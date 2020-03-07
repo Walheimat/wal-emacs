@@ -1,6 +1,8 @@
 * emacs config
+[[https://gitlab.com/Walheimat][@Walheimat]]'s emacs config as an org file.
+The file can be loaded using =(org-babel-load-file "~/.emacs.d/configuration.org")= assuming that's where it sits.
 ** MELPA
-Initialize MELPA and refresh contents.
+Initialize MELPA.
 #+BEGIN_SRC emacs-lisp
   (require 'package)
   (let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
@@ -38,7 +40,7 @@ Insertion of text should delete region. Highlight bracket pairs.
   (show-paren-mode 1)
 #+END_SRC
 *** tabs all the way
-Tabs are 4 spaces wide.
+Tabs are 4 spaces wide and we always use tabs. No electric indent. Pipe char to show indentation.
 #+BEGIN_SRC emacs-lisp
 ; START TABS CONFIG
 ;; Create a variable for our preferred tab width
@@ -99,14 +101,13 @@ Bind =C-x p C-f= to =find-file-in-project=.
       ("C-x p C-f" . find-file-in-project)))
 #+END_SRC
 ** switch mode by file
-I want to use web-mode for vue files.
+I want to use web-mode for vue files and js2 for javascript files.
 #+BEGIN_SRC emacs-lisp
   (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
   (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
 #+END_SRC
 ** treemacs
-Use use-package to configure treemacs.
-It's the default config except for =treemacs-is-never-other-window=.
+Use the default config except for =treemacs-is-never-other-window=.
 #+BEGIN_SRC emacs-lisp
 (use-package treemacs
   :ensure t
@@ -199,7 +200,9 @@ It's the default config except for =treemacs-is-never-other-window=.
   :config (treemacs-set-scope-type 'Perspectives))
 #+END_SRC
 ** flycheck
+Make flycheck understand newer eslint.
 *** override finding eslint
+Eslint configs can be found using a file, not a directory.
 #+BEGIN_SRC emacs-lisp
 (require 'flycheck)
 (defun flycheck-eslint-config-exists-p ()
@@ -209,7 +212,8 @@ It's the default config except for =treemacs-is-never-other-window=.
                                                  "--print-config" ".eslintrc"))))
     (eq exitcode 0)))
 #+END_SRC
-*** load tslint/eslint from local node_modules
+*** load eslint/tslint from local node_module
+Use the locally installed eslint/tslint.
 #+BEGIN_SRC emacs-lisp
   (defun my/use-eslint-from-node-modules ()
     (let* ((root (locate-dominating-file
@@ -244,6 +248,7 @@ Use bullets mode and make the ellipses bendy arrows.
   (setq org-ellipsis "↷")
 #+END_SRC
 *** Make org-mode log with notes
+When a =TODO= is =DONE= log a note.
 #+BEGIN_SRC emacs-lisp
   (setq org-log-done 'note)
 #+END_SRC
@@ -264,6 +269,7 @@ Web mode uses flycheck with tslint enabled.
 #+END_SRC
 ** lsp
 *** use lsp in web-mode
+Use lsp in web mode (for vetur).
 #+BEGIN_SRC emacs-lisp
   (add-hook 'web-mode-hook 'lsp)
 #+END_SRC
