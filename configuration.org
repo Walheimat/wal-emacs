@@ -5,20 +5,20 @@ The file can be loaded using =(org-babel-load-file "~/.emacs.d/configuration.org
 *** general
 No splash. Use separate file for customizations.
 #+BEGIN_SRC emacs-lisp
-  (package-initialize)
-  (setq inhibit-startup-message t)
-  (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-  (load custom-file)
+(package-initialize)
+(setq inhibit-startup-message t)
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(load custom-file)
 #+END_SRC
 *** MELPA
 Initialize MELPA.
 #+BEGIN_SRC emacs-lisp
-  (require 'package)
-  (require 'dash)
+(require 'package)
+(require 'dash)
 
-  (let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
-                    (not (gnutls-available-p))))
-       (proto (if no-ssl "http" "https")))
+(let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
+                  (not (gnutls-available-p))))
+     (proto (if no-ssl "http" "https")))
   (when no-ssl (warn "\
 Your version of Emacs does not support SSL connections,
 which is unsafe because it allows man-in-the-middle attacks.
@@ -30,8 +30,8 @@ There are two things you can do about this warning:
   ;; and `package-pinned-packages`. Most users will not need or want to do this.
   ;;(add-to-list 'package-archives (cons "melpa-stable" (concat proto "://stable.melpa.org/packages/")) t)
   )
-  (setq package-pinned-packages '())
-  (package-initialize)
+(setq package-pinned-packages '())
+(package-initialize)
 #+END_SRC
 *** packages
 Install packages (if they're missing).
@@ -81,101 +81,100 @@ Install packages (if they're missing).
 *** save place
 Save place between sessions.
 #+BEGIN_SRC emacs-lisp
-  (require 'saveplace)
-  (setq-default save-place t)
-  (setq save-place-file (expand-file-name ".places" user-emacs-directory))
+(require 'saveplace)
+(setq-default save-place t)
+(setq save-place-file (expand-file-name ".places" user-emacs-directory))
 #+END_SRC
 ** global
 Things that should always be true.
 *** global modes
 Always highlight current line. Always use company. Always display line numbers. Always use ivy. Always prettify symbols. Always highlight diffs. Always use dimmer.
 #+BEGIN_SRC emacs-lisp
-  (global-hl-line-mode)
-  (add-hook 'after-init-hook 'global-company-mode)
-  (global-display-line-numbers-mode)
-  (ivy-mode 1)
-  (global-prettify-symbols-mode +1)
-  (global-diff-hl-mode)
-  (dimmer-mode t)
-  (global-whitespace-mode)
+(global-hl-line-mode)
+(add-hook 'after-init-hook 'global-company-mode)
+(global-display-line-numbers-mode)
+(ivy-mode 1)
+(global-prettify-symbols-mode +1)
+(global-diff-hl-mode)
+(dimmer-mode t)
+(global-whitespace-mode)
 #+END_SRC
 *** reasonable settings
 Insertion of text should delete region. Highlight bracket pairs.
 #+BEGIN_SRC emacs-lisp
-  (delete-selection-mode 1)
-  (show-paren-mode 1)
+(delete-selection-mode 1)
+(show-paren-mode 1)
 #+END_SRC
 *** tabs all the way
 Tabs are 4 spaces wide. No electric indent. Pipe char to show indentation. Functions to enable/disable sane tabs.
 #+BEGIN_SRC emacs-lisp
-; START TABS CONFIG
-  (setq custom-tab-width 4)
+(setq custom-tab-width 4)
 
-  (defun disable-tabs () (setq indent-tabs-mode nil))
-  (defun enable-tabs  ()
-    (local-set-key (kbd "TAB") 'tab-to-tab-stop)
-    (setq indent-tabs-mode t)
-    (setq tab-width custom-tab-width))
+(defun disable-tabs () (setq indent-tabs-mode nil))
+(defun enable-tabs  ()
+  (local-set-key (kbd "TAB") 'tab-to-tab-stop)
+  (setq indent-tabs-mode t)
+  (setq tab-width custom-tab-width))
 
-  (setq-default python-indent-offset custom-tab-width) ;; Python
-  (setq-default js-indent-level custom-tab-width)      ;; Javascript
+(setq-default python-indent-offset custom-tab-width) ;; Python
+(setq-default js-indent-level custom-tab-width)      ;; Javascript
 
-  (setq-default electric-indent-inhibit t)
+(setq-default electric-indent-inhibit t)
 
-  (setq backward-delete-char-untabify-method 'hungry)
+(setq backward-delete-char-untabify-method 'hungry)
 
-  (setq whitespace-style '(face tabs tab-mark trailing))
-  (custom-set-faces
-    '(whitespace-tab ((t (:foreground "#636363")))))
-  (setq whitespace-display-mappings
-    '((tab-mark 9 [124 9] [92 9]))) ; 124 is the ascii ID for '\|'
+(setq whitespace-style '(face tabs tab-mark trailing))
+(custom-set-faces
+  '(whitespace-tab ((t (:foreground "#636363")))))
+(setq whitespace-display-mappings
+  '((tab-mark 9 [124 9] [92 9]))) ; 124 is the ascii ID for '\|'
 #+END_SRC
 *** key bindings
 =C-x g= opens magit status.
 =C-x p r= refreshes packages.
 #+BEGIN_SRC emacs-lisp
-  (global-set-key (kbd "C-x g") 'magit-status)
-  (global-set-key (kbd "C-x p r") 'package-refresh-contents)
+(global-set-key (kbd "C-x g") 'magit-status)
+(global-set-key (kbd "C-x p r") 'package-refresh-contents)
 #+END_SRC
 *** autosave and backups
 Store backups in backups folder. Store autosaves in temp folder.
 #+BEGIN_SRC emacs-lisp
-  (setq backup-directory-alist
-    `(("." . ,(expand-file-name
-      (concat user-emacs-directory "backups")))))
-  (setq auto-save-file-name-transforms
-    `((".*" ,temporary-file-directory t)))
+(setq backup-directory-alist
+  `(("." . ,(expand-file-name
+    (concat user-emacs-directory "backups")))))
+(setq auto-save-file-name-transforms
+  `((".*" ,temporary-file-directory t)))
 #+END_SRC
 ** specific
 Settings for packages and modes.
 *** find file in project
 Bind =C-x p C-f= to =find-file-in-project=.
 #+BEGIN_SRC emacs-lisp
-  (use-package find-file-in-project
-    :bind
-    (:map global-map
-      ("C-x p C-f" . find-file-in-project)))
+(use-package find-file-in-project
+  :bind
+  (:map global-map
+    ("C-x p C-f" . find-file-in-project)))
 #+END_SRC
 *** mode mappings
 Set up mode mappings.
 #+BEGIN_SRC emacs-lisp
-  (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-  ;; Restclient
-  (add-to-list 'auto-mode-alist '("\\.http" . restclient-mode))
+(add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+;; Restclient
+(add-to-list 'auto-mode-alist '("\\.http" . restclient-mode))
 #+END_SRC
 *** treemacs
 Use the default config except for =treemacs-is-never-other-window=.
 #+BEGIN_SRC emacs-lisp
-  (use-package treemacs
-    :ensure t
-    :defer t
-    :init
-    (with-eval-after-load 'winum
-      (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
-    :config
-    (progn
-      (setq treemacs-collapse-dirs                 (if treemacs-python-executable 3 0)
+(use-package treemacs
+  :ensure t
+  :defer t
+  :init
+  (with-eval-after-load 'winum
+    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  :config
+  (progn
+    (setq treemacs-collapse-dirs                 (if treemacs-python-executable 3 0)
           treemacs-deferred-git-apply-delay      0.5
           treemacs-directory-name-transformer    #'identity
           treemacs-display-in-side-window        t
@@ -213,20 +212,20 @@ Use the default config except for =treemacs-is-never-other-window=.
           treemacs-user-mode-line-format         nil
           treemacs-width                         35)
 
-    ;; The default width and height of the icons is 22 pixels. If you are
-    ;; using a Hi-DPI display, uncomment this to double the icon size.
-    ;;(treemacs-resize-icons 44)
+  ;; The default width and height of the icons is 22 pixels. If you are
+  ;; using a Hi-DPI display, uncomment this to double the icon size.
+  ;;(treemacs-resize-icons 44)
 
-      (treemacs-follow-mode t)
-      (treemacs-filewatch-mode t)
-      (treemacs-fringe-indicator-mode t)
-      (pcase (cons (not (null (executable-find "git")))
-                 (not (null treemacs-python-executable)))
-        (`(t . t)
-          (treemacs-git-mode 'deferred))
-        (`(t . _)
-          (treemacs-git-mode 'simple))))
-    :bind
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (treemacs-fringe-indicator-mode t)
+    (pcase (cons (not (null (executable-find "git")))
+               (not (null treemacs-python-executable)))
+      (`(t . t)
+        (treemacs-git-mode 'deferred))
+      (`(t . _)
+        (treemacs-git-mode 'simple))))
+  :bind
     (:map global-map
         ("M-0"       . treemacs-select-window)
         ("C-x t 1"   . treemacs-delete-other-windows)
@@ -235,123 +234,123 @@ Use the default config except for =treemacs-is-never-other-window=.
         ("C-x t C-t" . treemacs-find-file)
         ("C-x t M-t" . treemacs-find-tag)))
 
-  (use-package treemacs-projectile
-    :after treemacs projectile
-    :ensure t)
+(use-package treemacs-projectile
+  :after treemacs projectile
+  :ensure t)
 
-  (use-package treemacs-icons-dired
-    :after treemacs dired
-    :ensure t
-    :config (treemacs-icons-dired-mode))
+(use-package treemacs-icons-dired
+  :after treemacs dired
+  :ensure t
+  :config (treemacs-icons-dired-mode))
 
-  (use-package treemacs-magit
-    :after treemacs magit
-    :ensure t)
+(use-package treemacs-magit
+  :after treemacs magit
+  :ensure t)
 
-  (use-package treemacs-persp
-    :after treemacs persp-mode
-    :ensure t
-    :config (treemacs-set-scope-type 'Perspectives))
-  (treemacs)
+(use-package treemacs-persp
+  :after treemacs persp-mode
+  :ensure t
+  :config (treemacs-set-scope-type 'Perspectives))
+(treemacs)
 #+END_SRC
 *** flycheck
 Make flycheck understand newer eslint.
 **** override finding eslint
 Eslint configs can be found using a file, not a directory.
 #+BEGIN_SRC emacs-lisp
-  (require 'flycheck)
-  (defun flycheck-eslint-config-exists-p ()
-    "Whether there is a valid eslint config for the current buffer."
-    (let* ((executable (flycheck-find-checker-executable 'javascript-eslint))
-           (exitcode (and executable (call-process executable nil nil nil
-                                                   "--print-config" ".eslintrc"))))
-      (eq exitcode 0)))
+(require 'flycheck)
+(defun flycheck-eslint-config-exists-p ()
+  "Whether there is a valid eslint config for the current buffer."
+  (let* ((executable (flycheck-find-checker-executable 'javascript-eslint))
+         (exitcode (and executable (call-process executable nil nil nil
+                                                 "--print-config" ".eslintrc"))))
+    (eq exitcode 0)))
 #+END_SRC
 **** load eslint/tslint from local node_module
 Use the locally installed eslint/tslint.
 #+BEGIN_SRC emacs-lisp
-  (defun my/use-eslint-from-node-modules ()
-    (let* ((root (locate-dominating-file
-                  (or (buffer-file-name) default-directory)
-                  "node_modules"))
-           (eslint
-            (and root
-                 (expand-file-name "node_modules/.bin/eslint"
+(defun my/use-eslint-from-node-modules ()
+  (let* ((root (locate-dominating-file
+                (or (buffer-file-name) default-directory)
+                "node_modules"))
+         (eslint
+          (and root
+               (expand-file-name "node_modules/.bin/eslint"
+                               root))))
+    (when (and eslint (file-executable-p eslint))
+      (setq-local flycheck-javascript-eslint-executable eslint))))
+
+(defun my/use-tslint-from-node-modules ()
+  (let* ((root (locate-dominating-file
+                (or (buffer-file-name) default-directory)
+                "node_modules"))
+         (tslint
+          (and root
+               (expand-file-name "node_modules/.bin/tslint"
                                  root))))
-      (when (and eslint (file-executable-p eslint))
-        (setq-local flycheck-javascript-eslint-executable eslint))))
+    (when (and tslint (file-executable-p tslint))
+      (setq-local flycheck-typescript-tslint-executable tslint))))
 
-  (defun my/use-tslint-from-node-modules ()
-    (let* ((root (locate-dominating-file
-                  (or (buffer-file-name) default-directory)
-                  "node_modules"))
-           (tslint
-            (and root
-                 (expand-file-name "node_modules/.bin/tslint"
-                                   root))))
-      (when (and tslint (file-executable-p tslint))
-        (setq-local flycheck-typescript-tslint-executable tslint))))
-
-  (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
-  (add-hook 'flycheck-mode-hook #'my/use-tslint-from-node-modules)
+(add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
+(add-hook 'flycheck-mode-hook #'my/use-tslint-from-node-modules)
 #+END_SRC
 *** org mode
 **** Make org-mode look nicer
 Use bullets mode and make the ellipses bendy arrows.
 #+BEGIN_SRC emacs-lisp
-  (add-hook 'org-mode-hook (lambda() (org-bullets-mode t)))
-  (setq org-ellipsis "↷")
+(add-hook 'org-mode-hook (lambda() (org-bullets-mode t)))
+(setq org-ellipsis "↷")
 #+END_SRC
 **** Make org-mode log with notes
 When a =TODO= is =DONE= log a note.
 #+BEGIN_SRC emacs-lisp
-  (setq org-log-done 'note)
+(setq org-log-done 'note)
 #+END_SRC
 *** js2 mode
 Enable Flycheck and disable internal checker.
 #+BEGIN_SRC emacs-lisp
-  (setq-default js2-show-parse-errors nil)
-  (setq-default js2-strict-missing-semi-warning nil)
-  (add-hook 'js2-mode-hook (lambda () (flycheck-mode 1)))
-  (add-hook 'js2-mode-hook 'enable-tabs)
+(setq-default js2-show-parse-errors nil)
+(setq-default js2-strict-missing-semi-warning nil)
+(add-hook 'js2-mode-hook (lambda () (flycheck-mode 1)))
+(add-hook 'js2-mode-hook 'enable-tabs)
 #+END_SRC
 *** web mode
 Web mode uses flycheck with tslint enabled.
 #+BEGIN_SRC emacs-lisp
-  (add-hook 'web-mode-hook (lambda () (flycheck-mode 1)))
-  (with-eval-after-load 'flycheck
-    (flycheck-add-mode 'typescript-tslint 'web-mode)
-    (flycheck-add-mode 'css-csslint 'web-mode))
-  (add-hook 'web-mode-hook 'enable-tabs)
+(add-hook 'web-mode-hook (lambda () (flycheck-mode 1)))
+(with-eval-after-load 'flycheck
+  (flycheck-add-mode 'typescript-tslint 'web-mode)
+  (flycheck-add-mode 'css-csslint 'web-mode))
+(add-hook 'web-mode-hook 'enable-tabs)
 #+END_SRC
 *** lsp
 **** use lsp in web-mode
 Use lsp in web mode (for vetur).
 #+BEGIN_SRC emacs-lisp
-  (add-hook 'web-mode-hook 'lsp)
+(add-hook 'web-mode-hook 'lsp)
 #+END_SRC
 **** disable snippets
 Not sure this is necessary
 #+BEGIN_SRC emacs-lisp
-  (setq lsp-enable-snippet nil)
+(setq lsp-enable-snippet nil)
 #+END_SRC
 *** theme
 Use dracula for now.
 #+BEGIN_SRC emacs-lisp
-  (load-theme 'dracula t)
+(load-theme 'dracula t)
 #+END_SRC
 *** typescript mode
 Enable flycheck and sane tabs.
 #+BEGIN_SRC emacs-lisp
-  (add-hook 'typescript-mode-hook (lambda () (flycheck-mode 1)))
-  (add-hook 'typescript-mode-hook 'enable-tabs)
+(add-hook 'typescript-mode-hook (lambda () (flycheck-mode 1)))
+(add-hook 'typescript-mode-hook 'enable-tabs)
 #+END_SRC
 *** dimmer
 Make dimmed frames a bit dimmer.
 #+BEGIN_SRC emacs-lisp
-  (require 'dimmer)
-  (setq dimmer-fraction 0.5)
-  (dimmer-configure-org)
-  (dimmer-configure-magit)
-  (dimmer-configure-hydra)
+(require 'dimmer)
+(setq dimmer-fraction 0.5)
+(dimmer-configure-org)
+(dimmer-configure-magit)
+(dimmer-configure-hydra)
 #+END_SRC
