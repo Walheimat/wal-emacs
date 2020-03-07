@@ -1,4 +1,5 @@
-* MELPA
+* emacs config
+** MELPA
 Initialize MELPA and refresh contents.
 #+BEGIN_SRC emacs-lisp
   (require 'package)
@@ -18,9 +19,9 @@ There are two things you can do about this warning:
   )
   (package-initialize)
 #+END_SRC
-* global
+** global
 Things that should always be true.
-** global modes
+*** global modes
 Always highlight current line. Always use company. Always display line numbers. Always use ivy. Always prettify symbols.
 #+BEGIN_SRC emacs-lisp
   (global-hl-line-mode)
@@ -30,13 +31,13 @@ Always highlight current line. Always use company. Always display line numbers. 
   (global-prettify-symbols-mode +1)
   (global-diff-hl-mode)
 #+END_SRC
-** reasonable settings
+*** reasonable settings
 Insertion of text should delete region. Highlight bracket pairs.
 #+BEGIN_SRC emacs-lisp
   (delete-selection-mode 1)
   (show-paren-mode 1)
 #+END_SRC
-** tabs all the way
+*** tabs all the way
 Tabs are 4 spaces wide.
 #+BEGIN_SRC emacs-lisp
 ; START TABS CONFIG
@@ -82,14 +83,14 @@ Tabs are 4 spaces wide.
 (global-whitespace-mode) ; Enable whitespace mode everywhere
 ; END TABS CONFIG
 #+END_SRC
-** key bindings
+*** key bindings
 =C-x g= opens magit status.
 =C-x p r= refreshes packages.
 #+BEGIN_SRC emacs-lisp
   (global-set-key (kbd "C-x g") 'magit-status)
   (global-set-key (kbd "C-x p r") 'package-refresh-contents)
 #+END_SRC
-* find file in project
+** find file in project
 Bind =C-x p C-f= to =find-file-in-project=.
 #+BEGIN_SRC emacs-lisp
   (use-package find-file-in-project
@@ -97,13 +98,13 @@ Bind =C-x p C-f= to =find-file-in-project=.
     (:map global-map
       ("C-x p C-f" . find-file-in-project)))
 #+END_SRC
-* switch mode by file
+** switch mode by file
 I want to use web-mode for vue files.
 #+BEGIN_SRC emacs-lisp
   (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
   (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
 #+END_SRC
-* treemacs
+** treemacs
 Use use-package to configure treemacs.
 It's the default config except for =treemacs-is-never-other-window=.
 #+BEGIN_SRC emacs-lisp
@@ -197,8 +198,8 @@ It's the default config except for =treemacs-is-never-other-window=.
   :ensure t
   :config (treemacs-set-scope-type 'Perspectives))
 #+END_SRC
-* flycheck
-** override finding eslint
+** flycheck
+*** override finding eslint
 #+BEGIN_SRC emacs-lisp
 (require 'flycheck)
 (defun flycheck-eslint-config-exists-p ()
@@ -208,7 +209,7 @@ It's the default config except for =treemacs-is-never-other-window=.
                                                  "--print-config" ".eslintrc"))))
     (eq exitcode 0)))
 #+END_SRC
-** load tslint/eslint from local node_modules
+*** load tslint/eslint from local node_modules
 #+BEGIN_SRC emacs-lisp
   (defun my/use-eslint-from-node-modules ()
     (let* ((root (locate-dominating-file
@@ -235,25 +236,25 @@ It's the default config except for =treemacs-is-never-other-window=.
   (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
   (add-hook 'flycheck-mode-hook #'my/use-tslint-from-node-modules)
 #+END_SRC
-* org mode
-** Make org-mode look nicer
+** org mode
+*** Make org-mode look nicer
 Use bullets mode and make the ellipses bendy arrows.
 #+BEGIN_SRC emacs-lisp
   (add-hook 'org-mode-hook (lambda() (org-bullets-mode t)))
   (setq org-ellipsis "↷")
 #+END_SRC
-** Make org-mode log with notes
+*** Make org-mode log with notes
 #+BEGIN_SRC emacs-lisp
   (setq org-log-done 'note)
 #+END_SRC
-* js2 mode
+** js2 mode
 Enable Flycheck and disable internal checker.
 #+BEGIN_SRC emacs-lisp
 (setq-default js2-show-parse-errors nil)
 (setq-default js2-strict-missing-semi-warning nil)
 (add-hook 'js2-mode-hook (lambda () (flycheck-mode 1)))
 #+END_SRC
-* web mode
+** web mode
 Web mode uses flycheck with tslint enabled.
 #+BEGIN_SRC emacs-lisp
   (add-hook 'web-mode-hook (lambda () (flycheck-mode 1)))
@@ -261,21 +262,17 @@ Web mode uses flycheck with tslint enabled.
     (flycheck-add-mode 'typescript-tslint 'web-mode)
     (flycheck-add-mode 'css-csslint 'web-mode))
 #+END_SRC
-* lsp
-** use lsp in web-mode
-
+** lsp
+*** use lsp in web-mode
 #+BEGIN_SRC emacs-lisp
   (add-hook 'web-mode-hook 'lsp)
 #+END_SRC
-
-** disable snippets
-
+*** disable snippets
 Not sure this is necessary
-
 #+BEGIN_SRC emacs-lisp
   (setq lsp-enable-snippet nil)
 #+END_SRC
-* theme
+** theme
 Use dracula for now.
 #+BEGIN_SRC emacs-lisp
   (load-theme 'dracula t)
