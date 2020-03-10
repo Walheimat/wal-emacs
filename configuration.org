@@ -49,11 +49,14 @@ Install packages (if they're missing).
   (packages-install
    '(
      add-node-modules-path
+     browse-kill-ring
      company
      company-lsp
      company-restclient
      diff-hl
      dimmer
+     dumb-jump
+     evil-nerd-commenter
      find-file-in-project
      flycheck
      hydra
@@ -67,10 +70,12 @@ Install packages (if they're missing).
      perspective
      projectile
      restclient
+     smex
      treemacs
      typescript-mode
      use-package
      web-mode
+     which-key
      yasnippet
      )))
 
@@ -82,10 +87,8 @@ Install packages (if they're missing).
 #+END_SRC
 
 *** save place
-Save place between sessions.
+Save places in a file.
 #+BEGIN_SRC emacs-lisp
-(require 'saveplace)
-(setq-default save-place t)
 (setq save-place-file (expand-file-name ".places" user-emacs-directory))
 #+END_SRC
 ** global
@@ -101,6 +104,9 @@ Always highlight current line. Always use company. Always display line numbers. 
 (global-diff-hl-mode)
 (dimmer-mode t)
 (global-whitespace-mode)
+(save-place-mode 1)
+(dumb-jump-mode)
+(which-key-mode)
 #+END_SRC
 *** reasonable settings
 Insertion of text should delete region. Highlight bracket pairs.
@@ -135,9 +141,13 @@ Tabs are 4 spaces wide. No electric indent. Pipe char to show indentation. Funct
 *** key bindings
 =C-x g= opens magit status.
 =C-x p r= refreshes packages.
+=M-x= opens smex.
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "C-x g") 'magit-status)
 (global-set-key (kbd "C-x p r") 'package-refresh-contents)
+(global-set-key (kbd "M-x") 'smex)
+(global-set-key (kbd "C-x C-y") 'browse-kill-ring)
+(global-set-key (kbd "M-;") 'evilnc-comment-or-uncomment-lines)
 #+END_SRC
 *** autosave and backups
 Store backups in backups folder. Store autosaves in temp folder.
@@ -150,13 +160,18 @@ Store backups in backups folder. Store autosaves in temp folder.
 #+END_SRC
 ** specific
 Settings for packages and modes.
+*** theme
+Use dracula for now.
+#+BEGIN_SRC emacs-lisp
+(load-theme 'dracula t)
+#+END_SRC
 *** find file in project
-Bind =C-x p C-f= to =find-file-in-project=.
+Bind =C-x p f= to =find-file-in-project=.
 #+BEGIN_SRC emacs-lisp
 (use-package find-file-in-project
   :bind
   (:map global-map
-    ("C-x p C-f" . find-file-in-project)))
+    ("C-x p f" . find-file-in-project)))
 #+END_SRC
 *** mode mappings
 Set up mode mappings.
@@ -297,6 +312,15 @@ Use the locally installed eslint/tslint.
 (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
 (add-hook 'flycheck-mode-hook #'my/use-tslint-from-node-modules)
 #+END_SRC
+*** js2 mode
+Enable Flycheck and disable internal checker.
+#+BEGIN_SRC emacs-lisp
+(setq-default js2-show-parse-errors nil)
+(setq-default js2-strict-missing-semi-warning nil)
+(add-hook 'js2-mode-hook (lambda () (add-node-modules-to-path)))
+(add-hook 'js2-mode-hook (lambda () (flycheck-mode 1)))
+(add-hook 'js2-mode-hook 'enable-tabs)
+#+END_SRC
 *** org mode
 **** Make org-mode look nicer
 Use bullets mode and make the ellipses bendy arrows.
@@ -309,13 +333,6 @@ When a =TODO= is =DONE= log a note.
 #+BEGIN_SRC emacs-lisp
 (setq org-log-done 'note)
 #+END_SRC
-*** js2 mode
-Enable Flycheck and disable internal checker.
-#+BEGIN_SRC emacs-lisp
-(setq-default js2-show-parse-errors nil)
-(setq-default js2-strict-missing-semi-warning nil)
-(add-hook 'js2-mode-hook (lambda () (flycheck-mode 1)))
-(add-hook 'js2-mode-hook 'enable-tabs)
 #+END_SRC
 *** web mode
 Web mode uses flycheck with tslint enabled.
@@ -336,11 +353,6 @@ Use lsp in web mode (for vetur).
 Not sure this is necessary
 #+BEGIN_SRC emacs-lisp
 (setq lsp-enable-snippet nil)
-#+END_SRC
-*** theme
-Use dracula for now.
-#+BEGIN_SRC emacs-lisp
-(load-theme 'dracula t)
 #+END_SRC
 *** typescript mode
 Enable flycheck and sane tabs.
