@@ -5,6 +5,7 @@ The file can be loaded using =(org-babel-load-file "~/.emacs.d/configuration.org
 
 Check out [[https://gitlab.com/Walheimat/emacs-config/-/blob/master/.emacs][my init file]] for reference.
 ** before init
+Set up emacs, package manager and packages.
 *** general
 No splash. Use separate file for customizations.
 #+BEGIN_SRC emacs-lisp
@@ -76,6 +77,7 @@ Install packages (if they're missing).
      use-package
      web-mode
      which-key
+     yaml-mode
      yasnippet
      )))
 
@@ -86,27 +88,21 @@ Install packages (if they're missing).
    (init--install-packages)))
 #+END_SRC
 
+** global
+Configure global settings.
 *** save place
 Save places in a file.
 #+BEGIN_SRC emacs-lisp
 (setq save-place-file (expand-file-name ".places" user-emacs-directory))
 #+END_SRC
-** global
-Things that should always be true.
-*** global modes
-Always highlight current line. Always use company. Always display line numbers. Always use ivy. Always prettify symbols. Always highlight diffs. Always use dimmer.
+*** autosave and backups
+Store backups in backups folder. Store autosaves in temp folder.
 #+BEGIN_SRC emacs-lisp
-(global-hl-line-mode)
-(add-hook 'after-init-hook 'global-company-mode)
-(global-display-line-numbers-mode)
-(ivy-mode 1)
-(global-prettify-symbols-mode +1)
-(global-diff-hl-mode)
-(dimmer-mode t)
-(global-whitespace-mode)
-(save-place-mode 1)
-(dumb-jump-mode)
-(which-key-mode)
+(setq backup-directory-alist
+  `(("." . ,(expand-file-name
+    (concat user-emacs-directory "backups")))))
+(setq auto-save-file-name-transforms
+  `((".*" ,temporary-file-directory t)))
 #+END_SRC
 *** reasonable settings
 Insertion of text should delete region. Highlight bracket pairs.
@@ -149,30 +145,28 @@ Tabs are 4 spaces wide. No electric indent. Pipe char to show indentation. Funct
 (global-set-key (kbd "C-x C-y") 'browse-kill-ring)
 (global-set-key (kbd "M-;") 'evilnc-comment-or-uncomment-lines)
 #+END_SRC
-*** autosave and backups
-Store backups in backups folder. Store autosaves in temp folder.
-#+BEGIN_SRC emacs-lisp
-(setq backup-directory-alist
-  `(("." . ,(expand-file-name
-    (concat user-emacs-directory "backups")))))
-(setq auto-save-file-name-transforms
-  `((".*" ,temporary-file-directory t)))
-#+END_SRC
-** specific
-Settings for packages and modes.
 *** theme
 Use dracula for now.
 #+BEGIN_SRC emacs-lisp
 (load-theme 'dracula t)
 #+END_SRC
-*** find file in project
-Bind =C-x p f= to =find-file-in-project=.
+*** global modes
+Turn on a lot of useful (and prettifying) modes.
 #+BEGIN_SRC emacs-lisp
-(use-package find-file-in-project
-  :bind
-  (:map global-map
-    ("C-x p f" . find-file-in-project)))
+(global-hl-line-mode)
+(add-hook 'after-init-hook 'global-company-mode)
+(global-display-line-numbers-mode)
+(ivy-mode 1)
+(global-prettify-symbols-mode +1)
+(global-diff-hl-mode)
+(dimmer-mode t)
+(global-whitespace-mode)
+(save-place-mode 1)
+(dumb-jump-mode)
+(which-key-mode)
 #+END_SRC
+** specific
+ Configure packages.
 *** mode mappings
 Set up mode mappings.
 #+BEGIN_SRC emacs-lisp
@@ -312,15 +306,34 @@ Use the locally installed eslint/tslint.
 (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
 (add-hook 'flycheck-mode-hook #'my/use-tslint-from-node-modules)
 #+END_SRC
-*** js2 mode
-Enable Flycheck and disable internal checker.
+*** find file in project
+Bind =C-x p f= to =find-file-in-project=.
 #+BEGIN_SRC emacs-lisp
-(setq-default js2-show-parse-errors nil)
-(setq-default js2-strict-missing-semi-warning nil)
-(add-hook 'js2-mode-hook (lambda () (add-node-modules-to-path)))
-(add-hook 'js2-mode-hook (lambda () (flycheck-mode 1)))
-(add-hook 'js2-mode-hook 'enable-tabs)
+(use-package find-file-in-project
+  :bind
+  (:map global-map
+    ("C-x p f" . find-file-in-project)))
 #+END_SRC
+*** dimmer
+Make dimmed frames a bit dimmer.
+#+BEGIN_SRC emacs-lisp
+(require 'dimmer)
+(setq dimmer-fraction 0.5)
+(dimmer-configure-org)
+(dimmer-configure-magit)
+(dimmer-configure-hydra)
+#+END_SRC
+** modes
+Configure modes.
+*** js2 mode
+ Enable Flycheck and disable internal checker.
+ #+BEGIN_SRC emacs-lisp
+ (setq-default js2-show-parse-errors nil)
+ (setq-default js2-strict-missing-semi-warning nil)
+ (add-hook 'js2-mode-hook (lambda () (add-node-modules-to-path)))
+ (add-hook 'js2-mode-hook (lambda () (flycheck-mode 1)))
+ (add-hook 'js2-mode-hook 'enable-tabs)
+ #+END_SRC
 *** org mode
 **** Make org-mode look nicer
 Use bullets mode and make the ellipses bendy arrows.
@@ -343,6 +356,13 @@ Web mode uses flycheck with tslint enabled.
   (flycheck-add-mode 'css-csslint 'web-mode))
 (add-hook 'web-mode-hook 'enable-tabs)
 #+END_SRC
+*** typescript mode
+Enable flycheck and sane tabs.
+#+BEGIN_SRC emacs-lisp
+(add-hook 'typescript-mode-hook (lambda () (add-node-modules-to-path)))
+(add-hook 'typescript-mode-hook (lambda () (flycheck-mode 1)))
+(add-hook 'typescript-mode-hook 'enable-tabs)
+#+END_SRC
 *** lsp
 **** use lsp in web-mode
 Use lsp in web mode (for vetur).
@@ -353,19 +373,4 @@ Use lsp in web mode (for vetur).
 Not sure this is necessary
 #+BEGIN_SRC emacs-lisp
 (setq lsp-enable-snippet nil)
-#+END_SRC
-*** typescript mode
-Enable flycheck and sane tabs.
-#+BEGIN_SRC emacs-lisp
-(add-hook 'typescript-mode-hook (lambda () (flycheck-mode 1)))
-(add-hook 'typescript-mode-hook 'enable-tabs)
-#+END_SRC
-*** dimmer
-Make dimmed frames a bit dimmer.
-#+BEGIN_SRC emacs-lisp
-(require 'dimmer)
-(setq dimmer-fraction 0.5)
-(dimmer-configure-org)
-(dimmer-configure-magit)
-(dimmer-configure-hydra)
 #+END_SRC
