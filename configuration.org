@@ -49,7 +49,12 @@ Install packages (if they're missing).
 (defun init--install-packages ()
   (packages-install
    '(
+     ack
      add-node-modules-path
+     ample-theme
+     angular-mode
+     angular-snippets
+     auto-complete
      browse-kill-ring
      company
      company-lsp
@@ -79,6 +84,7 @@ Install packages (if they're missing).
      which-key
      yaml-mode
      yasnippet
+     zoom
      )))
 
 (condition-case nil
@@ -91,7 +97,7 @@ Install packages (if they're missing).
 ** global
 Configure global settings.
 *** save place
-Save places in a file.
+Save places, and do so in a file.
 #+BEGIN_SRC emacs-lisp
 (setq save-place-file (expand-file-name ".places" user-emacs-directory))
 #+END_SRC
@@ -105,18 +111,22 @@ Store backups in backups folder. Store autosaves in temp folder.
   `((".*" ,temporary-file-directory t)))
 #+END_SRC
 *** reasonable settings
-Insertion of text should delete region. Highlight bracket pairs.
+Insertion of text should delete region. Bracket pairs should be highlighted. Window (or frame ...) should start maximized.
 #+BEGIN_SRC emacs-lisp
 (delete-selection-mode 1)
 (show-paren-mode 1)
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
 #+END_SRC
 *** tabs all the way
-Tabs are 4 spaces wide. No electric indent. Pipe char to show indentation. Functions to enable/disable sane tabs.
+Tabs are 4 spaces wide. No electric indent. Pipe char to show indentation. Commands to enable/disable sane tabs.
 #+BEGIN_SRC emacs-lisp
 (setq custom-tab-width 4)
 
-(defun disable-tabs () (setq indent-tabs-mode nil))
+(defun disable-tabs () 
+  (interactive) 
+  (setq indent-tabs-mode nil))
 (defun enable-tabs  ()
+  (interactive)
   (local-set-key (kbd "TAB") 'tab-to-tab-stop)
   (setq indent-tabs-mode t)
   (setq tab-width custom-tab-width))
@@ -135,20 +145,28 @@ Tabs are 4 spaces wide. No electric indent. Pipe char to show indentation. Funct
   '((tab-mark 9 [124 9] [92 9]))) ; 124 is the ascii ID for '\|'
 #+END_SRC
 *** key bindings
-=C-x g= opens magit status.
-=C-x p r= refreshes packages.
-=M-x= opens smex.
+Change up the key bindings a bit.
++ =C-x g= opens magit status.
++ =M-x= opens smex.
++ =C-x C-y= to browse kill ring.
++ =s-,= to comment.
++ =s-a= to use ack. _Requires ack_!
++ =C-x r q= to (really) quit.
++ =C-x C-c= to open this config file.
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "C-x g") 'magit-status)
-(global-set-key (kbd "C-x p r") 'package-refresh-contents)
+;; (global-set-key (kbd "C-x p r") 'package-refresh-contents)
 (global-set-key (kbd "M-x") 'smex)
 (global-set-key (kbd "C-x C-y") 'browse-kill-ring)
-(global-set-key (kbd "M-;") 'evilnc-comment-or-uncomment-lines)
+(global-set-key (kbd "s-,") 'evilnc-comment-or-uncomment-lines)
+(global-set-key (kbd "s-a") 'ack)
+(global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
+(global-set-key (kbd "C-x C-c") (lambda () (interactive)(switch-to-buffer (find-file-noselect "~/.emacs.d/configuration.org"))))
 #+END_SRC
 *** theme
-Use dracula for now.
+Use ample flat.
 #+BEGIN_SRC emacs-lisp
-(load-theme 'dracula t)
+(load-theme 'ample-flat t)
 #+END_SRC
 *** global modes
 Turn on a lot of useful (and prettifying) modes.
@@ -164,6 +182,27 @@ Turn on a lot of useful (and prettifying) modes.
 (save-place-mode 1)
 (dumb-jump-mode)
 (which-key-mode)
+(tool-bar-mode -1)
+(zoom-mode 1)
+#+END_SRC
+*** font size
+Prefer FiraCode (-> mononoki -> Liberation -> DejaVu). If emacs runs with the custom arg =-bigger=, the default font size is 14 (instead of 10).
+#+BEGIN_SRC emacs-lisp
+(require 'dash)
+(defun font-candidate (&rest fonts)
+  "Return the first available font from a list of fonts."
+  (--first (find-font (font-spec :name it)) fonts))
+  (set-face-attribute 'default nil :font (font-candidate '"Fira Code 14" "mononoki 14" "Liberation Mono 14" "DejaVu Sans Mono 14"))
+
+(defun found-custom-arg (switch)
+  "Check for custom arg and delete it right away so emacs doesn't complain."
+  (let ((found-switch (member switch command-line-args)))
+    (setq command-line-args (delete switch command-line-args))
+    found-switch))
+
+(unless (found-custom-arg "-bigger")
+  (set-default-font (font-candidate '"Fira Code 10" "mononoki 10" "Liberation Mono 10" "DejaVu Sans Mono 10"))
+)
 #+END_SRC
 ** specific
  Configure packages.
@@ -172,7 +211,7 @@ Set up mode mappings.
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-;; Restclient
+(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
 (add-to-list 'auto-mode-alist '("\\.http" . restclient-mode))
 #+END_SRC
 *** treemacs
@@ -198,7 +237,7 @@ Use the default config except for =treemacs-is-never-other-window=.
           treemacs-follow-after-init             t
           treemacs-git-command-pipe              ""
           treemacs-goto-tag-strategy             'refetch-index
-          treemacs-indentation                   2
+          treemacs-indentation                   1
           treemacs-indentation-string            " "
           treemacs-is-never-other-window         t
           treemacs-max-git-entries               5000
@@ -216,13 +255,13 @@ Use the default config except for =treemacs-is-never-other-window=.
           treemacs-show-cursor                   nil
           treemacs-show-hidden-files             t
           treemacs-silent-filewatch              nil
-          treemacs-silent-refresh                nil
+          treemacs-silent-refresh                t
           treemacs-sorting                       'alphabetic-asc
           treemacs-space-between-root-nodes      t
           treemacs-tag-follow-cleanup            t
           treemacs-tag-follow-delay              1.5
           treemacs-user-mode-line-format         nil
-          treemacs-width                         35)
+          treemacs-width                         50)
 
   ;; The default width and height of the icons is 22 pixels. If you are
   ;; using a Hi-DPI display, uncomment this to double the icon size.
@@ -318,10 +357,15 @@ Bind =C-x p f= to =find-file-in-project=.
 Make dimmed frames a bit dimmer.
 #+BEGIN_SRC emacs-lisp
 (require 'dimmer)
-(setq dimmer-fraction 0.5)
+(setq dimmer-fraction 0.2)
 (dimmer-configure-org)
 (dimmer-configure-magit)
 (dimmer-configure-hydra)
+#+END_SRC
+*** autocomplete
+Use default configuration.
+#+BEGIN_SRC emacs-lisp
+(ac-config-default)
 #+END_SRC
 ** modes
 Configure modes.
@@ -330,7 +374,7 @@ Configure modes.
  #+BEGIN_SRC emacs-lisp
  (setq-default js2-show-parse-errors nil)
  (setq-default js2-strict-missing-semi-warning nil)
- (add-hook 'js2-mode-hook (lambda () (add-node-modules-to-path)))
+ (add-hook 'js2-mode-hook (lambda () (add-node-modules-path)))
  (add-hook 'js2-mode-hook (lambda () (flycheck-mode 1)))
  (add-hook 'js2-mode-hook 'enable-tabs)
  #+END_SRC
@@ -346,7 +390,6 @@ When a =TODO= is =DONE= log a note.
 #+BEGIN_SRC emacs-lisp
 (setq org-log-done 'note)
 #+END_SRC
-#+END_SRC
 *** web mode
 Web mode uses flycheck with tslint enabled.
 #+BEGIN_SRC emacs-lisp
@@ -359,7 +402,7 @@ Web mode uses flycheck with tslint enabled.
 *** typescript mode
 Enable flycheck and sane tabs.
 #+BEGIN_SRC emacs-lisp
-(add-hook 'typescript-mode-hook (lambda () (add-node-modules-to-path)))
+(add-hook 'typescript-mode-hook (lambda () (add-node-modules-path)))
 (add-hook 'typescript-mode-hook (lambda () (flycheck-mode 1)))
 (add-hook 'typescript-mode-hook 'enable-tabs)
 #+END_SRC
@@ -373,4 +416,10 @@ Use lsp in web mode (for vetur).
 Not sure this is necessary
 #+BEGIN_SRC emacs-lisp
 (setq lsp-enable-snippet nil)
+#+END_SRC
+*** zoom mode
+Use the golden ratio.
+#+BEGIN_SRC emacs-lisp
+(custom-set-variables
+ '(zoom-size '(0.618 . 0.618)))
 #+END_SRC
