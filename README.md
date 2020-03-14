@@ -5,8 +5,18 @@
 The file can be loaded using `(org-babel-load-file "~/.emacs.d/configuration.org")` (assuming that's the file's location).
 
 Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master/.emacs) for reference.
-\#TOC: headlines 2
 
+
+# Table of Contents
+
+1.  [emacs config](#orgaecd1c2)
+    1.  [before init](#orgd390aee)
+    2.  [global](#orga29bd92)
+    3.  [specific](#orgafc26b7)
+    4.  [modes](#org05142ff)
+
+
+<a id="orgd390aee"></a>
 
 ## before init
 
@@ -105,6 +115,8 @@ Install packages (if they're missing).
        (package-refresh-contents)
        (init--install-packages)))
 
+
+<a id="orga29bd92"></a>
 
 ## global
 
@@ -236,6 +248,8 @@ Prefer FiraCode (-> mononoki -> Liberation -> DejaVu). If emacs runs with the cu
       (set-default-font (font-candidate '"Fira Code 10" "mononoki 10" "Liberation Mono 10" "DejaVu Sans Mono 10"))
     )
 
+
+<a id="orgafc26b7"></a>
 
 ## specific
 
@@ -417,6 +431,8 @@ Use default configuration.
 
     (ac-config-default)
 
+
+<a id="org05142ff"></a>
 
 ## modes
 
