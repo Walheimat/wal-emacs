@@ -1,55 +1,17 @@
 
-# Table of Contents
-
-1.  [emacs config](#orge384121)
-    1.  [before init](#org5c1bfa1)
-        1.  [general](#orgd995d27)
-        2.  [MELPA](#org817f68b)
-        3.  [packages](#orgbf3f737)
-    2.  [global](#org4793b90)
-        1.  [save place](#org0fba62e)
-        2.  [autosave and backups](#orgca36ad2)
-        3.  [reasonable settings](#org7d1dc8d)
-        4.  [tabs all the way](#org9287f5d)
-        5.  [key bindings](#org8efa146)
-        6.  [theme](#org1ea5f23)
-        7.  [global modes](#orgb442b99)
-        8.  [font size](#org95034ba)
-    3.  [specific](#orgd5dfb1d)
-        1.  [mode mappings](#org2272603)
-        2.  [treemacs](#org8b5c0b3)
-        3.  [flycheck](#orgfbb3362)
-        4.  [find file in project](#orga8aa573)
-        5.  [dimmer](#org494db0d)
-        6.  [autocomplete](#org0c46ec6)
-    4.  [modes](#org21e4405)
-        1.  [js2 mode](#org32b6375)
-        2.  [org mode](#org723961a)
-        3.  [web mode](#org37feb5c)
-        4.  [typescript mode](#org3a404e9)
-        5.  [lsp](#org3440309)
-        6.  [zoom mode](#org993f127)
-
-
-<a id="orge384121"></a>
 
 # emacs config
-
-[@Walheimat](https://gitlab.com/Walheimat)'s emacs config as an org file.
 
 The file can be loaded using `(org-babel-load-file "~/.emacs.d/configuration.org")` (assuming that's the file's location).
 
 Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master/.emacs) for reference.
+\#TOC: headlines 2
 
-
-<a id="org5c1bfa1"></a>
 
 ## before init
 
 Set up emacs, package manager and packages.
 
-
-<a id="orgd995d27"></a>
 
 ### general
 
@@ -60,8 +22,6 @@ No splash. Use separate file for customizations.
     (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
     (load custom-file)
 
-
-<a id="org817f68b"></a>
 
 ### MELPA
 
@@ -87,8 +47,6 @@ Initialize MELPA.
     (setq package-pinned-packages '())
     (package-initialize)
 
-
-<a id="orgbf3f737"></a>
 
 ### packages
 
@@ -148,14 +106,10 @@ Install packages (if they're missing).
        (init--install-packages)))
 
 
-<a id="org4793b90"></a>
-
 ## global
 
 Configure global settings.
 
-
-<a id="org0fba62e"></a>
 
 ### save place
 
@@ -163,8 +117,6 @@ Save places, and do so in a file.
 
     (setq save-place-file (expand-file-name ".places" user-emacs-directory))
 
-
-<a id="orgca36ad2"></a>
 
 ### autosave and backups
 
@@ -177,8 +129,6 @@ Store backups in backups folder. Store autosaves in temp folder.
       `((".*" ,temporary-file-directory t)))
 
 
-<a id="org7d1dc8d"></a>
-
 ### reasonable settings
 
 Insertion of text should delete region. Bracket pairs should be highlighted. Window (or frame &#x2026;) should start maximized.
@@ -187,8 +137,6 @@ Insertion of text should delete region. Bracket pairs should be highlighted. Win
     (show-paren-mode 1)
     (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-
-<a id="org9287f5d"></a>
 
 ### tabs all the way
 
@@ -219,8 +167,6 @@ Tabs are 4 spaces wide. No electric indent. Pipe char to show indentation. Comma
       '((tab-mark 9 [124 9] [92 9]))) ; 124 is the ascii ID for '\|'
 
 
-<a id="org8efa146"></a>
-
 ### key bindings
 
 Change up the key bindings a bit.
@@ -234,16 +180,15 @@ Change up the key bindings a bit.
 -   `C-x C-c` to open this config file.
 
     (global-set-key (kbd "C-x g") 'magit-status)
-    ;; (global-set-key (kbd "C-x p r") 'package-refresh-contents)
     (global-set-key (kbd "M-x") 'smex)
     (global-set-key (kbd "C-x C-y") 'browse-kill-ring)
     (global-set-key (kbd "s-,") 'evilnc-comment-or-uncomment-lines)
     (global-set-key (kbd "s-a") 'ack)
     (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
-    (global-set-key (kbd "C-x C-c") (lambda () (interactive)(switch-to-buffer (find-file-noselect "~/.emacs.d/configuration.org"))))
+    (global-set-key
+      (kbd "C-x C-c")
+      (lambda () (interactive)(switch-to-buffer (find-file-noselect "~/.emacs.d/configuration.org"))))
 
-
-<a id="org1ea5f23"></a>
 
 ### theme
 
@@ -251,8 +196,6 @@ Use ample flat.
 
     (load-theme 'ample-flat t)
 
-
-<a id="orgb442b99"></a>
 
 ### global modes
 
@@ -272,8 +215,6 @@ Turn on a lot of useful (and prettifying) modes.
     (tool-bar-mode -1)
     (zoom-mode 1)
 
-
-<a id="org95034ba"></a>
 
 ### font size
 
@@ -296,14 +237,10 @@ Prefer FiraCode (-> mononoki -> Liberation -> DejaVu). If emacs runs with the cu
     )
 
 
-<a id="orgd5dfb1d"></a>
-
 ## specific
 
 Configure packages.
 
-
-<a id="org2272603"></a>
 
 ### mode mappings
 
@@ -314,8 +251,6 @@ Set up mode mappings.
     (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
     (add-to-list 'auto-mode-alist '("\\.http" . restclient-mode))
 
-
-<a id="org8b5c0b3"></a>
 
 ### treemacs
 
@@ -409,8 +344,6 @@ Use the default config except for `treemacs-is-never-other-window`.
     (treemacs)
 
 
-<a id="orgfbb3362"></a>
-
 ### flycheck
 
 Make flycheck understand newer eslint.
@@ -427,7 +360,7 @@ Make flycheck understand newer eslint.
         						 "--print-config" ".eslintrc"))))
             (eq exitcode 0)))
 
-2.  load eslint/tslint from local node<sub>module</sub>
+2.  load eslint/tslint from local node modules
 
     Use the locally installed eslint/tslint.
     
@@ -457,8 +390,6 @@ Make flycheck understand newer eslint.
         (add-hook 'flycheck-mode-hook #'my/use-tslint-from-node-modules)
 
 
-<a id="orga8aa573"></a>
-
 ### find file in project
 
 Bind `C-x p f` to `find-file-in-project`.
@@ -468,8 +399,6 @@ Bind `C-x p f` to `find-file-in-project`.
       (:map global-map
         ("C-x p f" . find-file-in-project)))
 
-
-<a id="org494db0d"></a>
 
 ### dimmer
 
@@ -482,8 +411,6 @@ Make dimmed frames a bit dimmer.
     (dimmer-configure-hydra)
 
 
-<a id="org0c46ec6"></a>
-
 ### autocomplete
 
 Use default configuration.
@@ -491,14 +418,10 @@ Use default configuration.
     (ac-config-default)
 
 
-<a id="org21e4405"></a>
-
 ## modes
 
 Configure modes.
 
-
-<a id="org32b6375"></a>
 
 ### js2 mode
 
@@ -510,8 +433,6 @@ Enable Flycheck and disable internal checker.
     (add-hook 'js2-mode-hook (lambda () (flycheck-mode 1)))
     (add-hook 'js2-mode-hook 'enable-tabs)
 
-
-<a id="org723961a"></a>
 
 ### org mode
 
@@ -529,8 +450,6 @@ Enable Flycheck and disable internal checker.
         (setq org-log-done 'note)
 
 
-<a id="org37feb5c"></a>
-
 ### web mode
 
 Web mode uses flycheck with tslint enabled.
@@ -542,8 +461,6 @@ Web mode uses flycheck with tslint enabled.
     (add-hook 'web-mode-hook 'enable-tabs)
 
 
-<a id="org3a404e9"></a>
-
 ### typescript mode
 
 Enable flycheck and sane tabs.
@@ -552,8 +469,6 @@ Enable flycheck and sane tabs.
     (add-hook 'typescript-mode-hook (lambda () (flycheck-mode 1)))
     (add-hook 'typescript-mode-hook 'enable-tabs)
 
-
-<a id="org3440309"></a>
 
 ### lsp
 
@@ -569,8 +484,6 @@ Enable flycheck and sane tabs.
     
         (setq lsp-enable-snippet nil)
 
-
-<a id="org993f127"></a>
 
 ### zoom mode
 
