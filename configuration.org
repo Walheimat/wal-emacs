@@ -54,19 +54,21 @@ Install packages (if they're missing).
      ack
      add-node-modules-path
      ample-theme
-     angular-mode
-     angular-snippets
+     ;; angular-mode
+     ;; angular-snippets
      auto-complete
      browse-kill-ring
      company
      company-lsp
      company-restclient
+     company-web
      diff-hl
      dimmer
      dumb-jump
      evil-nerd-commenter
      find-file-in-project
      flycheck
+     focus
      hydra
      ivy
      js2-mode
@@ -75,9 +77,14 @@ Install packages (if they're missing).
      markdown-mode
      nodejs-repl
      org-bullets
+     origami
      perspective
+     prettier-js
      projectile
+     rainbow-delimiters
      restclient
+     rjsx-mode
+     s
      smex
      treemacs
      typescript-mode
@@ -170,7 +177,7 @@ Change up the key bindings a bit.
 *** theme
 Use ample flat.
 #+BEGIN_SRC emacs-lisp
-(load-theme 'ample-flat t)
+(load-theme 'doom-spacegrey t)
 #+END_SRC
 *** global modes
 Turn on a lot of useful (and prettifying) modes.
@@ -187,16 +194,17 @@ Turn on a lot of useful (and prettifying) modes.
 (dumb-jump-mode)
 (which-key-mode)
 (tool-bar-mode -1)
+(menu-bar-mode -1)
 (zoom-mode 1)
 #+END_SRC
 *** font size
-Prefer FiraCode (-> mononoki -> Liberation -> DejaVu). If emacs runs with the custom arg =-bigger=, the default font size is 14 (instead of 10).
+Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the custom arg =-bigger=, the default font size is 14 (instead of 10).
 #+BEGIN_SRC emacs-lisp
 (require 'dash)
 (defun font-candidate (&rest fonts)
   "Return the first available font from a list of fonts."
   (--first (find-font (font-spec :name it)) fonts))
-  (set-face-attribute 'default nil :font (font-candidate '"Fira Code 14" "mononoki 14" "Liberation Mono 14" "DejaVu Sans Mono 14"))
+  (set-face-attribute 'default nil :font (font-candidate '"mononoki 14" "Fira Code 14" "Liberation Mono 14" "DejaVu Sans Mono 14"))
 
 (defun found-custom-arg (switch)
   "Check for custom arg and delete it right away so emacs doesn't complain."
@@ -205,108 +213,32 @@ Prefer FiraCode (-> mononoki -> Liberation -> DejaVu). If emacs runs with the cu
     found-switch))
 
 (unless (found-custom-arg "-bigger")
-  (set-default-font (font-candidate '"Fira Code 10" "mononoki 10" "Liberation Mono 10" "DejaVu Sans Mono 10"))
+  (set-default-font (font-candidate '"mononoki 10" "Fira Code 10" "Liberation Mono 10" "DejaVu Sans Mono 10"))
 )
 #+END_SRC
 ** specific
  Configure packages.
-*** mode mappings
-Set up mode mappings.
+*** autocomplete
+Use default configuration.
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
-(add-to-list 'auto-mode-alist '("\\.http" . restclient-mode))
+(ac-config-default)
 #+END_SRC
-*** treemacs
-Use the default config except for =treemacs-is-never-other-window=.
+*** dimmer
+Make dimmed frames a bit dimmer.
 #+BEGIN_SRC emacs-lisp
-(use-package treemacs
-  :ensure t
-  :defer t
-  :init
-  (with-eval-after-load 'winum
-    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
-  :config
-  (progn
-    (setq treemacs-collapse-dirs                 (if treemacs-python-executable 3 0)
-          treemacs-deferred-git-apply-delay      0.5
-          treemacs-directory-name-transformer    #'identity
-          treemacs-display-in-side-window        t
-          treemacs-eldoc-display                 t
-          treemacs-file-event-delay              5000
-          treemacs-file-extension-regex          treemacs-last-period-regex-value
-          treemacs-file-follow-delay             0.2
-          treemacs-file-name-transformer         #'identity
-          treemacs-follow-after-init             t
-          treemacs-git-command-pipe              ""
-          treemacs-goto-tag-strategy             'refetch-index
-          treemacs-indentation                   1
-          treemacs-indentation-string            " "
-          treemacs-is-never-other-window         t
-          treemacs-max-git-entries               5000
-          treemacs-missing-project-action        'ask
-          treemacs-no-png-images                 nil
-          treemacs-no-delete-other-windows       t
-          treemacs-project-follow-cleanup        nil
-          treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
-          treemacs-position                      'left
-          treemacs-recenter-distance             0.1
-          treemacs-recenter-after-file-follow    nil
-          treemacs-recenter-after-tag-follow     nil
-          treemacs-recenter-after-project-jump   'always
-          treemacs-recenter-after-project-expand 'on-distance
-          treemacs-show-cursor                   nil
-          treemacs-show-hidden-files             t
-          treemacs-silent-filewatch              nil
-          treemacs-silent-refresh                t
-          treemacs-sorting                       'alphabetic-asc
-          treemacs-space-between-root-nodes      t
-          treemacs-tag-follow-cleanup            t
-          treemacs-tag-follow-delay              1.5
-          treemacs-user-mode-line-format         nil
-          treemacs-width                         50)
-
-  ;; The default width and height of the icons is 22 pixels. If you are
-  ;; using a Hi-DPI display, uncomment this to double the icon size.
-  ;;(treemacs-resize-icons 44)
-
-    (treemacs-follow-mode t)
-    (treemacs-filewatch-mode t)
-    (treemacs-fringe-indicator-mode t)
-    (pcase (cons (not (null (executable-find "git")))
-               (not (null treemacs-python-executable)))
-      (`(t . t)
-        (treemacs-git-mode 'deferred))
-      (`(t . _)
-        (treemacs-git-mode 'simple))))
+(require 'dimmer)
+(setq dimmer-fraction 0.2)
+(dimmer-configure-org)
+(dimmer-configure-magit)
+(dimmer-configure-hydra)
+#+END_SRC
+*** find file in project
+Bind =C-x p f= to =find-file-in-project=.
+#+BEGIN_SRC emacs-lisp
+(use-package find-file-in-project
   :bind
-    (:map global-map
-        ("M-0"       . treemacs-select-window)
-        ("C-x t 1"   . treemacs-delete-other-windows)
-        ("C-x t t"   . treemacs)
-        ("C-x t B"   . treemacs-bookmark)
-        ("C-x t C-t" . treemacs-find-file)
-        ("C-x t M-t" . treemacs-find-tag)))
-
-(use-package treemacs-projectile
-  :after treemacs projectile
-  :ensure t)
-
-(use-package treemacs-icons-dired
-  :after treemacs dired
-  :ensure t
-  :config (treemacs-icons-dired-mode))
-
-(use-package treemacs-magit
-  :after treemacs magit
-  :ensure t)
-
-(use-package treemacs-persp
-  :after treemacs persp-mode
-  :ensure t
-  :config (treemacs-set-scope-type 'Perspectives))
-(treemacs)
+  (:map global-map
+    ("C-x p f" . find-file-in-project)))
 #+END_SRC
 *** flycheck
 Make flycheck understand newer eslint.
@@ -349,39 +281,93 @@ Use the locally installed eslint/tslint.
 (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
 (add-hook 'flycheck-mode-hook #'my/use-tslint-from-node-modules)
 #+END_SRC
-*** find file in project
-Bind =C-x p f= to =find-file-in-project=.
+*** mode mappings
+Set up mode mappings.
 #+BEGIN_SRC emacs-lisp
-(use-package find-file-in-project
+(add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
+(add-to-list 'auto-mode-alist '("\\.http" . restclient-mode))
+#+END_SRC
+*** origami
+Define keys.
+#+BEGIN_SRC emacs-lisp
+(require 'origami)
+(define-key origami-mode-map (kbd "C-x #") 'origami-toggle-node)
+#+END_SRC
+*** treemacs
+Less indentation. Never other window.
+#+BEGIN_SRC emacs-lisp
+(use-package treemacs
+  :ensure t
+  :defer t
+  :init
+  (with-eval-after-load 'winum
+    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  :config
+  (progn
+    (setq treemacs-indentation                   1
+          treemacs-indentation-string            " ⁝ "
+          treemacs-is-never-other-window         t
+          treemacs-no-delete-other-windows       nil
+          treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory))
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (treemacs-fringe-indicator-mode t)
+    (pcase (cons (not (null (executable-find "git")))
+               (not (null treemacs-python-executable)))
+      (`(t . t)
+        (treemacs-git-mode 'deferred))
+      (`(t . _)
+        (treemacs-git-mode 'extended))))
   :bind
-  (:map global-map
-    ("C-x p f" . find-file-in-project)))
-#+END_SRC
-*** dimmer
-Make dimmed frames a bit dimmer.
-#+BEGIN_SRC emacs-lisp
-(require 'dimmer)
-(setq dimmer-fraction 0.2)
-(dimmer-configure-org)
-(dimmer-configure-magit)
-(dimmer-configure-hydra)
-#+END_SRC
-*** autocomplete
-Use default configuration.
-#+BEGIN_SRC emacs-lisp
-(ac-config-default)
+    (:map global-map
+        ("M-0"       . treemacs-select-window)
+        ("C-x t 1"   . treemacs-delete-other-windows)
+        ("C-x t t"   . treemacs)
+        ("C-x t B"   . treemacs-bookmark)
+        ("C-x t C-t" . treemacs-find-file)
+        ("C-x t M-t" . treemacs-find-tag)))
+
+(use-package treemacs-projectile
+  :after treemacs projectile
+  :ensure t)
+
+(use-package treemacs-icons-dired
+  :after treemacs dired
+  :ensure t
+  :config (treemacs-icons-dired-mode))
+
+(use-package treemacs-magit
+  :after treemacs magit
+  :ensure t)
+
+(use-package treemacs-persp
+  :after treemacs persp-mode
+  :ensure t
+  :config (treemacs-set-scope-type 'Perspectives))
+(treemacs)
 #+END_SRC
 ** modes
 Configure modes.
 *** js2 mode
- Enable Flycheck and disable internal checker.
+Enable Flycheck and disable internal checker. I use this mode to test some minor modes like origami.
  #+BEGIN_SRC emacs-lisp
- (setq-default js2-show-parse-errors nil)
- (setq-default js2-strict-missing-semi-warning nil)
- (add-hook 'js2-mode-hook (lambda () (add-node-modules-path)))
- (add-hook 'js2-mode-hook (lambda () (flycheck-mode 1)))
- (add-hook 'js2-mode-hook 'enable-tabs)
+(setq-default js2-show-parse-errors nil)
+(setq-default js2-strict-missing-semi-warning nil)
+(add-hook 'js2-mode-hook (lambda () (add-node-modules-path)))
+(add-hook 'js2-mode-hook (lambda () (flycheck-mode 1)))
+(add-hook 'js2-mode-hook 'enable-tabs)
+(add-hook 'js2-mode-hook 'rainbow-delimiters-mode)
+(add-hook 'js2-mode-hook 'focus-mode)
+(add-hook 'js2-mode-hook 'origami-mode)
  #+END_SRC
+*** lsp
+Use lsp in web mode (for vetur).
+#+BEGIN_SRC emacs-lisp
+(add-hook 'web-mode-hook 'lsp)
+(add-hook 'web-mode-hook 'flycheck-mode)
+#+END_SRC
 *** org mode
 **** Make org-mode look nicer
 Use bullets mode and make the ellipses bendy arrows.
@@ -394,14 +380,13 @@ When a =TODO= is =DONE= log a note.
 #+BEGIN_SRC emacs-lisp
 (setq org-log-done 'note)
 #+END_SRC
-*** web mode
-Web mode uses flycheck with tslint enabled.
+*** rjsx mode
+Enable Flycheck.
 #+BEGIN_SRC emacs-lisp
-(add-hook 'web-mode-hook (lambda () (flycheck-mode 1)))
-(with-eval-after-load 'flycheck
-  (flycheck-add-mode 'typescript-tslint 'web-mode)
-  (flycheck-add-mode 'css-csslint 'web-mode))
-(add-hook 'web-mode-hook 'enable-tabs)
+(add-hook 'rjsx-mode-hook (lambda () (add-node-modules-path)))
+(add-hook 'rjsx-mode-hook (lambda () (flycheck-mode 1)))
+(add-hook 'rjsx-mode-hook 'enable-tabs)
+(add-hook 'rjsx-mode-hook (lambda () (setq-local indent-line-function 'js-jsx-indent-line)))
 #+END_SRC
 *** typescript mode
 Enable flycheck and sane tabs.
@@ -409,17 +394,12 @@ Enable flycheck and sane tabs.
 (add-hook 'typescript-mode-hook (lambda () (add-node-modules-path)))
 (add-hook 'typescript-mode-hook (lambda () (flycheck-mode 1)))
 (add-hook 'typescript-mode-hook 'enable-tabs)
+(add-hook 'typescript-mode-hook (lambda () (focus-mode)))
 #+END_SRC
-*** lsp
-**** use lsp in web-mode
-Use lsp in web mode (for vetur).
+*** web mode
+Web mode uses flycheck with tslint enabled.
 #+BEGIN_SRC emacs-lisp
-(add-hook 'web-mode-hook 'lsp)
-#+END_SRC
-**** disable snippets
-Not sure this is necessary
-#+BEGIN_SRC emacs-lisp
-(setq lsp-enable-snippet nil)
+(add-hook 'web-mode-hook 'enable-tabs)
 #+END_SRC
 *** zoom mode
 Use the golden ratio.
