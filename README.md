@@ -9,14 +9,14 @@ Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master
 
 # Table of Contents
 
-1.  [emacs config](#orgd391a44)
-    1.  [before init](#org30b5154)
-    2.  [global](#org3163ef2)
-    3.  [specific](#org2f42aeb)
-    4.  [modes](#org80fe783)
+1.  [emacs config](#org4d7df62)
+    1.  [before init](#orgc5d4274)
+    2.  [global](#org7a0a51f)
+    3.  [specific](#orgde25afd)
+    4.  [modes](#orgcdcee99)
 
 
-<a id="org30b5154"></a>
+<a id="orgc5d4274"></a>
 
 ## before init
 
@@ -74,14 +74,14 @@ Install packages (if they're missing).
          ack
          add-node-modules-path
          ample-theme
-         ;; angular-mode
-         ;; angular-snippets
+         angular-mode
          auto-complete
          browse-kill-ring
          company
          company-lsp
          company-restclient
          company-web
+         doom-themes
          diff-hl
          dimmer
          dumb-jump
@@ -123,7 +123,7 @@ Install packages (if they're missing).
        (init--install-packages)))
 
 
-<a id="org3163ef2"></a>
+<a id="org7a0a51f"></a>
 
 ## global
 
@@ -211,7 +211,7 @@ Change up the key bindings a bit.
 
 ### theme
 
-Use ample flat.
+Just pick a theme.
 
     (load-theme 'doom-spacegrey t)
 
@@ -257,7 +257,7 @@ Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the cu
     )
 
 
-<a id="org2f42aeb"></a>
+<a id="orgde25afd"></a>
 
 ## specific
 
@@ -411,7 +411,7 @@ Less indentation. Never other window.
     (treemacs)
 
 
-<a id="org80fe783"></a>
+<a id="orgcdcee99"></a>
 
 ## modes
 
