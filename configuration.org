@@ -9,7 +9,7 @@ Check out [[https://gitlab.com/Walheimat/emacs-config/-/blob/master/.emacs][my i
 ** before init
 Set up emacs, package manager and packages.
 *** general
-No splash. Use separate file for customizations.
+No splash. Use separate file for customizations (so we don't clutter up our init file).
 #+BEGIN_SRC emacs-lisp
 (package-initialize)
 (setq inhibit-startup-message t)
@@ -51,24 +51,28 @@ Install packages (if they're missing).
 (defun init--install-packages ()
   (packages-install
    '(
+     ace-window
      ack
      add-node-modules-path
      ample-theme
      angular-mode
-     auto-complete
+     beacon
      browse-kill-ring
+     color-identifiers-mode
      company
      company-lsp
      company-restclient
      company-web
-     doom-themes
      diff-hl
      dimmer
+     doom-themes
+     drag-stuff
      dumb-jump
      evil-nerd-commenter
      find-file-in-project
      flycheck
      focus
+     git-timemachine
      hydra
      ivy
      js2-mode
@@ -79,6 +83,7 @@ Install packages (if they're missing).
      org-bullets
      origami
      perspective
+     posframe
      prettier-js
      projectile
      rainbow-delimiters
@@ -103,6 +108,10 @@ Install packages (if they're missing).
    (init--install-packages)))
 #+END_SRC
 
+*** site-lisp
+Keeping this empty for now ...
+#+BEGIN_SRC emacs-lisp
+#+END_SRC
 ** global
 Configure global settings.
 *** save place
@@ -111,7 +120,7 @@ Save places, and do so in a file.
 (setq save-place-file (expand-file-name ".places" user-emacs-directory))
 #+END_SRC
 *** autosave and backups
-Store backups in backups folder. Store autosaves in temp folder.
+Store backups in backups folder. Store autosaves in temp folder. We don't want this to mess with git.
 #+BEGIN_SRC emacs-lisp
 (setq backup-directory-alist
   `(("." . ,(expand-file-name
@@ -119,12 +128,41 @@ Store backups in backups folder. Store autosaves in temp folder.
 (setq auto-save-file-name-transforms
   `((".*" ,temporary-file-directory t)))
 #+END_SRC
+*** global modes
+Turn on a lot of useful (and prettifying) modes.
+#+BEGIN_SRC emacs-lisp
+(global-hl-line-mode)
+(add-hook 'after-init-hook 'global-company-mode)
+(global-display-line-numbers-mode)
+(ivy-mode 1)
+(global-prettify-symbols-mode +1)
+(global-diff-hl-mode)
+(dimmer-mode t)
+(global-whitespace-mode)
+(save-place-mode 1)
+(dumb-jump-mode)
+(which-key-mode)
+(tool-bar-mode -1)
+(menu-bar-mode -1)
+(zoom-mode 1)
+(beacon-mode 1)
+(global-font-lock-mode 1)
+#+END_SRC
 *** reasonable settings
 Insertion of text should delete region. Bracket pairs should be highlighted. Window (or frame ...) should start maximized.
 #+BEGIN_SRC emacs-lisp
+;; show right away please
+(setq echo-keystrokes 0.1)
 (delete-selection-mode 1)
 (show-paren-mode 1)
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
+(defalias 'yes-or-no-p 'y-or-n-p)
+(defun my-font-lock-hook ()
+  "Slantend and enchanted."
+  (set-face-attribute 'font-lock-comment-face nil :slant 'italic)
+  (set-face-attribute 'font-lock-keyword-face nil :weight 'bold)
+)
+(add-hook 'font-lock-mode-hook 'my-font-lock-hook)
 #+END_SRC
 *** tabs all the way
 Tabs are 4 spaces wide. No electric indent. Pipe char to show indentation. Commands to enable/disable sane tabs.
@@ -153,7 +191,7 @@ Tabs are 4 spaces wide. No electric indent. Pipe char to show indentation. Comma
 (setq whitespace-display-mappings
   '((tab-mark 9 [124 9] [92 9]))) ; 124 is the ascii ID for '\|'
 #+END_SRC
-*** key bindings
+*** key bindsings
 Change up the key bindings a bit.
 + =C-x g= opens magit status.
 + =M-x= opens smex.
@@ -162,6 +200,11 @@ Change up the key bindings a bit.
 + =s-a= to use ack. _Requires ack_!
 + =C-x r q= to (really) quit.
 + =C-x C-c= to open this config file.
++ =M-o= to go to "other" window.
++ =C-x j= to dumb-jump.
++ =C-x t m= to open timemachine.
++ =s-s= turn on flyspell prgo mode.
++ =C-x p f= find file in project.
 
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "C-x g") 'magit-status)
@@ -173,29 +216,16 @@ Change up the key bindings a bit.
 (global-set-key
   (kbd "C-x C-c")
   (lambda () (interactive)(switch-to-buffer (find-file-noselect "~/.emacs.d/configuration.org"))))
+(global-set-key (kbd "M-o") 'ace-window)
+(global-set-key (kbd "C-x j") 'dumb-jump-go)
+(global-set-key (kbd "C-x t m") 'git-timemachine-toggle)
+(global-set-key (kbd "s-s") 'flyspell-prog-mode)
+(global-set-key (kbd "C-x p f") 'find-file-in-project)
 #+END_SRC
 *** theme
-Just pick a theme.
+Just pick a theme. This one is based on Jon Blow's.
 #+BEGIN_SRC emacs-lisp
-(load-theme 'doom-spacegrey t)
-#+END_SRC
-*** global modes
-Turn on a lot of useful (and prettifying) modes.
-#+BEGIN_SRC emacs-lisp
-(global-hl-line-mode)
-(add-hook 'after-init-hook 'global-company-mode)
-(global-display-line-numbers-mode)
-(ivy-mode 1)
-(global-prettify-symbols-mode +1)
-(global-diff-hl-mode)
-(dimmer-mode t)
-(global-whitespace-mode)
-(save-place-mode 1)
-(dumb-jump-mode)
-(which-key-mode)
-(tool-bar-mode -1)
-(menu-bar-mode -1)
-(zoom-mode 1)
+(load-theme 'naysayer t)
 #+END_SRC
 *** font size
 Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the custom arg =-bigger=, the default font size is 14 (instead of 10).
@@ -217,28 +247,22 @@ Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the cu
 )
 #+END_SRC
 ** specific
- Configure packages.
-*** autocomplete
-Use default configuration.
-#+BEGIN_SRC emacs-lisp
-(ac-config-default)
-#+END_SRC
+Configure packages.
 *** dimmer
 Make dimmed frames a bit dimmer.
 #+BEGIN_SRC emacs-lisp
 (require 'dimmer)
-(setq dimmer-fraction 0.2)
+(setq dimmer-fraction 0.3)
 (dimmer-configure-org)
 (dimmer-configure-magit)
 (dimmer-configure-hydra)
+(setq dimmer-adjustmentmode :both)
 #+END_SRC
-*** find file in project
-Bind =C-x p f= to =find-file-in-project=.
+*** drag stuff
+Use the default key bindings.
 #+BEGIN_SRC emacs-lisp
-(use-package find-file-in-project
-  :bind
-  (:map global-map
-    ("C-x p f" . find-file-in-project)))
+(require 'drag-stuff)
+(drag-stuff-define-keys)
 #+END_SRC
 *** flycheck
 Make flycheck understand newer eslint.
@@ -281,6 +305,11 @@ Use the locally installed eslint/tslint.
 (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
 (add-hook 'flycheck-mode-hook #'my/use-tslint-from-node-modules)
 #+END_SRC
+*** flyspell
+There could be too many messages.
+#+BEGIN_SRC emacs-lisp
+(setq flyspell-issue-message-flag nil)
+#+END_SRC
 *** mode mappings
 Set up mode mappings.
 #+BEGIN_SRC emacs-lisp
@@ -309,8 +338,8 @@ Less indentation. Never other window.
     (setq treemacs-indentation                   1
           treemacs-indentation-string            " ⁝ "
           treemacs-is-never-other-window         t
-          treemacs-no-delete-other-windows       nil
-          treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory))
+          treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+          treemacs-show-hidden-files             t)
     (treemacs-follow-mode t)
     (treemacs-filewatch-mode t)
     (treemacs-fringe-indicator-mode t)
@@ -350,24 +379,33 @@ Less indentation. Never other window.
 #+END_SRC
 ** modes
 Configure modes.
+*** color identifiers mode
+When color identifiers mode is active
+ #+BEGIN_SRC emacs-lisp
+(add-hook 'color-identifiers-mode-hook 'color-identifiers:refresh)
+ #+END_SRC
 *** js2 mode
 Enable Flycheck and disable internal checker. I use this mode to test some minor modes like origami.
  #+BEGIN_SRC emacs-lisp
 (setq-default js2-show-parse-errors nil)
 (setq-default js2-strict-missing-semi-warning nil)
-(add-hook 'js2-mode-hook (lambda () (add-node-modules-path)))
-(add-hook 'js2-mode-hook (lambda () (flycheck-mode 1)))
-(add-hook 'js2-mode-hook 'enable-tabs)
-(add-hook 'js2-mode-hook 'rainbow-delimiters-mode)
-(add-hook 'js2-mode-hook 'focus-mode)
-(add-hook 'js2-mode-hook 'origami-mode)
+
+(defun my-js2-mode-hook ()
+  "Hooks for js2 mode."
+  (enable-tabs)
+  (add-node-modules-path)
+  (flycheck-mode 1)
+  (rainbow-delimiters-mode)
+  (origami-mode)
+  (drag-stuff-mode)
+  (color-identifiers-mode)
+  (add-hook 'local-write-file-hooks
+    (lambda ()
+      (delete-trailing-whitespace)
+        nil))
+)
+(add-hook 'js2-mode-hook 'my-js2-mode-hook)
  #+END_SRC
-*** lsp
-Use lsp in web mode (for vetur).
-#+BEGIN_SRC emacs-lisp
-(add-hook 'web-mode-hook 'lsp)
-(add-hook 'web-mode-hook 'flycheck-mode)
-#+END_SRC
 *** org mode
 **** Make org-mode look nicer
 Use bullets mode and make the ellipses bendy arrows.
@@ -381,25 +419,53 @@ When a =TODO= is =DONE= log a note.
 (setq org-log-done 'note)
 #+END_SRC
 *** rjsx mode
-Enable Flycheck.
+Pretty much like js2.
 #+BEGIN_SRC emacs-lisp
-(add-hook 'rjsx-mode-hook (lambda () (add-node-modules-path)))
-(add-hook 'rjsx-mode-hook (lambda () (flycheck-mode 1)))
-(add-hook 'rjsx-mode-hook 'enable-tabs)
-(add-hook 'rjsx-mode-hook (lambda () (setq-local indent-line-function 'js-jsx-indent-line)))
+(defun my-rjsx-mode-hook ()
+  "Hooks for rjsx mode."
+  (add-node-modules-path)
+  (enable-tabs)
+  (flycheck-mode)
+  (lambda () (setq-local indent-line-function 'js-jsx-indent-line))
+  (add-hook 'local-write-file-hooks
+    (lambda ()
+      (delete-trailing-whitespace)
+        nil))
+)
+(add-hook 'rjsx-mode-hook 'my-rjsx-mode-hook)
 #+END_SRC
 *** typescript mode
-Enable flycheck and sane tabs.
+Enable lsp, flycheck and sane tabs. And some other stuff.
 #+BEGIN_SRC emacs-lisp
-(add-hook 'typescript-mode-hook (lambda () (add-node-modules-path)))
-(add-hook 'typescript-mode-hook (lambda () (flycheck-mode 1)))
-(add-hook 'typescript-mode-hook 'enable-tabs)
-(add-hook 'typescript-mode-hook (lambda () (focus-mode)))
+(defun my-typescript-mode-hook ()
+  "Hooks for typescript mode."
+  (enable-tabs)
+  (add-node-modules-path)
+  (flycheck-mode 1)
+  (lsp)
+  (rainbow-delimiters-mode)
+  (add-hook 'local-write-file-hooks
+    (lambda ()
+      (delete-trailing-whitespace)
+        nil))
+)
+(add-hook 'typescript-mode-hook 'my-typescsript-mode-hook)
 #+END_SRC
 *** web mode
-Web mode uses flycheck with tslint enabled.
+Web mode uses flycheck with lsp enabled.
 #+BEGIN_SRC emacs-lisp
-(add-hook 'web-mode-hook 'enable-tabs)
+(defun my-web-mode-hook ()
+  "Hooks for web mode."
+  (enable-tabs)
+  (add-node-modules-path)
+  (lsp)
+  (flycheck-mode)
+  (add-hook 'local-write-file-hooks
+    (lambda ()
+      (delete-trailing-whitespace)
+        nil))
+)
+(add-hook 'web-mode-hook 'my-web-mode-hook)
 #+END_SRC
 *** zoom mode
 Use the golden ratio.
