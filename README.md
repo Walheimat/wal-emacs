@@ -9,14 +9,14 @@ Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master
 
 # Table of Contents
 
-1.  [emacs config](#orgd47c936)
-    1.  [before init](#orga597f21)
-    2.  [global](#orgd5b5e91)
-    3.  [specific](#orga213b34)
-    4.  [modes](#org34acadb)
+1.  [emacs config](#org82d5d7a)
+    1.  [before init](#org7af1f91)
+    2.  [global](#orgec985a4)
+    3.  [specific](#orgba65135)
+    4.  [modes](#org0938a8d)
 
 
-<a id="orga597f21"></a>
+<a id="org7af1f91"></a>
 
 ## before init
 
@@ -132,7 +132,7 @@ Install packages (if they're missing).
 Keeping this empty for now &#x2026;
 
 
-<a id="orgd5b5e91"></a>
+<a id="orgec985a4"></a>
 
 ## global
 
@@ -289,7 +289,7 @@ Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the cu
     )
 
 
-<a id="orga213b34"></a>
+<a id="orgba65135"></a>
 
 ## specific
 
@@ -321,6 +321,13 @@ Use the default key bindings.
 
     (require 'drag-stuff)
     (drag-stuff-define-keys)
+
+
+### dumb-jump
+
+Use ivy. We have ivy.
+
+    (setq dumb-jump-selector 'ivy)
 
 
 ### flycheck
@@ -449,7 +456,7 @@ Less indentation. Never other window.
     (treemacs)
 
 
-<a id="org34acadb"></a>
+<a id="org0938a8d"></a>
 
 ## modes
 
