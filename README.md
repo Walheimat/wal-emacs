@@ -9,14 +9,14 @@ Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master
 
 # Table of Contents
 
-1.  [emacs config](#orga0e1eee)
-    1.  [before init](#orgb5fde25)
-    2.  [global](#orgaf03dec)
-    3.  [specific](#orgb2958a2)
-    4.  [modes](#org492c4aa)
+1.  [emacs config](#orgd47c936)
+    1.  [before init](#orga597f21)
+    2.  [global](#orgd5b5e91)
+    3.  [specific](#orga213b34)
+    4.  [modes](#org34acadb)
 
 
-<a id="orgb5fde25"></a>
+<a id="orga597f21"></a>
 
 ## before init
 
@@ -132,7 +132,7 @@ Install packages (if they're missing).
 Keeping this empty for now &#x2026;
 
 
-<a id="orgaf03dec"></a>
+<a id="orgd5b5e91"></a>
 
 ## global
 
@@ -243,6 +243,8 @@ Change up the key bindings a bit.
 -   `s-s` turn on flyspell prog mode.
 -   `C-x p f` find file in project.
 
+Do we really need a line here?
+
     (global-set-key (kbd "C-x g") 'magit-status)
     (global-set-key (kbd "M-x") 'smex)
     (global-set-key (kbd "C-x C-y") 'browse-kill-ring)
@@ -287,7 +289,7 @@ Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the cu
     )
 
 
-<a id="orgb2958a2"></a>
+<a id="orga213b34"></a>
 
 ## specific
 
@@ -447,7 +449,7 @@ Less indentation. Never other window.
     (treemacs)
 
 
-<a id="org492c4aa"></a>
+<a id="org34acadb"></a>
 
 ## modes
 
