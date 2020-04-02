@@ -9,14 +9,14 @@ Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master
 
 # Table of Contents
 
-1.  [emacs config](#org797c17d)
-    1.  [before init](#orge7eee14)
-    2.  [global](#org49d54c6)
-    3.  [specific](#orga31caed)
-    4.  [modes](#orgf459235)
+1.  [emacs config](#orga0e1eee)
+    1.  [before init](#orgb5fde25)
+    2.  [global](#orgaf03dec)
+    3.  [specific](#orgb2958a2)
+    4.  [modes](#org492c4aa)
 
 
-<a id="orge7eee14"></a>
+<a id="orgb5fde25"></a>
 
 ## before init
 
@@ -78,7 +78,6 @@ Install packages (if they're missing).
          angular-mode
          beacon
          browse-kill-ring
-         color-identifiers-mode
          company
          company-lsp
          company-restclient
@@ -133,7 +132,7 @@ Install packages (if they're missing).
 Keeping this empty for now &#x2026;
 
 
-<a id="org49d54c6"></a>
+<a id="orgaf03dec"></a>
 
 ## global
 
@@ -227,7 +226,7 @@ Tabs are 4 spaces wide. No electric indent. Pipe char to show indentation. Comma
       '((tab-mark 9 [124 9] [92 9]))) ; 124 is the ascii ID for '\|'
 
 
-### key bindsings
+### key bindings
 
 Change up the key bindings a bit.
 
@@ -241,7 +240,7 @@ Change up the key bindings a bit.
 -   `M-o` to go to "other" window.
 -   `C-x j` to dumb-jump.
 -   `C-x t m` to open timemachine.
--   `s-s` turn on flyspell prgo mode.
+-   `s-s` turn on flyspell prog mode.
 -   `C-x p f` find file in project.
 
     (global-set-key (kbd "C-x g") 'magit-status)
@@ -262,7 +261,7 @@ Change up the key bindings a bit.
 
 ### theme
 
-Just pick a theme. This one is based on Jon Blow's.
+Just pick a theme. This one is based on Jon Blow's and pretty cool.
 
     (load-theme 'naysayer t)
 
@@ -288,7 +287,7 @@ Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the cu
     )
 
 
-<a id="orga31caed"></a>
+<a id="orgb2958a2"></a>
 
 ## specific
 
@@ -448,18 +447,11 @@ Less indentation. Never other window.
     (treemacs)
 
 
-<a id="orgf459235"></a>
+<a id="org492c4aa"></a>
 
 ## modes
 
 Configure modes.
-
-
-### color identifiers mode
-
-When color identifiers mode is active
-
-    (add-hook 'color-identifiers-mode-hook 'color-identifiers:refresh)
 
 
 ### js2 mode
@@ -477,7 +469,6 @@ Enable Flycheck and disable internal checker. I use this mode to test some minor
       (rainbow-delimiters-mode)
       (origami-mode)
       (drag-stuff-mode)
-      (color-identifiers-mode)
       (add-hook 'local-write-file-hooks
         (lambda ()
           (delete-trailing-whitespace)
