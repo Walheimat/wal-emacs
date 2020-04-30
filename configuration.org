@@ -67,6 +67,8 @@ Install packages (if they're missing).
      doom-themes
      drag-stuff
      dumb-jump
+     esh-autosuggest
+     eshell-prompt-extras
      evil-nerd-commenter
      find-file-in-project
      flycheck
@@ -247,6 +249,20 @@ Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the cu
   (set-default-font (font-candidate '"mononoki 10" "Fira Code 10" "Liberation Mono 10" "DejaVu Sans Mono 10"))
 )
 #+END_SRC
+*** fun stuff
+Zone out after a minute.
+#+BEGIN_SRC emacs-lisp
+(require 'zone)
+(zone-when-idle 180)
+#+END_SRC
+*** func stuff
+Add some functions.
+#+BEGIN_SRC emacs-lisp
+(defun kill-other-buffers ()
+  "Kill all other buffers."
+  (interactive)
+  (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
+#+END_SRC
 ** specific
 Configure packages.
 *** diff-hl
@@ -274,6 +290,25 @@ Use the default key bindings.
 Use ivy. We have ivy.
 #+BEGIN_SRC emacs-lisp
 (setq dumb-jump-selector 'ivy)
+#+END_SRC
+*** esh-autosuggest
+#+BEGIN_SRC emacs-lisp
+(defun setup-eshell-ivy-completion ()
+  (define-key eshell-mode-map [remap eshell-pcomplete] 'completion-at-point))
+
+(defun my-eshell-mode-hook ()
+  "Hooks for eshell mode."
+  (esh-autosuggest-mode)
+  (setup-eshell-ivy-completion))
+
+(add-hook 'eshell-mode-hook 'my-eshell-mode-hook)
+#+END_SRC
+*** eshell-prompt-extras
+#+BEGIN_SRC emacs-lisp
+(with-eval-after-load "esh-opt"
+  (autoload 'epe-theme-lambda "eshell-prompt-extras")
+  (setq eshell-highlight-prompt nil
+        eshell-prompt-function 'epe-theme-lambda))
 #+END_SRC
 *** flycheck
 Make flycheck understand newer eslint.
@@ -315,6 +350,13 @@ Use the locally installed eslint/tslint.
 
 (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
 (add-hook 'flycheck-mode-hook #'my/use-tslint-from-node-modules)
+#+END_SRC
+**** checker options
+Longer idle delay, only after idle and save. For some reason, this doesn't work?
+#+BEGIN_SRC emacs-lisp
+;;(setq flycheck-idle-change-delay 2.5)
+;;(setq flycheck-check-syntax-automatically '(mode-enabled save))
+;;(flycheck-add-next-checker 'lsp 'typescript-tslint)
 #+END_SRC
 *** flyspell
 There could be too many messages.
@@ -459,9 +501,13 @@ Enable lsp, flycheck and sane tabs. And some other stuff.
 *** web mode
 Web mode uses flycheck with lsp enabled.
 #+BEGIN_SRC emacs-lisp
+(require 'web-mode)
+(setq web-mode-comment-style 2)
+(add-to-list 'web-mode-comment-formats '("vue" . "//"))
 (defun my-web-mode-hook ()
   "Hooks for web mode."
   (enable-tabs)
+  (web-mode-use-tabs)
   (add-node-modules-path)
   (lsp)
   (flycheck-mode)

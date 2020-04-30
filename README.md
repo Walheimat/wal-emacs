@@ -9,14 +9,14 @@ Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master
 
 # Table of Contents
 
-1.  [emacs config](#org82d5d7a)
-    1.  [before init](#org7af1f91)
-    2.  [global](#orgec985a4)
-    3.  [specific](#orgba65135)
-    4.  [modes](#org0938a8d)
+1.  [emacs config](#orga47b482)
+    1.  [before init](#orgae35fc2)
+    2.  [global](#org3777f3f)
+    3.  [specific](#orgc7c2619)
+    4.  [modes](#orgdd7b597)
 
 
-<a id="org7af1f91"></a>
+<a id="orgae35fc2"></a>
 
 ## before init
 
@@ -87,6 +87,8 @@ Install packages (if they're missing).
          doom-themes
          drag-stuff
          dumb-jump
+         esh-autosuggest
+         eshell-prompt-extras
          evil-nerd-commenter
          find-file-in-project
          flycheck
@@ -132,7 +134,7 @@ Install packages (if they're missing).
 Keeping this empty for now &#x2026;
 
 
-<a id="orgec985a4"></a>
+<a id="org3777f3f"></a>
 
 ## global
 
@@ -289,7 +291,25 @@ Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the cu
     )
 
 
-<a id="orgba65135"></a>
+### fun stuff
+
+Zone out after a minute.
+
+    (require 'zone)
+    (zone-when-idle 180)
+
+
+### func stuff
+
+Add some functions.
+
+    (defun kill-other-buffers ()
+      "Kill all other buffers."
+      (interactive)
+      (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
+
+
+<a id="orgc7c2619"></a>
 
 ## specific
 
@@ -328,6 +348,27 @@ Use the default key bindings.
 Use ivy. We have ivy.
 
     (setq dumb-jump-selector 'ivy)
+
+
+### esh-autosuggest
+
+    (defun setup-eshell-ivy-completion ()
+      (define-key eshell-mode-map [remap eshell-pcomplete] 'completion-at-point))
+    
+    (defun my-eshell-mode-hook ()
+      "Hooks for eshell mode."
+      (esh-autosuggest-mode)
+      (setup-eshell-ivy-completion))
+    
+    (add-hook 'eshell-mode-hook 'my-eshell-mode-hook)
+
+
+### eshell-prompt-extras
+
+    (with-eval-after-load "esh-opt"
+      (autoload 'epe-theme-lambda "eshell-prompt-extras")
+      (setq eshell-highlight-prompt nil
+    	eshell-prompt-function 'epe-theme-lambda))
 
 
 ### flycheck
@@ -374,6 +415,14 @@ Make flycheck understand newer eslint.
         
         (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
         (add-hook 'flycheck-mode-hook #'my/use-tslint-from-node-modules)
+
+3.  checker options
+
+    Longer idle delay, only after idle and save. For some reason, this doesn't work?
+    
+        ;;(setq flycheck-idle-change-delay 2.5)
+        ;;(setq flycheck-check-syntax-automatically '(mode-enabled save))
+        ;;(flycheck-add-next-checker 'lsp 'typescript-tslint)
 
 
 ### flyspell
@@ -456,7 +505,7 @@ Less indentation. Never other window.
     (treemacs)
 
 
-<a id="org0938a8d"></a>
+<a id="orgdd7b597"></a>
 
 ## modes
 
@@ -543,9 +592,13 @@ Enable lsp, flycheck and sane tabs. And some other stuff.
 
 Web mode uses flycheck with lsp enabled.
 
+    (require 'web-mode)
+    (setq web-mode-comment-style 2)
+    (add-to-list 'web-mode-comment-formats '("vue" . "//"))
     (defun my-web-mode-hook ()
       "Hooks for web mode."
       (enable-tabs)
+      (web-mode-use-tabs)
       (add-node-modules-path)
       (lsp)
       (flycheck-mode)
