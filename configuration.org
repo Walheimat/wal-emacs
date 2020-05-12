@@ -13,6 +13,7 @@ No splash. Use separate file for customizations (so we don't clutter up our init
 #+BEGIN_SRC emacs-lisp
 (package-initialize)
 (setq inhibit-startup-message t)
+(setq initial-scratch-message nil)
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (load custom-file)
 #+END_SRC
@@ -132,6 +133,8 @@ Store backups in backups folder. Store autosaves in temp folder. We don't want t
 *** global modes
 Turn on a lot of useful (and prettifying) modes.
 #+BEGIN_SRC emacs-lisp
+(show-paren-mode 1)
+(global-auto-revert-mode t)
 (global-hl-line-mode)
 (add-hook 'after-init-hook 'global-company-mode)
 (global-display-line-numbers-mode)
@@ -153,9 +156,12 @@ Turn on a lot of useful (and prettifying) modes.
 Insertion of text should delete region. Bracket pairs should be highlighted. Window (or frame ...) should start maximized.
 #+BEGIN_SRC emacs-lisp
 ;; show right away please
+(setq mouse-yank-at-point t)
+(setq show-paren-delay 0.0)
+(setq gc-cons-threshold 20000000)
+(setq sentence-end-double-space nil)
 (setq echo-keystrokes 0.1)
 (delete-selection-mode 1)
-(show-paren-mode 1)
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 (defalias 'yes-or-no-p 'y-or-n-p)
 (defun my-font-lock-hook ()
@@ -366,6 +372,7 @@ Set up mode mappings.
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+(add-to-list 'auto-mode-alist '("\\.jsx\\'" . rjsx-mode))
 (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
 (add-to-list 'auto-mode-alist '("\\.http" . restclient-mode))
 #+END_SRC

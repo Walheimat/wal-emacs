@@ -9,14 +9,14 @@ Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master
 
 # Table of Contents
 
-1.  [emacs config](#org1fff3f9)
-    1.  [before init](#org122b5a6)
-    2.  [global](#org2127ded)
-    3.  [specific](#org3d9db28)
-    4.  [modes](#orga09a453)
+1.  [emacs config](#orgbfb43f1)
+    1.  [before init](#orgd7c11e0)
+    2.  [global](#org3c3f368)
+    3.  [specific](#orgff49d7c)
+    4.  [modes](#orgcd9af99)
 
 
-<a id="org122b5a6"></a>
+<a id="orgd7c11e0"></a>
 
 ## before init
 
@@ -29,6 +29,7 @@ No splash. Use separate file for customizations (so we don't clutter up our init
 
     (package-initialize)
     (setq inhibit-startup-message t)
+    (setq initial-scratch-message nil)
     (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
     (load custom-file)
 
@@ -134,7 +135,7 @@ Install packages (if they're missing).
 Keeping this empty for now &#x2026;
 
 
-<a id="org2127ded"></a>
+<a id="org3c3f368"></a>
 
 ## global
 
@@ -163,6 +164,8 @@ Store backups in backups folder. Store autosaves in temp folder. We don't want t
 
 Turn on a lot of useful (and prettifying) modes.
 
+    (show-paren-mode 1)
+    (global-auto-revert-mode t)
     (global-hl-line-mode)
     (add-hook 'after-init-hook 'global-company-mode)
     (global-display-line-numbers-mode)
@@ -186,9 +189,12 @@ Turn on a lot of useful (and prettifying) modes.
 Insertion of text should delete region. Bracket pairs should be highlighted. Window (or frame &#x2026;) should start maximized.
 
     ;; show right away please
+    (setq mouse-yank-at-point t)
+    (setq show-paren-delay 0.0)
+    (setq gc-cons-threshold 20000000)
+    (setq sentence-end-double-space nil)
     (setq echo-keystrokes 0.1)
     (delete-selection-mode 1)
-    (show-paren-mode 1)
     (add-to-list 'default-frame-alist '(fullscreen . maximized))
     (defalias 'yes-or-no-p 'y-or-n-p)
     (defun my-font-lock-hook ()
@@ -307,7 +313,7 @@ Add some functions.
       (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
 
 
-<a id="org3d9db28"></a>
+<a id="orgff49d7c"></a>
 
 ## specific
 
@@ -436,6 +442,7 @@ Set up mode mappings.
 
     (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
     (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+    (add-to-list 'auto-mode-alist '("\\.jsx\\'" . rjsx-mode))
     (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
     (add-to-list 'auto-mode-alist '("\\.http" . restclient-mode))
 
@@ -503,7 +510,7 @@ Less indentation. Never other window.
     (treemacs)
 
 
-<a id="orga09a453"></a>
+<a id="orgcd9af99"></a>
 
 ## modes
 
