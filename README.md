@@ -9,14 +9,14 @@ Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master
 
 # Table of Contents
 
-1.  [emacs config](#orga47b482)
-    1.  [before init](#orgae35fc2)
-    2.  [global](#org3777f3f)
-    3.  [specific](#orgc7c2619)
-    4.  [modes](#orgdd7b597)
+1.  [emacs config](#org1fff3f9)
+    1.  [before init](#org122b5a6)
+    2.  [global](#org2127ded)
+    3.  [specific](#org3d9db28)
+    4.  [modes](#orga09a453)
 
 
-<a id="orgae35fc2"></a>
+<a id="org122b5a6"></a>
 
 ## before init
 
@@ -77,7 +77,6 @@ Install packages (if they're missing).
          ample-theme
          angular-mode
          beacon
-         browse-kill-ring
          company
          company-lsp
          company-restclient
@@ -87,6 +86,7 @@ Install packages (if they're missing).
          doom-themes
          drag-stuff
          dumb-jump
+         elixir-mode
          esh-autosuggest
          eshell-prompt-extras
          evil-nerd-commenter
@@ -134,7 +134,7 @@ Install packages (if they're missing).
 Keeping this empty for now &#x2026;
 
 
-<a id="org3777f3f"></a>
+<a id="org2127ded"></a>
 
 ## global
 
@@ -234,7 +234,6 @@ Change up the key bindings a bit.
 
 -   `C-x g` opens magit status.
 -   `M-x` opens smex.
--   `C-x C-y` to browse kill ring.
 -   `s-,` to comment.
 -   `s-a` to use ack. <span class="underline">Requires ack</span>!
 -   `C-x r q` to (really) quit.
@@ -249,7 +248,6 @@ Do we really need a line here?
 
     (global-set-key (kbd "C-x g") 'magit-status)
     (global-set-key (kbd "M-x") 'smex)
-    (global-set-key (kbd "C-x C-y") 'browse-kill-ring)
     (global-set-key (kbd "s-,") 'evilnc-comment-or-uncomment-lines)
     (global-set-key (kbd "s-a") 'ack)
     (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
@@ -309,7 +307,7 @@ Add some functions.
       (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
 
 
-<a id="orgc7c2619"></a>
+<a id="org3d9db28"></a>
 
 ## specific
 
@@ -505,7 +503,7 @@ Less indentation. Never other window.
     (treemacs)
 
 
-<a id="orgdd7b597"></a>
+<a id="orga09a453"></a>
 
 ## modes
 
