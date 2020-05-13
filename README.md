@@ -9,14 +9,14 @@ Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master
 
 # Table of Contents
 
-1.  [emacs config](#orgbfb43f1)
-    1.  [before init](#orgd7c11e0)
-    2.  [global](#org3c3f368)
-    3.  [specific](#orgff49d7c)
-    4.  [modes](#orgcd9af99)
+1.  [emacs config](#orgd46d580)
+    1.  [before init](#org0bf73e8)
+    2.  [global](#org3411cc0)
+    3.  [specific](#orgd36af2f)
+    4.  [modes](#org9be71b4)
 
 
-<a id="orgd7c11e0"></a>
+<a id="org0bf73e8"></a>
 
 ## before init
 
@@ -31,6 +31,7 @@ No splash. Use separate file for customizations (so we don't clutter up our init
     (setq inhibit-startup-message t)
     (setq initial-scratch-message nil)
     (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+    (setq py-python-command "python3")
     (load custom-file)
 
 
@@ -90,7 +91,9 @@ Install packages (if they're missing).
          elixir-mode
          esh-autosuggest
          eshell-prompt-extras
+         evil
          evil-nerd-commenter
+         evil-vimish-fold
          find-file-in-project
          flycheck
          focus
@@ -114,8 +117,10 @@ Install packages (if they're missing).
          s
          smex
          treemacs
+         treemacs-evil
          typescript-mode
          use-package
+         vimish-fold
          web-mode
          which-key
          yaml-mode
@@ -135,7 +140,7 @@ Install packages (if they're missing).
 Keeping this empty for now &#x2026;
 
 
-<a id="org3c3f368"></a>
+<a id="org3411cc0"></a>
 
 ## global
 
@@ -313,7 +318,7 @@ Add some functions.
       (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
 
 
-<a id="orgff49d7c"></a>
+<a id="orgd36af2f"></a>
 
 ## specific
 
@@ -373,6 +378,17 @@ Use ivy. We have ivy.
       (autoload 'epe-theme-lambda "eshell-prompt-extras")
       (setq eshell-highlight-prompt nil
     	eshell-prompt-function 'epe-theme-lambda))
+
+
+### vimish-fold
+
+Only target prog modes.
+
+    (defun all-evil()
+      (message "going all evil")
+      (interactive)
+      (evil-mode)
+      (evil-vimish-fold-mode))
 
 
 ### flycheck
@@ -490,6 +506,10 @@ Less indentation. Never other window.
     	("C-x t C-t" . treemacs-find-file)
     	("C-x t M-t" . treemacs-find-tag)))
     
+    (use-package treemacs-evil
+      :after treemacs evil
+      :ensure t)
+    
     (use-package treemacs-projectile
       :after treemacs projectile
       :ensure t)
@@ -510,7 +530,7 @@ Less indentation. Never other window.
     (treemacs)
 
 
-<a id="orgcd9af99"></a>
+<a id="org9be71b4"></a>
 
 ## modes
 
@@ -554,6 +574,21 @@ Enable Flycheck and disable internal checker. I use this mode to test some minor
     When a `TODO` is `DONE` log a note.
     
         (setq org-log-done 'note)
+
+
+### python mode
+
+Enable flycheck.
+
+    (defun my-python-mode-hook ()
+      "Hooks for python mode."
+      (flycheck-mode 1)
+      (add-hook 'local-write-file-hooks
+        (lambda ()
+          (delete-trailing-whitespace)
+    	nil))
+    )
+    (add-hook 'python-mode-hook 'my-python-mode-hook)
 
 
 ### rjsx mode

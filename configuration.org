@@ -15,6 +15,7 @@ No splash. Use separate file for customizations (so we don't clutter up our init
 (setq inhibit-startup-message t)
 (setq initial-scratch-message nil)
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(setq py-python-command "python3")
 (load custom-file)
 #+END_SRC
 *** MELPA
@@ -70,7 +71,9 @@ Install packages (if they're missing).
      elixir-mode
      esh-autosuggest
      eshell-prompt-extras
+     evil
      evil-nerd-commenter
+     evil-vimish-fold
      find-file-in-project
      flycheck
      focus
@@ -94,8 +97,10 @@ Install packages (if they're missing).
      s
      smex
      treemacs
+     treemacs-evil
      typescript-mode
      use-package
+     vimish-fold
      web-mode
      which-key
      yaml-mode
@@ -314,6 +319,15 @@ Use ivy. We have ivy.
   (setq eshell-highlight-prompt nil
         eshell-prompt-function 'epe-theme-lambda))
 #+END_SRC
+*** vimish-fold
+Only target prog modes.
+#+BEGIN_SRC emacs-lisp
+(defun all-evil()
+  (message "going all evil")
+  (interactive)
+  (evil-mode)
+  (evil-vimish-fold-mode))
+#+END_SRC
 *** flycheck
 Make flycheck understand newer eslint.
 **** override finding eslint
@@ -416,6 +430,10 @@ Less indentation. Never other window.
         ("C-x t C-t" . treemacs-find-file)
         ("C-x t M-t" . treemacs-find-tag)))
 
+(use-package treemacs-evil
+  :after treemacs evil
+  :ensure t)
+
 (use-package treemacs-projectile
   :after treemacs projectile
   :ensure t)
@@ -469,6 +487,19 @@ Use bullets mode and make the ellipses bendy arrows.
 When a =TODO= is =DONE= log a note.
 #+BEGIN_SRC emacs-lisp
 (setq org-log-done 'note)
+#+END_SRC
+*** python mode
+Enable flycheck.
+#+BEGIN_SRC emacs-lisp
+(defun my-python-mode-hook ()
+  "Hooks for python mode."
+  (flycheck-mode 1)
+  (add-hook 'local-write-file-hooks
+    (lambda ()
+      (delete-trailing-whitespace)
+        nil))
+)
+(add-hook 'python-mode-hook 'my-python-mode-hook)
 #+END_SRC
 *** rjsx mode
 Pretty much like js2.
