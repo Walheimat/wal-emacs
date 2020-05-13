@@ -9,14 +9,14 @@ Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master
 
 # Table of Contents
 
-1.  [emacs config](#orgd46d580)
-    1.  [before init](#org0bf73e8)
-    2.  [global](#org3411cc0)
-    3.  [specific](#orgd36af2f)
-    4.  [modes](#org9be71b4)
+1.  [emacs config](#org5247ca8)
+    1.  [before init](#org99d49f5)
+    2.  [global](#org3b47f92)
+    3.  [specific](#org3ae1173)
+    4.  [modes](#org055b8c1)
 
 
-<a id="org0bf73e8"></a>
+<a id="org99d49f5"></a>
 
 ## before init
 
@@ -106,7 +106,6 @@ Install packages (if they're missing).
          markdown-mode
          nodejs-repl
          org-bullets
-         origami
          perspective
          posframe
          prettier-js
@@ -140,7 +139,7 @@ Install packages (if they're missing).
 Keeping this empty for now &#x2026;
 
 
-<a id="org3411cc0"></a>
+<a id="org3b47f92"></a>
 
 ## global
 
@@ -318,7 +317,7 @@ Add some functions.
       (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
 
 
-<a id="orgd36af2f"></a>
+<a id="org3ae1173"></a>
 
 ## specific
 
@@ -463,14 +462,6 @@ Set up mode mappings.
     (add-to-list 'auto-mode-alist '("\\.http" . restclient-mode))
 
 
-### origami
-
-Define keys.
-
-    (require 'origami)
-    (define-key origami-mode-map (kbd "C-x #") 'origami-toggle-node)
-
-
 ### treemacs
 
 Less indentation. Never other window.
@@ -530,7 +521,7 @@ Less indentation. Never other window.
     (treemacs)
 
 
-<a id="org9be71b4"></a>
+<a id="org055b8c1"></a>
 
 ## modes
 
@@ -539,7 +530,7 @@ Configure modes.
 
 ### js2 mode
 
-Enable Flycheck and disable internal checker. I use this mode to test some minor modes like origami.
+Enable Flycheck and disable internal checker. I use this mode to test some minor modes.
 
     (setq-default js2-show-parse-errors nil)
     (setq-default js2-strict-missing-semi-warning nil)
@@ -550,7 +541,6 @@ Enable Flycheck and disable internal checker. I use this mode to test some minor
       (add-node-modules-path)
       (flycheck-mode 1)
       (rainbow-delimiters-mode)
-      (origami-mode)
       (drag-stuff-mode)
       (add-hook 'local-write-file-hooks
         (lambda ()
