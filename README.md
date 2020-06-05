@@ -9,14 +9,14 @@ Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master
 
 # Table of Contents
 
-1.  [emacs config](#org5247ca8)
-    1.  [before init](#org99d49f5)
-    2.  [global](#org3b47f92)
-    3.  [specific](#org3ae1173)
-    4.  [modes](#org055b8c1)
+1.  [emacs config](#org81ea31e)
+    1.  [before init](#orgf96852c)
+    2.  [global](#org7772cda)
+    3.  [specific](#orgc8473d4)
+    4.  [modes](#org933022d)
 
 
-<a id="org99d49f5"></a>
+<a id="orgf96852c"></a>
 
 ## before init
 
@@ -25,7 +25,7 @@ Set up emacs, package manager and packages.
 
 ### general
 
-No splash. Use separate file for customizations (so we don't clutter up our init file).
+No splash. Use separate file for customizations (so we don't clutter up our init file). Use python3.
 
     (package-initialize)
     (setq inhibit-startup-message t)
@@ -80,7 +80,7 @@ Install packages (if they're missing).
          angular-mode
          beacon
          company
-         company-lsp
+         company-box
          company-restclient
          company-web
          diff-hl
@@ -92,6 +92,7 @@ Install packages (if they're missing).
          esh-autosuggest
          eshell-prompt-extras
          evil
+         evil-magit
          evil-nerd-commenter
          evil-vimish-fold
          find-file-in-project
@@ -114,6 +115,7 @@ Install packages (if they're missing).
          restclient
          rjsx-mode
          s
+         shell-pop
          smex
          treemacs
          treemacs-evil
@@ -136,10 +138,17 @@ Install packages (if they're missing).
 
 ### site-lisp
 
-Keeping this empty for now &#x2026;
+Add side lisp directory and subdirs to load path.
+
+    (setq site-lisp-dir
+          (expand-file-name "site-lisp" user-emacs-directory))
+    (add-to-list 'load-path site-lisp-dir)
+    (dolist (project (directory-files site-lisp-dir t "\\w+"))
+      (when (file-directory-p project)
+        (add-to-list 'load-path project)))
 
 
-<a id="org3b47f92"></a>
+<a id="org7772cda"></a>
 
 ## global
 
@@ -195,7 +204,8 @@ Insertion of text should delete region. Bracket pairs should be highlighted. Win
     ;; show right away please
     (setq mouse-yank-at-point t)
     (setq show-paren-delay 0.0)
-    (setq gc-cons-threshold 20000000)
+    (setq gc-cons-threshold 100000000)
+    (setq read-process-output-max (* 1024 1024)) ;; 1mb
     (setq sentence-end-double-space nil)
     (setq echo-keystrokes 0.1)
     (delete-selection-mode 1)
@@ -215,8 +225,8 @@ Tabs are 4 spaces wide. No electric indent. Pipe char to show indentation. Comma
 
     (setq custom-tab-width 4)
     
-    (defun disable-tabs () 
-      (interactive) 
+    (defun disable-tabs ()
+      (interactive)
       (setq indent-tabs-mode nil))
     (defun enable-tabs  ()
       (interactive)
@@ -295,7 +305,7 @@ Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the cu
         found-switch))
     
     (unless (found-custom-arg "-bigger")
-      (set-default-font (font-candidate '"mononoki 10" "Fira Code 10" "Liberation Mono 10" "DejaVu Sans Mono 10"))
+      (set-default-font (font-candidate '"mononoki 12" "Fira Code 12" "Liberation Mono 12" "DejaVu Sans Mono 12"))
     )
 
 
@@ -311,22 +321,36 @@ Zone out after a minute.
 
 Add some functions.
 
+    ;; kill all other buffers
     (defun kill-other-buffers ()
       "Kill all other buffers."
       (interactive)
       (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
+    ;; check if buffer is treemacs buffer
+    ;; similar to minibufferp
+    (defun treemacsbufferp ()
+      "Check if this is the treemacs buffer."
+      (eq (current-buffer) (treemacs-get-local-buffer)))
 
 
-<a id="org3ae1173"></a>
+<a id="orgc8473d4"></a>
 
 ## specific
 
-Configure packages.
+Configure specific packages/aspects.
+
+
+### company
+
+Set up company-box
+
+    (require 'company-box)
+    (add-hook 'company-mode-hook 'company-box-mode)
 
 
 ### diff-hl
 
-Update after magit changes.
+Refresh post magit.
 
     (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
 
@@ -358,7 +382,9 @@ Use ivy. We have ivy.
     (setq dumb-jump-selector 'ivy)
 
 
-### esh-autosuggest
+### eshell
+
+Set up eshell.
 
     (defun setup-eshell-ivy-completion ()
       (define-key eshell-mode-map [remap eshell-pcomplete] 'completion-at-point))
@@ -369,25 +395,10 @@ Use ivy. We have ivy.
       (setup-eshell-ivy-completion))
     
     (add-hook 'eshell-mode-hook 'my-eshell-mode-hook)
-
-
-### eshell-prompt-extras
-
     (with-eval-after-load "esh-opt"
       (autoload 'epe-theme-lambda "eshell-prompt-extras")
       (setq eshell-highlight-prompt nil
     	eshell-prompt-function 'epe-theme-lambda))
-
-
-### vimish-fold
-
-Only target prog modes.
-
-    (defun all-evil()
-      (message "going all evil")
-      (interactive)
-      (evil-mode)
-      (evil-vimish-fold-mode))
 
 
 ### flycheck
@@ -435,13 +446,27 @@ Make flycheck understand newer eslint.
         (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
         (add-hook 'flycheck-mode-hook #'my/use-tslint-from-node-modules)
 
-3.  checker options
+3.  function to switch between tslint and lsp
 
-    Longer idle delay, only after idle and save. For some reason, this doesn't work?
-    
+        (defun switch-to-tslint ()
+          (lsp-disconnect)
+          (setq flycheck-checker-error-threshold 3000)
+          (setq flycheck-check-syntax-automatically '(idle-change))
+          (setq flycheck-checker 'typescript-tslint))
+        
+        (defun switch-back-to-lsp ()
+          (lsp)
+          (setq flycheck-checker-error-threshold 200)
+          (setq flycheck-checker 'lsp))
+        
+        (defun tslint ()
+          (interactive)
+          (if (bound-and-true-p lsp-mode)
+              (switch-to-tslint)
+            (switch-back-to-lsp)))
         ;;(setq flycheck-idle-change-delay 2.5)
-        ;;(setq flycheck-check-syntax-automatically '(mode-enabled save))
-        ;;(flycheck-add-next-checker 'lsp 'typescript-tslint)
+        ;;(setq flycheck-check-syntax-automatically '(save))
+        ;;(flycheck-add-next-checker 'typescript-tslint 'lsp)
 
 
 ### flyspell
@@ -449,6 +474,22 @@ Make flycheck understand newer eslint.
 There could be too many messages.
 
     (setq flyspell-issue-message-flag nil)
+
+
+### lsp
+
+Prefer capf, bigger delay, configure for angular.
+
+    (setq lsp-prefer-capf t)
+    (setq lsp-idle-delay 0.500)
+    (setq lsp-clients-angular-language-server-command
+      '("node"
+        "/home/krister/.config/nvm/12.16.1/lib/node_modules/@angular/language-server"
+        "--ngProbeLocations"
+        "/home/krister/.config/nvm/12.16.1/lib/node_modules"
+        "--tsProbeLocations"
+        "/home/krister/.config/nvm/12.16.1/lib/node_modules"
+        "--stdio"))
 
 
 ### mode mappings
@@ -460,6 +501,15 @@ Set up mode mappings.
     (add-to-list 'auto-mode-alist '("\\.jsx\\'" . rjsx-mode))
     (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
     (add-to-list 'auto-mode-alist '("\\.http" . restclient-mode))
+    (add-to-list 'auto-mode-alist '("\\.component.html" . web-mode))
+    (add-to-list 'auto-mode-alist '("\\.component.css" . css-mode))
+
+
+### prettier-js
+
+Require so it can be used outside of minor mode.
+
+    (require 'prettier-js)
 
 
 ### treemacs
@@ -521,16 +571,55 @@ Less indentation. Never other window.
     (treemacs)
 
 
-<a id="org055b8c1"></a>
+### vimish
+
+Turn on evil- and evil-vimish-fold-mode.
+
+    (require 'evil-magit)
+    ;; change mode-line color by evil state
+    (require 'cl)
+    (lexical-let ((default-color (cons (face-background 'mode-line)
+    				   (face-foreground 'mode-line))))
+    (add-hook 'post-command-hook
+      (lambda ()
+        (let ((color (cond ((minibufferp) default-color)
+    		       ((treemacsbufferp) default-color)
+    		       ((evil-insert-state-p) '("#9932CC" . "#ffffff"))
+    		       ((evil-emacs-state-p)  '("#ff6347" . "#ffffff"))
+    		       ((buffer-modified-p)   '("#db7093" . "#ffffff"))
+    		       (t default-color))))
+          (set-face-background 'mode-line (car color))
+          (set-face-foreground 'mode-line (cdr color))))))
+    (defun all-evil()
+      (message "going all evil")
+      (interactive)
+      (evil-mode)
+      (evil-vimish-fold-mode))
+
+
+<a id="org933022d"></a>
 
 ## modes
 
 Configure modes.
 
 
+### css mode
+
+Just activate flycheck and tabs for now.
+
+    (defun my-css-mode-hook ()
+      "Hooks for css mode."
+      (add-node-modules-path)
+      (enable-tabs)
+      (flycheck-mode))
+    
+    (add-hook 'css-mode-hook 'my-css-mode-hook)
+
+
 ### js2 mode
 
-Enable Flycheck and disable internal checker. I use this mode to test some minor modes.
+Enable Flycheck and disable internal checker.
 
     (setq-default js2-show-parse-errors nil)
     (setq-default js2-strict-missing-semi-warning nil)
