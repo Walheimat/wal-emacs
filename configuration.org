@@ -98,6 +98,7 @@ Install packages (if they're missing).
      shell-pop
      smex
      treemacs
+     telephone-line
      treemacs-evil
      typescript-mode
      use-package
@@ -164,7 +165,7 @@ Turn on a lot of useful (and prettifying) modes.
 (global-font-lock-mode 1)
 #+END_SRC
 *** reasonable settings
-Insertion of text should delete region. Bracket pairs should be highlighted. Window (or frame ...) should start maximized.
+Insertion of text should delete region. Bracket pairs should be highlighted. Window (or frame ...) should start maximized. Garbage collection and memory.
 #+BEGIN_SRC emacs-lisp
 ;; show right away please
 (setq mouse-yank-at-point t)
@@ -491,9 +492,23 @@ Less indentation. Never other window.
   :config (treemacs-set-scope-type 'Perspectives))
 (treemacs)
 #+END_SRC
-*** vimish
-Turn on evil- and evil-vimish-fold-mode.
+*** telephone-line
+A slightly nicer modeline.
 #+BEGIN_SRC emacs-lisp
+(setq telephone-line-primary-left-separator 'telephone-line-cubed-left
+      telephone-line-secondary-left-separator 'telephone-line-cubed-hollow-left
+      telephone-line-primary-right-separator 'telephone-line-cubed-right
+      telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right)
+(setq telephone-line-height 24
+      telephone-line-evil-use-short-tag nil)
+(telephone-line-mode t)
+#+END_SRC
+*** vimish
+Evil by default but we start in emacs mode. Vimish fold is disabled for now as I can't get the config right.
+#+BEGIN_SRC emacs-lisp
+(require 'evil)
+;; (require 'vimish-fold)
+;; (require 'evil-vimish-fold)
 (require 'evil-magit)
 ;; change mode-line color by evil state
 (require 'cl)
@@ -504,16 +519,17 @@ Turn on evil- and evil-vimish-fold-mode.
     (let ((color (cond ((minibufferp) default-color)
                        ((treemacsbufferp) default-color)
                        ((evil-insert-state-p) '("#9932CC" . "#ffffff"))
-                       ((evil-emacs-state-p)  '("#ff6347" . "#ffffff"))
+                       ;; ((evil-emacs-state-p)  '("#ff6347" . "#ffffff"))
                        ((buffer-modified-p)   '("#db7093" . "#ffffff"))
                        (t default-color))))
       (set-face-background 'mode-line (car color))
       (set-face-foreground 'mode-line (cdr color))))))
 (defun all-evil()
   (message "going all evil")
-  (interactive)
-  (evil-mode)
-  (evil-vimish-fold-mode))
+  (evil-mode 1))
+  ;; (evil-vimish-fold-mode))
+(setq evil-default-state 'emacs)
+(all-evil)
 #+END_SRC
 ** modes
 Configure modes.

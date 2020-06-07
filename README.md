@@ -9,14 +9,14 @@ Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master
 
 # Table of Contents
 
-1.  [emacs config](#org81ea31e)
-    1.  [before init](#orgf96852c)
-    2.  [global](#org7772cda)
-    3.  [specific](#orgc8473d4)
-    4.  [modes](#org933022d)
+1.  [emacs config](#org225a47a)
+    1.  [before init](#org03069d2)
+    2.  [global](#org094b9fc)
+    3.  [specific](#org65b8a05)
+    4.  [modes](#orge392933)
 
 
-<a id="orgf96852c"></a>
+<a id="org03069d2"></a>
 
 ## before init
 
@@ -118,6 +118,7 @@ Install packages (if they're missing).
          shell-pop
          smex
          treemacs
+         telephone-line
          treemacs-evil
          typescript-mode
          use-package
@@ -148,7 +149,7 @@ Add side lisp directory and subdirs to load path.
         (add-to-list 'load-path project)))
 
 
-<a id="org7772cda"></a>
+<a id="org094b9fc"></a>
 
 ## global
 
@@ -199,7 +200,7 @@ Turn on a lot of useful (and prettifying) modes.
 
 ### reasonable settings
 
-Insertion of text should delete region. Bracket pairs should be highlighted. Window (or frame &#x2026;) should start maximized.
+Insertion of text should delete region. Bracket pairs should be highlighted. Window (or frame &#x2026;) should start maximized. Garbage collection and memory.
 
     ;; show right away please
     (setq mouse-yank-at-point t)
@@ -333,7 +334,7 @@ Add some functions.
       (eq (current-buffer) (treemacs-get-local-buffer)))
 
 
-<a id="orgc8473d4"></a>
+<a id="org65b8a05"></a>
 
 ## specific
 
@@ -571,10 +572,26 @@ Less indentation. Never other window.
     (treemacs)
 
 
+### telephone-line
+
+A slightly nicer modeline.
+
+    (setq telephone-line-primary-left-separator 'telephone-line-cubed-left
+          telephone-line-secondary-left-separator 'telephone-line-cubed-hollow-left
+          telephone-line-primary-right-separator 'telephone-line-cubed-right
+          telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right)
+    (setq telephone-line-height 24
+          telephone-line-evil-use-short-tag nil)
+    (telephone-line-mode t)
+
+
 ### vimish
 
-Turn on evil- and evil-vimish-fold-mode.
+Evil by default but we start in emacs mode. Vimish fold is disabled for now as I can't get the config right.
 
+    (require 'evil)
+    ;; (require 'vimish-fold)
+    ;; (require 'evil-vimish-fold)
     (require 'evil-magit)
     ;; change mode-line color by evil state
     (require 'cl)
@@ -585,19 +602,20 @@ Turn on evil- and evil-vimish-fold-mode.
         (let ((color (cond ((minibufferp) default-color)
     		       ((treemacsbufferp) default-color)
     		       ((evil-insert-state-p) '("#9932CC" . "#ffffff"))
-    		       ((evil-emacs-state-p)  '("#ff6347" . "#ffffff"))
+    		       ;; ((evil-emacs-state-p)  '("#ff6347" . "#ffffff"))
     		       ((buffer-modified-p)   '("#db7093" . "#ffffff"))
     		       (t default-color))))
           (set-face-background 'mode-line (car color))
           (set-face-foreground 'mode-line (cdr color))))))
     (defun all-evil()
       (message "going all evil")
-      (interactive)
-      (evil-mode)
-      (evil-vimish-fold-mode))
+      (evil-mode 1))
+      ;; (evil-vimish-fold-mode))
+    (setq evil-default-state 'emacs)
+    (all-evil)
 
 
-<a id="org933022d"></a>
+<a id="orge392933"></a>
 
 ## modes
 
