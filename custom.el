@@ -34,7 +34,7 @@
  '(org-export-backends (quote (ascii html icalendar latex md odt)))
  '(package-selected-packages
    (quote
-    (hydgra telephone-line company-box evil-vimish-fold vimish-fold evil elixir-mode lsp-mode git-timemachine company-web-html company-css prettier-js evil-nerd-commenter diff-hl yasnippet yaml-mode web-mode use-package typescript-mode treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil ov org-bullets js2-mode flycheck find-file-in-project dracula-theme dimmer add-node-modules-path)))
+    (dap-mode highlight-indent-guide highlight-indent-guides highlight-numbers all-the-icons kaolin-themes hydgra telephone-line company-box evil-vimish-fold vimish-fold evil elixir-mode lsp-mode git-timemachine company-web-html company-css prettier-js evil-nerd-commenter diff-hl yasnippet yaml-mode web-mode use-package typescript-mode treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil ov org-bullets js2-mode flycheck find-file-in-project dracula-theme dimmer add-node-modules-path)))
  '(pdf-view-midnight-colors (cons "#c6c6c6" "#282b33"))
  '(pos-tip-background-color "#FFFACE")
  '(pos-tip-foreground-color "#272822")

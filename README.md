@@ -9,14 +9,14 @@ Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master
 
 # Table of Contents
 
-1.  [emacs config](#org225a47a)
-    1.  [before init](#org03069d2)
-    2.  [global](#org094b9fc)
-    3.  [specific](#org65b8a05)
-    4.  [modes](#orge392933)
+1.  [emacs config](#orgc088aa1)
+    1.  [before init](#org255d431)
+    2.  [global](#org49085b0)
+    3.  [specific](#orgd864c77)
+    4.  [modes](#org92108bd)
 
 
-<a id="org03069d2"></a>
+<a id="org255d431"></a>
 
 ## before init
 
@@ -29,7 +29,7 @@ No splash. Use separate file for customizations (so we don't clutter up our init
 
     (package-initialize)
     (setq inhibit-startup-message t)
-    (setq initial-scratch-message nil)
+    ;; (setq initial-scratch-message nil)
     (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
     (setq py-python-command "python3")
     (load custom-file)
@@ -76,13 +76,16 @@ Install packages (if they're missing).
          ace-window
          ack
          add-node-modules-path
+         all-the-icons
          ample-theme
          angular-mode
          beacon
          company
          company-box
+         company-lsp
          company-restclient
          company-web
+         dap-mode
          diff-hl
          dimmer
          doom-themes
@@ -99,9 +102,12 @@ Install packages (if they're missing).
          flycheck
          focus
          git-timemachine
+         highlight-numbers
+         highlight-indent-guides
          hydra
          ivy
          js2-mode
+         kaolin-themes
          lsp-mode
          magit
          markdown-mode
@@ -149,7 +155,7 @@ Add side lisp directory and subdirs to load path.
         (add-to-list 'load-path project)))
 
 
-<a id="org094b9fc"></a>
+<a id="org49085b0"></a>
 
 ## global
 
@@ -182,12 +188,14 @@ Turn on a lot of useful (and prettifying) modes.
     (global-auto-revert-mode t)
     (global-hl-line-mode)
     (add-hook 'after-init-hook 'global-company-mode)
+    (add-hook 'prog-mode-hook 'highlight-numbers-mode)
+    (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
     (global-display-line-numbers-mode)
     (ivy-mode 1)
-    (global-prettify-symbols-mode +1)
+    ;; (global-prettify-symbols-mode +1)
     (global-diff-hl-mode)
     (dimmer-mode t)
-    (global-whitespace-mode)
+    ;; (global-whitespace-mode)
     (save-place-mode 1)
     (dumb-jump-mode)
     (which-key-mode)
@@ -242,11 +250,11 @@ Tabs are 4 spaces wide. No electric indent. Pipe char to show indentation. Comma
     
     (setq backward-delete-char-untabify-method 'hungry)
     
-    (setq whitespace-style '(face tabs tab-mark trailing))
-    (custom-set-faces
-      '(whitespace-tab ((t (:foreground "#636363")))))
-    (setq whitespace-display-mappings
-      '((tab-mark 9 [124 9] [92 9]))) ; 124 is the ascii ID for '\|'
+    ;; (setq whitespace-style '(face tabs tab-mark trailing))
+    ;; (custom-set-faces
+    ;;   '(whitespace-tab ((t (:foreground "#636363")))))
+    ;; (setq whitespace-display-mappings
+    ;;   '((tab-mark 9 [124 9] [92 9]))) ; 124 is the ascii ID for '\|'
 
 
 ### key bindings
@@ -286,7 +294,8 @@ Do we really need a line here?
 
 Just pick a theme. This one is based on Jon Blow's and pretty cool.
 
-    (load-theme 'naysayer t)
+    ;; (load-theme 'naysayer t)
+    (load-theme 'kaolin-aurora t)
 
 
 ### font size
@@ -334,7 +343,7 @@ Add some functions.
       (eq (current-buffer) (treemacs-get-local-buffer)))
 
 
-<a id="org65b8a05"></a>
+<a id="orgd864c77"></a>
 
 ## specific
 
@@ -347,6 +356,23 @@ Set up company-box
 
     (require 'company-box)
     (add-hook 'company-mode-hook 'company-box-mode)
+    (setq company-minimum-prefix-length 3)
+    (setq company-idle-delay 0.5)
+
+
+### dap
+
+Require stuff.
+
+    (require 'dap-node)
+    (dap-auto-configure-mode 1)
+    (dap-register-debug-template
+      "Node::Attach"
+      (list :type "node"
+    	:request "attach"
+    	:remoteRoot "/usr/src/app"
+    	:localRoot "/home/krister/theventury"
+    	:name "Node::Attach"))
 
 
 ### diff-hl
@@ -354,6 +380,19 @@ Set up company-box
 Refresh post magit.
 
     (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
+
+
+### diminish
+
+    (require 'diminish)
+    (diminish 'company-mode)
+    (diminish 'ivy-mode)
+    (diminish 'company-box-mode)
+    (diminish 'beacon-mode)
+    (diminish 'zoom-mode)
+    (diminish 'which-key-mode)
+    (diminish 'eldoc-mode)
+    (diminish 'highlight-indent-guides-mode)
 
 
 ### dimmer
@@ -404,7 +443,13 @@ Set up eshell.
 
 ### flycheck
 
-Make flycheck understand newer eslint.
+Only check on save. Configure threshold and (unused) idle-change delay.
+
+    (defun my-flycheck-hook()
+      (setq flycheck-check-syntax-automatically '(save idle-change))
+      (setq flycheck-checker-error-threshold 100)
+      (setq flycheck-idle-change-delay 2.5))
+    ;; (add-hook 'flycheck-mode-hook 'my-flycheck-hook)
 
 1.  override finding eslint
 
@@ -451,13 +496,10 @@ Make flycheck understand newer eslint.
 
         (defun switch-to-tslint ()
           (lsp-disconnect)
-          (setq flycheck-checker-error-threshold 3000)
-          (setq flycheck-check-syntax-automatically '(idle-change))
           (setq flycheck-checker 'typescript-tslint))
         
         (defun switch-back-to-lsp ()
           (lsp)
-          (setq flycheck-checker-error-threshold 200)
           (setq flycheck-checker 'lsp))
         
         (defun tslint ()
@@ -465,9 +507,6 @@ Make flycheck understand newer eslint.
           (if (bound-and-true-p lsp-mode)
               (switch-to-tslint)
             (switch-back-to-lsp)))
-        ;;(setq flycheck-idle-change-delay 2.5)
-        ;;(setq flycheck-check-syntax-automatically '(save))
-        ;;(flycheck-add-next-checker 'typescript-tslint 'lsp)
 
 
 ### flyspell
@@ -477,12 +516,32 @@ There could be too many messages.
     (setq flyspell-issue-message-flag nil)
 
 
+### highlight-indent-guides
+
+    (setq highlight-indent-guides-method 'character)
+
+
+### kaolin
+
+Apply kaolin theme to treemacs.
+
+    (require 'kaolin-themes)
+    (kaolin-treemacs-theme)
+    ;; (setq kaolin-ocean-alt-bg t)
+    ;; Enable distinct background for fringe and line numbers.
+    ;; (setq kaolin-themes-distinct-fringe t)  
+    
+    ;; Enable distinct colors for company popup scrollbar.
+    ;; (setq kaolin-themes-distinct-company-scrollbar t)
+
+
 ### lsp
 
 Prefer capf, bigger delay, configure for angular.
 
-    (setq lsp-prefer-capf t)
-    (setq lsp-idle-delay 0.500)
+    ;; (setq lsp-prefer-capf t)
+    ;; (setq lsp-idle-delay 0.500)
+    ;; (setq lsp-semantic-highlighting t)
     (setq lsp-clients-angular-language-server-command
       '("node"
         "/home/krister/.config/nvm/12.16.1/lib/node_modules/@angular/language-server"
@@ -548,9 +607,9 @@ Less indentation. Never other window.
     	("C-x t C-t" . treemacs-find-file)
     	("C-x t M-t" . treemacs-find-tag)))
     
-    (use-package treemacs-evil
-      :after treemacs evil
-      :ensure t)
+    ;; (use-package treemacs-evil
+    ;;   :after treemacs evil
+    ;;   :ensure t)
     
     (use-package treemacs-projectile
       :after treemacs projectile
@@ -576,46 +635,70 @@ Less indentation. Never other window.
 
 A slightly nicer modeline.
 
-    (setq telephone-line-primary-left-separator 'telephone-line-cubed-left
-          telephone-line-secondary-left-separator 'telephone-line-cubed-hollow-left
-          telephone-line-primary-right-separator 'telephone-line-cubed-right
-          telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right)
-    (setq telephone-line-height 24
-          telephone-line-evil-use-short-tag nil)
+    (setq telephone-line-lhs
+          '((evil   . (telephone-line-buffer-segment))
+    	(accent . (telephone-line-vc-segment))
+    	(nil    . (telephone-line-minor-mode-segment
+    		   telephone-line-erc-modified-channels-segment
+    		   telephone-line-process-segment))))
+    (setq telephone-line-rhs
+          '((nil    . (telephone-line-misc-info-segment
+    		   telephone-line-flycheck-segment))
+    	(accent . (telephone-line-major-mode-segment))
+    	(evil   . (telephone-line-airline-position-segment))))
+    (setq telephone-line-primary-right-separator 'telephone-line-identity-left
+          telephone-line-secondary-right-separator 'telephone-line-identity-hollow-left
+          telephone-line-primary-left-separator 'telephone-line-identity-right
+          telephone-line-secondary-left-separator 'telephone-line-identity-hollow-right)
     (telephone-line-mode t)
 
 
 ### vimish
 
-Evil by default but we start in emacs mode. Vimish fold is disabled for now as I can't get the config right.
+Trying out evil.
 
-    (require 'evil)
+    ;; (require 'evil)
     ;; (require 'vimish-fold)
     ;; (require 'evil-vimish-fold)
-    (require 'evil-magit)
+    ;; (setq evil-magit-state 'emacs)
+    ;; (setq evil-magit-emacs-to-default-state-modes nil)
+    ;; (require 'evil-magit)
     ;; change mode-line color by evil state
-    (require 'cl)
-    (lexical-let ((default-color (cons (face-background 'mode-line)
-    				   (face-foreground 'mode-line))))
-    (add-hook 'post-command-hook
-      (lambda ()
-        (let ((color (cond ((minibufferp) default-color)
-    		       ((treemacsbufferp) default-color)
-    		       ((evil-insert-state-p) '("#9932CC" . "#ffffff"))
-    		       ;; ((evil-emacs-state-p)  '("#ff6347" . "#ffffff"))
-    		       ((buffer-modified-p)   '("#db7093" . "#ffffff"))
-    		       (t default-color))))
-          (set-face-background 'mode-line (car color))
-          (set-face-foreground 'mode-line (cdr color))))))
-    (defun all-evil()
-      (message "going all evil")
-      (evil-mode 1))
-      ;; (evil-vimish-fold-mode))
-    (setq evil-default-state 'emacs)
-    (all-evil)
+    ;; (require 'cl)
+    ;; (lexical-let ((default-color (cons (face-background 'mode-line)
+    ;;                                    (face-foreground 'mode-line))))
+    
+    ;; (defun color-mode-line()
+    ;;   (let ((color (cond ((minibufferp) default-color)
+    ;;                      ((treemacsbufferp) default-color)
+    ;;                      ((evil-insert-state-p) '("#9932CC" . "#ffffff"))
+    ;;                      ;; ((evil-emacs-state-p)  '("#ff6347" . "#ffffff"))
+    ;;                      ((buffer-modified-p)   '("#db7093" . "#ffffff"))
+    ;;                      (t default-color))))
+    ;;     (set-face-background 'mode-line (car color))
+    ;;     (set-face-foreground 'mode-line (cdr color))))
+    
+    ;; (add-hook 'post-command-hook 'color-mode-line)
+    ;; (defun all-evil()
+    ;;   (message "going all evil")
+    ;;   (evil-mode 1))
+    ;;   (evil-vimish-fold-mode))
+    ;; (setq evil-default-state 'emacs)
+    
+    ;; (add-hook 'evil-normal-state-entry-hook
+    ;;   (lambda ()
+    ;;     (message "Switching to normal state")
+    ;;     (setq evil-magit-emacs-to-default-state-modes '(git-commit-mode))
+    ;;     (setq evil-magit-state 'normal)))
+    ;; (add-hook 'evil-normal-state-exit-hook
+    ;;   (lambda ()
+    ;;      (message "Switching to emacs state")
+    ;;      (setq evil-magit-emacs-to-default-state-modes nil)
+    ;;      (setq evil-magit-state 'emacs)))
+    ;; (all-evil)
 
 
-<a id="orge392933"></a>
+<a id="org92108bd"></a>
 
 ## modes
 
@@ -720,8 +803,8 @@ Enable lsp, flycheck and sane tabs. And some other stuff.
       (add-hook 'local-write-file-hooks
         (lambda ()
           (delete-trailing-whitespace)
-    	nil))
-    )
+    	nil)))
+    
     (add-hook 'typescript-mode-hook 'my-typescript-mode-hook)
 
 
@@ -742,8 +825,8 @@ Web mode uses flycheck with lsp enabled.
       (add-hook 'local-write-file-hooks
         (lambda ()
           (delete-trailing-whitespace)
-    	nil))
-    )
+    	nil)))
+    
     (add-hook 'web-mode-hook 'my-web-mode-hook)
 
 
