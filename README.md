@@ -12,14 +12,14 @@ by running `M-x all-the-icons-install-fonts` and selecting `yes`.
 
 # Table of Contents
 
-1.  [emacs config](#orga1f3ad6)
-    1.  [before init](#orge141f28)
-    2.  [global](#org4f01133)
-    3.  [specific](#org2625981)
-    4.  [modes](#orgd23478c)
+1.  [emacs config](#org9e55b99)
+    1.  [before init](#orgca8c48a)
+    2.  [global](#org352eeb3)
+    3.  [specific](#org511cf56)
+    4.  [modes](#org2a671da)
 
 
-<a id="orge141f28"></a>
+<a id="orgca8c48a"></a>
 
 ## before init
 
@@ -120,6 +120,7 @@ Install packages (if they're missing).
          lsp-mode
          magit
          markdown-mode
+         naysayer-theme
          nodejs-repl
          org-bullets
          perspective
@@ -167,7 +168,7 @@ Add side lisp directory and subdirs to load path.
         (add-to-list 'load-path project)))
 
 
-<a id="org4f01133"></a>
+<a id="org352eeb3"></a>
 
 ## global
 
@@ -319,7 +320,7 @@ Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the cu
       "Return the first available font from a list of fonts."
       (--first (find-font (font-spec :name it)) fonts))
     
-    (set-face-attribute 'default nil :font (font-candidate '"mononoki 12" "Fira Code 14" "Liberation Mono 12" "DejaVu Sans Mono 12"))
+    (set-face-attribute 'default nil :font (font-candidate '"mononoki 12" "Fira Code 12" "Liberation Mono 12" "DejaVu Sans Mono 12"))
     
     (defun found-custom-arg (switch)
       "Check for custom arg and delete it right away so emacs doesn't complain."
@@ -356,7 +357,7 @@ Add some functions.
       (eq (current-buffer) (treemacs-get-local-buffer)))
 
 
-<a id="org2625981"></a>
+<a id="org511cf56"></a>
 
 ## specific
 
@@ -721,7 +722,7 @@ Trying out evil.
     ;; (all-evil)
 
 
-<a id="orgd23478c"></a>
+<a id="org2a671da"></a>
 
 ## modes
 
