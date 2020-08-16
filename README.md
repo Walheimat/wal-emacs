@@ -2,7 +2,7 @@
 
 # emacs config
 
-The file can be loaded using `(org-babel-load-file (expand-file-name "configuration.org" user-emacs-directoy))` (assuming that's the file's location).
+The file can be loaded using `(org-babel-load-file (expand-file-name "emacs-config/configuration.org" user-emacs-directoy))` (assuming that's the file's location).
 
 Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master/.emacs.example) for reference. To use, run `cp .emacs.example ../.emacs`.
 
@@ -14,14 +14,14 @@ by running `M-x all-the-icons-install-fonts` and selecting `yes`.
 
 # Table of Contents
 
-1.  [emacs config](#org1426b11)
-    1.  [before init](#org790f2c4)
-    2.  [global](#org8d24c63)
-    3.  [specific](#org128a8a1)
-    4.  [modes](#org0b53c84)
+1.  [emacs config](#orge55c00c)
+    1.  [before init](#orge95fd94)
+    2.  [global](#org80c5ab5)
+    3.  [specific](#org0199fb8)
+    4.  [modes](#orgbce859c)
 
 
-<a id="org790f2c4"></a>
+<a id="orge95fd94"></a>
 
 ## before init
 
@@ -35,7 +35,7 @@ No splash. Use separate file for customizations (so we don't clutter up our init
     (package-initialize)
     (setq inhibit-startup-message t)
     ;; (setq initial-scratch-message nil)
-    (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+    (setq custom-file (expand-file-name "emacs-config/custom.el" user-emacs-directory))
     (setq py-python-command "python3")
     (load custom-file)
 
@@ -170,7 +170,7 @@ Add side lisp directory and subdirs to load path.
         (add-to-list 'load-path project)))
 
 
-<a id="org8d24c63"></a>
+<a id="org80c5ab5"></a>
 
 ## global
 
@@ -359,7 +359,7 @@ Add some functions.
       (eq (current-buffer) (treemacs-get-local-buffer)))
 
 
-<a id="org128a8a1"></a>
+<a id="org0199fb8"></a>
 
 ## specific
 
@@ -724,7 +724,7 @@ Trying out evil.
     ;; (all-evil)
 
 
-<a id="org0b53c84"></a>
+<a id="orgbce859c"></a>
 
 ## modes
 
