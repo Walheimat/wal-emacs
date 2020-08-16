@@ -4,7 +4,9 @@
 
 The file can be loaded using `(org-babel-load-file (expand-file-name "configuration.org" user-emacs-directoy))` (assuming that's the file's location).
 
-Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master/.emacs) for reference.
+Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master/.emacs.example) for reference. To use, run `cp .emacs.example ../.emacs`.
+
+Ideally, you just init the repo in your `user-emacs-directory` to keep things in sync.
 
 **Note** that this config uses the `all-the-icons` package whose icons need to be downloaded manually
 by running `M-x all-the-icons-install-fonts` and selecting `yes`.
@@ -12,14 +14,14 @@ by running `M-x all-the-icons-install-fonts` and selecting `yes`.
 
 # Table of Contents
 
-1.  [emacs config](#org9e55b99)
-    1.  [before init](#orgca8c48a)
-    2.  [global](#org352eeb3)
-    3.  [specific](#org511cf56)
-    4.  [modes](#org2a671da)
+1.  [emacs config](#org1426b11)
+    1.  [before init](#org790f2c4)
+    2.  [global](#org8d24c63)
+    3.  [specific](#org128a8a1)
+    4.  [modes](#org0b53c84)
 
 
-<a id="orgca8c48a"></a>
+<a id="org790f2c4"></a>
 
 ## before init
 
@@ -168,7 +170,7 @@ Add side lisp directory and subdirs to load path.
         (add-to-list 'load-path project)))
 
 
-<a id="org352eeb3"></a>
+<a id="org8d24c63"></a>
 
 ## global
 
@@ -357,7 +359,7 @@ Add some functions.
       (eq (current-buffer) (treemacs-get-local-buffer)))
 
 
-<a id="org511cf56"></a>
+<a id="org128a8a1"></a>
 
 ## specific
 
@@ -722,7 +724,7 @@ Trying out evil.
     ;; (all-evil)
 
 
-<a id="org2a671da"></a>
+<a id="org0b53c84"></a>
 
 ## modes
 
