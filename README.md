@@ -6,17 +6,20 @@ The file can be loaded using `(org-babel-load-file "~/.emacs.d/configuration.org
 
 Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master/.emacs) for reference.
 
+**Note** that this config uses the \`all-the-icons\` package whose icons need to be downloaded manually
+by running `M-x all-the-icons-install-fonts` and selecting `yes`.
+
 
 # Table of Contents
 
-1.  [emacs config](#orgc088aa1)
-    1.  [before init](#org255d431)
-    2.  [global](#org49085b0)
-    3.  [specific](#orgd864c77)
-    4.  [modes](#org92108bd)
+1.  [emacs config](#org51cff88)
+    1.  [before init](#org24c193d)
+    2.  [global](#org8dc2917)
+    3.  [specific](#org054c3fa)
+    4.  [modes](#org31f3b9a)
 
 
-<a id="org255d431"></a>
+<a id="org24c193d"></a>
 
 ## before init
 
@@ -86,8 +89,11 @@ Install packages (if they're missing).
          company-restclient
          company-web
          dap-mode
+         dash
          diff-hl
+         diminish
          dimmer
+         docker
          doom-themes
          drag-stuff
          dumb-jump
@@ -106,6 +112,7 @@ Install packages (if they're missing).
          highlight-indent-guides
          hydra
          ivy
+         json-mode
          js2-mode
          kaolin-themes
          lsp-mode
@@ -155,7 +162,7 @@ Add side lisp directory and subdirs to load path.
         (add-to-list 'load-path project)))
 
 
-<a id="org49085b0"></a>
+<a id="org8dc2917"></a>
 
 ## global
 
@@ -192,7 +199,7 @@ Turn on a lot of useful (and prettifying) modes.
     (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
     (global-display-line-numbers-mode)
     (ivy-mode 1)
-    ;; (global-prettify-symbols-mode +1)
+    (global-prettify-symbols-mode +1)
     (global-diff-hl-mode)
     (dimmer-mode t)
     ;; (global-whitespace-mode)
@@ -294,8 +301,8 @@ Do we really need a line here?
 
 Just pick a theme. This one is based on Jon Blow's and pretty cool.
 
-    ;; (load-theme 'naysayer t)
-    (load-theme 'kaolin-aurora t)
+    (load-theme 'naysayer t)
+    ;; (load-theme 'monokai t)
 
 
 ### font size
@@ -306,7 +313,8 @@ Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the cu
     (defun font-candidate (&rest fonts)
       "Return the first available font from a list of fonts."
       (--first (find-font (font-spec :name it)) fonts))
-      (set-face-attribute 'default nil :font (font-candidate '"mononoki 14" "Fira Code 14" "Liberation Mono 14" "DejaVu Sans Mono 14"))
+    
+    (set-face-attribute 'default nil :font (font-candidate '"mononoki 12" "Fira Code 14" "Liberation Mono 12" "DejaVu Sans Mono 12"))
     
     (defun found-custom-arg (switch)
       "Check for custom arg and delete it right away so emacs doesn't complain."
@@ -314,8 +322,8 @@ Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the cu
         (setq command-line-args (delete switch command-line-args))
         found-switch))
     
-    (unless (found-custom-arg "-bigger")
-      (set-default-font (font-candidate '"mononoki 12" "Fira Code 12" "Liberation Mono 12" "DejaVu Sans Mono 12"))
+    (if (found-custom-arg "-bigger")
+      (set-default-font (font-candidate '"mononoki 14" "Fira Code 14" "Liberation Mono 14" "DejaVu Sans Mono 14"))
     )
 
 
@@ -343,7 +351,7 @@ Add some functions.
       (eq (current-buffer) (treemacs-get-local-buffer)))
 
 
-<a id="orgd864c77"></a>
+<a id="org054c3fa"></a>
 
 ## specific
 
@@ -358,6 +366,15 @@ Set up company-box
     (add-hook 'company-mode-hook 'company-box-mode)
     (setq company-minimum-prefix-length 3)
     (setq company-idle-delay 0.5)
+
+
+### docker
+
+Key binding.
+
+    (use-package docker
+      :ensure t
+      :bind ("C-c d" . docker))
 
 
 ### dap
@@ -527,7 +544,7 @@ Apply kaolin theme to treemacs.
 
     (require 'kaolin-themes)
     (kaolin-treemacs-theme)
-    ;; (setq kaolin-ocean-alt-bg t)
+    (setq kaolin-ocean-alt-bg t)
     ;; Enable distinct background for fringe and line numbers.
     ;; (setq kaolin-themes-distinct-fringe t)  
     
@@ -563,6 +580,7 @@ Set up mode mappings.
     (add-to-list 'auto-mode-alist '("\\.http" . restclient-mode))
     (add-to-list 'auto-mode-alist '("\\.component.html" . web-mode))
     (add-to-list 'auto-mode-alist '("\\.component.css" . css-mode))
+    (add-to-list 'auto-mode-alist '("\\.json" . json-mode))
 
 
 ### prettier-js
@@ -698,7 +716,7 @@ Trying out evil.
     ;; (all-evil)
 
 
-<a id="org92108bd"></a>
+<a id="org31f3b9a"></a>
 
 ## modes
 
@@ -775,12 +793,17 @@ Enable flycheck.
 
 Pretty much like js2.
 
+    (defun rjsx-indent ()
+      (interactive)
+      (setq-local indent-line-function 'js-jsx-indent-line)
+    )
+    
     (defun my-rjsx-mode-hook ()
       "Hooks for rjsx mode."
       (add-node-modules-path)
       (enable-tabs)
       (flycheck-mode)
-      (lambda () (setq-local indent-line-function 'js-jsx-indent-line))
+      (rjsx-indent)
       (add-hook 'local-write-file-hooks
         (lambda ()
           (delete-trailing-whitespace)
