@@ -126,14 +126,17 @@ Install packages (if they're missing).
 (condition-case nil
     (init--install-packages)
   (error
-   (package-refresh-contents)
-   (init--install-packages)))
+    (package-refresh-contents)
+    (init--install-packages)))
 #+END_SRC
 *** site-lisp
 Add side lisp directory and subdirs to load path.
 #+BEGIN_SRC emacs-lisp
+;; create the dir if it does not exist to avoid error
+(unless (file-directory-p (expand-file-name "site-lisp" user-emacs-directory))
+  (make-directory (expand-file-name "site-lisp" user-emacs-directory)))
 (setq site-lisp-dir
-      (expand-file-name "site-lisp" user-emacs-directory))
+  (expand-file-name "site-lisp" user-emacs-directory))
 (add-to-list 'load-path site-lisp-dir)
 (dolist (project (directory-files site-lisp-dir t "\\w+"))
   (when (file-directory-p project)

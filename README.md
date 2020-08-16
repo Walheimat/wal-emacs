@@ -12,14 +12,14 @@ by running `M-x all-the-icons-install-fonts` and selecting `yes`.
 
 # Table of Contents
 
-1.  [emacs config](#org51cff88)
-    1.  [before init](#org24c193d)
-    2.  [global](#org8dc2917)
-    3.  [specific](#org054c3fa)
-    4.  [modes](#org31f3b9a)
+1.  [emacs config](#orgba894e3)
+    1.  [before init](#org73fee49)
+    2.  [global](#orgc85720a)
+    3.  [specific](#org9fd33dc)
+    4.  [modes](#orgee97bc7)
 
 
-<a id="org24c193d"></a>
+<a id="org73fee49"></a>
 
 ## before init
 
@@ -146,23 +146,26 @@ Install packages (if they're missing).
     (condition-case nil
         (init--install-packages)
       (error
-       (package-refresh-contents)
-       (init--install-packages)))
+        (package-refresh-contents)
+        (init--install-packages)))
 
 
 ### site-lisp
 
 Add side lisp directory and subdirs to load path.
 
+    ;; create the dir if it does not exist to avoid error
+    (unless (file-directory-p (expand-file-name "site-lisp" user-emacs-directory))
+      (make-directory (expand-file-name "site-lisp" user-emacs-directory)))
     (setq site-lisp-dir
-          (expand-file-name "site-lisp" user-emacs-directory))
+      (expand-file-name "site-lisp" user-emacs-directory))
     (add-to-list 'load-path site-lisp-dir)
     (dolist (project (directory-files site-lisp-dir t "\\w+"))
       (when (file-directory-p project)
         (add-to-list 'load-path project)))
 
 
-<a id="org8dc2917"></a>
+<a id="orgc85720a"></a>
 
 ## global
 
@@ -351,7 +354,7 @@ Add some functions.
       (eq (current-buffer) (treemacs-get-local-buffer)))
 
 
-<a id="org054c3fa"></a>
+<a id="org9fd33dc"></a>
 
 ## specific
 
@@ -716,7 +719,7 @@ Trying out evil.
     ;; (all-evil)
 
 
-<a id="org31f3b9a"></a>
+<a id="orgee97bc7"></a>
 
 ## modes
 
