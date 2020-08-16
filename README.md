@@ -14,14 +14,14 @@ by running `M-x all-the-icons-install-fonts` and selecting `yes`.
 
 # Table of Contents
 
-1.  [emacs config](#orge55c00c)
-    1.  [before init](#orge95fd94)
-    2.  [global](#org80c5ab5)
-    3.  [specific](#org0199fb8)
-    4.  [modes](#orgbce859c)
+1.  [emacs config](#org32b040c)
+    1.  [before init](#org96499de)
+    2.  [global](#org22be0ac)
+    3.  [specific](#orgda9a282)
+    4.  [modes](#orgb601c81)
 
 
-<a id="orge95fd94"></a>
+<a id="org96499de"></a>
 
 ## before init
 
@@ -170,7 +170,7 @@ Add side lisp directory and subdirs to load path.
         (add-to-list 'load-path project)))
 
 
-<a id="org80c5ab5"></a>
+<a id="org22be0ac"></a>
 
 ## global
 
@@ -297,7 +297,7 @@ Do we really need a line here?
     (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
     (global-set-key
       (kbd "C-x C-c")
-      (lambda () (interactive)(switch-to-buffer (find-file-noselect "~/.emacs.d/configuration.org"))))
+      (lambda () (interactive)(switch-to-buffer (find-file-noselect "~/.emacs.d/emacs-config/configuration.org"))))
     (global-set-key (kbd "M-o") 'ace-window)
     (global-set-key (kbd "C-x j") 'dumb-jump-go)
     (global-set-key (kbd "C-x t m") 'git-timemachine-toggle)
@@ -359,7 +359,7 @@ Add some functions.
       (eq (current-buffer) (treemacs-get-local-buffer)))
 
 
-<a id="org0199fb8"></a>
+<a id="orgda9a282"></a>
 
 ## specific
 
@@ -724,7 +724,7 @@ Trying out evil.
     ;; (all-evil)
 
 
-<a id="orgbce859c"></a>
+<a id="orgb601c81"></a>
 
 ## modes
 
