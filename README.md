@@ -12,14 +12,14 @@ by running `M-x all-the-icons-install-fonts` and selecting `yes`.
 
 # Table of Contents
 
-1.  [emacs config](#orgba894e3)
-    1.  [before init](#org73fee49)
-    2.  [global](#orgc85720a)
-    3.  [specific](#org9fd33dc)
-    4.  [modes](#orgee97bc7)
+1.  [emacs config](#org45e83bd)
+    1.  [before init](#orgdc70508)
+    2.  [global](#org02840dc)
+    3.  [specific](#org1b60a7e)
+    4.  [modes](#org29e4ac0)
 
 
-<a id="org73fee49"></a>
+<a id="orgdc70508"></a>
 
 ## before init
 
@@ -43,8 +43,6 @@ No splash. Use separate file for customizations (so we don't clutter up our init
 Initialize MELPA.
 
     (require 'package)
-    (require 'dash)
-    
     (let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
     		  (not (gnutls-available-p))))
          (proto (if no-ssl "http" "https")))
@@ -67,6 +65,11 @@ Initialize MELPA.
 
 Install packages (if they're missing).
 
+    ;; we need dash for the upcoming loop
+    (unless (package-installed-p 'dash)
+      (package-install 'dash))
+    (require 'dash)
+    
     (defun packages-install (packages)
       (--each packages
         (when (not (package-installed-p it))
@@ -89,7 +92,6 @@ Install packages (if they're missing).
          company-restclient
          company-web
          dap-mode
-         dash
          diff-hl
          diminish
          dimmer
@@ -165,7 +167,7 @@ Add side lisp directory and subdirs to load path.
         (add-to-list 'load-path project)))
 
 
-<a id="orgc85720a"></a>
+<a id="org02840dc"></a>
 
 ## global
 
@@ -354,7 +356,7 @@ Add some functions.
       (eq (current-buffer) (treemacs-get-local-buffer)))
 
 
-<a id="org9fd33dc"></a>
+<a id="org1b60a7e"></a>
 
 ## specific
 
@@ -719,7 +721,7 @@ Trying out evil.
     ;; (all-evil)
 
 
-<a id="orgee97bc7"></a>
+<a id="org29e4ac0"></a>
 
 ## modes
 

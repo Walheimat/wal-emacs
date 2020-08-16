@@ -25,8 +25,6 @@ No splash. Use separate file for customizations (so we don't clutter up our init
 Initialize MELPA.
 #+BEGIN_SRC emacs-lisp
 (require 'package)
-(require 'dash)
-
 (let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
                   (not (gnutls-available-p))))
      (proto (if no-ssl "http" "https")))
@@ -47,6 +45,11 @@ There are two things you can do about this warning:
 *** packages
 Install packages (if they're missing).
 #+BEGIN_SRC emacs-lisp
+;; we need dash for the upcoming loop
+(unless (package-installed-p 'dash)
+  (package-install 'dash))
+(require 'dash)
+
 (defun packages-install (packages)
   (--each packages
     (when (not (package-installed-p it))
@@ -69,7 +72,6 @@ Install packages (if they're missing).
      company-restclient
      company-web
      dap-mode
-     dash
      diff-hl
      diminish
      dimmer
