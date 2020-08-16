@@ -2,11 +2,10 @@
 
 # emacs config
 
-The file can be loaded using `(org-babel-load-file (expand-file-name "emacs-config/configuration.org" user-emacs-directoy))` (assuming that's the file's location).
+Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master/.emacs.example) for reference. To use (and assuming you're in `~/.emacs.d/emacs-config`, run `cp .emacs.example ../../.emacs`.
 
-Check out [my init file](https://gitlab.com/Walheimat/emacs-config/-/blob/master/.emacs.example) for reference. To use, run `cp .emacs.example ../.emacs`.
-
-Ideally, you just init the repo in your `user-emacs-directory` to keep things in sync.
+If you did not init this repo in your `user-emacs-directory` using the default name, you will need to adapt
+the variable `walheimat-emacs-config-default-path` in the example.
 
 **Note** that this config uses the `all-the-icons` package whose icons need to be downloaded manually
 by running `M-x all-the-icons-install-fonts` and selecting `yes`.
@@ -14,14 +13,14 @@ by running `M-x all-the-icons-install-fonts` and selecting `yes`.
 
 # Table of Contents
 
-1.  [emacs config](#org32b040c)
-    1.  [before init](#org96499de)
-    2.  [global](#org22be0ac)
-    3.  [specific](#orgda9a282)
-    4.  [modes](#orgb601c81)
+1.  [emacs config](#org081e54d)
+    1.  [before init](#orge00a1f9)
+    2.  [global](#org9921b0d)
+    3.  [specific](#org9f66c47)
+    4.  [modes](#orgbd19f2f)
 
 
-<a id="org96499de"></a>
+<a id="orge00a1f9"></a>
 
 ## before init
 
@@ -35,7 +34,7 @@ No splash. Use separate file for customizations (so we don't clutter up our init
     (package-initialize)
     (setq inhibit-startup-message t)
     ;; (setq initial-scratch-message nil)
-    (setq custom-file (expand-file-name "emacs-config/custom.el" user-emacs-directory))
+    (setq custom-file (expand-file-name "custom.el" walheimat-emacs-config-default-path))
     (setq py-python-command "python3")
     (load custom-file)
 
@@ -170,7 +169,7 @@ Add side lisp directory and subdirs to load path.
         (add-to-list 'load-path project)))
 
 
-<a id="org22be0ac"></a>
+<a id="org9921b0d"></a>
 
 ## global
 
@@ -297,7 +296,7 @@ Do we really need a line here?
     (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
     (global-set-key
       (kbd "C-x C-c")
-      (lambda () (interactive)(switch-to-buffer (find-file-noselect "~/.emacs.d/emacs-config/configuration.org"))))
+      (lambda () (interactive)(switch-to-buffer (find-file-noselect (expand-file-name "configuration.org" walheimat-emacs-config-default-path)))))
     (global-set-key (kbd "M-o") 'ace-window)
     (global-set-key (kbd "C-x j") 'dumb-jump-go)
     (global-set-key (kbd "C-x t m") 'git-timemachine-toggle)
@@ -359,7 +358,7 @@ Add some functions.
       (eq (current-buffer) (treemacs-get-local-buffer)))
 
 
-<a id="orgda9a282"></a>
+<a id="org9f66c47"></a>
 
 ## specific
 
@@ -724,7 +723,7 @@ Trying out evil.
     ;; (all-evil)
 
 
-<a id="orgb601c81"></a>
+<a id="orgbd19f2f"></a>
 
 ## modes
 
