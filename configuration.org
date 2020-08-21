@@ -2,17 +2,44 @@
 #+AUTHOR: [[https://gitlab.com/Walheimat][@Walheimat]]
 #+OPTIONS: toc:nil
 * emacs config
-Check out [[https://gitlab.com/Walheimat/emacs-config/-/blob/master/.emacs.example][my init file]] for reference. To use (and assuming you're in =~/.emacs.d/emacs-config=, run =cp .emacs.example ../../.emacs=.
+This project is my personal Emacs config.
+
+The base is an org file so it doubles as a readme.
+
+#+TOC: headlines 2
+
+** setup
+If you're interested in trying out Emacs using my config, here are the necessary steps:
+
++ Install Emacs if you haven't
++ Clone this repository into your =user-emacs-directory=:
+  
+  If you're not sure where your =user-emacs-directory= might be, you can do the following:
+  + run Emacs
+  + hit =M-x= (that is your Alt/Option key followed by the letter =x=)
+  + type =describe-variable= and hit return
+
+  A window should pop up telling you the path
+  
+  Finally run =git clone git@gitlab.com:Walheimat/emacs-config.git ~/.emacs.d=
+  (replace =~/.emacs.d= with your actual path if it differs)
+
++ Copy the config file included in this repo by running =cp ~/.emacs.d/emacs-config/.emacs.example ../../.emacs=
+
+  Adapt the path again if necessary
+
++ Close and re-run Emacs which should download and install (almost) all packages
 
 If you did not init this repo in your =user-emacs-directory= using the default name, you will need to adapt
-the variable =walheimat-emacs-config-default-path= in the example.
+the variable =walheimat-emacs-config-default-path= in the example config you just copied.
 
 *Note* that this config uses the =all-the-icons= package whose icons need to be downloaded manually
 by running =M-x all-the-icons-install-fonts= and selecting =yes=.
-#+TOC: headlines 2
-** before init
+** config
+Configure Emacs. The init script will execute everything that follows.
+*** before init
 Set up emacs, package manager and packages.
-*** general
+**** general
 No splash. Use separate file for customizations (so we don't clutter up our init file). Use python3.
 #+BEGIN_SRC emacs-lisp
 (package-initialize)
@@ -22,7 +49,7 @@ No splash. Use separate file for customizations (so we don't clutter up our init
 (setq py-python-command "python3")
 (load custom-file)
 #+END_SRC
-*** MELPA
+**** MELPA
 Initialize MELPA.
 #+BEGIN_SRC emacs-lisp
 (require 'package)
@@ -43,8 +70,8 @@ There are two things you can do about this warning:
 (setq package-pinned-packages '())
 (package-initialize)
 #+END_SRC
-*** packages
-Install packages (if they're missing).
+**** packages
+Define and install packages (if they're missing).
 #+BEGIN_SRC emacs-lisp
 ;; we need dash for the upcoming loop
 (unless (package-installed-p 'dash)
@@ -134,8 +161,8 @@ Install packages (if they're missing).
     (package-refresh-contents)
     (init--install-packages)))
 #+END_SRC
-*** site-lisp
-Add side lisp directory and subdirs to load path.
+**** site-lisp
+Add side lisp directory and subdirs to load path. I put non-MELPA packages here.
 #+BEGIN_SRC emacs-lisp
 ;; create the dir if it does not exist to avoid error
 (unless (file-directory-p (expand-file-name "site-lisp" user-emacs-directory))
@@ -147,14 +174,14 @@ Add side lisp directory and subdirs to load path.
   (when (file-directory-p project)
     (add-to-list 'load-path project)))
 #+END_SRC
-** global
+*** global
 Configure global settings.
-*** save place
+**** save place
 Save places, and do so in a file.
 #+BEGIN_SRC emacs-lisp
 (setq save-place-file (expand-file-name ".places" user-emacs-directory))
 #+END_SRC
-*** autosave and backups
+**** autosave and backups
 Store backups in backups folder. Store autosaves in temp folder. We don't want this to mess with git.
 #+BEGIN_SRC emacs-lisp
 (setq backup-directory-alist
@@ -163,7 +190,7 @@ Store backups in backups folder. Store autosaves in temp folder. We don't want t
 (setq auto-save-file-name-transforms
   `((".*" ,temporary-file-directory t)))
 #+END_SRC
-*** global modes
+**** global modes
 Turn on a lot of useful (and prettifying) modes.
 #+BEGIN_SRC emacs-lisp
 (show-paren-mode 1)
@@ -187,8 +214,9 @@ Turn on a lot of useful (and prettifying) modes.
 (beacon-mode 1)
 (global-font-lock-mode 1)
 #+END_SRC
-*** reasonable settings
-Insertion of text should delete region. Bracket pairs should be highlighted. Window (or frame ...) should start maximized. Garbage collection and memory.
+**** reasonable settings
+Insertion of text should delete region. Bracket pairs should be highlighted.
+Window (or frame ...) should start maximized. Garbage collection and memory.
 #+BEGIN_SRC emacs-lisp
 ;; show right away please
 (setq mouse-yank-at-point t)
@@ -207,8 +235,9 @@ Insertion of text should delete region. Bracket pairs should be highlighted. Win
 )
 (add-hook 'font-lock-mode-hook 'my-font-lock-hook)
 #+END_SRC
-*** tabs all the way
-Tabs are 4 spaces wide. No electric indent. Pipe char to show indentation. Commands to enable/disable sane tabs.
+**** tabs all the way
+Tabs are 4 spaces wide. No electric indent. Pipe char to show indentation.
+Commands to enable/disable sane tabs.
 #+BEGIN_SRC emacs-lisp
 (setq custom-tab-width 4)
 
@@ -227,14 +256,8 @@ Tabs are 4 spaces wide. No electric indent. Pipe char to show indentation. Comma
 (setq-default electric-indent-inhibit t)
 
 (setq backward-delete-char-untabify-method 'hungry)
-
-;; (setq whitespace-style '(face tabs tab-mark trailing))
-;; (custom-set-faces
-;;   '(whitespace-tab ((t (:foreground "#636363")))))
-;; (setq whitespace-display-mappings
-;;   '((tab-mark 9 [124 9] [92 9]))) ; 124 is the ascii ID for '\|'
 #+END_SRC
-*** key bindings
+**** key bindings
 Change up the key bindings a bit.
 + =C-x g= opens magit status.
 + =M-x= opens smex.
@@ -248,7 +271,7 @@ Change up the key bindings a bit.
 + =s-s= turn on flyspell prog mode.
 + =C-x p f= find file in project.
 
-Do we really need a line here?
+Do we really need a line here? We do.
 
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "C-x g") 'magit-status)
@@ -265,13 +288,12 @@ Do we really need a line here?
 (global-set-key (kbd "s-s") 'flyspell-prog-mode)
 (global-set-key (kbd "C-x p f") 'find-file-in-project)
 #+END_SRC
-*** theme
-Just pick a theme. This one is based on Jon Blow's and pretty cool.
+**** theme
+Just pick a theme. At the moment it is some kaolin variant.
 #+BEGIN_SRC emacs-lisp
 (load-theme 'kaolin-galaxy t)
-;; (load-theme 'monokai t)
 #+END_SRC
-*** font size
+**** font size
 Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the custom arg =-bigger=, the default font size is 14 (instead of 10).
 #+BEGIN_SRC emacs-lisp
 (require 'dash)
@@ -291,17 +313,18 @@ Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the cu
   (set-default-font (font-candidate '"mononoki 14" "Fira Code 14" "Liberation Mono 14" "DejaVu Sans Mono 14"))
 )
 
+;; this requires you to have installed iosevka
 (if (found-custom-arg "-iosevka")
   (set-default-font "Iosevka 12")
 )
 #+END_SRC
-*** fun stuff
+**** fun stuff
 Zone out after a minute.
 #+BEGIN_SRC emacs-lisp
 (require 'zone)
 (zone-when-idle 180)
 #+END_SRC
-*** func stuff
+**** func stuff
 Add some functions.
 #+BEGIN_SRC emacs-lisp
 ;; kill all other buffers
@@ -315,9 +338,9 @@ Add some functions.
   "Check if this is the treemacs buffer."
   (eq (current-buffer) (treemacs-get-local-buffer)))
 #+END_SRC
-** specific
+*** specific
 Configure specific packages/aspects.
-*** company
+**** company
 Set up company-box
 #+BEGIN_SRC emacs-lisp
 (require 'company-box)
@@ -325,14 +348,14 @@ Set up company-box
 (setq company-minimum-prefix-length 3)
 (setq company-idle-delay 0.5)
 #+END_SRC
-*** docker
+**** docker
 Key binding.
 #+BEGIN_SRC emacs-lisp
 (use-package docker
   :ensure t
   :bind ("C-c d" . docker))
 #+END_SRC
-*** dap
+**** dap
 Require stuff.
 #+BEGIN_SRC emacs-lisp
 (require 'dap-node)
@@ -345,12 +368,12 @@ Require stuff.
 	:localRoot "/home/krister/theventury"
         :name "Node::Attach"))
 #+END_SRC
-*** diff-hl
+**** diff-hl
 Refresh post magit.
 #+BEGIN_SRC emacs-lisp
 (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
 #+END_SRC
-*** diminish
+**** diminish
 #+BEGIN_SRC emacs-lisp
 (require 'diminish)
 (diminish 'company-mode)
@@ -362,7 +385,7 @@ Refresh post magit.
 (diminish 'eldoc-mode)
 (diminish 'highlight-indent-guides-mode)
 #+END_SRC
-*** dimmer
+**** dimmer
 Make dimmed frames a bit dimmer.
 #+BEGIN_SRC emacs-lisp
 (require 'dimmer)
@@ -372,18 +395,18 @@ Make dimmed frames a bit dimmer.
 (dimmer-configure-hydra)
 (setq dimmer-adjustmentmode :both)
 #+END_SRC
-*** drag stuff
+**** drag stuff
 Use the default key bindings.
 #+BEGIN_SRC emacs-lisp
 (require 'drag-stuff)
 (drag-stuff-define-keys)
 #+END_SRC
-*** dumb-jump
+**** dumb-jump
 Use ivy. We have ivy.
 #+BEGIN_SRC emacs-lisp
 (setq dumb-jump-selector 'ivy)
 #+END_SRC
-*** eshell
+**** eshell
 Set up eshell.
 #+BEGIN_SRC emacs-lisp
 (defun setup-eshell-ivy-completion ()
@@ -400,7 +423,7 @@ Set up eshell.
   (setq eshell-highlight-prompt nil
         eshell-prompt-function 'epe-theme-lambda))
 #+END_SRC
-*** flycheck
+**** flycheck
 Only check on save. Configure threshold and (unused) idle-change delay.
 #+BEGIN_SRC emacs-lisp
 (defun my-flycheck-hook()
@@ -464,16 +487,16 @@ Use the locally installed eslint/tslint.
       (switch-to-tslint)
     (switch-back-to-lsp)))
 #+END_SRC
-*** flyspell
+**** flyspell
 There could be too many messages.
 #+BEGIN_SRC emacs-lisp
 (setq flyspell-issue-message-flag nil)
 #+END_SRC
-*** highlight-indent-guides
+**** highlight-indent-guides
 #+BEGIN_SRC emacs-lisp
 (setq highlight-indent-guides-method 'character)
 #+END_SRC
-*** kaolin
+**** kaolin
 Apply kaolin theme to treemacs.
 #+BEGIN_SRC emacs-lisp
 (require 'kaolin-themes)
@@ -485,7 +508,7 @@ Apply kaolin theme to treemacs.
 ;; Enable distinct colors for company popup scrollbar.
 ;; (setq kaolin-themes-distinct-company-scrollbar t)
 #+END_SRC
-*** lsp
+**** lsp
 Prefer capf, bigger delay, configure for angular.
 #+BEGIN_SRC emacs-lisp
 ;; (setq lsp-prefer-capf t)
@@ -500,7 +523,7 @@ Prefer capf, bigger delay, configure for angular.
     "/home/krister/.config/nvm/12.16.1/lib/node_modules"
     "--stdio"))
 #+END_SRC
-*** mode mappings
+**** mode mappings
 Set up mode mappings.
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
@@ -513,12 +536,12 @@ Set up mode mappings.
 (add-to-list 'auto-mode-alist '("\\.json" . json-mode))
 (add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-mode))
 #+END_SRC
-*** prettier-js
+**** prettier-js
 Require so it can be used outside of minor mode.
 #+BEGIN_SRC emacs-lisp
 (require 'prettier-js)
 #+END_SRC
-*** treemacs
+**** treemacs
 Less indentation. Never other window.
 #+BEGIN_SRC emacs-lisp
 (use-package treemacs
@@ -580,7 +603,7 @@ Less indentation. Never other window.
   :config (treemacs-set-scope-type 'Perspectives))
 (treemacs)
 #+END_SRC
-*** telephone-line
+**** telephone-line
 A slightly nicer modeline.
 #+BEGIN_SRC emacs-lisp
 (setq telephone-line-lhs
@@ -604,7 +627,7 @@ A slightly nicer modeline.
 #+RESULTS:
 : t
 
-*** vimish
+**** vimish
 Trying out evil.
 #+BEGIN_SRC emacs-lisp
 ;; (require 'evil)
@@ -647,9 +670,9 @@ Trying out evil.
 ;;      (setq evil-magit-state 'emacs)))
 ;; (all-evil)
 #+END_SRC
-** modes
+*** modes
 Configure modes.
-*** css mode
+**** css mode
 Just activate flycheck and tabs for now.
 #+BEGIN_SRC emacs-lisp
 (defun my-css-mode-hook ()
@@ -660,7 +683,7 @@ Just activate flycheck and tabs for now.
 
 (add-hook 'css-mode-hook 'my-css-mode-hook)
 #+END_SRC
-*** js2 mode
+**** js2 mode
 Enable Flycheck and disable internal checker.
  #+BEGIN_SRC emacs-lisp
 (setq-default js2-show-parse-errors nil)
@@ -680,7 +703,7 @@ Enable Flycheck and disable internal checker.
 )
 (add-hook 'js2-mode-hook 'my-js2-mode-hook)
  #+END_SRC
-*** org mode
+**** org mode
 **** Make org-mode look nicer
 Use bullets mode and make the ellipses bendy arrows.
 #+BEGIN_SRC emacs-lisp
@@ -692,7 +715,7 @@ When a =TODO= is =DONE= log a note.
 #+BEGIN_SRC emacs-lisp
 (setq org-log-done 'note)
 #+END_SRC
-*** python mode
+**** python mode
 Enable flycheck.
 #+BEGIN_SRC emacs-lisp
 (defun my-python-mode-hook ()
@@ -705,7 +728,7 @@ Enable flycheck.
 )
 (add-hook 'python-mode-hook 'my-python-mode-hook)
 #+END_SRC
-*** rjsx mode
+**** rjsx mode
 Pretty much like js2.
 #+BEGIN_SRC emacs-lisp
 (defun rjsx-indent ()
@@ -726,7 +749,7 @@ Pretty much like js2.
 )
 (add-hook 'rjsx-mode-hook 'my-rjsx-mode-hook)
 #+END_SRC
-*** typescript mode
+**** typescript mode
 Enable lsp, flycheck and sane tabs. And some other stuff.
 #+BEGIN_SRC emacs-lisp
 (defun my-typescript-mode-hook ()
@@ -743,7 +766,7 @@ Enable lsp, flycheck and sane tabs. And some other stuff.
 
 (add-hook 'typescript-mode-hook 'my-typescript-mode-hook)
 #+END_SRC
-*** web mode
+**** web mode
 Web mode uses flycheck with lsp enabled.
 #+BEGIN_SRC emacs-lisp
 (require 'web-mode)
@@ -763,7 +786,7 @@ Web mode uses flycheck with lsp enabled.
 
 (add-hook 'web-mode-hook 'my-web-mode-hook)
 #+END_SRC
-*** zoom mode
+**** zoom mode
 Use the golden ratio.
 #+BEGIN_SRC emacs-lisp
 (custom-set-variables
