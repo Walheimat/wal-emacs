@@ -13,14 +13,14 @@ by running `M-x all-the-icons-install-fonts` and selecting `yes`.
 
 # Table of Contents
 
-1.  [emacs config](#org081e54d)
-    1.  [before init](#orge00a1f9)
-    2.  [global](#org9921b0d)
-    3.  [specific](#org9f66c47)
-    4.  [modes](#orgbd19f2f)
+1.  [emacs config](#orgcb5e84d)
+    1.  [before init](#org3ee3fa8)
+    2.  [global](#org480219b)
+    3.  [specific](#org9442041)
+    4.  [modes](#org4863a02)
 
 
-<a id="orge00a1f9"></a>
+<a id="org3ee3fa8"></a>
 
 ## before init
 
@@ -97,6 +97,7 @@ Install packages (if they're missing).
          diminish
          dimmer
          docker
+         dockerfile-mode
          doom-themes
          drag-stuff
          dumb-jump
@@ -169,7 +170,7 @@ Add side lisp directory and subdirs to load path.
         (add-to-list 'load-path project)))
 
 
-<a id="org9921b0d"></a>
+<a id="org480219b"></a>
 
 ## global
 
@@ -308,7 +309,7 @@ Do we really need a line here?
 
 Just pick a theme. This one is based on Jon Blow's and pretty cool.
 
-    (load-theme 'naysayer t)
+    (load-theme 'kaolin-galaxy t)
     ;; (load-theme 'monokai t)
 
 
@@ -331,6 +332,10 @@ Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the cu
     
     (if (found-custom-arg "-bigger")
       (set-default-font (font-candidate '"mononoki 14" "Fira Code 14" "Liberation Mono 14" "DejaVu Sans Mono 14"))
+    )
+    
+    (if (found-custom-arg "-iosevka")
+      (set-default-font "Iosevka 12")
     )
 
 
@@ -358,7 +363,7 @@ Add some functions.
       (eq (current-buffer) (treemacs-get-local-buffer)))
 
 
-<a id="org9f66c47"></a>
+<a id="org9442041"></a>
 
 ## specific
 
@@ -588,6 +593,7 @@ Set up mode mappings.
     (add-to-list 'auto-mode-alist '("\\.component.html" . web-mode))
     (add-to-list 'auto-mode-alist '("\\.component.css" . css-mode))
     (add-to-list 'auto-mode-alist '("\\.json" . json-mode))
+    (add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-mode))
 
 
 ### prettier-js
@@ -610,11 +616,16 @@ Less indentation. Never other window.
       :config
       (progn
         (setq treemacs-indentation                   1
+    	  treemacs-width                         35
+    	  treemacs-move-forward-on-expand        t
+    	  treemacs-follow-after-init             nil
+    	  treemacs-recenter-after-file-follow    'always
     	  treemacs-indentation-string            " ⁝ "
     	  treemacs-is-never-other-window         t
+    	  treemacs-no-delete-other-windows       nil
     	  treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
     	  treemacs-show-hidden-files             t)
-        (treemacs-follow-mode t)
+        (treemacs-follow-mode nil)
         (treemacs-filewatch-mode t)
         (treemacs-fringe-indicator-mode t)
         (pcase (cons (not (null (executable-find "git")))
@@ -723,7 +734,7 @@ Trying out evil.
     ;; (all-evil)
 
 
-<a id="orgbd19f2f"></a>
+<a id="org4863a02"></a>
 
 ## modes
 
