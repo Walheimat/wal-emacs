@@ -4,17 +4,17 @@
 
 This project is my personal Emacs config.
 
-The base is an org file so it doubles as a readme.
+Its base is an org file so it doubles as a readme.
 
 
 # Table of Contents
 
-1.  [emacs config](#org7e1164b)
-    1.  [setup](#org64cd4f5)
-    2.  [config](#org30f78aa)
+1.  [emacs config](#orgcca2e89)
+    1.  [setup](#orgb865639)
+    2.  [config](#org339217c)
 
 
-<a id="org64cd4f5"></a>
+<a id="orgb865639"></a>
 
 ## setup
 
@@ -47,7 +47,7 @@ the variable `walheimat-emacs-config-default-path` in the example config you jus
 by running `M-x all-the-icons-install-fonts` and selecting `yes`.
 
 
-<a id="org30f78aa"></a>
+<a id="org339217c"></a>
 
 ## config
 
@@ -151,6 +151,7 @@ Set up emacs, package manager and packages.
              lsp-mode
              magit
              markdown-mode
+             mode-line-bell
              naysayer-theme
              nodejs-repl
              org-bullets
@@ -242,6 +243,7 @@ Configure global settings.
         (zoom-mode 1)
         (beacon-mode 1)
         (global-font-lock-mode 1)
+        (mode-line-bell-mode)
 
 4.  reasonable settings
 
@@ -324,7 +326,7 @@ Configure global settings.
 
     Just pick a theme. At the moment it is some kaolin variant.
     
-        (load-theme 'kaolin-galaxy t)
+        (load-theme 'doom-material t)
 
 8.  font size
 
@@ -612,7 +614,6 @@ Configure specific packages/aspects.
         	  treemacs-width                         35
         	  treemacs-move-forward-on-expand        t
         	  treemacs-follow-after-init             nil
-        	  treemacs-recenter-after-file-follow    'always
         	  treemacs-indentation-string            " ⁝ "
         	  treemacs-is-never-other-window         t
         	  treemacs-no-delete-other-windows       nil
