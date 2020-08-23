@@ -116,6 +116,7 @@ Define and install packages (if they're missing).
      evil-nerd-commenter
      evil-vimish-fold
      find-file-in-project
+     fira-code-mode
      flycheck
      focus
      git-timemachine
@@ -296,14 +297,16 @@ Just pick a theme. At the moment it is some kaolin variant.
 (load-theme 'doom-material t)
 #+END_SRC
 **** font size
-Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the custom arg =-bigger=, the default font size is 14 (instead of 10).
+Prefer FiraCode (-> mononoki -> Liberation -> DejaVu). If emacs runs with the custom arg =-bigger=, the default font size is 14 (instead of 10).
+
+To get support for ligatures, install the symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
 #+BEGIN_SRC emacs-lisp
 (require 'dash)
 (defun font-candidate (&rest fonts)
   "Return the first available font from a list of fonts."
   (--first (find-font (font-spec :name it)) fonts))
 
-(set-face-attribute 'default nil :font (font-candidate '"mononoki 12" "Fira Code 12" "Liberation Mono 12" "DejaVu Sans Mono 12"))
+(set-face-attribute 'default nil :font (font-candidate '"Fira Code 12" "mononoki 12" "Liberation Mono 12" "DejaVu Sans Mono 12"))
 
 (defun found-custom-arg (switch)
   "Check for custom arg and delete it right away so emacs doesn't complain."
@@ -312,13 +315,19 @@ Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the cu
     found-switch))
 
 (if (found-custom-arg "-bigger")
-  (set-default-font (font-candidate '"mononoki 14" "Fira Code 14" "Liberation Mono 14" "DejaVu Sans Mono 14"))
+  (set-default-font (font-candidate '"Fira Code 14" "mononoki 14" "Liberation Mono 14" "DejaVu Sans Mono 14"))
 )
 
 ;; this requires you to have installed iosevka
 (if (found-custom-arg "-iosevka")
   (set-default-font "Iosevka 12")
 )
+
+;; use fira mode if it's the default font and the symbol font is installed
+(use-package fira-code-mode
+  :if (and (x-list-fonts "Fira Code Symbol") (string= "Fira Code" (face-attribute 'default :family)))
+  :custom (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
+  :hook prog-mode)                                         ; mode to enable fira-code-mode in
 #+END_SRC
 **** fun stuff
 Zone out after a minute.

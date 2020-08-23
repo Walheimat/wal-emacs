@@ -9,12 +9,12 @@ Its base is an org file so it doubles as a readme.
 
 # Table of Contents
 
-1.  [emacs config](#orgcca2e89)
-    1.  [setup](#orgb865639)
-    2.  [config](#org339217c)
+1.  [emacs config](#orgd00ec7d)
+    1.  [setup](#org799554f)
+    2.  [config](#org6cba437)
 
 
-<a id="orgb865639"></a>
+<a id="org799554f"></a>
 
 ## setup
 
@@ -47,7 +47,7 @@ the variable `walheimat-emacs-config-default-path` in the example config you jus
 by running `M-x all-the-icons-install-fonts` and selecting `yes`.
 
 
-<a id="org339217c"></a>
+<a id="org6cba437"></a>
 
 ## config
 
@@ -138,6 +138,7 @@ Set up emacs, package manager and packages.
              evil-nerd-commenter
              evil-vimish-fold
              find-file-in-project
+             fira-code-mode
              flycheck
              focus
              git-timemachine
@@ -330,14 +331,16 @@ Configure global settings.
 
 8.  font size
 
-    Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the custom arg `-bigger`, the default font size is 14 (instead of 10).
+    Prefer FiraCode (-> mononoki -> Liberation -> DejaVu). If emacs runs with the custom arg `-bigger`, the default font size is 14 (instead of 10).
+    
+    To get support for ligatures, install the symbol font from [here](https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip).
     
         (require 'dash)
         (defun font-candidate (&rest fonts)
           "Return the first available font from a list of fonts."
           (--first (find-font (font-spec :name it)) fonts))
         
-        (set-face-attribute 'default nil :font (font-candidate '"mononoki 12" "Fira Code 12" "Liberation Mono 12" "DejaVu Sans Mono 12"))
+        (set-face-attribute 'default nil :font (font-candidate '"Fira Code 12" "mononoki 12" "Liberation Mono 12" "DejaVu Sans Mono 12"))
         
         (defun found-custom-arg (switch)
           "Check for custom arg and delete it right away so emacs doesn't complain."
@@ -346,13 +349,19 @@ Configure global settings.
             found-switch))
         
         (if (found-custom-arg "-bigger")
-          (set-default-font (font-candidate '"mononoki 14" "Fira Code 14" "Liberation Mono 14" "DejaVu Sans Mono 14"))
+          (set-default-font (font-candidate '"Fira Code 14" "mononoki 14" "Liberation Mono 14" "DejaVu Sans Mono 14"))
         )
         
         ;; this requires you to have installed iosevka
         (if (found-custom-arg "-iosevka")
           (set-default-font "Iosevka 12")
         )
+        
+        ;; use fira mode if it's the default font and the symbol font is installed
+        (use-package fira-code-mode
+          :if (and (x-list-fonts "Fira Code Symbol") (string= "Fira Code" (face-attribute 'default :family)))
+          :custom (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
+          :hook prog-mode)                                         ; mode to enable fira-code-mode in
 
 9.  fun stuff
 
