@@ -9,12 +9,12 @@ Its base is an org file so it doubles as a readme.
 
 # Table of Contents
 
-1.  [emacs config](#orga666e11)
-    1.  [setup](#orgc68585d)
-    2.  [config](#org85e3802)
+1.  [emacs config](#org945522f)
+    1.  [setup](#org12e1406)
+    2.  [config](#org8aa1979)
 
 
-<a id="orgc68585d"></a>
+<a id="org12e1406"></a>
 
 ## setup
 
@@ -28,13 +28,14 @@ If you're interested in trying out Emacs using my config, here are the necessary
     -   run Emacs
     -   hit `M-x` (that is your Alt/Option key followed by the letter `x`)
     -   type `describe-variable` and hit return
+    -   type `user-emacs-directory` and hit return again
     
     A window should pop up telling you the path
     
     Finally run `git clone git@gitlab.com:Walheimat/emacs-config.git ~/.emacs.d`
     (replace `~/.emacs.d` with your actual path if it differs)
 
--   Copy the config file included in this repo by running `cp ~/.emacs.d/emacs-config/.emacs.example ../../.emacs`
+-   Copy the config file included in this repo by running `cp ~/.emacs.d/emacs-config/.emacs.example ~/.emacs`
     
     Adapt the path again if necessary
 
@@ -46,8 +47,15 @@ the variable `walheimat-emacs-config-default-path` in the example config you jus
 **Note** that this config uses the `all-the-icons` package whose icons need to be downloaded manually
 by running `M-x all-the-icons-install-fonts` and selecting `yes`.
 
+**Note** that this config uses `dash`. The config will try to install it before installing the other packages
+but this has failed before. If that is the case do the following:
 
-<a id="org85e3802"></a>
+-   hit `M-x`, type `package-install` and hit return
+-   type `dash` and hit return again
+-   once the installation is complete, re-run Emacs
+
+
+<a id="org8aa1979"></a>
 
 ## config
 
