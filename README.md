@@ -9,12 +9,12 @@ Its base is an org file so it doubles as a readme.
 
 # Table of Contents
 
-1.  [emacs config](#orgd00ec7d)
-    1.  [setup](#org799554f)
-    2.  [config](#org6cba437)
+1.  [emacs config](#orga666e11)
+    1.  [setup](#orgc68585d)
+    2.  [config](#org85e3802)
 
 
-<a id="org799554f"></a>
+<a id="orgc68585d"></a>
 
 ## setup
 
@@ -47,7 +47,7 @@ the variable `walheimat-emacs-config-default-path` in the example config you jus
 by running `M-x all-the-icons-install-fonts` and selecting `yes`.
 
 
-<a id="org6cba437"></a>
+<a id="org85e3802"></a>
 
 ## config
 
@@ -325,9 +325,9 @@ Configure global settings.
 
 7.  theme
 
-    Just pick a theme. At the moment it is some kaolin variant.
+    Be sure to check out [Peach Melpa](https://peach-melpa.org/) to find a theme you like.
     
-        (load-theme 'doom-material t)
+        (load-theme 'doom-city-lights t)
 
 8.  font size
 
