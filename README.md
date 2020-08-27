@@ -9,12 +9,12 @@ Its base is an org file so it doubles as a readme.
 
 # Table of Contents
 
-1.  [emacs config](#org945522f)
-    1.  [setup](#org12e1406)
-    2.  [config](#org8aa1979)
+1.  [emacs config](#org4e41d6e)
+    1.  [setup](#org8382927)
+    2.  [config](#org24df09c)
 
 
-<a id="org12e1406"></a>
+<a id="org8382927"></a>
 
 ## setup
 
@@ -55,7 +55,7 @@ but this has failed before. If that is the case do the following:
 -   once the installation is complete, re-run Emacs
 
 
-<a id="org8aa1979"></a>
+<a id="org24df09c"></a>
 
 ## config
 
@@ -169,6 +169,7 @@ Set up emacs, package manager and packages.
              prettier-js
              projectile
              rainbow-delimiters
+             rainbow-mode
              restclient
              rjsx-mode
              s
@@ -184,6 +185,7 @@ Set up emacs, package manager and packages.
              which-key
              yaml-mode
              yasnippet
+             yasnippet-snippets
              zoom
              )))
         
@@ -335,7 +337,7 @@ Configure global settings.
 
     Be sure to check out [Peach Melpa](https://peach-melpa.org/) to find a theme you like.
     
-        (load-theme 'doom-city-lights t)
+        (load-theme 'doom-laserwave t)
 
 8.  font size
 
@@ -742,6 +744,12 @@ Configure specific packages/aspects.
         ;;      (setq evil-magit-state 'emacs)))
         ;; (all-evil)
 
+23. yasnippet
+
+    Don't enable globally but prepare for per-buffer use.
+    
+        (yas-reload-all)
+
 
 ### modes
 
@@ -771,6 +779,7 @@ Configure modes.
           (enable-tabs)
           (add-node-modules-path)
           (flycheck-mode 1)
+          (rainbow-mode)
           (rainbow-delimiters-mode)
           (drag-stuff-mode)
           (add-hook 'local-write-file-hooks
@@ -824,6 +833,9 @@ Configure modes.
           (enable-tabs)
           (flycheck-mode)
           (rjsx-indent)
+          (rainbow-mode)
+          (rainbow-delimiters-mode)
+          (drag-stuff-mode)
           (add-hook 'local-write-file-hooks
             (lambda ()
               (delete-trailing-whitespace)
