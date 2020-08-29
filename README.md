@@ -9,12 +9,12 @@ Its base is an org file so it doubles as a readme.
 
 # Table of Contents
 
-1.  [emacs config](#org4e41d6e)
-    1.  [setup](#org8382927)
-    2.  [config](#org24df09c)
+1.  [emacs config](#org8f0ba0e)
+    1.  [setup](#orgd9b85e6)
+    2.  [config](#org2344287)
 
 
-<a id="org8382927"></a>
+<a id="orgd9b85e6"></a>
 
 ## setup
 
@@ -55,7 +55,7 @@ but this has failed before. If that is the case do the following:
 -   once the installation is complete, re-run Emacs
 
 
-<a id="org24df09c"></a>
+<a id="org2344287"></a>
 
 ## config
 
@@ -129,6 +129,7 @@ Set up emacs, package manager and packages.
              company-lsp
              company-restclient
              company-web
+             crux
              dap-mode
              diff-hl
              diminish
@@ -144,7 +145,6 @@ Set up emacs, package manager and packages.
              evil
              evil-magit
              evil-nerd-commenter
-             evil-vimish-fold
              find-file-in-project
              fira-code-mode
              flycheck
@@ -180,7 +180,6 @@ Set up emacs, package manager and packages.
              treemacs-evil
              typescript-mode
              use-package
-             vimish-fold
              web-mode
              which-key
              yaml-mode
@@ -256,12 +255,12 @@ Configure global settings.
         (global-font-lock-mode 1)
         (mode-line-bell-mode)
 
-4.  reasonable settings
+4.  reasonable
 
+    settings
     Insertion of text should delete region. Bracket pairs should be highlighted.
     Window (or frame &#x2026;) should start maximized. Garbage collection and memory.
     
-        ;; show right away please
         (setq mouse-yank-at-point t)
         (setq show-paren-delay 0.0)
         (setq gc-cons-threshold 100000000)
@@ -311,13 +310,18 @@ Configure global settings.
     -   `s-a` to use ack. <span class="underline">Requires ack</span>!
     -   `C-x r q` to (really) quit.
     -   `C-x C-c` to open this config file.
-    -   `M-o` to go to "other" window.
+    -   `M-o` to go to "other" window or last buffer.
     -   `C-x j` to dumb-jump.
     -   `C-x t m` to open timemachine.
     -   `s-s` turn on flyspell prog mode.
     -   `C-x p f` find file in project.
+    -   `C-c k` kill other buffers.
+    -   `C-c o` open file with.
+    -   `s-RET` will open line above.
+    -   `s-k` kill the whole line.
+    -   `C-c d` duplicate current line (or region).
     
-    Do we really need a line here? We do.
+    Do we really need a line here?
     
         (global-set-key (kbd "C-x g") 'magit-status)
         (global-set-key (kbd "M-x") 'smex)
@@ -327,11 +331,16 @@ Configure global settings.
         (global-set-key
           (kbd "C-x C-c")
           (lambda () (interactive)(switch-to-buffer (find-file-noselect (expand-file-name "configuration.org" walheimat-emacs-config-default-path)))))
-        (global-set-key (kbd "M-o") 'ace-window)
+        (global-set-key (kbd "M-o") #'crux-other-window-or-switch-buffer)
         (global-set-key (kbd "C-x j") 'dumb-jump-go)
         (global-set-key (kbd "C-x t m") 'git-timemachine-toggle)
         (global-set-key (kbd "s-s") 'flyspell-prog-mode)
         (global-set-key (kbd "C-x p f") 'find-file-in-project)
+        (global-set-key (kbd "C-c k") #'crux-kill-other-buffers)
+        (global-set-key (kbd "C-c o") #'crux-open-with)
+        (global-set-key (kbd "s-<return>") #'crux-smart-open-line-above)
+        (global-set-key (kbd "s-k") #'crux-kill-whole-line)
+        (global-set-key (kbd "C-c d") #'crux-duplicate-current-line-or-region)
 
 7.  theme
 
@@ -384,11 +393,6 @@ Configure global settings.
 
     Add some functions.
     
-        ;; kill all other buffers
-        (defun kill-other-buffers ()
-          "Kill all other buffers."
-          (interactive)
-          (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
         ;; check if buffer is treemacs buffer
         ;; similar to minibufferp
         (defun treemacsbufferp ()
@@ -700,51 +704,7 @@ Configure specific packages/aspects.
               telephone-line-secondary-left-separator 'telephone-line-identity-hollow-right)
         (telephone-line-mode t)
 
-22. vimish
-
-    Trying out evil.
-    
-        ;; (require 'evil)
-        ;; (require 'vimish-fold)
-        ;; (require 'evil-vimish-fold)
-        ;; (setq evil-magit-state 'emacs)
-        ;; (setq evil-magit-emacs-to-default-state-modes nil)
-        ;; (require 'evil-magit)
-        ;; change mode-line color by evil state
-        ;; (require 'cl)
-        ;; (lexical-let ((default-color (cons (face-background 'mode-line)
-        ;;                                    (face-foreground 'mode-line))))
-        
-        ;; (defun color-mode-line()
-        ;;   (let ((color (cond ((minibufferp) default-color)
-        ;;                      ((treemacsbufferp) default-color)
-        ;;                      ((evil-insert-state-p) '("#9932CC" . "#ffffff"))
-        ;;                      ;; ((evil-emacs-state-p)  '("#ff6347" . "#ffffff"))
-        ;;                      ((buffer-modified-p)   '("#db7093" . "#ffffff"))
-        ;;                      (t default-color))))
-        ;;     (set-face-background 'mode-line (car color))
-        ;;     (set-face-foreground 'mode-line (cdr color))))
-        
-        ;; (add-hook 'post-command-hook 'color-mode-line)
-        ;; (defun all-evil()
-        ;;   (message "going all evil")
-        ;;   (evil-mode 1))
-        ;;   (evil-vimish-fold-mode))
-        ;; (setq evil-default-state 'emacs)
-        
-        ;; (add-hook 'evil-normal-state-entry-hook
-        ;;   (lambda ()
-        ;;     (message "Switching to normal state")
-        ;;     (setq evil-magit-emacs-to-default-state-modes '(git-commit-mode))
-        ;;     (setq evil-magit-state 'normal)))
-        ;; (add-hook 'evil-normal-state-exit-hook
-        ;;   (lambda ()
-        ;;      (message "Switching to emacs state")
-        ;;      (setq evil-magit-emacs-to-default-state-modes nil)
-        ;;      (setq evil-magit-state 'emacs)))
-        ;; (all-evil)
-
-23. yasnippet
+22. yasnippet
 
     Don't enable globally but prepare for per-buffer use.
     

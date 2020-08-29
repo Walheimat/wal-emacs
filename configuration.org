@@ -108,6 +108,7 @@ Define and install packages (if they're missing).
      company-lsp
      company-restclient
      company-web
+     crux
      dap-mode
      diff-hl
      diminish
@@ -123,7 +124,6 @@ Define and install packages (if they're missing).
      evil
      evil-magit
      evil-nerd-commenter
-     evil-vimish-fold
      find-file-in-project
      fira-code-mode
      flycheck
@@ -159,7 +159,6 @@ Define and install packages (if they're missing).
      treemacs-evil
      typescript-mode
      use-package
-     vimish-fold
      web-mode
      which-key
      yaml-mode
@@ -228,11 +227,11 @@ Turn on a lot of useful (and prettifying) modes.
 (global-font-lock-mode 1)
 (mode-line-bell-mode)
 #+END_SRC
-**** reasonable settings
+**** reasonable
+settings
 Insertion of text should delete region. Bracket pairs should be highlighted.
 Window (or frame ...) should start maximized. Garbage collection and memory.
 #+BEGIN_SRC emacs-lisp
-;; show right away please
 (setq mouse-yank-at-point t)
 (setq show-paren-delay 0.0)
 (setq gc-cons-threshold 100000000)
@@ -279,14 +278,18 @@ Change up the key bindings a bit.
 + =s-a= to use ack. _Requires ack_!
 + =C-x r q= to (really) quit.
 + =C-x C-c= to open this config file.
-+ =M-o= to go to "other" window.
++ =M-o= to go to "other" window or last buffer.
 + =C-x j= to dumb-jump.
 + =C-x t m= to open timemachine.
 + =s-s= turn on flyspell prog mode.
 + =C-x p f= find file in project.
++ =C-c k= kill other buffers.
++ =C-c o= open file with.
++ =s-RET= will open line above.
++ =s-k= kill the whole line.
++ =C-c d= duplicate current line (or region).
 
-Do we really need a line here? We do.
-
+Do we really need a line here?
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "C-x g") 'magit-status)
 (global-set-key (kbd "M-x") 'smex)
@@ -296,11 +299,16 @@ Do we really need a line here? We do.
 (global-set-key
   (kbd "C-x C-c")
   (lambda () (interactive)(switch-to-buffer (find-file-noselect (expand-file-name "configuration.org" walheimat-emacs-config-default-path)))))
-(global-set-key (kbd "M-o") 'ace-window)
+(global-set-key (kbd "M-o") #'crux-other-window-or-switch-buffer)
 (global-set-key (kbd "C-x j") 'dumb-jump-go)
 (global-set-key (kbd "C-x t m") 'git-timemachine-toggle)
 (global-set-key (kbd "s-s") 'flyspell-prog-mode)
 (global-set-key (kbd "C-x p f") 'find-file-in-project)
+(global-set-key (kbd "C-c k") #'crux-kill-other-buffers)
+(global-set-key (kbd "C-c o") #'crux-open-with)
+(global-set-key (kbd "s-<return>") #'crux-smart-open-line-above)
+(global-set-key (kbd "s-k") #'crux-kill-whole-line)
+(global-set-key (kbd "C-c d") #'crux-duplicate-current-line-or-region)
 #+END_SRC
 **** theme
 Be sure to check out [[https://peach-melpa.org/][Peach Melpa]] to find a theme you like.
@@ -349,11 +357,6 @@ Zone out after a minute.
 **** func stuff
 Add some functions.
 #+BEGIN_SRC emacs-lisp
-;; kill all other buffers
-(defun kill-other-buffers ()
-  "Kill all other buffers."
-  (interactive)
-  (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
 ;; check if buffer is treemacs buffer
 ;; similar to minibufferp
 (defun treemacsbufferp ()
@@ -643,49 +646,6 @@ A slightly nicer modeline.
       telephone-line-primary-left-separator 'telephone-line-identity-right
       telephone-line-secondary-left-separator 'telephone-line-identity-hollow-right)
 (telephone-line-mode t)
-#+END_SRC
-**** vimish
-Trying out evil.
-#+BEGIN_SRC emacs-lisp
-;; (require 'evil)
-;; (require 'vimish-fold)
-;; (require 'evil-vimish-fold)
-;; (setq evil-magit-state 'emacs)
-;; (setq evil-magit-emacs-to-default-state-modes nil)
-;; (require 'evil-magit)
-;; change mode-line color by evil state
-;; (require 'cl)
-;; (lexical-let ((default-color (cons (face-background 'mode-line)
-;;                                    (face-foreground 'mode-line))))
-
-;; (defun color-mode-line()
-;;   (let ((color (cond ((minibufferp) default-color)
-;;                      ((treemacsbufferp) default-color)
-;;                      ((evil-insert-state-p) '("#9932CC" . "#ffffff"))
-;;                      ;; ((evil-emacs-state-p)  '("#ff6347" . "#ffffff"))
-;;                      ((buffer-modified-p)   '("#db7093" . "#ffffff"))
-;;                      (t default-color))))
-;;     (set-face-background 'mode-line (car color))
-;;     (set-face-foreground 'mode-line (cdr color))))
-
-;; (add-hook 'post-command-hook 'color-mode-line)
-;; (defun all-evil()
-;;   (message "going all evil")
-;;   (evil-mode 1))
-;;   (evil-vimish-fold-mode))
-;; (setq evil-default-state 'emacs)
-
-;; (add-hook 'evil-normal-state-entry-hook
-;;   (lambda ()
-;;     (message "Switching to normal state")
-;;     (setq evil-magit-emacs-to-default-state-modes '(git-commit-mode))
-;;     (setq evil-magit-state 'normal)))
-;; (add-hook 'evil-normal-state-exit-hook
-;;   (lambda ()
-;;      (message "Switching to emacs state")
-;;      (setq evil-magit-emacs-to-default-state-modes nil)
-;;      (setq evil-magit-state 'emacs)))
-;; (all-evil)
 #+END_SRC
 **** yasnippet
 Don't enable globally but prepare for per-buffer use.
