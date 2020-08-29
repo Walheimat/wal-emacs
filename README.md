@@ -9,12 +9,12 @@ Its base is an org file so it doubles as a readme.
 
 # Table of Contents
 
-1.  [emacs config](#org8f0ba0e)
-    1.  [setup](#orgd9b85e6)
-    2.  [config](#org2344287)
+1.  [emacs config](#orgb5e9746)
+    1.  [setup](#orga673b11)
+    2.  [config](#orgee16459)
 
 
-<a id="orgd9b85e6"></a>
+<a id="orga673b11"></a>
 
 ## setup
 
@@ -55,7 +55,7 @@ but this has failed before. If that is the case do the following:
 -   once the installation is complete, re-run Emacs
 
 
-<a id="org2344287"></a>
+<a id="orgee16459"></a>
 
 ## config
 
@@ -346,7 +346,7 @@ Configure global settings.
 
     Be sure to check out [Peach Melpa](https://peach-melpa.org/) to find a theme you like.
     
-        (load-theme 'doom-laserwave t)
+        (load-theme 'doom-dracula t)
 
 8.  font size
 
