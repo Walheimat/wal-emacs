@@ -4,7 +4,7 @@
 * emacs config
 This project is my personal Emacs config.
 
-The base is an org file so it doubles as a readme.
+Its base is an org file so it doubles as a readme.
 
 #+TOC: headlines 2
 
@@ -18,13 +18,14 @@ If you're interested in trying out Emacs using my config, here are the necessary
   + run Emacs
   + hit =M-x= (that is your Alt/Option key followed by the letter =x=)
   + type =describe-variable= and hit return
+  + type =user-emacs-directory= and hit return again
 
   A window should pop up telling you the path
   
   Finally run =git clone git@gitlab.com:Walheimat/emacs-config.git ~/.emacs.d=
   (replace =~/.emacs.d= with your actual path if it differs)
 
-+ Copy the config file included in this repo by running =cp ~/.emacs.d/emacs-config/.emacs.example ../../.emacs=
++ Copy the config file included in this repo by running =cp ~/.emacs.d/emacs-config/.emacs.example ~/.emacs=
 
   Adapt the path again if necessary
 
@@ -35,6 +36,14 @@ the variable =walheimat-emacs-config-default-path= in the example config you jus
 
 *Note* that this config uses the =all-the-icons= package whose icons need to be downloaded manually
 by running =M-x all-the-icons-install-fonts= and selecting =yes=.
+
+*Note* that this config uses =dash=. The config will try to install it before installing the other packages
+but this has failed before. If that is the case do the following:
+
++ hit =M-x=, type =package-install= and hit return
++ type =dash= and hit return again
++ once the installation is complete, re-run Emacs
+
 ** config
 Configure Emacs. The init script will execute everything that follows.
 *** before init
@@ -99,6 +108,7 @@ Define and install packages (if they're missing).
      company-lsp
      company-restclient
      company-web
+     crux
      dap-mode
      diff-hl
      diminish
@@ -114,8 +124,8 @@ Define and install packages (if they're missing).
      evil
      evil-magit
      evil-nerd-commenter
-     evil-vimish-fold
      find-file-in-project
+     fira-code-mode
      flycheck
      focus
      git-timemachine
@@ -129,6 +139,7 @@ Define and install packages (if they're missing).
      lsp-mode
      magit
      markdown-mode
+     mode-line-bell
      naysayer-theme
      nodejs-repl
      org-bullets
@@ -137,6 +148,7 @@ Define and install packages (if they're missing).
      prettier-js
      projectile
      rainbow-delimiters
+     rainbow-mode
      restclient
      rjsx-mode
      s
@@ -147,11 +159,11 @@ Define and install packages (if they're missing).
      treemacs-evil
      typescript-mode
      use-package
-     vimish-fold
      web-mode
      which-key
      yaml-mode
      yasnippet
+     yasnippet-snippets
      zoom
      )))
 
@@ -213,12 +225,13 @@ Turn on a lot of useful (and prettifying) modes.
 (zoom-mode 1)
 (beacon-mode 1)
 (global-font-lock-mode 1)
+(mode-line-bell-mode)
 #+END_SRC
-**** reasonable settings
+**** reasonable
+settings
 Insertion of text should delete region. Bracket pairs should be highlighted.
 Window (or frame ...) should start maximized. Garbage collection and memory.
 #+BEGIN_SRC emacs-lisp
-;; show right away please
 (setq mouse-yank-at-point t)
 (setq show-paren-delay 0.0)
 (setq gc-cons-threshold 100000000)
@@ -265,14 +278,18 @@ Change up the key bindings a bit.
 + =s-a= to use ack. _Requires ack_!
 + =C-x r q= to (really) quit.
 + =C-x C-c= to open this config file.
-+ =M-o= to go to "other" window.
++ =M-o= to go to "other" window or last buffer.
 + =C-x j= to dumb-jump.
 + =C-x t m= to open timemachine.
 + =s-s= turn on flyspell prog mode.
 + =C-x p f= find file in project.
++ =C-c k= kill other buffers.
++ =C-c o= open file with.
++ =s-RET= will open line above.
++ =s-k= kill the whole line.
++ =C-c d= duplicate current line (or region).
 
-Do we really need a line here? We do.
-
+Do we really need a line here?
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "C-x g") 'magit-status)
 (global-set-key (kbd "M-x") 'smex)
@@ -282,26 +299,33 @@ Do we really need a line here? We do.
 (global-set-key
   (kbd "C-x C-c")
   (lambda () (interactive)(switch-to-buffer (find-file-noselect (expand-file-name "configuration.org" walheimat-emacs-config-default-path)))))
-(global-set-key (kbd "M-o") 'ace-window)
+(global-set-key (kbd "M-o") #'crux-other-window-or-switch-buffer)
 (global-set-key (kbd "C-x j") 'dumb-jump-go)
 (global-set-key (kbd "C-x t m") 'git-timemachine-toggle)
 (global-set-key (kbd "s-s") 'flyspell-prog-mode)
 (global-set-key (kbd "C-x p f") 'find-file-in-project)
+(global-set-key (kbd "C-c k") #'crux-kill-other-buffers)
+(global-set-key (kbd "C-c o") #'crux-open-with)
+(global-set-key (kbd "s-<return>") #'crux-smart-open-line-above)
+(global-set-key (kbd "s-k") #'crux-kill-whole-line)
+(global-set-key (kbd "C-c d") #'crux-duplicate-current-line-or-region)
 #+END_SRC
 **** theme
-Just pick a theme. At the moment it is some kaolin variant.
+Be sure to check out [[https://peach-melpa.org/][Peach Melpa]] to find a theme you like.
 #+BEGIN_SRC emacs-lisp
-(load-theme 'kaolin-galaxy t)
+(load-theme 'doom-dracula t)
 #+END_SRC
 **** font size
-Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the custom arg =-bigger=, the default font size is 14 (instead of 10).
+Prefer FiraCode (-> mononoki -> Liberation -> DejaVu). If emacs runs with the custom arg =-bigger=, the default font size is 14 (instead of 10).
+
+To get support for ligatures, install the symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
 #+BEGIN_SRC emacs-lisp
 (require 'dash)
 (defun font-candidate (&rest fonts)
   "Return the first available font from a list of fonts."
   (--first (find-font (font-spec :name it)) fonts))
 
-(set-face-attribute 'default nil :font (font-candidate '"mononoki 12" "Fira Code 12" "Liberation Mono 12" "DejaVu Sans Mono 12"))
+(set-face-attribute 'default nil :font (font-candidate '"Fira Code 12" "mononoki 12" "Liberation Mono 12" "DejaVu Sans Mono 12"))
 
 (defun found-custom-arg (switch)
   "Check for custom arg and delete it right away so emacs doesn't complain."
@@ -310,13 +334,19 @@ Prefer mononoki (-> FiraCode -> Liberation -> DejaVu). If emacs runs with the cu
     found-switch))
 
 (if (found-custom-arg "-bigger")
-  (set-default-font (font-candidate '"mononoki 14" "Fira Code 14" "Liberation Mono 14" "DejaVu Sans Mono 14"))
+  (set-default-font (font-candidate '"Fira Code 14" "mononoki 14" "Liberation Mono 14" "DejaVu Sans Mono 14"))
 )
 
 ;; this requires you to have installed iosevka
 (if (found-custom-arg "-iosevka")
   (set-default-font "Iosevka 12")
 )
+
+;; use fira mode if it's the default font and the symbol font is installed
+(use-package fira-code-mode
+  :if (and (x-list-fonts "Fira Code Symbol") (string= "Fira Code" (face-attribute 'default :family)))
+  :custom (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
+  :hook prog-mode)                                         ; mode to enable fira-code-mode in
 #+END_SRC
 **** fun stuff
 Zone out after a minute.
@@ -327,11 +357,6 @@ Zone out after a minute.
 **** func stuff
 Add some functions.
 #+BEGIN_SRC emacs-lisp
-;; kill all other buffers
-(defun kill-other-buffers ()
-  "Kill all other buffers."
-  (interactive)
-  (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
 ;; check if buffer is treemacs buffer
 ;; similar to minibufferp
 (defun treemacsbufferp ()
@@ -556,7 +581,6 @@ Less indentation. Never other window.
           treemacs-width                         35
 	  treemacs-move-forward-on-expand        t
 	  treemacs-follow-after-init             nil
-	  treemacs-recenter-after-file-follow    'always
           treemacs-indentation-string            " ⁝ "
           treemacs-is-never-other-window         t
 	  treemacs-no-delete-other-windows       nil
@@ -623,52 +647,10 @@ A slightly nicer modeline.
       telephone-line-secondary-left-separator 'telephone-line-identity-hollow-right)
 (telephone-line-mode t)
 #+END_SRC
-
-#+RESULTS:
-: t
-
-**** vimish
-Trying out evil.
+**** yasnippet
+Don't enable globally but prepare for per-buffer use.
 #+BEGIN_SRC emacs-lisp
-;; (require 'evil)
-;; (require 'vimish-fold)
-;; (require 'evil-vimish-fold)
-;; (setq evil-magit-state 'emacs)
-;; (setq evil-magit-emacs-to-default-state-modes nil)
-;; (require 'evil-magit)
-;; change mode-line color by evil state
-;; (require 'cl)
-;; (lexical-let ((default-color (cons (face-background 'mode-line)
-;;                                    (face-foreground 'mode-line))))
-
-;; (defun color-mode-line()
-;;   (let ((color (cond ((minibufferp) default-color)
-;;                      ((treemacsbufferp) default-color)
-;;                      ((evil-insert-state-p) '("#9932CC" . "#ffffff"))
-;;                      ;; ((evil-emacs-state-p)  '("#ff6347" . "#ffffff"))
-;;                      ((buffer-modified-p)   '("#db7093" . "#ffffff"))
-;;                      (t default-color))))
-;;     (set-face-background 'mode-line (car color))
-;;     (set-face-foreground 'mode-line (cdr color))))
-
-;; (add-hook 'post-command-hook 'color-mode-line)
-;; (defun all-evil()
-;;   (message "going all evil")
-;;   (evil-mode 1))
-;;   (evil-vimish-fold-mode))
-;; (setq evil-default-state 'emacs)
-
-;; (add-hook 'evil-normal-state-entry-hook
-;;   (lambda ()
-;;     (message "Switching to normal state")
-;;     (setq evil-magit-emacs-to-default-state-modes '(git-commit-mode))
-;;     (setq evil-magit-state 'normal)))
-;; (add-hook 'evil-normal-state-exit-hook
-;;   (lambda ()
-;;      (message "Switching to emacs state")
-;;      (setq evil-magit-emacs-to-default-state-modes nil)
-;;      (setq evil-magit-state 'emacs)))
-;; (all-evil)
+(yas-reload-all)
 #+END_SRC
 *** modes
 Configure modes.
@@ -694,6 +676,7 @@ Enable Flycheck and disable internal checker.
   (enable-tabs)
   (add-node-modules-path)
   (flycheck-mode 1)
+  (rainbow-mode)
   (rainbow-delimiters-mode)
   (drag-stuff-mode)
   (add-hook 'local-write-file-hooks
@@ -742,6 +725,9 @@ Pretty much like js2.
   (enable-tabs)
   (flycheck-mode)
   (rjsx-indent)
+  (rainbow-mode)
+  (rainbow-delimiters-mode)
+  (drag-stuff-mode)
   (add-hook 'local-write-file-hooks
     (lambda ()
       (delete-trailing-whitespace)
