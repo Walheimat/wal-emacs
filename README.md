@@ -9,12 +9,12 @@ Its base is an org file so it doubles as a readme.
 
 # Table of Contents
 
-1.  [emacs config](#org3359c53)
-    1.  [setup](#org7fcc25a)
-    2.  [config](#org589c7ec)
+1.  [emacs config](#org68661c5)
+    1.  [setup](#orgfa63869)
+    2.  [config](#orgfbeb558)
 
 
-<a id="org7fcc25a"></a>
+<a id="orgfa63869"></a>
 
 ## setup
 
@@ -55,7 +55,7 @@ but this has failed before. If that is the case do the following:
 -   once the installation is complete, re-run Emacs
 
 
-<a id="org589c7ec"></a>
+<a id="orgfbeb558"></a>
 
 ## config
 
@@ -306,23 +306,24 @@ Configure global settings.
     
     -   `C-x g` opens magit status.
     -   `M-x` opens smex.
-    -   `s-,` to comment.
-    -   `s-a` to use ack. <span class="underline">Requires ack</span>!
-    -   `C-x r q` to (really) quit.
-    -   `C-x C-c` to open this config file.
-    -   `M-o` to go to "other" window or last buffer.
-    -   `C-x j` to dumb-jump.
-    -   `C-x t m` to open timemachine.
-    -   `s-s` turn on flyspell prog mode.
-    -   `C-x p f` find file in project.
-    -   `C-c k` kill other buffers.
-    -   `C-c o` open file with.
-    -   `s-RET` will open line above.
-    -   `s-k` kill the whole line.
-    -   `C-c d` duplicate current line (or region).
-    -   `C-x 4 t` transpose windows (watch out for treemacs).
+    -   `s-,` (un-)comments.
+    -   `s-a` runs ack. <span class="underline">Requires ack</span>!
+    -   `C-x r q` (really) quits.
+    -   `C-x C-c` opens this config org file.
+    -   `M-o` goes to the "other" window or the last buffer.
+    -   `C-x j` dumb-jumps.
+    -   `C-x t m` opens the timemachine.
+    -   `s-s` turns on flyspell prog mode.
+    -   `C-x p f` finds a project file.
+    -   `C-c k` kills all other buffers.
+    -   `C-c o` opens file with outside program.
+    -   `s-RET` will open a (indented) line above.
+    -   `s-k` kills the whole line.
+    -   `C-c d` duplicates the current line (or region).
+    -   `C-x 4 t` transposes windows (watch out for treemacs).
+    -   `C-d d` opens docker.
     
-    Do we really need a line here?
+    Do we really need a line here? Yes.
     
         (global-set-key (kbd "C-x g") 'magit-status)
         (global-set-key (kbd "M-x") 'smex)
@@ -343,12 +344,13 @@ Configure global settings.
         (global-set-key (kbd "s-k") #'crux-kill-whole-line)
         (global-set-key (kbd "C-c d") #'crux-duplicate-current-line-or-region)
         (global-set-key (kbd "C-x 4 t") #'crux-transpose-windows)
+        (global-set-key (kbd "C-c d") 'docker)
 
 7.  theme
 
     Be sure to check out [Peach Melpa](https://peach-melpa.org/) to find a theme you like.
     
-        (load-theme 'doom-dracula t)
+        (load-theme 'panda t)
 
 8.  font size
 
