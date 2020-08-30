@@ -9,12 +9,12 @@ Its base is an org file so it doubles as a readme.
 
 # Table of Contents
 
-1.  [emacs config](#orgb5e9746)
-    1.  [setup](#orga673b11)
-    2.  [config](#orgee16459)
+1.  [emacs config](#org3359c53)
+    1.  [setup](#org7fcc25a)
+    2.  [config](#org589c7ec)
 
 
-<a id="orga673b11"></a>
+<a id="org7fcc25a"></a>
 
 ## setup
 
@@ -55,7 +55,7 @@ but this has failed before. If that is the case do the following:
 -   once the installation is complete, re-run Emacs
 
 
-<a id="orgee16459"></a>
+<a id="org589c7ec"></a>
 
 ## config
 
@@ -320,6 +320,7 @@ Configure global settings.
     -   `s-RET` will open line above.
     -   `s-k` kill the whole line.
     -   `C-c d` duplicate current line (or region).
+    -   `C-x 4 t` transpose windows (watch out for treemacs).
     
     Do we really need a line here?
     
@@ -341,6 +342,7 @@ Configure global settings.
         (global-set-key (kbd "s-<return>") #'crux-smart-open-line-above)
         (global-set-key (kbd "s-k") #'crux-kill-whole-line)
         (global-set-key (kbd "C-c d") #'crux-duplicate-current-line-or-region)
+        (global-set-key (kbd "C-x 4 t") #'crux-transpose-windows)
 
 7.  theme
 
@@ -771,6 +773,7 @@ Configure modes.
         (defun my-python-mode-hook ()
           "Hooks for python mode."
           (flycheck-mode 1)
+          (drag-stuff-mode)
           (add-hook 'local-write-file-hooks
             (lambda ()
               (delete-trailing-whitespace)
@@ -810,6 +813,7 @@ Configure modes.
         (defun my-typescript-mode-hook ()
           "Hooks for typescript mode."
           (enable-tabs)
+          (drag-stuff-mode)
           (add-node-modules-path)
           (flycheck-mode 1)
           (lsp)
@@ -832,6 +836,7 @@ Configure modes.
           "Hooks for web mode."
           (enable-tabs)
           (web-mode-use-tabs)
+          (drag-stuff-mode)
           (add-node-modules-path)
           (lsp)
           (flycheck-mode)
