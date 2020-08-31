@@ -9,12 +9,12 @@ Its base is an org file so it doubles as a readme.
 
 # Table of Contents
 
-1.  [emacs config](#org68661c5)
-    1.  [setup](#orgfa63869)
-    2.  [config](#orgfbeb558)
+1.  [emacs config](#orgf9d1336)
+    1.  [setup](#org307c269)
+    2.  [config](#orgd2ca60b)
 
 
-<a id="orgfa63869"></a>
+<a id="org307c269"></a>
 
 ## setup
 
@@ -55,7 +55,7 @@ but this has failed before. If that is the case do the following:
 -   once the installation is complete, re-run Emacs
 
 
-<a id="orgfbeb558"></a>
+<a id="orgd2ca60b"></a>
 
 ## config
 
@@ -164,6 +164,7 @@ Set up emacs, package manager and packages.
              naysayer-theme
              nodejs-repl
              org-bullets
+             panda-theme
              perspective
              posframe
              prettier-js
