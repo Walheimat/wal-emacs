@@ -9,12 +9,12 @@ Its base is an org file so it doubles as a readme.
 
 # Table of Contents
 
-1.  [emacs config](#orgf9d1336)
-    1.  [setup](#org307c269)
-    2.  [config](#orgd2ca60b)
+1.  [emacs config](#orgdd0e43c)
+    1.  [setup](#org79149df)
+    2.  [config](#orga6d718d)
 
 
-<a id="org307c269"></a>
+<a id="org79149df"></a>
 
 ## setup
 
@@ -55,7 +55,7 @@ but this has failed before. If that is the case do the following:
 -   once the installation is complete, re-run Emacs
 
 
-<a id="orgd2ca60b"></a>
+<a id="orga6d718d"></a>
 
 ## config
 
@@ -145,16 +145,15 @@ Set up emacs, package manager and packages.
              evil
              evil-magit
              evil-nerd-commenter
+             expand-region
              find-file-in-project
              fira-code-mode
              flycheck
-             focus
              git-timemachine
              highlight-numbers
              highlight-indent-guides
              hydra
              ivy
-             json-mode
              js2-mode
              kaolin-themes
              lsp-mode
@@ -180,6 +179,7 @@ Set up emacs, package manager and packages.
              telephone-line
              treemacs-evil
              typescript-mode
+             undo-fu
              use-package
              web-mode
              which-key
@@ -323,6 +323,8 @@ Configure global settings.
     -   `C-c d` duplicates the current line (or region).
     -   `C-x 4 t` transposes windows (watch out for treemacs).
     -   `C-d d` opens docker.
+    -   `C-+` expands region.
+    -   `C-z=/=C-S-z` undos/redos.
     
     Do we really need a line here? Yes.
     
@@ -346,6 +348,10 @@ Configure global settings.
         (global-set-key (kbd "C-c d") #'crux-duplicate-current-line-or-region)
         (global-set-key (kbd "C-x 4 t") #'crux-transpose-windows)
         (global-set-key (kbd "C-c d") 'docker)
+        (global-set-key (kbd "C-+") 'er/expand-region)
+        (global-unset-key (kbd "C-z"))
+        (global-set-key (kbd "C-z") 'undo-fu-only-undo)
+        (global-set-key (kbd "C-S-z") 'undo-fu-only-redo)
 
 7.  theme
 
