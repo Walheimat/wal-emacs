@@ -395,7 +395,10 @@ Key binding.
 **** dap
 Require stuff.
 #+BEGIN_SRC emacs-lisp
+(require 'cl)
 (require 'dap-node)
+(require 'dap-python)
+(setq dap-python-executable "python3")
 (dap-auto-configure-mode 1)
 (dap-register-debug-template
   "Node::Attach"
@@ -403,7 +406,10 @@ Require stuff.
         :request "attach"
 	:remoteRoot "/usr/src/app"
 	:localRoot "/home/krister/theventury"
+	:port 9229
         :name "Node::Attach"))
+(add-hook 'dap-stopped-hook
+          (lambda (arg) (call-interactively #'dap-hydra)))
 #+END_SRC
 **** diff-hl
 Refresh post magit.
