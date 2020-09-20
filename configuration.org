@@ -46,6 +46,13 @@ but this has failed before. If that is the case do the following:
 
 ** config
 Configure Emacs. The init script will execute everything that follows.
+*** personal
+Set some personal info.
+
+#+BEGIN_SRC emacs-lisp
+(setq user-full-name "Krister Schuchardt"
+      user-mail-address "krister.schuchardt@gmail.com")
+#+END_SRC
 *** before init
 Set up emacs, package manager and packages.
 **** general
@@ -142,6 +149,7 @@ Define and install packages (if they're missing).
      naysayer-theme
      nodejs-repl
      org-bullets
+     org-super-agenda
      panda-theme
      perspective
      posframe
@@ -154,6 +162,7 @@ Define and install packages (if they're missing).
      s
      shell-pop
      smex
+     spacemacs-theme
      treemacs
      telephone-line
      treemacs-evil
@@ -326,7 +335,7 @@ Do we really need a line here? Yes.
 **** theme
 Be sure to check out [[https://peach-melpa.org/][Peach Melpa]] to find a theme you like.
 #+BEGIN_SRC emacs-lisp
-(load-theme 'kaolin-galaxy t)
+(load-theme 'spacemacs-dark t)
 #+END_SRC
 **** font size
 Prefer FiraCode (-> mononoki -> Liberation -> DejaVu). If emacs runs with the custom arg =-bigger=, the default font size is 14 (instead of 10).
@@ -719,16 +728,106 @@ Enable Flycheck and disable internal checker.
 (add-hook 'js2-mode-hook 'my-js2-mode-hook)
  #+END_SRC
 **** org mode
-**** Make org-mode look nicer
-Use bullets mode and make the ellipses bendy arrows.
+***** org mode itself
+Use bullets mode and make the ellipses bendy arrows. When a =TODO= is =DONE= log a note.
 #+BEGIN_SRC emacs-lisp
 (add-hook 'org-mode-hook (lambda() (org-bullets-mode t)))
-(setq org-ellipsis "↷")
+(setq org-ellipsis "↷"
+      org-log-done 'note
+      org-directory "~/org/"
+      org-default-notes-file (concat org-directory "notes.org")
+      org-startup-with-inline-images t
+      org-todo-keywords
+      '((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
+(require 'org-install)
+(setq org-modules '(org-habit org-info org-tempo))
+(org-load-modules-maybe t)
+(setq org-habit-graph-column 105)
+
+(defun org-make-habit()
+    (interactive)
+    (org-set-property "STYLE" "habit"))
 #+END_SRC
-**** Make org-mode log with notes
-When a =TODO= is =DONE= log a note.
+***** agendas
+Everything concerning agendas (thx to mwfogleman).
 #+BEGIN_SRC emacs-lisp
-(setq org-log-done 'note)
+(use-package org-super-agenda
+  :init
+  (org-super-agenda-mode)
+  (defun my-org-super-agenda ()
+    (interactive)
+    (let ((org-super-agenda-groups
+           '((:name "Schedule"
+                    :time-grid t)
+             (:name "Development"
+                    :tag "dev")
+             )))
+      (org-agenda nil "a")))
+
+  (defun my-org-super-agenda-today ()
+    (interactive)
+    (progn
+      (my-org-super-agenda)
+      (org-agenda-day-view)))
+
+  (defun my-personal-agenda ()
+    (interactive)
+    (let ((org-super-agenda-groups
+           '((:discard (:tag ("tv"))))))
+      (org-agenda nil "a")
+      (org-agenda-day-view)))
+
+  (defun my-dev-agenda ()
+    (interactive)
+    (let ((org-super-agenda-groups
+           '((:name "Development"
+                    :tag "dev")
+              (:discard (:anything t)))))
+      (org-agenda nil "a")
+      (org-agenda-day-view)))
+
+  (defun my-bla-agenda ()
+    (interactive)
+    (let ((org-super-agenda-groups
+           '((:name "Meetings"
+                    :tag "bla")
+              (:discard (:anything t)))))
+      (org-agenda nil "a")
+      (org-agenda-day-view)))
+
+  (defun my-edu-agenda ()
+    (interactive)
+    (let ((org-super-agenda-groups
+           '((:name "Education"
+                    :tag "edu")
+              (:discard (:anything t)))))
+      (org-agenda nil "a")
+      (org-agenda-day-view)))
+
+  (defun my-okr-agenda ()
+    (interactive)
+    (let ((org-super-agenda-groups
+           '((:name "OKR"
+                    :tag "okr")
+              (:discard (:anything t)))))
+      (org-agenda nil "a")
+      (org-agenda-day-view)))
+
+  (bind-keys ("C-c 0" . my-org-super-agenda-today)
+             ("C-c 1" . my-dev-agenda)
+	     ("C-c 2" . my-bla-agenda)
+	     ("C-c 3" . my-edu-agenda)
+	     ("C-c 4" . my-okr-agenda)
+             ("C-c 5" . my-personal-agenda)
+             ("C-c 6" . my-org-super-agenda)))
+
+;; you will need to create these (or other) files manually for now
+(setq org-agenda-files (quote ("~/org/task.org"
+                               "~/org/userstory.org"
+			       "~/org/bug.org"
+			       "~/org/smartup.org"
+			       "~/org/improvement.org"
+			       )))
 #+END_SRC
 **** python mode
 Enable flycheck.
