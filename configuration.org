@@ -95,6 +95,8 @@ Define and install packages (if they're missing).
 (unless (package-installed-p 'dash)
   (package-install 'dash))
 (require 'dash)
+(require 'diminish)
+(require 'delight)
 
 ;; install use-package right away
 (unless (package-installed-p 'use-package)
@@ -108,6 +110,8 @@ Define and install packages (if they're missing).
       (package-install it)))
   (delete-other-windows))
 
+;; packages that either don't need configuration
+;; or are requirements in and of themselves are put here
 (defun init--install-packages ()
   (packages-install
    '(
@@ -125,9 +129,10 @@ Define and install packages (if they're missing).
      ;; company-lsp
      ;; company-restclient
      ;; company-web
-     crux
-     dap-mode
+     ;; crux
+     ;; dap-mode
      diff-hl
+     ;; we need this before `use-package`
      diminish
      dimmer
      ;; docker
@@ -189,11 +194,11 @@ Define and install packages (if they're missing).
      undo-fu
      ;; use-package
      web-mode
-     which-key
+     ;; which-key
      yaml-mode
-     yasnippet
-     yasnippet-snippets
-     zoom
+     ;; yasnippet
+     ;; yasnippet-snippets
+     ;; zoom
      )))
 
 (condition-case nil
@@ -346,12 +351,7 @@ Do we really need a line here? Yes.
   (lambda () (interactive)(switch-to-buffer (find-file-noselect (expand-file-name "configuration.org" walheimat-emacs-config-default-path)))))
 (global-set-key (kbd "s-s") 'flyspell-prog-mode)
 ;; crux
-(global-set-key (kbd "M-o") #'crux-other-window-or-switch-buffer)
-(global-set-key (kbd "C-c k") #'crux-kill-other-buffers)
-(global-set-key (kbd "C-c o") #'crux-open-with)
-(global-set-key (kbd "s-<return>") #'crux-smart-open-line-above)
-(global-set-key (kbd "s-k") #'crux-kill-whole-line)
-(global-set-key (kbd "C-c d") #'crux-duplicate-current-line-or-region)
+
 ;; need to find solution with treemacs open
 ;; (global-set-key (kbd "C-x 4 t") #'crux-transpose-windows)
 (global-set-key (kbd "C-+") 'er/expand-region)
@@ -412,8 +412,8 @@ Add some functions.
   "Check if this is the treemacs buffer."
   (eq (current-buffer) (treemacs-get-local-buffer)))
 #+END_SRC
-*** specific
-Configure specific packages/aspects.
+*** packages
+Ensure and configure packages.
 **** ag
 This requires =ag= binary.
 
@@ -438,10 +438,12 @@ Set up company-box
 ;; (require 'company-box)
 (use-package company-box)
 (use-package company
+  :delight " 📦"
+  :diminish company-box-mode
   :config 
   (setq company-minimum-prefix-length 3)
   (setq company-idle-delay 0.5)
-  :after company-box
+  :after (diminish company-box)
   :hook (company-mode . company-box-mode))
 (use-package company-lsp
   :after company)
@@ -452,6 +454,17 @@ Set up company-box
 ;; (require 'company-box)
 ;; (add-hook 'company-mode-hook 'company-box-mode)
 #+END_SRC
+**** crux
+Let's use =crux= for some editing magic. Check the [[*key bindings][key bindings section]] for descriptions.
+#+BEGIN_SRC emacs-lisp
+(use-package crux
+  :bind (("M-o"        . crux-other-window-or-switch-buffer)
+         ("C-c k"      . crux-kill-other-buffers)
+         ("C-c o"      . crux-open-with)
+         ("s-<return>" . crux-smart-open-line-above)
+         ("s-k"        . crux-kill-whole-line)
+         ("C-c d"      . crux-duplicate-current-line-or-region)))
+#+END_SRC
 **** docker
 Use =docker= package with =C-x d=.
 #+BEGIN_SRC emacs-lisp
@@ -460,41 +473,48 @@ Use =docker= package with =C-x d=.
   :bind ("C-x d" . docker))
 #+END_SRC
 **** dap
-Require stuff.
+Debugging using VSCode's DAP. Register a template for attaching to
+a docker host.
 #+BEGIN_SRC emacs-lisp
-(require 'cl)
-(require 'dap-node)
-(require 'dap-python)
-(setq dap-python-executable "python3")
-(setq dap-auto-configure-features '(sessions locals breakpoints))
-(dap-auto-configure-mode 1)
-(dap-register-debug-template
-  "Node::Attach"
-  (list :type "node"
-        :request "attach"
-	:remoteRoot "/usr/src/app"
-	:localRoot "/home/krister/theventury"
-	:port 9229
-        :name "Node::Attach"))
-(add-hook 'dap-stopped-hook
+(use-package dap-mode
+  :delight 
+  :init
+    (require 'cl)
+    (add-hook 'dap-stopped-hook
           (lambda (arg) (call-interactively #'dap-hydra)))
+  :config
+    (require 'dap-node)
+    (require 'dap-python)
+    (setq dap-python-executable "python3")
+    ;; (setq dap-auto-configure-features '(sessions locals breakpoints))
+    ;; (dap-auto-configure-mode 1)
+    (dap-register-debug-template
+      "Node::Attach"
+      (list :type "node"
+            :request "attach"
+            :remoteRoot "/usr/src/app"
+  	    :localRoot "/home/krister/theventury"
+  	    :port 9229
+            :name "Node::Attach")))
 #+END_SRC
 **** diff-hl
 Refresh post magit.
 #+BEGIN_SRC emacs-lisp
-(add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
+(use-package diff-hl
+  :hook (magit-post-refresh-hook  . diff-hl-magit-post-refresh))
 #+END_SRC
 **** diminish
+See individual =use-package= declarations for usage.
 #+BEGIN_SRC emacs-lisp
-(require 'diminish)
-(diminish 'company-mode)
-(diminish 'ivy-mode)
-(diminish 'company-box-mode)
-(diminish 'beacon-mode)
-(diminish 'zoom-mode)
-(diminish 'which-key-mode)
-(diminish 'eldoc-mode)
-(diminish 'highlight-indent-guides-mode)
+;; (require 'diminish)
+;; (diminish 'company-mode)
+;; (diminish 'ivy-mode)
+;; (diminish 'company-box-mode)
+;; (diminish 'beacon-mode)
+;; (diminish 'zoom-mode)
+;; (diminish 'which-key-mode)
+;; (diminish 'eldoc-mode)
+;; (diminish 'highlight-indent-guides-mode)
 #+END_SRC
 **** dimmer
 Make dimmed frames a bit dimmer.
@@ -509,8 +529,10 @@ Make dimmed frames a bit dimmer.
 **** drag stuff
 Use the default key bindings.
 #+BEGIN_SRC emacs-lisp
-(require 'drag-stuff)
-(drag-stuff-define-keys)
+(use-package drag-stuff
+  :delight " 🖐"
+  :init
+  (drag-stuff-define-keys))
 #+END_SRC
 **** dumb-jump
 Use ivy. We have ivy.
@@ -607,20 +629,30 @@ There could be too many messages.
 (setq flyspell-issue-message-flag nil)
 #+END_SRC
 **** highlight-indent-guides
+While this is useful, I don't need to see the minor mode.
 #+BEGIN_SRC emacs-lisp
-(setq highlight-indent-guides-method 'character)
+(use-package highlight-indent-guides
+  :diminish highlight-indent-guides-mode
+  :init
+   (setq highlight-indent-guides-method 'character))
+#+END_SRC
+**** ivy
+We use ivy for everything.
+#+BEGIN_SRC emacs-lisp
+(use-package ivy
+  :delight " ⚘")
 #+END_SRC
 **** kaolin
 Apply kaolin theme to treemacs.
 #+BEGIN_SRC emacs-lisp
-(require 'kaolin-themes)
-(kaolin-treemacs-theme)
-(setq kaolin-ocean-alt-bg t)
-;; Enable distinct background for fringe and line numbers.
-(setq kaolin-themes-distinct-fringe t)  
-
-;; Enable distinct colors for company popup scrollbar.
-(setq kaolin-themes-distinct-company-scrollbar t)
+(use-package kaolin-themes
+  :config
+  (kaolin-treemacs-theme)
+  (setq kaolin-ocean-alt-bg t)
+  ;; Enable distinct background for fringe and line numbers.
+  (setq kaolin-themes-distinct-fringe t)  
+  ;; Enable distinct colors for company popup scrollbar.
+  (setq kaolin-themes-distinct-company-scrollbar t))
 #+END_SRC
 **** lsp
 Prefer capf, bigger delay, configure for angular.
@@ -654,10 +686,11 @@ Set up mode mappings.
 **** prettier-js
 Require so it can be used outside of minor mode.
 #+BEGIN_SRC emacs-lisp
-(require 'prettier-js)
-(setq prettier-js-args '(
-  "--print-width" "91"
-))
+(use-package prettier-js
+  :config
+  (setq prettier-js-args '(
+    "--print-width" "91"
+  )))
 #+END_SRC
 **** smartparens
 Configure.
@@ -755,11 +788,31 @@ A slightly nicer modeline.
       telephone-line-secondary-left-separator 'telephone-line-identity-hollow-right)
 (telephone-line-mode t)
 #+END_SRC
+**** which-key
+Show me my options.
+#+BEGIN_SRC emacs-lisp
+(use-package which-key
+  :delight " ⁇")
+#+END_SRC
 **** yasnippet
 Don't enable globally but prepare for per-buffer use.
 #+BEGIN_SRC emacs-lisp
-(yas-reload-all)
+(use-package yasnippet-snippets)
+(use-package yasnippet
+  :diminish yas-mode
+  :init
+  :after yasnippet-snippets
+  (yas-reload-all))
 #+END_SRC
+**** zoom
+Use the golden ratio.
+#+BEGIN_SRC emacs-lisp
+(use-package zoom
+ :delight " 🔎"
+ :config
+ (custom-set-variables
+   '(zoom-size '(0.618 . 0.618))))
+#+END
 *** modes
 Configure modes.
 **** lisp mode
@@ -986,9 +1039,4 @@ Web mode uses flycheck with lsp enabled.
 
 (add-hook 'web-mode-hook 'my-web-mode-hook)
 #+END_SRC
-**** zoom mode
-Use the golden ratio.
-#+BEGIN_SRC emacs-lisp
-(custom-set-variables
- '(zoom-size '(0.618 . 0.618)))
-#+END
+
