@@ -131,7 +131,7 @@ Define and install packages (if they're missing).
      ample-theme
      angular-mode
      ;; avy
-     beacon
+     ;; beacon
      ;; company
      ;; company-box
      ;; company-lsp
@@ -178,12 +178,12 @@ Define and install packages (if they're missing).
      org-bullets
      org-super-agenda
      panda-theme
-     perspective
+     ;; perspective
      posframe
      ;; prettier-js
      projectile
-     rainbow-delimiters
-     rainbow-mode
+     ;; rainbow-delimiters
+     ;; rainbow-mode
      request
      restclient
      rjsx-mode
@@ -194,7 +194,7 @@ Define and install packages (if they're missing).
      ;; smex
      spacemacs-theme
      ;; symon
-     swiper
+     ;; swiper
      ;; treemacs
      ;; telephone-line
      treemacs-evil
@@ -432,7 +432,7 @@ Highlight search results.
 #+BEGIN_SRC emacs-lisp
 (use-package ag
   :config
-    (setq ag-highlight-search t)
+  (setq ag-highlight-search t)
   :bind ("s-a" . ag-project))
 #+END_SRC
 **** avy
@@ -441,6 +441,11 @@ Use avy to jump to lines (=C-ä=) and chars (=C-ä=).
 (use-package avy
   :bind (("C-ö" . avy-goto-char)
          ("C-ä" . avy-goto-line)))
+#+END_SRC
+**** beacon
+#+BEGIN_SRC emacs-lisp
+(use-package beacon
+  :delight " 💡")
 #+END_SRC
 **** company
 Set up company-box
@@ -573,6 +578,7 @@ Show flycheck suggestions in popup tip.
 #+BEGIN_SRC emacs-lisp
 (use-package flycheck-popup-tip)
 (use-package flycheck
+  :delight " FlyC"
   :hook (flycheck-mode . flycheck-popup-tip-mode))
 #+END_SRC
 **** fira-code
@@ -650,10 +656,12 @@ While this is useful, I don't need to see the minor mode.
    (setq highlight-indent-guides-method 'character))
 #+END_SRC
 **** ivy
-We use ivy for everything.
+We use ivy for everything. No longer comes with swiper.
 #+BEGIN_SRC emacs-lisp
+(use-package swiper)
 (use-package ivy
   :delight " ⚘"
+  :after swiper
   :config
     (ivy-mode 1)
     (setq ivy-use-virtual-buffers t)
@@ -701,10 +709,18 @@ Require so it can be used outside of minor mode.
     "--print-width" "91"
   )))
 #+END_SRC
+**** rainbow
+Show colors in source code and make delimiters stand out.
+#+BEGIN_SRC emacs-lisp
+(use-package rainbow-delimiters)
+(use-package rainbow-mode
+  :delight " 🌈")
+#+END_SRC
 **** smartparens
 Configure.
 #+BEGIN_SRC emacs-lisp
 (use-package smartparens
+  :diminish smartparens-mode
   :init
   (require 'smartparens-config))
 #+END_SRC
@@ -729,6 +745,7 @@ Make it look nice.
 **** treemacs
 Less indentation. Never other window.
 #+BEGIN_SRC emacs-lisp
+(use-package perspective)
 (use-package treemacs
   :defer t
   :init
@@ -869,7 +886,7 @@ Enable flycheck.
 #+END_SRC
 **** js2 mode
 Enable Flycheck and disable internal checker.
- #+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (setq-default js2-show-parse-errors nil)
 (setq-default js2-strict-missing-semi-warning nil)
 
@@ -888,7 +905,7 @@ Enable Flycheck and disable internal checker.
         nil))
 )
 (add-hook 'js2-mode-hook 'my-js2-mode-hook)
- #+END_SRC
+#+END_SRC
 **** org mode
 ***** org mode itself
 Use bullets mode and make the ellipses bendy arrows. When a =TODO= is =DONE= log a note.
