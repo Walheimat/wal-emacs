@@ -65,6 +65,7 @@ No splash. Use separate file for customizations (so we don't clutter up our init
 ;; (setq initial-scratch-message nil)
 (setq custom-file (expand-file-name "custom.el" walheimat-emacs-config-default-path))
 (setq py-python-command "python3")
+(setq use-package-always-ensure t)
 (load custom-file)
 #+END_SRC
 **** MELPA
@@ -106,25 +107,25 @@ Define and install packages (if they're missing).
   (packages-install
    '(
      ace-window
-     ack
+     ;; ack
      add-node-modules-path
-     ag
+     ;; ag
      all-the-icons
      ample-theme
      angular-mode
-     avy
+     ;; avy
      beacon
-     company
-     company-box
-     company-lsp
-     company-restclient
-     company-web
+     ;; company
+     ;; company-box
+     ;; company-lsp
+     ;; company-restclient
+     ;; company-web
      crux
      dap-mode
      diff-hl
      diminish
      dimmer
-     docker
+     ;; docker
      dockerfile-mode
      doom-themes
      drag-stuff
@@ -317,37 +318,39 @@ Change up the key bindings a bit.
 + =C-d d= opens docker.
 + =C-+= expands region.
 + =C-z=/=C-S-z= undos/redos.
++ =C-ö= jumps to char with avy.
 + =C-ä= jumps to line with avy.
-+ =C-s= uses swiper to search.
++ =C-s= uses swiper to .
 
 Do we really need a line here? Yes.
 #+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "C-x g") 'magit-status)
 (global-set-key (kbd "M-x") 'smex)
+(global-set-key (kbd "C-x g") 'magit-status)
+(global-set-key (kbd "C-x j") 'dumb-jump-go)
+(global-set-key (kbd "C-x p f") 'find-file-in-project)
+(global-set-key (kbd "C-x t m") 'git-timemachine-toggle)
+;; (global-set-key (kbd "C-x d") 'docker)
+(global-set-key (kbd "\C-s") 'swiper)
 (global-set-key (kbd "s-,") 'evilnc-comment-or-uncomment-lines)
-(global-set-key (kbd "s-a") 'ag-project)
+;; (global-set-key (kbd "s-a") 'ag-project)
 (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
 (global-set-key
   (kbd "C-x C-c")
   (lambda () (interactive)(switch-to-buffer (find-file-noselect (expand-file-name "configuration.org" walheimat-emacs-config-default-path)))))
-(global-set-key (kbd "M-o") #'crux-other-window-or-switch-buffer)
-(global-set-key (kbd "C-x j") 'dumb-jump-go)
-(global-set-key (kbd "C-x t m") 'git-timemachine-toggle)
 (global-set-key (kbd "s-s") 'flyspell-prog-mode)
-(global-set-key (kbd "C-x p f") 'find-file-in-project)
+;; crux
+(global-set-key (kbd "M-o") #'crux-other-window-or-switch-buffer)
 (global-set-key (kbd "C-c k") #'crux-kill-other-buffers)
 (global-set-key (kbd "C-c o") #'crux-open-with)
 (global-set-key (kbd "s-<return>") #'crux-smart-open-line-above)
 (global-set-key (kbd "s-k") #'crux-kill-whole-line)
 (global-set-key (kbd "C-c d") #'crux-duplicate-current-line-or-region)
-(global-set-key (kbd "C-x 4 t") #'crux-transpose-windows)
-(global-set-key (kbd "C-c d") 'docker)
+;; need to find solution with treemacs open
+;; (global-set-key (kbd "C-x 4 t") #'crux-transpose-windows)
 (global-set-key (kbd "C-+") 'er/expand-region)
 (global-unset-key (kbd "C-z"))
 (global-set-key (kbd "C-z") 'undo-fu-only-undo)
 (global-set-key (kbd "C-S-z") 'undo-fu-only-redo)
-(global-set-key (kbd "C-ä") 'avy-goto-line)
-(global-set-key (kbd "\C-s") 'swiper)
 #+END_SRC
 **** theme
 Be sure to check out [[https://peach-melpa.org/][Peach Melpa]] to find a theme you like.
@@ -405,24 +408,49 @@ Add some functions.
 *** specific
 Configure specific packages/aspects.
 **** ag
-Highlight search results.
+This requires =ag= binary.
+
+Use =s-a= to search with =ag= in project. Highlight search results.
 #+BEGIN_SRC emacs-lisp
-(setq ag-highlight-search t)
+(use-package ag
+  :config
+    (setq ag-highlight-search t)
+  :bind ("s-a" . ag-project))
+#+END_SRC
+**** avy
+Use avy to jump to lines (=C-ä=) and chars (=C-ä=).
+#+BEGIN_SRC emacs-lisp
+(use-package avy
+  :ensure t
+  :bind (("C-ö" . avy-goto-char)
+         ("C-ä" . avy-goto-line)))
 #+END_SRC
 **** company
 Set up company-box
 #+BEGIN_SRC emacs-lisp
-(require 'company-box)
-(add-hook 'company-mode-hook 'company-box-mode)
-(setq company-minimum-prefix-length 3)
-(setq company-idle-delay 0.5)
+;; (require 'company-box)
+(use-package company-box)
+(use-package company
+  :config 
+  (setq company-minimum-prefix-length 3)
+  (setq company-idle-delay 0.5)
+  :after company-box
+  :hook (company-mode . company-box-mode))
+(use-package company-lsp
+  :after company)
+(use-package company-restclient
+  :after company)
+(use-package company-web
+  :after company)
+;; (require 'company-box)
+;; (add-hook 'company-mode-hook 'company-box-mode)
 #+END_SRC
 **** docker
-Key binding.
+Use =docker= package with =C-x d=.
 #+BEGIN_SRC emacs-lisp
 (use-package docker
   :ensure t
-  :bind ("C-c d" . docker))
+  :bind ("C-x d" . docker))
 #+END_SRC
 **** dap
 Require stuff.
@@ -508,7 +536,7 @@ Only check on save. Configure threshold and (unused) idle-change delay.
   ;; (setq flycheck-check-syntax-automatically '(save idle-change))
   ;; (setq flycheck-checker-error-threshold 100)
   ;; (setq flycheck-idle-change-delay 2.5)
-  'flycheck-popup-tip-mode)
+  (flycheck-popup-tip-mode))
 (add-hook 'flycheck-mode-hook 'my-flycheck-hook)
 #+END_SRC
 **** override finding eslint
@@ -628,7 +656,6 @@ Require so it can be used outside of minor mode.
 Configure.
 #+BEGIN_SRC emacs-lips
 (require 'smartparens-config)
-(add-hook 'js-mode-hook #'smartparens-mode)
 #+END_SRC
 **** symon
 Make it look nice.
@@ -728,6 +755,14 @@ Don't enable globally but prepare for per-buffer use.
 #+END_SRC
 *** modes
 Configure modes.
+**** lisp mode
+Enable flycheck.
+#+BEGIN_SRC emacs-lisp
+(defun my-elisp-mode-hook ()
+  "Hooks for lisp interaction mode."
+  (flycheck-mode 1))
+(add-hook 'emacs-lisp-mode-hook 'my-elisp-mode-hook)
+#+END_SRC
 **** css mode
 Just activate flycheck and tabs for now.
 #+BEGIN_SRC emacs-lisp
@@ -762,6 +797,7 @@ Enable Flycheck and disable internal checker.
   (rainbow-mode)
   (rainbow-delimiters-mode)
   (drag-stuff-mode)
+  (smartparens-mode)
   (add-hook 'local-write-file-hooks
     (lambda ()
       (delete-trailing-whitespace)
