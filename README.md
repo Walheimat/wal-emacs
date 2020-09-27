@@ -2,19 +2,19 @@
 
 # emacs config
 
-This project is my personal Emacs config.
+This project is my personal Emacs (26.3) config.
 
-Its base is an org file so it doubles as a readme.
+Its base is an org file so it doubles as a readme<sup><a id="fnr.1" class="footref" href="#fn.1">1</a></sup>.
 
 
 # Table of Contents
 
-1.  [emacs config](#orgb5e9746)
-    1.  [setup](#orga673b11)
-    2.  [config](#orgee16459)
+1.  [emacs config](#org043a737)
+    1.  [setup](#org81c47fd)
+    2.  [config](#org7df2c78)
 
 
-<a id="orga673b11"></a>
+<a id="org81c47fd"></a>
 
 ## setup
 
@@ -30,7 +30,7 @@ If you're interested in trying out Emacs using my config, here are the necessary
     -   type `describe-variable` and hit return
     -   type `user-emacs-directory` and hit return again
     
-    A window should pop up telling you the path
+    A window (or is it a frame?) should pop up telling you the path
     
     Finally run `git clone git@gitlab.com:Walheimat/emacs-config.git ~/.emacs.d`
     (replace `~/.emacs.d` with your actual path if it differs)
@@ -55,11 +55,19 @@ but this has failed before. If that is the case do the following:
 -   once the installation is complete, re-run Emacs
 
 
-<a id="orgee16459"></a>
+<a id="org7df2c78"></a>
 
 ## config
 
-Configure Emacs. The init script will execute everything that follows.
+Configure Emacs. The init script will evaluate <span class="underline">everything</span> that follows.
+
+
+### personal
+
+Set some personal info.
+
+    (setq user-full-name "Krister Schuchardt"
+          user-mail-address "krister.schuchardt@theventury.com")
 
 
 ### before init
@@ -70,12 +78,17 @@ Set up emacs, package manager and packages.
 
     No splash. Use separate file for customizations (so we don't clutter up our init file). Use python3.
     
-        (package-initialize)
         (setq inhibit-startup-message t)
         ;; (setq initial-scratch-message nil)
+        
+        ;; custom.el
         (setq custom-file (expand-file-name "custom.el" walheimat-emacs-config-default-path))
-        (setq py-python-command "python3")
+        (unless (file-exists-p custom-file)
+          (write-region "" nil custom-file))
         (load custom-file)
+        
+        ;; python
+        (setq py-python-command "python3")
 
 2.  MELPA
 
@@ -99,7 +112,7 @@ Set up emacs, package manager and packages.
         (setq package-pinned-packages '())
         (package-initialize)
 
-3.  packages
+3.  dependencies
 
     Define and install packages (if they're missing).
     
@@ -108,84 +121,40 @@ Set up emacs, package manager and packages.
           (package-install 'dash))
         (require 'dash)
         
+        ;; we need diminish and delight for use-package
+        (unless (package-installed-p 'diminish)
+          (package-install 'diminish))
+        (require 'diminish)
+        (unless (package-installed-p 'delight)
+          (package-install 'delight))
+        (require 'delight)
+        
+        ;; install use-package next
+        (unless (package-installed-p 'use-package)
+          (package-install 'use-package))
+        ;; always ensure
+        (require 'use-package-ensure)
+        (setq use-package-always-ensure t)
+        
         (defun packages-install (packages)
           (--each packages
             (when (not (package-installed-p it))
               (package-install it)))
           (delete-other-windows))
         
+        ;; packages that either don't need configuration
+        ;; or are requirements in and of themselves are put here
         (defun init--install-packages ()
           (packages-install
            '(
-             ace-window
-             ack
-             add-node-modules-path
-             all-the-icons
              ample-theme
-             angular-mode
-             beacon
-             company
-             company-box
-             company-lsp
-             company-restclient
-             company-web
-             crux
-             dap-mode
-             diff-hl
-             diminish
-             dimmer
-             docker
-             dockerfile-mode
              doom-themes
-             drag-stuff
-             dumb-jump
-             elixir-mode
-             esh-autosuggest
-             eshell-prompt-extras
-             evil
-             evil-magit
-             evil-nerd-commenter
-             find-file-in-project
-             fira-code-mode
-             flycheck
-             focus
-             git-timemachine
-             highlight-numbers
-             highlight-indent-guides
-             hydra
-             ivy
-             json-mode
-             js2-mode
              kaolin-themes
-             lsp-mode
-             magit
-             markdown-mode
-             mode-line-bell
              naysayer-theme
-             nodejs-repl
-             org-bullets
-             perspective
-             posframe
-             prettier-js
-             projectile
-             rainbow-delimiters
-             rainbow-mode
-             restclient
-             rjsx-mode
-             s
-             shell-pop
-             smex
-             treemacs
-             telephone-line
-             treemacs-evil
-             typescript-mode
-             use-package
-             web-mode
-             which-key
-             yaml-mode
-             yasnippet
-             yasnippet-snippets
-             zoom
+             ;; nodejs-repl
+             nord-theme
+             panda-theme
+             spacemacs-theme
              )))
         
         (condition-case nil
@@ -228,6 +197,7 @@ Configure global settings.
             (concat user-emacs-directory "backups")))))
         (setq auto-save-file-name-transforms
           `((".*" ,temporary-file-directory t)))
+        (setq create-lockfiles nil)
 
 3.  global modes
 
@@ -239,7 +209,8 @@ Configure global settings.
         (add-hook 'after-init-hook 'global-company-mode)
         (add-hook 'prog-mode-hook 'highlight-numbers-mode)
         (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
-        (global-display-line-numbers-mode)
+        (add-hook 'prog-mode-hook 'linum-mode)
+        ;; (global-display-line-numbers-mode)
         (ivy-mode 1)
         (global-prettify-symbols-mode +1)
         (global-diff-hl-mode)
@@ -254,6 +225,8 @@ Configure global settings.
         (beacon-mode 1)
         (global-font-lock-mode 1)
         (mode-line-bell-mode)
+        (eshell-syntax-highlighting-global-mode)
+        (symon-mode)
 
 4.  reasonable
 
@@ -271,7 +244,7 @@ Configure global settings.
         (add-to-list 'default-frame-alist '(fullscreen . maximized))
         (defalias 'yes-or-no-p 'y-or-n-p)
         (defun my-font-lock-hook ()
-          "Slantend and enchanted."
+          "Slanted and enchanted."
           (set-face-attribute 'font-lock-comment-face nil :slant 'italic)
           (set-face-attribute 'font-lock-keyword-face nil :weight 'bold)
         )
@@ -304,49 +277,45 @@ Configure global settings.
 
     Change up the key bindings a bit.
     
+    -   `C-c e` opens eshell.
     -   `C-x g` opens magit status.
     -   `M-x` opens smex.
-    -   `s-,` to comment.
-    -   `s-a` to use ack. <span class="underline">Requires ack</span>!
-    -   `C-x r q` to (really) quit.
-    -   `C-x C-c` to open this config file.
-    -   `M-o` to go to "other" window or last buffer.
-    -   `C-x j` to dumb-jump.
-    -   `C-x t m` to open timemachine.
-    -   `s-s` turn on flyspell prog mode.
-    -   `C-x p f` find file in project.
-    -   `C-c k` kill other buffers.
-    -   `C-c o` open file with.
-    -   `s-RET` will open line above.
-    -   `s-k` kill the whole line.
-    -   `C-c d` duplicate current line (or region).
+    -   `s-,` (un-)comments.
+    -   `C-x p a` runs ag. <span class="underline">Requires ag</span>!
+    -   `C-x r q` (really) quits.
+    -   `C-x C-c` opens this config org file.
+    -   `M-o` goes to the "other" window or the last buffer.
+    -   `C-x j` dumb-jumps.
+    -   `C-x t m` opens the timemachine.
+    -   `s-y` runs flyspell.
+    -   `C-x p f` finds a project file.
+    -   `C-c k` kills all other buffers.
+    -   `C-c o` opens file with outside program.
+    -   `s-RET` will open a (indented) line above.
+    -   `s-k` kills the whole line.
+    -   `C-c d` duplicates the current line (or region).
+    -   `C-x 4 t` transposes windows (watch out for treemacs).
+    -   `C-d d` opens docker.
+    -   `C-+` expands region.
+    -   `C-z=/=C-S-z` undos/redos.
+    -   `C-ö` jumps to char with avy.
+    -   `C-ä` jumps to line with avy.
+    -   `C-s` uses swiper to search.
+    -   `C-;` use iedit.
     
-    Do we really need a line here?
+    Note that a lot of these are defined in the [packages](#orgb742491) section.
     
-        (global-set-key (kbd "C-x g") 'magit-status)
-        (global-set-key (kbd "M-x") 'smex)
-        (global-set-key (kbd "s-,") 'evilnc-comment-or-uncomment-lines)
-        (global-set-key (kbd "s-a") 'ack)
+        (global-set-key (kbd "C-c e") 'eshell)
         (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
         (global-set-key
           (kbd "C-x C-c")
           (lambda () (interactive)(switch-to-buffer (find-file-noselect (expand-file-name "configuration.org" walheimat-emacs-config-default-path)))))
-        (global-set-key (kbd "M-o") #'crux-other-window-or-switch-buffer)
-        (global-set-key (kbd "C-x j") 'dumb-jump-go)
-        (global-set-key (kbd "C-x t m") 'git-timemachine-toggle)
-        (global-set-key (kbd "s-s") 'flyspell-prog-mode)
-        (global-set-key (kbd "C-x p f") 'find-file-in-project)
-        (global-set-key (kbd "C-c k") #'crux-kill-other-buffers)
-        (global-set-key (kbd "C-c o") #'crux-open-with)
-        (global-set-key (kbd "s-<return>") #'crux-smart-open-line-above)
-        (global-set-key (kbd "s-k") #'crux-kill-whole-line)
-        (global-set-key (kbd "C-c d") #'crux-duplicate-current-line-or-region)
 
 7.  theme
 
     Be sure to check out [Peach Melpa](https://peach-melpa.org/) to find a theme you like.
     
-        (load-theme 'doom-dracula t)
+        (load-theme 'nord t)
 
 8.  font size
 
@@ -400,87 +369,183 @@ Configure global settings.
           (eq (current-buffer) (treemacs-get-local-buffer)))
 
 
-### specific
+### mode mappings
 
-Configure specific packages/aspects.
+Set up mode mappings for built-in modes.
 
-1.  company
+    (add-to-list 'auto-mode-alist '("\\.component.css" . css-mode))
+
+
+<a id="orgb742491"></a>
+
+### packages
+
+What follows is a list of MELPA packages that make Emacs even more awesome.
+
+If you wish to know more about any of them, check out the list<sup><a id="fnr.2" class="footref" href="#fn.2">2</a></sup> of repositories
+at the end of this readme/configuration.
+
+Many packages bind keys. Check the [key bindings section](#org7c93f64) if you need a list of all
+of them.
+
+1.  add-node-modules-path
+
+        (use-package add-node-modules-path)
+
+2.  all-the-icons
+
+        (use-package all-the-icons)
+
+3.  ag
+
+    Highlight search results using the **Silver Searcher**.
+    
+    This <span class="underline">requires</span> the `ag` binary which you can get from [here](https://github.com/ggreer/the_silver_searcher#installation).
+    
+        (use-package ag
+          :config
+          (setq ag-highlight-search t)
+          :bind ("C-x p a" . ag-project))
+
+4.  avy
+
+    Jumping to (visible) lines and chars is fun if you are to lazy to use your mouse.
+    
+        (use-package avy
+          :bind (("C-ö" . avy-goto-char)
+        	 ("C-ä" . avy-goto-line)))
+
+5.  beacon
+
+        (use-package beacon)
+
+6.  company
 
     Set up company-box
     
-        (require 'company-box)
-        (add-hook 'company-mode-hook 'company-box-mode)
-        (setq company-minimum-prefix-length 3)
-        (setq company-idle-delay 0.5)
+        (use-package company-box)
+        (use-package company
+          :delight " co"
+          :diminish company-box-mode
+          :config 
+          (setq company-minimum-prefix-length 3)
+          (setq company-idle-delay 0.5)
+          ;; :after (diminish company-box)
+          :hook (company-mode . company-box-mode))
+        (use-package company-lsp
+          :after company)
+        (use-package company-restclient
+          :after company)
+        (use-package company-web
+          :after company)
 
-2.  docker
+7.  crux
 
-    Key binding.
+    Let's use `crux` for some editing magic. Check the [key bindings section](#org7c93f64) for descriptions.
+    
+        (use-package crux
+          :bind (("M-o"        . crux-other-window-or-switch-buffer)
+        	 ("C-c k"      . crux-kill-other-buffers)
+        	 ;; need to find solution with treemacs open
+        	 ;; ("C-x 4 t")   .crux-transpose-windows)
+        	 ("C-c o"      . crux-open-with)
+        	 ("s-<return>" . crux-smart-open-line-above)
+        	 ("s-k"        . crux-kill-whole-line)
+        	 ("C-c d"      . crux-duplicate-current-line-or-region)))
+
+8.  docker
+
+    Use `docker` package with `C-x d`.
     
         (use-package docker
-          :ensure t
-          :bind ("C-c d" . docker))
+          :bind ("C-x d" . docker))
 
-3.  dap
+9.  dap
 
-    Require stuff.
+    Debugging using VSCode's DAP. Register a template for attaching to
+    a docker host.
     
-        (require 'dap-node)
-        (dap-auto-configure-mode 1)
-        (dap-register-debug-template
-          "Node::Attach"
-          (list :type "node"
-        	:request "attach"
-        	:remoteRoot "/usr/src/app"
-        	:localRoot "/home/krister/theventury"
-        	:name "Node::Attach"))
+        (use-package dap-mode
+          :delight " dap"
+          :init
+            (require 'cl)
+          :config
+            ;; (setq dap-auto-configure-features '(sessions locals breakpoints))
+            (require 'dap-node)
+            (require 'dap-python)
+            (setq dap-python-executable "python3")
+            (dap-auto-configure-mode 1)
+            (dap-register-debug-template
+              "Node::Attach"
+              (list :type "node"
+        	    :request "attach"
+        	    :remoteRoot "/usr/src/app"
+        	    :localRoot "/home/krister/theventury"
+        	    :port 9229
+        	    :name "Node::Attach"))
+           :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
 
-4.  diff-hl
+10. delight
+
+    Refine a couple of major-mode names.
+    
+        (delight 'js2-mode "js" :major)
+        (delight 'emacs-lisp-mode "elisp" :major)
+
+11. diff-hl
 
     Refresh post magit.
     
-        (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
+        (use-package diff-hl
+          :hook (magit-post-refresh  . diff-hl-magit-post-refresh))
 
-5.  diminish
+12. diminish
 
-        (require 'diminish)
-        (diminish 'company-mode)
-        (diminish 'ivy-mode)
-        (diminish 'company-box-mode)
-        (diminish 'beacon-mode)
-        (diminish 'zoom-mode)
-        (diminish 'which-key-mode)
+    See individual `use-package` declarations as well, since we delight in/diminish them there.
+    
         (diminish 'eldoc-mode)
-        (diminish 'highlight-indent-guides-mode)
 
-6.  dimmer
+13. dimmer
 
     Make dimmed frames a bit dimmer.
     
-        (require 'dimmer)
-        (setq dimmer-fraction 0.3)
-        (dimmer-configure-org)
-        (dimmer-configure-magit)
-        (dimmer-configure-hydra)
-        (setq dimmer-adjustmentmode :both)
+        (use-package dimmer
+          ;; :delight " dimmer"
+          :config
+          (setq dimmer-fraction 0.3)
+          (dimmer-configure-org)
+          (dimmer-configure-magit)
+          (dimmer-configure-hydra)
+          (setq dimmer-adjustmentmode :both))
 
-7.  drag stuff
+14. drag stuff
 
     Use the default key bindings.
     
-        (require 'drag-stuff)
-        (drag-stuff-define-keys)
+        (use-package drag-stuff
+          :delight " drag"
+          :config
+          (drag-stuff-define-keys))
 
-8.  dumb-jump
+15. dumb-jump
 
     Use ivy. We have ivy.
     
-        (setq dumb-jump-selector 'ivy)
+        ;; (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
+        (use-package dumb-jump
+          :config
+          (setq dumb-jump-selector 'ivy
+        	dumb-jump-force-searcher 'ag)
+          :bind ("C-x j" . dumb-jump-go))
 
-9.  eshell
+16. eshell
 
     Set up eshell.
     
+        (use-package esh-autosuggest)
+        (use-package eshell-prompt-extras)
+        (use-package eshell-syntax-highlighting)
+        
         (defun setup-eshell-ivy-completion ()
           (define-key eshell-mode-map [remap eshell-pcomplete] 'completion-at-point))
         
@@ -495,138 +560,234 @@ Configure specific packages/aspects.
           (setq eshell-highlight-prompt nil
         	eshell-prompt-function 'epe-theme-lambda))
 
-10. flycheck
+17. evilnc
 
-    Only check on save. Configure threshold and (unused) idle-change delay.
+    Comment code like in `vim`, evil, evil `vim`.
     
-        (defun my-flycheck-hook()
-          (setq flycheck-check-syntax-automatically '(save idle-change))
-          (setq flycheck-checker-error-threshold 100)
-          (setq flycheck-idle-change-delay 2.5))
-        ;; (add-hook 'flycheck-mode-hook 'my-flycheck-hook)
+        (use-package evil-nerd-commenter
+          :bind ("s-," . evilnc-comment-or-uncomment-lines))
 
-11. override finding eslint
+18. expand-region
 
-    Eslint configs can be found using a file, not a directory.
+    One thing that can be a bit tricky is selecting regions, not anymore.
     
-        (require 'flycheck)
-        (defun flycheck-eslint-config-exists-p ()
-          "Whether there is a valid eslint config for the current buffer."
-          (let* ((executable (flycheck-find-checker-executable 'javascript-eslint))
-        	 (exitcode (and executable (call-process executable nil nil nil
-        						 "--print-config" ".eslintrc"))))
-            (eq exitcode 0)))
+        (use-package expand-region
+          :bind ("C-+" . er/expand-region))
 
-12. load eslint/tslint from local node modules
+19. find-file-in-project
 
-    Use the locally installed eslint/tslint.
+        (use-package find-file-in-project
+          :config
+          (global-set-key (kbd "C-x p f") 'find-file-in-project))
+
+20. flycheck
+
+    Show flycheck suggestions in popup tip.
     
-        (defun my/use-eslint-from-node-modules ()
-          (let* ((root (locate-dominating-file
-        		(or (buffer-file-name) default-directory)
-        		"node_modules"))
-        	 (eslint
-        	  (and root
-        	       (expand-file-name "node_modules/.bin/eslint"
-        			       root))))
-            (when (and eslint (file-executable-p eslint))
-              (setq-local flycheck-javascript-eslint-executable eslint))))
-        
-        (defun my/use-tslint-from-node-modules ()
-          (let* ((root (locate-dominating-file
-        		(or (buffer-file-name) default-directory)
-        		"node_modules"))
-        	 (tslint
-        	  (and root
-        	       (expand-file-name "node_modules/.bin/tslint"
-        				 root))))
-            (when (and tslint (file-executable-p tslint))
-              (setq-local flycheck-typescript-tslint-executable tslint))))
-        
-        (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
-        (add-hook 'flycheck-mode-hook #'my/use-tslint-from-node-modules)
+        (use-package flycheck-popup-tip)
+        (use-package flycheck
+          :delight " fly"
+          :hook ((flycheck-mode . flycheck-popup-tip-mode)
+        	 (flycheck-mode . my/use-eslint-from-node-modules)
+        	 (flycheck-mode . my/use-tslint-from-node-modules)))
 
-13. function to switch between tslint and lsp
+21. fira-code
 
-        (defun switch-to-tslint ()
-          (lsp-disconnect)
-          (setq flycheck-checker 'typescript-tslint))
-        
-        (defun switch-back-to-lsp ()
-          (lsp)
-          (setq flycheck-checker 'lsp))
-        
-        (defun tslint ()
-          (interactive)
-          (if (bound-and-true-p lsp-mode)
-              (switch-to-tslint)
-            (switch-back-to-lsp)))
-
-14. flyspell
-
-    There could be too many messages.
+    Hide it.
     
-        (setq flyspell-issue-message-flag nil)
+        (use-package fira-code-mode
+          :diminish fira-code-mode)
 
-15. highlight-indent-guides
+22. git-timemachine
 
-        (setq highlight-indent-guides-method 'character)
+    If you want to go back in time and point fingers at the progenitors of doom.
+    
+        (use-package git-timemachine
+          :bind ("C-x t m" . git-timemachine-toggle))
 
-16. kaolin
+23. hydra
+
+    Not used yet (but dependency of other packages).
+    
+        (use-package hydra)
+
+24. iedit
+
+    Edit multiple occurrences at once.
+    
+        (use-package iedit)
+
+25. flyspell
+
+    Use American English for flyspell.
+    
+        (use-package flyspell
+          :config
+          (setq flyspell-issue-message-flag nil)
+          :bind ("s-y" . flyspell-prog-mode)
+          :hook (flyspell-prog-mode . (lambda() (ispell-change-dictionary "american"))))
+
+26. highlight-indent-guides
+
+    While this is useful, I don't need to see the minor mode.
+    
+        (use-package highlight-indent-guides
+          :diminish highlight-indent-guides-mode
+          :init
+          (setq highlight-indent-guides-method 'character))
+
+27. higlight numbers
+
+    Make numbers stand out.
+    
+        (use-package highlight-numbers)
+
+28. ivy
+
+    We use ivy for everything. No longer comes with swiper.
+    
+        (use-package swiper)
+        (use-package ivy
+          :diminish
+          :after swiper
+          :config
+            (ivy-mode 1)
+            (setq ivy-use-virtual-buffers t)
+            (setq enable-recursive-minibuffers t)
+            (global-set-key (kbd "\C-s") 'swiper))
+
+29. kaolin
 
     Apply kaolin theme to treemacs.
     
-        (require 'kaolin-themes)
-        (kaolin-treemacs-theme)
-        (setq kaolin-ocean-alt-bg t)
-        ;; Enable distinct background for fringe and line numbers.
-        ;; (setq kaolin-themes-distinct-fringe t)  
-        
-        ;; Enable distinct colors for company popup scrollbar.
-        ;; (setq kaolin-themes-distinct-company-scrollbar t)
+        (use-package kaolin-themes
+          :config
+          (kaolin-treemacs-theme)
+          (setq kaolin-ocean-alt-bg t)
+          ;; Enable distinct background for fringe and line numbers.
+          (setq kaolin-themes-distinct-fringe t)  
+          ;; Enable distinct colors for company popup scrollbar.
+          (setq kaolin-themes-distinct-company-scrollbar t))
 
-17. lsp
+30. lsp
 
     Prefer capf, bigger delay, configure for angular.
     
-        ;; (setq lsp-prefer-capf t)
-        ;; (setq lsp-idle-delay 0.500)
-        ;; (setq lsp-semantic-highlighting t)
-        (setq lsp-clients-angular-language-server-command
-          '("node"
-            "/home/krister/.config/nvm/12.16.1/lib/node_modules/@angular/language-server"
-            "--ngProbeLocations"
-            "/home/krister/.config/nvm/12.16.1/lib/node_modules"
-            "--tsProbeLocations"
-            "/home/krister/.config/nvm/12.16.1/lib/node_modules"
-            "--stdio"))
+        (use-package lsp-mode
+          :config
+          (setq lsp-prefer-capf t)
+          (setq lsp-idle-delay 0.500)
+          (setq lsp-semantic-highlighting t))
 
-18. mode mappings
+31. magit
 
-    Set up mode mappings.
-    
-        (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
-        (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-        (add-to-list 'auto-mode-alist '("\\.jsx\\'" . rjsx-mode))
-        (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
-        (add-to-list 'auto-mode-alist '("\\.http" . restclient-mode))
-        (add-to-list 'auto-mode-alist '("\\.component.html" . web-mode))
-        (add-to-list 'auto-mode-alist '("\\.component.css" . css-mode))
-        (add-to-list 'auto-mode-alist '("\\.json" . json-mode))
-        (add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-mode))
+        (use-package magit
+          :bind ("C-x g" . magit-status))
 
-19. prettier-js
+32. modeline bell
+
+        (use-package mode-line-bell)
+
+33. prettier-js
 
     Require so it can be used outside of minor mode.
     
-        (require 'prettier-js)
+        (use-package prettier-js
+          :config
+          (setq prettier-js-args '(
+            "--print-width" "91"
+          )))
 
-20. treemacs
+34. projectile
+
+    Projects in Emacs.
+    
+        (use-package projectile)
+
+35. rainbow
+
+    Show colors in source code and make delimiters stand out.
+    
+        (use-package rainbow-delimiters)
+        (use-package rainbow-mode
+          :diminish)
+
+36. restclient
+
+    Postman is passé.
+    
+        (use-package restclient
+          :init
+          (add-to-list 'auto-mode-alist '("\\.http" . restclient-mode)))
+
+37. request
+
+    Not used yet, but will in the future.
+    
+        (use-package request)
+
+38. s
+
+    String manipulation utility.
+    
+        (use-package s)
+
+39. smartparens
+
+    Configure.
+    
+        (use-package smartparens
+          :diminish smartparens-mode
+          :init
+          (require 'smartparens-config))
+
+40. smeargle
+
+    Highlight sections by edit date.
+    
+        ;; make it toggle
+        (defvar smeargle-on nil)
+        
+        (defun smeargle-toggle ()
+          (interactive)
+          (if smeargle-on
+            (progn
+              (setq smeargle-on nil)
+              (smeargle-clear))
+            (progn
+              (setq smeargle-on t)
+              (smeargle))))
+        
+        (use-package smeargle
+          :bind ("C-x t s" . smeargle-toggle))
+
+41. smex
+
+    Replace normal key binding.
+    
+        (use-package smex
+          :bind ("M-x" . smex))
+
+42. symon
+
+    Make it look nice.
+    
+        (use-package symon
+          :config
+          (setq symon-sparkline-type 'bounded
+        	symon-monitors
+        	  '(symon-linux-cpu-monitor
+        	    symon-linux-memory-monitor
+        	    symon-linux-network-rx-monitor
+        	    symon-linux-network-tx-monitor)))
+
+43. treemacs
 
     Less indentation. Never other window.
     
+        (use-package perspective)
+        ;; (use-package treemacs-evil)
         (use-package treemacs
-          :ensure t
           :defer t
           :init
           (with-eval-after-load 'winum
@@ -665,57 +826,108 @@ Configure specific packages/aspects.
         ;;   :ensure t)
         
         (use-package treemacs-projectile
-          :after treemacs projectile
-          :ensure t)
+          :after treemacs projectile)
         
         (use-package treemacs-icons-dired
           :after treemacs dired
-          :ensure t
           :config (treemacs-icons-dired-mode))
         
         (use-package treemacs-magit
-          :after treemacs magit
-          :ensure t)
+          :after treemacs magit)
         
         (use-package treemacs-persp
           :after treemacs persp-mode
-          :ensure t
           :config (treemacs-set-scope-type 'Perspectives))
-        (treemacs)
 
-21. telephone-line
+44. telephone-line
 
     A slightly nicer modeline.
     
-        (setq telephone-line-lhs
-              '((evil   . (telephone-line-buffer-segment))
-        	(accent . (telephone-line-vc-segment))
-        	(nil    . (telephone-line-minor-mode-segment
-        		   telephone-line-erc-modified-channels-segment
-        		   telephone-line-process-segment))))
-        (setq telephone-line-rhs
-              '((nil    . (telephone-line-misc-info-segment
-        		   telephone-line-flycheck-segment))
-        	(accent . (telephone-line-major-mode-segment))
-        	(evil   . (telephone-line-airline-position-segment))))
-        (setq telephone-line-primary-right-separator 'telephone-line-identity-left
-              telephone-line-secondary-right-separator 'telephone-line-identity-hollow-left
-              telephone-line-primary-left-separator 'telephone-line-identity-right
-              telephone-line-secondary-left-separator 'telephone-line-identity-hollow-right)
+        (use-package telephone-line
+          :config
+            (setq telephone-line-lhs
+        	  '((evil   . (telephone-line-buffer-segment))
+        	    (accent . (telephone-line-vc-segment))
+        	    (nil    . (telephone-line-minor-mode-segment
+        		       telephone-line-erc-modified-channels-segment
+        		       telephone-line-process-segment))))
+            (setq telephone-line-rhs
+        	  '((nil    . (telephone-line-misc-info-segment
+        		       telephone-line-flycheck-segment))
+        	    (accent . (telephone-line-major-mode-segment))
+        	    (evil   . (telephone-line-airline-position-segment))))
+            (setq telephone-line-primary-right-separator 'telephone-line-identity-left
+        	  telephone-line-secondary-right-separator 'telephone-line-identity-hollow-left
+        	  telephone-line-primary-left-separator 'telephone-line-identity-right
+        	  telephone-line-secondary-left-separator 'telephone-line-identity-hollow-right))
         (telephone-line-mode t)
 
-22. yasnippet
+45. undo-fu
+
+        (use-package undo-fu
+          :init
+          (global-unset-key (kbd "C-z"))
+          :bind ("C-z" . undo-fu-only-undo)
+        	("C-S-z" . undo-fu-only-redo))
+
+46. which-key
+
+    Show me my options.
+    
+        (use-package which-key
+          :delight " wk")
+
+47. yasnippet
 
     Don't enable globally but prepare for per-buffer use.
     
-        (yas-reload-all)
+        (use-package yasnippet-snippets)
+        (use-package yasnippet
+          :delight " yas"
+          :after yasnippet-snippets
+          :config
+          (yas-reload-all))
+
+48. zoom
+
+    Use the golden ratio.
+    
+        (use-package zoom
+         :diminish
+         :config
+         (custom-set-variables
+           '(zoom-size '(0.618 . 0.618))))
 
 
-### modes
+### mode configs
 
 Configure modes.
 
-1.  css mode
+1.  angular mode
+
+    You might think Angular is dead and you'd be right but not everyone knows yet.
+    
+        (use-package angular-mode
+          :init
+          (setq lsp-clients-angular-language-server-command
+            '("node"
+              "/home/krister/.config/nvm/12.16.1/lib/node_modules/@angular/language-server"
+              "--ngProbeLocations"
+              "/home/krister/.config/nvm/12.16.1/lib/node_modules"
+              "--tsProbeLocations"
+              "/home/krister/.config/nvm/12.16.1/lib/node_modules"
+              "--stdio")))
+
+2.  lisp mode
+
+    Enable flycheck.
+    
+        (defun my-elisp-mode-hook ()
+          "Hooks for lisp interaction mode."
+          (flycheck-mode 1))
+        (add-hook 'emacs-lisp-mode-hook 'my-elisp-mode-hook)
+
+3.  css mode
 
     Just activate flycheck and tabs for now.
     
@@ -727,12 +939,35 @@ Configure modes.
         
         (add-hook 'css-mode-hook 'my-css-mode-hook)
 
-2.  js2 mode
+4.  dockerfile mode
+
+    Make Dockerfiles look nice.
+    
+        (use-package dockerfile-mode
+          :init
+          (add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-mode)))
+
+5.  elixir mode
+
+    Enable flycheck.
+    
+        (use-package elixir-mode
+          :hook (elixir-mode . my-elixir-mode-hook))
+        (defun my-elixir-mode-hook ()
+          "Hooks for elixir mode."
+          (flycheck-mode))
+
+6.  js2 mode
 
     Enable Flycheck and disable internal checker.
     
-        (setq-default js2-show-parse-errors nil)
-        (setq-default js2-strict-missing-semi-warning nil)
+        (use-package js2-mode
+          :init
+          (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+          :config
+          (setq-default js2-show-parse-errors nil)
+          (setq-default js2-strict-missing-semi-warning nil)
+          :hook (js2-mode . my-js2-mode-hook))
         
         (defun my-js2-mode-hook ()
           "Hooks for js2 mode."
@@ -742,35 +977,132 @@ Configure modes.
           (rainbow-mode)
           (rainbow-delimiters-mode)
           (drag-stuff-mode)
+          (smartparens-mode)
           (add-hook 'local-write-file-hooks
             (lambda ()
               (delete-trailing-whitespace)
         	nil))
         )
-        (add-hook 'js2-mode-hook 'my-js2-mode-hook)
 
-3.  org mode
+7.  markdown mode
 
-4.  Make org-mode look nicer
+        (use-package markdown-mode)
 
-    Use bullets mode and make the ellipses bendy arrows.
+8.  org mode
+
+    1.  org mode itself
     
-        (add-hook 'org-mode-hook (lambda() (org-bullets-mode t)))
-        (setq org-ellipsis "↷")
-
-5.  Make org-mode log with notes
-
-    When a `TODO` is `DONE` log a note.
+        Use bullets mode and make the ellipses bendy arrows. When a `TODO` is `DONE`, log a note.
+        We also make the sequence from `TODO` to `DONE` more granular and add another `DONE`-like
+        state `CANCELLED`.
+        
+            
+            (use-package org-bullets
+              :hook (org-mode . (lambda() (org-bullets-mode t))))
+            (setq org-ellipsis "↷"
+                  org-log-done 'note
+                  org-directory "~/org/"
+                  org-default-notes-file (concat org-directory "notes.org")
+                  org-startup-with-inline-images t
+                  org-todo-keywords
+                  '((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
+            (require 'org-install)
+            (setq org-modules '(org-habit org-info org-tempo))
+            (org-load-modules-maybe t)
+            (setq org-habit-graph-column 105)
+            
+            ;; this doesn't seem to affect anything
+            (setq org-archive-subtree-save-file-p t)
+            
+            (defun org-make-habit()
+                (interactive)
+                (org-set-property "STYLE" "habit"))
     
-        (setq org-log-done 'note)
+    2.  agendas
+    
+        Everything concerning agendas (thx to mwfogleman).
+        
+            (use-package org-super-agenda
+              :init
+              (org-super-agenda-mode)
+              (defun my-org-super-agenda ()
+                (interactive)
+                (let ((org-super-agenda-groups
+            	   '((:name "Schedule"
+            		    :time-grid t)
+            	     (:name "Development"
+            		    :tag "dev")
+            	     )))
+                  (org-agenda nil "a")))
+            
+              (defun my-org-super-agenda-today ()
+                (interactive)
+                (progn
+                  (my-org-super-agenda)
+                  (org-agenda-day-view)))
+            
+              (defun my-personal-agenda ()
+                (interactive)
+                (let ((org-super-agenda-groups
+            	   '((:discard (:tag ("tv"))))))
+                  (org-agenda nil "a")
+                  (org-agenda-day-view)))
+            
+              (defun my-dev-agenda ()
+                (interactive)
+                (let ((org-super-agenda-groups
+            	   '((:name "Development"
+            		    :tag "dev")
+            	      (:discard (:anything t)))))
+                  (org-agenda nil "a")
+                  (org-agenda-day-view)))
+            
+              (defun my-pow-agenda ()
+                (interactive)
+                (let ((org-super-agenda-groups
+            	   '((:name "Meetings"
+            		    :tag "pow")
+            	      (:discard (:anything t)))))
+                  (org-agenda nil "a")
+                  (org-agenda-day-view)))
+            
+              (defun my-edu-agenda ()
+                (interactive)
+                (let ((org-super-agenda-groups
+            	   '((:name "Education"
+            		    :tag "edu")
+            	      (:discard (:anything t)))))
+                  (org-agenda nil "a")
+                  (org-agenda-day-view)))
+            
+              (defun my-okr-agenda ()
+                (interactive)
+                (let ((org-super-agenda-groups
+            	   '((:name "OKR"
+            		    :tag "okr")
+            	      (:discard (:anything t)))))
+                  (org-agenda nil "a")
+                  (org-agenda-day-view)))
+            
+              (bind-keys ("C-c 0" . my-org-super-agenda-today)
+            	     ("C-c 1" . my-dev-agenda)
+            	     ("C-c 2" . my-pow-agenda)
+            	     ("C-c 3" . my-edu-agenda)
+            	     ("C-c 4" . my-okr-agenda)
+            	     ("C-c 5" . my-personal-agenda)
+            	     ("C-c 6" . my-org-super-agenda)))
+            
+            ;; you will need to create these (or other) files manually for now
+            (setq org-agenda-files (quote ("~/org/tasks.org")))
 
-6.  python mode
+9.  python mode
 
-    Enable flycheck.
+    Enable flycheck. This mode is built-in.
     
         (defun my-python-mode-hook ()
           "Hooks for python mode."
           (flycheck-mode 1)
+          (drag-stuff-mode)
           (add-hook 'local-write-file-hooks
             (lambda ()
               (delete-trailing-whitespace)
@@ -778,10 +1110,15 @@ Configure modes.
         )
         (add-hook 'python-mode-hook 'my-python-mode-hook)
 
-7.  rjsx mode
+10. rjsx mode
 
     Pretty much like js2.
     
+        (use-package rjsx-mode
+          :init
+          (add-to-list 'auto-mode-alist '("\\.jsx\\'" . rjsx-mode))
+          :hook (rjsx-mode . my-rjsx-mode-hook))
+        
         (defun rjsx-indent ()
           (interactive)
           (setq-local indent-line-function 'js-jsx-indent-line)
@@ -801,15 +1138,19 @@ Configure modes.
               (delete-trailing-whitespace)
         	nil))
         )
-        (add-hook 'rjsx-mode-hook 'my-rjsx-mode-hook)
 
-8.  typescript mode
+11. typescript mode
 
     Enable lsp, flycheck and sane tabs. And some other stuff.
     
+        (use-package typescript-mode
+          :config
+          (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
+          :hook (typescript-mode . my-typescript-mode-hook))
         (defun my-typescript-mode-hook ()
           "Hooks for typescript mode."
           (enable-tabs)
+          (drag-stuff-mode)
           (add-node-modules-path)
           (flycheck-mode 1)
           (lsp)
@@ -818,20 +1159,26 @@ Configure modes.
             (lambda ()
               (delete-trailing-whitespace)
         	nil)))
-        
-        (add-hook 'typescript-mode-hook 'my-typescript-mode-hook)
 
-9.  web mode
+12. web mode
 
     Web mode uses flycheck with lsp enabled.
     
-        (require 'web-mode)
-        (setq web-mode-comment-style 2)
-        (add-to-list 'web-mode-comment-formats '("vue" . "//"))
+        (use-package web-mode
+          :config
+          (setq web-mode-comment-style 2)
+          (add-to-list 'web-mode-comment-formats '("vue" . "//"))
+          ;; associate files
+          (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
+          (add-to-list 'auto-mode-alist '("\\.component.html" . web-mode))
+          (add-to-list 'auto-mode-alist '("\\.ejs\\'" . web-mode))
+          :hook (web . my-web-mode-hook))
+        
         (defun my-web-mode-hook ()
           "Hooks for web mode."
           (enable-tabs)
           (web-mode-use-tabs)
+          (drag-stuff-mode)
           (add-node-modules-path)
           (lsp)
           (flycheck-mode)
@@ -839,13 +1186,81 @@ Configure modes.
             (lambda ()
               (delete-trailing-whitespace)
         	nil)))
-        
-        (add-hook 'web-mode-hook 'my-web-mode-hook)
 
-10. zoom mode
+13. yaml mode
 
-    Use the golden ratio.
+        (use-package yaml-mode)
+
+
+### functionality
+
+1.  override finding eslint
+
+    ESLint configs can be found using a file, not a directory.
     
-        (custom-set-variables
-         '(zoom-size '(0.618 . 0.618)))
+        ;; (require 'flycheck)
+        (defun flycheck-eslint-config-exists-p ()
+          "Whether there is a valid eslint config for the current buffer."
+          (let* ((executable (flycheck-find-checker-executable 'javascript-eslint))
+        	 (exitcode (and executable (call-process executable nil nil nil
+        						 "--print-config" ".eslintrc"))))
+            (eq exitcode 0)))
 
+2.  function to switch between tslint and lsp
+
+    This is not good code, but lsp doesn't play nice with tslint.
+    
+        (defun switch-to-tslint ()
+          (lsp-disconnect)
+          (setq flycheck-checker 'typescript-tslint))
+        
+        (defun switch-back-to-lsp ()
+          (lsp)
+          (setq flycheck-checker 'lsp))
+        
+        (defun tslint ()
+          (interactive)
+          (if (bound-and-true-p lsp-mode)
+              (switch-to-tslint)
+            (switch-back-to-lsp)))
+
+3.  load eslint/tslint from local node modules
+
+    Use the locally installed eslint/tslint binaries.
+    
+        (defun my/use-eslint-from-node-modules ()
+          (let* ((root (locate-dominating-file
+        		(or (buffer-file-name) default-directory)
+        		"node_modules"))
+        	 (eslint
+        	  (and root
+        	       (expand-file-name "node_modules/.bin/eslint"
+        			       root))))
+            (when (and eslint (file-executable-p eslint))
+              (setq-local flycheck-javascript-eslint-executable eslint))))
+        
+        (defun my/use-tslint-from-node-modules ()
+          (let* ((root (locate-dominating-file
+        		(or (buffer-file-name) default-directory)
+        		"node_modules"))
+        	 (tslint
+        	  (and root
+        	       (expand-file-name "node_modules/.bin/tslint"
+        				 root))))
+            (when (and tslint (file-executable-p tslint))
+              (setq-local flycheck-typescript-tslint-executable tslint))))
+        
+        ;; (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
+        ;; (add-hook 'flycheck-mode-hook #'my/use-tslint-from-node-modules)
+
+
+# Footnotes
+
+<sup><a id="fn.1" href="#fnr.1">1</a></sup> What you're reading is likely a markdown version exported from it.
+
+<sup><a id="fn.2" href="#fnr.2">2</a></sup> Repositories (incomplete):
+
+-   [ag](https://github.com/Wilfred/ag.el)
+-   [all the icons](https://github.com/domtronn/all-the-icons.el)
+-   [avy](https://github.com/abo-abo/avy)
+-   [dap](https://github.com/emacs-lsp/dap-mode)
