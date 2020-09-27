@@ -29,7 +29,7 @@
  '(jdee-db-requested-breakpoint-face-colors (cons "#222228" "#5b94ab"))
  '(jdee-db-spec-breakpoint-face-colors (cons "#222228" "#515462"))
  '(line-spacing 0.2)
- '(linum-format " %5i ")
+ ;; '(linum-format " %5i ")
  '(magit-diff-use-overlays nil)
  '(objed-cursor-color "#e1c1ee")
  '(org-export-backends (quote (ascii html icalendar latex md odt)))
