@@ -123,27 +123,14 @@ Define and install packages (if they're missing).
 (defun init--install-packages ()
   (packages-install
    '(
-     add-node-modules-path
-     all-the-icons
      ample-theme
      doom-themes
-     esh-autosuggest
-     eshell-prompt-extras
-     eshell-syntax-highlighting
-     highlight-numbers
-     hydra
-     iedit
      kaolin-themes
-     markdown-mode
-     mode-line-bell
      naysayer-theme
-     nodejs-repl
+     ;; nodejs-repl
      nord-theme
      panda-theme
-     request
-     s
      spacemacs-theme
-     yaml-mode
      )))
 
 (condition-case nil
@@ -280,6 +267,7 @@ Change up the key bindings a bit.
 + =C-ö= jumps to char with avy.
 + =C-ä= jumps to line with avy.
 + =C-s= uses swiper to search.
++ =C-;= use iedit.
 
 Note that a lot of these are defined in the [[*packages]] section.
 
@@ -356,6 +344,14 @@ at the end of this readme/configuration.
 
 Many packages bind keys. Check the [[*key bindings]] section if you need a list of all
 of them.
+**** add-node-modules-path
+#+BEGIN_SRC emacs-lisp
+(use-package add-node-modules-path)
+#+END_SRC
+**** all-the-icons
+#+BEGIN_SRC emacs-lisp
+(use-package all-the-icons)
+#+END_SRC
 **** ag
 Highlight search results using the *Silver Searcher*.
 
@@ -490,6 +486,10 @@ Use ivy. We have ivy.
 **** eshell
 Set up eshell.
 #+BEGIN_SRC emacs-lisp
+(use-package esh-autosuggest)
+(use-package eshell-prompt-extras)
+(use-package eshell-syntax-highlighting)
+
 (defun setup-eshell-ivy-completion ()
   (define-key eshell-mode-map [remap eshell-pcomplete] 'completion-at-point))
 
@@ -544,6 +544,16 @@ If you want to go back in time and point fingers at the progenitors of doom.
 (use-package git-timemachine
   :bind ("C-x t m" . git-timemachine-toggle))
 #+END_SRC
+**** hydra
+Not used yet (but dependency of other packages).
+#+BEGIN_SRC emacs-lisp
+(use-package hydra)
+#+END_SRC
+**** iedit
+Edit multiple occurrences at once.
+#+BEGIN_SRC emacs-lisp
+(use-package iedit)
+#+END_SRC
 **** flyspell
 Use American English for flyspell.
 #+BEGIN_SRC emacs-lisp
@@ -560,6 +570,11 @@ While this is useful, I don't need to see the minor mode.
   :diminish highlight-indent-guides-mode
   :init
   (setq highlight-indent-guides-method 'character))
+#+END_SRC
+**** higlight numbers
+Make numbers stand out.
+#+BEGIN_SRC emacs-lisp
+(use-package highlight-numbers)
 #+END_SRC
 **** ivy
 We use ivy for everything. No longer comes with swiper.
@@ -600,6 +615,10 @@ Prefer capf, bigger delay, configure for angular.
 (use-package magit
   :bind ("C-x g" . magit-status))
 #+END_SRC
+**** modeline bell
+#+BEGIN_SRC emacs-lisp
+(use-package mode-line-bell)
+#+END_SRC
 **** prettier-js
 Require so it can be used outside of minor mode.
 #+BEGIN_SRC emacs-lisp
@@ -627,6 +646,16 @@ Postman is passé.
 (use-package restclient
   :init
   (add-to-list 'auto-mode-alist '("\\.http" . restclient-mode)))
+#+END_SRC
+**** request
+Not used yet, but will in the future.
+#+BEGIN_SRC emacs-lisp
+(use-package request)
+#+END_SRC
+**** s
+String manipulation utility.
+#+BEGIN_SRC emacs-lisp
+(use-package s)
 #+END_SRC
 **** smartparens
 Configure.
@@ -729,7 +758,6 @@ Less indentation. Never other window.
 (use-package treemacs-persp
   :after treemacs persp-mode
   :config (treemacs-set-scope-type 'Perspectives))
-(treemacs)
 #+END_SRC
 **** telephone-line
 A slightly nicer modeline.
@@ -863,12 +891,17 @@ Enable Flycheck and disable internal checker.
         nil))
 )
 #+END_SRC
+**** markdown mode
+#+BEGIN_SRC emacs-lisp
+(use-package markdown-mode)
+#+END_SRC
 **** org mode
 ***** org mode itself
 Use bullets mode and make the ellipses bendy arrows. When a =TODO= is =DONE=, log a note.
 We also make the sequence from =TODO= to =DONE= more granular and add another =DONE=-like
 state =CANCELLED=.
 #+BEGIN_SRC emacs-lisp
+
 (use-package org-bullets
   :hook (org-mode . (lambda() (org-bullets-mode t))))
 (setq org-ellipsis "↷"
@@ -882,6 +915,9 @@ state =CANCELLED=.
 (setq org-modules '(org-habit org-info org-tempo))
 (org-load-modules-maybe t)
 (setq org-habit-graph-column 105)
+
+;; this doesn't seem to affect anything
+(setq org-archive-subtree-save-file-p t)
 
 (defun org-make-habit()
     (interactive)
@@ -1052,6 +1088,10 @@ Web mode uses flycheck with lsp enabled.
       (delete-trailing-whitespace)
         nil)))
 #+END_SRC
+**** yaml mode
+#+BEGIN_SRC emacs-lisp
+(use-package yaml-mode)
+#+END_SRC
 ** functionality
 **** override finding eslint
 ESLint configs can be found using a file, not a directory.
@@ -1113,5 +1153,6 @@ Use the locally installed eslint/tslint binaries.
 [fn:1] What you're reading is likely a markdown version exported from it.
 [fn:2] Repositories:
 + [[https://github.com/Wilfred/ag.el][ag]]
++ [[https://github.com/domtronn/all-the-icons.el][all the icons]]
 + [[https://github.com/abo-abo/avy][avy]]
 + [[https://github.com/emacs-lsp/dap-mode][dap]]
