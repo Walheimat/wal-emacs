@@ -904,9 +904,9 @@ Use bullets mode and make the ellipses bendy arrows. When a =TODO= is =DONE=, lo
 We also make the sequence from =TODO= to =DONE= more granular and add another =DONE=-like
 state =CANCELLED=.
 #+BEGIN_SRC emacs-lisp
-
 (use-package org-bullets
   :hook (org-mode . (lambda() (org-bullets-mode t))))
+
 (setq org-ellipsis "↷"
       org-log-done 'note
       org-directory "~/org/"
@@ -914,6 +914,7 @@ state =CANCELLED=.
       org-startup-with-inline-images t
       org-todo-keywords
       '((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
+
 (require 'org-install)
 (setq org-modules '(org-habit org-info org-tempo))
 (org-load-modules-maybe t)
@@ -925,6 +926,39 @@ state =CANCELLED=.
 (defun org-make-habit()
     (interactive)
     (org-set-property "STYLE" "habit"))
+
+(setq org-use-speed-commands t
+      org-speed-commands-user
+      '(("N" org-narrow-to-subtree)
+        ("W" widen)
+        ("$" org-archive-subtree)
+        ;; ("A" org-archive-subtree)
+        ;; ("d" org-down-element)
+        ;; ("k" org-cut-subtree)
+        ;; ("m" org-mark-subtree)
+        ;; ("s" org-sort)
+        ;; ("x" smex-major-mode-commands)
+        ;; ("y" org-todo-yesterday))
+        ("X" org-todo-done)
+        ("R" org-done-and-archive))
+
+(setq org-tag-alist '(
+  ;; depth
+  ("@immersive" . ?i) ;; "Deep"
+  ("@process"   . ?p) ;; "Shallow"
+  ;; context
+  ("@work"      . ?w)
+  ("@home"      . ?h)
+  ("@errand"    . ?e)
+  ;; time
+  ("@short"     . ?<)
+  ("@medium"    . ?=)
+  ("@long"      . ?>)
+  ;; energy
+  ("@easy"      . ?1)
+  ("@average"   . ?2)
+  ("@challenge" . ?4)
+))
 #+END_SRC
 ***** agendas
 Everything concerning agendas (thx to mwfogleman).
