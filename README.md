@@ -9,13 +9,12 @@ Its base is an org file so it doubles as a readme<sup><a id="fnr.1" class="footr
 
 # Table of Contents
 
-1.  [emacs config](#orged3869d)
-    1.  [setup](#org9497222)
-    2.  [config](#org0b383e0)
-    3.  [functionality](#org42b785c)
+1.  [emacs config](#org043a737)
+    1.  [setup](#org81c47fd)
+    2.  [config](#org7df2c78)
 
 
-<a id="org9497222"></a>
+<a id="org81c47fd"></a>
 
 ## setup
 
@@ -56,7 +55,7 @@ but this has failed before. If that is the case do the following:
 -   once the installation is complete, re-run Emacs
 
 
-<a id="org0b383e0"></a>
+<a id="org7df2c78"></a>
 
 ## config
 
@@ -304,7 +303,7 @@ Configure global settings.
     -   `C-s` uses swiper to search.
     -   `C-;` use iedit.
     
-    Note that a lot of these are defined in the [1.2.5](#org5118e97) section.
+    Note that a lot of these are defined in the [packages](#orgb742491) section.
     
         (global-set-key (kbd "C-c e") 'eshell)
         (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
@@ -377,7 +376,7 @@ Set up mode mappings for built-in modes.
     (add-to-list 'auto-mode-alist '("\\.component.css" . css-mode))
 
 
-<a id="org5118e97"></a>
+<a id="orgb742491"></a>
 
 ### packages
 
@@ -386,7 +385,7 @@ What follows is a list of MELPA packages that make Emacs even more awesome.
 If you wish to know more about any of them, check out the list<sup><a id="fnr.2" class="footref" href="#fn.2">2</a></sup> of repositories
 at the end of this readme/configuration.
 
-Many packages bind keys. Check the [1.2.3.6](#org3da9219) section if you need a list of all
+Many packages bind keys. Check the [key bindings section](#org7c93f64) if you need a list of all
 of them.
 
 1.  add-node-modules-path
@@ -442,7 +441,7 @@ of them.
 
 7.  crux
 
-    Let's use `crux` for some editing magic. Check the [key bindings section](#org3da9219) for descriptions.
+    Let's use `crux` for some editing magic. Check the [key bindings section](#org7c93f64) for descriptions.
     
         (use-package crux
           :bind (("M-o"        . crux-other-window-or-switch-buffer)
@@ -1193,9 +1192,7 @@ Configure modes.
         (use-package yaml-mode)
 
 
-<a id="org42b785c"></a>
-
-## functionality
+### functionality
 
 1.  override finding eslint
 
