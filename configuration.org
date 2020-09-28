@@ -197,7 +197,6 @@ Turn on a lot of useful (and prettifying) modes.
 (global-font-lock-mode 1)
 (mode-line-bell-mode)
 (eshell-syntax-highlighting-global-mode)
-(symon-mode)
 #+END_SRC
 **** reasonable
 settings
@@ -374,8 +373,14 @@ Jumping to (visible) lines and chars is fun if you are to lazy to use your mouse
 #+END_SRC
 **** beacon
 #+BEGIN_SRC emacs-lisp
-(use-package beacon)
+(use-package beacon
+  :config
+  (setq beacon-color 0.5
+        beacon-blink-duration 0.3
+	beacon-size 40
+  ))
 #+END_SRC
+**** 
 **** company
 Set up company-box
 #+BEGIN_SRC emacs-lisp
@@ -436,7 +441,7 @@ a docker host.
   	    :localRoot "/home/krister/theventury"
   	    :port 9229
             :name "Node::Attach"))
-   :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
+	    :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
 #+END_SRC
 **** delight
 Refine a couple of major-mode names.
@@ -694,16 +699,18 @@ Replace normal key binding.
   :bind ("M-x" . smex))
 #+END_SRC
 **** symon
-Make it look nice.
+Show some system stats when nothing else is going on.
 #+BEGIN_SRC emacs-lisp
 (use-package symon
   :config
   (setq symon-sparkline-type 'bounded
+        symon-delay 5
 	symon-monitors
 	  '(symon-linux-cpu-monitor
 	    symon-linux-memory-monitor
 	    symon-linux-network-rx-monitor
-	    symon-linux-network-tx-monitor)))
+	    symon-linux-network-tx-monitor))
+  (symon-mode))
 #+END_SRC
 **** treemacs
 Less indentation. Never other window.
@@ -796,7 +803,9 @@ A slightly nicer modeline.
 Show me my options.
 #+BEGIN_SRC emacs-lisp
 (use-package which-key
-  :delight " wk")
+  :delight " wk"
+  :config
+  (setq which-key-idle-delay 0.8))
 #+END_SRC
 **** yasnippet
 Don't enable globally but prepare for per-buffer use.
@@ -907,16 +916,33 @@ state =CANCELLED=.
 (use-package org-bullets
   :hook (org-mode . (lambda() (org-bullets-mode t))))
 
-(setq org-ellipsis "↷"
-      org-log-done 'note
-      org-directory "~/org/"
-      org-default-notes-file (concat org-directory "notes.org")
-      org-startup-with-inline-images t
-      org-todo-keywords
-      '((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
+(use-package org
+  :init
+  (setq org-ellipsis "↷"
+	org-log-done t
+	org-startup-truncated nil
+	org-directory "~/org/"
+	org-default-notes-file (concat org-directory "notes.org")
+	org-startup-with-inline-images t
+	org-todo-keywords
+	'((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
+  (add-to-list 'org-global-properties
+               '("Effort_ALL". "30m 1h 2h 4h 6h 1d 2d 2d+")))
+
+(setq org-log-done 'note
+      org-clock-idle-time nil
+      org-clock-continuously nil
+      org-clock-persist t
+      org-clock-in-switch-to-state "IN PROGRESS"
+      org-clock-in-resume nil
+      org-clock-report-include-clocking-task t
+      org-clock-out-remove-zero-time-clocks t
+      ;; Too many clock entries clutter up a heading
+      org-log-into-drawer t
+      org-clock-into-drawer 1)
 
 (require 'org-install)
-(setq org-modules '(org-habit org-info org-tempo))
+(setq org-modules '(org-habit org-info))
 (org-load-modules-maybe t)
 (setq org-habit-graph-column 105)
 
@@ -929,23 +955,19 @@ state =CANCELLED=.
 
 (setq org-use-speed-commands t
       org-speed-commands-user
-      '(("N" org-narrow-to-subtree)
-        ("W" widen)
-        ("$" org-archive-subtree)
-        ;; ("A" org-archive-subtree)
-        ;; ("d" org-down-element)
-        ;; ("k" org-cut-subtree)
-        ;; ("m" org-mark-subtree)
-        ;; ("s" org-sort)
-        ;; ("x" smex-major-mode-commands)
-        ;; ("y" org-todo-yesterday))
-        ("X" org-todo-done)
-        ("R" org-done-and-archive))
+      '(
+        ("w" widen)
+        ("n" org-narrow-to-subtree)
+	;; defaults are I and O
+	("i" org-clock-in)
+	("o" org-clock-out)
+        ("a" org-archive-subtree)
+        ("r" org-clock-report)))
 
 (setq org-tag-alist '(
   ;; depth
-  ("@immersive" . ?i) ;; "Deep"
-  ("@process"   . ?p) ;; "Shallow"
+  ("@immersive" . ?i)
+  ("@shallow"   . ?p)
   ;; context
   ("@work"      . ?w)
   ("@home"      . ?h)
@@ -958,10 +980,14 @@ state =CANCELLED=.
   ("@easy"      . ?1)
   ("@average"   . ?2)
   ("@challenge" . ?4)
+  ;; category
+  ("@dev"       . ?d)
+  ("@bla"       . ?b)
+  ("@edu"       . ?e)
 ))
 #+END_SRC
 ***** agendas
-Everything concerning agendas (thx to mwfogleman).
+Everything concerning agendas. This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/michael.org][mwfogleman]]'s emacs config.
 #+BEGIN_SRC emacs-lisp
 (use-package org-super-agenda
   :init
@@ -972,7 +998,8 @@ Everything concerning agendas (thx to mwfogleman).
            '((:name "Schedule"
                     :time-grid t)
              (:name "Development"
-                    :tag "dev")
+                    :tag "@dev")
+	     ;; (:discard (:anything t))
              )))
       (org-agenda nil "a")))
 
@@ -985,7 +1012,7 @@ Everything concerning agendas (thx to mwfogleman).
   (defun my-personal-agenda ()
     (interactive)
     (let ((org-super-agenda-groups
-           '((:discard (:tag ("tv"))))))
+           '((:discard (:tag ("@tv"))))))
       (org-agenda nil "a")
       (org-agenda-day-view)))
 
@@ -993,16 +1020,16 @@ Everything concerning agendas (thx to mwfogleman).
     (interactive)
     (let ((org-super-agenda-groups
            '((:name "Development"
-                    :tag "dev")
+                    :tag "@dev")
               (:discard (:anything t)))))
       (org-agenda nil "a")
       (org-agenda-day-view)))
 
-  (defun my-pow-agenda ()
+  (defun my-bla-agenda ()
     (interactive)
     (let ((org-super-agenda-groups
            '((:name "Meetings"
-                    :tag "pow")
+                    :tag "@bla")
               (:discard (:anything t)))))
       (org-agenda nil "a")
       (org-agenda-day-view)))
@@ -1011,30 +1038,59 @@ Everything concerning agendas (thx to mwfogleman).
     (interactive)
     (let ((org-super-agenda-groups
            '((:name "Education"
-                    :tag "edu")
-              (:discard (:anything t)))))
-      (org-agenda nil "a")
-      (org-agenda-day-view)))
-
-  (defun my-okr-agenda ()
-    (interactive)
-    (let ((org-super-agenda-groups
-           '((:name "OKR"
-                    :tag "okr")
+                    :tag "@edu")
               (:discard (:anything t)))))
       (org-agenda nil "a")
       (org-agenda-day-view)))
 
   (bind-keys ("C-c 0" . my-org-super-agenda-today)
              ("C-c 1" . my-dev-agenda)
-	     ("C-c 2" . my-pow-agenda)
+	     ("C-c 2" . my-bla-agenda)
 	     ("C-c 3" . my-edu-agenda)
-	     ("C-c 4" . my-okr-agenda)
              ("C-c 5" . my-personal-agenda)
              ("C-c 6" . my-org-super-agenda)))
 
+(setq org-agenda-hide-tags-regexp "@")
+
 ;; you will need to create these (or other) files manually for now
 (setq org-agenda-files (quote ("~/org/tasks.org")))
+
+;; more cool stuff rom mwfogleman's emacs.d
+(defhydra hydra-org-clock (:color blue :hint nil)
+  "
+Clock   In/out^     ^Edit^   ^Summary     (_?_)
+-----------------------------------------
+        _i_n         _e_dit   _g_oto entry
+        _c_ontinue   _q_uit   _d_isplay
+        _o_ut        ^ ^      _r_eport
+      "
+  ("i" org-clock-in)
+  ("o" org-clock-out)
+  ("c" org-clock-in-last)
+  ("e" org-clock-modify-effort-estimate)
+  ("q" org-clock-cancel)
+  ("g" org-clock-goto)
+  ("d" org-clock-display)
+  ("r" org-clock-report)
+  ("?" (org-info "Clocking commands")))
+
+(defhydra hydra-org-agenda-clock (:color blue :hint nil)
+  "
+Clock   In/out^
+-----------------------------------------
+        _i_n
+        _g_oto entry
+        _o_ut
+        _q_uit
+      "
+  ("i" org-agenda-clock-in)
+  ("o" org-agenda-clock-out)
+  ("q" org-agenda-clock-cancel)
+  ("g" org-agenda-clock-goto))
+
+(bind-keys ("C-c w" . hydra-org-clock/body)
+           :map org-agenda-mode-map
+           ("C-c w" . hydra-org-agenda-clock/body))
 #+END_SRC
 **** python mode
 Enable flycheck. This mode is built-in.
@@ -1133,7 +1189,6 @@ Web mode uses flycheck with lsp enabled.
 **** override finding eslint
 ESLint configs can be found using a file, not a directory.
 #+BEGIN_SRC emacs-lisp
-;; (require 'flycheck)
 (defun flycheck-eslint-config-exists-p ()
   "Whether there is a valid eslint config for the current buffer."
   (let* ((executable (flycheck-find-checker-executable 'javascript-eslint))
@@ -1182,14 +1237,14 @@ Use the locally installed eslint/tslint binaries.
 				   root))))
       (when (and tslint (file-executable-p tslint))
 	(setq-local flycheck-typescript-tslint-executable tslint))))
-
-  ;; (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
-  ;; (add-hook 'flycheck-mode-hook #'my/use-tslint-from-node-modules)
 #+END_SRC
+
 
 [fn:1] What you're reading is likely a markdown version exported from it.
 [fn:2] Repositories (incomplete):
 + [[https://github.com/Wilfred/ag.el][ag]]
-+ [[https://github.com/domtronn/all-the-icons.el][all the icons]]
++ [[https://github.com/domtronn/all-the-icons.el][all-the-icons]]
 + [[https://github.com/abo-abo/avy][avy]]
 + [[https://github.com/emacs-lsp/dap-mode][dap]]
++ [[https://github.com/zk-phi/symon][symon]]
++ [[https://github.com/justbur/emacs-which-key][which-key]]
