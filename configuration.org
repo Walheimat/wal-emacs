@@ -247,7 +247,7 @@ Change up the key bindings a bit.
 + =C-c e= opens eshell.
 + =C-x g= opens magit status.
 + =M-x= opens smex.
-+ =s-#= (un-)comments.
++ =s-,= (un-)comments.
 + =C-x p a= runs ag. _Requires ag_!
 + =C-x r q= (really) quits.
 + =C-x C-c= opens this config org file.
@@ -406,7 +406,7 @@ Let's use =crux= for some editing magic. Check the [[*key bindings][key bindings
   :bind (("M-o"        . crux-other-window-or-switch-buffer)
          ("C-c k"      . crux-kill-other-buffers)
          ;; need to find solution with treemacs open
-         ;; ("C-x 4 t")   .crux-transpose-windows)
+         ;; ("C-x 4 t")   .crux-transpose-windows
          ("C-c o"      . crux-open-with)
          ("s-<return>" . crux-smart-open-line-above)
          ("s-k"        . crux-kill-whole-line)
@@ -514,13 +514,13 @@ Set up eshell.
 Comment code like in =vim=, evil, evil =vim=.
 #+BEGIN_SRC emacs-lisp
 (use-package evil-nerd-commenter
-  :bind ("s-#" . evilnc-comment-or-uncomment-lines))
+  :bind ("s-," . evilnc-comment-or-uncomment-lines))
 #+END_SRC
 **** expand-region
 One thing that can be a bit tricky is selecting regions, not anymore.
 #+BEGIN_SRC emacs-lisp
 (use-package expand-region
-  :bind ("\C-+" . er/expand-region))
+  :bind ("C-+" . er/expand-region))
 #+END_SRC
 **** find-file-in-project
 #+BEGIN_SRC emacs-lisp
@@ -915,18 +915,23 @@ state =CANCELLED=.
 (use-package org-bullets
   :hook (org-mode . (lambda() (org-bullets-mode t))))
 
+;; change if necessary
+(defconst my-org-directory (expand-file-name "org" "~"))
+(unless (file-directory-p my-org-directory)
+  (make-directory my-org-directory))
+
 (use-package org
   :init
   (setq org-ellipsis "↷"
 	org-log-done t
 	org-startup-truncated nil
-	org-directory "~/org/"
+	org-directory my-org-directory
 	org-default-notes-file (concat org-directory "notes.org")
 	org-startup-with-inline-images t
 	org-todo-keywords
 	'((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
   (add-to-list 'org-global-properties
-               '("Effort_ALL". "30m 1h 2h 4h 6h 1d 2d 2d+")))
+               '("Effort_ALL". "30m 1h 2h 4h 6h 1d 2d")))
 
 (setq org-log-done 'note
       org-clock-idle-time nil
@@ -970,7 +975,7 @@ state =CANCELLED=.
   ;; context
   ("@work"      . ?w)
   ("@home"      . ?h)
-  ("@errand"    . ?e)
+  ("@errand"    . ?r)
   ;; time
   ("@short"     . ?<)
   ("@medium"    . ?=)
@@ -998,7 +1003,7 @@ Everything concerning agendas. This is mostly based on [[https://github.com/mwfo
                     :time-grid t)
              (:name "Development"
                     :tag "@dev")
-	     ;; (:discard (:anything t))
+	     (:discard (:anything t))
              )))
       (org-agenda nil "a")))
 
@@ -1011,7 +1016,7 @@ Everything concerning agendas. This is mostly based on [[https://github.com/mwfo
   (defun my-personal-agenda ()
     (interactive)
     (let ((org-super-agenda-groups
-           '((:discard (:tag ("@tv"))))))
+           '((:discard (:tag ("@work"))))))
       (org-agenda nil "a")
       (org-agenda-day-view)))
 
@@ -1051,8 +1056,13 @@ Everything concerning agendas. This is mostly based on [[https://github.com/mwfo
 
 (setq org-agenda-hide-tags-regexp "@")
 
-;; you will need to create these (or other) files manually for now
-(setq org-agenda-files (quote ("~/org/tasks.org")))
+;; I put all of my tasks into a subfolder `tasks` inside the org directory
+(defconst my-agenda-tasks-directory
+  (expand-file-name "tasks" org-directory)
+  "One-size-fits-all directory for agenda tasks.")
+(unless (file-directory-p my-agenda-tasks-directory)
+  (make-directory my-agenda-tasks-directory))
+(setq org-agenda-files `(,my-agenda-tasks-directory))
 
 ;; more cool stuff rom mwfogleman's emacs.d
 (defhydra hydra-org-clock (:color blue :hint nil)
