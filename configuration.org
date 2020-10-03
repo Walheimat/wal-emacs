@@ -59,7 +59,7 @@ Set up emacs, package manager and packages.
 No splash. Use separate file for customizations (so we don't clutter up our init file). Use python3.
 #+BEGIN_SRC emacs-lisp
 (setq inhibit-startup-message t)
-;; (setq initial-scratch-message nil)
+(setq initial-scratch-message nil)
 
 ;; custom.el
 (setq custom-file (expand-file-name "custom.el" walheimat-emacs-config-default-path))
@@ -99,37 +99,24 @@ Define and install packages (if they're missing).
   (package-install 'dash))
 (require 'dash)
 
-;; we need diminish and delight for use-package
-(unless (package-installed-p 'diminish)
-  (package-install 'diminish))
-(require 'diminish)
-(unless (package-installed-p 'delight)
-  (package-install 'delight))
-(require 'delight)
-
-;; install use-package next
-(unless (package-installed-p 'use-package)
-  (package-install 'use-package))
-;; always ensure
-(require 'use-package-ensure)
-(setq use-package-always-ensure t)
-
 (defun packages-install (packages)
   (--each packages
     (when (not (package-installed-p it))
       (package-install it)))
   (delete-other-windows))
 
-;; packages that either don't need configuration
+;; packages that either don't need configuration (themes)
 ;; or are requirements in and of themselves are put here
 (defun init--install-packages ()
   (packages-install
    '(
+     use-package
+     diminish
+     delight
      ample-theme
      doom-themes
      kaolin-themes
      naysayer-theme
-     ;; nodejs-repl
      nord-theme
      panda-theme
      spacemacs-theme
@@ -153,6 +140,12 @@ Add side lisp directory and subdirs to load path. I put non-MELPA packages here.
 (dolist (project (directory-files site-lisp-dir t "\\w+"))
   (when (file-directory-p project)
     (add-to-list 'load-path project)))
+#+END_SRC
+**** use-package
+Always ensure.
+#+BEGIN_SRC emacs-lisp
+(require 'use-package-ensure)
+(setq use-package-always-ensure t)
 #+END_SRC
 *** global
 Configure global settings.
@@ -381,6 +374,29 @@ Jumping to (visible) lines and chars is fun if you are to lazy to use your mouse
 	beacon-size 60
   ))
 #+END_SRC
+**** bm
+Bookmarks are useful. I don't remember where I was. _Who are you?!_
+#+BEGIN_SRC emacs-lisp
+(use-package bm
+  :init
+  (setq bm-restore-repository-on-load t)
+  (setq bm-repository-file (expand-file-name "bms" user-emacs-directory))
+  (setq-default bm-buffer-persistence t)
+  :hook
+  ((after-init   .      bm-repository-load)
+   (after-save   .      bm-buffer-save)
+   (kill-buffer  .      bm-buffer-save)
+   (kill-emacs   .     (lambda nil
+                         (bm-buffer-save-all)
+                         (bm-repository-save)))
+   (find-file    .      bm-buffer-restore)
+   (after-revert .      bm-buffer-restore)
+   (vc-before-checkin . bm-buffer-save))
+  :bind
+  (("<f2>"   . bm-next)
+   ("S-<f2>" . bm-previous)
+   ("C-<f2>" . bm-toggle)))
+#+END_SRC
 **** company
 Set up company-box
 #+BEGIN_SRC emacs-lisp
@@ -426,28 +442,31 @@ a docker host.
 (use-package dap-mode
   :delight " dap"
   :init
-    (require 'cl)
-    (setq dap-python-executable "python3")
+  (require 'cl)
+  (setq dap-python-executable "python3")
+  (setq dap-auto-configure-features '(sessions locals breakpoints))
   :config
-    ;; (setq dap-auto-configure-features '(sessions locals breakpoints))
-    (require 'dap-node)
-    (require 'dap-python)
-    (dap-auto-configure-mode 1)
-    (dap-register-debug-template
-      "Node::Attach"
-      (list :type "node"
-            :request "attach"
-            :remoteRoot "/usr/src/app"
-  	    :localRoot "/home/krister/theventury"
-  	    :port 9229
-            :name "Node::Attach"))
-	    :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
+  (require 'dap-node)
+  (require 'dap-python)
+  (dap-register-debug-template
+    "Node::Attach"
+    (list :type "node"
+          :request "attach"
+          :remoteRoot "/usr/src/app"
+	  :localRoot "/home/krister/theventury"
+  	  :port 9229
+          :name "Node::Attach"))
+  :hook 
+  ((js2-mode    . dap-mode)
+   (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra)))))
 #+END_SRC
 **** delight
 Refine a couple of major-mode names.
 #+BEGIN_SRC emacs-lisp
-(delight 'js2-mode "js" :major)
-(delight 'emacs-lisp-mode "elisp" :major)
+(use-package delight
+  :config
+  (delight 'js2-mode "js" :major)
+  (delight 'emacs-lisp-mode "elisp" :major))
 #+END_SRC
 **** diff-hl
 Refresh post magit.
@@ -458,7 +477,9 @@ Refresh post magit.
 **** diminish
 See individual =use-package= declarations as well, since we delight in/diminish them there.
 #+BEGIN_SRC emacs-lisp
-(diminish 'eldoc-mode)
+(use-package diminish
+  :config
+  (diminish 'eldoc-mode))
 #+END_SRC
 **** dimmer
 Make dimmed frames a bit dimmer.
@@ -775,6 +796,9 @@ Less indentation. Never other window.
 (use-package treemacs-persp
   :after treemacs persp-mode
   :config (treemacs-set-scope-type 'Perspectives))
+
+;; start with treemacs open
+(treemacs)
 #+END_SRC
 **** telephone-line
 A slightly nicer modeline.
@@ -1262,6 +1286,8 @@ Use the locally installed eslint/tslint binaries.
 + [[https://github.com/Wilfred/ag.el][ag]]
 + [[https://github.com/domtronn/all-the-icons.el][all-the-icons]]
 + [[https://github.com/abo-abo/avy][avy]]
++ [[https://github.com/joodland/bm][bm]]
 + [[https://github.com/emacs-lsp/dap-mode][dap]]
 + [[https://github.com/zk-phi/symon][symon]]
++ [[https://github.com/jwiegley/use-package][use-package]]
 + [[https://github.com/justbur/emacs-which-key][which-key]]
