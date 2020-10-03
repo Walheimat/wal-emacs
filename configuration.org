@@ -342,11 +342,6 @@ of them.
 #+BEGIN_SRC emacs-lisp
 (use-package add-node-modules-path)
 #+END_SRC
-**** alchemist
-Elixir tooling. Make sure to read the [[https://alchemist.readthedocs.io/en/latest/basic_usage/][docs]].
-#+BEGIN_SRC emacs-lisp
-(use-package alchemist)
-#+END_SRC
 **** all-the-icons
 #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons)
@@ -410,14 +405,17 @@ Set up company-box
   :delight " co"
   :diminish company-box-mode
   :init
-  (setq company-minimum-prefix-length 3)
-  (setq company-idle-delay 0.5)
-  ;; :after (diminish company-box)
+  (setq company-prefer-capf t)
+  (setq company-minimum-prefix-length 2)
+  (setq company-idle-delay 0.2)
   :hook (company-mode . company-box-mode))
+
 (use-package company-lsp
   :after company)
+
 (use-package company-restclient
   :after company)
+
 (use-package company-web
   :after company)
 #+END_SRC
@@ -636,9 +634,19 @@ Apply kaolin theme to treemacs.
   (setq kaolin-themes-distinct-company-scrollbar t))
 #+END_SRC
 **** lsp
-Prefer capf, bigger delay, configure for angular.
+Prefer capf, bigger delay.
+
+If you use Elixir, get the language server from [[https://github.com/elixir-lsp/elixir-ls][here]]. 
 #+BEGIN_SRC emacs-lisp
+
+;; you need to install the language server manually and point to the release
+(setq elixir-ls-release-location (expand-file-name "ls/elixir" user-emacs-directory))
+(if (file-exists-p (expand-file-name "language_server.sh" elixir-ls-release-location))
+  (add-hook 'elixir-mode-hook 'lsp))
+
 (use-package lsp-mode
+  :init
+  (add-to-list 'exec-path elixir-ls-release-location)
   :config
   (setq lsp-prefer-capf t)
   (setq lsp-idle-delay 0.500)
@@ -847,11 +855,13 @@ Show me my options.
 Don't enable globally but prepare for per-buffer use.
 #+BEGIN_SRC emacs-lisp
 (use-package yasnippet-snippets)
+
 (use-package yasnippet
   :delight " yas"
   :after yasnippet-snippets
-  :config
-  (yas-reload-all))
+  :hook ((yas-minor-mode . (lambda () (yas-reload-all)))
+         (prog-mode      . yas-minor-mode)))
+#+END_SRC
 #+END_SRC
 **** zoom
 Use the golden ratio.
@@ -1291,7 +1301,6 @@ Use the locally installed eslint/tslint binaries.
 [fn:1] What you're reading is likely a markdown version exported from it.
 [fn:2] Repositories (incomplete):
 + [[https://github.com/Wilfred/ag.el][ag]]
-+ [[https://github.com/tonini/alchemist.el][alchemist]]
 + [[https://github.com/domtronn/all-the-icons.el][all-the-icons]]
 + [[https://github.com/abo-abo/avy][avy]]
 + [[https://github.com/joodland/bm][bm]]
@@ -1299,3 +1308,4 @@ Use the locally installed eslint/tslint binaries.
 + [[https://github.com/zk-phi/symon][symon]]
 + [[https://github.com/jwiegley/use-package][use-package]]
 + [[https://github.com/justbur/emacs-which-key][which-key]]
++ [[https://github.com/joaotavora/yasnippet][yasnippet]]
