@@ -9,19 +9,19 @@ Its base is an org file so it doubles as a readme<sup><a id="fnr.1" class="footr
 
 # Table of Contents
 
-1.  [Emacs Org Config](#org67e39a2)
-    1.  [Setup](#org459b487)
-    2.  [Config](#org1f1d75d)
-        1.  [Personal Config](#org21f0255)
-        2.  [Initialization](#orgd650179)
-        3.  [Built-in](#org8e62c41)
-        4.  [Mode Mappings](#org550e0e1)
-        5.  [Packages](#org10ffb83)
-        6.  [Mode configs](#orgb5f10b2)
-        7.  [Tweaks](#orga061f73)
+1.  [Emacs Org Config](#orgac027a2)
+    1.  [Setup](#orgc76e7aa)
+    2.  [Config](#org17a17ca)
+        1.  [Personal Config](#orgb74c836)
+        2.  [Initialization](#org4121db7)
+        3.  [Built-in](#orgf5ec2ff)
+        4.  [Mode Mappings](#org80edd85)
+        5.  [Packages](#orge0d45e0)
+        6.  [Mode Configs](#org4b91062)
+        7.  [Tweaks](#org450c3b4)
 
 
-<a id="org459b487"></a>
+<a id="orgc76e7aa"></a>
 
 ## Setup
 
@@ -36,14 +36,14 @@ If you did not init this repo in your `user-emacs-directory` using the default n
 the variable `walheimat-emacs-config-default-path` in the example config you just copied.
 
 
-<a id="org1f1d75d"></a>
+<a id="org17a17ca"></a>
 
 ## Config
 
 The init script will evaluate <span class="underline">everything</span> that follows.
 
 
-<a id="org21f0255"></a>
+<a id="orgb74c836"></a>
 
 ### Personal Config
 
@@ -53,15 +53,15 @@ Set some personal info.
           user-mail-address "krister.schuchardt@theventury.com")
 
 
-<a id="orgd650179"></a>
+<a id="org4121db7"></a>
 
 ### Initialization
 
-Set up emacs, package manager and packages.
+Set up Emacs, package manager and packages.
 
 1.  Start-Up
 
-    Declutter a bit.
+    Unclutter a bit.
     
         ;; start maximized
         (add-to-list 'default-frame-alist '(fullscreen . maximized))
@@ -147,7 +147,7 @@ Set up emacs, package manager and packages.
 
 4.  Site-Lisp
 
-    Add `side-lisp` directory and subdirs to load path.
+    Add `side-lisp` directory and sub-directories to load path.
     I put non-MELPA packages here.
     If the directory doesn't exist, it will get created.
     Adapt if necessary.
@@ -171,7 +171,7 @@ Set up emacs, package manager and packages.
         (setq use-package-always-ensure t)
 
 
-<a id="org8e62c41"></a>
+<a id="orgf5ec2ff"></a>
 
 ### Built-in
 
@@ -292,7 +292,7 @@ Configure built-in settings.
     -   `C-s` uses swiper to search.
     -   `C-;` use iedit.
     
-    Note that all bindings for external packages are declared in the [packages](#org10ffb83) section.
+    Note that all bindings for external packages are declared in the [packages](#orge0d45e0) section.
     
         (global-set-key (kbd "C-c e") 'eshell)
         (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
@@ -353,7 +353,7 @@ Configure built-in settings.
           (eq (current-buffer) (treemacs-get-local-buffer)))
 
 
-<a id="org550e0e1"></a>
+<a id="org80edd85"></a>
 
 ### Mode Mappings
 
@@ -362,7 +362,7 @@ Set up mode mappings for built-in modes.
     (add-to-list 'auto-mode-alist '("\\.component.css" . css-mode))
 
 
-<a id="org10ffb83"></a>
+<a id="orge0d45e0"></a>
 
 ### Packages
 
@@ -371,7 +371,7 @@ What follows is a list of MELPA packages that make Emacs even more awesome.
 If you wish to know more about any of them, check out the list<sup><a id="fnr.4" class="footref" href="#fn.4">4</a></sup> of repositories
 at the end of this readme/configuration.
 
-Many packages bind keys. Check the [key bindings section](#org9ca576c) if you need a list of all
+Many packages bind keys. Check the [key bindings section](#org32e0128) if you need a list of all
 of them.
 
 1.  add-node-modules-path
@@ -468,7 +468,7 @@ of them.
 
 8.  crux
 
-    Let's use `crux` for some editing magic. Check the [key bindings section](#org9ca576c) for descriptions.
+    Let's use `crux` for some editing magic. Check the [key bindings section](#org32e0128) for descriptions.
     
         (use-package crux
           :bind (("M-o"        . crux-other-window-or-switch-buffer)
@@ -686,7 +686,7 @@ of them.
           (setq highlight-indent-guides-method 'character)
           :hook (prog-mode . highlight-indent-guides-mode))
 
-28. higlight numbers
+28. highlight numbers
 
     Make numbers stand out.
     
@@ -696,7 +696,7 @@ of them.
 29. ivy
 
     We use `ivy` for narrowing our options.
-    Swiper is an alternative for normal search.
+    `swiper` is an alternative for normal search.
     
         (use-package swiper)
         (use-package ivy
@@ -724,7 +724,7 @@ of them.
 
 31. lsp
 
-    Prefer capf, bigger delay.
+    Prefer `capf`, bigger delay.
     
     If you use Elixir, get the language server from [here](https://github.com/elixir-lsp/elixir-ls).
     
@@ -748,7 +748,7 @@ of them.
         (use-package magit
           :bind ("C-x g" . magit-status))
 
-33. modeline bell
+33. mode-line bell
 
     Make the bell visual.
     
@@ -994,9 +994,9 @@ of them.
          (zoom-mode 1))
 
 
-<a id="orgb5f10b2"></a>
+<a id="org4b91062"></a>
 
-### Mode configs
+### Mode Configs
 
 Configure modes.
 
@@ -1017,7 +1017,7 @@ Configure modes.
 
 2.  lisp mode
 
-    Enable flycheck.
+    Enable `flycheck`.
     
         (defun my-elisp-mode-hook ()
           "Hooks for lisp interaction mode."
@@ -1056,7 +1056,7 @@ Configure modes.
 
 6.  js2 mode
 
-    Enable Flycheck and disable internal checker.
+    Enable `flycheck` and disable internal checker.
     
         (use-package js2-mode
           :init
@@ -1289,7 +1289,7 @@ Configure modes.
 
 9.  python mode
 
-    Enable flycheck. This mode is built-in.
+    Enable `flycheck`. This mode is built-in.
     
         (defun my-python-mode-hook ()
           "Hooks for python mode."
@@ -1329,7 +1329,7 @@ Configure modes.
 
 11. typescript mode
 
-    Enable lsp, flycheck and sane tabs. And some other stuff.
+    Enable `lsp`, `flycheck` and sane tabs. And some other stuff.
     
         (use-package typescript-mode
           :config
@@ -1348,7 +1348,7 @@ Configure modes.
 
 12. web mode
 
-    Web mode uses flycheck with lsp enabled.
+    Web mode uses `flycheck` with `lsp` enabled.
     
         (use-package web-mode
           :config
@@ -1379,7 +1379,7 @@ Configure modes.
         (use-package yaml-mode)
 
 
-<a id="orga061f73"></a>
+<a id="org450c3b4"></a>
 
 ### Tweaks
 
@@ -1396,9 +1396,9 @@ Some things don't always work out-of-the-box.
         						 "--print-config" ".eslintrc"))))
             (eq exitcode 0)))
 
-2.  Switch between TS and TSLINT
+2.  Switch Between Language Server and TSLint
 
-    This is not good code, but lsp doesn't play nice with tslint.
+    This is not good code, but `lsp` doesn't play nice with `tslint`.
     
         (defun switch-to-tslint ()
           (lsp-disconnect)
@@ -1416,7 +1416,7 @@ Some things don't always work out-of-the-box.
 
 3.  Loading ESLint/TSLint
 
-    Use the locally installed eslint/tslint binaries.
+    Use the locally installed `eslint` and `tslint` binaries.
     
         (defun my/use-eslint-from-node-modules ()
           (let* ((root (locate-dominating-file
