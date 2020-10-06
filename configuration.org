@@ -28,7 +28,7 @@ The init script will evaluate _everything_ that follows.
 
 *** Personal Config
 
-Set some personal info.
+Set some personal info.[fn:5]
 
 #+BEGIN_SRC emacs-lisp
 (setq user-full-name "Krister Schuchardt"
@@ -51,7 +51,7 @@ Unclutter a bit.
 (setq inhibit-startup-message t)
 
 ;; empty scratch message
-(setq initial-scratch-message nil)
+(setq initial-scratch-message ";; Howdy, stranger ...")
 
 ;; use a distinct file for customization
 (setq custom-file (expand-file-name "custom.el" walheimat-emacs-config-default-path))
@@ -117,7 +117,6 @@ We need to install a few packages to install packages more easily.
      delight
      ample-theme
      doom-themes
-     dracula-theme
      kaolin-themes
      naysayer-theme
      nord-theme
@@ -195,12 +194,14 @@ Easy on the eyes.
 (show-paren-mode 1)
 (global-auto-revert-mode t)
 (global-hl-line-mode)
-(add-hook 'prog-mode-hook 'linum-mode)
+;; (add-hook 'prog-mode-hook 'linum-mode)
+(add-hook 'prog-mode-hook 'display-line-numbers-mode)
 (global-prettify-symbols-mode +1)
 ;; (global-whitespace-mode)
 (save-place-mode 1)
 (tool-bar-mode -1)
 (menu-bar-mode -1)
+(scroll-bar-mode -1)
 (global-font-lock-mode 1)
 (delete-selection-mode 1)
 
@@ -214,6 +215,9 @@ Easy on the eyes.
   (set-face-attribute 'font-lock-keyword-face nil :weight 'bold)
 )
 (add-hook 'font-lock-mode-hook 'my-font-lock-hook)
+
+;; huge cursor
+;; (setq x-stretch-cursor t)
 #+END_SRC
 
 **** Reasonable Settings
@@ -283,10 +287,12 @@ Change up the key bindings a bit.
 + =C-d d= opens docker.
 + =C-+= expands region.
 + =C-z=/=C-S-z= undos/redos.
-+ =C-ö= jumps to char with avy.
-+ =C-ä= jumps to line with avy.
++ =C-ö= jumps to line with avy.
++ =C-ä= jumps to char with avy.
 + =C-s= uses swiper to search.
 + =C-;= use iedit.
++ =C-c b b= toggle bookmark.
++ =C-c b s= show bookmarks.
 
 Note that all bindings for external packages are declared in the [[*Packages][packages]] section.
 
@@ -303,7 +309,7 @@ Note that all bindings for external packages are declared in the [[*Packages][pa
 Be sure to check out [[https://peach-melpa.org/][Peach Melpa]] to find a theme you like.
 
 #+BEGIN_SRC emacs-lisp
-(load-theme 'doom-dracula t)
+(load-theme 'naysayer t)
 #+END_SRC
 
 **** Font
@@ -412,8 +418,8 @@ Jumping to (visible) lines and chars is fun if you are too lazy to use your mous
 
 #+BEGIN_SRC emacs-lisp
 (use-package avy
-  :bind (("C-ö" . avy-goto-char)
-         ("C-ä" . avy-goto-line)))
+  :bind (("C-ö" . avy-goto-line)
+         ("C-ä" . avy-goto-char)))
 #+END_SRC
 
 **** beacon
@@ -439,6 +445,8 @@ Bookmarks are useful. I don't remember where I was. _Who are you?!_
   (setq bm-restore-repository-on-load t)
   (setq bm-repository-file (expand-file-name "bms" user-emacs-directory))
   (setq-default bm-buffer-persistence t)
+  (setq bm-annotate-on-create t)
+  (setq bm-highlight-style 'bm-highlight-only-fringe)
   :hook
   ((after-init   .      bm-repository-load)
    (after-save   .      bm-buffer-save)
@@ -450,9 +458,8 @@ Bookmarks are useful. I don't remember where I was. _Who are you?!_
    (after-revert .      bm-buffer-restore)
    (vc-before-checkin . bm-buffer-save))
   :bind
-  (("<f2>"   . bm-next)
-   ("S-<f2>" . bm-previous)
-   ("C-<f2>" . bm-toggle)))
+   (("C-c b s" . bm-show)
+    ("C-c b b" . bm-toggle)))
 #+END_SRC
 
 **** company
@@ -488,14 +495,15 @@ Let's use =crux= for some editing magic. Check the [[*Key Bindings][key bindings
 
 #+BEGIN_SRC emacs-lisp
 (use-package crux
-  :bind (("M-o"        . crux-other-window-or-switch-buffer)
-         ("C-c k"      . crux-kill-other-buffers)
+  :bind (("M-o"          . crux-other-window-or-switch-buffer)
+         ("C-c k"        . crux-kill-other-buffers)
          ;; need to find solution with treemacs open
          ;; ("C-x 4 t")   .crux-transpose-windows
-         ("C-c o"      . crux-open-with)
-         ("s-<return>" . crux-smart-open-line-above)
-         ("s-k"        . crux-kill-whole-line)
-         ("C-c d"      . crux-duplicate-current-line-or-region)))
+         ("C-c o"        . crux-open-with)
+         ("S-s-<return>" . crux-smart-open-line-above)
+	 ("s-<return>"   . crux-smart-open-line)
+         ("s-k"          . crux-kill-whole-line)
+         ("C-c d"        . crux-duplicate-current-line-or-region)))
 #+END_SRC
 
 **** docker
@@ -554,7 +562,7 @@ Refresh post magit.
 
 #+BEGIN_SRC emacs-lisp
 (use-package diff-hl
-  :config
+  :init
   (global-diff-hl-mode)
   :hook (magit-post-refresh  . diff-hl-magit-post-refresh))
 #+END_SRC
@@ -767,6 +775,31 @@ We use =ivy= for narrowing our options.
     (setq ivy-use-virtual-buffers t)
     (setq enable-recursive-minibuffers t)
     (global-set-key (kbd "C-c s") 'swiper))
+
+(defun ivy-rich-switch-buffer-icon (candidate)
+ (with-current-buffer
+      (get-buffer candidate)
+    (let ((icon (all-the-icons-icon-for-mode major-mode)))
+      (if (symbolp icon)
+          (all-the-icons-icon-for-mode 'fundamental-mode)
+        icon))))
+
+(use-package ivy-rich
+  :after ivy
+  :config
+  (setq ivy-rich-display-transformers-list
+      '(ivy-switch-buffer
+        (:columns
+         ((ivy-rich-switch-buffer-icon (:width 2))
+          (ivy-rich-candidate (:width 30))
+          (ivy-rich-switch-buffer-size (:width 7))
+          (ivy-rich-switch-buffer-indicators (:width 4 :face error :align right))
+          (ivy-rich-switch-buffer-major-mode (:width 12 :face warning))
+          (ivy-rich-switch-buffer-project (:width 15 :face success))
+          (ivy-rich-switch-buffer-path (:width (lambda (x) (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3))))))
+         :predicate
+         (lambda (cand) (get-buffer cand)))))
+  (ivy-rich-mode 1))
 #+END_SRC
 
 **** kaolin
@@ -1067,6 +1100,15 @@ Show the next possible key presses towards an action.
   (setq which-key-idle-delay 0.8))
 #+END_SRC
 
+**** yascroll
+
+Nicer scroll-bar.
+
+#+BEGIN_SRC emacs-lisp
+(use-package yascroll
+  :init
+  (global-yascroll-bar-mode 1))
+#+END_SRC
 **** yasnippet
 
 Snippets.
@@ -1274,7 +1316,8 @@ state =CANCELLED=.
   ;; context
   ("@work"      . ?w)
   ("@home"      . ?h)
-  ("@errand"    . ?r)
+  ("@away"      . ?a)
+  ("@repeated"  . ?r)
   ;; time
   ("@short"     . ?<)
   ("@medium"    . ?=)
@@ -1282,7 +1325,7 @@ state =CANCELLED=.
   ;; energy
   ("@easy"      . ?1)
   ("@average"   . ?2)
-  ("@challenge" . ?4)
+  ("@challenge" . ?3)
   ;; category
   ("@dev"       . ?d)
   ("@bla"       . ?b)
@@ -1303,16 +1346,25 @@ Everything concerning agendas. This is mostly based on [[https://github.com/mwfo
     (let ((org-super-agenda-groups
            '((:name "Schedule"
                     :time-grid t)
-             (:name "Development"
-                    :tag "@dev")
 	     (:discard (:anything t))
              )))
       (org-agenda nil "a")))
 
   (defun my-org-super-agenda-today ()
     (interactive)
-    (progn
-      (my-org-super-agenda)
+    (let ((org-super-agenda-groups
+           '((:name "Schedule"
+              :time-grid t)
+             (:name "Unscheduled"
+              :scheduled nil)
+	     (:name "Leftovers"
+              :and (
+                :todo ("IN PROGRESS" "WAITING")
+                :scheduled past
+                :not (:tag "@repeated")))
+	     (:discard (:anything t))
+	      )))
+      (org-agenda nil "a")
       (org-agenda-day-view)))
 
   (defun my-personal-agenda ()
@@ -1572,6 +1624,7 @@ Use the locally installed =eslint= and =tslint= binaries.
 
 * Footnotes
 
+
 [fn:1] What you're reading is likely a markdown version exported from it.
 
 [fn:2] *Note* that this config uses the =all-the-icons= package whose icons need to be downloaded manually
@@ -1600,9 +1653,14 @@ but this might fail. If that is the case do the following:
 + [[https://github.com/domtronn/all-the-icons.el][all-the-icons]]
 + [[https://github.com/abo-abo/avy][avy]]
 + [[https://github.com/joodland/bm][bm]]
++ [[https://github.com/bbatsov/crux][crux]]
 + [[https://github.com/emacs-lsp/dap-mode][dap]]
++ [[https://github.com/Yevgnen/ivy-rich][ivy-rich]]
++ [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]]
 + [[https://github.com/zk-phi/symon][symon]]
 + [[https://github.com/dbordak/telephone-line][telephone-line]]
 + [[https://github.com/jwiegley/use-package][use-package]]
 + [[https://github.com/justbur/emacs-which-key][which-key]]
 + [[https://github.com/joaotavora/yasnippet][yasnippet]]
+
+[fn:5] Send me an email, why don't you?
