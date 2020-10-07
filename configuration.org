@@ -390,14 +390,6 @@ Allows accessing a project's =node_modules=.
 (use-package add-node-modules-path)
 #+END_SRC
 
-**** all-the-icons
-
-You need to install the icons yourself[fn:2].
-
-#+BEGIN_SRC emacs-lisp
-(use-package all-the-icons)
-#+END_SRC
-
 **** ag
 
 Highlight search results using the *Silver Searcher*.
@@ -410,6 +402,14 @@ This _requires_ the =ag= binary which you can get from [[https://github.com/ggre
   (setq ag-highlight-search t)
   :bind ("C-x p a" . ag-project)
         ("s-a"     . ag))
+#+END_SRC
+
+**** all-the-icons
+
+You need to install the icons yourself[fn:2].
+
+#+BEGIN_SRC emacs-lisp
+(use-package all-the-icons)
 #+END_SRC
 
 **** avy
@@ -509,15 +509,6 @@ Let's use =crux= for some editing magic. Check the [[*Key Bindings][key bindings
          ("C-c d"        . crux-duplicate-current-line-or-region)))
 #+END_SRC
 
-**** docker
-
-I use Docker a lot, don't always have to use the command line.
-
-#+BEGIN_SRC emacs-lisp
-(use-package docker
-  :bind ("C-x d" . docker))
-#+END_SRC
-
 **** dap
 
 Debugging using VSCode's DAP.
@@ -595,6 +586,15 @@ Make dimmed frames a bit dimmer.
   (dimmer-configure-magit)
   (dimmer-configure-hydra)
   (setq dimmer-adjustmentmode :both))
+#+END_SRC
+
+**** docker
+
+I use Docker a lot, don't always have to use the command line.
+
+#+BEGIN_SRC emacs-lisp
+(use-package docker
+  :bind ("C-x d" . docker))
 #+END_SRC
 
 **** drag stuff
@@ -678,6 +678,16 @@ Finding files by name should be easy.
   (global-set-key (kbd "C-x p f") 'find-file-in-project))
 #+END_SRC
 
+**** fira-code
+
+I use FiraCode, this mode allows us to use ligatures.
+
+#+BEGIN_SRC emacs-lisp
+(use-package fira-code-mode
+  :diminish fira-code-mode)
+
+#+END_SRC
+
 **** flycheck
 
 Flycheck is for all of our linting/code quality needs.
@@ -692,41 +702,6 @@ I prefer pop-ups over mode-line info.
          (flycheck-mode . my/use-tslint-from-node-modules)))
 #+END_SRC
 
-**** fira-code
-
-I use FiraCode, this mode allows us to use ligatures.
-
-#+BEGIN_SRC emacs-lisp
-(use-package fira-code-mode
-  :diminish fira-code-mode)
-
-#+END_SRC
-
-**** git-timemachine
-
-If you want to go back in time and point fingers at the progenitors of doom.
-
-#+BEGIN_SRC emacs-lisp
-(use-package git-timemachine
-  :bind ("C-x t m" . git-timemachine-toggle))
-#+END_SRC
-
-**** hydra
-
-We use hydra to trigger grouped actions.
-
-#+BEGIN_SRC emacs-lisp
-(use-package hydra)
-#+END_SRC
-
-**** iedit
-
-Edit multiple occurrences at once.
-
-#+BEGIN_SRC emacs-lisp
-(use-package iedit)
-#+END_SRC
-
 **** flyspell
 
 My spelling is bad.
@@ -739,6 +714,15 @@ Use American English for flyspell in =prog-mode=.
   (setq flyspell-issue-message-flag nil)
   :bind ("s-y" . flyspell-prog-mode)
   :hook (flyspell-prog-mode . (lambda() (ispell-change-dictionary "american"))))
+#+END_SRC
+
+**** git-timemachine
+
+If you want to go back in time and point fingers at the progenitors of doom.
+
+#+BEGIN_SRC emacs-lisp
+(use-package git-timemachine
+  :bind ("C-x t m" . git-timemachine-toggle))
 #+END_SRC
 
 **** highlight-indent-guides
@@ -762,6 +746,22 @@ Make numbers stand out.
 (use-package highlight-numbers
   :hook (prog-mode . highlight-numbers-mode))
 
+#+END_SRC
+
+**** hydra
+
+We use hydra to trigger grouped actions.
+
+#+BEGIN_SRC emacs-lisp
+(use-package hydra)
+#+END_SRC
+
+**** iedit
+
+Edit multiple occurrences at once.
+
+#+BEGIN_SRC emacs-lisp
+(use-package iedit)
 #+END_SRC
 **** ivy
 
@@ -1012,6 +1012,31 @@ Show some system stats when nothing else is going on.
   (symon-mode))
 #+END_SRC
 
+**** telephone-line
+
+A slightly nicer modeline.
+
+#+BEGIN_SRC emacs-lisp
+(use-package telephone-line
+  :config
+    (setq telephone-line-lhs
+	  '((evil   . (telephone-line-buffer-segment))
+	    (accent . (telephone-line-vc-segment))
+	    (nil    . (telephone-line-minor-mode-segment
+		       telephone-line-erc-modified-channels-segment
+		       telephone-line-process-segment))))
+    (setq telephone-line-rhs
+	  '((nil    . (telephone-line-misc-info-segment
+		       telephone-line-flycheck-segment))
+	    (accent . (telephone-line-major-mode-segment))
+	    (evil   . (telephone-line-airline-position-segment))))
+    (setq telephone-line-primary-right-separator 'telephone-line-identity-left
+	  telephone-line-secondary-right-separator 'telephone-line-identity-hollow-left
+	  telephone-line-primary-left-separator 'telephone-line-identity-right
+	  telephone-line-secondary-left-separator 'telephone-line-identity-hollow-right)
+    (telephone-line-mode t))
+#+END_SRC
+
 **** treemacs
 
 I'm not a fan of =dired=, so let's show some dirs.
@@ -1071,31 +1096,6 @@ I'm not a fan of =dired=, so let's show some dirs.
 
 ;; start with treemacs open
 (treemacs)
-#+END_SRC
-
-**** telephone-line
-
-A slightly nicer modeline.
-
-#+BEGIN_SRC emacs-lisp
-(use-package telephone-line
-  :config
-    (setq telephone-line-lhs
-	  '((evil   . (telephone-line-buffer-segment))
-	    (accent . (telephone-line-vc-segment))
-	    (nil    . (telephone-line-minor-mode-segment
-		       telephone-line-erc-modified-channels-segment
-		       telephone-line-process-segment))))
-    (setq telephone-line-rhs
-	  '((nil    . (telephone-line-misc-info-segment
-		       telephone-line-flycheck-segment))
-	    (accent . (telephone-line-major-mode-segment))
-	    (evil   . (telephone-line-airline-position-segment))))
-    (setq telephone-line-primary-right-separator 'telephone-line-identity-left
-	  telephone-line-secondary-right-separator 'telephone-line-identity-hollow-left
-	  telephone-line-primary-left-separator 'telephone-line-identity-right
-	  telephone-line-secondary-left-separator 'telephone-line-identity-hollow-right)
-    (telephone-line-mode t))
 #+END_SRC
 
 **** undo-fu
@@ -1281,6 +1281,8 @@ state =CANCELLED=.
   (make-directory my-org-directory))
 
 (use-package org
+  ;; disable drag-stuff-mode in org-mode
+  :hook (org-mode . (lambda() (drag-stuff-mode -1)))
   :config
   ;; sometimes md export is missing
   (require 'ox-md nil t)
@@ -1558,6 +1560,7 @@ Web mode uses =flycheck= with =lsp= enabled.
 (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.component.html\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.ejs\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.json\\'" . web-mode))
 
 (defun my-web-mode-hook ()
   "Hooks for web mode."
