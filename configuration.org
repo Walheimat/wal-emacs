@@ -1157,17 +1157,21 @@ Nicer scroll-bar.
   :init
   (global-yascroll-bar-mode 1))
 #+END_SRC
+
 **** yasnippet
 
-Snippets.
-Don't enable globally but prepare for per-buffer use.
+Use snippets in prog mode buffers.
 
 #+BEGIN_SRC emacs-lisp
 (use-package yasnippet-snippets)
 
 (use-package yasnippet
   :delight " yas"
-  :config
+  :init
+  (define-key yas-minor-mode-map (kbd "<tab>") nil)
+  (define-key yas-minor-mode-map (kbd "TAB") nil)
+  (define-key yas-minor-mode-map (kbd "C-c y") #'yas-expand)
+  ;; :config
   ;; (add-hook 'company-mode-hook (lambda ()
   ;;   (substitute-key-definition 'company-complete-common
   ;;                              'company-yasnippet-or-completion
@@ -1182,6 +1186,7 @@ Don't enable globally but prepare for per-buffer use.
 ;;     (unless (yas-expand)
 ;;       (call-interactively #'company-complete-common))))
 #+END_SRC
+
 **** zoom
 
 Use the golden ratio between (in-)active buffers.
