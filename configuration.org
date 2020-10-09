@@ -227,7 +227,8 @@ Make things snappier.
 #+BEGIN_SRC emacs-lisp
 (setq mouse-yank-at-point t)
 (setq show-paren-delay 0.0)
-(setq gc-cons-threshold 100000000)
+;; apparently, this line is a very bad idea ...
+;; (setq gc-cons-threshold 100000000)
 (setq read-process-output-max (* 1024 1024)) ;; 1mb
 (setq sentence-end-double-space nil)
 (setq echo-keystrokes 0.1)
@@ -266,33 +267,35 @@ To make this work, we need to tweak a few things.
 
 Change up the key bindings a bit.
 
+I try to have most actions use user-reserved =C-c <key>= combinations,
+but some =C-x <key>= mappings snuck in.
+
 + =C-c e= opens eshell.
-+ =C-x g= opens magit status.
++ =C-c g= opens magit status.
 + =M-x= opens smex.
-+ =s-,= (un-)comments.
-+ =C-x p a= runs ag. _Requires ag_!
++ =s-#= (un-)comments.
++ =C-c a a= runs ag. _Requires ag_!
 + =C-x r q= (really) quits.
++ =C-c a p= runs ag-project.
 + =C-x C-c= opens this config org file.
 + =M-o= goes to the "other" window or the last buffer.
-+ =C-x j= dumb-jumps.
-+ =C-x t m= opens the timemachine.
-+ =s-y= runs flyspell.
-+ =C-x p f= finds a project file.
-+ =C-c k= kills all other buffers.
-+ =C-c o= opens file with outside program.
++ =C-c j= dumb-jumps.
++ =C-c q= opens the timemachine.
++ =C-c f p= finds a project file.
++ =C-c c k= kills all other buffers.
++ =C-c c o= opens file with outside program.
 + =s-RET= will open a (indented) line above.
 + =s-k= kills the whole line.
-+ =C-c d= duplicates the current line (or region).
-+ =C-x 4 t= transposes windows (watch out for treemacs).
-+ =C-d d= opens docker.
++ =C-c c d= duplicates the current line (or region).
++ =C-c d= opens docker.
 + =C-+= expands region.
 + =C-z=/=C-S-z= undos/redos.
-+ =C-ö= jumps to line with avy.
-+ =C-ä= jumps to char with avy.
-+ =C-s= uses swiper to search.
-+ =C-;= use iedit.
-+ =C-c b b= toggle bookmark.
++ =C-c v l= jumps to line with avy.
++ =C-c v c= jumps to char with avy.
++ =C-c s= uses swiper to search.
++ =C-c b b= toggles bookmarks.
 + =C-c b s= show bookmarks.
++ =C-c m <key>= for multiple cursors.
 
 Note that all bindings for external packages are declared in the [[*Packages][packages]] section.
 
@@ -339,7 +342,7 @@ To get support for ligatures, install the symbol font from [[https://github.com/
 ;; use fira mode if it's the default font and the symbol font is installed
 (use-package fira-code-mode
   :if (and (x-list-fonts "Fira Code Symbol") (string= "Fira Code" (face-attribute 'default :family)))
-  :custom (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
+  ;; :custom (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
   :hook prog-mode)                                         ; mode to enable fira-code-mode in
 #+END_SRC
 
@@ -362,6 +365,15 @@ Only need one so far.
 (defun treemacsbufferp ()
   "Check if this is the treemacs buffer."
   (eq (current-buffer) (treemacs-get-local-buffer)))
+
+;; trick garbage collection
+(defun my-minibuffer-setup-hook ()
+  (setq gc-cons-threshold most-positive-fixnum))
+(defun my-minibuffer-exit-hook ()
+  (setq gc-cons-threshold 800000))
+
+(add-hook 'minibuffer-setup-hook #'my-minibuffer-setup-hook)
+(add-hook 'minibuffer-exit-hook  #'my-minibuffer-exit-hook)
 #+END_SRC
 
 *** Mode Mappings
@@ -400,8 +412,8 @@ This _requires_ the =ag= binary which you can get from [[https://github.com/ggre
 (use-package ag
   :config
   (setq ag-highlight-search t)
-  :bind ("C-x p a" . ag-project)
-        ("s-a"     . ag))
+  :bind ("C-c a p" . ag-project)
+        ("C-c a a"     . ag))
 #+END_SRC
 
 **** all-the-icons
@@ -418,8 +430,8 @@ Jumping to (visible) lines and chars is fun if you are too lazy to use your mous
 
 #+BEGIN_SRC emacs-lisp
 (use-package avy
-  :bind (("C-ö" . avy-goto-line)
-         ("C-ä" . avy-goto-char)))
+  :bind (("C-c v l" . avy-goto-line)
+         ("C-c v c" . avy-goto-char)))
 #+END_SRC
 
 **** beacon
@@ -436,6 +448,7 @@ Help me find my cursor!
         beacon-blink-when-point-moves-vertically 2
   ))
 #+END_SRC
+
 **** bm
 
 Bookmarks are useful. I don't remember where I was. _Who are you?!_
@@ -470,17 +483,18 @@ Bookmarks are useful. I don't remember where I was. _Who are you?!_
 Code-completion. In a box.
 
 #+BEGIN_SRC emacs-lisp
-(use-package company-box)
+(use-package company-box
+  :diminish
+  :hook (company-mode . company-box-mode))
+
 (use-package company
   :delight " co"
-  :diminish company-box-mode
   :init
   (setq company-prefer-capf t)
-  (setq company-minimum-prefix-length 2)
+  (setq company-minimum-prefix-length 3)
   (setq company-idle-delay 0.2)
   :config
-  (global-company-mode 1)
-  :hook ((company-mode    . company-box-mode)))
+  (global-company-mode 1))
 
 (use-package company-lsp
   :after company)
@@ -499,14 +513,14 @@ Let's use =crux= for some editing magic. Check the [[*Key Bindings][key bindings
 #+BEGIN_SRC emacs-lisp
 (use-package crux
   :bind (("M-o"          . crux-other-window-or-switch-buffer)
-         ("C-c k"        . crux-kill-other-buffers)
+         ("C-c c k"      . crux-kill-other-buffers)
          ;; need to find solution with treemacs open
          ;; ("C-x 4 t")   .crux-transpose-windows
-         ("C-c o"        . crux-open-with)
+         ("C-c c o"      . crux-open-with)
          ("S-s-<return>" . crux-smart-open-line-above)
 	 ("s-<return>"   . crux-smart-open-line)
          ("s-k"          . crux-kill-whole-line)
-         ("C-c d"        . crux-duplicate-current-line-or-region)))
+         ("C-c c d"      . crux-duplicate-current-line-or-region)))
 #+END_SRC
 
 **** dap
@@ -594,7 +608,7 @@ I use Docker a lot, don't always have to use the command line.
 
 #+BEGIN_SRC emacs-lisp
 (use-package docker
-  :bind ("C-x d" . docker))
+  :bind ("C-c d" . docker))
 #+END_SRC
 
 **** drag stuff
@@ -621,7 +635,7 @@ Configure it for =ivy=.
   (setq dumb-jump-selector 'ivy
         dumb-jump-force-searcher 'ag)
   (dumb-jump-mode)
-  :bind ("C-x j" . dumb-jump-go))
+  :bind ("C-c j" . dumb-jump-go))
 #+END_SRC
 
 **** eshell
@@ -656,7 +670,7 @@ Comment code like in =vim=, evil, evil =vim=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package evil-nerd-commenter
-  :bind ("s-," . evilnc-comment-or-uncomment-lines))
+  :bind ("s-#" . evilnc-comment-or-uncomment-lines))
 #+END_SRC
 
 **** expand-region
@@ -675,7 +689,7 @@ Finding files by name should be easy.
 #+BEGIN_SRC emacs-lisp
 (use-package find-file-in-project
   :config
-  (global-set-key (kbd "C-x p f") 'find-file-in-project))
+  (global-set-key (kbd "C-c f p") 'find-file-in-project))
 #+END_SRC
 
 **** fira-code
@@ -712,7 +726,6 @@ Use American English for flyspell in =prog-mode=.
   :delight " fsp"
   :config
   (setq flyspell-issue-message-flag nil)
-  :bind ("s-y" . flyspell-prog-mode)
   :hook (flyspell-prog-mode . (lambda() (ispell-change-dictionary "american"))))
 #+END_SRC
 
@@ -734,7 +747,7 @@ If you want to go back in time and point fingers at the progenitors of doom.
 
 #+BEGIN_SRC emacs-lisp
 (use-package git-timemachine
-  :bind ("C-x t m" . git-timemachine-toggle))
+  :bind ("C-c q" . git-timemachine-toggle))
 #+END_SRC
 
 **** highlight-indent-guides
@@ -768,28 +781,22 @@ We use hydra to trigger grouped actions.
 (use-package hydra)
 #+END_SRC
 
-**** iedit
-
-Edit multiple occurrences at once.
-
-#+BEGIN_SRC emacs-lisp
-(use-package iedit)
-#+END_SRC
 **** ivy
 
 We use =ivy= for narrowing our options.
 =swiper= is an alternative for normal search.
 
 #+BEGIN_SRC emacs-lisp
-(use-package swiper)
+(use-package swiper
+  :after ivy
+  :bind ("C-c s" . swiper))
+
 (use-package ivy
   :diminish
-  :after swiper
   :config
-    (ivy-mode 1)
-    (setq ivy-use-virtual-buffers t)
-    (setq enable-recursive-minibuffers t)
-    (global-set-key (kbd "C-c s") 'swiper))
+  (ivy-mode 1)
+  (setq ivy-use-virtual-buffers t)
+  (setq enable-recursive-minibuffers t))
 
 (defun ivy-rich-switch-buffer-icon (candidate)
  (with-current-buffer
@@ -869,7 +876,7 @@ Version control has never been this easy before.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
-  :bind ("C-x g" . magit-status))
+  :bind ("C-c g" . magit-status))
 #+END_SRC
 
 **** mode-line bell
@@ -890,8 +897,9 @@ It's nice to change everything at once.
 #+BEGIN_SRC emacs-lisp
 (use-package multiple-cursors
   :bind
-  (("C-<" . mc/mark-next-like-this)
-   ("C->" . mc/mark-previous-likethis)))
+  (("C-c m n" . mc/mark-next-like-this)
+   ("C-c m p" . mc/mark-previous-like-this)
+   ("C-c m a" . mc/mark-all-like-this)))
 #+END_SRC
 
 **** origami
@@ -900,8 +908,8 @@ Code folding. Unfortunately has some performance issues.
 
 #+BEGIN_SRC emacs-lisp
 (use-package origami
-  :hook (prog-mode . origami-mode) 
-  :bind (("s-#" . origami-toggle-node)))
+  :hook (prog-mode . origami-mode)
+  :bind (("C-c o" . origami-toggle-node)))
 #+END_SRC
 
 **** prettier-js
@@ -994,8 +1002,7 @@ Highlight sections by edit date.
       (setq smeargle-on t)
       (smeargle))))
 
-(use-package smeargle
-  :bind ("C-x t s" . smeargle-toggle))
+(use-package smeargle)
 #+END_SRC
 
 **** smex
@@ -1097,10 +1104,10 @@ I'm not a fan of =dired=, so let's show some dirs.
   :bind
     (:map global-map
         ("M-0"       . treemacs-select-window)
-        ("C-x t 1"   . treemacs-delete-other-windows)
-        ("C-x t t"   . treemacs)
-        ("C-x t b"   . treemacs-bookmark)
-        ("C-x t M-t" . treemacs-find-tag)))
+        ("C-c t 1"   . treemacs-delete-other-windows)
+        ("C-c t t"   . treemacs)
+        ("C-c t b"   . treemacs-bookmark)
+        ("C-c t M-t" . treemacs-find-tag)))
 
 ;; (use-package treemacs-evil
 ;;   :after treemacs evil
@@ -1440,39 +1447,9 @@ Everything concerning agendas. This is mostly based on [[https://github.com/mwfo
       (org-agenda nil "a")
       (org-agenda-day-view)))
 
-  (defun my-dev-agenda ()
-    (interactive)
-    (let ((org-super-agenda-groups
-           '((:name "Development"
-                    :tag "@dev")
-              (:discard (:anything t)))))
-      (org-agenda nil "a")
-      (org-agenda-day-view)))
-
-  (defun my-bla-agenda ()
-    (interactive)
-    (let ((org-super-agenda-groups
-           '((:name "Meetings"
-                    :tag "@bla")
-              (:discard (:anything t)))))
-      (org-agenda nil "a")
-      (org-agenda-day-view)))
-
-  (defun my-edu-agenda ()
-    (interactive)
-    (let ((org-super-agenda-groups
-           '((:name "Education"
-                    :tag "@edu")
-              (:discard (:anything t)))))
-      (org-agenda nil "a")
-      (org-agenda-day-view)))
-
-  (bind-keys ("C-c 0" . my-org-super-agenda-today)
-             ("C-c 1" . my-dev-agenda)
-	     ("C-c 2" . my-bla-agenda)
-	     ("C-c 3" . my-edu-agenda)
-             ("C-c 5" . my-personal-agenda)
-             ("C-c 6" . my-org-super-agenda)))
+  (bind-keys ("<f5>" . my-org-super-agenda-today)
+             ("<f6>" . my-personal-agenda)
+             ("<f7>" . my-org-super-agenda)))
 
 (setq org-agenda-hide-tags-regexp "@")
 
