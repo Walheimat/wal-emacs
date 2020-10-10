@@ -427,7 +427,6 @@ to download it automatically).
   :ensure-system-package ag
   :init
   (setq ag-highlight-search t)
-  :chords ("ag" . ag)
   :bind ("C-c a a" . ag)
         ("C-c a p" . ag-project))
 #+END_SRC
@@ -458,7 +457,6 @@ Jumping to (visible) lines and chars is fun if you are too lazy to use your mous
 
 #+BEGIN_SRC emacs-lisp
 (use-package avy
-  :chords (("ay" . avy-goto-line))
   :bind (("C-c v l" . avy-goto-line)
          ("C-c v c" . avy-goto-char)))
 #+END_SRC
@@ -636,7 +634,6 @@ I use Docker a lot, don't always have to use the command line.
 
 #+BEGIN_SRC emacs-lisp
 (use-package docker
-  :chords ("dc" . docker)
   :bind ("C-c d" . docker))
 #+END_SRC
 
@@ -756,14 +753,21 @@ I prefer pop-ups over mode-line info.
 **** flyspell
 
 My spelling is bad.
-Use American English for flyspell in =prog-mode=.
+Use American English for flyspell.
 
 #+BEGIN_SRC emacs-lisp
 (use-package flyspell
   :delight " fsp"
+  :init (setq ispell-dictionary "american")
   :config
-  (setq flyspell-issue-message-flag nil)
-  :hook (flyspell-prog-mode . (lambda() (ispell-change-dictionary "american"))))
+  (setq flyspell-issue-message-flag nil))
+
+(use-package flyspell-correct
+  :after flyspell
+  :bind (:map flyspell-mode-map ("C-;" . flyspell-correct-wrapper)))
+
+(use-package flyspell-correct-ivy
+  :after flyspell-correct)
 #+END_SRC
 
 **** gitignore-mode
@@ -783,7 +787,6 @@ If you want to go back in time and point fingers at the progenitors of doom.
 
 #+BEGIN_SRC emacs-lisp
 (use-package git-timemachine
-  :chords ("tm" . git-timemachine-toggle)
   :bind ("C-c q" . git-timemachine-toggle))
 #+END_SRC
 
@@ -810,6 +813,15 @@ Make numbers stand out.
 
 #+END_SRC
 
+**** hl-todo
+
+Highlight =TODO=, =FIXME= etc. in prog modes.
+
+#+BEGIN_SRC emacs-lisp
+(use-package hl-todo
+  :hook (prog-mode . hl-todo-mode))
+#+END_SRC
+
 **** hydra
 
 We use hydra to trigger grouped actions.
@@ -826,7 +838,7 @@ We use =ivy= for narrowing our options.
 #+BEGIN_SRC emacs-lisp
 (use-package swiper
   :after ivy
-  :chords ("sr" . swiper)
+  :chords ("qq" . swiper)
   :bind ("C-c s" . swiper))
 
 (use-package ivy
@@ -911,6 +923,10 @@ If you use Elixir, get the language server from [[https://github.com/elixir-lsp/
   :config
   (add-to-list 'lsp-file-watch-ignored "[/\\\\]_build$")
   (add-to-list 'lsp-file-watch-ignored "[/\\\\]deps$"))
+
+(use-package lsp-ui
+  :after lsp-mode
+  :hook (lsp-mode . lsp-ui-mode))
 #+END_SRC
 
 **** magit
@@ -919,7 +935,6 @@ Version control has never been this easy before.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
-  :chords ("gt" . magit-status)
   :bind ("C-c g" . magit-status))
 #+END_SRC
 
@@ -988,6 +1003,16 @@ Show colors in source code and make delimiters stand out.
 (use-package rainbow-mode
   :diminish
   :hook (prog-mode . rainbow-mode))
+#+END_SRC
+
+**** restart-emacs
+Sometimes I restart for fun.
+
+#+BEGIN_SRC emacs-lisp
+(use-package restart-emacs
+  :init
+  (setq restart-emacs-restore-frames t)
+  :bind ("C-c r s" . restart-emacs))
 #+END_SRC
 
 **** restclient
@@ -1382,6 +1407,9 @@ state =CANCELLED=.
 (use-package org-bullets
   :hook (org-mode . (lambda() (org-bullets-mode t))))
 
+;; use org-mode for presentations
+(use-package org-present)
+
 ;; change if necessary
 (defconst my-org-directory (expand-file-name "org" "~"))
 (unless (file-directory-p my-org-directory)
@@ -1755,6 +1783,8 @@ but this might fail. If that is the case do the following:
 + [[https://github.com/bbatsov/crux][crux]]
 + [[https://github.com/emacs-lsp/dap-mode][dap]]
 + [[https://github.com/Yevgnen/ivy-rich][ivy-rich]]
++ [[https://github.com/emacs-lsp/lsp-ui][lsp-ui]]
++ [[https://github.com/rlister/org-present][org-present]]
 + [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]]
 + [[https://github.com/zk-phi/symon][symon]]
 + [[https://github.com/dbordak/telephone-line][telephone-line]]
