@@ -458,7 +458,7 @@ Jumping to (visible) lines and chars is fun if you are too lazy to use your mous
 
 #+BEGIN_SRC emacs-lisp
 (use-package avy
-  :chords (("av" . avy-goto-line))
+  :chords (("ay" . avy-goto-line))
   :bind (("C-c v l" . avy-goto-line)
          ("C-c v c" . avy-goto-char)))
 #+END_SRC
@@ -706,6 +706,7 @@ Comment code like in =vim=, evil, evil =vim=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package evil-nerd-commenter
+  :chords ("##" . evilnc-comment-or-uncomment-lines)
   :bind ("s-#" . evilnc-comment-or-uncomment-lines))
 #+END_SRC
 
@@ -825,7 +826,7 @@ We use =ivy= for narrowing our options.
 #+BEGIN_SRC emacs-lisp
 (use-package swiper
   :after ivy
-  :chords ("ss" . swiper)
+  :chords ("sr" . swiper)
   :bind ("C-c s" . swiper))
 
 (use-package ivy
@@ -918,7 +919,7 @@ Version control has never been this easy before.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
-  :chords ("gg" . magit-status)
+  :chords ("gt" . magit-status)
   :bind ("C-c g" . magit-status))
 #+END_SRC
 
@@ -1096,18 +1097,17 @@ A slightly nicer modeline.
     '((evil   . (telephone-line-buffer-segment))
       (accent . (telephone-line-vc-segment))
       (nil    . (telephone-line-minor-mode-segment
-		 telephone-line-erc-modified-channels-segment
 		 telephone-line-process-segment))))
   (setq telephone-line-rhs
     '((nil    . (telephone-line-misc-info-segment
                  telephone-line-flycheck-segment))
       (accent . (telephone-line-major-mode-segment))
-      (evil   . (telephone-line-airline-position-segment))))
+      (evil  . (telephone-line-airline-position-segment))))
   (setq telephone-line-primary-right-separator 'telephone-line-identity-left
         telephone-line-secondary-right-separator 'telephone-line-identity-hollow-left
         telephone-line-primary-left-separator 'telephone-line-identity-right
         telephone-line-secondary-left-separator 'telephone-line-identity-hollow-right)
-  :init
+  :config
   (telephone-line-mode t))
 #+END_SRC
 
@@ -1148,7 +1148,7 @@ I'm not a fan of =dired=, so let's show some dirs.
         (treemacs-git-mode 'deferred))
       (`(t . _)
         (treemacs-git-mode 'extended))))
-  :chords ("tt" . treemacs)
+  :chords (",." . treemacs)
   :bind
     (:map global-map
         ("M-0"       . treemacs-select-window)
@@ -1227,7 +1227,10 @@ Nicer scroll-bar.
 Use snippets in prog mode buffers.
 
 #+BEGIN_SRC emacs-lisp
-(use-package yasnippet-snippets)
+(use-package yasnippet-snippets
+  :after yasnippet
+  :config
+  (yas-reload-all))
 
 (use-package yasnippet
   :delight " yas"
@@ -1241,8 +1244,7 @@ Use snippets in prog mode buffers.
   ;;                              'company-yasnippet-or-completion
   ;;                               company-active-map)))
   ;; :after yasnippet-snippets
-  :hook ((prog-mode      . yas-minor-mode)
-         (yas-minor-mode . (lambda () (yas-reload-all)))))
+  :hook (prog-mode . yas-minor-mode))
 
 ;; (defun company-yasnippet-or-completion ()
 ;;   (interactive)
