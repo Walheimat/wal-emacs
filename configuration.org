@@ -129,6 +129,14 @@ We need to install a few packages to install packages more easily.
   (error
     (package-refresh-contents)
     (init--install-packages)))
+(require 'diminish)
+(require 'delight)
+(require 'bind-key)
+
+;; has to come here to be useable
+(use-package use-package-chords
+  :config
+  (key-chord-mode 1))
 #+END_SRC
 
 **** Site-Lisp
@@ -270,32 +278,37 @@ Change up the key bindings a bit.
 I try to have most actions use user-reserved =C-c <key>= combinations,
 but some =C-x <key>= mappings snuck in.
 
-+ =C-c e= opens eshell.
-+ =C-c g= opens magit status.
-+ =M-x= opens smex.
-+ =s-#= (un-)comments.
-+ =C-c a a= runs ag. _Requires ag_!
-+ =C-x r q= (really) quits.
-+ =C-c a p= runs ag-project.
-+ =C-x C-c= opens this config org file.
-+ =M-o= goes to the "other" window or the last buffer.
-+ =C-c j= dumb-jumps.
-+ =C-c q= opens the timemachine.
-+ =C-c f p= finds a project file.
-+ =C-c c k= kills all other buffers.
-+ =C-c c o= opens file with outside program.
-+ =s-RET= will open a (indented) line above.
-+ =s-k= kills the whole line.
-+ =C-c c d= duplicates the current line (or region).
-+ =C-c d= opens docker.
+If you want to see all personal keybindings, execute =describe-personal-keybindings=.
+
++ =<f5>= opens today's agenda.
++ =<f6>= opens today's personal agenda
++ =<f7>= opens this week's agenda
 + =C-+= expands region.
-+ =C-z=/=C-S-z= undos/redos.
-+ =C-c v l= jumps to line with avy.
-+ =C-c v c= jumps to char with avy.
-+ =C-c s= uses swiper to search.
++ =C-c a a= runs ag. _Requires ag_!
++ =C-c a p= runs ag-project.
 + =C-c b b= toggles bookmarks.
 + =C-c b s= show bookmarks.
++ =C-c c d= duplicates the current line (or region).
++ =C-c c k= kills all other buffers.
++ =C-c c o= opens file with outside program.
++ =C-c d= opens docker.
++ =C-c e= opens eshell.
++ =C-c f p= finds a project file.
++ =C-c g= opens magit status.
++ =C-c j= dumb-jumps.
 + =C-c m <key>= for multiple cursors.
++ =C-c q= opens the timemachine.
++ =C-c s= uses swiper to search.
++ =C-c v c= jumps to char with avy.
++ =C-c v l= jumps to line with avy.
++ =C-x C-c= opens this config org file.
++ =C-x r q= (really) quits.
++ =C-z=/=C-S-z= undos/redos.
++ =M-o= goes to the "other" window or the last buffer.
++ =M-x= opens smex.
++ =s-#= (un-)comments.
++ =s-k= kills the whole line.
++ =s-RET= will open a (indented) line above.
 
 Note that all bindings for external packages are declared in the [[*Packages][packages]] section.
 
@@ -406,14 +419,17 @@ Allows accessing a project's =node_modules=.
 
 Highlight search results using the *Silver Searcher*.
 
-This _requires_ the =ag= binary which you can get from [[https://github.com/ggreer/the_silver_searcher#installation][here]].
+This _requires_ the =ag= binary which you can get from [[https://github.com/ggreer/the_silver_searcher#installation][here]] (we will try
+to download it automatically).
 
 #+BEGIN_SRC emacs-lisp
 (use-package ag
-  :config
+  :ensure-system-package ag
+  :init
   (setq ag-highlight-search t)
-  :bind ("C-c a p" . ag-project)
-        ("C-c a a"     . ag))
+  :chords ("ag" . ag)
+  :bind ("C-c a a" . ag)
+        ("C-c a p" . ag-project))
 #+END_SRC
 
 **** all-the-icons
@@ -424,12 +440,25 @@ You need to install the icons yourself[fn:2].
 (use-package all-the-icons)
 #+END_SRC
 
+**** auto-package-update
+Keep packages updated.
+
+#+BEGIN_SRC emacs-lisp
+(use-package auto-package-update
+  :init
+  (setq auto-package-update-delete-old-versions t)
+  (setq auto-package-update-hide-results t)
+  :config
+  (auto-package-update-maybe))
+#+END_SRC
+
 **** avy
 
 Jumping to (visible) lines and chars is fun if you are too lazy to use your mouse.
 
 #+BEGIN_SRC emacs-lisp
 (use-package avy
+  :chords (("av" . avy-goto-line))
   :bind (("C-c v l" . avy-goto-line)
          ("C-c v c" . avy-goto-char)))
 #+END_SRC
@@ -608,6 +637,7 @@ I use Docker a lot, don't always have to use the command line.
 
 #+BEGIN_SRC emacs-lisp
 (use-package docker
+  :chords ("dc" . docker)
   :bind ("C-c d" . docker))
 #+END_SRC
 
@@ -635,6 +665,7 @@ Configure it for =ivy=.
   (setq dumb-jump-selector 'ivy
         dumb-jump-force-searcher 'ag)
   (dumb-jump-mode)
+  :chords ("jj" . dump-jump-go)
   :bind ("C-c j" . dumb-jump-go))
 #+END_SRC
 
@@ -737,8 +768,7 @@ Necessary even for =.gitignore= files.
 
 #+BEGIN_SRC emacs-lisp
 (use-package gitignore-mode
-  :init
-  (add-to-list 'auto-mode-alist '(".gitignore\\'" . gitignore-mode)))
+  :mode "^.gitignore")
 #+END_SRC
 
 **** git-timemachine
@@ -747,6 +777,7 @@ If you want to go back in time and point fingers at the progenitors of doom.
 
 #+BEGIN_SRC emacs-lisp
 (use-package git-timemachine
+  :chords ("tm" . git-timemachine-toggle)
   :bind ("C-c q" . git-timemachine-toggle))
 #+END_SRC
 
@@ -789,14 +820,16 @@ We use =ivy= for narrowing our options.
 #+BEGIN_SRC emacs-lisp
 (use-package swiper
   :after ivy
+  :chords ("ss" . swiper)
   :bind ("C-c s" . swiper))
 
 (use-package ivy
   :diminish
-  :config
-  (ivy-mode 1)
+  :init
   (setq ivy-use-virtual-buffers t)
-  (setq enable-recursive-minibuffers t))
+  (setq enable-recursive-minibuffers t)
+  :config
+  (ivy-mode 1))
 
 (defun ivy-rich-switch-buffer-icon (candidate)
  (with-current-buffer
@@ -808,7 +841,7 @@ We use =ivy= for narrowing our options.
 
 (use-package ivy-rich
   :after ivy
-  :config
+  :init
   (setq ivy-rich-display-transformers-list
       '(ivy-switch-buffer
         (:columns
@@ -821,6 +854,7 @@ We use =ivy= for narrowing our options.
           (ivy-rich-switch-buffer-path (:width (lambda (x) (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3))))))
          :predicate
          (lambda (cand) (get-buffer cand)))))
+  :config
   (ivy-rich-mode 1))
 #+END_SRC
 
@@ -830,14 +864,23 @@ This is a themes collection I sometimes pick from.
 
 #+BEGIN_SRC emacs-lisp
 (use-package kaolin-themes
-  :config
-  ;; treemacs
-  (kaolin-treemacs-theme)
+  :init
   (setq kaolin-ocean-alt-bg t)
   ;; Enable distinct background for fringe and line numbers.
   (setq kaolin-themes-distinct-fringe t)
   ;; Enable distinct colors for company popup scrollbar.
-  (setq kaolin-themes-distinct-company-scrollbar t))
+  (setq kaolin-themes-distinct-company-scrollbar t)
+  :config
+  ;; treemacs
+  (kaolin-treemacs-theme))
+#+END_SRC
+
+**** key-chord
+
+Let's try out some guitar-playin'.
+
+#+BEGIN_SRC emacs-lisp
+
 #+END_SRC
 
 **** kubernetes
@@ -864,9 +907,8 @@ If you use Elixir, get the language server from [[https://github.com/elixir-lsp/
 (use-package lsp-mode
   :init
   (add-to-list 'exec-path elixir-ls-release-location)
-  :config
   (setq lsp-prefer-capf t)
-  (setq lsp-idle-delay 0.500)
+  (setq lsp-idle-delay 1.5)
   (setq lsp-semantic-highlighting t))
 #+END_SRC
 
@@ -876,6 +918,7 @@ Version control has never been this easy before.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
+  :chords ("gg" . magit-status)
   :bind ("C-c g" . magit-status))
 #+END_SRC
 
@@ -918,7 +961,7 @@ Format code quickly.
 
 #+BEGIN_SRC emacs-lisp
 (use-package prettier-js
-  :config
+  :init
   ;; you might want to remove/edit this
   (setq prettier-js-args '(
     "--print-width" "91"
@@ -939,7 +982,8 @@ Show colors in source code and make delimiters stand out.
 
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-delimiters
-  :hook (prog-mode . rainbow-mode))
+  :hook (prog-mode . rainbow-delimiters-mode))
+
 (use-package rainbow-mode
   :diminish
   :hook (prog-mode . rainbow-mode))
@@ -952,8 +996,7 @@ I use a =.http= file extension for my request examples.
 
 #+BEGIN_SRC emacs-lisp
 (use-package restclient
-  :init
-  (add-to-list 'auto-mode-alist '("\\.http" . restclient-mode)))
+  :mode "\\.http\\'")
 #+END_SRC
 
 **** request
@@ -1030,7 +1073,7 @@ Show some system stats when nothing else is going on.
 
 #+BEGIN_SRC emacs-lisp
 (use-package symon
-  :config
+  :init
   (setq symon-sparkline-type 'bounded
         symon-delay 5
 	symon-monitors
@@ -1038,6 +1081,7 @@ Show some system stats when nothing else is going on.
 	    symon-linux-memory-monitor
 	    symon-linux-network-rx-monitor
 	    symon-linux-network-tx-monitor))
+  :config
   (symon-mode))
 #+END_SRC
 
@@ -1047,23 +1091,24 @@ A slightly nicer modeline.
 
 #+BEGIN_SRC emacs-lisp
 (use-package telephone-line
-  :config
-    (setq telephone-line-lhs
-	  '((evil   . (telephone-line-buffer-segment))
-	    (accent . (telephone-line-vc-segment))
-	    (nil    . (telephone-line-minor-mode-segment
-		       telephone-line-erc-modified-channels-segment
-		       telephone-line-process-segment))))
-    (setq telephone-line-rhs
-	  '((nil    . (telephone-line-misc-info-segment
-		       telephone-line-flycheck-segment))
-	    (accent . (telephone-line-major-mode-segment))
-	    (evil   . (telephone-line-airline-position-segment))))
-    (setq telephone-line-primary-right-separator 'telephone-line-identity-left
-	  telephone-line-secondary-right-separator 'telephone-line-identity-hollow-left
-	  telephone-line-primary-left-separator 'telephone-line-identity-right
-	  telephone-line-secondary-left-separator 'telephone-line-identity-hollow-right)
-    (telephone-line-mode t))
+  :init
+  (setq telephone-line-lhs
+    '((evil   . (telephone-line-buffer-segment))
+      (accent . (telephone-line-vc-segment))
+      (nil    . (telephone-line-minor-mode-segment
+		 telephone-line-erc-modified-channels-segment
+		 telephone-line-process-segment))))
+  (setq telephone-line-rhs
+    '((nil    . (telephone-line-misc-info-segment
+                 telephone-line-flycheck-segment))
+      (accent . (telephone-line-major-mode-segment))
+      (evil   . (telephone-line-airline-position-segment))))
+  (setq telephone-line-primary-right-separator 'telephone-line-identity-left
+        telephone-line-secondary-right-separator 'telephone-line-identity-hollow-left
+        telephone-line-primary-left-separator 'telephone-line-identity-right
+        telephone-line-secondary-left-separator 'telephone-line-identity-hollow-right)
+  :init
+  (telephone-line-mode t))
 #+END_SRC
 
 **** treemacs
@@ -1072,7 +1117,9 @@ I'm not a fan of =dired=, so let's show some dirs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package perspective)
+
 ;; (use-package treemacs-evil)
+
 (use-package treemacs
   :defer t
   :init
@@ -1101,6 +1148,7 @@ I'm not a fan of =dired=, so let's show some dirs.
         (treemacs-git-mode 'deferred))
       (`(t . _)
         (treemacs-git-mode 'extended))))
+  :chords ("tt" . treemacs)
   :bind
     (:map global-map
         ("M-0"       . treemacs-select-window)
@@ -1139,8 +1187,16 @@ Undoing un-undoing is weird in Emacs.
 (use-package undo-fu
   :init
   (global-unset-key (kbd "C-z"))
-  :bind ("C-z" . undo-fu-only-undo)
+  :bind ("C-z"   . undo-fu-only-undo)
         ("C-S-z" . undo-fu-only-redo))
+#+END_SRC
+
+**** use-package-ensure-system-package
+
+Ensure binaries.
+
+#+BEGIN_SRC emacs-lisp
+(use-package use-package-ensure-system-package)
 #+END_SRC
 
 **** which-key
@@ -1150,9 +1206,10 @@ Show the next possible key presses towards an action.
 #+BEGIN_SRC emacs-lisp
 (use-package which-key
   :delight " wk"
+  :init
+  (setq which-key-idle-delay 0.8)
   :config
-  (which-key-mode)
-  (setq which-key-idle-delay 0.8))
+  (which-key-mode))
 #+END_SRC
 
 **** yascroll
@@ -1161,7 +1218,7 @@ Nicer scroll-bar.
 
 #+BEGIN_SRC emacs-lisp
 (use-package yascroll
-  :init
+  :config
   (global-yascroll-bar-mode 1))
 #+END_SRC
 
@@ -1260,8 +1317,7 @@ Make Dockerfiles look nice.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dockerfile-mode
-  :init
-  (add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-mode)))
+  :mode "^Dockerfile")
 #+END_SRC
 
 **** elixir mode
@@ -1271,6 +1327,7 @@ Enable flycheck.
 #+BEGIN_SRC emacs-lisp
 (use-package elixir-mode
   :hook (elixir-mode . my-elixir-mode-hook))
+
 (defun my-elixir-mode-hook ()
   "Hooks for elixir mode."
   (flycheck-mode))
@@ -1282,9 +1339,8 @@ Enable =flycheck= and disable internal checker.
 
 #+BEGIN_SRC emacs-lisp
 (use-package js2-mode
+  :mode "\\.js\\'"
   :init
-  (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-  :config
   (setq-default js2-show-parse-errors nil)
   (setq-default js2-strict-missing-semi-warning nil)
   :hook (js2-mode . my-js2-mode-hook))
@@ -1521,8 +1577,7 @@ Pretty much like js2.
 
 #+BEGIN_SRC emacs-lisp
 (use-package rjsx-mode
-  :init
-  (add-to-list 'auto-mode-alist '("\\.jsx\\'" . rjsx-mode))
+  :mode "\\.jsx\\'"
   :hook (rjsx-mode . my-rjsx-mode-hook))
 
 (defun rjsx-indent ()
@@ -1549,9 +1604,9 @@ Enable =lsp=, =flycheck= and sane tabs. And some other stuff.
 
 #+BEGIN_SRC emacs-lisp
 (use-package typescript-mode
-  :config
-  (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
+  :mode "\\.ts\\'"
   :hook (typescript-mode . my-typescript-mode-hook))
+
 (defun my-typescript-mode-hook ()
   "Hooks for typescript mode."
   (enable-tabs)
@@ -1573,13 +1628,10 @@ Web mode uses =flycheck= with =lsp= enabled.
   :hook (web-mode . my-web-mode-hook)
   :init
   (setq web-mode-comment-style 2)
-  :config
-  (add-to-list 'web-mode-comment-formats '("vue" . "//")))
-
-(add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.component.html\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.ejs\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.json\\'" . web-mode))
+  :mode ("\\.vue\\'"
+         "\\.component.html\\'"
+         "\\.ejs\\'"
+         "\\.json\\'"))
 
 (defun my-web-mode-hook ()
   "Hooks for web mode."
