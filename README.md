@@ -9,19 +9,19 @@ Its base is an org file so it doubles as a readme<sup><a id="fnr.1" class="footr
 
 # Table of Contents
 
-1.  [Emacs Org Config](#orgac027a2)
-    1.  [Setup](#orgc76e7aa)
-    2.  [Config](#org17a17ca)
-        1.  [Personal Config](#orgb74c836)
-        2.  [Initialization](#org4121db7)
-        3.  [Built-in](#orgf5ec2ff)
-        4.  [Mode Mappings](#org80edd85)
-        5.  [Packages](#orge0d45e0)
-        6.  [Mode Configs](#org4b91062)
-        7.  [Tweaks](#org450c3b4)
+1.  [Emacs Org Config](#org8a39bb1)
+    1.  [Setup](#org6ed41ce)
+    2.  [Config](#org57d6c98)
+        1.  [Personal Config](#orgddd3fac)
+        2.  [Initialization](#org8e5bb2b)
+        3.  [Built-in](#orgfe65321)
+        4.  [Mode Mappings](#orgf7b0199)
+        5.  [Packages](#org8ba62ad)
+        6.  [Mode Configs](#org46c3b15)
+        7.  [Tweaks](#org0ec9065)
 
 
-<a id="orgc76e7aa"></a>
+<a id="org6ed41ce"></a>
 
 ## Setup
 
@@ -36,24 +36,24 @@ If you did not init this repo in your `user-emacs-directory` using the default n
 the variable `walheimat-emacs-config-default-path` in the example config you just copied.
 
 
-<a id="org17a17ca"></a>
+<a id="org57d6c98"></a>
 
 ## Config
 
 The init script will evaluate <span class="underline">everything</span> that follows.
 
 
-<a id="orgb74c836"></a>
+<a id="orgddd3fac"></a>
 
 ### Personal Config
 
-Set some personal info.
+Set some personal info.<sup><a id="fnr.4" class="footref" href="#fn.4">4</a></sup>
 
     (setq user-full-name "Krister Schuchardt"
           user-mail-address "krister.schuchardt@theventury.com")
 
 
-<a id="org4121db7"></a>
+<a id="org8e5bb2b"></a>
 
 ### Initialization
 
@@ -70,7 +70,7 @@ Set up Emacs, package manager and packages.
         (setq inhibit-startup-message t)
         
         ;; empty scratch message
-        (setq initial-scratch-message nil)
+        (setq initial-scratch-message ";; Howdy, stranger ...")
         
         ;; use a distinct file for customization
         (setq custom-file (expand-file-name "custom.el" walheimat-emacs-config-default-path))
@@ -144,6 +144,14 @@ Set up Emacs, package manager and packages.
           (error
             (package-refresh-contents)
             (init--install-packages)))
+        (require 'diminish)
+        (require 'delight)
+        (require 'bind-key)
+        
+        ;; has to come here to be useable
+        (use-package use-package-chords
+          :config
+          (key-chord-mode 1))
 
 4.  Site-Lisp
 
@@ -171,7 +179,7 @@ Set up Emacs, package manager and packages.
         (setq use-package-always-ensure t)
 
 
-<a id="orgf5ec2ff"></a>
+<a id="orgfe65321"></a>
 
 ### Built-in
 
@@ -204,12 +212,14 @@ Configure built-in settings.
         (show-paren-mode 1)
         (global-auto-revert-mode t)
         (global-hl-line-mode)
-        (add-hook 'prog-mode-hook 'linum-mode)
+        ;; (add-hook 'prog-mode-hook 'linum-mode)
+        (add-hook 'prog-mode-hook 'display-line-numbers-mode)
         (global-prettify-symbols-mode +1)
         ;; (global-whitespace-mode)
         (save-place-mode 1)
         (tool-bar-mode -1)
         (menu-bar-mode -1)
+        (scroll-bar-mode -1)
         (global-font-lock-mode 1)
         (delete-selection-mode 1)
         
@@ -223,6 +233,9 @@ Configure built-in settings.
           (set-face-attribute 'font-lock-keyword-face nil :weight 'bold)
         )
         (add-hook 'font-lock-mode-hook 'my-font-lock-hook)
+        
+        ;; huge cursor
+        ;; (setq x-stretch-cursor t)
 
 3.  Reasonable Settings
 
@@ -230,7 +243,8 @@ Configure built-in settings.
     
         (setq mouse-yank-at-point t)
         (setq show-paren-delay 0.0)
-        (setq gc-cons-threshold 100000000)
+        ;; apparently, this line is a very bad idea ...
+        ;; (setq gc-cons-threshold 100000000)
         (setq read-process-output-max (* 1024 1024)) ;; 1mb
         (setq sentence-end-double-space nil)
         (setq echo-keystrokes 0.1)
@@ -266,33 +280,38 @@ Configure built-in settings.
 
     Change up the key bindings a bit.
     
-    -   `C-c e` opens eshell.
-    -   `C-x g` opens magit status.
-    -   `M-x` opens smex.
-    -   `s-,` (un-)comments.
-    -   `C-x p a` runs ag. <span class="underline">Requires ag</span>!
-    -   `C-x r q` (really) quits.
-    -   `C-x C-c` opens this config org file.
-    -   `M-o` goes to the "other" window or the last buffer.
-    -   `C-x j` dumb-jumps.
-    -   `C-x t m` opens the timemachine.
-    -   `s-y` runs flyspell.
-    -   `C-x p f` finds a project file.
-    -   `C-c k` kills all other buffers.
-    -   `C-c o` opens file with outside program.
-    -   `s-RET` will open a (indented) line above.
-    -   `s-k` kills the whole line.
-    -   `C-c d` duplicates the current line (or region).
-    -   `C-x 4 t` transposes windows (watch out for treemacs).
-    -   `C-d d` opens docker.
-    -   `C-+` expands region.
-    -   `C-z=/=C-S-z` undos/redos.
-    -   `C-ö` jumps to char with avy.
-    -   `C-ä` jumps to line with avy.
-    -   `C-s` uses swiper to search.
-    -   `C-;` use iedit.
+    I try to have most actions use user-reserved `C-c <key>` combinations,
+    but some `C-x <key>` mappings snuck in.
     
-    Note that all bindings for external packages are declared in the [packages](#orge0d45e0) section.
+    If you want to see all personal keybindings, execute `describe-personal-keybindings`.
+    
+    -   `<f5>` opens today's agenda.
+    -   `<f6>` opens today's personal agenda
+    -   `<f7>` opens this week's agenda
+    -   `C-+` expands region.
+    -   `C-c a <key>` runs ag (`a` for generic, `p` for in-project search). <span class="underline">Requires ag</span>!
+    -   `C-c b <key>` toggle(`t`) or shows(`s`) bookmarks.
+    -   `C-c c <key>` to duplicate (`d`) the current line, kill (`k`) other buffers and (`o`) open with outside program.
+    -   `C-c d` opens docker.
+    -   `C-c e` opens eshell.
+    -   `C-c f p` finds a project file.
+    -   `C-c g` opens magit status.
+    -   `C-c j=/=jj` dumb-jumps.
+    -   `C-c m <key>` for multiple cursors.
+    -   `C-c q` opens the time machine.
+    -   `C-c s=/=qq` uses swiper to search.
+    -   `C-c t t=/`,.= opens treemacs.
+    -   `C-c v <key>` jumps to char (`c`) or line (`l`) with avy.
+    -   `C-x C-c` opens this config org file.
+    -   `C-x r q` (really) quits.
+    -   `C-z=/=C-S-z` undos/redos.
+    -   `M-o` goes to the "other" window or the last buffer.
+    -   `M-x` opens smex.
+    -   `s-#=/=##` (chord) (un-)comments.
+    -   `s-k` kills the whole line.
+    -   `s-RET` will open a (indented) line above.
+    
+    Note that all bindings for external packages are declared in the [packages](#org8ba62ad) section.
     
         (global-set-key (kbd "C-c e") 'eshell)
         (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
@@ -304,12 +323,12 @@ Configure built-in settings.
 
     Be sure to check out [Peach Melpa](https://peach-melpa.org/) to find a theme you like.
     
-        (load-theme 'ample-flat t)
+        (load-theme 'doom-city-lights t)
 
 7.  Font
 
     Prefer FiraCode (-> mononoki -> Liberation -> DejaVu).
-    If emacs runs with the custom arg `-bigger`, the default font size is 14 (instead of 10).
+    If Emacs runs with the custom argument `-bigger`, the default font size is 14 (instead of 10).
     
     To get support for ligatures, install the symbol font from [here](https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip).
     
@@ -332,12 +351,12 @@ Configure built-in settings.
         ;; use fira mode if it's the default font and the symbol font is installed
         (use-package fira-code-mode
           :if (and (x-list-fonts "Fira Code Symbol") (string= "Fira Code" (face-attribute 'default :family)))
-          :custom (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
+          ;; :custom (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
           :hook prog-mode)                                         ; mode to enable fira-code-mode in
 
 8.  Zoning
 
-    Zone out after a minute.
+    Zone out after a couple of minutes.
     
         (require 'zone)
         (zone-when-idle 180)
@@ -351,9 +370,18 @@ Configure built-in settings.
         (defun treemacsbufferp ()
           "Check if this is the treemacs buffer."
           (eq (current-buffer) (treemacs-get-local-buffer)))
+        
+        ;; trick garbage collection
+        (defun my-minibuffer-setup-hook ()
+          (setq gc-cons-threshold most-positive-fixnum))
+        (defun my-minibuffer-exit-hook ()
+          (setq gc-cons-threshold 800000))
+        
+        (add-hook 'minibuffer-setup-hook #'my-minibuffer-setup-hook)
+        (add-hook 'minibuffer-exit-hook  #'my-minibuffer-exit-hook)
 
 
-<a id="org80edd85"></a>
+<a id="orgf7b0199"></a>
 
 ### Mode Mappings
 
@@ -362,16 +390,16 @@ Set up mode mappings for built-in modes.
     (add-to-list 'auto-mode-alist '("\\.component.css" . css-mode))
 
 
-<a id="orge0d45e0"></a>
+<a id="org8ba62ad"></a>
 
 ### Packages
 
 What follows is a list of MELPA packages that make Emacs even more awesome.
 
-If you wish to know more about any of them, check out the list<sup><a id="fnr.4" class="footref" href="#fn.4">4</a></sup> of repositories
+If you wish to know more about any of them, check out the list<sup><a id="fnr.5" class="footref" href="#fn.5">5</a></sup> of repositories
 at the end of this readme/configuration.
 
-Many packages bind keys. Check the [key bindings section](#org32e0128) if you need a list of all
+Many packages bind keys. Check the [key bindings section](#orgadce77c) if you need a list of all
 of them.
 
 1.  add-node-modules-path
@@ -380,33 +408,46 @@ of them.
     
         (use-package add-node-modules-path)
 
-2.  all-the-icons
+2.  ag
+
+    Highlight search results using the **Silver Searcher**.
+    
+    This <span class="underline">requires</span> the `ag` binary which you can get from [here](https://github.com/ggreer/the_silver_searcher#installation) (we will try
+    to download it automatically).
+    
+        (use-package ag
+          :ensure-system-package ag
+          :init
+          (setq ag-highlight-search t)
+          :bind ("C-c a a" . ag)
+        	("C-c a p" . ag-project))
+
+3.  all-the-icons
 
     You need to install the icons yourself<sup><a id="fnr.2.100" class="footref" href="#fn.2">2</a></sup>.
     
         (use-package all-the-icons)
 
-3.  ag
+4.  auto-package-update
 
-    Highlight search results using the **Silver Searcher**.
+    Keep packages updated (disabled for now).
     
-    This <span class="underline">requires</span> the `ag` binary which you can get from [here](https://github.com/ggreer/the_silver_searcher#installation).
-    
-        (use-package ag
-          :config
-          (setq ag-highlight-search t)
-          :bind ("C-x p a" . ag-project)
-        	("s-a"     . ag))
+        ;; (use-package auto-package-update
+        ;;   :init
+        ;;   (setq auto-package-update-delete-old-versions t)
+        ;;   (setq auto-package-update-hide-results t)
+        ;;   :config
+        ;;   (auto-package-update-maybe))
 
-4.  avy
+5.  avy
 
-    Jumping to (visible) lines and chars is fun if you are to lazy to use your mouse.
+    Jumping to (visible) lines and chars is fun if you are too lazy to use your mouse.
     
         (use-package avy
-          :bind (("C-ö" . avy-goto-char)
-        	 ("C-ä" . avy-goto-line)))
+          :bind (("C-c v l" . avy-goto-line)
+        	 ("C-c v c" . avy-goto-char)))
 
-5.  beacon
+6.  beacon
 
     Help me find my cursor!
     
@@ -416,9 +457,10 @@ of them.
           (setq beacon-color 0.4
         	beacon-blink-duration 0.4
         	beacon-size 60
+        	beacon-blink-when-point-moves-vertically 2
           ))
 
-6.  bm
+7.  bm
 
     Bookmarks are useful. I don't remember where I was. <span class="underline">Who are you?!</span>
     
@@ -427,6 +469,9 @@ of them.
           (setq bm-restore-repository-on-load t)
           (setq bm-repository-file (expand-file-name "bms" user-emacs-directory))
           (setq-default bm-buffer-persistence t)
+          (setq bm-annotate-on-create t)
+          (setq bm-highlight-style 'bm-highlight-only-fringe)
+          (setq bm-cycle-all-buffers t)
           :hook
           ((after-init   .      bm-repository-load)
            (after-save   .      bm-buffer-save)
@@ -438,27 +483,28 @@ of them.
            (after-revert .      bm-buffer-restore)
            (vc-before-checkin . bm-buffer-save))
           :bind
-          (("<f2>"   . bm-next)
-           ("S-<f2>" . bm-previous)
-           ("C-<f2>" . bm-toggle)))
+           (("C-c b s" . bm-show)
+            ("C-c b n" . bm-next)
+            ("C-c b b" . bm-toggle)))
 
-7.  company
+8.  company
 
     Code-completion. In a box.
     
-        (use-package company-box)
+        (use-package company-box
+          :diminish
+          :hook (company-mode . company-box-mode))
+        
         (use-package company
           :delight " co"
-          :diminish company-box-mode
           :init
           (setq company-prefer-capf t)
-          (setq company-minimum-prefix-length 2)
-          (setq company-idle-delay 0.2)
-          :hook ((after-init-hook . global-company-mode)
-        	 (company-mode    . company-box-mode)))
+          (setq company-minimum-prefix-length 3)
+          (setq company-idle-delay 0.5)
+          :hook (prog-mode . company-mode))
         
-        (use-package company-lsp
-          :after company)
+        ;; (use-package company-lsp
+        ;;   :after company)
         
         (use-package company-restclient
           :after company)
@@ -466,26 +512,20 @@ of them.
         (use-package company-web
           :after company)
 
-8.  crux
+9.  crux
 
-    Let's use `crux` for some editing magic. Check the [key bindings section](#org32e0128) for descriptions.
+    Let's use `crux` for some editing magic. Check the [key bindings section](#orgadce77c) for descriptions.
     
         (use-package crux
-          :bind (("M-o"        . crux-other-window-or-switch-buffer)
-        	 ("C-c k"      . crux-kill-other-buffers)
+          :bind (("M-o"          . crux-other-window-or-switch-buffer)
+        	 ("C-c c k"      . crux-kill-other-buffers)
         	 ;; need to find solution with treemacs open
         	 ;; ("C-x 4 t")   .crux-transpose-windows
-        	 ("C-c o"      . crux-open-with)
-        	 ("s-<return>" . crux-smart-open-line-above)
-        	 ("s-k"        . crux-kill-whole-line)
-        	 ("C-c d"      . crux-duplicate-current-line-or-region)))
-
-9.  docker
-
-    I use Docker a lot, don't always have to use the command line.
-    
-        (use-package docker
-          :bind ("C-x d" . docker))
+        	 ("C-c c o"      . crux-open-with)
+        	 ("S-s-<return>" . crux-smart-open-line-above)
+        	 ("s-<return>"   . crux-smart-open-line)
+        	 ("s-k"          . crux-kill-whole-line)
+        	 ("C-c c d"      . crux-duplicate-current-line-or-region)))
 
 10. dap
 
@@ -529,7 +569,7 @@ of them.
     Refresh post magit.
     
         (use-package diff-hl
-          :config
+          :init
           (global-diff-hl-mode)
           :hook (magit-post-refresh  . diff-hl-magit-post-refresh))
 
@@ -543,7 +583,7 @@ of them.
 
 14. dimmer
 
-    Dim inactiver frames.
+    Dim inactive frames.
     Make dimmed frames a bit dimmer.
     
         (use-package dimmer
@@ -556,7 +596,14 @@ of them.
           (dimmer-configure-hydra)
           (setq dimmer-adjustmentmode :both))
 
-15. drag stuff
+15. docker
+
+    I use Docker a lot, don't always have to use the command line.
+    
+        (use-package docker
+          :bind ("C-c d" . docker))
+
+16. drag stuff
 
     Use the default key bindings.
     
@@ -566,7 +613,7 @@ of them.
           (drag-stuff-define-keys)
           (drag-stuff-global-mode))
 
-16. dumb-jump
+17. dumb-jump
 
     Jump to definitions (in other files).
     Configure it for `ivy`.
@@ -577,9 +624,10 @@ of them.
           (setq dumb-jump-selector 'ivy
         	dumb-jump-force-searcher 'ag)
           (dumb-jump-mode)
-          :bind ("C-x j" . dumb-jump-go))
+          :chords ("jj" . dump-jump-go)
+          :bind ("C-c j" . dumb-jump-go))
 
-17. eshell
+18. eshell
 
     Set up eshell.
     
@@ -597,37 +645,51 @@ of them.
           (esh-autosuggest-mode)
           (setup-eshell-ivy-completion))
         
+        ;; override how clearing the eshell works
+        (defun eshell/clear ()
+          "Clear the shell by truncating everything."
+          (interactive)
+          (let ((eshell-buffer-maximum-lines 0)) (eshell-truncate-buffer)))
+        
         (add-hook 'eshell-mode-hook 'my-eshell-mode-hook)
         (with-eval-after-load "esh-opt"
           (autoload 'epe-theme-lambda "eshell-prompt-extras")
           (setq eshell-highlight-prompt nil
         	eshell-prompt-function 'epe-theme-lambda))
 
-18. evilnc
+19. evilnc
 
     Comment code like in `vim`, evil, evil `vim`.
     
         (use-package evil-nerd-commenter
-          :bind ("s-," . evilnc-comment-or-uncomment-lines))
+          :chords ("##" . evilnc-comment-or-uncomment-lines)
+          :bind ("s-#" . evilnc-comment-or-uncomment-lines))
 
-19. expand-region
+20. expand-region
 
     One thing that can be a bit tricky is selecting regions, not anymore.
     
         (use-package expand-region
           :bind ("C-+" . er/expand-region))
 
-20. find-file-in-project
+21. find-file-in-project
 
     Finding files by name should be easy.
     
         (use-package find-file-in-project
           :config
-          (global-set-key (kbd "C-x p f") 'find-file-in-project))
+          (global-set-key (kbd "C-c f p") 'find-file-in-project))
 
-21. flycheck
+22. fira-code
 
-    Flycheck is for all of our linting/code quality needs.
+    I use FiraCode, this mode allows us to use ligatures.
+    
+        (use-package fira-code-mode
+          :diminish fira-code-mode)
+
+23. flycheck
+
+    `flycheck` is for all of our linting/code quality needs.
     I prefer pop-ups over mode-line info.
     
         (use-package flycheck-popup-tip)
@@ -637,43 +699,39 @@ of them.
         	 (flycheck-mode . my/use-eslint-from-node-modules)
         	 (flycheck-mode . my/use-tslint-from-node-modules)))
 
-22. fira-code
+24. flyspell
 
-    I use FiraCode, this mode allows us to use ligatures.
+    My spelling is bad.
+    Use American English for flyspell.
     
-        (use-package fira-code-mode
-          :diminish fira-code-mode)
+        (use-package flyspell
+          :delight " fsp"
+          :init (setq ispell-dictionary "american")
+          :config
+          (setq flyspell-issue-message-flag nil))
+        
+        (use-package flyspell-correct
+          :after flyspell
+          :bind (:map flyspell-mode-map ("C-c ä" . flyspell-correct-wrapper)))
+        
+        (use-package flyspell-correct-ivy
+          :after flyspell-correct)
 
-23. git-timemachine
+25. gitignore-mode
+
+    Syntax highlighting.
+    
+    Necessary even for `.gitignore` files.
+    
+        (use-package gitignore-mode
+          :mode "^.gitignore")
+
+26. git-timemachine
 
     If you want to go back in time and point fingers at the progenitors of doom.
     
         (use-package git-timemachine
-          :bind ("C-x t m" . git-timemachine-toggle))
-
-24. hydra
-
-    We use hydra to trigger grouped actions.
-    
-        (use-package hydra)
-
-25. iedit
-
-    Edit multiple occurrences at once.
-    
-        (use-package iedit)
-
-26. flyspell
-
-    My spelling is bad.
-    Use American English for flyspell in `prog-mode`.
-    
-        (use-package flyspell
-          :delight " fsp"
-          :config
-          (setq flyspell-issue-message-flag nil)
-          :bind ("s-y" . flyspell-prog-mode)
-          :hook (flyspell-prog-mode . (lambda() (ispell-change-dictionary "american"))))
+          :bind ("C-c q" . git-timemachine-toggle))
 
 27. highlight-indent-guides
 
@@ -693,36 +751,86 @@ of them.
         (use-package highlight-numbers
           :hook (prog-mode . highlight-numbers-mode))
 
-29. ivy
+29. hl-todo
+
+    Highlight `TODO`, `FIXME` etc. in prog modes.
+    
+        (use-package hl-todo
+          :hook (prog-mode . hl-todo-mode))
+
+30. hydra
+
+    We use hydra to trigger grouped actions.
+    
+        (use-package hydra)
+
+31. ivy
 
     We use `ivy` for narrowing our options.
     `swiper` is an alternative for normal search.
     
-        (use-package swiper)
+        (use-package swiper
+          :after ivy
+          :chords ("qq" . swiper)
+          :bind ("C-c s" . swiper))
+        
         (use-package ivy
           :diminish
-          :after swiper
+          :init
+          (setq ivy-use-virtual-buffers t)
+          (setq enable-recursive-minibuffers t)
           :config
-            (ivy-mode 1)
-            (setq ivy-use-virtual-buffers t)
-            (setq enable-recursive-minibuffers t)
-            (global-set-key (kbd "C-c s") 'swiper))
+          (ivy-mode 1))
+        
+        (defun ivy-rich-switch-buffer-icon (candidate)
+         (with-current-buffer
+              (get-buffer candidate)
+            (let ((icon (all-the-icons-icon-for-mode major-mode)))
+              (if (symbolp icon)
+        	  (all-the-icons-icon-for-mode 'fundamental-mode)
+        	icon))))
+        
+        (use-package ivy-rich
+          :after ivy
+          :init
+          (setq ivy-rich-display-transformers-list
+              '(ivy-switch-buffer
+        	(:columns
+        	 ((ivy-rich-switch-buffer-icon (:width 2))
+        	  (ivy-rich-candidate (:width 30))
+        	  (ivy-rich-switch-buffer-size (:width 7))
+        	  (ivy-rich-switch-buffer-indicators (:width 4 :face error :align right))
+        	  (ivy-rich-switch-buffer-major-mode (:width 12 :face warning))
+        	  (ivy-rich-switch-buffer-project (:width 15 :face success))
+        	  (ivy-rich-switch-buffer-path (:width (lambda (x) (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3))))))
+        	 :predicate
+        	 (lambda (cand) (get-buffer cand)))))
+          :config
+          (ivy-rich-mode 1))
 
-30. kaolin
+32. kaolin
 
     This is a themes collection I sometimes pick from.
     
         (use-package kaolin-themes
-          :config
-          ;; treemacs
-          (kaolin-treemacs-theme)
+          :init
           (setq kaolin-ocean-alt-bg t)
           ;; Enable distinct background for fringe and line numbers.
           (setq kaolin-themes-distinct-fringe t)
           ;; Enable distinct colors for company popup scrollbar.
-          (setq kaolin-themes-distinct-company-scrollbar t))
+          (setq kaolin-themes-distinct-company-scrollbar t)
+          :config
+          ;; treemacs
+          (kaolin-treemacs-theme))
 
-31. lsp
+33. kubernetes
+
+    Who doesn't like pods and stuff?
+    
+        (use-package kubernetes
+          :commands (kubernetes-overview))
+
+34. lsp
 
     Prefer `capf`, bigger delay.
     
@@ -736,83 +844,118 @@ of them.
         (use-package lsp-mode
           :init
           (add-to-list 'exec-path elixir-ls-release-location)
-          :config
           (setq lsp-prefer-capf t)
-          (setq lsp-idle-delay 0.500)
-          (setq lsp-semantic-highlighting t))
+          (setq lsp-idle-delay 1.5)
+          (setq lsp-semantic-highlighting t)
+          :config
+          (add-to-list 'lsp-file-watch-ignored "[/\\\\]_build$")
+          (add-to-list 'lsp-file-watch-ignored "[/\\\\]deps$"))
+        
+        (use-package lsp-ui
+          :after lsp-mode
+          :hook (lsp-mode . lsp-ui-mode))
 
-32. magit
+35. magit
 
     Version control has never been this easy before.
     
         (use-package magit
-          :bind ("C-x g" . magit-status))
+          :bind ("C-c g" . magit-status))
 
-33. mode-line bell
+36. mode-line bell
 
     Make the bell visual.
     
         (use-package mode-line-bell
-          :config
+          :config ; just some help
           (mode-line-bell-mode))
 
-34. origami
+37. multiple-cursors
+
+    Sometimes a lot of things are similarly wrong.
+    It's nice to change everything at once.
+    
+        (use-package multiple-cursors
+          :bind
+          (("C-c m n" . mc/mark-next-like-this)
+           ("C-c m p" . mc/mark-previous-like-this)
+           ("C-c m a" . mc/mark-all-like-this)))
+
+38. mwim
+
+    Let's try this.
+    
+        (use-package mwim
+          :bind (
+        	 ("C-a" . mwim-beginning)
+        	 ("C-e" . mwim-end)))
+
+39. origami
 
     Code folding. Unfortunately has some performance issues.
     
         (use-package origami
-          :hook (prog-mode . origami-mode) 
-          :bind (("s-#" . origami-toggle-node)))
+          :hook (prog-mode . origami-mode)
+          :bind (("C-c o" . origami-toggle-node)))
 
-35. prettier-js
+40. prettier-js
 
     Format code quickly.
     
         (use-package prettier-js
-          :config
+          :init
           ;; you might want to remove/edit this
           (setq prettier-js-args '(
             "--print-width" "91"
           )))
 
-36. projectile
+41. projectile
 
     Projects in Emacs.
     
         (use-package projectile)
 
-37. rainbow
+42. rainbow
 
     Show colors in source code and make delimiters stand out.
     
         (use-package rainbow-delimiters
-          :hook (prog-mode . rainbow-mode))
+          :hook (prog-mode . rainbow-delimiters-mode))
+        
         (use-package rainbow-mode
           :diminish
           :hook (prog-mode . rainbow-mode))
 
-38. restclient
+43. restart-emacs
+
+    Sometimes I restart for fun.
+    
+        (use-package restart-emacs
+          :init
+          (setq restart-emacs-restore-frames t)
+          :bind ("C-c r s" . restart-emacs))
+
+44. restclient
 
     Postman is passé.
     I use a `.http` file extension for my request examples.
     
         (use-package restclient
-          :init
-          (add-to-list 'auto-mode-alist '("\\.http" . restclient-mode)))
+          :mode "\\.http\\'")
 
-39. request
+45. request
 
     Not used yet, but will in the future.
     
         (use-package request)
 
-40. s
+46. s
 
     String manipulation utility.
     
         (use-package s)
 
-41. smartparens
+47. smartparens
 
     Create a pairs automatically.
     
@@ -822,7 +965,7 @@ of them.
           (require 'smartparens-config)
           :hook (prog-mode . smartparens-mode))
 
-42. smeargle
+48. smeargle
 
     Highlight sections by edit date.
     
@@ -839,37 +982,70 @@ of them.
               (setq smeargle-on t)
               (smeargle))))
         
-        (use-package smeargle
-          :bind ("C-x t s" . smeargle-toggle))
+        (use-package smeargle)
 
-43. smex
+49. smex
 
     Show completions for `M-x` in a buffer.
     
         (use-package smex
           :bind ("M-x" . smex))
 
-44. symon
+50. so-long
+
+    This mode is included in Emacs > 27. Still using 26 here.
+    
+        (use-package so-long
+          :config
+          (global-so-long-mode 1))
+
+51. symon
 
     Show some system stats when nothing else is going on.
     
         (use-package symon
-          :config
+          :init
           (setq symon-sparkline-type 'bounded
-        	symon-delay 2.5
+        	symon-delay 5
         	symon-monitors
         	  '(symon-linux-cpu-monitor
         	    symon-linux-memory-monitor
         	    symon-linux-network-rx-monitor
         	    symon-linux-network-tx-monitor))
+          :config
           (symon-mode))
 
-45. treemacs
+52. telephone-line
 
-    I'm not a fan of `dired`, so let's show some dirs.
+    A slightly nicer mode-line.
+    
+        (use-package telephone-line
+          :init
+          (setq telephone-line-lhs
+            '((evil   . (telephone-line-buffer-segment))
+              (accent . (telephone-line-vc-segment))
+              (nil    . (telephone-line-minor-mode-segment
+        		 telephone-line-process-segment))))
+          (setq telephone-line-rhs
+            '((nil    . (telephone-line-misc-info-segment
+        		 telephone-line-flycheck-segment))
+              (accent . (telephone-line-major-mode-segment))
+              (evil  . (telephone-line-airline-position-segment))))
+          (setq telephone-line-primary-right-separator 'telephone-line-identity-left
+        	telephone-line-secondary-right-separator 'telephone-line-identity-hollow-left
+        	telephone-line-primary-left-separator 'telephone-line-identity-right
+        	telephone-line-secondary-left-separator 'telephone-line-identity-hollow-right)
+          :config
+          (telephone-line-mode t))
+
+53. treemacs
+
+    I'm not a fan of `dired`, so let's show some <span class="underline">dirs</span>.
     
         (use-package perspective)
+        
         ;; (use-package treemacs-evil)
+        
         (use-package treemacs
           :defer t
           :init
@@ -885,24 +1061,27 @@ of them.
         	  treemacs-is-never-other-window         t
         	  treemacs-no-delete-other-windows       nil
         	  treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
-        	  treemacs-show-hidden-files             t)
-            (treemacs-follow-mode nil)
+        	  treemacs-show-hidden-files             t
+        	  treemacs-file-event-delay              1000)
+        
+            (treemacs-follow-mode -1)
             (treemacs-filewatch-mode t)
             (treemacs-fringe-indicator-mode t)
+        
             (pcase (cons (not (null (executable-find "git")))
         	       (not (null treemacs-python-executable)))
               (`(t . t)
         	(treemacs-git-mode 'deferred))
               (`(t . _)
         	(treemacs-git-mode 'extended))))
+          :chords (",." . treemacs)
           :bind
             (:map global-map
         	("M-0"       . treemacs-select-window)
-        	("C-x t 1"   . treemacs-delete-other-windows)
-        	("C-x t t"   . treemacs)
-        	("C-x t B"   . treemacs-bookmark)
-        	("C-x t C-t" . treemacs-find-file)
-        	("C-x t M-t" . treemacs-find-tag)))
+        	("C-c t 1"   . treemacs-delete-other-windows)
+        	("C-c t t"   . treemacs)
+        	("C-c t b"   . treemacs-bookmark)
+        	("C-c t M-t" . treemacs-find-tag)))
         
         ;; (use-package treemacs-evil
         ;;   :after treemacs evil
@@ -925,63 +1104,78 @@ of them.
         ;; start with treemacs open
         (treemacs)
 
-46. telephone-line
-
-    A slightly nicer modeline.
-    
-        (use-package telephone-line
-          :config
-            (setq telephone-line-lhs
-        	  '((evil   . (telephone-line-buffer-segment))
-        	    (accent . (telephone-line-vc-segment))
-        	    (nil    . (telephone-line-minor-mode-segment
-        		       telephone-line-erc-modified-channels-segment
-        		       telephone-line-process-segment))))
-            (setq telephone-line-rhs
-        	  '((nil    . (telephone-line-misc-info-segment
-        		       telephone-line-flycheck-segment))
-        	    (accent . (telephone-line-major-mode-segment))
-        	    (evil   . (telephone-line-airline-position-segment))))
-            (setq telephone-line-primary-right-separator 'telephone-line-identity-left
-        	  telephone-line-secondary-right-separator 'telephone-line-identity-hollow-left
-        	  telephone-line-primary-left-separator 'telephone-line-identity-right
-        	  telephone-line-secondary-left-separator 'telephone-line-identity-hollow-right)
-            (telephone-line-mode t))
-
-47. undo-fu
+54. undo-fu
 
     Undoing un-undoing is weird in Emacs.
     
         (use-package undo-fu
           :init
           (global-unset-key (kbd "C-z"))
-          :bind ("C-z" . undo-fu-only-undo)
+          :bind ("C-z"   . undo-fu-only-undo)
         	("C-S-z" . undo-fu-only-redo))
 
-48. which-key
+55. use-package-ensure-system-package
+
+    Ensure binaries.
+    
+        (use-package use-package-ensure-system-package)
+
+56. which-key
 
     Show the next possible key presses towards an action.
     
         (use-package which-key
           :delight " wk"
+          :init
+          (setq which-key-idle-delay 0.8)
           :config
-          (which-key-mode)
-          (setq which-key-idle-delay 0.8))
+          (which-key-mode))
 
-49. yasnippet
+57. writeroom-mode
 
-    Snippets.
-    Don't enable globally but prepare for per-buffer use.
+    Create a room of one's own.
     
-        (use-package yasnippet-snippets)
+        (use-package writeroom-mode
+          :bind ("C-c ü" . writeroom-mode))
+
+58. yascroll
+
+    Nicer scroll-bar.
+    
+        (use-package yascroll
+          :config
+          (global-yascroll-bar-mode 1))
+
+59. yasnippet
+
+    Use snippets in prog mode buffers.
+    
+        (use-package yasnippet-snippets
+          :after yasnippet
+          :config
+          (yas-reload-all))
         
         (use-package yasnippet
           :delight " yas"
-          :after yasnippet-snippets
-          :hook ((yas-minor-mode . (lambda () (yas-reload-all)))
-        	 (prog-mode      . yas-minor-mode)))
+          :init
+          (define-key yas-minor-mode-map (kbd "<tab>") nil)
+          (define-key yas-minor-mode-map (kbd "TAB") nil)
+          (define-key yas-minor-mode-map (kbd "C-c y") #'yas-expand)
+          ;; :config
+          ;; (add-hook 'company-mode-hook (lambda ()
+          ;;   (substitute-key-definition 'company-complete-common
+          ;;                              'company-yasnippet-or-completion
+          ;;                               company-active-map)))
+          ;; :after yasnippet-snippets
+          :hook (prog-mode . yas-minor-mode))
+        
+        ;; (defun company-yasnippet-or-completion ()
+        ;;   (interactive)
+        ;;   (let ((yas-fallback-behavior nil))
+        ;;     (unless (yas-expand)
+        ;;       (call-interactively #'company-complete-common))))
 
-50. zoom
+60. zoom
 
     Use the golden ratio between (in-)active buffers.
     
@@ -994,7 +1188,7 @@ of them.
          (zoom-mode 1))
 
 
-<a id="org4b91062"></a>
+<a id="org46c3b15"></a>
 
 ### Mode Configs
 
@@ -1038,18 +1232,18 @@ Configure modes.
 
 4.  dockerfile mode
 
-    Make Dockerfiles look nice.
+    Make `Dockerfiles` look nice.
     
         (use-package dockerfile-mode
-          :init
-          (add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-mode)))
+          :mode "^Dockerfile")
 
 5.  elixir mode
 
-    Enable flycheck.
+    Enable `flycheck`.
     
         (use-package elixir-mode
           :hook (elixir-mode . my-elixir-mode-hook))
+        
         (defun my-elixir-mode-hook ()
           "Hooks for elixir mode."
           (flycheck-mode))
@@ -1059,9 +1253,8 @@ Configure modes.
     Enable `flycheck` and disable internal checker.
     
         (use-package js2-mode
+          :mode "\\.js\\'"
           :init
-          (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-          :config
           (setq-default js2-show-parse-errors nil)
           (setq-default js2-strict-missing-semi-warning nil)
           :hook (js2-mode . my-js2-mode-hook))
@@ -1097,12 +1290,17 @@ Configure modes.
             (use-package org-bullets
               :hook (org-mode . (lambda() (org-bullets-mode t))))
             
+            ;; use org-mode for presentations
+            (use-package org-present)
+            
             ;; change if necessary
             (defconst my-org-directory (expand-file-name "org" "~"))
             (unless (file-directory-p my-org-directory)
               (make-directory my-org-directory))
             
             (use-package org
+              ;; disable drag-stuff-mode in org-mode
+              :hook (org-mode . (lambda() (drag-stuff-mode -1)))
               :config
               ;; sometimes md export is missing
               (require 'ox-md nil t)
@@ -1111,7 +1309,7 @@ Configure modes.
             	org-log-done t
             	org-startup-truncated nil
             	org-directory my-org-directory
-            	org-default-notes-file (concat org-directory "notes.org")
+            	org-default-notes-file (concat org-directory "/notes.org")
             	org-startup-with-inline-images t
             	org-todo-keywords
             	'((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
@@ -1160,7 +1358,8 @@ Configure modes.
               ;; context
               ("@work"      . ?w)
               ("@home"      . ?h)
-              ("@errand"    . ?r)
+              ("@away"      . ?a)
+              ("@repeated"  . ?r)
               ;; time
               ("@short"     . ?<)
               ("@medium"    . ?=)
@@ -1168,7 +1367,7 @@ Configure modes.
               ;; energy
               ("@easy"      . ?1)
               ("@average"   . ?2)
-              ("@challenge" . ?4)
+              ("@challenge" . ?3)
               ;; category
               ("@dev"       . ?d)
               ("@bla"       . ?b)
@@ -1187,16 +1386,25 @@ Configure modes.
                 (let ((org-super-agenda-groups
             	   '((:name "Schedule"
             		    :time-grid t)
-            	     (:name "Development"
-            		    :tag "@dev")
             	     (:discard (:anything t))
             	     )))
                   (org-agenda nil "a")))
             
               (defun my-org-super-agenda-today ()
                 (interactive)
-                (progn
-                  (my-org-super-agenda)
+                (let ((org-super-agenda-groups
+            	   '((:name "Schedule"
+            	      :time-grid t)
+            	     (:name "Unscheduled"
+            	      :scheduled nil)
+            	     (:name "Leftovers"
+            	      :and (
+            		:todo ("IN PROGRESS" "WAITING")
+            		:scheduled past
+            		:not (:tag "@repeated")))
+            	     (:discard (:anything t))
+            	      )))
+                  (org-agenda nil "a")
                   (org-agenda-day-view)))
             
               (defun my-personal-agenda ()
@@ -1206,39 +1414,9 @@ Configure modes.
                   (org-agenda nil "a")
                   (org-agenda-day-view)))
             
-              (defun my-dev-agenda ()
-                (interactive)
-                (let ((org-super-agenda-groups
-            	   '((:name "Development"
-            		    :tag "@dev")
-            	      (:discard (:anything t)))))
-                  (org-agenda nil "a")
-                  (org-agenda-day-view)))
-            
-              (defun my-bla-agenda ()
-                (interactive)
-                (let ((org-super-agenda-groups
-            	   '((:name "Meetings"
-            		    :tag "@bla")
-            	      (:discard (:anything t)))))
-                  (org-agenda nil "a")
-                  (org-agenda-day-view)))
-            
-              (defun my-edu-agenda ()
-                (interactive)
-                (let ((org-super-agenda-groups
-            	   '((:name "Education"
-            		    :tag "@edu")
-            	      (:discard (:anything t)))))
-                  (org-agenda nil "a")
-                  (org-agenda-day-view)))
-            
-              (bind-keys ("C-c 0" . my-org-super-agenda-today)
-            	     ("C-c 1" . my-dev-agenda)
-            	     ("C-c 2" . my-bla-agenda)
-            	     ("C-c 3" . my-edu-agenda)
-            	     ("C-c 5" . my-personal-agenda)
-            	     ("C-c 6" . my-org-super-agenda)))
+              (bind-keys ("<f5>" . my-org-super-agenda-today)
+            	     ("<f6>" . my-personal-agenda)
+            	     ("<f7>" . my-org-super-agenda)))
             
             (setq org-agenda-hide-tags-regexp "@")
             
@@ -1306,8 +1484,7 @@ Configure modes.
     Pretty much like js2.
     
         (use-package rjsx-mode
-          :init
-          (add-to-list 'auto-mode-alist '("\\.jsx\\'" . rjsx-mode))
+          :mode "\\.jsx\\'"
           :hook (rjsx-mode . my-rjsx-mode-hook))
         
         (defun rjsx-indent ()
@@ -1332,9 +1509,9 @@ Configure modes.
     Enable `lsp`, `flycheck` and sane tabs. And some other stuff.
     
         (use-package typescript-mode
-          :config
-          (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
+          :mode "\\.ts\\'"
           :hook (typescript-mode . my-typescript-mode-hook))
+        
         (defun my-typescript-mode-hook ()
           "Hooks for typescript mode."
           (enable-tabs)
@@ -1351,14 +1528,13 @@ Configure modes.
     Web mode uses `flycheck` with `lsp` enabled.
     
         (use-package web-mode
-          :config
+          :hook (web-mode . my-web-mode-hook)
+          :init
           (setq web-mode-comment-style 2)
-          (add-to-list 'web-mode-comment-formats '("vue" . "//"))
-          ;; associate files
-          (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
-          (add-to-list 'auto-mode-alist '("\\.component.html" . web-mode))
-          (add-to-list 'auto-mode-alist '("\\.ejs\\'" . web-mode))
-          :hook (web . my-web-mode-hook))
+          :mode ("\\.vue\\'"
+        	 "\\.component.html\\'"
+        	 "\\.ejs\\'"
+        	 "\\.json\\'"))
         
         (defun my-web-mode-hook ()
           "Hooks for web mode."
@@ -1379,7 +1555,7 @@ Configure modes.
         (use-package yaml-mode)
 
 
-<a id="org450c3b4"></a>
+<a id="org0ec9065"></a>
 
 ### Tweaks
 
@@ -1467,15 +1643,24 @@ A window (or is it a frame?) should pop up telling you the path
 Finally run `git clone git@gitlab.com:Walheimat/emacs-config.git ~/.emacs.d`
 (replace `~/.emacs.d` with your actual path if it differs)
 
-<sup><a id="fn.4" href="#fnr.4">4</a></sup> Repositories (incomplete):
+<sup><a id="fn.4" href="#fnr.4">4</a></sup> Send me an email, why don't you?
+
+<sup><a id="fn.5" href="#fnr.5">5</a></sup> Repositories (incomplete):
 
 -   [ag](https://github.com/Wilfred/ag.el)
 -   [all-the-icons](https://github.com/domtronn/all-the-icons.el)
 -   [avy](https://github.com/abo-abo/avy)
 -   [bm](https://github.com/joodland/bm)
+-   [crux](https://github.com/bbatsov/crux)
 -   [dap](https://github.com/emacs-lsp/dap-mode)
+-   [ivy-rich](https://github.com/Yevgnen/ivy-rich)
+-   [lsp-ui](https://github.com/emacs-lsp/lsp-ui)
+-   [mwim](https://github.com/alezost/mwim.el)
+-   [org-present](https://github.com/rlister/org-present)
+-   [org-super-agenda](https://github.com/alphapapa/org-super-agenda)
 -   [symon](https://github.com/zk-phi/symon)
 -   [telephone-line](https://github.com/dbordak/telephone-line)
+-   [treemacs](https://github.com/Alexander-Miller/treemacs)
 -   [use-package](https://github.com/jwiegley/use-package)
 -   [which-key](https://github.com/justbur/emacs-which-key)
 -   [yasnippet](https://github.com/joaotavora/yasnippet)
