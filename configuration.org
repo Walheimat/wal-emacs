@@ -284,29 +284,25 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =<f6>= opens today's personal agenda
 + =<f7>= opens this week's agenda
 + =C-+= expands region.
-+ =C-c a a= runs ag. _Requires ag_!
-+ =C-c a p= runs ag-project.
-+ =C-c b b= toggles bookmarks.
-+ =C-c b s= show bookmarks.
-+ =C-c c d= duplicates the current line (or region).
-+ =C-c c k= kills all other buffers.
-+ =C-c c o= opens file with outside program.
++ =C-c a <key>= runs ag (=a= for generic, =p= for in-project search). _Requires ag_!
++ =C-c b <key>= toggle(=t=) or shows(=s=) bookmarks.
++ =C-c c <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
 + =C-c d= opens docker.
 + =C-c e= opens eshell.
 + =C-c f p= finds a project file.
 + =C-c g= opens magit status.
-+ =C-c j= dumb-jumps.
++ =C-c j=/=jj= dumb-jumps.
 + =C-c m <key>= for multiple cursors.
-+ =C-c q= opens the timemachine.
-+ =C-c s= uses swiper to search.
-+ =C-c v c= jumps to char with avy.
-+ =C-c v l= jumps to line with avy.
++ =C-c q= opens the time machine.
++ =C-c s=/=qq= uses swiper to search.
++ =C-c t t=/=,.= opens treemacs.
++ =C-c v <key>= jumps to char (=c=) or line (=l=) with avy.
 + =C-x C-c= opens this config org file.
 + =C-x r q= (really) quits.
 + =C-z=/=C-S-z= undos/redos.
 + =M-o= goes to the "other" window or the last buffer.
 + =M-x= opens smex.
-+ =s-#= (un-)comments.
++ =s-#=/=##= (chord) (un-)comments.
 + =s-k= kills the whole line.
 + =s-RET= will open a (indented) line above.
 
@@ -331,7 +327,7 @@ Be sure to check out [[https://peach-melpa.org/][Peach Melpa]] to find a theme y
 **** Font
 
 Prefer FiraCode (-> mononoki -> Liberation -> DejaVu).
-If emacs runs with the custom arg =-bigger=, the default font size is 14 (instead of 10).
+If Emacs runs with the custom argument =-bigger=, the default font size is 14 (instead of 10).
 
 To get support for ligatures, install the symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
 
@@ -613,7 +609,7 @@ See individual =use-package= declarations as well, since we delight in/diminish 
 
 **** dimmer
 
-Dim inactiver frames.
+Dim inactive frames.
 Make dimmed frames a bit dimmer.
 
 #+BEGIN_SRC emacs-lisp
@@ -738,7 +734,7 @@ I use FiraCode, this mode allows us to use ligatures.
 
 **** flycheck
 
-Flycheck is for all of our linting/code quality needs.
+=flycheck= is for all of our linting/code quality needs.
 I prefer pop-ups over mode-line info.
 
 #+BEGIN_SRC emacs-lisp
@@ -764,7 +760,7 @@ Use American English for flyspell.
 
 (use-package flyspell-correct
   :after flyspell
-  :bind (:map flyspell-mode-map ("C-;" . flyspell-correct-wrapper)))
+  :bind (:map flyspell-mode-map ("C-c ä" . flyspell-correct-wrapper)))
 
 (use-package flyspell-correct-ivy
   :after flyspell-correct)
@@ -944,7 +940,7 @@ Make the bell visual.
 
 #+BEGIN_SRC emacs-lisp
 (use-package mode-line-bell
-  :config
+  :config ; just some help
   (mode-line-bell-mode))
 #+END_SRC
 
@@ -959,6 +955,17 @@ It's nice to change everything at once.
   (("C-c m n" . mc/mark-next-like-this)
    ("C-c m p" . mc/mark-previous-like-this)
    ("C-c m a" . mc/mark-all-like-this)))
+#+END_SRC
+
+**** mwim
+
+Let's try this.
+
+#+BEGIN_SRC emacs-lisp
+(use-package mwim
+  :bind (
+         ("C-a" . mwim-beginning)
+         ("C-e" . mwim-end)))
 #+END_SRC
 
 **** origami
@@ -1113,7 +1120,7 @@ Show some system stats when nothing else is going on.
 
 **** telephone-line
 
-A slightly nicer modeline.
+A slightly nicer mode-line.
 
 #+BEGIN_SRC emacs-lisp
 (use-package telephone-line
@@ -1138,7 +1145,7 @@ A slightly nicer modeline.
 
 **** treemacs
 
-I'm not a fan of =dired=, so let's show some dirs.
+I'm not a fan of =dired=, so let's show some _dirs_.
 
 #+BEGIN_SRC emacs-lisp
 (use-package perspective)
@@ -1235,6 +1242,15 @@ Show the next possible key presses towards an action.
   (setq which-key-idle-delay 0.8)
   :config
   (which-key-mode))
+#+END_SRC
+
+**** writeroom-mode
+
+Create a room of one's own.
+
+#+BEGIN_SRC emacs-lisp
+(use-package writeroom-mode
+  :bind ("C-c ü" . writeroom-mode))
 #+END_SRC
 
 **** yascroll
@@ -1340,7 +1356,7 @@ Just activate flycheck and tabs for now.
 
 **** dockerfile mode
 
-Make Dockerfiles look nice.
+Make =Dockerfiles= look nice.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dockerfile-mode
@@ -1349,7 +1365,7 @@ Make Dockerfiles look nice.
 
 **** elixir mode
 
-Enable flycheck.
+Enable =flycheck=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package elixir-mode
@@ -1751,7 +1767,6 @@ Use the locally installed =eslint= and =tslint= binaries.
 
 * Footnotes
 
-
 [fn:1] What you're reading is likely a markdown version exported from it.
 
 [fn:2] *Note* that this config uses the =all-the-icons= package whose icons need to be downloaded manually
@@ -1784,6 +1799,7 @@ but this might fail. If that is the case do the following:
 + [[https://github.com/emacs-lsp/dap-mode][dap]]
 + [[https://github.com/Yevgnen/ivy-rich][ivy-rich]]
 + [[https://github.com/emacs-lsp/lsp-ui][lsp-ui]]
++ [[https://github.com/alezost/mwim.el][mwim]]
 + [[https://github.com/rlister/org-present][org-present]]
 + [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]]
 + [[https://github.com/zk-phi/symon][symon]]
