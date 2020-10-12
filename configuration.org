@@ -838,7 +838,8 @@ We use =ivy= for narrowing our options.
 #+BEGIN_SRC emacs-lisp
 (use-package swiper
   :after ivy
-  :chords ("qq" . swiper)
+  :chords (("qq" . swiper)
+           (",." . ivy-switch-buffer))
   :bind ("C-c s" . swiper))
 
 (use-package ivy
@@ -979,6 +980,7 @@ Code folding. Unfortunately has some performance issues.
 #+BEGIN_SRC emacs-lisp
 (use-package origami
   :hook (prog-mode . origami-mode)
+  :chords ("ww" . origami-toggle-node)
   :bind (("C-c o" . origami-toggle-node)))
 #+END_SRC
 
@@ -1184,7 +1186,7 @@ I'm not a fan of =dired=, so let's show some _dirs_.
         (treemacs-git-mode 'deferred))
       (`(t . _)
         (treemacs-git-mode 'extended))))
-  :chords (",." . treemacs)
+  :chords ("<<" . treemacs)
   :bind
     (:map global-map
         ("M-0"       . treemacs-select-window)
@@ -1212,7 +1214,7 @@ I'm not a fan of =dired=, so let's show some _dirs_.
   :config (treemacs-set-scope-type 'Perspectives))
 
 ;; start with treemacs open
-(treemacs)
+;; (treemacs)
 #+END_SRC
 
 **** undo-fu
@@ -1254,7 +1256,7 @@ Create a room of one's own.
 
 #+BEGIN_SRC emacs-lisp
 (use-package writeroom-mode
-  :bind ("C-c ü" . writeroom-mode))
+  :bind ("C-c w" . writeroom-mode))
 #+END_SRC
 
 **** yascroll
@@ -1600,9 +1602,10 @@ Clock   In/out^
   ("q" org-agenda-clock-cancel)
   ("g" org-agenda-clock-goto))
 
-(bind-keys ("C-c w" . hydra-org-clock/body)
+(bind-keys :map org-mode-map
+           ("C-c h" . hydra-org-clock/body)
            :map org-agenda-mode-map
-           ("C-c w" . hydra-org-agenda-clock/body))
+           ("C-c h" . hydra-org-agenda-clock/body))
 #+END_SRC
 
 **** python mode
