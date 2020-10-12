@@ -152,7 +152,7 @@ Adapt if necessary.
     (add-to-list 'load-path project)))
 #+END_SRC
 
-**** Package management
+**** Package Management
 
 We use =use-package= for managing our packages.
 We also always want to ensure the package, i.e. if it's not there, get it.
@@ -367,7 +367,7 @@ Zone out after a couple of minutes.
 (zone-when-idle 180)
 #+END_SRC
 
-**** Additional functions
+**** Additional Functions
 
 Only need one so far.
 
@@ -912,15 +912,17 @@ If you use Elixir, get the language server from [[https://github.com/elixir-lsp/
 ;; you need to install the language server manually and point to the release
 (setq elixir-ls-release-location (expand-file-name "ls/elixir" user-emacs-directory))
 (if (file-exists-p (expand-file-name "language_server.sh" elixir-ls-release-location))
+  (add-to-list 'exec-path elixir-ls-release-location)
   (add-hook 'elixir-mode-hook 'lsp))
 
 (use-package lsp-mode
   :init
-  (add-to-list 'exec-path elixir-ls-release-location)
+  (setq lsp-completion-provider :capf)
   (setq lsp-prefer-capf t)
   (setq lsp-idle-delay 1.5)
   (setq lsp-semantic-highlighting t)
   :config
+  ;; ignore elixir build and dependency folders
   (add-to-list 'lsp-file-watch-ignored "[/\\\\]_build$")
   (add-to-list 'lsp-file-watch-ignored "[/\\\\]deps$"))
 
