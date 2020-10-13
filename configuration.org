@@ -44,10 +44,10 @@ Unclutter a bit.
 
 #+BEGIN_SRC emacs-lisp
 ;; start maximized
-;; (add-to-list 'default-frame-alist '(fullscreen . maximized))
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
 
 ;; start fullscreen
-(add-hook 'window-setup-hook 'toggle-frame-fullscreen t)
+;; (add-hook 'window-setup-hook 'toggle-frame-fullscreen t)
 
 ;; no splash
 (setq inhibit-startup-message t)
@@ -238,8 +238,6 @@ Make things snappier.
 #+BEGIN_SRC emacs-lisp
 (setq mouse-yank-at-point t)
 (setq show-paren-delay 0.0)
-;; apparently, this line is a very bad idea ...
-;; (setq gc-cons-threshold 100000000)
 (setq read-process-output-max (* 1024 1024)) ;; 1mb
 (setq sentence-end-double-space nil)
 (setq echo-keystrokes 0.1)
@@ -324,7 +322,7 @@ Note that all bindings for external packages are declared in the [[*Packages][pa
 Be sure to check out [[https://peach-melpa.org/][Peach Melpa]] to find a theme you like.
 
 #+BEGIN_SRC emacs-lisp
-(load-theme 'naysayer t)
+(load-theme 'doom-horizon t)
 #+END_SRC
 
 **** Font
@@ -379,10 +377,11 @@ Only need one so far.
   (eq (current-buffer) (treemacs-get-local-buffer)))
 
 ;; trick garbage collection
+(defvar hundred-mb 100000000)
 (defun my-minibuffer-setup-hook ()
   (setq gc-cons-threshold most-positive-fixnum))
 (defun my-minibuffer-exit-hook ()
-  (setq gc-cons-threshold 800000))
+  (setq gc-cons-threshold hundred-mb))
 
 (add-hook 'minibuffer-setup-hook #'my-minibuffer-setup-hook)
 (add-hook 'minibuffer-exit-hook  #'my-minibuffer-exit-hook)
@@ -1176,7 +1175,7 @@ I'm not a fan of =dired=, so let's show some _dirs_.
           treemacs-show-hidden-files             t
           treemacs-file-event-delay              1000)
 
-    (treemacs-follow-mode -1)
+    (treemacs-follow-mode t)
     (treemacs-filewatch-mode t)
     (treemacs-fringe-indicator-mode t)
 
