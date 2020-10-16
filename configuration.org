@@ -46,7 +46,7 @@ Unclutter a bit.
 ;; start maximized
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-;; start fullscreen
+;; ... or start fullscreen, you decide
 ;; (add-hook 'window-setup-hook 'toggle-frame-fullscreen t)
 
 ;; no splash
@@ -95,7 +95,8 @@ There are two things you can do about this warning:
 
 **** Dependencies
 
-We need to install a few packages to install packages more easily.
+We manage our packages with =use-package=, before we can use it,
+we have to install it and a few other packages the hard way.
 
 #+BEGIN_SRC emacs-lisp
 ;; we need dash for the upcoming loop
@@ -123,6 +124,7 @@ We need to install a few packages to install packages more easily.
      naysayer-theme
      nord-theme
      panda-theme
+     paper-theme
      spacemacs-theme
      )))
 
@@ -144,9 +146,13 @@ Adapt if necessary.
 ;; create the dir if it does not exist to avoid error
 (unless (file-directory-p (expand-file-name "site-lisp" user-emacs-directory))
   (make-directory (expand-file-name "site-lisp" user-emacs-directory)))
+
 (setq site-lisp-dir
   (expand-file-name "site-lisp" user-emacs-directory))
+
 (add-to-list 'load-path site-lisp-dir)
+
+;; add subdirs as well
 (dolist (project (directory-files site-lisp-dir t "\\w+"))
   (when (file-directory-p project)
     (add-to-list 'load-path project)))
@@ -154,8 +160,8 @@ Adapt if necessary.
 
 **** Package Management
 
-We use =use-package= for managing our packages.
 We also always want to ensure the package, i.e. if it's not there, get it.
+I'm also using chords for a few, common actions.
 
 #+BEGIN_SRC emacs-lisp
 (require 'use-package-ensure)
@@ -281,31 +287,32 @@ but some =C-x <key>= mappings snuck in.
 
 If you want to see all personal keybindings, execute =describe-personal-keybindings=.
 
-+ =<f5>= opens today's agenda.
-+ =<f6>= opens today's personal agenda
-+ =<f7>= opens this week's agenda
++ =<key-chord> # #= (un-)comments.
 + =C-+= expands region.
-+ =C-c a <key>= runs ag (=a= for generic, =p= for in-project search). _Requires ag_!
++ =C-c a <key>= opens today's (=t=), this week's (=w=) or your personal (=p=) agenda.
 + =C-c b <key>= toggle(=t=) or shows(=s=) bookmarks.
 + =C-c c <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
-+ =C-c d= opens docker.
++ =C-c d= for docker actions.
 + =C-c e= opens eshell.
-+ =C-c f p= finds a project file.
++ =C-c f a <key>= runs ag (=a= for generic, =p= for in-project search). _Requires ag_!
++ =C-c f f= finds a project file.
 + =C-c g= opens magit status.
-+ =C-c j=/=jj= dumb-jumps.
++ =C-c j=/=<key-chord> j j= dumb-jumps.
 + =C-c m <key>= for multiple cursors.
++ =C-c o= for code-folding.
++ =C-c p <key>= interacts with perspectives
 + =C-c q= opens the time machine.
-+ =C-c s=/=qq= uses swiper to search.
-+ =C-c t t=/=,.= opens treemacs.
++ =C-c r s= restarts.
++ =C-c s= uses swiper to search.
++ =C-c t t= opens treemacs.
 + =C-c v <key>= jumps to char (=c=) or line (=l=) with avy.
 + =C-x C-c= opens this config org file.
 + =C-x r q= (really) quits.
 + =C-z=/=C-S-z= undos/redos.
 + =M-o= goes to the "other" window or the last buffer.
 + =M-x= opens smex.
-+ =s-#=/=##= (chord) (un-)comments.
++ =s-(S)-RET= will open an indented line above (below).
 + =s-k= kills the whole line.
-+ =s-RET= will open a (indented) line above.
 
 Note that all bindings for external packages are declared in the [[*Packages][packages]] section.
 
@@ -322,7 +329,8 @@ Note that all bindings for external packages are declared in the [[*Packages][pa
 Be sure to check out [[https://peach-melpa.org/][Peach Melpa]] to find a theme you like.
 
 #+BEGIN_SRC emacs-lisp
-(load-theme 'doom-challenger-deep t)
+(setq my-emacs-theme 'doom-challenger-deep)
+(load-theme my-emacs-theme t)
 #+END_SRC
 
 **** Font
@@ -387,23 +395,15 @@ Only need one so far.
 (add-hook 'minibuffer-exit-hook  #'my-minibuffer-exit-hook)
 #+END_SRC
 
-*** Mode Mappings
-
-Set up mode mappings for built-in modes.
-
-#+BEGIN_SRC emacs-lisp
-(add-to-list 'auto-mode-alist '("\\.component.css" . css-mode))
-#+END_SRC
-
 *** Packages
 
 What follows is a list of MELPA packages that make Emacs even more awesome.
 
 If you wish to know more about any of them, check out the list[fn:4] of repositories
-at the end of this readme/configuration.
+at the end of this readme/configuration or the [[https://github.com/emacs-tw/awesome-emacs][awesome-emacs]] project.
 
-Many packages bind keys. Check the [[*Key Bindings][key bindings section]] if you need a list of all
-of them.
+Many packages bind keys.
+Check the [[*Key Bindings][key bindings section]] if you need a list of all of them.
 
 **** add-node-modules-path
 
@@ -418,15 +418,15 @@ Allows accessing a project's =node_modules=.
 Highlight search results using the *Silver Searcher*.
 
 This _requires_ the =ag= binary which you can get from [[https://github.com/ggreer/the_silver_searcher#installation][here]] (we will try
-to download it automatically).
+to download it automatically, but might fail).
 
 #+BEGIN_SRC emacs-lisp
 (use-package ag
   :ensure-system-package ag
   :init
   (setq ag-highlight-search t)
-  :bind ("C-c a a" . ag)
-        ("C-c a p" . ag-project))
+  :bind ("C-c f a a" . ag)
+        ("C-c f a p" . ag-project))
 #+END_SRC
 
 **** all-the-icons
@@ -438,6 +438,7 @@ You need to install the icons yourself[fn:2].
 #+END_SRC
 
 **** auto-package-update
+
 Keep packages updated (disabled for now).
 
 #+BEGIN_SRC emacs-lisp
@@ -482,7 +483,7 @@ Bookmarks are useful. I don't remember where I was. _Who are you?!_
 (use-package bm
   :init
   (setq bm-restore-repository-on-load t)
-  (setq bm-repository-file (expand-file-name "bms" user-emacs-directory))
+  (setq bm-repository-file (expand-file-name ".cache/bm-persist" user-emacs-directory))
   (setq-default bm-buffer-persistence t)
   (setq bm-annotate-on-create t)
   (setq bm-highlight-style 'bm-highlight-only-fringe)
@@ -491,9 +492,9 @@ Bookmarks are useful. I don't remember where I was. _Who are you?!_
   ((after-init   .      bm-repository-load)
    (after-save   .      bm-buffer-save)
    (kill-buffer  .      bm-buffer-save)
-   (kill-emacs   .     (lambda nil
-                         (bm-buffer-save-all)
-                         (bm-repository-save)))
+   (kill-emacs   .      (lambda nil
+                          (bm-buffer-save-all)
+                          (bm-repository-save)))
    (find-file    .      bm-buffer-restore)
    (after-revert .      bm-buffer-restore)
    (vc-before-checkin . bm-buffer-save))
@@ -520,9 +521,6 @@ Code-completion. In a box.
   (setq company-idle-delay 0.5)
   :hook (prog-mode . company-mode))
 
-;; (use-package company-lsp
-;;   :after company)
-
 (use-package company-restclient
   :after company)
 
@@ -532,7 +530,8 @@ Code-completion. In a box.
 
 **** crux
 
-Let's use =crux= for some editing magic. Check the [[*Key Bindings][key bindings section]] for descriptions.
+Let's use =crux= for some editing magic.
+Check the [[*Key Bindings][key bindings section]] for descriptions.
 
 #+BEGIN_SRC emacs-lisp
 (use-package crux
@@ -701,8 +700,7 @@ Comment code like in =vim=, evil, evil =vim=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package evil-nerd-commenter
-  :chords ("##" . evilnc-comment-or-uncomment-lines)
-  :bind ("s-#" . evilnc-comment-or-uncomment-lines))
+  :chords ("##" . evilnc-comment-or-uncomment-lines))
 #+END_SRC
 
 **** expand-region
@@ -721,7 +719,7 @@ Finding files by name should be easy.
 #+BEGIN_SRC emacs-lisp
 (use-package find-file-in-project
   :config
-  (global-set-key (kbd "C-c f") 'find-file-in-project))
+  (global-set-key (kbd "C-c f f") 'find-file-in-project))
 #+END_SRC
 
 **** fira-code
@@ -837,8 +835,7 @@ We use =ivy= for narrowing our options.
 #+BEGIN_SRC emacs-lisp
 (use-package swiper
   :after ivy
-  :chords (("qq" . swiper)
-           (",." . persp-ivy-switch-buffer))
+  :chords ((",." . persp-ivy-switch-buffer))
   :bind ("C-c s" . swiper))
 
 (use-package ivy
@@ -921,7 +918,7 @@ If you use Elixir, get the language server from [[https://github.com/elixir-lsp/
   (setq lsp-completion-provider :capf)
   (setq lsp-prefer-capf t)
   (setq lsp-idle-delay 1.5)
-  (setq lsp-semantic-highlighting t)
+  ;; (setq lsp-semantic-highlighting t)
   :config
   ;; ignore elixir build and dependency folders
   (add-to-list 'lsp-file-watch-ignored "[/\\\\]_build$")
@@ -947,7 +944,7 @@ Make the bell visual.
 
 #+BEGIN_SRC emacs-lisp
 (use-package mode-line-bell
-  :config ; just some help
+  :config
   (mode-line-bell-mode))
 #+END_SRC
 
@@ -1226,6 +1223,7 @@ I'm not a fan of =dired=, so let's show some _dirs_.
 (use-package treemacs-magit
   :after treemacs magit)
 
+;; this supposedly works with perspective but it fails
 ;; (use-package treemacs-persp
 ;;   :after treemacs persp-mode
 ;;   :config (treemacs-set-scope-type 'Perspectives))
@@ -1269,10 +1267,17 @@ Show the next possible key presses towards an action.
 
 **** writeroom-mode
 
-Create a room of one's own.
+Create a room of one's own. I use a different (light) theme here.
 
 #+BEGIN_SRC emacs-lisp
 (use-package writeroom-mode
+  :hook ((writeroom-mode-enable . (lambda() 
+                                      (disable-theme my-emacs-theme)
+                                      (load-theme 'paper t)
+                                       ))
+         (writeroom-mode-disable . (lambda()
+                                     (disable-theme 'paper)
+                                     (load-theme my-emacs-theme t))))
   :bind ("C-c w" . writeroom-mode))
 #+END_SRC
 
@@ -1330,6 +1335,7 @@ You might think Angular is dead and you'd be right but not everyone knows yet.
 
 #+BEGIN_SRC emacs-lisp
 (use-package angular-mode
+  :mode ("\\.component.css\\'" . css-mode)
   :init
   (setq lsp-clients-angular-language-server-command
     '("node"
@@ -1562,9 +1568,9 @@ Everything concerning agendas. This is mostly based on [[https://github.com/mwfo
       (org-agenda nil "a")
       (org-agenda-day-view)))
 
-  (bind-keys ("<f5>" . my-org-super-agenda-today)
-             ("<f6>" . my-personal-agenda)
-             ("<f7>" . my-org-super-agenda)))
+  (bind-keys ("C-c a t" . my-org-super-agenda-today)
+             ("C-c a p" . my-personal-agenda)
+             ("C-c a w" . my-org-super-agenda)))
 
 (setq org-agenda-hide-tags-regexp "@")
 
