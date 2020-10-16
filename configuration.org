@@ -329,8 +329,9 @@ Note that all bindings for external packages are declared in the [[*Packages][pa
 Be sure to check out [[https://peach-melpa.org/][Peach Melpa]] to find a theme you like.
 
 #+BEGIN_SRC emacs-lisp
-(setq my-emacs-theme 'doom-challenger-deep)
-(load-theme my-emacs-theme t)
+(setq my-dark-emacs-theme 'doom-challenger-deep)
+(setq my-light-emacs-theme 'paper)
+(load-theme my-dark-emacs-theme t)
 #+END_SRC
 
 **** Font
@@ -1267,23 +1268,25 @@ Show the next possible key presses towards an action.
 
 **** writeroom-mode
 
-Create a room of one's own. I use a different (light) theme here.
+Create a room of one's own.
+I use a different (light) theme here.
 
 #+BEGIN_SRC emacs-lisp
 (use-package writeroom-mode
   :hook ((writeroom-mode-enable . (lambda() 
-                                      (disable-theme my-emacs-theme)
-                                      (load-theme 'paper t)
+                                      (disable-theme my-dark-emacs-theme)
+                                      (load-theme my-light-emacs-theme t)
                                        ))
          (writeroom-mode-disable . (lambda()
-                                     (disable-theme 'paper)
-                                     (load-theme my-emacs-theme t))))
+                                     (disable-theme my-light-emacs-theme)
+                                     (load-theme my-dark-emacs-theme t))))
   :bind ("C-c w" . writeroom-mode))
 #+END_SRC
 
 **** yasnippet
 
 Use snippets in prog mode buffers.
+Because I also use company, =yas-expand= is mapped to =C-c y=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package yasnippet-snippets
@@ -1506,7 +1509,7 @@ state =CANCELLED=.
 (setq org-tag-alist '(
   ;; depth
   ("@immersive" . ?i)
-  ("@shallow"   . ?p)
+  ("@shallow"   . ?s)
   ;; context
   ("@work"      . ?w)
   ("@home"      . ?h)
@@ -1789,17 +1792,21 @@ Use the locally installed =eslint= and =tslint= binaries.
 
 [fn:1] What you're reading is likely a markdown version exported from it.
 
-[fn:2] *Note* that this config uses the =all-the-icons= package whose icons need to be downloaded manually
+[fn:2] *Note* that this config uses the =all-the-icons= package
+whose icons need to be downloaded manually
 by running =M-x all-the-icons-install-fonts= and selecting =yes=.
 
-*Note* that this config uses =dash=. The config will try to install it before installing the other packages
-but this might fail. If that is the case do the following:
+*Note* that this config uses =dash=.
+The config will try to install it before installing the other packages
+but this might fail.
+If that is the case do the following:
 
 + hit =M-x=, type =package-install= and hit return
 + type =dash= and hit return again
 + once the installation is complete, re-run Emacs
 
-[fn:3] If you're not sure where your =user-emacs-directory= might be, you can do the following:
+[fn:3] If you're not sure where your =user-emacs-directory= might be,
+you can do the following:
   + run Emacs
   + hit =M-x= (that is your Alt/Option key followed by the letter =x=)
   + type =describe-variable= and hit return
