@@ -135,7 +135,7 @@ We need to install a few packages to install packages more easily.
 
 **** Site-Lisp
 
-Add =side-lisp= directory and sub-directories to load path.
+Add =site-lisp= directory and sub-directories to load path.
 I put non-MELPA packages here.
 If the directory doesn't exist, it will get created.
 Adapt if necessary.
@@ -322,7 +322,7 @@ Note that all bindings for external packages are declared in the [[*Packages][pa
 Be sure to check out [[https://peach-melpa.org/][Peach Melpa]] to find a theme you like.
 
 #+BEGIN_SRC emacs-lisp
-(load-theme 'doom-laserwave t)
+(load-theme 'doom-challenger-deep t)
 #+END_SRC
 
 **** Font
@@ -838,7 +838,7 @@ We use =ivy= for narrowing our options.
 (use-package swiper
   :after ivy
   :chords (("qq" . swiper)
-           (",." . ivy-switch-buffer))
+           (",." . persp-ivy-switch-buffer))
   :bind ("C-c s" . swiper))
 
 (use-package ivy
@@ -846,6 +846,7 @@ We use =ivy= for narrowing our options.
   :init
   (setq ivy-use-virtual-buffers t)
   (setq enable-recursive-minibuffers t)
+  :bind (("C-x b" . persp-ivy-switch-buffer))
   :config
   (ivy-mode 1))
 
@@ -861,7 +862,7 @@ We use =ivy= for narrowing our options.
   :after ivy
   :init
   (setq ivy-rich-display-transformers-list
-      '(ivy-switch-buffer
+      '(persp-ivy-switch-buffer
         (:columns
          ((ivy-rich-switch-buffer-icon (:width 2))
           (ivy-rich-candidate (:width 30))
@@ -983,6 +984,22 @@ Code folding. Unfortunately has some performance issues.
   :hook (prog-mode . origami-mode)
   :chords ("ww" . origami-toggle-node)
   :bind (("C-c o" . origami-toggle-node)))
+#+END_SRC
+
+**** perspective
+
+Have some perspective, man.
+
+#+BEGIN_SRC emacs-lisp
+(use-package perspective
+  :init
+  (setq persp-state-default-file (expand-file-name ".cache/persp-persist" user-emacs-directory))
+  (setq persp-mode-prefix-key (kbd "C-c p"))
+  :config
+  (persp-mode))
+
+;; no idea why putting this in :hook kills the package
+(add-hook 'kill-emacs-hook #'persp-state-save)
 #+END_SRC
 
 **** prettier-js
@@ -1159,8 +1176,6 @@ A slightly nicer mode-line.
 I'm not a fan of =dired=, so let's show some _dirs_.
 
 #+BEGIN_SRC emacs-lisp
-(use-package perspective)
-
 (use-package treemacs
   :defer t
   :init
@@ -1211,9 +1226,9 @@ I'm not a fan of =dired=, so let's show some _dirs_.
 (use-package treemacs-magit
   :after treemacs magit)
 
-(use-package treemacs-persp
-  :after treemacs persp-mode
-  :config (treemacs-set-scope-type 'Perspectives))
+;; (use-package treemacs-persp
+;;   :after treemacs persp-mode
+;;   :config (treemacs-set-scope-type 'Perspectives))
 
 ;; start with treemacs open
 ;; (treemacs)
