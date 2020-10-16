@@ -1340,6 +1340,7 @@ You might think Angular is dead and you'd be right but not everyone knows yet.
 (use-package angular-mode
   :mode ("\\.component.css\\'" . css-mode)
   :init
+  ;; adapt, obviouisly
   (setq lsp-clients-angular-language-server-command
     '("node"
       "/home/krister/.config/nvm/12.16.1/lib/node_modules/@angular/language-server"
@@ -1358,6 +1359,7 @@ Enable =flycheck=.
 (defun my-elisp-mode-hook ()
   "Hooks for lisp interaction mode."
   (flycheck-mode 1))
+
 (add-hook 'emacs-lisp-mode-hook 'my-elisp-mode-hook)
 #+END_SRC
 
@@ -1533,7 +1535,8 @@ state =CANCELLED=.
 
 ***** Agendas
 
-Everything concerning agendas. This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/michael.org][mwfogleman]]'s emacs config.
+Everything concerning agendas.
+This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/michael.org][mwfogleman]]'s emacs config.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-super-agenda
@@ -1627,7 +1630,8 @@ Clock   In/out^
 
 **** python mode
 
-Enable =flycheck=. This mode is built-in.
+Enable =flycheck=.
+This mode is built-in.
 
 #+BEGIN_SRC emacs-lisp
 (defun my-python-mode-hook ()
@@ -1670,7 +1674,7 @@ Pretty much like js2.
 
 **** typescript mode
 
-Enable =lsp=, =flycheck= and sane tabs. And some other stuff.
+Enable =lsp=, =flycheck=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package typescript-mode
@@ -1691,7 +1695,8 @@ Enable =lsp=, =flycheck= and sane tabs. And some other stuff.
 
 **** web mode
 
-Web mode uses =flycheck= with =lsp= enabled.
+Web mode uses =flycheck=,
+prompts user if =lsp= should be enabled.
 
 #+BEGIN_SRC emacs-lisp
 (use-package web-mode
@@ -1700,15 +1705,15 @@ Web mode uses =flycheck= with =lsp= enabled.
   (setq web-mode-comment-style 2)
   :mode ("\\.vue\\'"
          "\\.component.html\\'"
-         "\\.ejs\\'"
-         "\\.json\\'"))
+         "\\.ejs\\'")
 
 (defun my-web-mode-hook ()
   "Hooks for web mode."
   (enable-tabs)
   (web-mode-use-tabs)
   (add-node-modules-path)
-  (lsp)
+  (if (y-or-n-p "Do you want to enable lsp?")
+        (lsp))
   (flycheck-mode)
   (add-hook 'local-write-file-hooks
     (lambda ()
