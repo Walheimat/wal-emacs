@@ -2,58 +2,57 @@
 
 # Emacs Org Config
 
-This project is my personal Emacs (26.3) config.
+This project is my personal Emacs (26.3)<sup><a id="fnr.1" class="footref" href="#fn.1">1</a></sup> config.
 
-Its base is an org file so it doubles as a readme<sup><a id="fnr.1" class="footref" href="#fn.1">1</a></sup>.
+Its base is an org file so it doubles as a readme<sup><a id="fnr.2" class="footref" href="#fn.2">2</a></sup>.
 
 
 # Table of Contents
 
-1.  [Emacs Org Config](#org8a39bb1)
-    1.  [Setup](#org6ed41ce)
-    2.  [Config](#org57d6c98)
-        1.  [Personal Config](#orgddd3fac)
-        2.  [Initialization](#org8e5bb2b)
-        3.  [Built-in](#orgfe65321)
-        4.  [Mode Mappings](#orgf7b0199)
-        5.  [Packages](#org8ba62ad)
-        6.  [Mode Configs](#org46c3b15)
-        7.  [Tweaks](#org0ec9065)
+1.  [Emacs Org Config](#org1a4d39f)
+    1.  [Setup](#org5399d04)
+    2.  [Config](#org22ea85f)
+        1.  [Personal Config](#orgdc1fcd3)
+        2.  [Initialization](#org8987cf6)
+        3.  [Built-in](#orgbda5725)
+        4.  [Packages](#orgb179f96)
+        5.  [Mode Configs](#org71a33f0)
+        6.  [Tweaks](#orgf8076d1)
 
 
-<a id="org6ed41ce"></a>
+<a id="org5399d04"></a>
 
 ## Setup
 
 If you're interested in trying out Emacs using my config, here are the necessary steps:
 
 -   Install Emacs if you haven't
--   Clone this repository into your `user-emacs-directory`<sup><a id="fnr.2" class="footref" href="#fn.2">2</a></sup>
+-   Clone this repository into your `user-emacs-directory`<sup><a id="fnr.3" class="footref" href="#fn.3">3</a></sup>
 -   Copy the config file included in this repo by running `cp ~/.emacs.d/emacs-config/.emacs.example ~/.emacs`
--   Close and re-run Emacs which should download and install (almost<sup><a id="fnr.3" class="footref" href="#fn.3">3</a></sup>) all packages
+-   Close and re-run Emacs which should download and install (almost<sup><a id="fnr.4" class="footref" href="#fn.4">4</a></sup>) all packages
 
 If you did not init this repo in your `user-emacs-directory` using the default name, you will need to adapt
 the variable `walheimat-emacs-config-default-path` in the example config you just copied.
 
 
-<a id="org57d6c98"></a>
+<a id="org22ea85f"></a>
 
 ## Config
 
 The init script will evaluate <span class="underline">everything</span> that follows.
 
 
-<a id="orgddd3fac"></a>
+<a id="orgdc1fcd3"></a>
 
 ### Personal Config
 
-Set some personal info.<sup><a id="fnr.4" class="footref" href="#fn.4">4</a></sup>
+Set some personal info.<sup><a id="fnr.5" class="footref" href="#fn.5">5</a></sup>
 
     (setq user-full-name "Krister Schuchardt"
           user-mail-address "krister.schuchardt@theventury.com")
 
 
-<a id="org8e5bb2b"></a>
+<a id="org8987cf6"></a>
 
 ### Initialization
 
@@ -65,6 +64,9 @@ Set up Emacs, package manager and packages.
     
         ;; start maximized
         (add-to-list 'default-frame-alist '(fullscreen . maximized))
+        
+        ;; ... or start fullscreen, you decide
+        ;; (add-hook 'window-setup-hook 'toggle-frame-fullscreen t)
         
         ;; no splash
         (setq inhibit-startup-message t)
@@ -109,7 +111,8 @@ Set up Emacs, package manager and packages.
 
 3.  Dependencies
 
-    We need to install a few packages to install packages more easily.
+    We manage our packages with `use-package`, before we can use it,
+    we have to install it and a few other packages the hard way.
     
         ;; we need dash for the upcoming loop
         (unless (package-installed-p 'dash)
@@ -136,6 +139,7 @@ Set up Emacs, package manager and packages.
              naysayer-theme
              nord-theme
              panda-theme
+             paper-theme
              spacemacs-theme
              )))
         
@@ -144,6 +148,36 @@ Set up Emacs, package manager and packages.
           (error
             (package-refresh-contents)
             (init--install-packages)))
+
+4.  Site-Lisp
+
+    Add `site-lisp` directory and sub-directories to load path.
+    I put non-MELPA packages here.
+    If the directory doesn't exist, it will get created.
+    Adapt if necessary.
+    
+        ;; create the dir if it does not exist to avoid error
+        (unless (file-directory-p (expand-file-name "site-lisp" user-emacs-directory))
+          (make-directory (expand-file-name "site-lisp" user-emacs-directory)))
+        
+        (setq site-lisp-dir
+          (expand-file-name "site-lisp" user-emacs-directory))
+        
+        (add-to-list 'load-path site-lisp-dir)
+        
+        ;; add subdirs as well
+        (dolist (project (directory-files site-lisp-dir t "\\w+"))
+          (when (file-directory-p project)
+            (add-to-list 'load-path project)))
+
+5.  Package Management
+
+    We also always want to ensure the package, i.e. if it's not there, get it.
+    I'm also using chords for a few, common actions.
+    
+        (require 'use-package-ensure)
+        (setq use-package-always-ensure t)
+        
         (require 'diminish)
         (require 'delight)
         (require 'bind-key)
@@ -153,33 +187,8 @@ Set up Emacs, package manager and packages.
           :config
           (key-chord-mode 1))
 
-4.  Site-Lisp
 
-    Add `side-lisp` directory and sub-directories to load path.
-    I put non-MELPA packages here.
-    If the directory doesn't exist, it will get created.
-    Adapt if necessary.
-    
-        ;; create the dir if it does not exist to avoid error
-        (unless (file-directory-p (expand-file-name "site-lisp" user-emacs-directory))
-          (make-directory (expand-file-name "site-lisp" user-emacs-directory)))
-        (setq site-lisp-dir
-          (expand-file-name "site-lisp" user-emacs-directory))
-        (add-to-list 'load-path site-lisp-dir)
-        (dolist (project (directory-files site-lisp-dir t "\\w+"))
-          (when (file-directory-p project)
-            (add-to-list 'load-path project)))
-
-5.  Package management
-
-    We use `use-package` for managing our packages.
-    We also always want to ensure the package, i.e. if it's not there, get it.
-    
-        (require 'use-package-ensure)
-        (setq use-package-always-ensure t)
-
-
-<a id="orgfe65321"></a>
+<a id="orgbda5725"></a>
 
 ### Built-in
 
@@ -243,8 +252,6 @@ Configure built-in settings.
     
         (setq mouse-yank-at-point t)
         (setq show-paren-delay 0.0)
-        ;; apparently, this line is a very bad idea ...
-        ;; (setq gc-cons-threshold 100000000)
         (setq read-process-output-max (* 1024 1024)) ;; 1mb
         (setq sentence-end-double-space nil)
         (setq echo-keystrokes 0.1)
@@ -285,33 +292,34 @@ Configure built-in settings.
     
     If you want to see all personal keybindings, execute `describe-personal-keybindings`.
     
-    -   `<f5>` opens today's agenda.
-    -   `<f6>` opens today's personal agenda
-    -   `<f7>` opens this week's agenda
+    -   `<key-chord> # #` (un-)comments.
     -   `C-+` expands region.
-    -   `C-c a <key>` runs ag (`a` for generic, `p` for in-project search). <span class="underline">Requires ag</span>!
+    -   `C-c a <key>` opens today's (`t`), this week's (`w`) or your personal (`p`) agenda.
     -   `C-c b <key>` toggle(`t`) or shows(`s`) bookmarks.
     -   `C-c c <key>` to duplicate (`d`) the current line, kill (`k`) other buffers and (`o`) open with outside program.
-    -   `C-c d` opens docker.
+    -   `C-c d` for docker actions.
     -   `C-c e` opens eshell.
-    -   `C-c f p` finds a project file.
+    -   `C-c f a <key>` runs ag (`a` for generic, `p` for in-project search). <span class="underline">Requires ag</span>!
+    -   `C-c f f` finds a project file.
     -   `C-c g` opens magit status.
-    -   `C-c j=/=jj` dumb-jumps.
+    -   `C-c j=/=<key-chord> j j` dumb-jumps.
     -   `C-c m <key>` for multiple cursors.
+    -   `C-c o` for code-folding.
+    -   `C-c p <key>` interacts with perspectives
     -   `C-c q` opens the time machine.
-    -   `C-c s=/=qq` uses swiper to search.
-    -   `C-c t t=/`,.= opens treemacs.
+    -   `C-c r s` restarts.
+    -   `C-c s` uses swiper to search.
+    -   `C-c t t` opens treemacs.
     -   `C-c v <key>` jumps to char (`c`) or line (`l`) with avy.
     -   `C-x C-c` opens this config org file.
     -   `C-x r q` (really) quits.
     -   `C-z=/=C-S-z` undos/redos.
     -   `M-o` goes to the "other" window or the last buffer.
     -   `M-x` opens smex.
-    -   `s-#=/=##` (chord) (un-)comments.
+    -   `s-(S)-RET` will open an indented line above (below).
     -   `s-k` kills the whole line.
-    -   `s-RET` will open a (indented) line above.
     
-    Note that all bindings for external packages are declared in the [packages](#org8ba62ad) section.
+    Note that all bindings for external packages are declared in the [packages](#orgb179f96) section.
     
         (global-set-key (kbd "C-c e") 'eshell)
         (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
@@ -323,7 +331,9 @@ Configure built-in settings.
 
     Be sure to check out [Peach Melpa](https://peach-melpa.org/) to find a theme you like.
     
-        (load-theme 'doom-city-lights t)
+        (setq my-dark-emacs-theme 'doom-challenger-deep)
+        (setq my-light-emacs-theme 'paper)
+        (load-theme my-dark-emacs-theme t)
 
 7.  Font
 
@@ -361,7 +371,7 @@ Configure built-in settings.
         (require 'zone)
         (zone-when-idle 180)
 
-9.  Additional functions
+9.  Additional Functions
 
     Only need one so far.
     
@@ -372,35 +382,27 @@ Configure built-in settings.
           (eq (current-buffer) (treemacs-get-local-buffer)))
         
         ;; trick garbage collection
+        (defvar hundred-mb 100000000)
         (defun my-minibuffer-setup-hook ()
           (setq gc-cons-threshold most-positive-fixnum))
         (defun my-minibuffer-exit-hook ()
-          (setq gc-cons-threshold 800000))
+          (setq gc-cons-threshold hundred-mb))
         
         (add-hook 'minibuffer-setup-hook #'my-minibuffer-setup-hook)
         (add-hook 'minibuffer-exit-hook  #'my-minibuffer-exit-hook)
 
 
-<a id="orgf7b0199"></a>
-
-### Mode Mappings
-
-Set up mode mappings for built-in modes.
-
-    (add-to-list 'auto-mode-alist '("\\.component.css" . css-mode))
-
-
-<a id="org8ba62ad"></a>
+<a id="orgb179f96"></a>
 
 ### Packages
 
 What follows is a list of MELPA packages that make Emacs even more awesome.
 
-If you wish to know more about any of them, check out the list<sup><a id="fnr.5" class="footref" href="#fn.5">5</a></sup> of repositories
-at the end of this readme/configuration.
+If you wish to know more about any of them, check out the list<sup><a id="fnr.6" class="footref" href="#fn.6">6</a></sup> of repositories
+at the end of this readme/configuration or the [awesome-emacs](https://github.com/emacs-tw/awesome-emacs) project.
 
-Many packages bind keys. Check the [key bindings section](#orgadce77c) if you need a list of all
-of them.
+Many packages bind keys.
+Check the [key bindings section](#org69917a3) if you need a list of all of them.
 
 1.  add-node-modules-path
 
@@ -413,18 +415,18 @@ of them.
     Highlight search results using the **Silver Searcher**.
     
     This <span class="underline">requires</span> the `ag` binary which you can get from [here](https://github.com/ggreer/the_silver_searcher#installation) (we will try
-    to download it automatically).
+    to download it automatically, but might fail).
     
         (use-package ag
           :ensure-system-package ag
           :init
           (setq ag-highlight-search t)
-          :bind ("C-c a a" . ag)
-        	("C-c a p" . ag-project))
+          :bind ("C-c f a a" . ag)
+        	("C-c f a p" . ag-project))
 
 3.  all-the-icons
 
-    You need to install the icons yourself<sup><a id="fnr.2.100" class="footref" href="#fn.2">2</a></sup>.
+    You need to install the icons yourself<sup><a id="fnr.3.100" class="footref" href="#fn.3">3</a></sup>.
     
         (use-package all-the-icons)
 
@@ -467,7 +469,7 @@ of them.
         (use-package bm
           :init
           (setq bm-restore-repository-on-load t)
-          (setq bm-repository-file (expand-file-name "bms" user-emacs-directory))
+          (setq bm-repository-file (expand-file-name ".cache/bm-persist" user-emacs-directory))
           (setq-default bm-buffer-persistence t)
           (setq bm-annotate-on-create t)
           (setq bm-highlight-style 'bm-highlight-only-fringe)
@@ -476,9 +478,9 @@ of them.
           ((after-init   .      bm-repository-load)
            (after-save   .      bm-buffer-save)
            (kill-buffer  .      bm-buffer-save)
-           (kill-emacs   .     (lambda nil
-        			 (bm-buffer-save-all)
-        			 (bm-repository-save)))
+           (kill-emacs   .      (lambda nil
+        			  (bm-buffer-save-all)
+        			  (bm-repository-save)))
            (find-file    .      bm-buffer-restore)
            (after-revert .      bm-buffer-restore)
            (vc-before-checkin . bm-buffer-save))
@@ -503,9 +505,6 @@ of them.
           (setq company-idle-delay 0.5)
           :hook (prog-mode . company-mode))
         
-        ;; (use-package company-lsp
-        ;;   :after company)
-        
         (use-package company-restclient
           :after company)
         
@@ -514,7 +513,8 @@ of them.
 
 9.  crux
 
-    Let's use `crux` for some editing magic. Check the [key bindings section](#orgadce77c) for descriptions.
+    Let's use `crux` for some editing magic.
+    Check the [key bindings section](#org69917a3) for descriptions.
     
         (use-package crux
           :bind (("M-o"          . crux-other-window-or-switch-buffer)
@@ -533,27 +533,28 @@ of them.
     We register a node template for attaching to a Docker host.
     I currently only use it for JavaScript and Python.
     
-        (use-package dap-mode
-          :delight " dap"
-          :init
-          (require 'cl)
-          (setq dap-python-executable "python3")
-          (setq dap-auto-configure-features '(sessions locals breakpoints))
-          :config
-          (require 'dap-node)
-          (require 'dap-python)
-          (dap-register-debug-template
-            "Node::Attach"
-            (list :type "node"
-        	  :request "attach"
-        	  :remoteRoot "/usr/src/app"
-        	  :localRoot "/home/krister/theventury"
-        	  :port 9229
-        	  :name "Node::Attach"))
-          :hook 
-          ((js2-mode    . dap-mode)
-           (python-mode . dap-mode)
-           (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra)))))
+        (when (version< emacs-version "27.0")
+          (use-package dap-mode
+            :delight " dap"
+            :init
+            (require 'cl) ;; deprecated in 27
+            (setq dap-python-executable "python3")
+            (setq dap-auto-configure-features '(sessions locals breakpoints))
+            :config
+            (require 'dap-node)
+            (require 'dap-python)
+            (dap-register-debug-template
+              "Node::Attach"
+              (list :type "node"
+        	    :request "attach"
+        	    :remoteRoot "/usr/src/app"
+        	    :localRoot "/home/krister/theventury"
+        	    :port 9229
+        	    :name "Node::Attach"))
+            :hook 
+            ((js2-mode    . dap-mode)
+             (python-mode . dap-mode)
+             (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))))
 
 11. delight
 
@@ -624,7 +625,7 @@ of them.
           (setq dumb-jump-selector 'ivy
         	dumb-jump-force-searcher 'ag)
           (dumb-jump-mode)
-          :chords ("jj" . dump-jump-go)
+          :chords ("jj" . dumb-jump-go)
           :bind ("C-c j" . dumb-jump-go))
 
 18. eshell
@@ -662,8 +663,7 @@ of them.
     Comment code like in `vim`, evil, evil `vim`.
     
         (use-package evil-nerd-commenter
-          :chords ("##" . evilnc-comment-or-uncomment-lines)
-          :bind ("s-#" . evilnc-comment-or-uncomment-lines))
+          :chords ("##" . evilnc-comment-or-uncomment-lines))
 
 20. expand-region
 
@@ -678,7 +678,7 @@ of them.
     
         (use-package find-file-in-project
           :config
-          (global-set-key (kbd "C-c f p") 'find-file-in-project))
+          (global-set-key (kbd "C-c f f") 'find-file-in-project))
 
 22. fira-code
 
@@ -692,12 +692,13 @@ of them.
     `flycheck` is for all of our linting/code quality needs.
     I prefer pop-ups over mode-line info.
     
-        (use-package flycheck-popup-tip)
+        ;; (use-package flycheck-popup-tip)
         (use-package flycheck
           :delight " fly"
-          :hook ((flycheck-mode . flycheck-popup-tip-mode)
-        	 (flycheck-mode . my/use-eslint-from-node-modules)
-        	 (flycheck-mode . my/use-tslint-from-node-modules)))
+          :hook ((flycheck-mode . my-use-eslint-from-node-modules)
+        	 (flycheck-mode . my-use-tslint-from-node-modules)
+        	 ;; (flycheck-mode . flycheck-popup-tip-mode)
+        ))
 
 24. flyspell
 
@@ -771,7 +772,7 @@ of them.
     
         (use-package swiper
           :after ivy
-          :chords ("qq" . swiper)
+          :chords ((",." . persp-ivy-switch-buffer))
           :bind ("C-c s" . swiper))
         
         (use-package ivy
@@ -779,6 +780,7 @@ of them.
           :init
           (setq ivy-use-virtual-buffers t)
           (setq enable-recursive-minibuffers t)
+          :bind (("C-x b" . persp-ivy-switch-buffer))
           :config
           (ivy-mode 1))
         
@@ -794,7 +796,7 @@ of them.
           :after ivy
           :init
           (setq ivy-rich-display-transformers-list
-              '(ivy-switch-buffer
+              '(persp-ivy-switch-buffer
         	(:columns
         	 ((ivy-rich-switch-buffer-icon (:width 2))
         	  (ivy-rich-candidate (:width 30))
@@ -839,15 +841,17 @@ of them.
         ;; you need to install the language server manually and point to the release
         (setq elixir-ls-release-location (expand-file-name "ls/elixir" user-emacs-directory))
         (if (file-exists-p (expand-file-name "language_server.sh" elixir-ls-release-location))
+          (add-to-list 'exec-path elixir-ls-release-location)
           (add-hook 'elixir-mode-hook 'lsp))
         
         (use-package lsp-mode
           :init
-          (add-to-list 'exec-path elixir-ls-release-location)
+          (setq lsp-completion-provider :capf)
           (setq lsp-prefer-capf t)
           (setq lsp-idle-delay 1.5)
-          (setq lsp-semantic-highlighting t)
+          ;; (setq lsp-semantic-highlighting t)
           :config
+          ;; ignore elixir build and dependency folders
           (add-to-list 'lsp-file-watch-ignored "[/\\\\]_build$")
           (add-to-list 'lsp-file-watch-ignored "[/\\\\]deps$"))
         
@@ -867,7 +871,7 @@ of them.
     Make the bell visual.
     
         (use-package mode-line-bell
-          :config ; just some help
+          :config
           (mode-line-bell-mode))
 
 37. multiple-cursors
@@ -894,11 +898,27 @@ of them.
 
     Code folding. Unfortunately has some performance issues.
     
-        (use-package origami
-          :hook (prog-mode . origami-mode)
-          :bind (("C-c o" . origami-toggle-node)))
+        (when (version< emacs-version "27.0")
+          (use-package origami
+            :hook (prog-mode . origami-mode)
+            :chords ("ww" . origami-toggle-node)
+            :bind (("C-c o" . origami-toggle-node))))
 
-40. prettier-js
+40. perspective
+
+    Have some perspective, man.
+    
+        (use-package perspective
+          :init
+          (setq persp-state-default-file (expand-file-name ".cache/persp-persist" user-emacs-directory))
+          (setq persp-mode-prefix-key (kbd "C-c p"))
+          :config
+          (persp-mode))
+        
+        ;; no idea why putting this in :hook kills the package
+        (add-hook 'kill-emacs-hook #'persp-state-save)
+
+41. prettier-js
 
     Format code quickly.
     
@@ -909,13 +929,17 @@ of them.
             "--print-width" "91"
           )))
 
-41. projectile
+42. projectile
 
     Projects in Emacs.
     
-        (use-package projectile)
+        (use-package projectile
+          :init
+          ;; (add-to-list 'projectile-globally-ignored-directories "node_modules")
+          ;; (add-to-list 'projectile-globally-ignored-directories "build")
+        )
 
-42. rainbow
+43. rainbow
 
     Show colors in source code and make delimiters stand out.
     
@@ -926,7 +950,7 @@ of them.
           :diminish
           :hook (prog-mode . rainbow-mode))
 
-43. restart-emacs
+44. restart-emacs
 
     Sometimes I restart for fun.
     
@@ -935,27 +959,27 @@ of them.
           (setq restart-emacs-restore-frames t)
           :bind ("C-c r s" . restart-emacs))
 
-44. restclient
+45. restclient
 
     Postman is passé.
     I use a `.http` file extension for my request examples.
     
         (use-package restclient
-          :mode "\\.http\\'")
+          :mode ("\\.http\\'" . restclient-mode))
 
-45. request
+46. request
 
     Not used yet, but will in the future.
     
         (use-package request)
 
-46. s
+47. s
 
     String manipulation utility.
     
         (use-package s)
 
-47. smartparens
+48. smartparens
 
     Create a pairs automatically.
     
@@ -965,7 +989,7 @@ of them.
           (require 'smartparens-config)
           :hook (prog-mode . smartparens-mode))
 
-48. smeargle
+49. smeargle
 
     Highlight sections by edit date.
     
@@ -984,14 +1008,14 @@ of them.
         
         (use-package smeargle)
 
-49. smex
+50. smex
 
     Show completions for `M-x` in a buffer.
     
         (use-package smex
           :bind ("M-x" . smex))
 
-50. so-long
+51. so-long
 
     This mode is included in Emacs > 27. Still using 26 here.
     
@@ -999,14 +1023,14 @@ of them.
           :config
           (global-so-long-mode 1))
 
-51. symon
+52. symon
 
     Show some system stats when nothing else is going on.
     
         (use-package symon
           :init
           (setq symon-sparkline-type 'bounded
-        	symon-delay 5
+        	symon-delay 10
         	symon-monitors
         	  '(symon-linux-cpu-monitor
         	    symon-linux-memory-monitor
@@ -1015,7 +1039,7 @@ of them.
           :config
           (symon-mode))
 
-52. telephone-line
+53. telephone-line
 
     A slightly nicer mode-line.
     
@@ -1038,14 +1062,10 @@ of them.
           :config
           (telephone-line-mode t))
 
-53. treemacs
+54. treemacs
 
     I'm not a fan of `dired`, so let's show some <span class="underline">dirs</span>.
     
-        (use-package perspective)
-        
-        ;; (use-package treemacs-evil)
-        
         (use-package treemacs
           :defer t
           :init
@@ -1055,6 +1075,7 @@ of them.
           (progn
             (setq treemacs-indentation                   1
         	  treemacs-width                         35
+        	  treemacs-position                      'left
         	  treemacs-move-forward-on-expand        t
         	  treemacs-follow-after-init             nil
         	  treemacs-indentation-string            " ⁝ "
@@ -1064,7 +1085,7 @@ of them.
         	  treemacs-show-hidden-files             t
         	  treemacs-file-event-delay              1000)
         
-            (treemacs-follow-mode -1)
+            (treemacs-follow-mode t)
             (treemacs-filewatch-mode t)
             (treemacs-fringe-indicator-mode t)
         
@@ -1074,7 +1095,6 @@ of them.
         	(treemacs-git-mode 'deferred))
               (`(t . _)
         	(treemacs-git-mode 'extended))))
-          :chords (",." . treemacs)
           :bind
             (:map global-map
         	("M-0"       . treemacs-select-window)
@@ -1084,27 +1104,27 @@ of them.
         	("C-c t M-t" . treemacs-find-tag)))
         
         ;; (use-package treemacs-evil
-        ;;   :after treemacs evil
-        ;;   :ensure t)
+        ;;   :after treemacs evil)
         
         (use-package treemacs-projectile
           :after treemacs projectile)
         
-        (use-package treemacs-icons-dired
-          :after treemacs dired
-          :config (treemacs-icons-dired-mode))
+        ;; (use-package treemacs-icons-dired
+        ;;   :after treemacs dired
+        ;;   :config (treemacs-icons-dired-mode))
         
         (use-package treemacs-magit
           :after treemacs magit)
         
-        (use-package treemacs-persp
-          :after treemacs persp-mode
-          :config (treemacs-set-scope-type 'Perspectives))
+        ;; this supposedly works with perspective but it fails
+        ;; (use-package treemacs-persp
+        ;;   :after treemacs persp-mode
+        ;;   :config (treemacs-set-scope-type 'Perspectives))
         
         ;; start with treemacs open
-        (treemacs)
+        ;; (treemacs)
 
-54. undo-fu
+55. undo-fu
 
     Undoing un-undoing is weird in Emacs.
     
@@ -1114,13 +1134,13 @@ of them.
           :bind ("C-z"   . undo-fu-only-undo)
         	("C-S-z" . undo-fu-only-redo))
 
-55. use-package-ensure-system-package
+56. use-package-ensure-system-package
 
     Ensure binaries.
     
         (use-package use-package-ensure-system-package)
 
-56. which-key
+57. which-key
 
     Show the next possible key presses towards an action.
     
@@ -1131,24 +1151,25 @@ of them.
           :config
           (which-key-mode))
 
-57. writeroom-mode
+58. writeroom-mode
 
     Create a room of one's own.
+    I use a different (light) theme here.
     
         (use-package writeroom-mode
-          :bind ("C-c ü" . writeroom-mode))
-
-58. yascroll
-
-    Nicer scroll-bar.
-    
-        (use-package yascroll
-          :config
-          (global-yascroll-bar-mode 1))
+          :hook ((writeroom-mode-enable . (lambda() 
+        				      (disable-theme my-dark-emacs-theme)
+        				      (load-theme my-light-emacs-theme t)
+        				       ))
+        	 (writeroom-mode-disable . (lambda()
+        				     (disable-theme my-light-emacs-theme)
+        				     (load-theme my-dark-emacs-theme t))))
+          :bind ("C-c w" . writeroom-mode))
 
 59. yasnippet
 
     Use snippets in prog mode buffers.
+    Because I also use company, `yas-expand` is mapped to `C-c y`.
     
         (use-package yasnippet-snippets
           :after yasnippet
@@ -1166,7 +1187,6 @@ of them.
           ;;   (substitute-key-definition 'company-complete-common
           ;;                              'company-yasnippet-or-completion
           ;;                               company-active-map)))
-          ;; :after yasnippet-snippets
           :hook (prog-mode . yas-minor-mode))
         
         ;; (defun company-yasnippet-or-completion ()
@@ -1188,7 +1208,7 @@ of them.
          (zoom-mode 1))
 
 
-<a id="org46c3b15"></a>
+<a id="org71a33f0"></a>
 
 ### Mode Configs
 
@@ -1199,7 +1219,9 @@ Configure modes.
     You might think Angular is dead and you'd be right but not everyone knows yet.
     
         (use-package angular-mode
+          :mode ("\\.component.css\\'" . css-mode)
           :init
+          ;; adapt, obviouisly
           (setq lsp-clients-angular-language-server-command
             '("node"
               "/home/krister/.config/nvm/12.16.1/lib/node_modules/@angular/language-server"
@@ -1216,6 +1238,7 @@ Configure modes.
         (defun my-elisp-mode-hook ()
           "Hooks for lisp interaction mode."
           (flycheck-mode 1))
+        
         (add-hook 'emacs-lisp-mode-hook 'my-elisp-mode-hook)
 
 3.  css mode
@@ -1246,6 +1269,7 @@ Configure modes.
         
         (defun my-elixir-mode-hook ()
           "Hooks for elixir mode."
+          (lsp)
           (flycheck-mode))
 
 6.  js2 mode
@@ -1308,6 +1332,7 @@ Configure modes.
               (setq org-ellipsis "↷"
             	org-log-done t
             	org-startup-truncated nil
+            	org-startup-folded 'showeverything
             	org-directory my-org-directory
             	org-default-notes-file (concat org-directory "/notes.org")
             	org-startup-with-inline-images t
@@ -1354,7 +1379,7 @@ Configure modes.
             (setq org-tag-alist '(
               ;; depth
               ("@immersive" . ?i)
-              ("@shallow"   . ?p)
+              ("@shallow"   . ?s)
               ;; context
               ("@work"      . ?w)
               ("@home"      . ?h)
@@ -1376,7 +1401,8 @@ Configure modes.
     
     2.  Agendas
     
-        Everything concerning agendas. This is mostly based on [mwfogleman](https://github.com/mwfogleman/.emacs.d/blob/master/michael.org)'s emacs config.
+        Everything concerning agendas.
+        This is mostly based on [mwfogleman](https://github.com/mwfogleman/.emacs.d/blob/master/michael.org)'s emacs config.
         
             (use-package org-super-agenda
               :init
@@ -1414,9 +1440,9 @@ Configure modes.
                   (org-agenda nil "a")
                   (org-agenda-day-view)))
             
-              (bind-keys ("<f5>" . my-org-super-agenda-today)
-            	     ("<f6>" . my-personal-agenda)
-            	     ("<f7>" . my-org-super-agenda)))
+              (bind-keys ("C-c a t" . my-org-super-agenda-today)
+            	     ("C-c a p" . my-personal-agenda)
+            	     ("C-c a w" . my-org-super-agenda)))
             
             (setq org-agenda-hide-tags-regexp "@")
             
@@ -1461,13 +1487,15 @@ Configure modes.
               ("q" org-agenda-clock-cancel)
               ("g" org-agenda-clock-goto))
             
-            (bind-keys ("C-c w" . hydra-org-clock/body)
+            (bind-keys :map org-mode-map
+            	   ("C-c h" . hydra-org-clock/body)
             	   :map org-agenda-mode-map
-            	   ("C-c w" . hydra-org-agenda-clock/body))
+            	   ("C-c h" . hydra-org-agenda-clock/body))
 
 9.  python mode
 
-    Enable `flycheck`. This mode is built-in.
+    Enable `flycheck`.
+    This mode is built-in.
     
         (defun my-python-mode-hook ()
           "Hooks for python mode."
@@ -1477,6 +1505,7 @@ Configure modes.
               (delete-trailing-whitespace)
         	nil))
         )
+        
         (add-hook 'python-mode-hook 'my-python-mode-hook)
 
 10. rjsx mode
@@ -1506,7 +1535,7 @@ Configure modes.
 
 11. typescript mode
 
-    Enable `lsp`, `flycheck` and sane tabs. And some other stuff.
+    Enable `lsp`, `flycheck`.
     
         (use-package typescript-mode
           :mode "\\.ts\\'"
@@ -1525,7 +1554,8 @@ Configure modes.
 
 12. web mode
 
-    Web mode uses `flycheck` with `lsp` enabled.
+    Web mode uses `flycheck`,
+    prompts user if `lsp` should be enabled.
     
         (use-package web-mode
           :hook (web-mode . my-web-mode-hook)
@@ -1533,15 +1563,15 @@ Configure modes.
           (setq web-mode-comment-style 2)
           :mode ("\\.vue\\'"
         	 "\\.component.html\\'"
-        	 "\\.ejs\\'"
-        	 "\\.json\\'"))
+        	 "\\.ejs\\'"))
         
         (defun my-web-mode-hook ()
           "Hooks for web mode."
           (enable-tabs)
           (web-mode-use-tabs)
           (add-node-modules-path)
-          (lsp)
+          (if (y-or-n-p "Do you want to enable lsp?")
+        	(lsp))
           (flycheck-mode)
           (add-hook 'local-write-file-hooks
             (lambda ()
@@ -1555,7 +1585,7 @@ Configure modes.
         (use-package yaml-mode)
 
 
-<a id="org0ec9065"></a>
+<a id="orgf8076d1"></a>
 
 ### Tweaks
 
@@ -1594,7 +1624,7 @@ Some things don't always work out-of-the-box.
 
     Use the locally installed `eslint` and `tslint` binaries.
     
-        (defun my/use-eslint-from-node-modules ()
+        (defun my-use-eslint-from-node-modules ()
           (let* ((root (locate-dominating-file
         		(or (buffer-file-name) default-directory)
         		"node_modules"))
@@ -1605,7 +1635,7 @@ Some things don't always work out-of-the-box.
             (when (and eslint (file-executable-p eslint))
               (setq-local flycheck-javascript-eslint-executable eslint))))
         
-        (defun my/use-tslint-from-node-modules ()
+        (defun my-use-tslint-from-node-modules ()
           (let* ((root (locate-dominating-file
         		(or (buffer-file-name) default-directory)
         		"node_modules"))
@@ -1619,19 +1649,27 @@ Some things don't always work out-of-the-box.
 
 # Footnotes
 
-<sup><a id="fn.1" href="#fnr.1">1</a></sup> What you're reading is likely a markdown version exported from it.
+<sup><a id="fn.1" href="#fnr.1">1</a></sup> I built version `27.1` from source and tested the config a bit.
+Apart from two packages that will be disabled for any `27.x` version,
+it seem to work fine.
 
-<sup><a id="fn.2" href="#fnr.2">2</a></sup> **Note** that this config uses the `all-the-icons` package whose icons need to be downloaded manually
+<sup><a id="fn.2" href="#fnr.2">2</a></sup> What you're reading is likely a markdown version exported from it.
+
+<sup><a id="fn.3" href="#fnr.3">3</a></sup> **Note** that this config uses the `all-the-icons` package
+whose icons need to be downloaded manually
 by running `M-x all-the-icons-install-fonts` and selecting `yes`.
 
-**Note** that this config uses `dash`. The config will try to install it before installing the other packages
-but this might fail. If that is the case do the following:
+**Note** that this config uses `dash`.
+The config will try to install it before installing the other packages
+but this might fail.
+If that is the case do the following:
 
 -   hit `M-x`, type `package-install` and hit return
 -   type `dash` and hit return again
 -   once the installation is complete, re-run Emacs
 
-<sup><a id="fn.3" href="#fnr.3">3</a></sup> If you're not sure where your `user-emacs-directory` might be, you can do the following:
+<sup><a id="fn.4" href="#fnr.4">4</a></sup> If you're not sure where your `user-emacs-directory` might be,
+you can do the following:
 
 -   run Emacs
 -   hit `M-x` (that is your Alt/Option key followed by the letter `x`)
@@ -1643,9 +1681,9 @@ A window (or is it a frame?) should pop up telling you the path
 Finally run `git clone git@gitlab.com:Walheimat/emacs-config.git ~/.emacs.d`
 (replace `~/.emacs.d` with your actual path if it differs)
 
-<sup><a id="fn.4" href="#fnr.4">4</a></sup> Send me an email, why don't you?
+<sup><a id="fn.5" href="#fnr.5">5</a></sup> Send me an email, why don't you?
 
-<sup><a id="fn.5" href="#fnr.5">5</a></sup> Repositories (incomplete):
+<sup><a id="fn.6" href="#fnr.6">6</a></sup> Repositories (incomplete):
 
 -   [ag](https://github.com/Wilfred/ag.el)
 -   [all-the-icons](https://github.com/domtronn/all-the-icons.el)
