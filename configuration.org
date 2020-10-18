@@ -329,9 +329,27 @@ Note that all bindings for external packages are declared in the [[*Packages][pa
 Be sure to check out [[https://peach-melpa.org/][Peach Melpa]] to find a theme you like.
 
 #+BEGIN_SRC emacs-lisp
-(setq my-dark-emacs-theme 'doom-challenger-deep)
-(setq my-light-emacs-theme 'paper)
-(load-theme my-dark-emacs-theme t)
+;; two themes and a switch
+(defcustom my-dark-emacs-theme 'doom-challenger-deep
+  "The quote-unquote default emacs theme.")
+
+(defcustom my-light-emacs-theme 'paper
+  "The non-default emacs theme.")
+
+(setq my-active-theme my-dark-emacs-theme)
+
+(defun theme-light-switch (&optional selection)
+  "Switch from light to dark theme and vice-versa."
+  (interactive)
+  (disable-theme my-active-theme)
+  (cond ((or (equal my-active-theme my-dark-emacs-theme) (equal selection 'light))  
+           (load-theme my-light-emacs-theme)
+           (setq my-active-theme my-light-emacs-theme))
+        ((or (equal my-active-theme my-light-emacs-theme) (equal selection 'dark))
+           (load-theme my-dark-emacs-theme)
+           (setq my-active-theme my-dark-emacs-theme))))
+
+(load-theme my-dark-emacs-theme)
 #+END_SRC
 
 **** Font
@@ -1298,13 +1316,8 @@ I use a different (light) theme here.
 
 #+BEGIN_SRC emacs-lisp
 (use-package writeroom-mode
-  :hook ((writeroom-mode-enable . (lambda() 
-                                      (disable-theme my-dark-emacs-theme)
-                                      (load-theme my-light-emacs-theme t)
-                                       ))
-         (writeroom-mode-disable . (lambda()
-                                     (disable-theme my-light-emacs-theme)
-                                     (load-theme my-dark-emacs-theme t))))
+  :hook ((writeroom-mode-enable  . (lambda() (theme-light-switch 'light)))
+         (writeroom-mode-disable . (lambda() (theme-light-switch 'dark))))
   :bind ("C-c w" . writeroom-mode))
 #+END_SRC
 
