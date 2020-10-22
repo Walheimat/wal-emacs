@@ -1070,7 +1070,14 @@ Have some perspective, man.
   (setq persp-state-default-file (expand-file-name ".cache/persp-persist" user-emacs-directory))
   (setq persp-mode-prefix-key (kbd "C-c p"))
   :config
-  (persp-mode))
+  (persp-mode)
+)
+
+;; not sure there's much benefit to this
+(use-package persp-projectile
+  :disabled
+  :after perspective
+  :bind ("C-c ö" . projectile-persp-switch-project))
 
 ;; no idea why putting this in :hook kills the package
 (add-hook 'kill-emacs-hook #'persp-state-save)
@@ -1092,12 +1099,22 @@ Format code quickly.
 **** projectile
 
 Projects in Emacs.
+You don't really _need_ treemacs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
+  :diminish " p"
+  :bind ("C-c l" . projectile-command-map)
   :init
+  (setq projectile-completion-system 'ivy
+        ;; diminishing anyway, but hey
+        projectile-mode-line-function '(lambda() (format " {%s}" (projectile-project-name)))
+        projectile-switch-project-action #'projectile-dired
+        projectile-sort-order 'recentf)
+  :config
   ;; (add-to-list 'projectile-globally-ignored-directories "node_modules")
   ;; (add-to-list 'projectile-globally-ignored-directories "build")
+  (projectile-mode +1)
 )
 #+END_SRC
 
@@ -1309,8 +1326,8 @@ I'm not a fan of =dired=, so let's show some _dirs_.
   :after treemacs persp-mode
   :config (treemacs-set-scope-type 'Perspectives))
 
-;; start with treemacs open
-(treemacs)
+;; start with treemacs open (or not)
+;; (treemacs)
 #+END_SRC
 
 **** undo-fu
