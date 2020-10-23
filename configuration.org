@@ -475,6 +475,11 @@ You need to install the icons yourself[fn:3].
 
 #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons)
+
+;; use it for dired
+(use-package all-the-icons-dired
+  :after all-the-icons
+  :hook (dired-mode . all-the-icons-dired-mode))
 #+END_SRC
 
 **** auto-package-update
@@ -1104,18 +1109,16 @@ You don't really _need_ treemacs.
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
   :diminish " p"
-  :bind ("C-c l" . projectile-command-map)
   :init
   (setq projectile-completion-system 'ivy
-        ;; diminishing anyway, but hey
         projectile-mode-line-function '(lambda() (format " {%s}" (projectile-project-name)))
         projectile-switch-project-action #'projectile-dired
         projectile-sort-order 'recentf)
   :config
   ;; (add-to-list 'projectile-globally-ignored-directories "node_modules")
   ;; (add-to-list 'projectile-globally-ignored-directories "build")
-  (projectile-mode +1)
-)
+  (define-key projectile-mode-map (kbd "C-c l") 'projectile-command-map)
+  (projectile-mode +1))
 #+END_SRC
 
 **** rainbow
@@ -1266,7 +1269,8 @@ A slightly nicer mode-line (disabled in favor of doom-modeline for now).
 
 **** treemacs
 
-I'm not a fan of =dired=, so let's show some _dirs_.
+I'm now a fan of =dired=, but sometimes the "ineluctable modality of the 
+visible" is nice, so let's show some _dirs_.
 
 #+BEGIN_SRC emacs-lisp
 (use-package treemacs
@@ -1624,10 +1628,11 @@ state =CANCELLED=.
         ("a" org-archive-subtree)
         ("r" org-clock-report)))
 
+;; tags differentiated by # and @
 (setq org-tag-alist '(
   ;; depth
-  ("@immersive" . ?i)
-  ("@shallow"   . ?s)
+  ("#immersive" . ?i)
+  ("#process"   . ?p)
   ;; context
   ("@work"      . ?w)
   ("@home"      . ?h)
@@ -1694,6 +1699,7 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
              ("C-c a p" . my-personal-agenda)
              ("C-c a w" . my-org-super-agenda)))
 
+;; we hide all @-tags
 (setq org-agenda-hide-tags-regexp "@")
 
 ;; I put all of my tasks into a subfolder `tasks` inside the org directory
