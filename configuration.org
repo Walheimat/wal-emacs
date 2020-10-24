@@ -1,9 +1,10 @@
 #+TITLE: Walheimat's Hybrid Emacs Config/Readme
 #+AUTHOR: [[https://gitlab.com/Walheimat][@Walheimat]]
 #+OPTIONS: toc:nil
+
 * Emacs Org Config
 
-This project is my personal Emacs (26.3)[fn:1] config.
+This project is my personal Emacs (27.1)[fn:1] config.
 
 Its base is an org file so it doubles as a readme[fn:2].
 
@@ -11,15 +12,18 @@ Its base is an org file so it doubles as a readme[fn:2].
 
 ** Setup
 
-If you're interested in trying out Emacs using my config, here are the necessary steps:
+If you're interested in trying out Emacs using my config,
+here are the necessary steps:
 
 + Install Emacs if you haven't
 + Clone this repository into your =user-emacs-directory=[fn:3]
 + Copy the config file included in this repo by running =cp ~/.emacs.d/emacs-config/.emacs.example ~/.emacs=
 + Close and re-run Emacs which should download and install (almost[fn:4]) all packages
 
-If you did not init this repo in your =user-emacs-directory= using the default name, you will need to adapt
-the variable =walheimat-emacs-config-default-path= in the example config you just copied.
+If you did not init this repo in your =user-emacs-directory= using the default name,
+you will need to adapt the variable =walheimat-emacs-config-default-path= in the example config you just copied.
+
+There are [[https://github.com/emacs-tw/awesome-emacs#starter-kit][more user-friendly and less tailor-made configs]] out there.
 
 ** Config
 
@@ -47,7 +51,7 @@ Unclutter a bit.
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
 ;; ... or start fullscreen, you decide
-;; (add-hook 'window-setup-hook 'toggle-frame-fullscreen t)
+(add-hook 'window-setup-hook 'toggle-frame-fullscreen t)
 
 ;; no splash
 (setq inhibit-startup-message t)
@@ -66,6 +70,7 @@ Unclutter a bit.
 
 ;; use python3 as default python command
 (setq py-python-command "python3")
+(setq python-shell-interpreter "python3")
 #+END_SRC
 
 **** MELPA
@@ -140,6 +145,7 @@ we have to install it and a few other packages the hard way.
 Add =site-lisp= directory and sub-directories to load path.
 I put non-MELPA packages here.
 If the directory doesn't exist, it will get created.
+
 Adapt if necessary.
 
 #+BEGIN_SRC emacs-lisp
@@ -212,7 +218,7 @@ Easy on the eyes.
 (global-auto-revert-mode t)
 (global-hl-line-mode)
 ;; (add-hook 'prog-mode-hook 'linum-mode)
-(add-hook 'prog-mode-hook 'display-line-numbers-mode)
+;; (add-hook 'prog-mode-hook 'display-line-numbers-mode)
 (global-prettify-symbols-mode +1)
 ;; (global-whitespace-mode)
 (save-place-mode 1)
@@ -222,10 +228,14 @@ Easy on the eyes.
 (global-font-lock-mode 1)
 (delete-selection-mode 1)
 
+;; trying to not touch the mouse as much
+(mouse-avoidance-mode 'banish)
+
 ;; simple y/n is enough
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 ;; I want my comments slanted and my keywords bold
+;; the FiraCode font does not support this
 (defun my-font-lock-hook ()
   "Slanted and enchanted."
   (set-face-attribute 'font-lock-comment-face nil :slant 'italic)
@@ -287,37 +297,36 @@ but some =C-x <key>= mappings snuck in.
 
 If you want to see all personal keybindings, execute =describe-personal-keybindings=.
 
-+ =<key-chord> # #= (un-)comments.
-+ =C-+= expands region.
 + =C-c a <key>= opens today's (=t=), this week's (=w=) or your personal (=p=) agenda.
 + =C-c b <key>= toggle(=t=) or shows(=s=) bookmarks.
 + =C-c c <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
 + =C-c d= for docker actions.
-+ =C-c e= opens eshell.
-+ =C-c f a <key>= runs ag (=a= for generic, =p= for in-project search). _Requires ag_!
-+ =C-c f f= finds a project file.
++ =C-c t <key>= opens eshell (=e=) or vterm (=v=).
++ =C-c f <key>= runs ag (=a= for generic, =p= for in-project search). _Requires ag_!
 + =C-c g= opens magit status.
-+ =C-c j=/=<key-chord> j j= dumb-jumps.
++ =C-c j= dumb-jumps.
++ =C-c l <key>= interacts with projects.
 + =C-c m <key>= for multiple cursors.
++ =C-c n n= opens treemacs.
 + =C-c o= for code-folding.
-+ =C-c p <key>= interacts with perspectives
-+ =C-c q= opens the time machine.
-+ =C-c r s= restarts.
++ =C-c p <key>= interacts with perspectives.
++ =C-c q <key>= interacts with fly-checking.
++ =C-x r s= restarts.
 + =C-c s= uses swiper to search.
-+ =C-c t t= opens treemacs.
 + =C-c v <key>= jumps to char (=c=) or line (=l=) with avy.
++ =C-+= expands region.
 + =C-x C-c= opens this config org file.
 + =C-x r q= (really) quits.
 + =C-z=/=C-S-z= undos/redos.
++ =<key-chord> # #= (un-)comments.
 + =M-o= goes to the "other" window or the last buffer.
 + =M-x= opens smex.
-+ =s-(S)-RET= will open an indented line above (below).
 + =s-k= kills the whole line.
++ =s-(S)-RET= will open an indented line above (below).
 
 Note that all bindings for external packages are declared in the [[*Packages][packages]] section.
 
 #+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "C-c e") 'eshell)
 (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
 (global-set-key
   (kbd "C-x C-c")
@@ -328,10 +337,30 @@ Note that all bindings for external packages are declared in the [[*Packages][pa
 
 Be sure to check out [[https://peach-melpa.org/][Peach Melpa]] to find a theme you like.
 
+If you're using the =doom-modeline=, go for a  =doom-*= theme.
+
 #+BEGIN_SRC emacs-lisp
-(setq my-dark-emacs-theme 'doom-challenger-deep)
-(setq my-light-emacs-theme 'paper)
-(load-theme my-dark-emacs-theme t)
+;; two themes and a switch
+(defcustom my-dark-emacs-theme 'doom-wilmersdorf
+  "The quote-unquote default emacs theme.")
+
+(defcustom my-light-emacs-theme 'paper
+  "The non-default emacs theme.")
+
+(setq my-active-theme my-dark-emacs-theme)
+
+(defun theme-light-switch (&optional selection)
+  "Switch from light to dark theme and vice-versa."
+  (interactive)
+  (disable-theme my-active-theme)
+  (cond ((or (equal my-active-theme my-dark-emacs-theme) (equal selection 'light))  
+           (load-theme my-light-emacs-theme)
+           (setq my-active-theme my-light-emacs-theme))
+        ((or (equal my-active-theme my-light-emacs-theme) (equal selection 'dark))
+           (load-theme my-dark-emacs-theme)
+           (setq my-active-theme my-dark-emacs-theme))))
+
+(load-theme my-dark-emacs-theme)
 #+END_SRC
 
 **** Font
@@ -374,6 +403,17 @@ Zone out after a couple of minutes.
 (zone-when-idle 180)
 #+END_SRC
 
+**** Time
+
+I want to see the time sometimes (fullscreen).
+I don't want to see the CPU load though.
+
+#+BEGIN_SRC emacs-lisp
+(setq display-time-default-load-average nil)
+(setq display-time-format "%k:%M ")
+(display-time-mode -1)
+#+END_SRC
+
 **** Additional Functions
 
 Only need one so far.
@@ -386,7 +426,7 @@ Only need one so far.
   (eq (current-buffer) (treemacs-get-local-buffer)))
 
 ;; trick garbage collection
-(defvar hundred-mb 100000000)
+(defvar hundred-mb (* 1024 1024 100))
 (defun my-minibuffer-setup-hook ()
   (setq gc-cons-threshold most-positive-fixnum))
 (defun my-minibuffer-exit-hook ()
@@ -426,8 +466,8 @@ to download it automatically, but might fail).
   :ensure-system-package ag
   :init
   (setq ag-highlight-search t)
-  :bind ("C-c f a a" . ag)
-        ("C-c f a p" . ag-project))
+  :bind ("C-c f a" . ag)
+        ("C-c f p" . ag-project))
 #+END_SRC
 
 **** all-the-icons
@@ -436,6 +476,11 @@ You need to install the icons yourself[fn:3].
 
 #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons)
+
+;; use it for dired
+(use-package all-the-icons-dired
+  :after all-the-icons
+  :hook (dired-mode . all-the-icons-dired-mode))
 #+END_SRC
 
 **** auto-package-update
@@ -443,12 +488,13 @@ You need to install the icons yourself[fn:3].
 Keep packages updated (disabled for now).
 
 #+BEGIN_SRC emacs-lisp
-;; (use-package auto-package-update
-;;   :init
-;;   (setq auto-package-update-delete-old-versions t)
-;;   (setq auto-package-update-hide-results t)
-;;   :config
-;;   (auto-package-update-maybe))
+(use-package auto-package-update
+  :disabled
+  :init
+  (setq auto-package-update-delete-old-versions t)
+  (setq auto-package-update-hide-results t)
+  :config
+  (auto-package-update-maybe))
 #+END_SRC
 
 **** avy
@@ -539,7 +585,7 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
   :bind (("M-o"          . crux-other-window-or-switch-buffer)
          ("C-c c k"      . crux-kill-other-buffers)
          ;; need to find solution with treemacs open
-         ;; ("C-x 4 t")   .crux-transpose-windows
+         ("C-c c t"      . crux-transpose-windows)
          ("C-c c o"      . crux-open-with)
          ("S-s-<return>" . crux-smart-open-line-above)
 	 ("s-<return>"   . crux-smart-open-line)
@@ -636,6 +682,21 @@ I use Docker a lot, don't always have to use the command line.
   :bind ("C-c d" . docker))
 #+END_SRC
 
+**** doom-modeline
+
+Busier and prettier modeline.
+Note that this packag requires you to install `all-the-icons` fonts[fn:3].
+
+#+BEGIN_SRC emacs-lisp
+(use-package doom-modeline
+  :init
+  (setq doom-modeline-project-detection 'projectile)
+  (setq doom-modeline-minor-modes t)
+  (setq doom-modeline-buffer-encoding nil)
+  :config
+  (doom-modeline-mode 1))
+#+END_SRC
+
 **** drag stuff
 
 Use the default key bindings.
@@ -660,7 +721,6 @@ Configure it for =ivy=.
   (setq dumb-jump-selector 'ivy
         dumb-jump-force-searcher 'ag)
   (dumb-jump-mode)
-  :chords ("jj" . dumb-jump-go)
   :bind ("C-c j" . dumb-jump-go))
 #+END_SRC
 
@@ -669,8 +729,14 @@ Configure it for =ivy=.
 Set up eshell.
 
 #+BEGIN_SRC emacs-lisp
+(use-package eshell
+  :hook (eshell-mode . my-eshell-mode-hook)
+  :bind ("C-c t e" . eshell))
+
 (use-package esh-autosuggest)
+
 (use-package eshell-prompt-extras)
+
 (use-package eshell-syntax-highlighting
   :config
   (eshell-syntax-highlighting-global-mode))
@@ -689,7 +755,6 @@ Set up eshell.
   (interactive)
   (let ((eshell-buffer-maximum-lines 0)) (eshell-truncate-buffer)))
 
-(add-hook 'eshell-mode-hook 'my-eshell-mode-hook)
 (with-eval-after-load "esh-opt"
   (autoload 'epe-theme-lambda "eshell-prompt-extras")
   (setq eshell-highlight-prompt nil
@@ -716,12 +781,10 @@ One thing that can be a bit tricky is selecting regions, not anymore.
 
 **** find-file-in-project
 
-Finding files by name should be easy.
+Finding files by name should be easy (disabled in favor of projectile for now).
 
 #+BEGIN_SRC emacs-lisp
-(use-package find-file-in-project
-  :config
-  (global-set-key (kbd "C-c f f") 'find-file-in-project))
+(use-package find-file-in-project)
 #+END_SRC
 
 **** fira-code
@@ -743,6 +806,8 @@ I prefer pop-ups over mode-line info.
 ;; (use-package flycheck-popup-tip)
 (use-package flycheck
   :delight " fly"
+  :init
+  (setq flycheck-keymap-prefix (kbd "C-c q"))
   :hook ((flycheck-mode . my-use-eslint-from-node-modules)
          (flycheck-mode . my-use-tslint-from-node-modules)
 	 ;; (flycheck-mode . flycheck-popup-tip-mode)
@@ -763,7 +828,7 @@ Use American English for flyspell.
 
 (use-package flyspell-correct
   :after flyspell
-  :bind (:map flyspell-mode-map ("C-c ä" . flyspell-correct-wrapper)))
+  :bind (:map flyspell-mode-map ("C-c q c" . flyspell-correct-wrapper)))
 
 (use-package flyspell-correct-ivy
   :after flyspell-correct)
@@ -785,8 +850,19 @@ Necessary even for =.gitignore= files.
 If you want to go back in time and point fingers at the progenitors of doom.
 
 #+BEGIN_SRC emacs-lisp
-(use-package git-timemachine
-  :bind ("C-c q" . git-timemachine-toggle))
+(use-package git-timemachine)
+#+END_SRC
+
+**** google-this
+
+If you're too lazy to copy and paste.
+
+#+BEGIN_SRC emacs-lisp
+(use-package google-this
+  :diminish
+  :bind ("C-c u" . 'google-this-mode-submap)
+  :config
+  (google-this-mode 1))
 #+END_SRC
 
 **** highlight-indent-guides
@@ -835,9 +911,12 @@ We use =ivy= for narrowing our options.
 =swiper= is an alternative for normal search.
 
 #+BEGIN_SRC emacs-lisp
+;; change to ivy-switch-buffer if you don't use perspective
+(fset 'my-switch-buffer 'persp-ivy-switch-buffer)
+
 (use-package swiper
   :after ivy
-  :chords ((",." . persp-ivy-switch-buffer))
+  :chords ((",." . my-switch-buffer))
   :bind ("C-c s" . swiper))
 
 (use-package ivy
@@ -845,7 +924,7 @@ We use =ivy= for narrowing our options.
   :init
   (setq ivy-use-virtual-buffers t)
   (setq enable-recursive-minibuffers t)
-  :bind (("C-x b" . persp-ivy-switch-buffer))
+  :bind (("C-x b" . my-switch-buffer))
   :config
   (ivy-mode 1))
 
@@ -861,7 +940,7 @@ We use =ivy= for narrowing our options.
   :after ivy
   :init
   (setq ivy-rich-display-transformers-list
-      '(persp-ivy-switch-buffer
+      '(my-switch-buffer
         (:columns
          ((ivy-rich-switch-buffer-icon (:width 2))
           (ivy-rich-candidate (:width 30))
@@ -982,7 +1061,6 @@ Code folding. Unfortunately has some performance issues.
 (when (version< emacs-version "27.0")
   (use-package origami
     :hook (prog-mode . origami-mode)
-    :chords ("ww" . origami-toggle-node)
     :bind (("C-c o" . origami-toggle-node))))
 #+END_SRC
 
@@ -991,12 +1069,23 @@ Code folding. Unfortunately has some performance issues.
 Have some perspective, man.
 
 #+BEGIN_SRC emacs-lisp
+;; default is "main"
+(setq my-default-perspective "walheimat")
+
 (use-package perspective
   :init
+  (setq persp-initial-frame-name my-default-perspective)
   (setq persp-state-default-file (expand-file-name ".cache/persp-persist" user-emacs-directory))
   (setq persp-mode-prefix-key (kbd "C-c p"))
   :config
-  (persp-mode))
+  (persp-mode)
+)
+
+;; not sure there's much benefit to this
+(use-package persp-projectile
+  :disabled
+  :after perspective
+  :bind ("C-c ö" . projectile-persp-switch-project))
 
 ;; no idea why putting this in :hook kills the package
 (add-hook 'kill-emacs-hook #'persp-state-save)
@@ -1018,13 +1107,21 @@ Format code quickly.
 **** projectile
 
 Projects in Emacs.
+You don't really _need_ treemacs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
+  :diminish " p"
   :init
+  (setq projectile-completion-system 'ivy
+        projectile-mode-line-function '(lambda() (format " {%s}" (projectile-project-name)))
+        projectile-switch-project-action #'projectile-dired
+        projectile-sort-order 'recentf)
+  :config
   ;; (add-to-list 'projectile-globally-ignored-directories "node_modules")
   ;; (add-to-list 'projectile-globally-ignored-directories "build")
-)
+  (define-key projectile-mode-map (kbd "C-c l") 'projectile-command-map)
+  (projectile-mode +1))
 #+END_SRC
 
 **** rainbow
@@ -1041,13 +1138,14 @@ Show colors in source code and make delimiters stand out.
 #+END_SRC
 
 **** restart-emacs
+
 Sometimes I restart for fun.
 
 #+BEGIN_SRC emacs-lisp
 (use-package restart-emacs
   :init
   (setq restart-emacs-restore-frames t)
-  :bind ("C-c r s" . restart-emacs))
+  :bind ("C-x r s" . restart-emacs))
 #+END_SRC
 
 **** restclient
@@ -1148,10 +1246,11 @@ Show some system stats when nothing else is going on.
 
 **** telephone-line
 
-A slightly nicer mode-line.
+A slightly nicer mode-line (disabled in favor of doom-modeline for now).
 
 #+BEGIN_SRC emacs-lisp
 (use-package telephone-line
+  :disabled
   :init
   (setq telephone-line-lhs
     '((evil   . (telephone-line-buffer-segment))
@@ -1173,7 +1272,8 @@ A slightly nicer mode-line.
 
 **** treemacs
 
-I'm not a fan of =dired=, so let's show some _dirs_.
+I'm now a fan of =dired=, but sometimes the "ineluctable modality of the 
+visible" is nice, so let's show some _dirs_.
 
 #+BEGIN_SRC emacs-lisp
 (use-package treemacs
@@ -1208,10 +1308,10 @@ I'm not a fan of =dired=, so let's show some _dirs_.
   :bind
     (:map global-map
         ("M-0"       . treemacs-select-window)
-        ("C-c t 1"   . treemacs-delete-other-windows)
-        ("C-c t t"   . treemacs)
-        ("C-c t b"   . treemacs-bookmark)
-        ("C-c t M-t" . treemacs-find-tag)))
+        ("C-c n 1"   . treemacs-delete-other-windows)
+        ("C-c n n"   . treemacs)
+        ("C-c n b"   . treemacs-bookmark)
+        ("C-c n M-t" . treemacs-find-tag)))
 
 ;; (use-package treemacs-evil
 ;;   :after treemacs evil)
@@ -1219,19 +1319,21 @@ I'm not a fan of =dired=, so let's show some _dirs_.
 (use-package treemacs-projectile
   :after treemacs projectile)
 
-;; (use-package treemacs-icons-dired
-;;   :after treemacs dired
-;;   :config (treemacs-icons-dired-mode))
+(use-package treemacs-icons-dired
+  :disabled
+  :after treemacs dired
+  :config (treemacs-icons-dired-mode))
 
 (use-package treemacs-magit
   :after treemacs magit)
 
 ;; this supposedly works with perspective but it fails
-;; (use-package treemacs-persp
-;;   :after treemacs persp-mode
-;;   :config (treemacs-set-scope-type 'Perspectives))
+(use-package treemacs-persp
+  :disabled
+  :after treemacs persp-mode
+  :config (treemacs-set-scope-type 'Perspectives))
 
-;; start with treemacs open
+;; start with treemacs open (or not)
 ;; (treemacs)
 #+END_SRC
 
@@ -1255,13 +1357,28 @@ Ensure binaries.
 (use-package use-package-ensure-system-package)
 #+END_SRC
 
+**** vterm
+
+Vterm might require you to have built Emacs from source.
+Also, if you're on an older Ubuntu version (like my work PC),
+the =libvterm= package might be too old. 
+
+#+BEGIN_SRC emacs-lisp
+(unless (version< emacs-version "27.0")
+  (use-package vterm
+    :bind ("C-c t v" . vterm)
+    :config
+    (setq vterm-kill-buffer-on-exit t)))
+#+END_SRC
+
+
 **** which-key
 
 Show the next possible key presses towards an action.
 
 #+BEGIN_SRC emacs-lisp
 (use-package which-key
-  :delight " wk"
+  :diminish
   :init
   (setq which-key-idle-delay 0.8)
   :config
@@ -1275,13 +1392,8 @@ I use a different (light) theme here.
 
 #+BEGIN_SRC emacs-lisp
 (use-package writeroom-mode
-  :hook ((writeroom-mode-enable . (lambda() 
-                                      (disable-theme my-dark-emacs-theme)
-                                      (load-theme my-light-emacs-theme t)
-                                       ))
-         (writeroom-mode-disable . (lambda()
-                                     (disable-theme my-light-emacs-theme)
-                                     (load-theme my-dark-emacs-theme t))))
+  :hook ((writeroom-mode-enable  . (lambda() (theme-light-switch 'light)))
+         (writeroom-mode-disable . (lambda() (theme-light-switch 'dark))))
   :bind ("C-c w" . writeroom-mode))
 #+END_SRC
 
@@ -1402,6 +1514,14 @@ Enable =flycheck=.
   (flycheck-mode))
 #+END_SRC
 
+**** haskell mode
+
+Don't use haskell much yet.
+
+#+BEGIN_SRC emacs-lisp
+(use-package haskell-mode)
+#+END_SRC
+
 **** js2 mode
 
 Enable =flycheck= and disable internal checker.
@@ -1511,10 +1631,11 @@ state =CANCELLED=.
         ("a" org-archive-subtree)
         ("r" org-clock-report)))
 
+;; tags differentiated by # and @
 (setq org-tag-alist '(
   ;; depth
-  ("@immersive" . ?i)
-  ("@shallow"   . ?s)
+  ("#immersive" . ?i)
+  ("#process"   . ?p)
   ;; context
   ("@work"      . ?w)
   ("@home"      . ?h)
@@ -1581,6 +1702,7 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
              ("C-c a p" . my-personal-agenda)
              ("C-c a w" . my-org-super-agenda)))
 
+;; we hide all @-tags
 (setq org-agenda-hide-tags-regexp "@")
 
 ;; I put all of my tasks into a subfolder `tasks` inside the org directory
@@ -1698,8 +1820,7 @@ Enable =lsp=, =flycheck=.
 
 **** web mode
 
-Web mode uses =flycheck=,
-prompts user if =lsp= should be enabled.
+Web mode uses =flycheck=, prompts user if =lsp= should be enabled.
 
 #+BEGIN_SRC emacs-lisp
 (use-package web-mode
@@ -1799,9 +1920,7 @@ Use the locally installed =eslint= and =tslint= binaries.
 
 * Footnotes
 
-[fn:1] I built version =27.1= from source and tested the config a bit.
-Apart from two packages that will be disabled for any =27.x= version,
-it seem to work fine.
+[fn:1] I jumped ship from =26.3=. Most of the things will work there.
 
 [fn:2] What you're reading is likely a markdown version exported from it.
 
@@ -1833,20 +1952,61 @@ you can do the following:
 [fn:6] Repositories (incomplete):
 + [[https://github.com/Wilfred/ag.el][ag]]
 + [[https://github.com/domtronn/all-the-icons.el][all-the-icons]]
++ [[https://github.com/rranelli/auto-package-update.el][auto-package-update]]
 + [[https://github.com/abo-abo/avy][avy]]
++ [[https://github.com/Malabarba/beacon][beacon]]
 + [[https://github.com/joodland/bm][bm]]
 + [[https://github.com/bbatsov/crux][crux]]
-+ [[https://github.com/emacs-lsp/dap-mode][dap]]
++ [[https://github.com/emacs-lsp/dap-mode][dap-mode]]
++ [[https://github.com/magnars/dash.el][dash]]
++ [[https://github.com/gonewest818/dimmer.el][dimmer]]
++ [[https://github.com/Silex/docker.el][docker]]
++ [[https://github.com/seagle0128/doom-modeline][doom-modeline]]
++ [[https://github.com/rejeep/drag-stuff.el][drag-stuff]]
++ [[https://github.com/jacktasia/dumb-jump][dumb-jump]]
++ [[https://github.com/elixir-editors/emacs-elixir][elixir-mode]]
++ [[https://github.com/dieggsy/esh-autosuggest/][esh-autosuggest]]
++ [[https://github.com/redguardtoo/evil-nerd-commenter][evil-nerd-commenter]]
++ [[https://github.com/magnars/expand-region.el][expand-region]]
++ [[https://github.com/technomancy/find-file-in-project][find-file-in-project]]
++ [[https://github.com/flycheck/flycheck][flycheck]]
++ [[https://github.com/Malabarba/emacs-google-this][google-this]]
++ [[https://github.com/haskell/haskell-mode][haskell-mode]]
++ [[https://github.com/abo-abo/hydra][hydra]]
++ [[https://github.com/zk-phi/indent-guide][indent-guide]]
++ [[https://github.com/abo-abo/swiper][ivy/swiper]]
 + [[https://github.com/Yevgnen/ivy-rich][ivy-rich]]
++ [[https://github.com/mooz/js2-mode/][js-mode]]
++ [[https://github.com/chrisbarrett/kubernetes-el][kubernetes]]
++ [[https://github.com/emacs-lsp/lsp-mode][lsp-mode]]
 + [[https://github.com/emacs-lsp/lsp-ui][lsp-ui]]
++ [[https://magit.vc/][magit]]
++ [[https://jblevins.org/projects/markdown-mode/][markdown-mode]]
++ [[https://github.com/magnars/multiple-cursors.el][multiple-cursors]]
 + [[https://github.com/alezost/mwim.el][mwim]]
++ [[https://orgmode.org/][org-mode]]
 + [[https://github.com/rlister/org-present][org-present]]
 + [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]]
++ [[https://github.com/gregsexton/origami.el][origami]]
++ [[https://github.com/bbatsov/projectile][projectile]]
++ [[https://github.com/Fanael/rainbow-delimiters][rainbow-delimiters]]
++ [[https://github.com/emacsmirror/rainbow-mode][rainbow-mode]]
++ [[https://github.com/tkf/emacs-request][request]]
++ [[https://github.com/iqbalansari/restart-emacs][restart-emacs]]
++ [[https://github.com/felipeochoa/rjsx-mode][rjsx-mode]]
++ [[https://github.com/magnars/s.el][s]]
++ [[https://github.com/Fuco1/smartparens][smartparens]]
++ [[https://github.com/nonsequitur/smex/][smex]]
 + [[https://github.com/zk-phi/symon][symon]]
 + [[https://github.com/dbordak/telephone-line][telephone-line]]
 + [[https://github.com/Alexander-Miller/treemacs][treemacs]]
++ [[https://gitlab.com/ideasman42/emacs-undo-fu][undo-fu]]
 + [[https://github.com/jwiegley/use-package][use-package]]
++ [[https://github.com/akermu/emacs-libvterm][vterm]]
++ [[http://web-mode.org/][web-mode]]
 + [[https://github.com/justbur/emacs-which-key][which-key]]
 + [[https://github.com/joaotavora/yasnippet][yasnippet]]
++ [[https://www.emacswiki.org/emacs/ZoneMode][zone]]
++ [[https://github.com/cyrus-and/zoom][zoom]]
 
 [fn:5] Send me an email, why don't you?
