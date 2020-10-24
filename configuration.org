@@ -480,6 +480,7 @@ You need to install the icons yourself[fn:3].
 ;; use it for dired
 (use-package all-the-icons-dired
   :after all-the-icons
+  :diminish
   :hook (dired-mode . all-the-icons-dired-mode))
 #+END_SRC
 
@@ -912,7 +913,7 @@ We use =ivy= for narrowing our options.
 
 #+BEGIN_SRC emacs-lisp
 ;; change to ivy-switch-buffer if you don't use perspective
-(fset 'my-switch-buffer 'persp-ivy-switch-buffer)
+(defalias 'my-switch-buffer 'persp-ivy-switch-buffer)
 
 (use-package swiper
   :after ivy
@@ -1111,7 +1112,7 @@ You don't really _need_ treemacs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
-  :diminish " p"
+  :diminish " pjt"
   :init
   (setq projectile-completion-system 'ivy
         projectile-mode-line-function '(lambda() (format " {%s}" (projectile-project-name)))
@@ -1120,6 +1121,8 @@ You don't really _need_ treemacs.
   :config
   ;; (add-to-list 'projectile-globally-ignored-directories "node_modules")
   ;; (add-to-list 'projectile-globally-ignored-directories "build")
+  (add-to-list 'projectile-other-file-alist '("org" "org_archive"))
+  (add-to-list 'projectile-other-file-alist '("org_archive" "org"))
   (define-key projectile-mode-map (kbd "C-c l") 'projectile-command-map)
   (projectile-mode +1))
 #+END_SRC
