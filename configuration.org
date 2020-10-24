@@ -23,6 +23,8 @@ here are the necessary steps:
 If you did not init this repo in your =user-emacs-directory= using the default name,
 you will need to adapt the variable =walheimat-emacs-config-default-path= in the example config you just copied.
 
+There are [[https://github.com/emacs-tw/awesome-emacs#starter-kit][more user-friendly and less tailor-made configs]] out there.
+
 ** Config
 
 The init script will evaluate _everything_ that follows.
@@ -295,37 +297,36 @@ but some =C-x <key>= mappings snuck in.
 
 If you want to see all personal keybindings, execute =describe-personal-keybindings=.
 
-+ =<key-chord> # #= (un-)comments.
-+ =C-+= expands region.
 + =C-c a <key>= opens today's (=t=), this week's (=w=) or your personal (=p=) agenda.
 + =C-c b <key>= toggle(=t=) or shows(=s=) bookmarks.
 + =C-c c <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
 + =C-c d= for docker actions.
-+ =C-c e= opens eshell.
-+ =C-c f a <key>= runs ag (=a= for generic, =p= for in-project search). _Requires ag_!
-+ =C-c f f= finds a project file.
++ =C-c t <key>= opens eshell (=e=) or vterm (=v=).
++ =C-c f <key>= runs ag (=a= for generic, =p= for in-project search). _Requires ag_!
 + =C-c g= opens magit status.
-+ =C-c j=/=<key-chord> j j= dumb-jumps.
++ =C-c j= dumb-jumps.
++ =C-c l <key>= interacts with projects.
 + =C-c m <key>= for multiple cursors.
++ =C-c n n= opens treemacs.
 + =C-c o= for code-folding.
 + =C-c p <key>= interacts with perspectives.
 + =C-c q <key>= interacts with fly-checking.
-+ =C-c r s= restarts.
++ =C-x r s= restarts.
 + =C-c s= uses swiper to search.
-+ =C-c n n= opens treemacs.
 + =C-c v <key>= jumps to char (=c=) or line (=l=) with avy.
++ =C-+= expands region.
 + =C-x C-c= opens this config org file.
 + =C-x r q= (really) quits.
 + =C-z=/=C-S-z= undos/redos.
++ =<key-chord> # #= (un-)comments.
 + =M-o= goes to the "other" window or the last buffer.
 + =M-x= opens smex.
-+ =s-(S)-RET= will open an indented line above (below).
 + =s-k= kills the whole line.
++ =s-(S)-RET= will open an indented line above (below).
 
 Note that all bindings for external packages are declared in the [[*Packages][packages]] section.
 
 #+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "C-c t e") 'eshell)
 (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
 (global-set-key
   (kbd "C-x C-c")
@@ -465,8 +466,8 @@ to download it automatically, but might fail).
   :ensure-system-package ag
   :init
   (setq ag-highlight-search t)
-  :bind ("C-c f a a" . ag)
-        ("C-c f a p" . ag-project))
+  :bind ("C-c f a" . ag)
+        ("C-c f a" . ag-project))
 #+END_SRC
 
 **** all-the-icons
@@ -683,8 +684,8 @@ I use Docker a lot, don't always have to use the command line.
 
 **** doom-modeline
 
-A possible replacement for =telephone-line=.
-It looks really nice but I might consider it "too busy" eventually.
+Busier and prettier modeline.
+Note that this packag requires you to install `all-the-icons` fonts[fn:3].
 
 #+BEGIN_SRC emacs-lisp
 (use-package doom-modeline
@@ -720,7 +721,6 @@ Configure it for =ivy=.
   (setq dumb-jump-selector 'ivy
         dumb-jump-force-searcher 'ag)
   (dumb-jump-mode)
-  :chords ("jj" . dumb-jump-go)
   :bind ("C-c j" . dumb-jump-go))
 #+END_SRC
 
@@ -729,8 +729,14 @@ Configure it for =ivy=.
 Set up eshell.
 
 #+BEGIN_SRC emacs-lisp
+(use-package eshell
+  :hook (eshell-mode . my-eshell-mode-hook)
+  :bind ("C-c t e" . eshell))
+
 (use-package esh-autosuggest)
+
 (use-package eshell-prompt-extras)
+
 (use-package eshell-syntax-highlighting
   :config
   (eshell-syntax-highlighting-global-mode))
@@ -749,7 +755,6 @@ Set up eshell.
   (interactive)
   (let ((eshell-buffer-maximum-lines 0)) (eshell-truncate-buffer)))
 
-(add-hook 'eshell-mode-hook 'my-eshell-mode-hook)
 (with-eval-after-load "esh-opt"
   (autoload 'epe-theme-lambda "eshell-prompt-extras")
   (setq eshell-highlight-prompt nil
@@ -776,10 +781,11 @@ One thing that can be a bit tricky is selecting regions, not anymore.
 
 **** find-file-in-project
 
-Finding files by name should be easy.
+Finding files by name should be easy (disabled in favor of projectile for now).
 
 #+BEGIN_SRC emacs-lisp
 (use-package find-file-in-project
+  :disabled
   :config
   (global-set-key (kbd "C-c f f") 'find-file-in-project))
 #+END_SRC
@@ -803,8 +809,8 @@ I prefer pop-ups over mode-line info.
 ;; (use-package flycheck-popup-tip)
 (use-package flycheck
   :delight " fly"
-  :bind (("C-c q n" . flycheck-next-error)
-         ("C-c q p" . flycheck-previous-error))
+  :init
+  (setq flycheck-keymap-prefix (kbd "C-c q"))
   :hook ((flycheck-mode . my-use-eslint-from-node-modules)
          (flycheck-mode . my-use-tslint-from-node-modules)
 	 ;; (flycheck-mode . flycheck-popup-tip-mode)
@@ -1142,7 +1148,7 @@ Sometimes I restart for fun.
 (use-package restart-emacs
   :init
   (setq restart-emacs-restore-frames t)
-  :bind ("C-c r s" . restart-emacs))
+  :bind ("C-x r s" . restart-emacs))
 #+END_SRC
 
 **** restclient
