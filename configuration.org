@@ -12,6 +12,17 @@ Its base is an org file so it doubles as a readme[fn:2].
 
 ** Setup
 
+*** Heads-up
+
+If you're a complete beginner,
+you will find [[https://github.com/emacs-tw/awesome-emacs#starter-kit][more user-friendly and less tailor-made configs]] out there.
+
+The idea of this config is to be a starting-off-point for your own custom config.
+Nothing in this config should be considered _good practice_,
+it's mostly just how I (think I) like things to be.
+
+*** Try-out
+
 If you're interested in trying out Emacs using my config,
 here are the necessary steps:
 
@@ -23,18 +34,16 @@ here are the necessary steps:
 If you did not init this repo in your =user-emacs-directory= using the default name,
 you will need to adapt the variable =walheimat-emacs-config-default-path= in the example config you just copied.
 
-There are [[https://github.com/emacs-tw/awesome-emacs#starter-kit][more user-friendly and less tailor-made configs]] out there.
-
 ** Config
 
 The init script will evaluate _everything_ that follows.
 
-*** Personal Config
+*** Personal
 
 Set some personal info.[fn:5]
 
 #+BEGIN_SRC emacs-lisp
-(setq user-full-name "Krister Schuchardt"
+(setq user-full-name    "Krister Schuchardt"
       user-mail-address "krister.schuchardt@theventury.com")
 #+END_SRC
 
@@ -69,8 +78,8 @@ Unclutter a bit.
 (load custom-file)
 
 ;; use python3 as default python command
-(setq py-python-command "python3")
-(setq python-shell-interpreter "python3")
+(setq py-python-command        "python3"
+      python-shell-interpreter "python3")
 #+END_SRC
 
 **** MELPA
@@ -252,11 +261,11 @@ Easy on the eyes.
 Make things snappier.
 
 #+BEGIN_SRC emacs-lisp
-(setq mouse-yank-at-point t)
-(setq show-paren-delay 0.0)
-(setq read-process-output-max (* 1024 1024)) ;; 1mb
-(setq sentence-end-double-space nil)
-(setq echo-keystrokes 0.1)
+(setq mouse-yank-at-point       t
+      show-paren-delay          0.0
+      read-process-output-max   (* 1024 1024) ;; 1mb
+      sentence-end-double-space nil
+      echo-keystrokes           0.1)
 #+END_SRC
 
 **** Indentation
@@ -279,11 +288,9 @@ To make this work, we need to tweak a few things.
   (setq indent-tabs-mode t)
   (setq tab-width custom-tab-width))
 
-(setq-default python-indent-offset custom-tab-width) ;; Python
-(setq-default js-indent-level custom-tab-width)      ;; Javascript
-
-;; this always messes me up
-(setq-default electric-indent-inhibit t)
+(setq-default python-indent-offset    custom-tab-width ;; Python
+              js-indent-level         custom-tab-width ;; Javascript
+              electric-indent-inhibit t)
 
 (setq backward-delete-char-untabify-method 'hungry)
 #+END_SRC
@@ -409,8 +416,8 @@ I want to see the time sometimes (fullscreen).
 I don't want to see the CPU load though.
 
 #+BEGIN_SRC emacs-lisp
-(setq display-time-default-load-average nil)
-(setq display-time-format "%k:%M ")
+(setq display-time-default-load-average nil
+      display-time-format               "%k:%M ")
 (display-time-mode -1)
 #+END_SRC
 
@@ -493,7 +500,7 @@ Keep packages updated (disabled for now).
   :disabled
   :init
   (setq auto-package-update-delete-old-versions t)
-  (setq auto-package-update-hide-results t)
+  (setq auto-package-update-hide-results        t)
   :config
   (auto-package-update-maybe))
 #+END_SRC
@@ -516,9 +523,9 @@ Help me find my cursor!
 (use-package beacon
   :config
   (beacon-mode 1)
-  (setq beacon-color 0.4
-        beacon-blink-duration 0.4
-	beacon-size 60
+  (setq beacon-color                             0.4
+        beacon-blink-duration                    0.4
+	beacon-size                              60
         beacon-blink-when-point-moves-vertically 2
   ))
 #+END_SRC
@@ -530,12 +537,12 @@ Bookmarks are useful. I don't remember where I was. _Who are you?!_
 #+BEGIN_SRC emacs-lisp
 (use-package bm
   :init
-  (setq bm-restore-repository-on-load t)
-  (setq bm-repository-file (expand-file-name ".cache/bm-persist" user-emacs-directory))
   (setq-default bm-buffer-persistence t)
-  (setq bm-annotate-on-create t)
-  (setq bm-highlight-style 'bm-highlight-only-fringe)
-  (setq bm-cycle-all-buffers t)
+  (setq bm-restore-repository-on-load t
+        bm-repository-file            (expand-file-name ".cache/bm-persist" user-emacs-directory)
+        bm-annotate-on-create         t
+        bm-highlight-style            'bm-highlight-only-fringe
+        bm-cycle-all-buffers          t)
   :hook
   ((after-init   .      bm-repository-load)
    (after-save   .      bm-buffer-save)
@@ -562,11 +569,11 @@ Code-completion. In a box.
   :hook (company-mode . company-box-mode))
 
 (use-package company
-  :delight " co"
+  :delight " cmp"
   :init
-  (setq company-prefer-capf t)
-  (setq company-minimum-prefix-length 3)
-  (setq company-idle-delay 0.5)
+  (setq company-prefer-capf           t
+        company-minimum-prefix-length 3
+        company-idle-delay            0.5)
   :hook (prog-mode . company-mode))
 
 (use-package company-restclient
@@ -606,8 +613,8 @@ I currently only use it for JavaScript and Python.
     :delight " dap"
     :init
     (require 'cl) ;; deprecated in 27
-    (setq dap-python-executable "python3")
-    (setq dap-auto-configure-features '(sessions locals breakpoints))
+    (setq dap-python-executable       "python3"
+          dap-auto-configure-features '(sessions locals breakpoints))
     :config
     (require 'dap-node)
     (require 'dap-python)
@@ -644,7 +651,7 @@ Refresh post magit.
 (use-package diff-hl
   :init
   (global-diff-hl-mode)
-  :hook (magit-post-refresh  . diff-hl-magit-post-refresh))
+  :hook (magit-post-refresh . diff-hl-magit-post-refresh))
 #+END_SRC
 
 **** diminish
@@ -665,13 +672,14 @@ Make dimmed frames a bit dimmer.
 #+BEGIN_SRC emacs-lisp
 (use-package dimmer
   :diminish
+  :init
+  (setq dimmer-fraction       0.3
+        dimmer-adjustmentmode :both)  
   :config
-  (dimmer-mode t)
-  (setq dimmer-fraction 0.3)
   (dimmer-configure-org)
   (dimmer-configure-magit)
   (dimmer-configure-hydra)
-  (setq dimmer-adjustmentmode :both))
+  (dimmer-mode t))
 #+END_SRC
 
 **** docker
@@ -691,9 +699,9 @@ Note that this packag requires you to install `all-the-icons` fonts[fn:3].
 #+BEGIN_SRC emacs-lisp
 (use-package doom-modeline
   :init
-  (setq doom-modeline-project-detection 'projectile)
-  (setq doom-modeline-minor-modes t)
-  (setq doom-modeline-buffer-encoding nil)
+  (setq doom-modeline-project-detection 'projectile
+        doom-modeline-minor-modes       t
+        doom-modeline-buffer-encoding   nil)
   :config
   (doom-modeline-mode 1))
 #+END_SRC
@@ -704,10 +712,10 @@ Use the default key bindings.
 
 #+BEGIN_SRC emacs-lisp
 (use-package drag-stuff
-  :delight " drag"
+  :delight " drg"
+  :hook (prog-mode . drag-stuff-mode)
   :config
-  (drag-stuff-define-keys)
-  (drag-stuff-global-mode))
+  (drag-stuff-define-keys))
 #+END_SRC
 
 **** dumb-jump
@@ -718,9 +726,10 @@ Configure it for =ivy=.
 #+BEGIN_SRC emacs-lisp
 ;; (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
 (use-package dumb-jump
-  :config
-  (setq dumb-jump-selector 'ivy
+  :init
+  (setq dumb-jump-selector       'ivy
         dumb-jump-force-searcher 'ag)
+  :config
   (dumb-jump-mode)
   :bind ("C-c j" . dumb-jump-go))
 #+END_SRC
@@ -823,8 +832,8 @@ Use American English for flyspell.
 #+BEGIN_SRC emacs-lisp
 (use-package flyspell
   :delight " fsp"
-  :init (setq ispell-dictionary "american")
-  :config
+  :init
+  (setq ispell-dictionary "american")
   (setq flyspell-issue-message-flag nil))
 
 (use-package flyspell-correct
@@ -923,8 +932,8 @@ We use =ivy= for narrowing our options.
 (use-package ivy
   :diminish
   :init
-  (setq ivy-use-virtual-buffers t)
-  (setq enable-recursive-minibuffers t)
+  (setq ivy-use-virtual-buffers      t
+        enable-recursive-minibuffers t)
   :bind (("C-x b" . my-switch-buffer))
   :config
   (ivy-mode 1))
@@ -963,11 +972,11 @@ This is a themes collection I sometimes pick from.
 #+BEGIN_SRC emacs-lisp
 (use-package kaolin-themes
   :init
-  (setq kaolin-ocean-alt-bg t)
-  ;; Enable distinct background for fringe and line numbers.
-  (setq kaolin-themes-distinct-fringe t)
-  ;; Enable distinct colors for company popup scrollbar.
-  (setq kaolin-themes-distinct-company-scrollbar t)
+  (setq kaolin-ocean-alt-bg                      t
+        ;; Enable distinct background for fringe and line numbers.
+        kaolin-themes-distinct-fringe            t
+        ;; Enable distinct colors for company popup scrollbar.
+        kaolin-themes-distinct-company-scrollbar t)
   :config
   ;; treemacs
   (kaolin-treemacs-theme))
@@ -997,9 +1006,9 @@ If you use Elixir, get the language server from [[https://github.com/elixir-lsp/
 
 (use-package lsp-mode
   :init
-  (setq lsp-completion-provider :capf)
-  (setq lsp-prefer-capf t)
-  (setq lsp-idle-delay 1.5)
+  (setq lsp-completion-provider :capf
+        lsp-prefer-capf         t
+        lsp-idle-delay          1.5)
   ;; (setq lsp-semantic-highlighting t)
   :config
   ;; ignore elixir build and dependency folders
@@ -1045,12 +1054,11 @@ It's nice to change everything at once.
 
 **** mwim
 
-Let's try this.
+Move where I want. Useful for comments.
 
 #+BEGIN_SRC emacs-lisp
 (use-package mwim
-  :bind (
-         ("C-a" . mwim-beginning)
+  :bind (("C-a" . mwim-beginning)
          ("C-e" . mwim-end)))
 #+END_SRC
 
@@ -1075,12 +1083,12 @@ Have some perspective, man.
 
 (use-package perspective
   :init
-  (setq persp-initial-frame-name my-default-perspective)
-  (setq persp-state-default-file (expand-file-name ".cache/persp-persist" user-emacs-directory))
-  (setq persp-mode-prefix-key (kbd "C-c p"))
+  (setq persp-modestring-dividers '("(" ")" "/")
+        persp-initial-frame-name  my-default-perspective
+        persp-state-default-file  (expand-file-name ".cache/persp-persist" user-emacs-directory)
+        persp-mode-prefix-key     (kbd "C-c p"))
   :config
-  (persp-mode)
-)
+  (persp-mode))
 
 ;; not sure there's much benefit to this
 (use-package persp-projectile
@@ -1114,10 +1122,10 @@ You don't really _need_ treemacs.
 (use-package projectile
   :diminish " pjt"
   :init
-  (setq projectile-completion-system 'ivy
-        projectile-mode-line-function '(lambda() (format " {%s}" (projectile-project-name)))
+  (setq projectile-completion-system     'ivy
+        projectile-mode-line-function    '(lambda() (format " {%s}" (projectile-project-name)))
         projectile-switch-project-action #'projectile-dired
-        projectile-sort-order 'recentf)
+        projectile-sort-order            'recentf)
   :config
   ;; (add-to-list 'projectile-globally-ignored-directories "node_modules")
   ;; (add-to-list 'projectile-globally-ignored-directories "build")
@@ -1237,12 +1245,12 @@ Show some system stats when nothing else is going on.
 (use-package symon
   :init
   (setq symon-sparkline-type 'bounded
-        symon-delay 10
+        symon-delay          10
 	symon-monitors
-	  '(symon-linux-cpu-monitor
-	    symon-linux-memory-monitor
-	    symon-linux-network-rx-monitor
-	    symon-linux-network-tx-monitor))
+			     '(symon-linux-cpu-monitor
+			       symon-linux-memory-monitor
+			       symon-linux-network-rx-monitor
+			       symon-linux-network-tx-monitor))
   :config
   (symon-mode))
 #+END_SRC
@@ -1533,8 +1541,8 @@ Enable =flycheck= and disable internal checker.
 (use-package js2-mode
   :mode "\\.js\\'"
   :init
-  (setq-default js2-show-parse-errors nil)
-  (setq-default js2-strict-missing-semi-warning nil)
+  (setq-default js2-show-parse-errors nil
+                js2-strict-missing-semi-warning nil)
   :hook (js2-mode . my-js2-mode-hook))
 
 (defun my-js2-mode-hook ()
@@ -1587,37 +1595,37 @@ state =CANCELLED=.
   ;; sometimes md export is missing
   (require 'ox-md nil t)
   :init
-  (setq org-ellipsis "↷"
-	org-log-done t
-	org-startup-truncated nil
-        org-startup-folded 'showeverything
-	org-directory my-org-directory
-	org-default-notes-file (concat org-directory "/notes.org")
+  (setq org-ellipsis                   "↷"
+	org-log-done                   t
+	org-startup-truncated          nil
+        org-startup-folded             'showeverything
+	org-directory                  my-org-directory
+	org-default-notes-file         (concat org-directory "/notes.org")
 	org-startup-with-inline-images t
 	org-todo-keywords
-	'((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
+	  '((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
   (add-to-list 'org-global-properties
                '("Effort_ALL". "30m 1h 2h 4h 6h 1d 2d")))
 
-(setq org-log-done 'note
-      org-clock-idle-time nil
-      org-clock-continuously nil
-      org-clock-persist t
-      org-clock-in-switch-to-state "IN PROGRESS"
-      org-clock-in-resume nil
+(setq org-log-done                           'note
+      org-clock-idle-time                    nil
+      org-clock-continuously                 nil
+      org-clock-persist                      t
+      org-clock-in-switch-to-state           "IN PROGRESS"
+      org-clock-in-resume                    nil
       org-clock-report-include-clocking-task t
-      org-clock-out-remove-zero-time-clocks t
+      org-clock-out-remove-zero-time-clocks  t
       ;; Too many clock entries clutter up a heading
-      org-log-into-drawer t
-      org-clock-into-drawer 1)
+      org-log-into-drawer                    t
+      org-clock-into-drawer                  1)
 
 (require 'org-install)
-(setq org-modules '(org-habit org-info))
-(org-load-modules-maybe t)
-(setq org-habit-graph-column 105)
+(setq org-modules                     '(org-habit org-info)
+      org-habit-graph-column          105
+      ;; this doesn't seem to affect anything
+      org-archive-subtree-save-file-p t)
 
-;; this doesn't seem to affect anything
-(setq org-archive-subtree-save-file-p t)
+(org-load-modules-maybe t)
 
 (defun org-make-habit()
     (interactive)
