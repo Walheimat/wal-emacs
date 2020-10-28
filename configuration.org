@@ -17,30 +17,30 @@ Its base is an org file so it doubles as a readme[fn:2].
 If you're a complete beginner,
 you will find [[https://github.com/emacs-tw/awesome-emacs#starter-kit][more user-friendly and less tailor-made configs]] out there.
 
-The idea of this config is to be a starting-off-point for your own custom config.
+The idea of this config is to provide a jumping-off-point for your own custom config.
 Nothing in this config should be considered _good practice_,
 it's mostly just how I (think I) like things to be.
 
 *** Try-out
 
-If you're interested in trying out Emacs using my config,
+If you're interested in trying out Emacs using my config anyway,
 here are the necessary steps:
 
-+ Install Emacs if you haven't
-+ Clone this repository into your =user-emacs-directory=[fn:3]
++ Install Emacs if you haven't[fn:3]
++ Clone this repository into your =user-emacs-directory=[fn:4]
 + Copy the config file included in this repo by running =cp ~/.emacs.d/emacs-config/.emacs.example ~/.emacs=
-+ Close and re-run Emacs which should download and install (almost[fn:4]) all packages
++ Close and re-run Emacs which should download and install (almost[fn:5]) all packages
 
 If you did not init this repo in your =user-emacs-directory= using the default name,
 you will need to adapt the variable =walheimat-emacs-config-default-path= in the example config you just copied.
 
 ** Config
 
-The init script will evaluate _everything_ that follows.
+The init script will evaluate _everything_[fn:6] that follows.
 
 *** Personal
 
-Set some personal info.[fn:5]
+Set some personal info.[fn:7]
 
 #+BEGIN_SRC emacs-lisp
 (setq user-full-name    "Krister Schuchardt"
@@ -59,7 +59,7 @@ Unclutter a bit.
 ;; start maximized
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-;; ... or start fullscreen, you decide
+;; ... and fullscreen
 (add-hook 'window-setup-hook 'toggle-frame-fullscreen t)
 
 ;; no splash
@@ -76,10 +76,6 @@ Unclutter a bit.
   (write-region "" nil custom-file))
 
 (load custom-file)
-
-;; use python3 as default python command
-(setq py-python-command        "python3"
-      python-shell-interpreter "python3")
 #+END_SRC
 
 **** MELPA
@@ -348,7 +344,7 @@ If you're using the =doom-modeline=, go for a  =doom-*= theme.
 
 #+BEGIN_SRC emacs-lisp
 ;; two themes and a switch
-(defcustom my-dark-emacs-theme 'doom-wilmersdorf
+(defcustom my-dark-emacs-theme 'doom-horizon
   "The quote-unquote default emacs theme.")
 
 (defcustom my-light-emacs-theme 'paper
@@ -447,7 +443,7 @@ Only need one so far.
     
 What follows is a list of MELPA packages that make Emacs even more awesome.
 
-If you wish to know more about any of them, check out the list[fn:6] of repositories
+If you wish to know more about any of them, check out the list[fn:8] of repositories
 at the end of this readme/configuration or the [[https://github.com/emacs-tw/awesome-emacs][awesome-emacs]] project.
 
 Many packages bind keys.
@@ -479,7 +475,7 @@ to download it automatically, but might fail).
 
 **** all-the-icons
 
-You need to install the icons yourself[fn:3].
+You need to install the icons yourself[fn:5].
 
 #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons)
@@ -694,7 +690,7 @@ I use Docker a lot, don't always have to use the command line.
 **** doom-modeline
 
 Busier and prettier modeline.
-Note that this packag requires you to install `all-the-icons` fonts[fn:3].
+Note that this packag requires you to install `all-the-icons` fonts[fn:5].
 
 #+BEGIN_SRC emacs-lisp
 (use-package doom-modeline
@@ -1769,16 +1765,21 @@ Enable =flycheck=.
 This mode is built-in.
 
 #+BEGIN_SRC emacs-lisp
+(use-package python
+  :hook (python-mode . my-python-mode-hook)
+  :init
+  ;; use python3 as default python command
+  (setq py-python-command        "python3"
+        python-shell-interpreter "python3"))
+
 (defun my-python-mode-hook ()
   "Hooks for python mode."
+  (message "Sssnake_case!")
   (flycheck-mode 1)
   (add-hook 'local-write-file-hooks
     (lambda ()
       (delete-trailing-whitespace)
-        nil))
-)
-
-(add-hook 'python-mode-hook 'my-python-mode-hook)
+        nil)))
 #+END_SRC
 
 **** rjsx mode
@@ -1792,8 +1793,7 @@ Pretty much like js2.
 
 (defun rjsx-indent ()
   (interactive)
-  (setq-local indent-line-function 'js-jsx-indent-line)
-)
+  (setq-local indent-line-function 'js-jsx-indent-line))
 
 (defun my-rjsx-mode-hook ()
   "Hooks for rjsx mode."
@@ -1804,8 +1804,7 @@ Pretty much like js2.
   (add-hook 'local-write-file-hooks
     (lambda ()
       (delete-trailing-whitespace)
-        nil))
-)
+        nil)))
 #+END_SRC
 
 **** typescript mode
@@ -1935,18 +1934,7 @@ Use the locally installed =eslint= and =tslint= binaries.
 
 [fn:2] What you're reading is likely a markdown version exported from it.
 
-[fn:3] *Note* that this config uses the =all-the-icons= package
-whose icons need to be downloaded manually
-by running =M-x all-the-icons-install-fonts= and selecting =yes=.
-
-*Note* that this config uses =dash=.
-The config will try to install it before installing the other packages
-but this might fail.
-If that is the case do the following:
-
-+ hit =M-x=, type =package-install= and hit return
-+ type =dash= and hit return again
-+ once the installation is complete, re-run Emacs
+[fn:3] If you're feeling adventurous, [[https://git.savannah.gnu.org/cgit/emacs.git/tree/INSTALL][build from source]].
 
 [fn:4] If you're not sure where your =user-emacs-directory= might be,
 you can do the following:
@@ -1960,7 +1948,26 @@ you can do the following:
   Finally run =git clone git@gitlab.com:Walheimat/emacs-config.git ~/.emacs.d=
   (replace =~/.emacs.d= with your actual path if it differs)
 
-[fn:6] Repositories (incomplete):
+[fn:5] This config uses the =all-the-icons= package
+whose icons need to be downloaded manually
+by running =M-x all-the-icons-install-fonts= and selecting =yes=.
+
+This config uses =dash=.
+
+We will try to install it before installing the other packages
+but this might fail.
+
+If that is the case do the following:
+
++ hit =M-x=, type =package-install= and hit return
++ type =dash= and hit return again
++ once the installation is complete, re-run Emacs
+
+[fn:6] 97 code blocks, to be exact.
+
+[fn:7] Send me an email, why don't you?
+
+[fn:8] Repositories (almost complete):
 + [[https://github.com/Wilfred/ag.el][ag]]
 + [[https://github.com/domtronn/all-the-icons.el][all-the-icons]]
 + [[https://github.com/rranelli/auto-package-update.el][auto-package-update]]
@@ -1994,7 +2001,7 @@ you can do the following:
 + [[https://magit.vc/][magit]]
 + [[https://jblevins.org/projects/markdown-mode/][markdown-mode]]
 + [[https://github.com/magnars/multiple-cursors.el][multiple-cursors]]
-+ [[https://github.com/alezost/mwim.el][mwim]]
++ [[https://github.com/alezost/mwim.el][mwim]]not
 + [[https://orgmode.org/][org-mode]]
 + [[https://github.com/rlister/org-present][org-present]]
 + [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]]
@@ -2019,5 +2026,3 @@ you can do the following:
 + [[https://github.com/joaotavora/yasnippet][yasnippet]]
 + [[https://www.emacswiki.org/emacs/ZoneMode][zone]]
 + [[https://github.com/cyrus-and/zoom][zoom]]
-
-[fn:5] Send me an email, why don't you?
