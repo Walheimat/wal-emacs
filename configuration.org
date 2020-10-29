@@ -234,7 +234,7 @@ Easy on the eyes.
 (delete-selection-mode 1)
 
 ;; trying to not touch the mouse as much
-(mouse-avoidance-mode 'banish)
+;; (mouse-avoidance-mode 'banish)
 
 ;; simple y/n is enough
 (defalias 'yes-or-no-p 'y-or-n-p)
@@ -304,7 +304,7 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =C-c b <key>= toggle(=t=) or shows(=s=) bookmarks.
 + =C-c c <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
 + =C-c d= for docker actions.
-+ =C-c t <key>= opens eshell (=e=) or vterm (=v=).
++ =C-c t <key>= opens eshell (=e=), ansi-term (=a=) or vterm (=v=).
 + =C-c f <key>= runs ag (=a= for generic, =p= for in-project search). _Requires ag_!
 + =C-c g= opens magit status.
 + =C-c j= dumb-jumps.
@@ -485,6 +485,15 @@ You need to install the icons yourself[fn:5].
   :after all-the-icons
   :diminish
   :hook (dired-mode . all-the-icons-dired-mode))
+#+END_SRC
+
+**** ansi-term
+
+Sometimes you need a terminal.
+
+#+BEGIN_SRC emacs-lisp
+(use-package term
+  :bind ("C-c t a" . ansi-term))
 #+END_SRC
 
 **** auto-package-update
@@ -799,8 +808,9 @@ I use FiraCode, this mode allows us to use ligatures.
 
 #+BEGIN_SRC emacs-lisp
 (use-package fira-code-mode
-  :diminish fira-code-mode)
-
+  :diminish fira-code-mode
+  :custom
+  (fira-code-mode-disabled-ligatures '("[]" "x")))
 #+END_SRC
 
 **** flycheck
@@ -816,7 +826,7 @@ I prefer pop-ups over mode-line info.
   (setq flycheck-keymap-prefix (kbd "C-c q"))
   :hook ((flycheck-mode . my-use-eslint-from-node-modules)
          (flycheck-mode . my-use-tslint-from-node-modules)
-	 ;; (flycheck-mode . flycheck-popup-tip-mode)
+	 (flycheck-mode . flycheck-popup-tip-mode)
 ))
 #+END_SRC
 
