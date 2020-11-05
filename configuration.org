@@ -106,12 +106,32 @@ There are two things you can do about this warning:
 We manage our packages with =use-package=, before we can use it,
 we have to install it and a few other packages the hard way.
 
+***** Lisp extensions
+
+We need dash.
+
 #+BEGIN_SRC emacs-lisp
 ;; we need dash for the upcoming loop
 (unless (package-installed-p 'dash)
   (package-install 'dash))
 (require 'dash)
+#+END_SRC
 
+***** Folders
+
+Make sure the cache folder exists.
+We store bookmarks and perspectives here.
+
+#+BEGIN_SRC emacs-lisp
+(unless (file-directory-p (expand-file-name ".cache" user-emacs-directory))
+  (make-directory (expand-file-name ".cache" user-emacs-directory)))
+#+END_SRC
+
+***** Other packages
+
+Now we can install the other dependencies.
+
+#+BEGIN_SRC emacs-lisp
 (defun packages-install (packages)
   (--each packages
     (when (not (package-installed-p it))
@@ -242,8 +262,8 @@ Easy on the eyes.
 (defun my-font-lock-hook ()
   "Slanted and enchanted."
   (set-face-attribute 'font-lock-comment-face nil :slant 'italic)
-  (set-face-attribute 'font-lock-keyword-face nil :weight 'bold)
-)
+  (set-face-attribute 'font-lock-keyword-face nil :weight 'bold))
+
 (add-hook 'font-lock-mode-hook 'my-font-lock-hook)
 
 ;; huge cursor
@@ -298,8 +318,8 @@ but some =C-x <key>= mappings snuck in.
 
 If you want to see all personal keybindings, execute =describe-personal-keybindings=.
 
-+ =C-c a <key>= opens today's (=t=), this week's (=w=) or your personal (=p=) agenda.
-+ =C-c b <key>= toggle(=t=) or shows(=s=) bookmarks.
++ =C-c a <key>= opens today's (=t=), this week's (=w=) or my personal (=p=) agenda.
++ =C-c b <key>= toggle (=t=) or shows (=s=) bookmarks.
 + =C-c c <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
 + =C-c d= for docker actions.
 + =C-c t <key>= opens eshell (=e=), ansi-term (=a=) or vterm (=v=).
@@ -314,7 +334,7 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =C-c q <key>= interacts with fly-checking.
 + =C-x r s= restarts.
 + =C-c s= uses swiper to search.
-+ =C-c v <key>= jumps to char (=c=) or line (=l=) with avy.
++ =C-c v <key>= jumps to char (=c=) or line (=v=) with avy.
 + =C-+= expands region.
 + =C-x C-c= opens this config org file.
 + =C-x r q= (really) quits.
@@ -338,7 +358,8 @@ Note that all bindings for external packages are declared in the [[*Packages][pa
 
 Be sure to check out [[https://peach-melpa.org/][Peach Melpa]] to find a theme you like.
 
-If you're using the =doom-modeline=, go for a  =doom-*= theme.
+If you're using the =doom-modeline=, go for a =doom-*= theme.
+Otherwise the colors might clash.
 
 #+BEGIN_SRC emacs-lisp
 ;; two themes and a switch
@@ -364,13 +385,14 @@ If you're using the =doom-modeline=, go for a  =doom-*= theme.
 ;; some themes require configuration, so we only load after intialization
 (add-hook 'after-init-hook '(lambda()
   (load-theme my-dark-emacs-theme)
+  ;; if you don't mind some transparency
   (transparency 99)))
 #+END_SRC
 
 **** Font
 
 Prefer FiraCode (-> mononoki -> Liberation -> DejaVu).
-If Emacs runs with the custom argument =-bigger=, the default font size is 14 (instead of 10).
+If Emacs runs with the custom argument =--bigger=, the default font size is 14 (instead of 10).
 
 To get support for ligatures, install the symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
 
@@ -387,15 +409,8 @@ To get support for ligatures, install the symbol font from [[https://github.com/
     (setq command-line-args (delete switch command-line-args))
     found-switch))
 
-(if (found-custom-arg "-bigger")
-  (set-default-font (font-candidate '"Fira Code 14" "mononoki 14" "Liberation Mono 14" "DejaVu Sans Mono 14"))
-)
-
-;; use fira mode if it's the default font and the symbol font is installed
-(use-package fira-code-mode
-  :if (and (x-list-fonts "Fira Code Symbol") (string= "Fira Code" (face-attribute 'default :family)))
-  ;; :custom (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
-  :hook prog-mode)                                         ; mode to enable fira-code-mode in
+(if (found-custom-arg "--bigger")
+  (set-default-font (font-candidate '"Fira Code 14" "mononoki 14" "Liberation Mono 14" "DejaVu Sans Mono 14")))
 #+END_SRC
 
 **** Zoning
@@ -415,12 +430,14 @@ I don't want to see the CPU load though.
 #+BEGIN_SRC emacs-lisp
 (setq display-time-default-load-average nil
       display-time-format               "%k:%M ")
+
 (display-time-mode -1)
 #+END_SRC
 
 **** Additional Functions
 
-Only need one so far.
+Better (?) garbage collection, transparency,
+and treemacs buffer check.
 
 #+BEGIN_SRC emacs-lisp
 ;; check if buffer is treemacs buffer
@@ -523,7 +540,7 @@ Jumping to (visible) lines and chars is fun if you are too lazy to use your mous
 
 #+BEGIN_SRC emacs-lisp
 (use-package avy
-  :bind (("C-c v l" . avy-goto-line)
+  :bind (("C-c v v" . avy-goto-line)
          ("C-c v c" . avy-goto-char)))
 #+END_SRC
 
@@ -538,8 +555,7 @@ Help me find my cursor!
   (setq beacon-color                             0.4
         beacon-blink-duration                    0.4
 	beacon-size                              60
-        beacon-blink-when-point-moves-vertically 2
-  ))
+        beacon-blink-when-point-moves-vertically 2))
 #+END_SRC
 
 **** bm
@@ -736,7 +752,6 @@ Jump to definitions (in other files).
 Configure it for =ivy=.
 
 #+BEGIN_SRC emacs-lisp
-;; (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
 (use-package dumb-jump
   :init
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
@@ -816,9 +831,10 @@ I use FiraCode, this mode allows us to use ligatures.
 
 #+BEGIN_SRC emacs-lisp
 (use-package fira-code-mode
-  :diminish fira-code-mode
-  :custom
-  (fira-code-mode-disabled-ligatures '("[]" "x")))
+  ;; use fira mode if it's the default font and the symbol font is installed
+  :if (and (x-list-fonts "Fira Code Symbol") (string= "Fira Code" (face-attribute 'default :family)))
+  :custom (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
+  :hook prog-mode)                                         ; mode to enable fira-code-mode in
 #+END_SRC
 
 **** flycheck
@@ -1051,7 +1067,7 @@ If you use Elixir, get the language server from [[https://github.com/elixir-lsp/
 
 **** lua
 
-Why not.
+Why not. It can be awesome.
 
 #+BEGIN_SRC emacs-lisp
 (use-package lua-mode)
@@ -1104,10 +1120,9 @@ Move where I want. Useful for comments.
 Code folding. Unfortunately has some performance issues.
 
 #+BEGIN_SRC emacs-lisp
-(when (version< emacs-version "27.0")
-  (use-package origami
-    :hook (prog-mode . origami-mode)
-    :bind (("C-c o" . origami-toggle-node))))
+(use-package origami
+  :hook (prog-mode . origami-mode)
+  :bind (("C-c o" . origami-toggle-node)))
 #+END_SRC
 
 **** perspective
@@ -1339,6 +1354,7 @@ visible" is nice, so let's show some _dirs_.
 
 #+BEGIN_SRC emacs-lisp
 (use-package treemacs
+  :disabled
   :defer t
   :init
   (with-eval-after-load 'winum
@@ -1379,6 +1395,7 @@ visible" is nice, so let's show some _dirs_.
 ;;   :after treemacs evil)
 
 (use-package treemacs-projectile
+  :disabled
   :after treemacs projectile)
 
 (use-package treemacs-icons-dired
@@ -1387,6 +1404,7 @@ visible" is nice, so let's show some _dirs_.
   :config (treemacs-icons-dired-mode))
 
 (use-package treemacs-magit
+  :disabled
   :after treemacs magit)
 
 ;; this supposedly works with perspective but it fails
