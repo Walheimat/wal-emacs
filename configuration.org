@@ -58,7 +58,7 @@ Unclutter a bit.
 #+BEGIN_SRC emacs-lisp
 ;; if you're using a tiling wm, comment the following two lines
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
-(add-hook 'window-setup-hook 'toggle-frame-fullscreen t)
+;; (add-hook 'window-setup-hook 'toggle-frame-fullscreen t)
 
 ;; no splash
 (setq inhibit-startup-message t)
@@ -362,7 +362,9 @@ If you're using the =doom-modeline=, go for a  =doom-*= theme.
            (setq my-active-theme my-dark-emacs-theme))))
 
 ;; some themes require configuration, so we only load after intialization
-(add-hook 'after-init-hook '(lambda() (load-theme my-dark-emacs-theme)))
+(add-hook 'after-init-hook '(lambda()
+  (load-theme my-dark-emacs-theme)
+  (transparency 99)))
 #+END_SRC
 
 **** Font
@@ -436,6 +438,12 @@ Only need one so far.
 
 (add-hook 'minibuffer-setup-hook #'my-minibuffer-setup-hook)
 (add-hook 'minibuffer-exit-hook  #'my-minibuffer-exit-hook)
+
+;; transparency
+(defun transparency (value)
+  "Sets the transparency of the frame window. 0=transparent/100=opaque"
+  (interactive "nTransparency Value 0 - 100 opaque:")
+  (set-frame-parameter (selected-frame) 'alpha value))
 #+END_SRC
 
 *** Packages
@@ -731,11 +739,12 @@ Configure it for =ivy=.
 ;; (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
 (use-package dumb-jump
   :init
+  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
   (setq dumb-jump-selector       'ivy
         dumb-jump-force-searcher 'ag)
   :config
   (dumb-jump-mode)
-  :bind ("C-c j" . dumb-jump-go))
+  :bind ("C-c j" . xref-find-definitions))
 #+END_SRC
 
 **** eshell
@@ -966,6 +975,7 @@ We use =ivy= for narrowing our options.
 (use-package ivy-rich
   :after ivy
   :init
+  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
   (setq ivy-rich-display-transformers-list
       '(my-switch-buffer
         (:columns
