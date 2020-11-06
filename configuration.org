@@ -45,15 +45,40 @@ Set some personal info.[fn:7]
 #+BEGIN_SRC emacs-lisp
 (setq user-full-name    "Krister Schuchardt"
       user-mail-address "krister.schuchardt@theventury.com")
+
+;; warn Mac/Windows users
+(unless (eq system-type 'gnu/linux)
+  (message "Warning: Config only tested on linux"))
 #+END_SRC
 
 *** Initialization
 
 Set up Emacs, package manager and packages.
 
+**** Folders
+
+Make sure the cache folder exists.
+We store bookmarks and perspectives here.
+
+#+BEGIN_SRC emacs-lisp
+(unless (file-directory-p (expand-file-name ".cache" user-emacs-directory))
+  (make-directory (expand-file-name ".cache" user-emacs-directory)))
+#+END_SRC
+
+**** Lisp extensions
+
+We need dash.
+
+#+BEGIN_SRC emacs-lisp
+;; we need dash for the upcoming loop
+(unless (package-installed-p 'dash)
+  (package-install 'dash))
+(require 'dash)
+#+END_SRC
+
 **** Start-Up
 
-Unclutter a bit.
+Customize start-up.
 
 #+BEGIN_SRC emacs-lisp
 ;; if you're using a tiling wm, comment the following two lines
@@ -63,9 +88,6 @@ Unclutter a bit.
 ;; no splash
 (setq inhibit-startup-message t)
 
-;; empty scratch message
-(setq initial-scratch-message ";; Howdy, stranger ...")
-
 ;; use a distinct file for customization
 (setq custom-file (expand-file-name "custom.el" walheimat-emacs-config-default-path))
 
@@ -74,6 +96,34 @@ Unclutter a bit.
   (write-region "" nil custom-file))
 
 (load custom-file)
+#+END_SRC
+
+***** Peristent *scratch*
+
+Let's keep the scratch contents.
+This (and some other things) was cribbed from [[https://www.john2x.com/emacs.html][john2x's config]] and only slightly adapted.
+
+#+BEGIN_SRC emacs-lisp
+;; empty scratch message
+(setq initial-scratch-message ";; Howdy, stranger ...")
+
+(setq scratch-persist-file (expand-file-name ".cache/scratch-persist" user-emacs-directory))
+
+(defun persist-scratch ()
+  (interactive)
+  "Persist contents of *scratch* buffer"
+  (with-current-buffer (get-buffer-create "*scratch*")
+    (write-region (point-min) (point-max) scratch-persist-file)))
+
+(defun rehydrate-scratch ()
+  "Re-hydrate scratch buffer (if persisted)"
+  (if (file-exists-p scratch-persist-file)
+      (with-current-buffer (get-buffer "*scratch*")
+        (delete-region (point-min) (point-max))
+        (insert-file-contents scratch-persist-file))))
+
+(add-hook 'after-init-hook #'rehydrate-scratch)
+(add-hook 'kill-emacs-hook #'persist-scratch)
 #+END_SRC
 
 **** MELPA
@@ -105,27 +155,6 @@ There are two things you can do about this warning:
 
 We manage our packages with =use-package=, before we can use it,
 we have to install it and a few other packages the hard way.
-
-***** Lisp extensions
-
-We need dash.
-
-#+BEGIN_SRC emacs-lisp
-;; we need dash for the upcoming loop
-(unless (package-installed-p 'dash)
-  (package-install 'dash))
-(require 'dash)
-#+END_SRC
-
-***** Folders
-
-Make sure the cache folder exists.
-We store bookmarks and perspectives here.
-
-#+BEGIN_SRC emacs-lisp
-(unless (file-directory-p (expand-file-name ".cache" user-emacs-directory))
-  (make-directory (expand-file-name ".cache" user-emacs-directory)))
-#+END_SRC
 
 ***** Other packages
 
@@ -431,6 +460,8 @@ I don't want to see the CPU load though.
 (setq display-time-default-load-average nil
       display-time-format               "%k:%M ")
 
+;; note that turning this on will persist the mode in your custom.el,
+;; so delete it from there if you want it gone again
 (display-time-mode -1)
 #+END_SRC
 
@@ -461,6 +492,14 @@ and treemacs buffer check.
   "Sets the transparency of the frame window. 0=transparent/100=opaque"
   (interactive "nTransparency Value 0 - 100 opaque:")
   (set-frame-parameter (selected-frame) 'alpha value))
+
+;; creating parent dirs
+(defun my-create-non-existent-directory ()
+  (let ((parent-directory (file-name-directory buffer-file-name)))
+    (when (and (not (file-exists-p parent-directory))
+      (y-or-n-p (format "Directory `%s' does not exist! Create it?" parent-directory)))
+        (make-directory parent-directory t))))
+(add-to-list 'find-file-not-found-functions #'my-create-non-existent-directory)
 #+END_SRC
 
 *** Packages
@@ -636,28 +675,27 @@ We register a node template for attaching to a Docker host.
 I currently only use it for JavaScript and Python.
 
 #+BEGIN_SRC emacs-lisp
-(when (version< emacs-version "27.0")
-  (use-package dap-mode
-    :delight " dap"
-    :init
-    (require 'cl) ;; deprecated in 27
-    (setq dap-python-executable       "python3"
-          dap-auto-configure-features '(sessions locals breakpoints))
-    :config
-    (require 'dap-node)
-    (require 'dap-python)
-    (dap-register-debug-template
-      "Node::Attach"
-      (list :type "node"
-	    :request "attach"
-	    :remoteRoot "/usr/src/app"
-	    :localRoot "/home/krister/theventury"
-	    :port 9229
-	    :name "Node::Attach"))
-    :hook 
-    ((js2-mode    . dap-mode)
-     (python-mode . dap-mode)
-     (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))))
+(use-package dap-mode
+  :delight " dap"
+  :init
+  ;; (require 'cl) ;; deprecated in 27
+  (setq dap-python-executable       "python3"
+        dap-auto-configure-features '(sessions locals breakpoints))
+  :config
+  (require 'dap-node)
+  (require 'dap-python)
+  (dap-register-debug-template
+    "Node::Attach"
+    (list :type "node"
+          :request "attach"
+          :remoteRoot "/usr/src/app"
+	  :localRoot "/home/krister/theventury"
+	  :port 9229
+	  :name "Node::Attach"))
+  :hook 
+  ((js2-mode    . dap-mode)
+   (python-mode . dap-mode)
+   (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra)))))
 #+END_SRC
 
 **** delight
@@ -840,6 +878,7 @@ I use FiraCode, this mode allows us to use ligatures.
 
 #+BEGIN_SRC emacs-lisp
 (use-package fira-code-mode
+  :diminish
   ;; use fira mode if it's the default font and the symbol font is installed
   :if (and (x-list-fonts "Fira Code Symbol") (string= "Fira Code" (face-attribute 'default :family)))
   :custom (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
@@ -912,7 +951,6 @@ Use the golden ratio.
   :config
   (golden-ratio-mode 1))
 #+END_SRC
-
 
 **** google-this
 
@@ -1074,14 +1112,6 @@ If you use Elixir, get the language server from [[https://github.com/elixir-lsp/
 (use-package lsp-ui)
 #+END_SRC
 
-**** lua
-
-Why not. It can be awesome.
-
-#+BEGIN_SRC emacs-lisp
-(use-package lua-mode)
-#+END_SRC
-
 **** magit
 
 Version control has never been this easy before.
@@ -1091,7 +1121,7 @@ Version control has never been this easy before.
   :bind ("C-c g" . magit-status))
 #+END_SRC
 
-**** mode-line bell
+**** mode-line-bell
 
 Make the bell visual.
 
@@ -1173,9 +1203,7 @@ Format code quickly.
 (use-package prettier-js
   :init
   ;; you might want to remove/edit this
-  (setq prettier-js-args '(
-    "--print-width" "91"
-  )))
+  (setq prettier-js-args '("--print-width" "91")))
 #+END_SRC
 
 **** projectile
@@ -1462,7 +1490,6 @@ the =libvterm= package might be too old.
     (setq vterm-kill-buffer-on-exit t)))
 #+END_SRC
 
-
 **** which-key
 
 Show the next possible key presses towards an action.
@@ -1625,6 +1652,15 @@ Don't use haskell much yet.
 (use-package haskell-mode)
 #+END_SRC
 
+**** json mode
+
+Enable =flycheck=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package json-mode
+  :hook (json-mode . flycheck-mode))
+#+END_SRC
+
 **** js2 mode
 
 Enable =flycheck= and disable internal checker.
@@ -1648,6 +1684,14 @@ Enable =flycheck= and disable internal checker.
       (delete-trailing-whitespace)
         nil))
 )
+#+END_SRC
+
+**** lua mode
+
+Why not. It can be awesome.
+
+#+BEGIN_SRC emacs-lisp
+(use-package lua-mode)
 #+END_SRC
 
 **** markdown mode
@@ -2064,16 +2108,20 @@ If that is the case do the following:
 [fn:7] Send me an email, why don't you?
 
 [fn:8] Repositories (almost complete):
++ [[https://github.com/codesuki/add-node-modules-path][add-node-modules-path]]
 + [[https://github.com/Wilfred/ag.el][ag]]
 + [[https://github.com/domtronn/all-the-icons.el][all-the-icons]]
 + [[https://github.com/rranelli/auto-package-update.el][auto-package-update]]
 + [[https://github.com/abo-abo/avy][avy]]
 + [[https://github.com/Malabarba/beacon][beacon]]
 + [[https://github.com/joodland/bm][bm]]
++ [[https://company-mode.github.io/][company]]
 + [[https://github.com/bbatsov/crux][crux]]
 + [[https://github.com/emacs-lsp/dap-mode][dap-mode]]
 + [[https://github.com/magnars/dash.el][dash]]
++ [[https://github.com/dgutov/diff-hl][diff-hl]]
 + [[https://github.com/gonewest818/dimmer.el][dimmer]]
++ [[https://github.com/Fuco1/dired-hacks/][dired-filter]]
 + [[https://github.com/Silex/docker.el][docker]]
 + [[https://github.com/seagle0128/doom-modeline][doom-modeline]]
 + [[https://github.com/rejeep/drag-stuff.el][drag-stuff]]
@@ -2083,25 +2131,33 @@ If that is the case do the following:
 + [[https://github.com/redguardtoo/evil-nerd-commenter][evil-nerd-commenter]]
 + [[https://github.com/magnars/expand-region.el][expand-region]]
 + [[https://github.com/technomancy/find-file-in-project][find-file-in-project]]
++ [[https://github.com/jming422/fira-code-mode][fira-code]]
 + [[https://github.com/flycheck/flycheck][flycheck]]
++ [[https://github.com/roman/golden-ratio.el][golden-ratio]]
 + [[https://github.com/Malabarba/emacs-google-this][google-this]]
 + [[https://github.com/haskell/haskell-mode][haskell-mode]]
++ [[https://github.com/zk-phi/indent-guide][highlight-indent-guide]]
++ [[https://github.com/Fanael/highlight-numbers][highlight-numbers]]
 + [[https://github.com/abo-abo/hydra][hydra]]
-+ [[https://github.com/zk-phi/indent-guide][indent-guide]]
-+ [[https://github.com/abo-abo/swiper][ivy/swiper]]
 + [[https://github.com/Yevgnen/ivy-rich][ivy-rich]]
-+ [[https://github.com/mooz/js2-mode/][js-mode]]
++ [[https://github.com/abo-abo/swiper][ivy/swiper]]
++ [[https://github.com/mooz/js2-mode/][js2-mode]]
++ [[https://github.com/ogdenwebb/emacs-kaolin-themes][kaolin]]
 + [[https://github.com/chrisbarrett/kubernetes-el][kubernetes]]
 + [[https://github.com/emacs-lsp/lsp-mode][lsp-mode]]
 + [[https://github.com/emacs-lsp/lsp-ui][lsp-ui]]
++ [[https://github.com/immerrr/lua-mode/tree/345ebfc1e236d9676e7e9f7364493785e7756348][lua-mode]]
 + [[https://magit.vc/][magit]]
 + [[https://jblevins.org/projects/markdown-mode/][markdown-mode]]
++ [[https://github.com/purcell/mode-line-bell][mode-line-bell]]
 + [[https://github.com/magnars/multiple-cursors.el][multiple-cursors]]
-+ [[https://github.com/alezost/mwim.el][mwim]]not
++ [[https://github.com/alezost/mwim.el][mwim]]
 + [[https://orgmode.org/][org-mode]]
 + [[https://github.com/rlister/org-present][org-present]]
 + [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]]
 + [[https://github.com/gregsexton/origami.el][origami]]
++ [[https://github.com/nex3/perspective-el][perspective]]
++ [[https://github.com/prettier/prettier-emacs/tree/e9b73e81d3e1642aec682195f127a42dfb0b5774][prettier-js]]
 + [[https://github.com/bbatsov/projectile][projectile]]
 + [[https://github.com/Fanael/rainbow-delimiters][rainbow-delimiters]]
 + [[https://github.com/emacsmirror/rainbow-mode][rainbow-mode]]
@@ -2111,6 +2167,7 @@ If that is the case do the following:
 + [[https://github.com/magnars/s.el][s]]
 + [[https://github.com/Fuco1/smartparens][smartparens]]
 + [[https://github.com/nonsequitur/smex/][smex]]
++ [[https://github.com/aspiers/smooth-scrolling/tree/2462c13640aa4c75ab3ddad443fedc29acf68f84][smooth-scrolling]]
 + [[https://github.com/zk-phi/symon][symon]]
 + [[https://github.com/dbordak/telephone-line][telephone-line]]
 + [[https://github.com/Alexander-Miller/treemacs][treemacs]]
@@ -2119,6 +2176,7 @@ If that is the case do the following:
 + [[https://github.com/akermu/emacs-libvterm][vterm]]
 + [[http://web-mode.org/][web-mode]]
 + [[https://github.com/justbur/emacs-which-key][which-key]]
++ [[https://github.com/joostkremers/writeroom-mode][writeroom-mode]]
 + [[https://github.com/joaotavora/yasnippet][yasnippet]]
 + [[https://www.emacswiki.org/emacs/ZoneMode][zone]]
 + [[https://github.com/cyrus-and/zoom][zoom]]
