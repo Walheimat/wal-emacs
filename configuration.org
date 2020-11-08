@@ -12,6 +12,9 @@ Its base is an org file so it doubles as a readme[fn:2].
 
 ** Setup
 
+Everything you need to know to use this config,
+including the information that you maybe shouldn't.
+
 *** Heads-up
 
 If you're a complete beginner,
@@ -500,6 +503,11 @@ and treemacs buffer check.
       (y-or-n-p (format "Directory `%s' does not exist! Create it?" parent-directory)))
         (make-directory parent-directory t))))
 (add-to-list 'find-file-not-found-functions #'my-create-non-existent-directory)
+
+;; finding dired buffers
+(defun is-dired-buffer (buffer-or-string)
+  "Check if provided buffer is dired-buffer"
+  (eq (with-current-buffer buffer-or-string major-mode) 'dired-mode))
 #+END_SRC
 
 *** Packages
@@ -705,8 +713,9 @@ Refine a couple of major-mode names.
 #+BEGIN_SRC emacs-lisp
 (use-package delight
   :config
-  (delight 'js2-mode "js" :major)
-  (delight 'emacs-lisp-mode "elisp" :major))
+  (delight 'dired-mode "Dired" :major)
+  (delight 'js2-mode "JavaScript" :major)
+  (delight 'emacs-lisp-mode "Elisp" :major))
 #+END_SRC
 
 **** diff-hl
@@ -746,6 +755,23 @@ Make dimmed frames a bit dimmer.
   (dimmer-configure-magit)
   (dimmer-configure-hydra)
   (dimmer-mode t))
+#+END_SRC
+
+**** dired
+
+Group directories first in dired,
+override some keybindings.
+
+#+BEGIN_SRC emacs-lisp
+(use-package dired
+  :ensure nil
+  :config
+  (setq delete-by-moving-to-trash t)
+  :commands (dired dired-jump delete-file)
+  :custom ((dired-listing-switches "-lah --group-directories-first"))
+  :bind (:map dired-mode-map
+        ("V" . dired-display-file)   ;; overrides dired-do-run-mail
+        ("-" . dired-up-directory))) ;; overides negative-argument
 #+END_SRC
 
 **** dired-filter
@@ -815,6 +841,7 @@ Set up eshell.
 
 #+BEGIN_SRC emacs-lisp
 (use-package eshell
+  :ensure nil
   :hook (eshell-mode . my-eshell-mode-hook)
   :bind ("C-c t e" . eshell))
 
@@ -1023,6 +1050,8 @@ We use =ivy= for narrowing our options.
   :init
   (setq ivy-use-virtual-buffers      t
         enable-recursive-minibuffers t)
+  ;; hide dired buffers when switching
+  (add-to-list 'ivy-ignore-buffers 'is-dired-buffer)
   :bind (("C-x b" . my-switch-buffer))
   :config
   (ivy-mode 1))
@@ -1156,7 +1185,10 @@ Move where I want. Useful for comments.
 
 **** origami
 
-Code folding. Unfortunately has some performance issues.
+Code folding.
+Unfortunately has some performance issues.
+This package also uses the deprecated =cl= package,
+leading to warning from emacs version 27 onwards.
 
 #+BEGIN_SRC emacs-lisp
 (use-package origami
@@ -1566,7 +1598,7 @@ This is buggy sometimes, so I prefer =golden-ratio=.
 
 *** Mode Configs
 
-Configure modes.
+Configure major modes.
 
 **** angular mode
 
