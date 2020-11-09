@@ -418,7 +418,7 @@ Otherwise the colors might clash.
 (add-hook 'after-init-hook '(lambda()
   (load-theme my-dark-emacs-theme)
   ;; if you don't mind some transparency
-  (transparency 99)))
+  (transparency 95)))
 #+END_SRC
 
 **** Font
@@ -1699,7 +1699,8 @@ Enable tabs and =flycheck=.
 #+BEGIN_SRC emacs-lisp
 (defun my-json-mode-hook ()
   "Hooks for json mode."
-  (enable-tabs)
+  (when (y-or-n-p "Do you want to enables tabs?")
+    (enable-tabs))
   (flycheck-mode 1)
   (rainbow-delimiters-mode))
 
@@ -1779,10 +1780,12 @@ state =CANCELLED=.
   (setq org-ellipsis                   "↷"
 	org-log-done                   t
 	org-startup-truncated          nil
-        org-startup-folded             'showeverything
+        org-startup-folded             t
 	org-directory                  my-org-directory
 	org-default-notes-file         (concat org-directory "/notes.org")
 	org-startup-with-inline-images t
+        ;; be sure to add archive tag with org-toggle-archive-tag
+	org-archive-location           "::* Archived"
 	org-todo-keywords
 	  '((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
   (add-to-list 'org-global-properties
