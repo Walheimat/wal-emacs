@@ -506,8 +506,13 @@ and treemacs buffer check.
 
 ;; finding dired buffers
 (defun is-dired-buffer (buffer-or-string)
-  "Check if provided buffer is dired-buffer"
+  "Check if provided buffer is dired-buffer."
   (eq (with-current-buffer buffer-or-string major-mode) 'dired-mode))
+
+;; finding docker buffers
+(defun is-docker-buffer (buffer-or-string)
+  "Check if provided buffer is docker-buffer."
+  (string-match "* docker " buffer-or-string))
 #+END_SRC
 
 *** Packages
@@ -1052,6 +1057,7 @@ We use =ivy= for narrowing our options.
         enable-recursive-minibuffers t)
   ;; hide dired buffers when switching
   (add-to-list 'ivy-ignore-buffers 'is-dired-buffer)
+  (add-to-list 'ivy-ignore-buffers 'is-docker-buffer)
   :bind (("C-x b" . my-switch-buffer))
   :config
   (ivy-mode 1))
