@@ -358,6 +358,7 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =C-c f <key>= runs ag (=a= for generic, =p= for in-project search). _Requires ag_!
 + =C-c g= opens magit status.
 + =C-c j= dumb-jumps.
++ =C-c k= kills current buffer and window.
 + =C-c l <key>= interacts with projects.
 + =C-c m <key>= for multiple cursors.
 + =C-c n n= opens treemacs.
@@ -380,6 +381,7 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 Note that all bindings for external packages are declared in the [[*Packages][packages]] section.
 
 #+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "C-c k")   'kill-buffer-and-window) ;; short for C-x 4 0
 (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
 (global-set-key
   (kbd "C-x C-c")
@@ -513,6 +515,18 @@ and treemacs buffer check.
 (defun is-docker-buffer (buffer-or-string)
   "Check if provided buffer is docker-buffer."
   (string-match "* docker " buffer-or-string))
+
+;; finding some default emacs buffers I don't need to see
+(defun is-default-emacs-buffer (buffer-or-string)
+  "Check if provided buffer is a default emacs buffer."
+  (or (string-match "*Messages*" buffer-or-string)
+      (string-match "*scratch*" buffer-or-string)
+      (eq (with-current-buffer buffer-or-string major-mode) 'help-mode)))
+
+;; finding ag buffers
+(defun is-ag-buffer (buffer-or-string)
+  "Check if provided buffer is an ag buffer."
+  (string-match "*ag search " buffer-or-string))
 #+END_SRC
 
 *** Packages
@@ -770,13 +784,15 @@ override some keybindings.
 #+BEGIN_SRC emacs-lisp
 (use-package dired
   :ensure nil
+  :init
+  (put 'dired-find-alternate-file 'disabled nil)
   :config
   (setq delete-by-moving-to-trash t)
   :commands (dired dired-jump delete-file)
   :custom ((dired-listing-switches "-lah --group-directories-first"))
   :bind (:map dired-mode-map
         ("V" . dired-display-file)   ;; overrides dired-do-run-mail
-        ("-" . dired-up-directory))) ;; overides negative-argument
+        ("-" . dired-up-directory))) ;; overrides negative-argument
 #+END_SRC
 
 **** dired-filter
@@ -1053,13 +1069,14 @@ We use =ivy= for narrowing our options.
   :bind ("C-c s" . swiper))
 
 (use-package ivy
-  :diminish
   :init
   (setq ivy-use-virtual-buffers      t
         enable-recursive-minibuffers t)
-  ;; hide dired buffers when switching
+  ;; hide dired, docker, ag and default emacs buffers when switching
   (add-to-list 'ivy-ignore-buffers 'is-dired-buffer)
   (add-to-list 'ivy-ignore-buffers 'is-docker-buffer)
+  (add-to-list 'ivy-ignore-buffers 'is-default-emacs-buffer)
+  (add-to-list 'ivy-ignore-buffers 'is-ag-buffer)
   :bind (("C-x b" . my-switch-buffer))
   :config
   (ivy-mode 1))
@@ -1079,13 +1096,15 @@ We use =ivy= for narrowing our options.
   (setq ivy-rich-display-transformers-list
       '(my-switch-buffer
         (:columns
-         ((ivy-rich-switch-buffer-icon (:width 2))
+         (
           (ivy-rich-candidate (:width 30))
           (ivy-rich-switch-buffer-size (:width 7))
           (ivy-rich-switch-buffer-indicators (:width 4 :face error :align right))
-          (ivy-rich-switch-buffer-major-mode (:width 12 :face warning))
-          (ivy-rich-switch-buffer-project (:width 15 :face success))
-          (ivy-rich-switch-buffer-path (:width (lambda (x) (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3))))))
+          (ivy-rich-switch-buffer-project (:width 30 :face success))
+	  ;; (ivy-rich-switch-buffer-major-mode (:width 8 :face warning))
+	  (ivy-rich-switch-buffer-icon (:width 2))
+	  (ivy-rich-switch-buffer-path (:width (lambda (x) (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3)))))
+	 )
          :predicate
          (lambda (cand) (get-buffer cand)))))
   :config
@@ -1198,8 +1217,11 @@ Unfortunately has some performance issues.
 This package also uses the deprecated =cl= package,
 leading to warning from emacs version 27 onwards.
 
+Disabled for now.
+
 #+BEGIN_SRC emacs-lisp
 (use-package origami
+  :disabled
   :init
   (setq origami-fold-replacement "⋯")
   :hook (prog-mode . origami-mode)
@@ -1780,7 +1802,7 @@ state =CANCELLED=.
   (setq org-ellipsis                   "↷"
 	org-log-done                   t
 	org-startup-truncated          nil
-        org-startup-folded             t
+        org-startup-folded             'overview
 	org-directory                  my-org-directory
 	org-default-notes-file         (concat org-directory "/notes.org")
 	org-startup-with-inline-images t
