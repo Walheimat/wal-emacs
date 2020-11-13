@@ -51,7 +51,10 @@ Set some personal info.[fn:7]
 
 ;; warn Mac/Windows users
 (unless (eq system-type 'gnu/linux)
-  (message "Warning: Config only tested on linux"))
+  (warn "\
+    Warning: Config only tested on linux.
+    While I did get in running on Windows 10,
+    it was quite tricky and involved setting unsafe options."))
 #+END_SRC
 
 *** Initialization
@@ -66,17 +69,6 @@ We store bookmarks and perspectives here.
 #+BEGIN_SRC emacs-lisp
 (unless (file-directory-p (expand-file-name ".cache" user-emacs-directory))
   (make-directory (expand-file-name ".cache" user-emacs-directory)))
-#+END_SRC
-
-**** Lisp extensions
-
-We need dash.
-
-#+BEGIN_SRC emacs-lisp
-;; we need dash for the upcoming loop
-(unless (package-installed-p 'dash)
-  (package-install 'dash))
-(require 'dash)
 #+END_SRC
 
 **** Start-Up
@@ -135,24 +127,38 @@ Add MELPA and org-mode to our package archives.
 We'll be getting most (if not all) packages from the prior.
 
 #+BEGIN_SRC emacs-lisp
-  (require 'package)
-  (let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
-		      (not (gnutls-available-p))))
+(require 'package)
+(let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
+         (not (gnutls-available-p))))
 	 (proto (if no-ssl "http" "https")))
-    (when no-ssl (warn "\
-	Your version of Emacs does not support SSL connections,
-	which is unsafe because it allows man-in-the-middle attacks.
-	There are two things you can do about this warning:
-	1. Install an Emacs version that does support SSL and be safe.
-	2. Remove this warning from your init file so you won't see it again."))
-    (add-to-list 'package-archives (cons "melpa" (concat proto "://melpa.org/packages/")) t)
-    (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
-    ;; Comment/uncomment this line to enable MELPA Stable if desired.  See `package-archive-priorities`
-    ;; and `package-pinned-packages`. Most users will not need or want to do this.
-    ;;(add-to-list 'package-archives (cons "melpa-stable" (concat proto "://stable.melpa.org/packages/")) t)
-    )
-  (setq package-pinned-packages '())
-  (package-initialize)
+ (when no-ssl (warn "\
+   Your version of Emacs does not support SSL connections,
+   which is unsafe because it allows man-in-the-middle attacks.
+   There are two things you can do about this warning:
+   1. Install an Emacs version that does support SSL and be safe.
+   2. Remove this warning from your init file so you won't see it again."))
+  (add-to-list 'package-archives (cons "melpa" (concat proto "://melpa.org/packages/")) t)
+  (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
+  ;; Comment/uncomment this line to enable MELPA Stable if desired.  See `package-archive-priorities`
+  ;; and `package-pinned-packages`. Most users will not need or want to do this.
+  ;;(add-to-list 'package-archives (cons "melpa-stable" (concat proto "://stable.melpa.org/packages/")) t)
+)
+(setq package-pinned-packages '())
+(package-initialize)
+#+END_SRC
+
+**** Lisp extensions
+
+We need dash.
+
+#+BEGIN_SRC emacs-lisp
+;; we need dash for the upcoming loop
+(unless (package-installed-p 'dash)
+  (condition-case nil
+    (package-install 'dash)
+    (error (package-refresh-contents)
+           (package-install 'dash))))
+(require 'dash)
 #+END_SRC
 
 **** Dependencies
@@ -355,23 +361,23 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =C-c b <key>= toggle (=t=) or shows (=s=) bookmarks.
 + =C-c c <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
 + =C-c d= for docker actions.
-+ =C-c t <key>= opens eshell (=e=), ansi-term (=a=) or vterm (=v=).
 + =C-c f <key>= runs ag (=a= for generic, =p= for in-project search). _Requires ag_!
 + =C-c g= opens magit status.
++ =C-c i <key>= interacts with perspectives.
 + =C-c j= dumb-jumps.
 + =C-c k= kills current buffer and window.
-+ =C-c l <key>= interacts with projects.
 + =C-c m <key>= for multiple cursors.
 + =C-c n n= opens treemacs.
 + =C-c o= for code-folding.
-+ =C-c p <key>= interacts with perspectives.
++ =C-c p <key>= interacts with projects.
 + =C-c q <key>= interacts with fly-checking.
-+ =C-x r s= restarts.
 + =C-c s= uses swiper to search.
++ =C-c t <key>= opens eshell (=e=), ansi-term (=a=) or vterm (=v=).
 + =C-c v <key>= jumps to char (=c=) or line (=v=) with avy.
 + =C-+= expands region.
 + =C-x C-c= opens this config org file.
 + =C-x r q= (really) quits.
++ =C-x r s= restarts.
 + =C-z=/=C-S-z= undos/redos.
 + =<key-chord> # #= (un-)comments.
 + =M-o= goes to the "other" window or the last buffer.
@@ -398,7 +404,7 @@ Otherwise the colors might clash.
 
 #+BEGIN_SRC emacs-lisp
 ;; two themes and a switch
-(defcustom my-dark-emacs-theme 'kaolin-temple
+(defcustom my-dark-emacs-theme 'kaolin-galaxy
   "The quote-unquote default emacs theme.")
 
 (defcustom my-light-emacs-theme 'paper
@@ -1244,7 +1250,7 @@ Have some perspective, man.
   (setq persp-modestring-dividers '("(" ")" "/")
         persp-initial-frame-name  my-default-perspective
         persp-state-default-file  (expand-file-name ".cache/persp-persist" user-emacs-directory)
-        persp-mode-prefix-key     (kbd "C-c p"))
+        persp-mode-prefix-key     (kbd "C-c i"))
   :config
   (persp-mode))
 
@@ -1287,7 +1293,7 @@ You don't really _need_ treemacs.
   ;; (add-to-list 'projectile-globally-ignored-directories "build")
   (add-to-list 'projectile-other-file-alist '("org" "org_archive"))
   (add-to-list 'projectile-other-file-alist '("org_archive" "org"))
-  (define-key projectile-mode-map (kbd "C-c l") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (projectile-mode +1))
 #+END_SRC
 
