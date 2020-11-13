@@ -1072,29 +1072,40 @@ We use =ivy= for narrowing our options.
 
 (use-package swiper
   :after ivy
-  :chords ((",." . my-switch-buffer))
   :bind ("C-c s" . swiper))
+
+;; hide dired, docker, ag and default emacs buffers when switching
+(setq my-ivy-ignore-buffers '(
+  is-dired-buffer
+  is-docker-buffer
+  is-ag-buffer
+  is-default-emacs-buffer
+  "\\` "
+  "\\`\\*tramp/"))
+
+;; toggle custom ignore on or off
+(defun my-toggle-ivy-ignore ()
+  (interactive)
+  (if (y-or-n-p "Use custom ivy buffer ignore?")
+    (setq ivy-ignore-buffers my-ivy-ignore-buffers)
+    (setq ivy-ignore-buffers '("\\` " "\\`\\*tramp/"))))
 
 (use-package ivy
   :init
   (setq ivy-use-virtual-buffers      t
-        enable-recursive-minibuffers t)
-  ;; hide dired, docker, ag and default emacs buffers when switching
-  (add-to-list 'ivy-ignore-buffers 'is-dired-buffer)
-  (add-to-list 'ivy-ignore-buffers 'is-docker-buffer)
-  (add-to-list 'ivy-ignore-buffers 'is-default-emacs-buffer)
-  (add-to-list 'ivy-ignore-buffers 'is-ag-buffer)
+        enable-recursive-minibuffers t
+        ivy-ignore-buffers           my-ivy-ignore-buffers)
   :bind (("C-x b" . my-switch-buffer))
+  :chords ((",." . my-switch-buffer))
   :config
   (ivy-mode 1))
 
 (defun ivy-rich-switch-buffer-icon (candidate)
- (with-current-buffer
-      (get-buffer candidate)
+  (with-current-buffer (get-buffer candidate)
     (let ((icon (all-the-icons-icon-for-mode major-mode)))
       (if (symbolp icon)
           (all-the-icons-icon-for-mode 'fundamental-mode)
-        icon))))
+           icon))))
 
 (use-package ivy-rich
   :after ivy
@@ -1110,7 +1121,8 @@ We use =ivy= for narrowing our options.
           (ivy-rich-switch-buffer-project (:width 30 :face success))
 	  ;; (ivy-rich-switch-buffer-major-mode (:width 8 :face warning))
 	  (ivy-rich-switch-buffer-icon (:width 2))
-	  (ivy-rich-switch-buffer-path (:width (lambda (x) (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3)))))
+	  (ivy-rich-switch-buffer-path (:width (lambda (x)
+            (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3)))))
 	 )
          :predicate
          (lambda (cand) (get-buffer cand)))))
