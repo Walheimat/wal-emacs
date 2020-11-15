@@ -360,17 +360,14 @@ but some =C-x <key>= mappings snuck in.
 If you want to see all personal keybindings, execute =describe-personal-keybindings=.
 
 + =C-c a <key>= opens today's (=t=), this week's (=w=) or my personal (=p=) agenda.
-+ =C-c b <key>= toggle (=t=) or shows (=s=) bookmarks.
 + =C-c c <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
-+ =C-c d= for docker actions.
 + =C-c f <key>= runs ag (=a= for generic, =p= for in-project search). _Requires ag_!
 + =C-c g= opens magit status.
 + =C-c i <key>= interacts with perspectives.
 + =C-c j= dumb-jumps.
-+ =C-c k= kills current buffer and window.
++ =C-c k= for docker actions.
 + =C-c m <key>= for multiple cursors.
-+ =C-c n n= opens treemacs.
-+ =C-c o= for code-folding.
++ =C-c o <key>= toggle (=t=) or shows (=s=) bookmarks.
 + =C-c p <key>= interacts with projects.
 + =C-c q <key>= interacts with fly-checking.
 + =C-c s= uses swiper to search.
@@ -396,6 +393,13 @@ guaranteed).
 + =H-b= switches buffer.
 + =H-c= (un-)comments lines.
 + =H-d= opens dired relative to open file.
++ =H-f= to find with ag.
++ =H-i= switches prespective.
++ =H-k= to interact with docker.
++ =H-m= mark all like this (multiple cursors).
++ =H-<number>= splits horizontal (=2=), vertical (=3=) or kills (=4=).
++ =H-o= to toggle bookmarks.
++ =H-p= switches project.
 + =H-s= searches with swiper.
 + =H-v= jumps to line with avy.
 
@@ -424,8 +428,7 @@ modifier_map Mod3   { <HYPR> };
 Note that all bindings for external packages are declared in the [[*Packages][packages]] section.
 
 #+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "C-c k")   'kill-buffer-and-window) ;; short for C-x 4 0
-(global-set-key (kbd "H-k")     'kill-buffer-and-window)
+(global-set-key (kbd "H-4")     'kill-buffer-and-window)
 (global-set-key (kbd "H-3")     'split-window-right)
 (global-set-key (kbd "H-2")     'split-window-below)
 (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
@@ -605,8 +608,9 @@ to download it automatically, but might fail).
   :ensure-system-package ag
   :init
   (setq ag-highlight-search t)
-  :bind ("C-c f a" . ag)
-        ("C-c f p" . ag-project))
+  :bind (("C-c f a" . ag)
+         ("C-c f p" . ag-project)
+	 ("H-f"     . ag)))
 #+END_SRC
 
 **** all-the-icons
@@ -695,9 +699,10 @@ Bookmarks are useful. I don't remember where I was. _Who are you?!_
    (after-revert .      bm-buffer-restore)
    (vc-before-checkin . bm-buffer-save))
   :bind
-   (("C-c b s" . bm-show)
-    ("C-c b n" . bm-next)
-    ("C-c b b" . bm-toggle)))
+   (("C-c o s" . bm-show)
+    ("C-c o n" . bm-next)
+    ("C-c o b" . bm-toggle)
+    ("H-o"     . bm-toggle)))
 #+END_SRC
 
 **** company
@@ -860,7 +865,8 @@ I use Docker a lot, don't always have to use the command line.
 (use-package docker
   :init
   (setq docker-container-default-sort-key '("Names"))
-  :bind ("C-c d" . docker))
+  :bind (("C-c k" . docker)
+         ("H-k"   . docker)))
 #+END_SRC
 
 **** doom-modeline
@@ -903,7 +909,8 @@ Configure it for =ivy=.
         dumb-jump-force-searcher 'ag)
   :config
   (dumb-jump-mode)
-  :bind ("C-c j" . xref-find-definitions))
+  :bind (("C-c j" . xref-find-definitions)
+         ("H-j"   . xref-find-definitions)))
 #+END_SRC
 
 **** eshell
@@ -950,7 +957,7 @@ Comment code like in =vim=, evil, evil =vim=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package evil-nerd-commenter
-  :bind   ("H-c" . evilnc-comment-or-uncomment-lines)
+  :bind   ("H-#" . evilnc-comment-or-uncomment-lines)
   :chords ("##"  . evilnc-comment-or-uncomment-lines))
 #+END_SRC
 
@@ -1238,7 +1245,8 @@ Version control has never been this easy before.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
-  :bind ("C-c g" . magit-status))
+  :bind (("C-c g" . magit-status)
+         ("H-g"   . magit-status)))
 #+END_SRC
 
 **** mode-line-bell
@@ -1261,7 +1269,8 @@ It's nice to change everything at once.
   :bind
   (("C-c m n" . mc/mark-next-like-this)
    ("C-c m p" . mc/mark-previous-like-this)
-   ("C-c m a" . mc/mark-all-like-this)))
+   ("C-c m a" . mc/mark-all-like-this)
+   ("H-m"     . mc/mark-all-like-this)))
 #+END_SRC
 
 **** mwim
@@ -1303,6 +1312,7 @@ Have some perspective, man.
 (use-package perspective
   :custom-face
   (persp-selected-face ((t (:weight bold :foreground "burlywood"))))
+  :bind ("H-i" . persp-switch)
   :init
   (setq persp-modestring-dividers '("(" ")" "/")
         persp-initial-frame-name  my-default-perspective
@@ -1340,6 +1350,7 @@ You don't really _need_ treemacs.
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
   :diminish " pjt"
+  :bind ("H-p" . projectile-switch-project)
   :init
   (setq projectile-completion-system     'ivy
         projectile-mode-line-function    '(lambda() (format " {%s}" (projectile-project-name)))
