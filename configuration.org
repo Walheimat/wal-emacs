@@ -352,6 +352,8 @@ To make this work, we need to tweak a few things.
 
 Change up the key bindings a bit.
 
+***** Personal
+
 I try to have most actions use user-reserved =C-c <key>= combinations,
 but some =C-x <key>= mappings snuck in.
 
@@ -379,11 +381,45 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =C-x r q= (really) quits.
 + =C-x r s= restarts.
 + =C-z=/=C-S-z= undos/redos.
-+ =<key-chord> # #= (un-)comments.
++ =<key-chord> # #= (un-)comments lines.
 + =M-o= goes to the "other" window or the last buffer.
 + =M-x= opens smex.
 + =s-k= kills the whole line.
 + =s-(S)-RET= will open an indented line above (below).
+
+***** Hyper
+
+The following bindings are either quick-access of already bound
+actions or those that aren't essential (since having a hyper key is not
+guaranteed).
+
++ =H-b= switches buffer.
++ =H-c= (un-)comments lines.
++ =H-d= opens dired relative to open file.
++ =H-s= searches with swiper.
++ =H-v= jumps to line with avy.
+
+****** Caps to Hyper
+
+I re-bound my =<CAPS>= (caps-lock) key to =Hyper_L= to use these
+hyper bindings.
+
+If you use Xorg Display Server,
+you can do this by editing your =/usr/share/X11/xkb/symbols/pc= file like so:
+
+#+BEGIN_SRC
+...
+// key <CAPS> {    [ Caps_Lock     ]   };
+key <CAPS> {    [ Hyper_L       ]   };
+...
+// modifier_map Lock   { Caps_Lock };
+modifier_map Mod3   { Hyper_L, Hyper_R };
+...
+// modifier_map Mod4   { <HYPR> };   
+modifier_map Mod3   { <HYPR> };   
+#+END_SRC 
+
+***** Bindings
 
 Note that all bindings for external packages are declared in the [[*Packages][packages]] section.
 
@@ -614,7 +650,8 @@ Jumping to (visible) lines and chars is fun if you are too lazy to use your mous
 #+BEGIN_SRC emacs-lisp
 (use-package avy
   :bind (("C-c v v" . avy-goto-line)
-         ("C-c v c" . avy-goto-char)))
+         ("C-c v c" . avy-goto-char)
+	 ("H-v"     . avy-goto-line)))
 #+END_SRC
 
 **** beacon
@@ -797,9 +834,10 @@ override some keybindings.
   (setq delete-by-moving-to-trash t)
   :commands (dired dired-jump delete-file)
   :custom ((dired-listing-switches "-lah --group-directories-first"))
-  :bind (:map dired-mode-map
-        ("V" . dired-display-file)   ;; overrides dired-do-run-mail
-        ("-" . dired-up-directory))) ;; overrides negative-argument
+  :bind (("H-d" . dired-jump)
+         (:map dired-mode-map
+         ("V" . dired-display-file)   ;; overrides dired-do-run-mail
+         ("-" . dired-up-directory)))) ;; overrides negative-argument
 #+END_SRC
 
 **** dired-filter
@@ -909,7 +947,8 @@ Comment code like in =vim=, evil, evil =vim=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package evil-nerd-commenter
-  :chords ("##" . evilnc-comment-or-uncomment-lines))
+  :bind   ("H-c" . evilnc-comment-or-uncomment-lines)
+  :chords ("##"  . evilnc-comment-or-uncomment-lines))
 #+END_SRC
 
 **** expand-region
@@ -1072,7 +1111,8 @@ We use =ivy= for narrowing our options.
 
 (use-package swiper
   :after ivy
-  :bind ("C-c s" . swiper))
+  :bind (("C-c s" . swiper)
+         ("H-s"   . swiper)))
 
 ;; hide dired, docker, ag and default emacs buffers when switching
 (setq my-ivy-ignore-buffers '(
@@ -1096,7 +1136,8 @@ We use =ivy= for narrowing our options.
   (setq ivy-use-virtual-buffers      t
         enable-recursive-minibuffers t
         ivy-ignore-buffers           my-ivy-ignore-buffers)
-  :bind (("C-x b" . my-switch-buffer))
+  :bind (("C-x b" . my-switch-buffer)
+         ("H-b"   . my-switch-buffer))
   :chords ((",." . my-switch-buffer))
   :config
   (ivy-mode 1))
