@@ -51,7 +51,10 @@ Set some personal info.[fn:7]
 
 ;; warn Mac/Windows users
 (unless (eq system-type 'gnu/linux)
-  (message "Warning: Config only tested on linux"))
+  (warn "\
+    Warning: Config only tested on linux.
+    While I did get in running on Windows 10,
+    it was quite tricky and involved setting unsafe options."))
 #+END_SRC
 
 *** Initialization
@@ -66,17 +69,6 @@ We store bookmarks and perspectives here.
 #+BEGIN_SRC emacs-lisp
 (unless (file-directory-p (expand-file-name ".cache" user-emacs-directory))
   (make-directory (expand-file-name ".cache" user-emacs-directory)))
-#+END_SRC
-
-**** Lisp extensions
-
-We need dash.
-
-#+BEGIN_SRC emacs-lisp
-;; we need dash for the upcoming loop
-(unless (package-installed-p 'dash)
-  (package-install 'dash))
-(require 'dash)
 #+END_SRC
 
 **** Start-Up
@@ -129,29 +121,44 @@ This (and some other things) was cribbed from [[https://www.john2x.com/emacs.htm
 (add-hook 'kill-emacs-hook #'persist-scratch)
 #+END_SRC
 
-**** MELPA
+**** Package Archives
 
-Add MELPA to our package archives.
-We'll be getting most (if not all) packages from there.
+Add MELPA and org-mode to our package archives.
+We'll be getting most (if not all) packages from the prior.
 
 #+BEGIN_SRC emacs-lisp
 (require 'package)
 (let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
-                  (not (gnutls-available-p))))
-     (proto (if no-ssl "http" "https")))
-  (when no-ssl (warn "\
-Your version of Emacs does not support SSL connections,
-which is unsafe because it allows man-in-the-middle attacks.
-There are two things you can do about this warning:
-1. Install an Emacs version that does support SSL and be safe.
-2. Remove this warning from your init file so you won't see it again."))
+         (not (gnutls-available-p))))
+	 (proto (if no-ssl "http" "https")))
+ (when no-ssl (warn "\
+   Your version of Emacs does not support SSL connections,
+   which is unsafe because it allows man-in-the-middle attacks.
+   There are two things you can do about this warning:
+   1. Install an Emacs version that does support SSL and be safe.
+   2. Remove this warning from your init file so you won't see it again."))
   (add-to-list 'package-archives (cons "melpa" (concat proto "://melpa.org/packages/")) t)
+  (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
   ;; Comment/uncomment this line to enable MELPA Stable if desired.  See `package-archive-priorities`
   ;; and `package-pinned-packages`. Most users will not need or want to do this.
   ;;(add-to-list 'package-archives (cons "melpa-stable" (concat proto "://stable.melpa.org/packages/")) t)
-  )
+)
 (setq package-pinned-packages '())
 (package-initialize)
+#+END_SRC
+
+**** Lisp extensions
+
+We need dash.
+
+#+BEGIN_SRC emacs-lisp
+;; we need dash for the upcoming loop
+(unless (package-installed-p 'dash)
+  (condition-case nil
+    (package-install 'dash)
+    (error (package-refresh-contents)
+           (package-install 'dash))))
+(require 'dash)
 #+END_SRC
 
 **** Dependencies
@@ -354,22 +361,23 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =C-c b <key>= toggle (=t=) or shows (=s=) bookmarks.
 + =C-c c <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
 + =C-c d= for docker actions.
-+ =C-c t <key>= opens eshell (=e=), ansi-term (=a=) or vterm (=v=).
 + =C-c f <key>= runs ag (=a= for generic, =p= for in-project search). _Requires ag_!
 + =C-c g= opens magit status.
++ =C-c i <key>= interacts with perspectives.
 + =C-c j= dumb-jumps.
-+ =C-c l <key>= interacts with projects.
++ =C-c k= kills current buffer and window.
 + =C-c m <key>= for multiple cursors.
 + =C-c n n= opens treemacs.
 + =C-c o= for code-folding.
-+ =C-c p <key>= interacts with perspectives.
++ =C-c p <key>= interacts with projects.
 + =C-c q <key>= interacts with fly-checking.
-+ =C-x r s= restarts.
 + =C-c s= uses swiper to search.
++ =C-c t <key>= opens eshell (=e=), ansi-term (=a=) or vterm (=v=).
 + =C-c v <key>= jumps to char (=c=) or line (=v=) with avy.
 + =C-+= expands region.
 + =C-x C-c= opens this config org file.
 + =C-x r q= (really) quits.
++ =C-x r s= restarts.
 + =C-z=/=C-S-z= undos/redos.
 + =<key-chord> # #= (un-)comments.
 + =M-o= goes to the "other" window or the last buffer.
@@ -380,6 +388,7 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 Note that all bindings for external packages are declared in the [[*Packages][packages]] section.
 
 #+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "C-c k")   'kill-buffer-and-window) ;; short for C-x 4 0
 (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
 (global-set-key
   (kbd "C-x C-c")
@@ -395,7 +404,7 @@ Otherwise the colors might clash.
 
 #+BEGIN_SRC emacs-lisp
 ;; two themes and a switch
-(defcustom my-dark-emacs-theme 'kaolin-temple
+(defcustom my-dark-emacs-theme 'kaolin-galaxy
   "The quote-unquote default emacs theme.")
 
 (defcustom my-light-emacs-theme 'paper
@@ -418,7 +427,7 @@ Otherwise the colors might clash.
 (add-hook 'after-init-hook '(lambda()
   (load-theme my-dark-emacs-theme)
   ;; if you don't mind some transparency
-  (transparency 99)))
+  (transparency 95)))
 #+END_SRC
 
 **** Font
@@ -506,8 +515,25 @@ and treemacs buffer check.
 
 ;; finding dired buffers
 (defun is-dired-buffer (buffer-or-string)
-  "Check if provided buffer is dired-buffer"
+  "Check if provided buffer is dired-buffer."
   (eq (with-current-buffer buffer-or-string major-mode) 'dired-mode))
+
+;; finding docker buffers
+(defun is-docker-buffer (buffer-or-string)
+  "Check if provided buffer is docker-buffer."
+  (string-match "* docker " buffer-or-string))
+
+;; finding some default emacs buffers I don't need to see
+(defun is-default-emacs-buffer (buffer-or-string)
+  "Check if provided buffer is a default emacs buffer."
+  (or (string-match "*Messages*" buffer-or-string)
+      (string-match "*scratch*" buffer-or-string)
+      (eq (with-current-buffer buffer-or-string major-mode) 'help-mode)))
+
+;; finding ag buffers
+(defun is-ag-buffer (buffer-or-string)
+  "Check if provided buffer is an ag buffer."
+  (string-match "*ag search " buffer-or-string))
 #+END_SRC
 
 *** Packages
@@ -765,13 +791,15 @@ override some keybindings.
 #+BEGIN_SRC emacs-lisp
 (use-package dired
   :ensure nil
+  :init
+  (put 'dired-find-alternate-file 'disabled nil)
   :config
   (setq delete-by-moving-to-trash t)
   :commands (dired dired-jump delete-file)
   :custom ((dired-listing-switches "-lah --group-directories-first"))
   :bind (:map dired-mode-map
         ("V" . dired-display-file)   ;; overrides dired-do-run-mail
-        ("-" . dired-up-directory))) ;; overides negative-argument
+        ("-" . dired-up-directory))) ;; overrides negative-argument
 #+END_SRC
 
 **** dired-filter
@@ -789,6 +817,8 @@ I use Docker a lot, don't always have to use the command line.
 
 #+BEGIN_SRC emacs-lisp
 (use-package docker
+  :init
+  (setq docker-container-default-sort-key '("Names"))
   :bind ("C-c d" . docker))
 #+END_SRC
 
@@ -1042,27 +1072,41 @@ We use =ivy= for narrowing our options.
 
 (use-package swiper
   :after ivy
-  :chords ((",." . my-switch-buffer))
   :bind ("C-c s" . swiper))
 
+;; hide dired, docker, ag and default emacs buffers when switching
+(setq my-ivy-ignore-buffers '(
+  is-dired-buffer
+  is-docker-buffer
+  is-ag-buffer
+  is-default-emacs-buffer
+  "\\` "
+  "\\`\\*tramp/"))
+
+;; toggle custom ignore on or off
+;; makes ivy-switch-buffer-other-window unusable
+(defun my-toggle-ivy-ignore ()
+  (interactive)
+  (if (y-or-n-p "Use custom ivy buffer ignore?")
+    (setq ivy-ignore-buffers my-ivy-ignore-buffers)
+    (setq ivy-ignore-buffers '("\\` " "\\`\\*tramp/"))))
+
 (use-package ivy
-  :diminish
   :init
   (setq ivy-use-virtual-buffers      t
-        enable-recursive-minibuffers t)
-  ;; hide dired buffers when switching
-  (add-to-list 'ivy-ignore-buffers 'is-dired-buffer)
+        enable-recursive-minibuffers t
+        ivy-ignore-buffers           my-ivy-ignore-buffers)
   :bind (("C-x b" . my-switch-buffer))
+  :chords ((",." . my-switch-buffer))
   :config
   (ivy-mode 1))
 
 (defun ivy-rich-switch-buffer-icon (candidate)
- (with-current-buffer
-      (get-buffer candidate)
+  (with-current-buffer (get-buffer candidate)
     (let ((icon (all-the-icons-icon-for-mode major-mode)))
       (if (symbolp icon)
           (all-the-icons-icon-for-mode 'fundamental-mode)
-        icon))))
+           icon))))
 
 (use-package ivy-rich
   :after ivy
@@ -1071,13 +1115,16 @@ We use =ivy= for narrowing our options.
   (setq ivy-rich-display-transformers-list
       '(my-switch-buffer
         (:columns
-         ((ivy-rich-switch-buffer-icon (:width 2))
+         (
           (ivy-rich-candidate (:width 30))
           (ivy-rich-switch-buffer-size (:width 7))
           (ivy-rich-switch-buffer-indicators (:width 4 :face error :align right))
-          (ivy-rich-switch-buffer-major-mode (:width 12 :face warning))
-          (ivy-rich-switch-buffer-project (:width 15 :face success))
-          (ivy-rich-switch-buffer-path (:width (lambda (x) (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3))))))
+          (ivy-rich-switch-buffer-project (:width 30 :face success))
+	  ;; (ivy-rich-switch-buffer-major-mode (:width 8 :face warning))
+	  (ivy-rich-switch-buffer-icon (:width 2))
+	  (ivy-rich-switch-buffer-path (:width (lambda (x)
+            (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3)))))
+	 )
          :predicate
          (lambda (cand) (get-buffer cand)))))
   :config
@@ -1190,8 +1237,11 @@ Unfortunately has some performance issues.
 This package also uses the deprecated =cl= package,
 leading to warning from emacs version 27 onwards.
 
+Disabled for now.
+
 #+BEGIN_SRC emacs-lisp
 (use-package origami
+  :disabled
   :init
   (setq origami-fold-replacement "⋯")
   :hook (prog-mode . origami-mode)
@@ -1213,7 +1263,7 @@ Have some perspective, man.
   (setq persp-modestring-dividers '("(" ")" "/")
         persp-initial-frame-name  my-default-perspective
         persp-state-default-file  (expand-file-name ".cache/persp-persist" user-emacs-directory)
-        persp-mode-prefix-key     (kbd "C-c p"))
+        persp-mode-prefix-key     (kbd "C-c i"))
   :config
   (persp-mode))
 
@@ -1256,7 +1306,7 @@ You don't really _need_ treemacs.
   ;; (add-to-list 'projectile-globally-ignored-directories "build")
   (add-to-list 'projectile-other-file-alist '("org" "org_archive"))
   (add-to-list 'projectile-other-file-alist '("org_archive" "org"))
-  (define-key projectile-mode-map (kbd "C-c l") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (projectile-mode +1))
 #+END_SRC
 
@@ -1691,7 +1741,8 @@ Enable tabs and =flycheck=.
 #+BEGIN_SRC emacs-lisp
 (defun my-json-mode-hook ()
   "Hooks for json mode."
-  (enable-tabs)
+  (when (y-or-n-p "Do you want to enables tabs?")
+    (enable-tabs))
   (flycheck-mode 1)
   (rainbow-delimiters-mode))
 
@@ -1771,10 +1822,12 @@ state =CANCELLED=.
   (setq org-ellipsis                   "↷"
 	org-log-done                   t
 	org-startup-truncated          nil
-        org-startup-folded             'showeverything
+        org-startup-folded             'overview
 	org-directory                  my-org-directory
 	org-default-notes-file         (concat org-directory "/notes.org")
 	org-startup-with-inline-images t
+        ;; be sure to add archive tag with org-toggle-archive-tag
+	org-archive-location           "::* Archived"
 	org-todo-keywords
 	  '((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
   (add-to-list 'org-global-properties

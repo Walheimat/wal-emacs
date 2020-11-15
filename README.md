@@ -9,20 +9,20 @@ Its base is an org file so it doubles as a readme<sup><a id="fnr.2" class="footr
 
 # Table of Contents
 
-1.  [Emacs Org Config](#org4a8e8ae)
-    1.  [Setup](#org37f0cf6)
-        1.  [Heads-up](#orgd25add9)
-        2.  [Try-out](#orgf9a54e1)
-    2.  [Config](#orgfeac929)
-        1.  [Personal](#org1ce61a3)
-        2.  [Initialization](#org2f9f7de)
-        3.  [Built-in](#org5bdbbb9)
-        4.  [Packages](#orga7118b5)
-        5.  [Mode Configs](#org8b860d9)
-        6.  [Tweaks](#org8f6406a)
+1.  [Emacs Org Config](#org894e229)
+    1.  [Setup](#org9364a09)
+        1.  [Heads-up](#org195482d)
+        2.  [Try-out](#org4476774)
+    2.  [Config](#orgcf27c69)
+        1.  [Personal](#orgfd02ae8)
+        2.  [Initialization](#org9bd8137)
+        3.  [Built-in](#orgcd4439d)
+        4.  [Packages](#org881c42c)
+        5.  [Mode Configs](#orgb5c52d4)
+        6.  [Tweaks](#org1f50ded)
 
 
-<a id="org37f0cf6"></a>
+<a id="org9364a09"></a>
 
 ## Setup
 
@@ -30,7 +30,7 @@ Everything you need to know to use this config,
 including the information that you maybe shouldn't.
 
 
-<a id="orgd25add9"></a>
+<a id="org195482d"></a>
 
 ### Heads-up
 
@@ -42,7 +42,7 @@ Nothing in this config should be considered <span class="underline">good practic
 it's mostly just how I (think I) like things to be.
 
 
-<a id="orgf9a54e1"></a>
+<a id="org4476774"></a>
 
 ### Try-out
 
@@ -58,14 +58,14 @@ If you did not init this repo in your `user-emacs-directory` using the default n
 you will need to adapt the variable `walheimat-emacs-config-default-path` in the example config you just copied.
 
 
-<a id="orgfeac929"></a>
+<a id="orgcf27c69"></a>
 
 ## Config
 
 The init script will evaluate <span class="underline">everything</span><sup><a id="fnr.6" class="footref" href="#fn.6">6</a></sup> that follows.
 
 
-<a id="org1ce61a3"></a>
+<a id="orgfd02ae8"></a>
 
 ### Personal
 
@@ -76,10 +76,13 @@ Set some personal info.<sup><a id="fnr.7" class="footref" href="#fn.7">7</a></su
     
     ;; warn Mac/Windows users
     (unless (eq system-type 'gnu/linux)
-      (message "Warning: Config only tested on linux"))
+      (warn "\
+        Warning: Config only tested on linux.
+        While I did get in running on Windows 10,
+        it was quite tricky and involved setting unsafe options."))
 
 
-<a id="org2f9f7de"></a>
+<a id="org9bd8137"></a>
 
 ### Initialization
 
@@ -93,16 +96,7 @@ Set up Emacs, package manager and packages.
         (unless (file-directory-p (expand-file-name ".cache" user-emacs-directory))
           (make-directory (expand-file-name ".cache" user-emacs-directory)))
 
-2.  Lisp extensions
-
-    We need dash.
-    
-        ;; we need dash for the upcoming loop
-        (unless (package-installed-p 'dash)
-          (package-install 'dash))
-        (require 'dash)
-
-3.  Start-Up
+2.  Start-Up
 
     Customize start-up.
     
@@ -148,28 +142,41 @@ Set up Emacs, package manager and packages.
             (add-hook 'after-init-hook #'rehydrate-scratch)
             (add-hook 'kill-emacs-hook #'persist-scratch)
 
-4.  MELPA
+3.  Package Archives
 
-    Add MELPA to our package archives.
-    We'll be getting most (if not all) packages from there.
+    Add MELPA and org-mode to our package archives.
+    We'll be getting most (if not all) packages from the prior.
     
         (require 'package)
         (let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
-        		  (not (gnutls-available-p))))
-             (proto (if no-ssl "http" "https")))
-          (when no-ssl (warn "\
-        Your version of Emacs does not support SSL connections,
-        which is unsafe because it allows man-in-the-middle attacks.
-        There are two things you can do about this warning:
-        1. Install an Emacs version that does support SSL and be safe.
-        2. Remove this warning from your init file so you won't see it again."))
+        	 (not (gnutls-available-p))))
+        	 (proto (if no-ssl "http" "https")))
+         (when no-ssl (warn "\
+           Your version of Emacs does not support SSL connections,
+           which is unsafe because it allows man-in-the-middle attacks.
+           There are two things you can do about this warning:
+           1. Install an Emacs version that does support SSL and be safe.
+           2. Remove this warning from your init file so you won't see it again."))
           (add-to-list 'package-archives (cons "melpa" (concat proto "://melpa.org/packages/")) t)
+          (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
           ;; Comment/uncomment this line to enable MELPA Stable if desired.  See `package-archive-priorities`
           ;; and `package-pinned-packages`. Most users will not need or want to do this.
           ;;(add-to-list 'package-archives (cons "melpa-stable" (concat proto "://stable.melpa.org/packages/")) t)
-          )
+        )
         (setq package-pinned-packages '())
         (package-initialize)
+
+4.  Lisp extensions
+
+    We need dash.
+    
+        ;; we need dash for the upcoming loop
+        (unless (package-installed-p 'dash)
+          (condition-case nil
+            (package-install 'dash)
+            (error (package-refresh-contents)
+        	   (package-install 'dash))))
+        (require 'dash)
 
 5.  Dependencies
 
@@ -250,7 +257,7 @@ Set up Emacs, package manager and packages.
           (key-chord-mode 1))
 
 
-<a id="org5bdbbb9"></a>
+<a id="orgcd4439d"></a>
 
 ### Built-in
 
@@ -360,22 +367,23 @@ Configure built-in settings.
     -   `C-c b <key>` toggle (`t`) or shows (`s`) bookmarks.
     -   `C-c c <key>` to duplicate (`d`) the current line, kill (`k`) other buffers and (`o`) open with outside program.
     -   `C-c d` for docker actions.
-    -   `C-c t <key>` opens eshell (`e`), ansi-term (`a`) or vterm (`v`).
     -   `C-c f <key>` runs ag (`a` for generic, `p` for in-project search). <span class="underline">Requires ag</span>!
     -   `C-c g` opens magit status.
+    -   `C-c i <key>` interacts with perspectives.
     -   `C-c j` dumb-jumps.
-    -   `C-c l <key>` interacts with projects.
+    -   `C-c k` kills current buffer and window.
     -   `C-c m <key>` for multiple cursors.
     -   `C-c n n` opens treemacs.
     -   `C-c o` for code-folding.
-    -   `C-c p <key>` interacts with perspectives.
+    -   `C-c p <key>` interacts with projects.
     -   `C-c q <key>` interacts with fly-checking.
-    -   `C-x r s` restarts.
     -   `C-c s` uses swiper to search.
+    -   `C-c t <key>` opens eshell (`e`), ansi-term (`a`) or vterm (`v`).
     -   `C-c v <key>` jumps to char (`c`) or line (`v`) with avy.
     -   `C-+` expands region.
     -   `C-x C-c` opens this config org file.
     -   `C-x r q` (really) quits.
+    -   `C-x r s` restarts.
     -   `C-z=/=C-S-z` undos/redos.
     -   `<key-chord> # #` (un-)comments.
     -   `M-o` goes to the "other" window or the last buffer.
@@ -383,8 +391,9 @@ Configure built-in settings.
     -   `s-k` kills the whole line.
     -   `s-(S)-RET` will open an indented line above (below).
     
-    Note that all bindings for external packages are declared in the [packages](#orga7118b5) section.
+    Note that all bindings for external packages are declared in the [packages](#org881c42c) section.
     
+        (global-set-key (kbd "C-c k")   'kill-buffer-and-window) ;; short for C-x 4 0
         (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
         (global-set-key
           (kbd "C-x C-c")
@@ -398,7 +407,7 @@ Configure built-in settings.
     Otherwise the colors might clash.
     
         ;; two themes and a switch
-        (defcustom my-dark-emacs-theme 'kaolin-temple
+        (defcustom my-dark-emacs-theme 'kaolin-galaxy
           "The quote-unquote default emacs theme.")
         
         (defcustom my-light-emacs-theme 'paper
@@ -421,7 +430,7 @@ Configure built-in settings.
         (add-hook 'after-init-hook '(lambda()
           (load-theme my-dark-emacs-theme)
           ;; if you don't mind some transparency
-          (transparency 99)))
+          (transparency 95)))
 
 7.  Font
 
@@ -501,11 +510,28 @@ Configure built-in settings.
         
         ;; finding dired buffers
         (defun is-dired-buffer (buffer-or-string)
-          "Check if provided buffer is dired-buffer"
+          "Check if provided buffer is dired-buffer."
           (eq (with-current-buffer buffer-or-string major-mode) 'dired-mode))
+        
+        ;; finding docker buffers
+        (defun is-docker-buffer (buffer-or-string)
+          "Check if provided buffer is docker-buffer."
+          (string-match "* docker " buffer-or-string))
+        
+        ;; finding some default emacs buffers I don't need to see
+        (defun is-default-emacs-buffer (buffer-or-string)
+          "Check if provided buffer is a default emacs buffer."
+          (or (string-match "*Messages*" buffer-or-string)
+              (string-match "*scratch*" buffer-or-string)
+              (eq (with-current-buffer buffer-or-string major-mode) 'help-mode)))
+        
+        ;; finding ag buffers
+        (defun is-ag-buffer (buffer-or-string)
+          "Check if provided buffer is an ag buffer."
+          (string-match "*ag search " buffer-or-string))
 
 
-<a id="orga7118b5"></a>
+<a id="org881c42c"></a>
 
 ### Packages
 
@@ -515,7 +541,7 @@ If you wish to know more about any of them, check out the list<sup><a id="fnr.8"
 at the end of this readme/configuration or the [awesome-emacs](https://github.com/emacs-tw/awesome-emacs) project.
 
 Many packages bind keys.
-Check the [key bindings section](#org7c9f72d) if you need a list of all of them.
+Check the [key bindings section](#orgdc71eff) if you need a list of all of them.
 
 1.  add-node-modules-path
 
@@ -640,7 +666,7 @@ Check the [key bindings section](#org7c9f72d) if you need a list of all of them.
 10. crux
 
     Let's use `crux` for some editing magic.
-    Check the [key bindings section](#org7c9f72d) for descriptions.
+    Check the [key bindings section](#orgdc71eff) for descriptions.
     
         (use-package crux
           :bind (("M-o"          . crux-other-window-or-switch-buffer)
@@ -731,13 +757,15 @@ Check the [key bindings section](#org7c9f72d) if you need a list of all of them.
     
         (use-package dired
           :ensure nil
+          :init
+          (put 'dired-find-alternate-file 'disabled nil)
           :config
           (setq delete-by-moving-to-trash t)
           :commands (dired dired-jump delete-file)
           :custom ((dired-listing-switches "-lah --group-directories-first"))
           :bind (:map dired-mode-map
         	("V" . dired-display-file)   ;; overrides dired-do-run-mail
-        	("-" . dired-up-directory))) ;; overides negative-argument
+        	("-" . dired-up-directory))) ;; overrides negative-argument
 
 17. dired-filter
 
@@ -751,6 +779,8 @@ Check the [key bindings section](#org7c9f72d) if you need a list of all of them.
     I use Docker a lot, don't always have to use the command line.
     
         (use-package docker
+          :init
+          (setq docker-container-default-sort-key '("Names"))
           :bind ("C-c d" . docker))
 
 19. doom-modeline
@@ -965,27 +995,41 @@ Check the [key bindings section](#org7c9f72d) if you need a list of all of them.
         
         (use-package swiper
           :after ivy
-          :chords ((",." . my-switch-buffer))
           :bind ("C-c s" . swiper))
         
+        ;; hide dired, docker, ag and default emacs buffers when switching
+        (setq my-ivy-ignore-buffers '(
+          is-dired-buffer
+          is-docker-buffer
+          is-ag-buffer
+          is-default-emacs-buffer
+          "\\` "
+          "\\`\\*tramp/"))
+        
+        ;; toggle custom ignore on or off
+        ;; makes ivy-switch-buffer-other-window unusable
+        (defun my-toggle-ivy-ignore ()
+          (interactive)
+          (if (y-or-n-p "Use custom ivy buffer ignore?")
+            (setq ivy-ignore-buffers my-ivy-ignore-buffers)
+            (setq ivy-ignore-buffers '("\\` " "\\`\\*tramp/"))))
+        
         (use-package ivy
-          :diminish
           :init
           (setq ivy-use-virtual-buffers      t
-        	enable-recursive-minibuffers t)
-          ;; hide dired buffers when switching
-          (add-to-list 'ivy-ignore-buffers 'is-dired-buffer)
+        	enable-recursive-minibuffers t
+        	ivy-ignore-buffers           my-ivy-ignore-buffers)
           :bind (("C-x b" . my-switch-buffer))
+          :chords ((",." . my-switch-buffer))
           :config
           (ivy-mode 1))
         
         (defun ivy-rich-switch-buffer-icon (candidate)
-         (with-current-buffer
-              (get-buffer candidate)
+          (with-current-buffer (get-buffer candidate)
             (let ((icon (all-the-icons-icon-for-mode major-mode)))
               (if (symbolp icon)
         	  (all-the-icons-icon-for-mode 'fundamental-mode)
-        	icon))))
+        	   icon))))
         
         (use-package ivy-rich
           :after ivy
@@ -994,13 +1038,16 @@ Check the [key bindings section](#org7c9f72d) if you need a list of all of them.
           (setq ivy-rich-display-transformers-list
               '(my-switch-buffer
         	(:columns
-        	 ((ivy-rich-switch-buffer-icon (:width 2))
+        	 (
         	  (ivy-rich-candidate (:width 30))
         	  (ivy-rich-switch-buffer-size (:width 7))
         	  (ivy-rich-switch-buffer-indicators (:width 4 :face error :align right))
-        	  (ivy-rich-switch-buffer-major-mode (:width 12 :face warning))
-        	  (ivy-rich-switch-buffer-project (:width 15 :face success))
-        	  (ivy-rich-switch-buffer-path (:width (lambda (x) (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3))))))
+        	  (ivy-rich-switch-buffer-project (:width 30 :face success))
+        	  ;; (ivy-rich-switch-buffer-major-mode (:width 8 :face warning))
+        	  (ivy-rich-switch-buffer-icon (:width 2))
+        	  (ivy-rich-switch-buffer-path (:width (lambda (x)
+        	    (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3)))))
+        	 )
         	 :predicate
         	 (lambda (cand) (get-buffer cand)))))
           :config
@@ -1098,7 +1145,10 @@ Check the [key bindings section](#org7c9f72d) if you need a list of all of them.
     This package also uses the deprecated `cl` package,
     leading to warning from emacs version 27 onwards.
     
+    Disabled for now.
+    
         (use-package origami
+          :disabled
           :init
           (setq origami-fold-replacement "⋯")
           :hook (prog-mode . origami-mode)
@@ -1118,7 +1168,7 @@ Check the [key bindings section](#org7c9f72d) if you need a list of all of them.
           (setq persp-modestring-dividers '("(" ")" "/")
         	persp-initial-frame-name  my-default-perspective
         	persp-state-default-file  (expand-file-name ".cache/persp-persist" user-emacs-directory)
-        	persp-mode-prefix-key     (kbd "C-c p"))
+        	persp-mode-prefix-key     (kbd "C-c i"))
           :config
           (persp-mode))
         
@@ -1157,7 +1207,7 @@ Check the [key bindings section](#org7c9f72d) if you need a list of all of them.
           ;; (add-to-list 'projectile-globally-ignored-directories "build")
           (add-to-list 'projectile-other-file-alist '("org" "org_archive"))
           (add-to-list 'projectile-other-file-alist '("org_archive" "org"))
-          (define-key projectile-mode-map (kbd "C-c l") 'projectile-command-map)
+          (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
           (projectile-mode +1))
 
 49. rainbow
@@ -1457,7 +1507,7 @@ Check the [key bindings section](#org7c9f72d) if you need a list of all of them.
          (zoom-mode 1))
 
 
-<a id="org8b860d9"></a>
+<a id="orgb5c52d4"></a>
 
 ### Mode Configs
 
@@ -1539,7 +1589,8 @@ Configure major modes.
     
         (defun my-json-mode-hook ()
           "Hooks for json mode."
-          (enable-tabs)
+          (when (y-or-n-p "Do you want to enables tabs?")
+            (enable-tabs))
           (flycheck-mode 1)
           (rainbow-delimiters-mode))
         
@@ -1611,10 +1662,12 @@ Configure major modes.
               (setq org-ellipsis                   "↷"
             	org-log-done                   t
             	org-startup-truncated          nil
-            	org-startup-folded             'showeverything
+            	org-startup-folded             'overview
             	org-directory                  my-org-directory
             	org-default-notes-file         (concat org-directory "/notes.org")
             	org-startup-with-inline-images t
+            	;; be sure to add archive tag with org-toggle-archive-tag
+            	org-archive-location           "::* Archived"
             	org-todo-keywords
             	  '((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
               (add-to-list 'org-global-properties
@@ -1868,7 +1921,7 @@ Configure major modes.
         (use-package yaml-mode)
 
 
-<a id="org8f6406a"></a>
+<a id="org1f50ded"></a>
 
 ### Tweaks
 
