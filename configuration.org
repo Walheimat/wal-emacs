@@ -367,17 +367,19 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =C-c j= dumb-jumps.
 + =C-c k= for docker actions.
 + =C-c m <key>= for multiple cursors.
-+ =C-c o <key>= toggle (=t=) or shows (=s=) bookmarks.
++ =C-c o <key>= toggle (=o=), go to next (=n=) or show (=s=) bookmarks.
 + =C-c p <key>= interacts with projects.
 + =C-c q <key>= interacts with fly-checking.
 + =C-c s= uses swiper to search.
 + =C-c t <key>= opens eshell (=e=), ansi-term (=a=) or vterm (=v=).
 + =C-c v <key>= jumps to char (=c=) or line (=v=) with avy.
++ =C-c w <key>= swaps (=s=) or deletes other windows (=d=).
 + =C-+= expands region.
 + =C-x C-c= opens this config org file.
 + =C-x r q= (really) quits.
 + =C-x r s= restarts.
 + =C-z=/=C-S-z= undos/redos.
++ =<f5>= to enter writeroom mode.
 + =<key-chord> # #= (un-)comments lines.
 + =M-o= goes to the "other" window or the last buffer.
 + =M-x= opens smex.
@@ -402,6 +404,7 @@ guaranteed).
 + =H-p= switches project.
 + =H-s= searches with swiper.
 + =H-v= jumps to line with avy.
++ =H-w= swaps windows.
 
 ****** Caps to Hyper
 
@@ -423,7 +426,7 @@ modifier_map Mod3   { Hyper_L, Hyper_R };
 modifier_map Mod3   { <HYPR> };   
 #+END_SRC 
 
-***** Bindings
+***** Other Bindings
 
 Note that all bindings for external packages are declared in the [[*Packages][packages]] section.
 
@@ -558,7 +561,7 @@ and treemacs buffer check.
 ;; finding dired buffers
 (defun is-dired-buffer (buffer-or-string)
   "Check if provided buffer is dired-buffer."
-  (eq (with-current-buffer buffer-or-string major-mode) 'dired-mode))
+  (eq (with-current-buffer (get-buffer-create buffer-or-string) major-mode) 'dired-mode))
 
 ;; finding docker buffers
 (defun is-docker-buffer (buffer-or-string)
@@ -570,7 +573,7 @@ and treemacs buffer check.
   "Check if provided buffer is a default emacs buffer."
   (or (string-match "*Messages*" buffer-or-string)
       (string-match "*scratch*" buffer-or-string)
-      (eq (with-current-buffer buffer-or-string major-mode) 'help-mode)))
+      (eq (with-current-buffer (get-buffer-create buffer-or-string) major-mode) 'help-mode)))
 
 ;; finding ag buffers
 (defun is-ag-buffer (buffer-or-string)
@@ -587,6 +590,17 @@ at the end of this readme/configuration or the [[https://github.com/emacs-tw/awe
 
 Many packages bind keys.
 Check the [[*Key Bindings][key bindings section]] if you need a list of all of them.
+
+**** ace
+
+Ace allows for some nifty window swapping.
+
+#+BEGIN_SRC emacs-lisp
+(use-package ace-window
+  :bind (("H-w" . ace-swap-window)
+         ("C-c w s" . ace-swap-window)
+	 ("C-c w d" . ace-delete-other-windows)))
+#+END_SRC
 
 **** add-node-modules-path
 
@@ -1650,7 +1664,7 @@ I use a different (light) theme here.
 (use-package writeroom-mode
   :hook ((writeroom-mode-enable  . (lambda() (theme-light-switch 'light)))
          (writeroom-mode-disable . (lambda() (theme-light-switch 'dark))))
-  :bind ("C-c w" . writeroom-mode))
+  :bind ("<f5>" . writeroom-mode))
 #+END_SRC
 
 **** yasnippet
