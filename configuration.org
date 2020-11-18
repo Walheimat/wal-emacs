@@ -1670,7 +1670,8 @@ I use a different (light) theme here.
 **** yasnippet
 
 Use snippets in prog mode buffers.
-Because I also use company, =yas-expand= is mapped to =C-c y=.
+Because I also use company, =yas-expand= is mapped to =H-e=,
+if you don't have a hyper key, bind it to a personal binding.
 
 #+BEGIN_SRC emacs-lisp
 (use-package yasnippet-snippets
@@ -1680,10 +1681,10 @@ Because I also use company, =yas-expand= is mapped to =C-c y=.
 
 (use-package yasnippet
   :delight " yas"
-  :init
-  (define-key yas-minor-mode-map (kbd "<tab>") nil)
-  (define-key yas-minor-mode-map (kbd "TAB") nil)
-  (define-key yas-minor-mode-map (kbd "C-c y") #'yas-expand)
+  :bind ((:map yas-minor-mode-map
+              ("<tab>" . nil)
+	      ("TAB"  . nil)
+	      ("H-e"  . #'yas-expand)))
   ;; :config
   ;; (add-hook 'company-mode-hook (lambda ()
   ;;   (substitute-key-definition 'company-complete-common
@@ -1874,7 +1875,7 @@ state =CANCELLED=.
   :hook (org-mode . (lambda() (org-bullets-mode t))))
 
 ;; use org-mode for presentations
-(use-package org-present)
+;; (use-package org-present)
 
 ;; change if necessary
 (defconst my-org-directory (expand-file-name "org" "~"))
@@ -2056,6 +2057,21 @@ Clock   In/out^
            ("C-c h" . hydra-org-clock/body)
            :map org-agenda-mode-map
            ("C-c h" . hydra-org-agenda-clock/body))
+#+END_SRC
+
+***** Presentations
+
+Use =org tree slide= for presentations.
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-tree-slide
+  :hook ((org-tree-slide-play . (lambda () (beacon-mode -1)))
+         (org-tree-slide-stop . (lambda () (beacon-mode 1))))
+  :bind (("C-c y y" . org-tree-slide-mode)
+	 ("C-c y t" . org-tree-slide-play-with-timer)
+         (:map org-tree-slide-mode-map
+          ("n" . org-tree-slide-move-next-tree)
+	  ("p" . org-tree-slide-move-previous-tree))))
 #+END_SRC
 
 **** python mode
