@@ -229,7 +229,8 @@ Adapt if necessary.
 **** Package Management
 
 We also always want to ensure the package, i.e. if it's not there, get it.
-I'm also using chords for a few, common actions.
+
+I used chords for a few, common actions but prefer using hyper key now.
 
 #+BEGIN_SRC emacs-lisp
 (require 'use-package-ensure)
@@ -241,6 +242,7 @@ I'm also using chords for a few, common actions.
 
 ;; has to come here to be useable
 (use-package use-package-chords
+  :disabled
   :config
   (key-chord-mode 1))
 #+END_SRC
@@ -361,6 +363,7 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 
 + =C-c a <key>= opens today's (=t=), this week's (=w=) or my personal (=p=) agenda.
 + =C-c c <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
++ =C-c c #= (un-)comments lines.
 + =C-c f <key>= runs ag (=a= for generic, =p= for in-project search). _Requires ag_!
 + =C-c g= opens magit status.
 + =C-c i <key>= interacts with perspectives.
@@ -380,7 +383,6 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =C-x r s= restarts.
 + =C-z=/=C-S-z= undos/redos.
 + =<f5>= to enter writeroom mode.
-+ =<key-chord> # #= (un-)comments lines.
 + =M-o= goes to the "other" window or the last buffer.
 + =M-x= opens smex.
 + =s-k= kills the whole line.
@@ -393,7 +395,6 @@ actions or those that aren't essential (since having a hyper key is not
 guaranteed).
 
 + =H-b= switches buffer.
-+ =H-c= (un-)comments lines.
 + =H-d= opens dired relative to open file.
 + =H-f= to find with ag.
 + =H-i= switches prespective.
@@ -403,6 +404,8 @@ guaranteed).
 + =H-o= to toggle bookmarks.
 + =H-p= switches project.
 + =H-s= searches with swiper.
++ =H-<TAB>= expands snippets (in =yas-minor-mode=).
++ =H-#= (un-)comments lines.
 + =H-v= jumps to line with avy.
 + =H-w= swaps windows.
 
@@ -449,7 +452,7 @@ Otherwise the colors might clash.
 
 #+BEGIN_SRC emacs-lisp
 ;; two themes and a switch
-(defcustom my-dark-emacs-theme 'kaolin-bubblegum
+(defcustom my-dark-emacs-theme 'doom-horizon
   "The quote-unquote default emacs theme.")
 
 (defcustom my-light-emacs-theme 'paper
@@ -971,8 +974,8 @@ Comment code like in =vim=, evil, evil =vim=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package evil-nerd-commenter
-  :bind   ("H-#" . evilnc-comment-or-uncomment-lines)
-  :chords ("##"  . evilnc-comment-or-uncomment-lines))
+  :bind (("H-#" . evilnc-comment-or-uncomment-lines)
+         ("C-c c #"  . evilnc-comment-or-uncomment-lines)))
 #+END_SRC
 
 **** expand-region
@@ -1127,16 +1130,10 @@ We use hydra to trigger grouped actions.
 **** ivy
 
 We use =ivy= for narrowing our options.
-=swiper= is an alternative for normal search.
 
 #+BEGIN_SRC emacs-lisp
 ;; change to ivy-switch-buffer if you don't use perspective
 (defalias 'my-switch-buffer 'persp-ivy-switch-buffer)
-
-(use-package swiper
-  :after ivy
-  :bind (("C-c s" . swiper)
-         ("H-s"   . swiper)))
 
 ;; hide dired, docker, ag and default emacs buffers when switching
 (setq my-ivy-ignore-buffers '(
@@ -1148,7 +1145,6 @@ We use =ivy= for narrowing our options.
   "\\`\\*tramp/"))
 
 ;; toggle custom ignore on or off
-;; makes ivy-switch-buffer-other-window unusable
 (defun my-toggle-ivy-ignore ()
   (interactive)
   (if (y-or-n-p "Use custom ivy buffer ignore?")
@@ -1162,10 +1158,15 @@ We use =ivy= for narrowing our options.
         ivy-ignore-buffers           my-ivy-ignore-buffers)
   :bind (("C-x b" . my-switch-buffer)
          ("H-b"   . my-switch-buffer))
-  :chords ((",." . my-switch-buffer))
   :config
   (ivy-mode 1))
+#+END_SRC
 
+**** ivy-rich
+
+Some nicer candidate view when switching buffers.
+
+#+BEGIN_SRC emacs-lisp
 (defun ivy-rich-switch-buffer-icon (candidate)
   (with-current-buffer (get-buffer candidate)
     (let ((icon (all-the-icons-icon-for-mode major-mode)))
@@ -1493,6 +1494,18 @@ This mode is included in Emacs > 27. Still using 26 here.
   (global-so-long-mode 1))
 #+END_SRC
 
+**** swiper
+
+Smart searching with =ivy=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package swiper
+  :after ivy
+  :bind (("C-c s" . swiper)
+         ("H-s"   . swiper)))
+#+END_SRC
+
+
 **** symon
 
 Show some system stats when nothing else is going on.
@@ -1682,9 +1695,9 @@ if you don't have a hyper key, bind it to a personal binding.
 (use-package yasnippet
   :delight " yas"
   :bind ((:map yas-minor-mode-map
-              ("<tab>" . nil)
-	      ("TAB"  . nil)
-	      ("H-e"  . #'yas-expand)))
+              ("<tab>"    . nil)
+	      ("TAB"      . nil)
+	      ("H-<tab>"  . #'yas-expand)))
   ;; :config
   ;; (add-hook 'company-mode-hook (lambda ()
   ;;   (substitute-key-definition 'company-complete-common
