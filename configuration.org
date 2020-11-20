@@ -1231,15 +1231,7 @@ Who doesn't like pods and stuff?
 
 Prefer =capf=, bigger delay.
 
-If you use Elixir, get the language server from [[https://github.com/elixir-lsp/elixir-ls][here]].
-
 #+BEGIN_SRC emacs-lisp
-;; you need to install the language server manually and point to the release
-(setq elixir-ls-release-location (expand-file-name "ls/elixir" user-emacs-directory))
-(if (file-exists-p (expand-file-name "language_server.sh" elixir-ls-release-location))
-  (add-to-list 'exec-path elixir-ls-release-location)
-  (add-hook 'elixir-mode-hook 'lsp))
-
 (use-package lsp-mode
   :init
   (setq lsp-completion-provider :capf
@@ -1252,6 +1244,37 @@ If you use Elixir, get the language server from [[https://github.com/elixir-lsp/
   (add-to-list 'lsp-file-watch-ignored "[/\\\\]deps$"))
 
 (use-package lsp-ui)
+#+END_SRC
+
+***** Language Servers 
+
+Register language servers. You will have to install them yourselves.
+
+If you use Elixir, get the language server from [[https://github.com/elixir-lsp/elixir-ls][here]].
+
+If you use Prolog, check instructions [[https://emacs-lsp.github.io/lsp-mode/page/lsp-prolog/][here]].
+
+#+BEGIN_SRC emacs-lisp
+;;; elixir
+;; you need to install the language server manually and point to the release
+(setq elixir-ls-release-location (expand-file-name "ls/elixir" user-emacs-directory))
+(if (file-exists-p (expand-file-name "language_server.sh" elixir-ls-release-location))
+  (add-to-list 'exec-path elixir-ls-release-location)
+  (add-hook 'elixir-mode-hook 'lsp))
+
+;;; prolog
+(lsp-register-client
+  (make-lsp-client
+   :new-connection
+   (lsp-stdio-connection (list "swipl"
+                               "-g" "use_module(library(lsp_server))."
+                               "-g" "lsp_server:main"
+                               "-t" "halt"
+                               "--" "stdio"))
+   :major-modes '(prolog-mode)
+   :priority 1
+   :multi-root t
+   :server-id 'prolog-ls))
 #+END_SRC
 
 **** magit
