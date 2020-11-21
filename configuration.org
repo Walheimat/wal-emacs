@@ -229,7 +229,8 @@ Adapt if necessary.
 **** Package Management
 
 We also always want to ensure the package, i.e. if it's not there, get it.
-I'm also using chords for a few, common actions.
+
+I used chords for a few, common actions but prefer using hyper key now.
 
 #+BEGIN_SRC emacs-lisp
 (require 'use-package-ensure)
@@ -241,6 +242,7 @@ I'm also using chords for a few, common actions.
 
 ;; has to come here to be useable
 (use-package use-package-chords
+  :disabled
   :config
   (key-chord-mode 1))
 #+END_SRC
@@ -352,43 +354,90 @@ To make this work, we need to tweak a few things.
 
 Change up the key bindings a bit.
 
+***** Personal
+
 I try to have most actions use user-reserved =C-c <key>= combinations,
 but some =C-x <key>= mappings snuck in.
 
 If you want to see all personal keybindings, execute =describe-personal-keybindings=.
 
 + =C-c a <key>= opens today's (=t=), this week's (=w=) or my personal (=p=) agenda.
-+ =C-c b <key>= toggle (=t=) or shows (=s=) bookmarks.
 + =C-c c <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
-+ =C-c d= for docker actions.
++ =C-c c #= (un-)comments lines.
 + =C-c f <key>= runs ag (=a= for generic, =p= for in-project search). _Requires ag_!
 + =C-c g= opens magit status.
 + =C-c i <key>= interacts with perspectives.
 + =C-c j= dumb-jumps.
-+ =C-c k= kills current buffer and window.
++ =C-c k= for docker actions.
 + =C-c m <key>= for multiple cursors.
-+ =C-c n n= opens treemacs.
-+ =C-c o= for code-folding.
++ =C-c o <key>= toggle (=o=), go to next (=n=) or show (=s=) bookmarks.
 + =C-c p <key>= interacts with projects.
 + =C-c q <key>= interacts with fly-checking.
 + =C-c s= uses swiper to search.
 + =C-c t <key>= opens eshell (=e=), ansi-term (=a=) or vterm (=v=).
 + =C-c v <key>= jumps to char (=c=) or line (=v=) with avy.
++ =C-c w <key>= swaps (=s=) or deletes other windows (=d=).
 + =C-+= expands region.
 + =C-x C-c= opens this config org file.
 + =C-x r q= (really) quits.
 + =C-x r s= restarts.
 + =C-z=/=C-S-z= undos/redos.
-+ =<key-chord> # #= (un-)comments.
++ =<f5>= to enter writeroom mode.
 + =M-o= goes to the "other" window or the last buffer.
 + =M-x= opens smex.
 + =s-k= kills the whole line.
 + =s-(S)-RET= will open an indented line above (below).
 
-Note that all bindings for external packages are declared in the [[*Packages][packages]] section.
+***** Hyper
+
+The following bindings are either quick-access of already bound
+actions or those that aren't essential (since having a hyper key is not
+guaranteed).
+
++ =H-b= switches buffer.
++ =H-d= opens dired relative to open file.
++ =H-f= to find with ag.
++ =H-i= switches prespective.
++ =H-k= to interact with docker.
++ =H-m= mark all like this (multiple cursors).
++ =H-<number>= splits horizontal (=2=), vertical (=3=), closes (=0=) or kills (=4=).
++ =H-o= to toggle bookmarks.
++ =H-p= switches project.
++ =H-s= searches with swiper.
++ =H-<TAB>= expands snippets (in =yas-minor-mode=).
++ =H-#= (un-)comments lines.
++ =H-v= jumps to line with avy.
++ =H-w= swaps windows.
+
+****** Caps to Hyper
+
+I re-bound my =<CAPS>= (caps-lock) key to =Hyper_L= to use these
+hyper bindings.
+
+If you use Xorg Display Server,
+you can do this by editing your =/usr/share/X11/xkb/symbols/pc= file like so:
+
+#+BEGIN_SRC
+...
+// key <CAPS> {    [ Caps_Lock     ]   };
+key <CAPS> {    [ Hyper_L       ]   };
+...
+// modifier_map Lock   { Caps_Lock };
+modifier_map Mod3   { Hyper_L, Hyper_R };
+...
+// modifier_map Mod4   { <HYPR> };   
+modifier_map Mod3   { <HYPR> };   
+#+END_SRC 
+
+***** Non-Use-Package Bindings
+
+Most bindings are declared in the [[*Packages][packages]] section.
 
 #+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "C-c k")   'kill-buffer-and-window) ;; short for C-x 4 0
+(global-set-key (kbd "H-4")     'kill-buffer-and-window)
+(global-set-key (kbd "H-3")     'split-window-right)
+(global-set-key (kbd "H-2")     'split-window-below)
+(global-set-key (kbd "H-0")     'delete-window)
 (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
 (global-set-key
   (kbd "C-x C-c")
@@ -404,7 +453,7 @@ Otherwise the colors might clash.
 
 #+BEGIN_SRC emacs-lisp
 ;; two themes and a switch
-(defcustom my-dark-emacs-theme 'kaolin-galaxy
+(defcustom my-dark-emacs-theme 'doom-horizon
   "The quote-unquote default emacs theme.")
 
 (defcustom my-light-emacs-theme 'paper
@@ -516,7 +565,7 @@ and treemacs buffer check.
 ;; finding dired buffers
 (defun is-dired-buffer (buffer-or-string)
   "Check if provided buffer is dired-buffer."
-  (eq (with-current-buffer buffer-or-string major-mode) 'dired-mode))
+  (eq (with-current-buffer (get-buffer-create buffer-or-string) major-mode) 'dired-mode))
 
 ;; finding docker buffers
 (defun is-docker-buffer (buffer-or-string)
@@ -528,7 +577,7 @@ and treemacs buffer check.
   "Check if provided buffer is a default emacs buffer."
   (or (string-match "*Messages*" buffer-or-string)
       (string-match "*scratch*" buffer-or-string)
-      (eq (with-current-buffer buffer-or-string major-mode) 'help-mode)))
+      (eq (with-current-buffer (get-buffer-create buffer-or-string) major-mode) 'help-mode)))
 
 ;; finding ag buffers
 (defun is-ag-buffer (buffer-or-string)
@@ -545,6 +594,17 @@ at the end of this readme/configuration or the [[https://github.com/emacs-tw/awe
 
 Many packages bind keys.
 Check the [[*Key Bindings][key bindings section]] if you need a list of all of them.
+
+**** ace
+
+Ace allows for some nifty window swapping.
+
+#+BEGIN_SRC emacs-lisp
+(use-package ace-window
+  :bind (("H-w" . ace-swap-window)
+         ("C-c w s" . ace-swap-window)
+	 ("C-c w d" . ace-delete-other-windows)))
+#+END_SRC
 
 **** add-node-modules-path
 
@@ -566,8 +626,9 @@ to download it automatically, but might fail).
   :ensure-system-package ag
   :init
   (setq ag-highlight-search t)
-  :bind ("C-c f a" . ag)
-        ("C-c f p" . ag-project))
+  :bind (("C-c f a" . ag)
+         ("C-c f p" . ag-project)
+	 ("H-f"     . ag)))
 #+END_SRC
 
 **** all-the-icons
@@ -614,7 +675,8 @@ Jumping to (visible) lines and chars is fun if you are too lazy to use your mous
 #+BEGIN_SRC emacs-lisp
 (use-package avy
   :bind (("C-c v v" . avy-goto-line)
-         ("C-c v c" . avy-goto-char)))
+         ("C-c v c" . avy-goto-char)
+	 ("H-v"     . avy-goto-line)))
 #+END_SRC
 
 **** beacon
@@ -655,9 +717,10 @@ Bookmarks are useful. I don't remember where I was. _Who are you?!_
    (after-revert .      bm-buffer-restore)
    (vc-before-checkin . bm-buffer-save))
   :bind
-   (("C-c b s" . bm-show)
-    ("C-c b n" . bm-next)
-    ("C-c b b" . bm-toggle)))
+   (("C-c o s" . bm-show)
+    ("C-c o n" . bm-next)
+    ("C-c o b" . bm-toggle)
+    ("H-o"     . bm-toggle)))
 #+END_SRC
 
 **** company
@@ -797,9 +860,10 @@ override some keybindings.
   (setq delete-by-moving-to-trash t)
   :commands (dired dired-jump delete-file)
   :custom ((dired-listing-switches "-lah --group-directories-first"))
-  :bind (:map dired-mode-map
-        ("V" . dired-display-file)   ;; overrides dired-do-run-mail
-        ("-" . dired-up-directory))) ;; overrides negative-argument
+  :bind (("H-d" . dired-jump)
+         (:map dired-mode-map
+         ("V" . dired-display-file)   ;; overrides dired-do-run-mail
+         ("-" . dired-up-directory)))) ;; overrides negative-argument
 #+END_SRC
 
 **** dired-filter
@@ -819,7 +883,8 @@ I use Docker a lot, don't always have to use the command line.
 (use-package docker
   :init
   (setq docker-container-default-sort-key '("Names"))
-  :bind ("C-c d" . docker))
+  :bind (("C-c k" . docker)
+         ("H-k"   . docker)))
 #+END_SRC
 
 **** doom-modeline
@@ -862,7 +927,8 @@ Configure it for =ivy=.
         dumb-jump-force-searcher 'ag)
   :config
   (dumb-jump-mode)
-  :bind ("C-c j" . xref-find-definitions))
+  :bind (("C-c j" . xref-find-definitions)
+         ("H-j"   . xref-find-definitions)))
 #+END_SRC
 
 **** eshell
@@ -909,7 +975,8 @@ Comment code like in =vim=, evil, evil =vim=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package evil-nerd-commenter
-  :chords ("##" . evilnc-comment-or-uncomment-lines))
+  :bind (("H-#" . evilnc-comment-or-uncomment-lines)
+         ("C-c c #"  . evilnc-comment-or-uncomment-lines)))
 #+END_SRC
 
 **** expand-region
@@ -1064,15 +1131,10 @@ We use hydra to trigger grouped actions.
 **** ivy
 
 We use =ivy= for narrowing our options.
-=swiper= is an alternative for normal search.
 
 #+BEGIN_SRC emacs-lisp
 ;; change to ivy-switch-buffer if you don't use perspective
 (defalias 'my-switch-buffer 'persp-ivy-switch-buffer)
-
-(use-package swiper
-  :after ivy
-  :bind ("C-c s" . swiper))
 
 ;; hide dired, docker, ag and default emacs buffers when switching
 (setq my-ivy-ignore-buffers '(
@@ -1084,7 +1146,6 @@ We use =ivy= for narrowing our options.
   "\\`\\*tramp/"))
 
 ;; toggle custom ignore on or off
-;; makes ivy-switch-buffer-other-window unusable
 (defun my-toggle-ivy-ignore ()
   (interactive)
   (if (y-or-n-p "Use custom ivy buffer ignore?")
@@ -1096,11 +1157,17 @@ We use =ivy= for narrowing our options.
   (setq ivy-use-virtual-buffers      t
         enable-recursive-minibuffers t
         ivy-ignore-buffers           my-ivy-ignore-buffers)
-  :bind (("C-x b" . my-switch-buffer))
-  :chords ((",." . my-switch-buffer))
+  :bind (("C-x b" . my-switch-buffer)
+         ("H-b"   . my-switch-buffer))
   :config
   (ivy-mode 1))
+#+END_SRC
 
+**** ivy-rich
+
+Some nicer candidate view when switching buffers.
+
+#+BEGIN_SRC emacs-lisp
 (defun ivy-rich-switch-buffer-icon (candidate)
   (with-current-buffer (get-buffer candidate)
     (let ((icon (all-the-icons-icon-for-mode major-mode)))
@@ -1165,15 +1232,7 @@ Who doesn't like pods and stuff?
 
 Prefer =capf=, bigger delay.
 
-If you use Elixir, get the language server from [[https://github.com/elixir-lsp/elixir-ls][here]].
-
 #+BEGIN_SRC emacs-lisp
-;; you need to install the language server manually and point to the release
-(setq elixir-ls-release-location (expand-file-name "ls/elixir" user-emacs-directory))
-(if (file-exists-p (expand-file-name "language_server.sh" elixir-ls-release-location))
-  (add-to-list 'exec-path elixir-ls-release-location)
-  (add-hook 'elixir-mode-hook 'lsp))
-
 (use-package lsp-mode
   :init
   (setq lsp-completion-provider :capf
@@ -1188,13 +1247,42 @@ If you use Elixir, get the language server from [[https://github.com/elixir-lsp/
 (use-package lsp-ui)
 #+END_SRC
 
+***** Language Servers 
+
+Configure or register language servers.
+You will have to install them yourself.[fn:9]
+
+#+BEGIN_SRC emacs-lisp
+;;; elixir
+;; you need to install the language server manually and point to the release
+(setq elixir-ls-release-location (expand-file-name "ls/elixir" user-emacs-directory))
+(if (file-exists-p (expand-file-name "language_server.sh" elixir-ls-release-location))
+  (add-to-list 'exec-path elixir-ls-release-location)
+  (add-hook 'elixir-mode-hook 'lsp))
+
+;;; prolog
+(lsp-register-client
+  (make-lsp-client
+   :new-connection
+   (lsp-stdio-connection (list "swipl"
+                               "-g" "use_module(library(lsp_server))."
+                               "-g" "lsp_server:main"
+                               "-t" "halt"
+                               "--" "stdio"))
+   :major-modes '(prolog-mode)
+   :priority 1
+   :multi-root t
+   :server-id 'prolog-ls))
+#+END_SRC
+
 **** magit
 
 Version control has never been this easy before.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
-  :bind ("C-c g" . magit-status))
+  :bind (("C-c g" . magit-status)
+         ("H-g"   . magit-status)))
 #+END_SRC
 
 **** mode-line-bell
@@ -1217,7 +1305,8 @@ It's nice to change everything at once.
   :bind
   (("C-c m n" . mc/mark-next-like-this)
    ("C-c m p" . mc/mark-previous-like-this)
-   ("C-c m a" . mc/mark-all-like-this)))
+   ("C-c m a" . mc/mark-all-like-this)
+   ("H-m"     . mc/mark-all-like-this)))
 #+END_SRC
 
 **** mwim
@@ -1259,6 +1348,7 @@ Have some perspective, man.
 (use-package perspective
   :custom-face
   (persp-selected-face ((t (:weight bold :foreground "burlywood"))))
+  :bind ("H-i" . persp-switch)
   :init
   (setq persp-modestring-dividers '("(" ")" "/")
         persp-initial-frame-name  my-default-perspective
@@ -1296,6 +1386,7 @@ You don't really _need_ treemacs.
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
   :diminish " pjt"
+  :bind ("H-p" . projectile-switch-project)
   :init
   (setq projectile-completion-system     'ivy
         projectile-mode-line-function    '(lambda() (format " {%s}" (projectile-project-name)))
@@ -1424,6 +1515,18 @@ This mode is included in Emacs > 27. Still using 26 here.
   (global-so-long-mode 1))
 #+END_SRC
 
+**** swiper
+
+Smart searching with =ivy=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package swiper
+  :after ivy
+  :bind (("C-c s" . swiper)
+         ("H-s"   . swiper)))
+#+END_SRC
+
+
 **** symon
 
 Show some system stats when nothing else is going on.
@@ -1484,7 +1587,6 @@ visible" is nice, so let's show some _dirs_.
   (progn
     (setq treemacs-indentation                   1
           treemacs-width                         35
-	  treemacs-position                      'left
 	  treemacs-move-forward-on-expand        t
 	  treemacs-follow-after-init             nil
           treemacs-indentation-string            " ⁝ "
@@ -1511,9 +1613,16 @@ visible" is nice, so let's show some _dirs_.
         ("C-c n n"   . treemacs)
         ("C-c n b"   . treemacs-bookmark)
         ("C-c n M-t" . treemacs-find-tag)))
+#+END_SRC
 
-;; (use-package treemacs-evil
-;;   :after treemacs evil)
+***** Treemacs Packages
+
+Some treemacs integration packages.
+
+#+BEGIN_SRC emacs-lisp
+(use-package treemacs-evil
+  :disabled
+  :after treemacs evil)
 
 (use-package treemacs-projectile
   :disabled
@@ -1560,16 +1669,32 @@ Ensure binaries.
 
 **** vterm
 
-Vterm might require you to have built Emacs from source.
+Vterm can be an alternative to included shell (emulation).
+We also install =vterm-toggle=.
+
 Also, if you're on an older Ubuntu version (like my work PC),
-the =libvterm= package might be too old. 
+the =libvterm= package might be too old, but you could
+always try to build from source ...
 
 #+BEGIN_SRC emacs-lisp
 (unless (version< emacs-version "27.0")
   (use-package vterm
-    :bind ("C-c t v" . vterm)
     :config
-    (setq vterm-kill-buffer-on-exit t)))
+    (when (file-exists-p "/bin/fish")
+      (setq vterm-shell "/bin/fish"))
+    (setq vterm-kill-buffer-on-exit t))
+  (use-package vterm-toggle
+    :bind (("H-t"   . vterm-toggle)
+           ("C-c t v" . vterm-toggle))
+    :init
+    (setq vterm-toggle-fullscreen-p nil)
+    (add-to-list 'display-buffer-alist
+             '((lambda(bufname _) (with-current-buffer bufname (equal major-mode 'vterm-mode)))
+                (display-buffer-reuse-window display-buffer-in-side-window)
+                (side . bottom)
+                (dedicated . t)
+                (reusable-frames . visible)
+                (window-height . 0.3)))))
 #+END_SRC
 
 **** which-key
@@ -1595,13 +1720,14 @@ I use a different (light) theme here.
 (use-package writeroom-mode
   :hook ((writeroom-mode-enable  . (lambda() (theme-light-switch 'light)))
          (writeroom-mode-disable . (lambda() (theme-light-switch 'dark))))
-  :bind ("C-c w" . writeroom-mode))
+  :bind ("<f5>" . writeroom-mode))
 #+END_SRC
 
 **** yasnippet
 
 Use snippets in prog mode buffers.
-Because I also use company, =yas-expand= is mapped to =C-c y=.
+Because I also use company, =yas-expand= is mapped to =H-e=,
+if you don't have a hyper key, bind it to a personal binding.
 
 #+BEGIN_SRC emacs-lisp
 (use-package yasnippet-snippets
@@ -1611,10 +1737,10 @@ Because I also use company, =yas-expand= is mapped to =C-c y=.
 
 (use-package yasnippet
   :delight " yas"
-  :init
-  (define-key yas-minor-mode-map (kbd "<tab>") nil)
-  (define-key yas-minor-mode-map (kbd "TAB") nil)
-  (define-key yas-minor-mode-map (kbd "C-c y") #'yas-expand)
+  :bind ((:map yas-minor-mode-map
+              ("<tab>"    . nil)
+	      ("TAB"      . nil)
+	      ("H-<tab>"  . #'yas-expand)))
   ;; :config
   ;; (add-hook 'company-mode-hook (lambda ()
   ;;   (substitute-key-definition 'company-complete-common
@@ -1691,7 +1817,7 @@ Enable =flycheck=.
 
 **** css mode
 
-Just activate flycheck and tabs for now.
+Just activate =flycheck= and tabs for now.
 
 #+BEGIN_SRC emacs-lisp
 (defun my-css-mode-hook ()
@@ -1804,9 +1930,6 @@ state =CANCELLED=.
 (use-package org-bullets
   :hook (org-mode . (lambda() (org-bullets-mode t))))
 
-;; use org-mode for presentations
-(use-package org-present)
-
 ;; change if necessary
 (defconst my-org-directory (expand-file-name "org" "~"))
 (unless (file-directory-p my-org-directory)
@@ -1833,7 +1956,7 @@ state =CANCELLED=.
   (add-to-list 'org-global-properties
                '("Effort_ALL". "30m 1h 2h 4h 6h 1d 2d")))
 
-(setq org-log-done                           'note
+(setq org-log-done                           'time
       org-clock-idle-time                    nil
       org-clock-continuously                 nil
       org-clock-persist                      t
@@ -1989,6 +2112,21 @@ Clock   In/out^
            ("C-c h" . hydra-org-agenda-clock/body))
 #+END_SRC
 
+***** Presentations
+
+Use =org tree slide= for presentations.
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-tree-slide
+  :hook ((org-tree-slide-play . (lambda () (beacon-mode -1)))
+         (org-tree-slide-stop . (lambda () (beacon-mode 1))))
+  :bind (("C-c y y" . org-tree-slide-mode)
+	 ("C-c y t" . org-tree-slide-play-with-timer)
+         (:map org-tree-slide-mode-map
+          ("n" . org-tree-slide-move-next-tree)
+	  ("p" . org-tree-slide-move-previous-tree))))
+#+END_SRC
+
 **** python mode
 
 Enable =flycheck=.
@@ -2006,6 +2144,7 @@ This mode is built-in.
   "Hooks for python mode."
   (message "Sssnake_case!")
   (flycheck-mode 1)
+  (lsp)
   (add-hook 'local-write-file-hooks
     (lambda ()
       (delete-trailing-whitespace)
@@ -2198,6 +2337,7 @@ If that is the case do the following:
 [fn:7] Send me an email, why don't you?
 
 [fn:8] Repositories (almost complete):
++ [[https://github.com/abo-abo/ace-window][ace-window]]
 + [[https://github.com/codesuki/add-node-modules-path][add-node-modules-path]]
 + [[https://github.com/Wilfred/ag.el][ag]]
 + [[https://github.com/domtronn/all-the-icons.el][all-the-icons]]
@@ -2264,9 +2404,17 @@ If that is the case do the following:
 + [[https://gitlab.com/ideasman42/emacs-undo-fu][undo-fu]]
 + [[https://github.com/jwiegley/use-package][use-package]]
 + [[https://github.com/akermu/emacs-libvterm][vterm]]
++ [[https://github.com/jixiuf/vterm-toggle][vterm-toggle]]
 + [[http://web-mode.org/][web-mode]]
 + [[https://github.com/justbur/emacs-which-key][which-key]]
 + [[https://github.com/joostkremers/writeroom-mode][writeroom-mode]]
 + [[https://github.com/joaotavora/yasnippet][yasnippet]]
 + [[https://www.emacswiki.org/emacs/ZoneMode][zone]]
 + [[https://github.com/cyrus-and/zoom][zoom]]
+
+[fn:9] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+
+Currently I only need three:
++ [[https://github.com/elixir-lsp/elixir-ls][Elixir]]
++ [[https://emacs-lsp.github.io/lsp-mode/page/lsp-prolog/][Prolog]]
++ [[https://emacs-lsp.github.io/lsp-mode/page/lsp-pyls/][Python]]
