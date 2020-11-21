@@ -400,7 +400,7 @@ guaranteed).
 + =H-i= switches prespective.
 + =H-k= to interact with docker.
 + =H-m= mark all like this (multiple cursors).
-+ =H-<number>= splits horizontal (=2=), vertical (=3=) or kills (=4=).
++ =H-<number>= splits horizontal (=2=), vertical (=3=), closes (=0=) or kills (=4=).
 + =H-o= to toggle bookmarks.
 + =H-p= switches project.
 + =H-s= searches with swiper.
@@ -429,14 +429,15 @@ modifier_map Mod3   { Hyper_L, Hyper_R };
 modifier_map Mod3   { <HYPR> };   
 #+END_SRC 
 
-***** Other Bindings
+***** Non-Use-Package Bindings
 
-Note that all bindings for external packages are declared in the [[*Packages][packages]] section.
+Most bindings are declared in the [[*Packages][packages]] section.
 
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "H-4")     'kill-buffer-and-window)
 (global-set-key (kbd "H-3")     'split-window-right)
 (global-set-key (kbd "H-2")     'split-window-below)
+(global-set-key (kbd "H-0")     'delete-window)
 (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
 (global-set-key
   (kbd "C-x C-c")
@@ -1669,6 +1670,7 @@ Ensure binaries.
 **** vterm
 
 Vterm can be an alternative to included shell (emulation).
+We also install =vterm-toggle=.
 
 Also, if you're on an older Ubuntu version (like my work PC),
 the =libvterm= package might be too old, but you could
@@ -1677,11 +1679,22 @@ always try to build from source ...
 #+BEGIN_SRC emacs-lisp
 (unless (version< emacs-version "27.0")
   (use-package vterm
-    :bind ("C-c t v" . vterm)
     :config
     (when (file-exists-p "/bin/fish")
       (setq vterm-shell "/bin/fish"))
-    (setq vterm-kill-buffer-on-exit t)))
+    (setq vterm-kill-buffer-on-exit t))
+  (use-package vterm-toggle
+    :bind (("H-t"   . vterm-toggle)
+           ("C-c t v" . vterm-toggle))
+    :init
+    (setq vterm-toggle-fullscreen-p nil)
+    (add-to-list 'display-buffer-alist
+             '((lambda(bufname _) (with-current-buffer bufname (equal major-mode 'vterm-mode)))
+                (display-buffer-reuse-window display-buffer-in-side-window)
+                (side . bottom)
+                (dedicated . t)
+                (reusable-frames . visible)
+                (window-height . 0.3)))))
 #+END_SRC
 
 **** which-key
@@ -2391,6 +2404,7 @@ If that is the case do the following:
 + [[https://gitlab.com/ideasman42/emacs-undo-fu][undo-fu]]
 + [[https://github.com/jwiegley/use-package][use-package]]
 + [[https://github.com/akermu/emacs-libvterm][vterm]]
++ [[https://github.com/jixiuf/vterm-toggle][vterm-toggle]]
 + [[http://web-mode.org/][web-mode]]
 + [[https://github.com/justbur/emacs-which-key][which-key]]
 + [[https://github.com/joostkremers/writeroom-mode][writeroom-mode]]
