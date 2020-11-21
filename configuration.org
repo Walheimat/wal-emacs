@@ -375,6 +375,7 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =C-c q <key>= interacts with fly-checking.
 + =C-c s= uses swiper to search.
 + =C-c t <key>= opens eshell (=e=), ansi-term (=a=) or vterm (=v=).
++ =C-c u <key>= to debug (=u=) or edit template (=t=).
 + =C-c v <key>= jumps to char (=c=) or line (=v=) with avy.
 + =C-c w <key>= swaps (=s=) or deletes other windows (=d=).
 + =C-+= expands region.
@@ -383,6 +384,8 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =C-x r s= restarts.
 + =C-z=/=C-S-z= undos/redos.
 + =<f5>= to enter writeroom mode.
++ =<f6>= to google this.
++ =<f7>= to present org file.
 + =M-o= goes to the "other" window or the last buffer.
 + =M-x= opens smex.
 + =s-k= kills the whole line.
@@ -400,12 +403,18 @@ guaranteed).
 + =H-i= switches prespective.
 + =H-k= to interact with docker.
 + =H-m= mark all like this (multiple cursors).
-+ =H-<number>= splits horizontal (=2=), vertical (=3=), closes (=0=) or kills (=4=).
++ =H-<number>=
+  + closes (=0=),
+  + closes others (=1=),
+  + splits horizontal (=2=),
+  + splits vertical (=3=),
+  + kills (=4=).
 + =H-o= to toggle bookmarks.
 + =H-p= switches project.
 + =H-s= searches with swiper.
 + =H-<TAB>= expands snippets (in =yas-minor-mode=).
 + =H-#= (un-)comments lines.
++ =H-u= to debug.
 + =H-v= jumps to line with avy.
 + =H-w= swaps windows.
 
@@ -437,6 +446,7 @@ Most bindings are declared in the [[*Packages][packages]] section.
 (global-set-key (kbd "H-4")     'kill-buffer-and-window)
 (global-set-key (kbd "H-3")     'split-window-right)
 (global-set-key (kbd "H-2")     'split-window-below)
+(global-set-key (kbd "H-1")     'delete-other-windows)
 (global-set-key (kbd "H-0")     'delete-window)
 (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
 (global-set-key
@@ -775,24 +785,37 @@ I currently only use it for JavaScript and Python.
 (use-package dap-mode
   :delight " dap"
   :init
-  ;; (require 'cl) ;; deprecated in 27
   (setq dap-python-executable       "python3"
         dap-auto-configure-features '(sessions locals breakpoints))
   :config
   (require 'dap-node)
   (require 'dap-python)
-  (dap-register-debug-template
-    "Node::Attach"
-    (list :type "node"
-          :request "attach"
-          :remoteRoot "/usr/src/app"
-	  :localRoot "/home/krister/theventury"
-	  :port 9229
-	  :name "Node::Attach"))
+  :bind (("C-c u u" . dap-debug)
+         ("C-c u t" . dap-debug-edit-template)
+	 ("H-u"     . dap-debug)
+         (:map dap-mode-map
+               ("?" . dap-hydra)))
   :hook 
-  ((js2-mode    . dap-mode)
-   (python-mode . dap-mode)
-   (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra)))))
+  ((js2-mode    . dap-auto-configure-mode)
+   (python-mode . dap-auto-configure-mode)))
+#+END_SRC
+
+***** Debug Templates
+
+This is just an example, ideally, you put templates
+in your project root.
+
+This one is for attaching to a containerized node app running =nodemon=.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(dap-register-debug-template
+  "Nodemon::Attach"
+  (list :type "node"
+        :request "attach"
+        :remoteRoot "/usr/src/app"
+  	:localRoot "/home/user/path/to/root"
+	:port 9229
+	:name "Nodemon::Attach"))
 #+END_SRC
 
 **** delight
@@ -1083,7 +1106,7 @@ If you're too lazy to copy and paste.
 #+BEGIN_SRC emacs-lisp
 (use-package google-this
   :diminish
-  :bind ("C-c u" . 'google-this-mode-submap)
+  :bind ("<f6>" . 'google-this-mode-submap)
   :config
   (google-this-mode 1))
 #+END_SRC
@@ -2120,8 +2143,7 @@ Use =org tree slide= for presentations.
 (use-package org-tree-slide
   :hook ((org-tree-slide-play . (lambda () (beacon-mode -1)))
          (org-tree-slide-stop . (lambda () (beacon-mode 1))))
-  :bind (("C-c y y" . org-tree-slide-mode)
-	 ("C-c y t" . org-tree-slide-play-with-timer)
+  :bind (("<f7>" . org-tree-slide-mode)
          (:map org-tree-slide-mode-map
           ("n" . org-tree-slide-move-next-tree)
 	  ("p" . org-tree-slide-move-previous-tree))))
