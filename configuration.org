@@ -784,26 +784,26 @@ I currently only use it for JavaScript and Python.
 #+BEGIN_SRC emacs-lisp
 (use-package dap-mode
   :delight " dap"
+  :custom
+  (lsp-enable-dap-auto-configure nil)
   :init
-  (setq dap-python-executable       "python3"
-        dap-auto-configure-features '(sessions locals breakpoints))
+  (setq dap-python-executable "python3")
+  ;; (setq dap-auto-configure-features '(sessions locals breakpoints))
   :config
+  (dap-ui-mode 1)
   (require 'dap-node)
   (require 'dap-python)
-  :bind (("C-c u u" . dap-debug)
-         ("C-c u t" . dap-debug-edit-template)
-	 ("H-u"     . dap-debug)
+  :bind (("C-c u" . dap-mode)
          (:map dap-mode-map
-               ("?" . dap-hydra)))
-  :hook 
-  ((js2-mode    . dap-auto-configure-mode)
-   (python-mode . dap-auto-configure-mode)))
+               ("H-u" . dap-hydra))))
 #+END_SRC
 
 ***** Debug Templates
 
 This is just an example, ideally, you put templates
 in your project root.
+
+****** Node.js
 
 This one is for attaching to a containerized node app running =nodemon=.
 
@@ -812,10 +812,40 @@ This one is for attaching to a containerized node app running =nodemon=.
   "Nodemon::Attach"
   (list :type "node"
         :request "attach"
+        :port 9229
         :remoteRoot "/usr/src/app"
-  	:localRoot "/home/user/path/to/root"
+  	:localRoot "/home/user/path/to/root"))
+#+END_SRC
+
+****** Transpiled Node.js
+
+Still some =babel= projects left.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(dap-register-debug-template
+  "Babel::Attach"
+  (list :type "node"
+        :request "attach"
 	:port 9229
-	:name "Nodemon::Attach"))
+	:sourceMaps t
+        :localRoot "/home/user/path/to/build"
+        :remoteRoot "/usr/src/app"))
+#+END_SRC
+
+****** TypeScript
+
+Compile your =src= with =--sourceMap= or set =sourceMap= to =true= in
+your =tsconfig.json=.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(dap-register-debug-template
+  "TypeScript::Attach"
+  (list :type "node"
+        :request "attach"
+        :port 9229
+	:sourceMaps t
+        :localRoot "/home/user/path/to/build"
+        :remoteRoot "/usr/src/app/build"))
 #+END_SRC
 
 **** delight
