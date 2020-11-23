@@ -93,7 +93,7 @@ Customize start-up.
 (load custom-file)
 #+END_SRC
 
-***** Peristent *scratch*
+***** Persistent *scratch*
 
 Let's keep the scratch contents.
 This (and some other things) was cribbed from [[https://www.john2x.com/emacs.html][john2x's config]] and only slightly adapted.
@@ -443,11 +443,14 @@ modifier_map Mod3   { <HYPR> };
 Most bindings are declared in the [[*Packages][packages]] section.
 
 #+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "H-4")     'kill-buffer-and-window)
-(global-set-key (kbd "H-3")     'split-window-right)
-(global-set-key (kbd "H-2")     'split-window-below)
-(global-set-key (kbd "H-1")     'delete-other-windows)
+;; windows
 (global-set-key (kbd "H-0")     'delete-window)
+(global-set-key (kbd "H-1")     'delete-other-windows)
+(global-set-key (kbd "H-2")     'split-window-below)
+(global-set-key (kbd "H-3")     'split-window-right)
+(global-set-key (kbd "H-4")     'kill-buffer-and-window)
+
+;; emacs
 (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
 (global-set-key
   (kbd "C-x C-c")
@@ -778,8 +781,6 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
 **** dap
 
 Debugging using VSCode's DAP.
-We register a node template for attaching to a Docker host.
-I currently only use it for JavaScript and Python.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dap-mode
@@ -800,8 +801,7 @@ I currently only use it for JavaScript and Python.
 
 ***** Debug Templates
 
-This is just an example, ideally, you put templates
-in your project root.
+Here are some examples for Node.js projects using =nodemon=.
 
 ****** Node.js
 
@@ -809,7 +809,7 @@ This one is for attaching to a containerized node app running =nodemon=.
 
 #+BEGIN_SRC emacs-lisp :tangle no
 (dap-register-debug-template
-  "Nodemon::Attach"
+  "Node::Attach"
   (list :type "node"
         :request "attach"
         :port 9229
@@ -1161,7 +1161,6 @@ Make numbers stand out.
 #+BEGIN_SRC emacs-lisp
 (use-package highlight-numbers
   :hook (prog-mode . highlight-numbers-mode))
-
 #+END_SRC
 
 **** hl-todo
@@ -1307,7 +1306,6 @@ You will have to install them yourself.[fn:9]
 
 #+BEGIN_SRC emacs-lisp
 ;;; elixir
-;; you need to install the language server manually and point to the release
 (setq elixir-ls-release-location (expand-file-name "ls/elixir" user-emacs-directory))
 (if (file-exists-p (expand-file-name "language_server.sh" elixir-ls-release-location))
   (add-to-list 'exec-path elixir-ls-release-location)
@@ -1448,8 +1446,8 @@ You don't really _need_ treemacs.
   :config
   ;; (add-to-list 'projectile-globally-ignored-directories "node_modules")
   ;; (add-to-list 'projectile-globally-ignored-directories "build")
-  (add-to-list 'projectile-other-file-alist '("org" "org_archive"))
-  (add-to-list 'projectile-other-file-alist '("org_archive" "org"))
+  ;; (add-to-list 'projectile-other-file-alist '("org" "org_archive"))
+  ;; (add-to-list 'projectile-other-file-alist '("org_archive" "org"))
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (projectile-mode +1))
 #+END_SRC
@@ -1560,12 +1558,14 @@ Smooth scrolling at the margins using =C-n= and =C-p=.
 
 **** so-long
 
-This mode is included in Emacs > 27. Still using 26 here.
+For files whose lines are too long (no longer
+needed in Emacs 27+).
 
 #+BEGIN_SRC emacs-lisp
-(use-package so-long
-  :config
-  (global-so-long-mode 1))
+(if (version< emacs-version "27")
+  (use-package so-long
+    :config
+    (global-so-long-mode 1)))
 #+END_SRC
 
 **** swiper
@@ -1579,7 +1579,6 @@ Smart searching with =ivy=.
          ("H-s"   . swiper)))
 #+END_SRC
 
-
 **** symon
 
 Show some system stats when nothing else is going on.
@@ -1589,8 +1588,7 @@ Show some system stats when nothing else is going on.
   :init
   (setq symon-sparkline-type 'bounded
         symon-delay          10
-	symon-monitors
-			     '(symon-linux-cpu-monitor
+	symon-monitors       '(symon-linux-cpu-monitor
 			       symon-linux-memory-monitor
 			       symon-linux-network-rx-monitor
 			       symon-linux-network-tx-monitor))
