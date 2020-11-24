@@ -466,28 +466,28 @@ Otherwise the colors might clash.
 
 #+BEGIN_SRC emacs-lisp
 ;; two themes and a switch
-(defcustom my-dark-emacs-theme 'doom-horizon
+(defcustom my-primary-emacs-theme 'doom-opera-light
   "The quote-unquote default emacs theme.")
 
-(defcustom my-light-emacs-theme 'paper
+(defcustom my-secondary-emacs-theme 'paper
   "The non-default emacs theme.")
 
-(setq my-active-theme my-dark-emacs-theme)
+(setq my-active-theme my-primary-emacs-theme)
 
 (defun theme-light-switch (&optional selection)
   "Switch from light to dark theme and vice-versa."
   (interactive)
   (disable-theme my-active-theme)
-  (cond ((or (equal my-active-theme my-dark-emacs-theme) (equal selection 'light))  
-           (load-theme my-light-emacs-theme)
-           (setq my-active-theme my-light-emacs-theme))
-        ((or (equal my-active-theme my-light-emacs-theme) (equal selection 'dark))
-           (load-theme my-dark-emacs-theme)
-           (setq my-active-theme my-dark-emacs-theme))))
+  (cond ((or (equal my-active-theme my-primary-emacs-theme) (equal selection 'secondary))  
+           (load-theme my-secondary-emacs-theme)
+           (setq my-active-theme my-secondary-emacs-theme))
+        ((or (equal my-active-theme my-secondary-emacs-theme) (equal selection 'secondary))
+           (load-theme my-primary-emacs-theme)
+           (setq my-active-theme my-primary-emacs-theme))))
 
 ;; some themes require configuration, so we only load after intialization
 (add-hook 'after-init-hook '(lambda()
-  (load-theme my-dark-emacs-theme)
+  (load-theme my-primary-emacs-theme)
   ;; if you don't mind some transparency
   (transparency 95)))
 #+END_SRC
@@ -1769,8 +1769,8 @@ I use a different (light) theme here.
 
 #+BEGIN_SRC emacs-lisp
 (use-package writeroom-mode
-  :hook ((writeroom-mode-enable  . (lambda() (theme-light-switch 'light)))
-         (writeroom-mode-disable . (lambda() (theme-light-switch 'dark))))
+  :hook ((writeroom-mode-enable  . (lambda() (theme-light-switch 'secondary)))
+         (writeroom-mode-disable . (lambda() (theme-light-switch 'primary))))
   :bind ("<f5>" . writeroom-mode))
 #+END_SRC
 
