@@ -2075,19 +2075,7 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
 #+BEGIN_SRC emacs-lisp
 (use-package org-super-agenda
   :init
-  (org-super-agenda-mode)
-  (defun my-org-super-agenda ()
-    (interactive)
-    (let ((org-super-agenda-groups
-           '((:name "Schedule"
-                    :time-grid t)
-	     (:discard (:anything t))
-             )))
-      (org-agenda nil "a")))
-
-  (defun my-org-super-agenda-today ()
-    (interactive)
-    (let ((org-super-agenda-groups
+  (setq org-super-agenda-groups
            '((:name "Schedule"
               :time-grid t)
              (:name "Unscheduled"
@@ -2098,20 +2086,10 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
                 :scheduled past
                 :not (:tag "@repeated")))
 	     (:discard (:anything t))
-	      )))
-      (org-agenda nil "a")
-      (org-agenda-day-view)))
-
-  (defun my-personal-agenda ()
-    (interactive)
-    (let ((org-super-agenda-groups
-           '((:discard (:tag ("@work"))))))
-      (org-agenda nil "a")
-      (org-agenda-day-view)))
-
-  (bind-keys ("C-c a t" . my-org-super-agenda-today)
-             ("C-c a p" . my-personal-agenda)
-             ("C-c a w" . my-org-super-agenda)))
+	      ))
+  ;; not sure why this can't be in config
+  (org-super-agenda-mode)
+  :bind ("C-c a" . org-agenda))
 
 ;; we hide all @-tags
 (setq org-agenda-hide-tags-regexp "@")
@@ -2120,8 +2098,10 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
 (defconst my-agenda-tasks-directory
   (expand-file-name "tasks" org-directory)
   "One-size-fits-all directory for agenda tasks.")
+
 (unless (file-directory-p my-agenda-tasks-directory)
   (make-directory my-agenda-tasks-directory))
+
 (setq org-agenda-files `(,my-agenda-tasks-directory))
 
 ;; more cool stuff rom mwfogleman's emacs.d
