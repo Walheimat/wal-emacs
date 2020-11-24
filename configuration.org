@@ -93,9 +93,10 @@ Customize start-up.
 (load custom-file)
 #+END_SRC
 
-***** Peristent *scratch*
+***** Persistent *scratch*
 
 Let's keep the scratch contents.
+
 This (and some other things) was cribbed from [[https://www.john2x.com/emacs.html][john2x's config]] and only slightly adapted.
 
 #+BEGIN_SRC emacs-lisp
@@ -206,8 +207,8 @@ Now we can install the other dependencies.
 
 Add =site-lisp= directory and sub-directories to load path.
 I put non-MELPA packages here.
-If the directory doesn't exist, it will get created.
 
+If the directory doesn't exist, it will get created.
 Adapt if necessary.
 
 #+BEGIN_SRC emacs-lisp
@@ -230,7 +231,7 @@ Adapt if necessary.
 
 We also always want to ensure the package, i.e. if it's not there, get it.
 
-I used chords for a few, common actions but prefer using hyper key now.
+I used key-chords for a few, common actions but prefer using hyper key now.
 
 #+BEGIN_SRC emacs-lisp
 (require 'use-package-ensure)
@@ -375,6 +376,7 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =C-c q <key>= interacts with fly-checking.
 + =C-c s= uses swiper to search.
 + =C-c t <key>= opens eshell (=e=), ansi-term (=a=) or vterm (=v=).
++ =C-c u <key>= to debug (=u=) or edit template (=t=).
 + =C-c v <key>= jumps to char (=c=) or line (=v=) with avy.
 + =C-c w <key>= swaps (=s=) or deletes other windows (=d=).
 + =C-+= expands region.
@@ -383,6 +385,9 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =C-x r s= restarts.
 + =C-z=/=C-S-z= undos/redos.
 + =<f5>= to enter writeroom mode.
++ =<f6>= to google this.
++ =<f7>= to present org file.
++ =<f8>= to spell-check.
 + =M-o= goes to the "other" window or the last buffer.
 + =M-x= opens smex.
 + =s-k= kills the whole line.
@@ -400,12 +405,18 @@ guaranteed).
 + =H-i= switches prespective.
 + =H-k= to interact with docker.
 + =H-m= mark all like this (multiple cursors).
-+ =H-<number>= splits horizontal (=2=), vertical (=3=), closes (=0=) or kills (=4=).
++ =H-<number>=
+  + closes (=0=),
+  + closes others (=1=),
+  + splits horizontal (=2=),
+  + splits vertical (=3=),
+  + kills (=4=).
 + =H-o= to toggle bookmarks.
 + =H-p= switches project.
 + =H-s= searches with swiper.
 + =H-<TAB>= expands snippets (in =yas-minor-mode=).
 + =H-#= (un-)comments lines.
++ =H-u= to debug.
 + =H-v= jumps to line with avy.
 + =H-w= swaps windows.
 
@@ -434,10 +445,14 @@ modifier_map Mod3   { <HYPR> };
 Most bindings are declared in the [[*Packages][packages]] section.
 
 #+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "H-4")     'kill-buffer-and-window)
-(global-set-key (kbd "H-3")     'split-window-right)
-(global-set-key (kbd "H-2")     'split-window-below)
+;; windows
 (global-set-key (kbd "H-0")     'delete-window)
+(global-set-key (kbd "H-1")     'delete-other-windows)
+(global-set-key (kbd "H-2")     'split-window-below)
+(global-set-key (kbd "H-3")     'split-window-right)
+(global-set-key (kbd "H-4")     'kill-buffer-and-window)
+
+;; emacs
 (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
 (global-set-key
   (kbd "C-x C-c")
@@ -453,28 +468,28 @@ Otherwise the colors might clash.
 
 #+BEGIN_SRC emacs-lisp
 ;; two themes and a switch
-(defcustom my-dark-emacs-theme 'doom-horizon
+(defcustom my-primary-emacs-theme 'doom-opera-light
   "The quote-unquote default emacs theme.")
 
-(defcustom my-light-emacs-theme 'paper
+(defcustom my-secondary-emacs-theme 'paper
   "The non-default emacs theme.")
 
-(setq my-active-theme my-dark-emacs-theme)
+(setq my-active-theme my-primary-emacs-theme)
 
 (defun theme-light-switch (&optional selection)
   "Switch from light to dark theme and vice-versa."
   (interactive)
   (disable-theme my-active-theme)
-  (cond ((or (equal my-active-theme my-dark-emacs-theme) (equal selection 'light))  
-           (load-theme my-light-emacs-theme)
-           (setq my-active-theme my-light-emacs-theme))
-        ((or (equal my-active-theme my-light-emacs-theme) (equal selection 'dark))
-           (load-theme my-dark-emacs-theme)
-           (setq my-active-theme my-dark-emacs-theme))))
+  (cond ((or (equal my-active-theme my-primary-emacs-theme) (equal selection 'secondary))  
+           (load-theme my-secondary-emacs-theme)
+           (setq my-active-theme my-secondary-emacs-theme))
+        ((or (equal my-active-theme my-secondary-emacs-theme) (equal selection 'secondary))
+           (load-theme my-primary-emacs-theme)
+           (setq my-active-theme my-primary-emacs-theme))))
 
 ;; some themes require configuration, so we only load after intialization
 (add-hook 'after-init-hook '(lambda()
-  (load-theme my-dark-emacs-theme)
+  (load-theme my-primary-emacs-theme)
   ;; if you don't mind some transparency
   (transparency 95)))
 #+END_SRC
@@ -482,6 +497,7 @@ Otherwise the colors might clash.
 **** Font
 
 Prefer FiraCode (-> mononoki -> Liberation -> DejaVu).
+
 If Emacs runs with the custom argument =--bigger=, the default font size is 14 (instead of 10).
 
 To get support for ligatures, install the symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
@@ -529,7 +545,7 @@ I don't want to see the CPU load though.
 **** Additional Functions
 
 Better (?) garbage collection, transparency,
-and treemacs buffer check.
+and =treemacs= buffer check.
 
 #+BEGIN_SRC emacs-lisp
 ;; check if buffer is treemacs buffer
@@ -597,7 +613,7 @@ Check the [[*Key Bindings][key bindings section]] if you need a list of all of t
 
 **** ace
 
-Ace allows for some nifty window swapping.
+=ace= allows for some nifty window swapping.
 
 #+BEGIN_SRC emacs-lisp
 (use-package ace-window
@@ -720,7 +736,7 @@ Bookmarks are useful. I don't remember where I was. _Who are you?!_
    (("C-c o s" . bm-show)
     ("C-c o n" . bm-next)
     ("C-c o b" . bm-toggle)
-    ("H-o"     . bm-toggle)))
+    ("H-o"     . bm-toggle))) ;; ho-ho-ho!
 #+END_SRC
 
 **** company
@@ -768,31 +784,90 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
 **** dap
 
 Debugging using VSCode's DAP.
-We register a node template for attaching to a Docker host.
-I currently only use it for JavaScript and Python.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dap-mode
   :delight " dap"
+  :custom
+  (lsp-enable-dap-auto-configure nil)
   :init
-  ;; (require 'cl) ;; deprecated in 27
-  (setq dap-python-executable       "python3"
-        dap-auto-configure-features '(sessions locals breakpoints))
+  (setq dap-python-executable "python3")
+  ;; (setq dap-auto-configure-features '(sessions locals breakpoints))
   :config
+  (dap-ui-mode 1)
   (require 'dap-node)
   (require 'dap-python)
-  (dap-register-debug-template
-    "Node::Attach"
-    (list :type "node"
-          :request "attach"
-          :remoteRoot "/usr/src/app"
-	  :localRoot "/home/krister/theventury"
-	  :port 9229
-	  :name "Node::Attach"))
-  :hook 
-  ((js2-mode    . dap-mode)
-   (python-mode . dap-mode)
-   (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra)))))
+  :bind (("C-c u" . dap-mode)
+         (:map dap-mode-map
+               ("H-u" . dap-hydra))))
+#+END_SRC
+
+***** Debug Templates
+
+Here are some examples for Node.js projects using =nodemon=.
+
+Put them in a file in your project root,
+and evaluate them there using =C-x C-e=.
+Adapt paths if necessary.
+
+****** Node.js
+
+This one is for attaching to a containerized node app.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(when (require 'dap-mode nil 'noerror)
+  (progn
+    (let* ((remote-root "/usr/src/app")
+	   (local-root (file-name-directory buffer-file-name)))
+      (dap-register-debug-template
+       "attach::node"
+       (list :type "node"
+             :request "attach"
+	     :sourceMaps t
+             :remoteRoot remote-root
+  	     :localRoot local-root
+	     :port 9229)))))
+#+END_SRC
+
+****** Transpiled Node.js
+
+Still some =babel= projects left.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(when (require 'dap-mode nil 'noerror)
+  (progn
+    (let* ((build-directory "build")
+	   (remote-root (concat "/usr/src/app/" build-directory))
+	   (local-root (concat (file-name-directory buffer-file-name) build-directory)))
+      (dap-register-debug-template
+       "attach::babel"
+       (list :type "node"
+             :request "attach"
+	     :sourceMaps t
+             :remoteRoot remote-root
+  	     :localRoot local-root
+	     :port 9229)))))
+#+END_SRC
+
+****** TypeScript
+
+Compile your =src= with =--sourceMap= or set =sourceMap= to =true= in
+your =tsconfig.json=.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(when (require 'dap-mode nil 'noerror)
+  (progn
+    (let* ((build-directory "build")
+	   (remote-root (concat "/usr/src/app/" build-directory))
+	   (local-root (concat (file-name-directory buffer-file-name) build-directory)))
+      (dap-register-debug-template
+       "attach::typescript"
+       (list :type "node"
+             :request "attach"
+	     :sourceMaps t
+             :remoteRoot remote-root
+  	     :localRoot local-root
+	     :port 9229)))))
 #+END_SRC
 
 **** delight
@@ -809,18 +884,22 @@ Refine a couple of major-mode names.
 
 **** diff-hl
 
-Refresh post magit.
+Show diffs in the fringe.
+Show diffs in =dired= buffers as well.
+Refresh after =magit= is done.
 
 #+BEGIN_SRC emacs-lisp
 (use-package diff-hl
   :init
   (global-diff-hl-mode)
-  :hook (magit-post-refresh . diff-hl-magit-post-refresh))
+  :hook ((magit-post-refresh . diff-hl-magit-post-refresh)
+         (dired-mode         . diff-hl-dired-mode)))
 #+END_SRC
 
 **** diminish
 
-See individual =use-package= declarations as well, since we delight in/diminish them there.
+See individual =use-package= declarations as well,
+since we =delight= in/diminish them there.
 
 #+BEGIN_SRC emacs-lisp
 (use-package diminish
@@ -848,7 +927,7 @@ Make dimmed frames a bit dimmer.
 
 **** dired
 
-Group directories first in dired,
+Group directories first in =dired=,
 override some keybindings.
 
 #+BEGIN_SRC emacs-lisp
@@ -869,6 +948,7 @@ override some keybindings.
 **** dired-filter
 
 This package is awesome.
+Hit =/= to filter in =dired= buffers.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired-filter
@@ -890,7 +970,7 @@ I use Docker a lot, don't always have to use the command line.
 **** doom-modeline
 
 Busier and prettier modeline.
-Note that this packag requires you to install `all-the-icons` fonts[fn:5].
+Note that this packag requires you to install =all-the-icons= fonts[fn:5].
 
 #+BEGIN_SRC emacs-lisp
 (use-package doom-modeline
@@ -933,7 +1013,7 @@ Configure it for =ivy=.
 
 **** eshell
 
-Set up eshell.
+Set up =eshell=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package eshell
@@ -990,7 +1070,7 @@ One thing that can be a bit tricky is selecting regions, not anymore.
 
 **** find-file-in-project
 
-Finding files by name should be easy (disabled in favor of projectile for now).
+Finding files by name should be easy.
 
 #+BEGIN_SRC emacs-lisp
 (use-package find-file-in-project)
@@ -1012,35 +1092,36 @@ I use FiraCode, this mode allows us to use ligatures.
 **** flycheck
 
 =flycheck= is for all of our linting/code quality needs.
-I prefer pop-ups over mode-line info.
 
 #+BEGIN_SRC emacs-lisp
-;; (use-package flycheck-popup-tip)
 (use-package flycheck
   :delight " fly"
   :init
   (setq flycheck-keymap-prefix (kbd "C-c q"))
   :hook ((flycheck-mode . my-use-eslint-from-node-modules)
-         (flycheck-mode . my-use-tslint-from-node-modules)
-	 (flycheck-mode . flycheck-popup-tip-mode)
-))
+         (flycheck-mode . my-use-tslint-from-node-modules)))
 #+END_SRC
 
 **** flyspell
 
 My spelling is bad.
-Use American English for flyspell.
+Use American English for =flyspell=.
+
+You can bring up actions (skip, save) with =M-o=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package flyspell
   :delight " fsp"
   :init
   (setq ispell-dictionary "american")
-  (setq flyspell-issue-message-flag nil))
+  (setq flyspell-issue-message-flag nil)
+  :bind (("<f9>" . flyspell-mode)
+         (:map flyspell-mode-map
+             ("n" . flyspell-correct-next)
+	     ("p" . flyspell-correct-previous))))
 
 (use-package flyspell-correct
-  :after flyspell
-  :bind (:map flyspell-mode-map ("C-c q c" . flyspell-correct-wrapper)))
+  :after flyspell)
 
 (use-package flyspell-correct-ivy
   :after flyspell-correct)
@@ -1083,7 +1164,7 @@ If you're too lazy to copy and paste.
 #+BEGIN_SRC emacs-lisp
 (use-package google-this
   :diminish
-  :bind ("C-c u" . 'google-this-mode-submap)
+  :bind ("<f6>" . 'google-this-mode-submap)
   :config
   (google-this-mode 1))
 #+END_SRC
@@ -1108,12 +1189,11 @@ Make numbers stand out.
 #+BEGIN_SRC emacs-lisp
 (use-package highlight-numbers
   :hook (prog-mode . highlight-numbers-mode))
-
 #+END_SRC
 
 **** hl-todo
 
-Highlight =TODO=, =FIXME= etc. in prog modes.
+Highlight =TODO=, =FIXME= etc. in =prog= modes.
 
 #+BEGIN_SRC emacs-lisp
 (use-package hl-todo
@@ -1122,7 +1202,7 @@ Highlight =TODO=, =FIXME= etc. in prog modes.
 
 **** hydra
 
-We use hydra to trigger grouped actions.
+We use =hydra= to trigger grouped actions.
 
 #+BEGIN_SRC emacs-lisp
 (use-package hydra)
@@ -1250,11 +1330,11 @@ Prefer =capf=, bigger delay.
 ***** Language Servers 
 
 Configure or register language servers.
+
 You will have to install them yourself.[fn:9]
 
 #+BEGIN_SRC emacs-lisp
 ;;; elixir
-;; you need to install the language server manually and point to the release
 (setq elixir-ls-release-location (expand-file-name "ls/elixir" user-emacs-directory))
 (if (file-exists-p (expand-file-name "language_server.sh" elixir-ls-release-location))
   (add-to-list 'exec-path elixir-ls-release-location)
@@ -1311,7 +1391,8 @@ It's nice to change everything at once.
 
 **** mwim
 
-Move where I want. Useful for comments.
+Move where I want.
+Useful for comments.
 
 #+BEGIN_SRC emacs-lisp
 (use-package mwim
@@ -1381,7 +1462,7 @@ Format code quickly.
 **** projectile
 
 Projects in Emacs.
-You don't really _need_ treemacs.
+You don't really _need_ =treemacs=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
@@ -1395,8 +1476,8 @@ You don't really _need_ treemacs.
   :config
   ;; (add-to-list 'projectile-globally-ignored-directories "node_modules")
   ;; (add-to-list 'projectile-globally-ignored-directories "build")
-  (add-to-list 'projectile-other-file-alist '("org" "org_archive"))
-  (add-to-list 'projectile-other-file-alist '("org_archive" "org"))
+  ;; (add-to-list 'projectile-other-file-alist '("org" "org_archive"))
+  ;; (add-to-list 'projectile-other-file-alist '("org_archive" "org"))
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (projectile-mode +1))
 #+END_SRC
@@ -1507,12 +1588,14 @@ Smooth scrolling at the margins using =C-n= and =C-p=.
 
 **** so-long
 
-This mode is included in Emacs > 27. Still using 26 here.
+For files whose lines are too long (no longer
+needed in Emacs 27+).
 
 #+BEGIN_SRC emacs-lisp
-(use-package so-long
-  :config
-  (global-so-long-mode 1))
+(if (version< emacs-version "27")
+  (use-package so-long
+    :config
+    (global-so-long-mode 1)))
 #+END_SRC
 
 **** swiper
@@ -1526,7 +1609,6 @@ Smart searching with =ivy=.
          ("H-s"   . swiper)))
 #+END_SRC
 
-
 **** symon
 
 Show some system stats when nothing else is going on.
@@ -1536,8 +1618,7 @@ Show some system stats when nothing else is going on.
   :init
   (setq symon-sparkline-type 'bounded
         symon-delay          10
-	symon-monitors
-			     '(symon-linux-cpu-monitor
+	symon-monitors       '(symon-linux-cpu-monitor
 			       symon-linux-memory-monitor
 			       symon-linux-network-rx-monitor
 			       symon-linux-network-tx-monitor))
@@ -1547,7 +1628,7 @@ Show some system stats when nothing else is going on.
 
 **** telephone-line
 
-A slightly nicer mode-line (disabled in favor of doom-modeline for now).
+A slightly nicer mode-line (disabled in favor of =doom-modeline= for now).
 
 #+BEGIN_SRC emacs-lisp
 (use-package telephone-line
@@ -1669,7 +1750,7 @@ Ensure binaries.
 
 **** vterm
 
-Vterm can be an alternative to included shell (emulation).
+=vterm= can be an alternative to included shells.
 We also install =vterm-toggle=.
 
 Also, if you're on an older Ubuntu version (like my work PC),
@@ -1718,14 +1799,14 @@ I use a different (light) theme here.
 
 #+BEGIN_SRC emacs-lisp
 (use-package writeroom-mode
-  :hook ((writeroom-mode-enable  . (lambda() (theme-light-switch 'light)))
-         (writeroom-mode-disable . (lambda() (theme-light-switch 'dark))))
+  :hook ((writeroom-mode-enable  . (lambda() (theme-light-switch 'secondary)))
+         (writeroom-mode-disable . (lambda() (theme-light-switch 'primary))))
   :bind ("<f5>" . writeroom-mode))
 #+END_SRC
 
 **** yasnippet
 
-Use snippets in prog mode buffers.
+Use snippets in =prog= mode buffers.
 Because I also use company, =yas-expand= is mapped to =H-e=,
 if you don't have a hyper key, bind it to a personal binding.
 
@@ -1902,7 +1983,7 @@ Enable =flycheck= and disable internal checker.
 
 **** lua mode
 
-Why not. It can be awesome.
+Why not. It can be /awesome/.
 
 #+BEGIN_SRC emacs-lisp
 (use-package lua-mode)
@@ -1922,7 +2003,7 @@ Org mode is the best thing about Emacs. Check out the [[https://orgmode.org/manu
 
 ***** The Mode Itself
 
-Use bullets mode and make the ellipses bendy arrows. When a =TODO= is =DONE=, log a note.
+Use bullets mode and make the ellipses bendy arrows. When a =TODO= is =DONE=, log time.
 We also make the sequence from =TODO= to =DONE= more granular and add another =DONE=-like
 state =CANCELLED=.
 
@@ -2019,24 +2100,13 @@ state =CANCELLED=.
 ***** Agendas
 
 Everything concerning agendas.
-This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/michael.org][mwfogleman]]'s emacs config.
+
+This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/michael.org][mwfogleman]]'s Emacs config.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-super-agenda
   :init
-  (org-super-agenda-mode)
-  (defun my-org-super-agenda ()
-    (interactive)
-    (let ((org-super-agenda-groups
-           '((:name "Schedule"
-                    :time-grid t)
-	     (:discard (:anything t))
-             )))
-      (org-agenda nil "a")))
-
-  (defun my-org-super-agenda-today ()
-    (interactive)
-    (let ((org-super-agenda-groups
+  (setq org-super-agenda-groups
            '((:name "Schedule"
               :time-grid t)
              (:name "Unscheduled"
@@ -2047,20 +2117,10 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
                 :scheduled past
                 :not (:tag "@repeated")))
 	     (:discard (:anything t))
-	      )))
-      (org-agenda nil "a")
-      (org-agenda-day-view)))
-
-  (defun my-personal-agenda ()
-    (interactive)
-    (let ((org-super-agenda-groups
-           '((:discard (:tag ("@work"))))))
-      (org-agenda nil "a")
-      (org-agenda-day-view)))
-
-  (bind-keys ("C-c a t" . my-org-super-agenda-today)
-             ("C-c a p" . my-personal-agenda)
-             ("C-c a w" . my-org-super-agenda)))
+	      ))
+  ;; not sure why this can't be in config
+  (org-super-agenda-mode)
+  :bind ("C-c a" . org-agenda))
 
 ;; we hide all @-tags
 (setq org-agenda-hide-tags-regexp "@")
@@ -2069,8 +2129,10 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
 (defconst my-agenda-tasks-directory
   (expand-file-name "tasks" org-directory)
   "One-size-fits-all directory for agenda tasks.")
+
 (unless (file-directory-p my-agenda-tasks-directory)
   (make-directory my-agenda-tasks-directory))
+
 (setq org-agenda-files `(,my-agenda-tasks-directory))
 
 ;; more cool stuff rom mwfogleman's emacs.d
@@ -2114,14 +2176,13 @@ Clock   In/out^
 
 ***** Presentations
 
-Use =org tree slide= for presentations.
+Use =org-tree-slide= for presentations.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-tree-slide
   :hook ((org-tree-slide-play . (lambda () (beacon-mode -1)))
          (org-tree-slide-stop . (lambda () (beacon-mode 1))))
-  :bind (("C-c y y" . org-tree-slide-mode)
-	 ("C-c y t" . org-tree-slide-play-with-timer)
+  :bind (("<f7>" . org-tree-slide-mode)
          (:map org-tree-slide-mode-map
           ("n" . org-tree-slide-move-next-tree)
 	  ("p" . org-tree-slide-move-previous-tree))))
@@ -2153,7 +2214,7 @@ This mode is built-in.
 
 **** rjsx mode
 
-Pretty much like js2.
+Pretty much like =js2=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package rjsx-mode
@@ -2224,7 +2285,7 @@ Web mode uses =flycheck=, prompts user if =lsp= should be enabled.
         nil)))
 #+END_SRC
 
-**** yaml mode
+**** yam mode
 
 Sometimes you need YAMLs.
 
@@ -2363,6 +2424,7 @@ If that is the case do the following:
 + [[https://github.com/technomancy/find-file-in-project][find-file-in-project]]
 + [[https://github.com/jming422/fira-code-mode][fira-code]]
 + [[https://github.com/flycheck/flycheck][flycheck]]
++ [[https://github.com/d12frosted/flyspell-correct][flyspell-correct]]
 + [[https://github.com/roman/golden-ratio.el][golden-ratio]]
 + [[https://github.com/Malabarba/emacs-google-this][google-this]]
 + [[https://github.com/haskell/haskell-mode][haskell-mode]]

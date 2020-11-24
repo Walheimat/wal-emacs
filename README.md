@@ -9,20 +9,20 @@ Its base is an org file so it doubles as a readme<sup><a id="fnr.2" class="footr
 
 # Table of Contents
 
-1.  [Emacs Org Config](#orgbdf0143)
-    1.  [Setup](#orgf8952a5)
-        1.  [Heads-up](#orgfd0d55a)
-        2.  [Try-out](#org6472475)
-    2.  [Config](#orgedebed5)
-        1.  [Personal](#org192b5bd)
-        2.  [Initialization](#org2c8dd8b)
-        3.  [Built-in](#org62d9800)
-        4.  [Packages](#orgbdd6fbd)
-        5.  [Mode Configs](#orgf6a4ab1)
-        6.  [Tweaks](#orgd626346)
+1.  [Emacs Org Config](#org9be5975)
+    1.  [Setup](#org3cd206e)
+        1.  [Heads-up](#org8e98442)
+        2.  [Try-out](#org513d627)
+    2.  [Config](#orga80542f)
+        1.  [Personal](#org440552b)
+        2.  [Initialization](#org6742fe8)
+        3.  [Built-in](#org5bec9c8)
+        4.  [Packages](#org79ffd6d)
+        5.  [Mode Configs](#org2c1fd97)
+        6.  [Tweaks](#orgf028dca)
 
 
-<a id="orgf8952a5"></a>
+<a id="org3cd206e"></a>
 
 ## Setup
 
@@ -30,7 +30,7 @@ Everything you need to know to use this config,
 including the information that you maybe shouldn't.
 
 
-<a id="orgfd0d55a"></a>
+<a id="org8e98442"></a>
 
 ### Heads-up
 
@@ -42,7 +42,7 @@ Nothing in this config should be considered <span class="underline">good practic
 it's mostly just how I (think I) like things to be.
 
 
-<a id="org6472475"></a>
+<a id="org513d627"></a>
 
 ### Try-out
 
@@ -58,14 +58,14 @@ If you did not init this repo in your `user-emacs-directory` using the default n
 you will need to adapt the variable `walheimat-emacs-config-default-path` in the example config you just copied.
 
 
-<a id="orgedebed5"></a>
+<a id="orga80542f"></a>
 
 ## Config
 
 The init script will evaluate <span class="underline">everything</span><sup><a id="fnr.6" class="footref" href="#fn.6">6</a></sup> that follows.
 
 
-<a id="org192b5bd"></a>
+<a id="org440552b"></a>
 
 ### Personal
 
@@ -82,7 +82,7 @@ Set some personal info.<sup><a id="fnr.7" class="footref" href="#fn.7">7</a></su
         it was quite tricky and involved setting unsafe options."))
 
 
-<a id="org2c8dd8b"></a>
+<a id="org6742fe8"></a>
 
 ### Initialization
 
@@ -116,9 +116,10 @@ Set up Emacs, package manager and packages.
         
         (load custom-file)
     
-    1.  Peristent **scratch**
+    1.  Persistent **scratch**
     
         Let's keep the scratch contents.
+        
         This (and some other things) was cribbed from [john2x's config](https://www.john2x.com/emacs.html) and only slightly adapted.
         
             ;; empty scratch message
@@ -221,8 +222,8 @@ Set up Emacs, package manager and packages.
 
     Add `site-lisp` directory and sub-directories to load path.
     I put non-MELPA packages here.
-    If the directory doesn't exist, it will get created.
     
+    If the directory doesn't exist, it will get created.
     Adapt if necessary.
     
         ;; create the dir if it does not exist to avoid error
@@ -243,7 +244,7 @@ Set up Emacs, package manager and packages.
 
     We also always want to ensure the package, i.e. if it's not there, get it.
     
-    I used chords for a few, common actions but prefer using hyper key now.
+    I used key-chords for a few, common actions but prefer using hyper key now.
     
         (require 'use-package-ensure)
         (setq use-package-always-ensure t)
@@ -259,7 +260,7 @@ Set up Emacs, package manager and packages.
           (key-chord-mode 1))
 
 
-<a id="org62d9800"></a>
+<a id="org5bec9c8"></a>
 
 ### Built-in
 
@@ -381,6 +382,7 @@ Configure built-in settings.
         -   `C-c q <key>` interacts with fly-checking.
         -   `C-c s` uses swiper to search.
         -   `C-c t <key>` opens eshell (`e`), ansi-term (`a`) or vterm (`v`).
+        -   `C-c u <key>` to debug (`u`) or edit template (`t`).
         -   `C-c v <key>` jumps to char (`c`) or line (`v`) with avy.
         -   `C-c w <key>` swaps (`s`) or deletes other windows (`d`).
         -   `C-+` expands region.
@@ -389,6 +391,9 @@ Configure built-in settings.
         -   `C-x r s` restarts.
         -   `C-z=/=C-S-z` undos/redos.
         -   `<f5>` to enter writeroom mode.
+        -   `<f6>` to google this.
+        -   `<f7>` to present org file.
+        -   `<f8>` to spell-check.
         -   `M-o` goes to the "other" window or the last buffer.
         -   `M-x` opens smex.
         -   `s-k` kills the whole line.
@@ -406,12 +411,18 @@ Configure built-in settings.
         -   `H-i` switches prespective.
         -   `H-k` to interact with docker.
         -   `H-m` mark all like this (multiple cursors).
-        -   `H-<number>` splits horizontal (`2`), vertical (`3`), closes (`0`) or kills (`4`).
+        -   `H-<number>`
+            -   closes (`0`),
+            -   closes others (`1`),
+            -   splits horizontal (`2`),
+            -   splits vertical (`3`),
+            -   kills (`4`).
         -   `H-o` to toggle bookmarks.
         -   `H-p` switches project.
         -   `H-s` searches with swiper.
         -   `H-<TAB>` expands snippets (in `yas-minor-mode`).
         -   `H-#` (un-)comments lines.
+        -   `H-u` to debug.
         -   `H-v` jumps to line with avy.
         -   `H-w` swaps windows.
         
@@ -435,12 +446,16 @@ Configure built-in settings.
     
     3.  Non-Use-Package Bindings
     
-        Most bindings are declared in the [packages](#orgbdd6fbd) section.
+        Most bindings are declared in the [packages](#org79ffd6d) section.
         
-            (global-set-key (kbd "H-4")     'kill-buffer-and-window)
-            (global-set-key (kbd "H-3")     'split-window-right)
-            (global-set-key (kbd "H-2")     'split-window-below)
+            ;; windows
             (global-set-key (kbd "H-0")     'delete-window)
+            (global-set-key (kbd "H-1")     'delete-other-windows)
+            (global-set-key (kbd "H-2")     'split-window-below)
+            (global-set-key (kbd "H-3")     'split-window-right)
+            (global-set-key (kbd "H-4")     'kill-buffer-and-window)
+            
+            ;; emacs
             (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
             (global-set-key
               (kbd "C-x C-c")
@@ -454,34 +469,35 @@ Configure built-in settings.
     Otherwise the colors might clash.
     
         ;; two themes and a switch
-        (defcustom my-dark-emacs-theme 'doom-horizon
+        (defcustom my-primary-emacs-theme 'doom-opera-light
           "The quote-unquote default emacs theme.")
         
-        (defcustom my-light-emacs-theme 'paper
+        (defcustom my-secondary-emacs-theme 'paper
           "The non-default emacs theme.")
         
-        (setq my-active-theme my-dark-emacs-theme)
+        (setq my-active-theme my-primary-emacs-theme)
         
         (defun theme-light-switch (&optional selection)
           "Switch from light to dark theme and vice-versa."
           (interactive)
           (disable-theme my-active-theme)
-          (cond ((or (equal my-active-theme my-dark-emacs-theme) (equal selection 'light))  
-        	   (load-theme my-light-emacs-theme)
-        	   (setq my-active-theme my-light-emacs-theme))
-        	((or (equal my-active-theme my-light-emacs-theme) (equal selection 'dark))
-        	   (load-theme my-dark-emacs-theme)
-        	   (setq my-active-theme my-dark-emacs-theme))))
+          (cond ((or (equal my-active-theme my-primary-emacs-theme) (equal selection 'secondary))  
+        	   (load-theme my-secondary-emacs-theme)
+        	   (setq my-active-theme my-secondary-emacs-theme))
+        	((or (equal my-active-theme my-secondary-emacs-theme) (equal selection 'secondary))
+        	   (load-theme my-primary-emacs-theme)
+        	   (setq my-active-theme my-primary-emacs-theme))))
         
         ;; some themes require configuration, so we only load after intialization
         (add-hook 'after-init-hook '(lambda()
-          (load-theme my-dark-emacs-theme)
+          (load-theme my-primary-emacs-theme)
           ;; if you don't mind some transparency
           (transparency 95)))
 
 7.  Font
 
     Prefer FiraCode (-> mononoki -> Liberation -> DejaVu).
+    
     If Emacs runs with the custom argument `--bigger`, the default font size is 14 (instead of 10).
     
     To get support for ligatures, install the symbol font from [here](https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip).
@@ -523,7 +539,7 @@ Configure built-in settings.
 10. Additional Functions
 
     Better (?) garbage collection, transparency,
-    and treemacs buffer check.
+    and `treemacs` buffer check.
     
         ;; check if buffer is treemacs buffer
         ;; similar to minibufferp
@@ -578,7 +594,7 @@ Configure built-in settings.
           (string-match "*ag search " buffer-or-string))
 
 
-<a id="orgbdd6fbd"></a>
+<a id="org79ffd6d"></a>
 
 ### Packages
 
@@ -588,11 +604,11 @@ If you wish to know more about any of them, check out the list<sup><a id="fnr.8"
 at the end of this readme/configuration or the [awesome-emacs](https://github.com/emacs-tw/awesome-emacs) project.
 
 Many packages bind keys.
-Check the [key bindings section](#org1048561) if you need a list of all of them.
+Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
 
 1.  ace
 
-    Ace allows for some nifty window swapping.
+    `ace` allows for some nifty window swapping.
     
         (use-package ace-window
           :bind (("H-w" . ace-swap-window)
@@ -698,7 +714,7 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
            (("C-c o s" . bm-show)
             ("C-c o n" . bm-next)
             ("C-c o b" . bm-toggle)
-            ("H-o"     . bm-toggle)))
+            ("H-o"     . bm-toggle))) ;; ho-ho-ho!
 
 10. company
 
@@ -725,7 +741,7 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
 11. crux
 
     Let's use `crux` for some editing magic.
-    Check the [key bindings section](#org1048561) for descriptions.
+    Check the [key bindings section](#orgcbeb3e6) for descriptions.
     
         (use-package crux
           :bind (("M-o"          . crux-other-window-or-switch-buffer)
@@ -741,30 +757,83 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
 12. dap
 
     Debugging using VSCode's DAP.
-    We register a node template for attaching to a Docker host.
-    I currently only use it for JavaScript and Python.
     
         (use-package dap-mode
           :delight " dap"
+          :custom
+          (lsp-enable-dap-auto-configure nil)
           :init
-          ;; (require 'cl) ;; deprecated in 27
-          (setq dap-python-executable       "python3"
-        	dap-auto-configure-features '(sessions locals breakpoints))
+          (setq dap-python-executable "python3")
+          ;; (setq dap-auto-configure-features '(sessions locals breakpoints))
           :config
+          (dap-ui-mode 1)
           (require 'dap-node)
           (require 'dap-python)
-          (dap-register-debug-template
-            "Node::Attach"
-            (list :type "node"
-        	  :request "attach"
-        	  :remoteRoot "/usr/src/app"
-        	  :localRoot "/home/krister/theventury"
-        	  :port 9229
-        	  :name "Node::Attach"))
-          :hook 
-          ((js2-mode    . dap-mode)
-           (python-mode . dap-mode)
-           (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra)))))
+          :bind (("C-c u" . dap-mode)
+        	 (:map dap-mode-map
+        	       ("H-u" . dap-hydra))))
+    
+    1.  Debug Templates
+    
+        Here are some examples for Node.js projects using `nodemon`.
+        
+        Put them in a file in your project root,
+        and evaluate them there using `C-x C-e`.
+        Adapt paths if necessary.
+        
+        1.  Node.js
+        
+            This one is for attaching to a containerized node app.
+            
+                (when (require 'dap-mode nil 'noerror)
+                  (progn
+                    (let* ((remote-root "/usr/src/app")
+                	   (local-root (file-name-directory buffer-file-name)))
+                      (dap-register-debug-template
+                       "attach::node"
+                       (list :type "node"
+                	     :request "attach"
+                	     :sourceMaps t
+                	     :remoteRoot remote-root
+                	     :localRoot local-root
+                	     :port 9229)))))
+        
+        2.  Transpiled Node.js
+        
+            Still some `babel` projects left.
+            
+                (when (require 'dap-mode nil 'noerror)
+                  (progn
+                    (let* ((build-directory "build")
+                	   (remote-root (concat "/usr/src/app/" build-directory))
+                	   (local-root (concat (file-name-directory buffer-file-name) build-directory)))
+                      (dap-register-debug-template
+                       "attach::babel"
+                       (list :type "node"
+                	     :request "attach"
+                	     :sourceMaps t
+                	     :remoteRoot remote-root
+                	     :localRoot local-root
+                	     :port 9229)))))
+        
+        3.  TypeScript
+        
+            Compile your `src` with `--sourceMap` or set `sourceMap` to `true` in
+            your `tsconfig.json`.
+            
+                (when (require 'dap-mode nil 'noerror)
+                  (progn
+                    (let* ((build-directory "build")
+                	   (remote-root (concat "/usr/src/app/" build-directory))
+                	   (local-root (concat (file-name-directory buffer-file-name) build-directory)))
+                      (dap-register-debug-template
+                       "attach::typescript"
+                       (list :type "node"
+                	     :request "attach"
+                	     :sourceMaps t
+                	     :remoteRoot remote-root
+                	     :localRoot local-root
+                	     :port 9229)))))
 
 13. delight
 
@@ -778,16 +847,20 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
 
 14. diff-hl
 
-    Refresh post magit.
+    Show diffs in the fringe.
+    Show diffs in `dired` buffers as well.
+    Refresh after `magit` is done.
     
         (use-package diff-hl
           :init
           (global-diff-hl-mode)
-          :hook (magit-post-refresh . diff-hl-magit-post-refresh))
+          :hook ((magit-post-refresh . diff-hl-magit-post-refresh)
+        	 (dired-mode         . diff-hl-dired-mode)))
 
 15. diminish
 
-    See individual `use-package` declarations as well, since we delight in/diminish them there.
+    See individual `use-package` declarations as well,
+    since we `delight` in/diminish them there.
     
         (use-package diminish
           :config
@@ -811,7 +884,7 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
 
 17. dired
 
-    Group directories first in dired,
+    Group directories first in `dired`,
     override some keybindings.
     
         (use-package dired
@@ -830,6 +903,7 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
 18. dired-filter
 
     This package is awesome.
+    Hit `/` to filter in `dired` buffers.
     
         (use-package dired-filter
           :diminish "def")
@@ -847,7 +921,7 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
 20. doom-modeline
 
     Busier and prettier modeline.
-    Note that this packag requires you to install \`all-the-icons\` fonts<sup><a id="fnr.5.100" class="footref" href="#fn.5">5</a></sup>.
+    Note that this packag requires you to install `all-the-icons` fonts<sup><a id="fnr.5.100" class="footref" href="#fn.5">5</a></sup>.
     
         (use-package doom-modeline
           :init
@@ -884,7 +958,7 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
 
 23. eshell
 
-    Set up eshell.
+    Set up `eshell`.
     
         (use-package eshell
           :ensure nil
@@ -935,7 +1009,7 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
 
 26. find-file-in-project
 
-    Finding files by name should be easy (disabled in favor of projectile for now).
+    Finding files by name should be easy.
     
         (use-package find-file-in-project)
 
@@ -953,32 +1027,33 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
 28. flycheck
 
     `flycheck` is for all of our linting/code quality needs.
-    I prefer pop-ups over mode-line info.
     
-        ;; (use-package flycheck-popup-tip)
         (use-package flycheck
           :delight " fly"
           :init
           (setq flycheck-keymap-prefix (kbd "C-c q"))
           :hook ((flycheck-mode . my-use-eslint-from-node-modules)
-        	 (flycheck-mode . my-use-tslint-from-node-modules)
-        	 (flycheck-mode . flycheck-popup-tip-mode)
-        ))
+        	 (flycheck-mode . my-use-tslint-from-node-modules)))
 
 29. flyspell
 
     My spelling is bad.
-    Use American English for flyspell.
+    Use American English for `flyspell`.
+    
+    You can bring up actions (skip, save) with `M-o`.
     
         (use-package flyspell
           :delight " fsp"
           :init
           (setq ispell-dictionary "american")
-          (setq flyspell-issue-message-flag nil))
+          (setq flyspell-issue-message-flag nil)
+          :bind (("<f9>" . flyspell-mode)
+        	 (:map flyspell-mode-map
+        	     ("n" . flyspell-correct-next)
+        	     ("p" . flyspell-correct-previous))))
         
         (use-package flyspell-correct
-          :after flyspell
-          :bind (:map flyspell-mode-map ("C-c q c" . flyspell-correct-wrapper)))
+          :after flyspell)
         
         (use-package flyspell-correct-ivy
           :after flyspell-correct)
@@ -1013,7 +1088,7 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
     
         (use-package google-this
           :diminish
-          :bind ("C-c u" . 'google-this-mode-submap)
+          :bind ("<f6>" . 'google-this-mode-submap)
           :config
           (google-this-mode 1))
 
@@ -1037,14 +1112,14 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
 
 36. hl-todo
 
-    Highlight `TODO`, `FIXME` etc. in prog modes.
+    Highlight `TODO`, `FIXME` etc. in `prog` modes.
     
         (use-package hl-todo
           :hook (prog-mode . hl-todo-mode))
 
 37. hydra
 
-    We use hydra to trigger grouped actions.
+    We use `hydra` to trigger grouped actions.
     
         (use-package hydra)
 
@@ -1160,10 +1235,10 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
     1.  Language Servers
     
         Configure or register language servers.
+        
         You will have to install them yourself.<sup><a id="fnr.9" class="footref" href="#fn.9">9</a></sup>
         
             ;;; elixir
-            ;; you need to install the language server manually and point to the release
             (setq elixir-ls-release-location (expand-file-name "ls/elixir" user-emacs-directory))
             (if (file-exists-p (expand-file-name "language_server.sh" elixir-ls-release-location))
               (add-to-list 'exec-path elixir-ls-release-location)
@@ -1213,7 +1288,8 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
 
 46. mwim
 
-    Move where I want. Useful for comments.
+    Move where I want.
+    Useful for comments.
     
         (use-package mwim
           :bind (("C-a" . mwim-beginning)
@@ -1275,7 +1351,7 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
 50. projectile
 
     Projects in Emacs.
-    You don't really <span class="underline">need</span> treemacs.
+    You don't really <span class="underline">need</span> `treemacs`.
     
         (use-package projectile
           :diminish " pjt"
@@ -1288,8 +1364,8 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
           :config
           ;; (add-to-list 'projectile-globally-ignored-directories "node_modules")
           ;; (add-to-list 'projectile-globally-ignored-directories "build")
-          (add-to-list 'projectile-other-file-alist '("org" "org_archive"))
-          (add-to-list 'projectile-other-file-alist '("org_archive" "org"))
+          ;; (add-to-list 'projectile-other-file-alist '("org" "org_archive"))
+          ;; (add-to-list 'projectile-other-file-alist '("org_archive" "org"))
           (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
           (projectile-mode +1))
 
@@ -1381,11 +1457,13 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
 
 60. so-long
 
-    This mode is included in Emacs > 27. Still using 26 here.
+    For files whose lines are too long (no longer
+    needed in Emacs 27+).
     
-        (use-package so-long
-          :config
-          (global-so-long-mode 1))
+        (if (version< emacs-version "27")
+          (use-package so-long
+            :config
+            (global-so-long-mode 1)))
 
 61. swiper
 
@@ -1404,8 +1482,7 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
           :init
           (setq symon-sparkline-type 'bounded
         	symon-delay          10
-        	symon-monitors
-        			     '(symon-linux-cpu-monitor
+        	symon-monitors       '(symon-linux-cpu-monitor
         			       symon-linux-memory-monitor
         			       symon-linux-network-rx-monitor
         			       symon-linux-network-tx-monitor))
@@ -1414,7 +1491,7 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
 
 63. telephone-line
 
-    A slightly nicer mode-line (disabled in favor of doom-modeline for now).
+    A slightly nicer mode-line (disabled in favor of `doom-modeline` for now).
     
         (use-package telephone-line
           :disabled
@@ -1526,7 +1603,7 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
 
 67. vterm
 
-    Vterm can be an alternative to included shell (emulation).
+    `vterm` can be an alternative to included shells.
     We also install `vterm-toggle`.
     
     Also, if you're on an older Ubuntu version (like my work PC),
@@ -1570,13 +1647,13 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
     I use a different (light) theme here.
     
         (use-package writeroom-mode
-          :hook ((writeroom-mode-enable  . (lambda() (theme-light-switch 'light)))
-        	 (writeroom-mode-disable . (lambda() (theme-light-switch 'dark))))
+          :hook ((writeroom-mode-enable  . (lambda() (theme-light-switch 'secondary)))
+        	 (writeroom-mode-disable . (lambda() (theme-light-switch 'primary))))
           :bind ("<f5>" . writeroom-mode))
 
 70. yasnippet
 
-    Use snippets in prog mode buffers.
+    Use snippets in `prog` mode buffers.
     Because I also use company, `yas-expand` is mapped to `H-e`,
     if you don't have a hyper key, bind it to a personal binding.
     
@@ -1620,7 +1697,7 @@ Check the [key bindings section](#org1048561) if you need a list of all of them.
          (zoom-mode 1))
 
 
-<a id="orgf6a4ab1"></a>
+<a id="org2c1fd97"></a>
 
 ### Mode Configs
 
@@ -1734,7 +1811,7 @@ Configure major modes.
 
 10. lua mode
 
-    Why not. It can be awesome.
+    Why not. It can be *awesome*.
     
         (use-package lua-mode)
 
@@ -1750,7 +1827,7 @@ Configure major modes.
     
     1.  The Mode Itself
     
-        Use bullets mode and make the ellipses bendy arrows. When a `TODO` is `DONE`, log a note.
+        Use bullets mode and make the ellipses bendy arrows. When a `TODO` is `DONE`, log time.
         We also make the sequence from `TODO` to `DONE` more granular and add another `DONE`-like
         state `CANCELLED`.
         
@@ -1845,23 +1922,12 @@ Configure major modes.
     2.  Agendas
     
         Everything concerning agendas.
-        This is mostly based on [mwfogleman](https://github.com/mwfogleman/.emacs.d/blob/master/michael.org)'s emacs config.
+        
+        This is mostly based on [mwfogleman](https://github.com/mwfogleman/.emacs.d/blob/master/michael.org)'s Emacs config.
         
             (use-package org-super-agenda
               :init
-              (org-super-agenda-mode)
-              (defun my-org-super-agenda ()
-                (interactive)
-                (let ((org-super-agenda-groups
-            	   '((:name "Schedule"
-            		    :time-grid t)
-            	     (:discard (:anything t))
-            	     )))
-                  (org-agenda nil "a")))
-            
-              (defun my-org-super-agenda-today ()
-                (interactive)
-                (let ((org-super-agenda-groups
+              (setq org-super-agenda-groups
             	   '((:name "Schedule"
             	      :time-grid t)
             	     (:name "Unscheduled"
@@ -1872,20 +1938,10 @@ Configure major modes.
             		:scheduled past
             		:not (:tag "@repeated")))
             	     (:discard (:anything t))
-            	      )))
-                  (org-agenda nil "a")
-                  (org-agenda-day-view)))
-            
-              (defun my-personal-agenda ()
-                (interactive)
-                (let ((org-super-agenda-groups
-            	   '((:discard (:tag ("@work"))))))
-                  (org-agenda nil "a")
-                  (org-agenda-day-view)))
-            
-              (bind-keys ("C-c a t" . my-org-super-agenda-today)
-            	     ("C-c a p" . my-personal-agenda)
-            	     ("C-c a w" . my-org-super-agenda)))
+            	      ))
+              ;; not sure why this can't be in config
+              (org-super-agenda-mode)
+              :bind ("C-c a" . org-agenda))
             
             ;; we hide all @-tags
             (setq org-agenda-hide-tags-regexp "@")
@@ -1894,8 +1950,10 @@ Configure major modes.
             (defconst my-agenda-tasks-directory
               (expand-file-name "tasks" org-directory)
               "One-size-fits-all directory for agenda tasks.")
+            
             (unless (file-directory-p my-agenda-tasks-directory)
               (make-directory my-agenda-tasks-directory))
+            
             (setq org-agenda-files `(,my-agenda-tasks-directory))
             
             ;; more cool stuff rom mwfogleman's emacs.d
@@ -1938,13 +1996,12 @@ Configure major modes.
     
     3.  Presentations
     
-        Use `org tree slide` for presentations.
+        Use `org-tree-slide` for presentations.
         
             (use-package org-tree-slide
               :hook ((org-tree-slide-play . (lambda () (beacon-mode -1)))
             	 (org-tree-slide-stop . (lambda () (beacon-mode 1))))
-              :bind (("C-c y y" . org-tree-slide-mode)
-            	 ("C-c y t" . org-tree-slide-play-with-timer)
+              :bind (("<f7>" . org-tree-slide-mode)
             	 (:map org-tree-slide-mode-map
             	  ("n" . org-tree-slide-move-next-tree)
             	  ("p" . org-tree-slide-move-previous-tree))))
@@ -1973,7 +2030,7 @@ Configure major modes.
 
 14. rjsx mode
 
-    Pretty much like js2.
+    Pretty much like `js2`.
     
         (use-package rjsx-mode
           :mode "\\.jsx\\'"
@@ -2038,14 +2095,14 @@ Configure major modes.
               (delete-trailing-whitespace)
         	nil)))
 
-17. yaml mode
+17. yam mode
 
     Sometimes you need YAMLs.
     
         (use-package yaml-mode)
 
 
-<a id="orgd626346"></a>
+<a id="orgf028dca"></a>
 
 ### Tweaks
 
@@ -2175,6 +2232,7 @@ If that is the case do the following:
 -   [find-file-in-project](https://github.com/technomancy/find-file-in-project)
 -   [fira-code](https://github.com/jming422/fira-code-mode)
 -   [flycheck](https://github.com/flycheck/flycheck)
+-   [flyspell-correct](https://github.com/d12frosted/flyspell-correct)
 -   [golden-ratio](https://github.com/roman/golden-ratio.el)
 -   [google-this](https://github.com/Malabarba/emacs-google-this)
 -   [haskell-mode](https://github.com/haskell/haskell-mode)
