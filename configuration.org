@@ -1867,14 +1867,17 @@ You might think Angular is dead and you'd be right but not everyone knows yet.
   :mode ("\\.component.css\\'" . css-mode)
   :init
   ;; adapt, obviouisly
-  (setq lsp-clients-angular-language-server-command
-    '("node"
-      "/home/krister/.config/nvm/12.16.1/lib/node_modules/@angular/language-server"
-      "--ngProbeLocations"
-      "/home/krister/.config/nvm/12.16.1/lib/node_modules"
-      "--tsProbeLocations"
-      "/home/krister/.config/nvm/12.16.1/lib/node_modules"
-      "--stdio")))
+  (let* ((node-lts "14.8.0")
+       (node-nvm-lib (format ".config/nvm/%s/lib/node_modules" node-lts))
+       (node-abs (expand-file-name node-nvm-lib "~")))
+    (setq lsp-clients-angular-server-command
+  	  `("node"
+            ,(expand-file-name "@angular/language-server" node-abs)
+	    "--ngProbeLocations"
+	    ,node-abs
+	    "--tsProbeLocations"
+	    ,node-abs
+	    "--stdio"))))
 #+END_SRC
 
 **** crontab mode
