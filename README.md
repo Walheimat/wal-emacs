@@ -9,20 +9,20 @@ Its base is an org file so it doubles as a readme<sup><a id="fnr.2" class="footr
 
 # Table of Contents
 
-1.  [Emacs Org Config](#org9be5975)
-    1.  [Setup](#org3cd206e)
-        1.  [Heads-up](#org8e98442)
-        2.  [Try-out](#org513d627)
-    2.  [Config](#orga80542f)
-        1.  [Personal](#org440552b)
-        2.  [Initialization](#org6742fe8)
-        3.  [Built-in](#org5bec9c8)
-        4.  [Packages](#org79ffd6d)
-        5.  [Mode Configs](#org2c1fd97)
-        6.  [Tweaks](#orgf028dca)
+1.  [Emacs Org Config](#org47eebea)
+    1.  [Setup](#orgdbd7dce)
+        1.  [Heads-up](#org7754dda)
+        2.  [Try-out](#org5fe9ef3)
+    2.  [Config](#org6fbe3ff)
+        1.  [Personal](#orgadfa88e)
+        2.  [Initialization](#org84bbf4c)
+        3.  [Built-in](#org4c1102c)
+        4.  [Packages](#orgcad4113)
+        5.  [Mode Configs](#org4866a7b)
+        6.  [Tweaks](#org107b8f6)
 
 
-<a id="org3cd206e"></a>
+<a id="orgdbd7dce"></a>
 
 ## Setup
 
@@ -30,7 +30,7 @@ Everything you need to know to use this config,
 including the information that you maybe shouldn't.
 
 
-<a id="org8e98442"></a>
+<a id="org7754dda"></a>
 
 ### Heads-up
 
@@ -42,7 +42,7 @@ Nothing in this config should be considered <span class="underline">good practic
 it's mostly just how I (think I) like things to be.
 
 
-<a id="org513d627"></a>
+<a id="org5fe9ef3"></a>
 
 ### Try-out
 
@@ -58,14 +58,14 @@ If you did not init this repo in your `user-emacs-directory` using the default n
 you will need to adapt the variable `walheimat-emacs-config-default-path` in the example config you just copied.
 
 
-<a id="orga80542f"></a>
+<a id="org6fbe3ff"></a>
 
 ## Config
 
 The init script will evaluate <span class="underline">everything</span><sup><a id="fnr.6" class="footref" href="#fn.6">6</a></sup> that follows.
 
 
-<a id="org440552b"></a>
+<a id="orgadfa88e"></a>
 
 ### Personal
 
@@ -82,7 +82,7 @@ Set some personal info.<sup><a id="fnr.7" class="footref" href="#fn.7">7</a></su
         it was quite tricky and involved setting unsafe options."))
 
 
-<a id="org6742fe8"></a>
+<a id="org84bbf4c"></a>
 
 ### Initialization
 
@@ -260,7 +260,7 @@ Set up Emacs, package manager and packages.
           (key-chord-mode 1))
 
 
-<a id="org5bec9c8"></a>
+<a id="org4c1102c"></a>
 
 ### Built-in
 
@@ -446,7 +446,7 @@ Configure built-in settings.
     
     3.  Non-Use-Package Bindings
     
-        Most bindings are declared in the [packages](#org79ffd6d) section.
+        Most bindings are declared in the [packages](#orgcad4113) section.
         
             ;; windows
             (global-set-key (kbd "H-0")     'delete-window)
@@ -594,7 +594,7 @@ Configure built-in settings.
           (string-match "*ag search " buffer-or-string))
 
 
-<a id="org79ffd6d"></a>
+<a id="orgcad4113"></a>
 
 ### Packages
 
@@ -604,7 +604,7 @@ If you wish to know more about any of them, check out the list<sup><a id="fnr.8"
 at the end of this readme/configuration or the [awesome-emacs](https://github.com/emacs-tw/awesome-emacs) project.
 
 Many packages bind keys.
-Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
+Check the [key bindings section](#org881f414) if you need a list of all of them.
 
 1.  ace
 
@@ -741,7 +741,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
 11. crux
 
     Let's use `crux` for some editing magic.
-    Check the [key bindings section](#orgcbeb3e6) for descriptions.
+    Check the [key bindings section](#org881f414) for descriptions.
     
         (use-package crux
           :bind (("M-o"          . crux-other-window-or-switch-buffer)
@@ -1697,7 +1697,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
          (zoom-mode 1))
 
 
-<a id="org2c1fd97"></a>
+<a id="org4866a7b"></a>
 
 ### Mode Configs
 
@@ -2095,14 +2095,14 @@ Configure major modes.
               (delete-trailing-whitespace)
         	nil)))
 
-17. yam mode
+17. yaml mode
 
     Sometimes you need YAMLs.
     
         (use-package yaml-mode)
 
 
-<a id="orgf028dca"></a>
+<a id="org107b8f6"></a>
 
 ### Tweaks
 
