@@ -469,7 +469,7 @@ Otherwise the colors might clash.
 
 #+BEGIN_SRC emacs-lisp
 ;; two themes and a switch
-(defcustom my-primary-emacs-theme 'doom-opera-light
+(defcustom my-primary-emacs-theme 'kaolin-light
   "The quote-unquote default emacs theme.")
 
 (defcustom my-secondary-emacs-theme 'paper
@@ -1893,11 +1893,14 @@ It's time to deal with this.
 Enable =flycheck=.
 
 #+BEGIN_SRC emacs-lisp
-(defun my-elisp-mode-hook ()
-  "Hooks for lisp interaction mode."
-  (flycheck-mode 1))
+(use-package emacs-lisp
+  :ensure nil
+  :hook (emacs-lisp-mode . my/elisp-mode-hook))
 
-(add-hook 'emacs-lisp-mode-hook 'my-elisp-mode-hook)
+(defun my/elisp-mode-hook ()
+  "Hooks for lisp interaction mode."
+  (message "So it's just a bunch of lists?")
+  (flycheck-mode 1))
 #+END_SRC
 
 **** css mode
@@ -1905,13 +1908,16 @@ Enable =flycheck=.
 Just activate =flycheck= and tabs for now.
 
 #+BEGIN_SRC emacs-lisp
-(defun my-css-mode-hook ()
+(use-package css
+  :ensure nil
+  :hook (css-mode . my/css-mode-hook))
+
+(defun my/css-mode-hook ()
   "Hooks for css mode."
+  (message "Centering? It's simple. Here's 15 ways to do it.")
   (add-node-modules-path)
   (enable-tabs)
   (flycheck-mode))
-
-(add-hook 'css-mode-hook 'my-css-mode-hook)
 #+END_SRC
 
 **** dockerfile mode
@@ -1929,10 +1935,11 @@ Enable =flycheck=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package elixir-mode
-  :hook (elixir-mode . my-elixir-mode-hook))
+  :hook (elixir-mode . my/elixir-mode-hook))
 
-(defun my-elixir-mode-hook ()
+(defun my/elixir-mode-hook ()
   "Hooks for elixir mode."
+  (message "Mixin' potions")
   (lsp)
   (flycheck-mode))
 #+END_SRC
@@ -1950,15 +1957,16 @@ Don't use haskell much yet.
 Enable tabs and =flycheck=.
 
 #+BEGIN_SRC emacs-lisp
-(defun my-json-mode-hook ()
+(use-package json-mode
+  :hook (json-mode . my/json-mode-hook))
+
+(defun my/json-mode-hook ()
   "Hooks for json mode."
+  (message "JSON? JSON?! JSON!!")
   (when (y-or-n-p "Do you want to enables tabs?")
     (enable-tabs))
   (flycheck-mode 1)
   (rainbow-delimiters-mode))
-
-(use-package json-mode
-  :hook (json-mode . my-json-mode-hook))
 #+END_SRC
 
 **** js2 mode
@@ -1971,10 +1979,11 @@ Enable =flycheck= and disable internal checker.
   :init
   (setq-default js2-show-parse-errors nil
                 js2-strict-missing-semi-warning nil)
-  :hook (js2-mode . my-js2-mode-hook))
+  :hook (js2-mode . my/js2-mode-hook))
 
-(defun my-js2-mode-hook ()
+(defun my/js2-mode-hook ()
   "Hooks for js2 mode."
+  (message "NaN !== NaN")
   (enable-tabs)
   (add-node-modules-path)
   (flycheck-mode 1)
@@ -2200,13 +2209,14 @@ This mode is built-in.
 
 #+BEGIN_SRC emacs-lisp
 (use-package python
-  :hook (python-mode . my-python-mode-hook)
+  :ensure nil
+  :hook (python-mode . my/python-mode-hook)
   :init
   ;; use python3 as default python command
   (setq py-python-command        "python3"
         python-shell-interpreter "python3"))
 
-(defun my-python-mode-hook ()
+(defun my/python-mode-hook ()
   "Hooks for python mode."
   (message "Sssnake_case!")
   (flycheck-mode 1)
@@ -2224,13 +2234,13 @@ Pretty much like =js2=.
 #+BEGIN_SRC emacs-lisp
 (use-package rjsx-mode
   :mode "\\.jsx\\'"
-  :hook (rjsx-mode . my-rjsx-mode-hook))
+  :hook (rjsx-mode . my/rjsx-mode-hook))
 
 (defun rjsx-indent ()
   (interactive)
   (setq-local indent-line-function 'js-jsx-indent-line))
 
-(defun my-rjsx-mode-hook ()
+(defun my/rjsx-mode-hook ()
   "Hooks for rjsx mode."
   (add-node-modules-path)
   (enable-tabs)
@@ -2249,10 +2259,11 @@ Enable =lsp=, =flycheck=.
 #+BEGIN_SRC emacs-lisp
 (use-package typescript-mode
   :mode "\\.ts\\'"
-  :hook (typescript-mode . my-typescript-mode-hook))
+  :hook (typescript-mode . my/typescript-mode-hook))
 
-(defun my-typescript-mode-hook ()
+(defun my/typescript-mode-hook ()
   "Hooks for typescript mode."
+  (message "This is any, that is any, everything is any!")
   (enable-tabs)
   (add-node-modules-path)
   (flycheck-mode 1)
@@ -2269,15 +2280,16 @@ Web mode uses =flycheck=, prompts user if =lsp= should be enabled.
 
 #+BEGIN_SRC emacs-lisp
 (use-package web-mode
-  :hook (web-mode . my-web-mode-hook)
+  :hook (web-mode . my/web-mode-hook)
   :init
   (setq web-mode-comment-style 2)
   :mode ("\\.vue\\'"
          "\\.component.html\\'"
          "\\.ejs\\'"))
 
-(defun my-web-mode-hook ()
+(defun my/web-mode-hook ()
   "Hooks for web mode."
+  (message "This is the Internet")
   (enable-tabs)
   (web-mode-use-tabs)
   (add-node-modules-path)
