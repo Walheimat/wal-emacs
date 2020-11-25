@@ -606,13 +606,30 @@ Check the [[*Key Bindings][key bindings section]] if you need a list of all of t
 **** ace
 
 =ace= allows for some nifty window swapping.
+We do some customization to integrate better with our buffer
+switching setup.
 
 #+BEGIN_SRC emacs-lisp
 (use-package ace-window
+  :custom
+  (aw-leading-char-style 'path) ;; does this work?
   :init
   (setq aw-dispatch-always t
-        aw-minibuffer-flag t)
-  :bind (("H-w" . ace-window)
+        aw-minibuffer-flag t
+        aw-dispatch-alist  '((?x aw-delete-window           "delete")
+	                     (?s aw-swap-window             "swap")
+                             (?b aw-switch-buffer-in-window "buffer")
+                             (?h aw-split-window-horz       "horizontal split")
+                             (?v aw-split-window-vert       "vertical split")
+                             (?f aw-split-window-fair       "fair split")
+                             (?? aw-show-dispatch-help      "help")))
+  :config
+  ;; overriding this because we want our custom buffer switch
+  (advice-add
+    'aw--switch-buffer
+    :override (lambda (&rest r) (my-switch-buffer r))
+    '((name . "aw--switch-buffer")))
+  :bind (("H-w"   . ace-window)
          ("C-c w" . ace-window)))
 #+END_SRC
 
@@ -1151,6 +1168,8 @@ Use the golden ratio.
   ;; make sure to run golden ratio after ace switch
   (advice-add 'aw-switch-to-window :after #'golden-ratio)
   :config
+  ;; this doesn't work for me, see alt solution above
+  ;; (push 'aw-switch-to-window golden-ratio-extra-commands)
   (golden-ratio-mode 1))
 #+END_SRC
 
