@@ -399,6 +399,7 @@ The following bindings are either quick-access of already bound
 actions or those that aren't essential (since having a hyper key is not
 guaranteed).
 
++ =H-4= kills window and buffer.
 + =H-a= shows agenda.
 + =H-b= switches buffer.
 + =H-d= opens dired relative to open file.
@@ -406,12 +407,6 @@ guaranteed).
 + =H-i= switches prespective.
 + =H-k= to interact with docker.
 + =H-m= mark all like this (multiple cursors).
-+ =H-<number>=
-  + closes (=0=),
-  + closes others (=1=),
-  + splits horizontal (=2=),
-  + splits vertical (=3=),
-  + kills (=4=).
 + =H-o= to toggle bookmarks.
 + =H-p= switches project.
 + =H-s= searches with swiper.
@@ -447,11 +442,7 @@ Most bindings are declared in the [[*Packages][packages]] section.
 
 #+BEGIN_SRC emacs-lisp
 ;; windows
-(global-set-key (kbd "H-0")     'delete-window)
-(global-set-key (kbd "H-1")     'delete-other-windows)
-(global-set-key (kbd "H-2")     'split-window-below)
-(global-set-key (kbd "H-3")     'split-window-right)
-(global-set-key (kbd "H-4")     'kill-buffer-and-window)
+(global-set-key (kbd "H-4") 'kill-buffer-and-window)
 
 ;; emacs
 (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
@@ -618,9 +609,11 @@ Check the [[*Key Bindings][key bindings section]] if you need a list of all of t
 
 #+BEGIN_SRC emacs-lisp
 (use-package ace-window
-  :bind (("H-w" . ace-swap-window)
-         ("C-c w s" . ace-swap-window)
-	 ("C-c w d" . ace-delete-other-windows)))
+  :init
+  (setq aw-dispatch-always t
+        aw-minibuffer-flag t)
+  :bind (("H-w" . ace-window)
+         ("C-c w" . ace-window)))
 #+END_SRC
 
 **** add-node-modules-path
@@ -1154,6 +1147,9 @@ Use the golden ratio.
 #+BEGIN_SRC emacs-lisp
 (use-package golden-ratio
   :diminish
+  :init
+  ;; make sure to run golden ratio after ace switch
+  (advice-add 'aw-switch-to-window :after #'golden-ratio)
   :config
   (golden-ratio-mode 1))
 #+END_SRC
