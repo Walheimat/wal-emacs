@@ -9,20 +9,20 @@ Its base is an org file so it doubles as a readme<sup><a id="fnr.2" class="footr
 
 # Table of Contents
 
-1.  [Emacs Org Config](#org9be5975)
-    1.  [Setup](#org3cd206e)
-        1.  [Heads-up](#org8e98442)
-        2.  [Try-out](#org513d627)
-    2.  [Config](#orga80542f)
-        1.  [Personal](#org440552b)
-        2.  [Initialization](#org6742fe8)
-        3.  [Built-in](#org5bec9c8)
-        4.  [Packages](#org79ffd6d)
-        5.  [Mode Configs](#org2c1fd97)
-        6.  [Tweaks](#orgf028dca)
+1.  [Emacs Org Config](#orgae0b4d7)
+    1.  [Setup](#org0502767)
+        1.  [Heads-up](#orgda73bc1)
+        2.  [Try-out](#orgfb142c7)
+    2.  [Config](#orgcf81bc0)
+        1.  [Personal](#org0951b23)
+        2.  [Initialization](#org0663224)
+        3.  [Built-in](#org8f6520c)
+        4.  [Packages](#orgecde6cc)
+        5.  [Mode Configs](#org77bdfb3)
+        6.  [Tweaks](#orga6f1717)
 
 
-<a id="org3cd206e"></a>
+<a id="org0502767"></a>
 
 ## Setup
 
@@ -30,7 +30,7 @@ Everything you need to know to use this config,
 including the information that you maybe shouldn't.
 
 
-<a id="org8e98442"></a>
+<a id="orgda73bc1"></a>
 
 ### Heads-up
 
@@ -42,7 +42,7 @@ Nothing in this config should be considered <span class="underline">good practic
 it's mostly just how I (think I) like things to be.
 
 
-<a id="org513d627"></a>
+<a id="orgfb142c7"></a>
 
 ### Try-out
 
@@ -58,14 +58,14 @@ If you did not init this repo in your `user-emacs-directory` using the default n
 you will need to adapt the variable `walheimat-emacs-config-default-path` in the example config you just copied.
 
 
-<a id="orga80542f"></a>
+<a id="orgcf81bc0"></a>
 
 ## Config
 
 The init script will evaluate <span class="underline">everything</span><sup><a id="fnr.6" class="footref" href="#fn.6">6</a></sup> that follows.
 
 
-<a id="org440552b"></a>
+<a id="org0951b23"></a>
 
 ### Personal
 
@@ -82,7 +82,7 @@ Set some personal info.<sup><a id="fnr.7" class="footref" href="#fn.7">7</a></su
         it was quite tricky and involved setting unsafe options."))
 
 
-<a id="org6742fe8"></a>
+<a id="org0663224"></a>
 
 ### Initialization
 
@@ -260,7 +260,7 @@ Set up Emacs, package manager and packages.
           (key-chord-mode 1))
 
 
-<a id="org5bec9c8"></a>
+<a id="org8f6520c"></a>
 
 ### Built-in
 
@@ -405,18 +405,14 @@ Configure built-in settings.
         actions or those that aren't essential (since having a hyper key is not
         guaranteed).
         
+        -   `H-4` kills window and buffer.
+        -   `H-a` shows agenda.
         -   `H-b` switches buffer.
         -   `H-d` opens dired relative to open file.
         -   `H-f` to find with ag.
         -   `H-i` switches prespective.
         -   `H-k` to interact with docker.
         -   `H-m` mark all like this (multiple cursors).
-        -   `H-<number>`
-            -   closes (`0`),
-            -   closes others (`1`),
-            -   splits horizontal (`2`),
-            -   splits vertical (`3`),
-            -   kills (`4`).
         -   `H-o` to toggle bookmarks.
         -   `H-p` switches project.
         -   `H-s` searches with swiper.
@@ -446,14 +442,10 @@ Configure built-in settings.
     
     3.  Non-Use-Package Bindings
     
-        Most bindings are declared in the [packages](#org79ffd6d) section.
+        Most bindings are declared in the [packages](#orgecde6cc) section.
         
             ;; windows
-            (global-set-key (kbd "H-0")     'delete-window)
-            (global-set-key (kbd "H-1")     'delete-other-windows)
-            (global-set-key (kbd "H-2")     'split-window-below)
-            (global-set-key (kbd "H-3")     'split-window-right)
-            (global-set-key (kbd "H-4")     'kill-buffer-and-window)
+            (global-set-key (kbd "H-4") 'kill-buffer-and-window)
             
             ;; emacs
             (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
@@ -469,7 +461,7 @@ Configure built-in settings.
     Otherwise the colors might clash.
     
         ;; two themes and a switch
-        (defcustom my-primary-emacs-theme 'doom-opera-light
+        (defcustom my-primary-emacs-theme 'kaolin-light
           "The quote-unquote default emacs theme.")
         
         (defcustom my-secondary-emacs-theme 'paper
@@ -594,7 +586,7 @@ Configure built-in settings.
           (string-match "*ag search " buffer-or-string))
 
 
-<a id="org79ffd6d"></a>
+<a id="orgecde6cc"></a>
 
 ### Packages
 
@@ -604,16 +596,35 @@ If you wish to know more about any of them, check out the list<sup><a id="fnr.8"
 at the end of this readme/configuration or the [awesome-emacs](https://github.com/emacs-tw/awesome-emacs) project.
 
 Many packages bind keys.
-Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
+Check the [key bindings section](#org6f51166) if you need a list of all of them.
 
 1.  ace
 
     `ace` allows for some nifty window swapping.
+    We do some customization to integrate better with our buffer
+    switching setup.
     
         (use-package ace-window
-          :bind (("H-w" . ace-swap-window)
-        	 ("C-c w s" . ace-swap-window)
-        	 ("C-c w d" . ace-delete-other-windows)))
+          :custom
+          (aw-leading-char-style 'path) ;; does this work?
+          :init
+          (setq aw-dispatch-always t
+        	aw-minibuffer-flag t
+        	aw-dispatch-alist  '((?x aw-delete-window           "delete")
+        			     (?s aw-swap-window             "swap")
+        			     (?b aw-switch-buffer-in-window "buffer")
+        			     (?h aw-split-window-horz       "horizontal split")
+        			     (?v aw-split-window-vert       "vertical split")
+        			     (?f aw-split-window-fair       "fair split")
+        			     (?? aw-show-dispatch-help      "help")))
+          :config
+          ;; overriding this because we want our custom buffer switch
+          (advice-add
+            'aw--switch-buffer
+            :override (lambda (&rest r) (my-switch-buffer r))
+            '((name . "aw--switch-buffer")))
+          :bind (("H-w"   . ace-window)
+        	 ("C-c w" . ace-window)))
 
 2.  add-node-modules-path
 
@@ -741,7 +752,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
 11. crux
 
     Let's use `crux` for some editing magic.
-    Check the [key bindings section](#orgcbeb3e6) for descriptions.
+    Check the [key bindings section](#org6f51166) for descriptions.
     
         (use-package crux
           :bind (("M-o"          . crux-other-window-or-switch-buffer)
@@ -835,7 +846,38 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
                 	     :localRoot local-root
                 	     :port 9229)))))
 
-13. delight
+13. dashboard
+
+    Let's have a dash of board.
+    
+        ;; dependency
+        (use-package page-break-lines)
+        
+        ;; using my gitlab status messages, only one so far
+        (setq my/dashboard-footer-messages
+          '(":whale2: breaching your favorite stupid framework"))
+        
+        (use-package dashboard
+          :after page-break-lines
+          :init
+          (setq dashboard-banner-logo-title "Walheimat's Emacs Config"
+        	dashboard-startup-banner    (expand-file-name
+        				       "logo.png"
+        				       walheimat-emacs-config-default-path)
+        	dashboard-projects-backend  'projectile
+        	dashboard-items             '((recents   . 5)
+        				      (projects  . 5)
+        				      (agenda)
+        				      (bookmarks . 5))
+        	dashboard-center-content    t
+        	dashboard-set-file-icons    t
+        	dashboard-set-navigator     t
+        	dashboard-footer-messages   my/dashboard-footer-messages
+        	dashboard-set-init-info     t)
+          :config
+          (dashboard-setup-startup-hook))
+
+14. delight
 
     Refine a couple of major-mode names.
     
@@ -845,7 +887,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           (delight 'js2-mode "JavaScript" :major)
           (delight 'emacs-lisp-mode "Elisp" :major))
 
-14. diff-hl
+15. diff-hl
 
     Show diffs in the fringe.
     Show diffs in `dired` buffers as well.
@@ -857,7 +899,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :hook ((magit-post-refresh . diff-hl-magit-post-refresh)
         	 (dired-mode         . diff-hl-dired-mode)))
 
-15. diminish
+16. diminish
 
     See individual `use-package` declarations as well,
     since we `delight` in/diminish them there.
@@ -866,7 +908,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :config
           (diminish 'eldoc-mode))
 
-16. dimmer
+17. dimmer
 
     Dim inactive frames.
     Make dimmed frames a bit dimmer.
@@ -882,7 +924,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           (dimmer-configure-hydra)
           (dimmer-mode t))
 
-17. dired
+18. dired
 
     Group directories first in `dired`,
     override some keybindings.
@@ -900,7 +942,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
         	 ("V" . dired-display-file)   ;; overrides dired-do-run-mail
         	 ("-" . dired-up-directory)))) ;; overrides negative-argument
 
-18. dired-filter
+19. dired-filter
 
     This package is awesome.
     Hit `/` to filter in `dired` buffers.
@@ -908,7 +950,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
         (use-package dired-filter
           :diminish "def")
 
-19. docker
+20. docker
 
     I use Docker a lot, don't always have to use the command line.
     
@@ -918,7 +960,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :bind (("C-c k" . docker)
         	 ("H-k"   . docker)))
 
-20. doom-modeline
+21. doom-modeline
 
     Busier and prettier modeline.
     Note that this packag requires you to install `all-the-icons` fonts<sup><a id="fnr.5.100" class="footref" href="#fn.5">5</a></sup>.
@@ -931,7 +973,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :config
           (doom-modeline-mode 1))
 
-21. drag stuff
+22. drag stuff
 
     Use the default key bindings.
     
@@ -941,7 +983,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :config
           (drag-stuff-define-keys))
 
-22. dumb-jump
+23. dumb-jump
 
     Jump to definitions (in other files).
     Configure it for `ivy`.
@@ -956,7 +998,17 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :bind (("C-c j" . xref-find-definitions)
         	 ("H-j"   . xref-find-definitions)))
 
-23. eshell
+24. emojify
+
+    Display emojis.
+    
+    You might have to call `emojify-download-emoji` to
+    download a set that supports your emojis.
+    
+        (use-package emojify
+          :hook (after-init . global-emojify-mode))
+
+25. eshell
 
     Set up `eshell`.
     
@@ -992,7 +1044,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           (setq eshell-highlight-prompt nil
         	eshell-prompt-function 'epe-theme-lambda))
 
-24. evilnc
+26. evilnc
 
     Comment code like in `vim`, evil, evil `vim`.
     
@@ -1000,20 +1052,20 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :bind (("H-#" . evilnc-comment-or-uncomment-lines)
         	 ("C-c c #"  . evilnc-comment-or-uncomment-lines)))
 
-25. expand-region
+27. expand-region
 
     One thing that can be a bit tricky is selecting regions, not anymore.
     
         (use-package expand-region
           :bind ("C-+" . er/expand-region))
 
-26. find-file-in-project
+28. find-file-in-project
 
     Finding files by name should be easy.
     
         (use-package find-file-in-project)
 
-27. fira-code
+29. fira-code
 
     I use FiraCode, this mode allows us to use ligatures.
     
@@ -1024,7 +1076,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :custom (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
           :hook prog-mode)                                         ; mode to enable fira-code-mode in
 
-28. flycheck
+30. flycheck
 
     `flycheck` is for all of our linting/code quality needs.
     
@@ -1035,7 +1087,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :hook ((flycheck-mode . my-use-eslint-from-node-modules)
         	 (flycheck-mode . my-use-tslint-from-node-modules)))
 
-29. flyspell
+31. flyspell
 
     My spelling is bad.
     Use American English for `flyspell`.
@@ -1058,7 +1110,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
         (use-package flyspell-correct-ivy
           :after flyspell-correct)
 
-30. gitignore-mode
+32. gitignore-mode
 
     Syntax highlighting.
     
@@ -1067,22 +1119,27 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
         (use-package gitignore-mode
           :mode "^.gitignore")
 
-31. git-timemachine
+33. git-timemachine
 
     If you want to go back in time and point fingers at the progenitors of doom.
     
         (use-package git-timemachine)
 
-32. golden-ratio
+34. golden-ratio
 
     Use the golden ratio.
     
         (use-package golden-ratio
           :diminish
+          :init
+          ;; make sure to run golden ratio after ace switch
+          (advice-add 'aw-switch-to-window :after #'golden-ratio)
           :config
+          ;; this doesn't work for me, see alt solution above
+          ;; (push 'aw-switch-to-window golden-ratio-extra-commands)
           (golden-ratio-mode 1))
 
-33. google-this
+35. google-this
 
     If you're too lazy to copy and paste.
     
@@ -1092,7 +1149,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :config
           (google-this-mode 1))
 
-34. highlight-indent-guides
+36. highlight-indent-guides
 
     Show indentation.
     
@@ -1103,27 +1160,27 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           (setq highlight-indent-guides-method 'character)
           :hook (prog-mode . highlight-indent-guides-mode))
 
-35. highlight numbers
+37. highlight numbers
 
     Make numbers stand out.
     
         (use-package highlight-numbers
           :hook (prog-mode . highlight-numbers-mode))
 
-36. hl-todo
+38. hl-todo
 
     Highlight `TODO`, `FIXME` etc. in `prog` modes.
     
         (use-package hl-todo
           :hook (prog-mode . hl-todo-mode))
 
-37. hydra
+39. hydra
 
     We use `hydra` to trigger grouped actions.
     
         (use-package hydra)
 
-38. ivy
+40. ivy
 
     We use `ivy` for narrowing our options.
     
@@ -1156,7 +1213,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :config
           (ivy-mode 1))
 
-39. ivy-rich
+41. ivy-rich
 
     Some nicer candidate view when switching buffers.
     
@@ -1189,7 +1246,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :config
           (ivy-rich-mode 1))
 
-40. kaolin
+42. kaolin
 
     This is a themes collection I sometimes pick from.
     
@@ -1208,14 +1265,14 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           ;; treemacs
           (kaolin-treemacs-theme))
 
-41. kubernetes
+43. kubernetes
 
     Who doesn't like pods and stuff?
     
         (use-package kubernetes
           :commands (kubernetes-overview))
 
-42. lsp
+44. lsp
 
     Prefer `capf`, bigger delay.
     
@@ -1258,7 +1315,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
                :multi-root t
                :server-id 'prolog-ls))
 
-43. magit
+45. magit
 
     Version control has never been this easy before.
     
@@ -1266,7 +1323,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :bind (("C-c g" . magit-status)
         	 ("H-g"   . magit-status)))
 
-44. mode-line-bell
+46. mode-line-bell
 
     Make the bell visual.
     
@@ -1274,7 +1331,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :config
           (mode-line-bell-mode))
 
-45. multiple-cursors
+47. multiple-cursors
 
     Sometimes a lot of things are similarly wrong.
     It's nice to change everything at once.
@@ -1286,7 +1343,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
            ("C-c m a" . mc/mark-all-like-this)
            ("H-m"     . mc/mark-all-like-this)))
 
-46. mwim
+48. mwim
 
     Move where I want.
     Useful for comments.
@@ -1295,7 +1352,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :bind (("C-a" . mwim-beginning)
         	 ("C-e" . mwim-end)))
 
-47. origami
+49. origami
 
     Code folding.
     Unfortunately has some performance issues.
@@ -1311,7 +1368,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :hook (prog-mode . origami-mode)
           :bind (("C-c o" . origami-toggle-node)))
 
-48. perspective
+50. perspective
 
     Have some perspective, man.
     
@@ -1339,7 +1396,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
         ;; no idea why putting this in :hook kills the package
         (add-hook 'kill-emacs-hook #'persp-state-save)
 
-49. prettier-js
+51. prettier-js
 
     Format code quickly.
     
@@ -1348,7 +1405,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           ;; you might want to remove/edit this
           (setq prettier-js-args '("--print-width" "91")))
 
-50. projectile
+52. projectile
 
     Projects in Emacs.
     You don't really <span class="underline">need</span> `treemacs`.
@@ -1369,7 +1426,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
           (projectile-mode +1))
 
-51. rainbow
+53. rainbow
 
     Show colors in source code and make delimiters stand out.
     
@@ -1380,7 +1437,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :diminish
           :hook (prog-mode . rainbow-mode))
 
-52. restart-emacs
+54. restart-emacs
 
     Sometimes I restart for fun.
     
@@ -1389,7 +1446,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           (setq restart-emacs-restore-frames t)
           :bind ("C-x r s" . restart-emacs))
 
-53. restclient
+55. restclient
 
     Postman is passé.
     I use a `.http` file extension for my request examples.
@@ -1397,19 +1454,19 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
         (use-package restclient
           :mode ("\\.http\\'" . restclient-mode))
 
-54. request
+56. request
 
     Not used yet, but will in the future.
     
         (use-package request)
 
-55. s
+57. s
 
     String manipulation utility.
     
         (use-package s)
 
-56. smartparens
+58. smartparens
 
     Create a pairs automatically.
     
@@ -1419,7 +1476,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           (require 'smartparens-config)
           :hook (prog-mode . smartparens-mode))
 
-57. smeargle
+59. smeargle
 
     Highlight sections by edit date.
     
@@ -1438,14 +1495,14 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
         
         (use-package smeargle)
 
-58. smex
+60. smex
 
     Show completions for `M-x` in a buffer.
     
         (use-package smex
           :bind ("M-x" . smex))
 
-59. smooth-scrolling
+61. smooth-scrolling
 
     Smooth scrolling at the margins using `C-n` and `C-p`.
     
@@ -1455,7 +1512,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :config
           (smooth-scrolling-mode 1))
 
-60. so-long
+62. so-long
 
     For files whose lines are too long (no longer
     needed in Emacs 27+).
@@ -1465,7 +1522,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
             :config
             (global-so-long-mode 1)))
 
-61. swiper
+63. swiper
 
     Smart searching with `ivy`.
     
@@ -1474,7 +1531,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :bind (("C-c s" . swiper)
         	 ("H-s"   . swiper)))
 
-62. symon
+64. symon
 
     Show some system stats when nothing else is going on.
     
@@ -1489,7 +1546,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :config
           (symon-mode))
 
-63. telephone-line
+65. telephone-line
 
     A slightly nicer mode-line (disabled in favor of `doom-modeline` for now).
     
@@ -1513,7 +1570,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :config
           (telephone-line-mode t))
 
-64. treemacs
+66. treemacs
 
     I'm now a fan of `dired`, but sometimes the "ineluctable modality of the 
     visible" is nice, so let's show some <span class="underline">dirs</span>.
@@ -1585,7 +1642,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
             ;; start with treemacs open (or not)
             ;; (treemacs)
 
-65. undo-fu
+67. undo-fu
 
     Undoing un-undoing is weird in Emacs.
     
@@ -1595,13 +1652,13 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :bind ("C-z"   . undo-fu-only-undo)
         	("C-S-z" . undo-fu-only-redo))
 
-66. use-package-ensure-system-package
+68. use-package-ensure-system-package
 
     Ensure binaries.
     
         (use-package use-package-ensure-system-package)
 
-67. vterm
+69. vterm
 
     `vterm` can be an alternative to included shells.
     We also install `vterm-toggle`.
@@ -1629,7 +1686,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
         		(reusable-frames . visible)
         		(window-height . 0.3)))))
 
-68. which-key
+70. which-key
 
     Show the next possible key presses towards an action.
     
@@ -1641,7 +1698,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
           :config
           (which-key-mode))
 
-69. writeroom-mode
+71. writeroom-mode
 
     Create a room of one's own.
     I use a different (light) theme here.
@@ -1651,7 +1708,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
         	 (writeroom-mode-disable . (lambda() (theme-light-switch 'primary))))
           :bind ("<f5>" . writeroom-mode))
 
-70. yasnippet
+72. yasnippet
 
     Use snippets in `prog` mode buffers.
     Because I also use company, `yas-expand` is mapped to `H-e`,
@@ -1681,7 +1738,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
         ;;     (unless (yas-expand)
         ;;       (call-interactively #'company-complete-common))))
 
-71. zoom
+73. zoom
 
     Use the golden ratio between (in-)active buffers.
     
@@ -1697,7 +1754,7 @@ Check the [key bindings section](#orgcbeb3e6) if you need a list of all of them.
          (zoom-mode 1))
 
 
-<a id="org2c1fd97"></a>
+<a id="org77bdfb3"></a>
 
 ### Mode Configs
 
@@ -1711,14 +1768,17 @@ Configure major modes.
           :mode ("\\.component.css\\'" . css-mode)
           :init
           ;; adapt, obviouisly
-          (setq lsp-clients-angular-language-server-command
-            '("node"
-              "/home/krister/.config/nvm/12.16.1/lib/node_modules/@angular/language-server"
-              "--ngProbeLocations"
-              "/home/krister/.config/nvm/12.16.1/lib/node_modules"
-              "--tsProbeLocations"
-              "/home/krister/.config/nvm/12.16.1/lib/node_modules"
-              "--stdio")))
+          (let* ((node-lts "14.8.0")
+               (node-nvm-lib (format ".config/nvm/%s/lib/node_modules" node-lts))
+               (node-abs (expand-file-name node-nvm-lib "~")))
+            (setq lsp-clients-angular-server-command
+        	  `("node"
+        	    ,(expand-file-name "@angular/language-server" node-abs)
+        	    "--ngProbeLocations"
+        	    ,node-abs
+        	    "--tsProbeLocations"
+        	    ,node-abs
+        	    "--stdio"))))
 
 2.  crontab mode
 
@@ -1730,23 +1790,29 @@ Configure major modes.
 
     Enable `flycheck`.
     
-        (defun my-elisp-mode-hook ()
-          "Hooks for lisp interaction mode."
-          (flycheck-mode 1))
+        (use-package emacs-lisp
+          :ensure nil
+          :hook (emacs-lisp-mode . my/elisp-mode-hook))
         
-        (add-hook 'emacs-lisp-mode-hook 'my-elisp-mode-hook)
+        (defun my/elisp-mode-hook ()
+          "Hooks for lisp interaction mode."
+          (message "So it's just a bunch of lists?")
+          (flycheck-mode 1))
 
 4.  css mode
 
     Just activate `flycheck` and tabs for now.
     
-        (defun my-css-mode-hook ()
+        (use-package css
+          :ensure nil
+          :hook (css-mode . my/css-mode-hook))
+        
+        (defun my/css-mode-hook ()
           "Hooks for css mode."
+          (message "Centering? It's simple. Here's 15 ways to do it.")
           (add-node-modules-path)
           (enable-tabs)
           (flycheck-mode))
-        
-        (add-hook 'css-mode-hook 'my-css-mode-hook)
 
 5.  dockerfile mode
 
@@ -1760,10 +1826,11 @@ Configure major modes.
     Enable `flycheck`.
     
         (use-package elixir-mode
-          :hook (elixir-mode . my-elixir-mode-hook))
+          :hook (elixir-mode . my/elixir-mode-hook))
         
-        (defun my-elixir-mode-hook ()
+        (defun my/elixir-mode-hook ()
           "Hooks for elixir mode."
+          (message "Mixin' potions")
           (lsp)
           (flycheck-mode))
 
@@ -1777,15 +1844,16 @@ Configure major modes.
 
     Enable tabs and `flycheck`.
     
-        (defun my-json-mode-hook ()
+        (use-package json-mode
+          :hook (json-mode . my/json-mode-hook))
+        
+        (defun my/json-mode-hook ()
           "Hooks for json mode."
+          (message "JSON? JSON?! JSON!!")
           (when (y-or-n-p "Do you want to enables tabs?")
             (enable-tabs))
           (flycheck-mode 1)
           (rainbow-delimiters-mode))
-        
-        (use-package json-mode
-          :hook (json-mode . my-json-mode-hook))
 
 9.  js2 mode
 
@@ -1796,10 +1864,11 @@ Configure major modes.
           :init
           (setq-default js2-show-parse-errors nil
         		js2-strict-missing-semi-warning nil)
-          :hook (js2-mode . my-js2-mode-hook))
+          :hook (js2-mode . my/js2-mode-hook))
         
-        (defun my-js2-mode-hook ()
+        (defun my/js2-mode-hook ()
           "Hooks for js2 mode."
+          (message "NaN !== NaN")
           (enable-tabs)
           (add-node-modules-path)
           (flycheck-mode 1)
@@ -1941,7 +2010,8 @@ Configure major modes.
             	      ))
               ;; not sure why this can't be in config
               (org-super-agenda-mode)
-              :bind ("C-c a" . org-agenda))
+              :bind (("C-c a" . org-agenda)
+            	 ("H-a"   . org-agenda)))
             
             ;; we hide all @-tags
             (setq org-agenda-hide-tags-regexp "@")
@@ -2012,13 +2082,14 @@ Configure major modes.
     This mode is built-in.
     
         (use-package python
-          :hook (python-mode . my-python-mode-hook)
+          :ensure nil
+          :hook (python-mode . my/python-mode-hook)
           :init
           ;; use python3 as default python command
           (setq py-python-command        "python3"
         	python-shell-interpreter "python3"))
         
-        (defun my-python-mode-hook ()
+        (defun my/python-mode-hook ()
           "Hooks for python mode."
           (message "Sssnake_case!")
           (flycheck-mode 1)
@@ -2034,13 +2105,13 @@ Configure major modes.
     
         (use-package rjsx-mode
           :mode "\\.jsx\\'"
-          :hook (rjsx-mode . my-rjsx-mode-hook))
+          :hook (rjsx-mode . my/rjsx-mode-hook))
         
         (defun rjsx-indent ()
           (interactive)
           (setq-local indent-line-function 'js-jsx-indent-line))
         
-        (defun my-rjsx-mode-hook ()
+        (defun my/rjsx-mode-hook ()
           "Hooks for rjsx mode."
           (add-node-modules-path)
           (enable-tabs)
@@ -2057,10 +2128,11 @@ Configure major modes.
     
         (use-package typescript-mode
           :mode "\\.ts\\'"
-          :hook (typescript-mode . my-typescript-mode-hook))
+          :hook (typescript-mode . my/typescript-mode-hook))
         
-        (defun my-typescript-mode-hook ()
+        (defun my/typescript-mode-hook ()
           "Hooks for typescript mode."
+          (message "This is any, that is any, everything is any!")
           (enable-tabs)
           (add-node-modules-path)
           (flycheck-mode 1)
@@ -2075,15 +2147,16 @@ Configure major modes.
     Web mode uses `flycheck`, prompts user if `lsp` should be enabled.
     
         (use-package web-mode
-          :hook (web-mode . my-web-mode-hook)
+          :hook (web-mode . my/web-mode-hook)
           :init
           (setq web-mode-comment-style 2)
           :mode ("\\.vue\\'"
         	 "\\.component.html\\'"
         	 "\\.ejs\\'"))
         
-        (defun my-web-mode-hook ()
+        (defun my/web-mode-hook ()
           "Hooks for web mode."
+          (message "This is the Internet")
           (enable-tabs)
           (web-mode-use-tabs)
           (add-node-modules-path)
@@ -2095,14 +2168,14 @@ Configure major modes.
               (delete-trailing-whitespace)
         	nil)))
 
-17. yam mode
+17. yaml mode
 
     Sometimes you need YAMLs.
     
         (use-package yaml-mode)
 
 
-<a id="orgf028dca"></a>
+<a id="orga6f1717"></a>
 
 ### Tweaks
 
@@ -2218,6 +2291,7 @@ If that is the case do the following:
 -   [crux](https://github.com/bbatsov/crux)
 -   [dap-mode](https://github.com/emacs-lsp/dap-mode)
 -   [dash](https://github.com/magnars/dash.el)
+-   [dashboard](https://github.com/emacs-dashboard/emacs-dashboard)
 -   [diff-hl](https://github.com/dgutov/diff-hl)
 -   [dimmer](https://github.com/gonewest818/dimmer.el)
 -   [dired-filter](https://github.com/Fuco1/dired-hacks/)
@@ -2226,6 +2300,7 @@ If that is the case do the following:
 -   [drag-stuff](https://github.com/rejeep/drag-stuff.el)
 -   [dumb-jump](https://github.com/jacktasia/dumb-jump)
 -   [elixir-mode](https://github.com/elixir-editors/emacs-elixir)
+-   [emojify](https://github.com/iqbalansari/emacs-emojify)
 -   [esh-autosuggest](https://github.com/dieggsy/esh-autosuggest/)
 -   [evil-nerd-commenter](https://github.com/redguardtoo/evil-nerd-commenter)
 -   [expand-region](https://github.com/magnars/expand-region.el)
