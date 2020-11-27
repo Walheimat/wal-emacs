@@ -388,6 +388,7 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =<f6>= to google this.
 + =<f7>= to present org file.
 + =<f8>= to spell-check.
++ =<f9>= to resume =ivy=.
 + =M-o= goes to the "other" window or the last buffer.
 + =M-x= opens smex.
 + =s-k= kills the whole line.
@@ -572,27 +573,19 @@ ask if it should get created."
         (make-directory parent-directory t))))
 (add-to-list 'find-file-not-found-functions #'my-create-non-existent-directory)
 
-;; finding dired buffers
-(defun is-dired-buffer (buffer-or-string)
-  "Check if provided buffer is dired-buffer."
-  (eq (with-current-buffer (get-buffer-create buffer-or-string) major-mode) 'dired-mode))
-
-;; finding docker buffers
-(defun is-docker-buffer (buffer-or-string)
-  "Check if provided buffer is docker-buffer."
-  (string-match "* docker " buffer-or-string))
-
-;; finding some default emacs buffers I don't need to see
-(defun is-default-emacs-buffer (buffer-or-string)
-  "Check if provided buffer is a default emacs buffer."
-  (or (string-match "*Messages*" buffer-or-string)
-      (string-match "*scratch*" buffer-or-string)
-      (eq (with-current-buffer (get-buffer-create buffer-or-string) major-mode) 'help-mode)))
-
-;; finding ag buffers
-(defun is-ag-buffer (buffer-or-string)
-  "Check if provided buffer is an ag buffer."
-  (string-match "*ag search " buffer-or-string))
+(defun is-commonly-ignored-buffer (buffer-or-string)
+  "Check if provided buffer is commonly ignored."
+  (or
+      ;; starred buffers
+      (string-match "^\\*[[:ascii:]]+\\*\\'" buffer-or-string)
+      ;; dired
+      (eq (with-current-buffer
+           (get-buffer-create buffer-or-string)
+           major-mode) 'dired-mode)
+      ;; helpful buffers
+      (eq (with-current-buffer
+           (get-buffer-create buffer-or-string)
+            major-mode) 'helpful-mode)))
 #+END_SRC
 
 *** Packages
@@ -693,6 +686,14 @@ Keep packages updated (disabled for now).
   (auto-package-update-maybe))
 #+END_SRC
 
+**** autothemer
+
+Create new themes more easily.
+
+#+BEGIN_SRC emacs-lisp
+(use-package autothemer)
+#+END_SRC
+
 **** avy
 
 Jumping to (visible) lines and chars is fun if you are too lazy to use your mouse.
@@ -771,6 +772,18 @@ Code-completion. In a box.
 (use-package company-web
   :after company)
 #+END_SRC
+
+**** counsel
+
+Counsel me this.
+
+#+BEGIN_SRC emacs-lisp
+(use-package counsel
+  :bind ("M-x" . counsel-M-x)
+  :custom
+  (counsel-linux-app-format-function #'counsel-linux-app-format-function-command-only))
+#+END_SRC
+
 
 **** crux
 
@@ -1232,6 +1245,23 @@ If you're too lazy to copy and paste.
   (google-this-mode 1))
 #+END_SRC
 
+**** helpful
+
+Let's try (to be) =helpful=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package helpful
+  :custom
+  (counsel-describe-function-function #'helpful-callable)
+  (counsel-describe-variable-function #'helpful-variable)
+  :bind
+  ([remap describe-function] . counsel-describe-function)
+  ([remap describe-command]  . helpful-command)
+  ([remap describe-variable] . counsel-describe-variable)
+  ([remap describe-key]      . helpful-key))
+#+END_SRC
+
+
 **** highlight-indent-guides
 
 Show indentation.
@@ -1281,10 +1311,7 @@ We use =ivy= for narrowing our options.
 
 ;; hide dired, docker, ag and default emacs buffers when switching
 (setq my-ivy-ignore-buffers '(
-  is-dired-buffer
-  is-docker-buffer
-  is-ag-buffer
-  is-default-emacs-buffer
+  is-commonly-ignored-buffer
   "\\` "
   "\\`\\*tramp/"))
 
@@ -1300,9 +1327,12 @@ We use =ivy= for narrowing our options.
   :init
   (setq ivy-use-virtual-buffers      t
         enable-recursive-minibuffers t
-        ivy-ignore-buffers           my-ivy-ignore-buffers)
+        ivy-ignore-buffers           my-ivy-ignore-buffers
+        ivy-count-format             "%d/%d "
+        ivy-wrap                     t)
   :bind (("C-x b" . my-switch-buffer)
-         ("H-b"   . my-switch-buffer))
+         ("H-b"   . my-switch-buffer)
+         ("<f9>"  . ivy-resume))
   :config
   (ivy-mode 1))
 #+END_SRC
@@ -1321,11 +1351,12 @@ Some nicer candidate view when switching buffers.
 
 (use-package ivy-rich
   :after ivy
-  :init
+  :config
   (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
   (setq ivy-rich-display-transformers-list
-      '(my-switch-buffer
-        (:columns
+        (plist-put ivy-rich-display-transformers-list 
+        'my-switch-buffer
+        '(:columns
          (
           (ivy-rich-candidate (:width 30))
           (ivy-rich-switch-buffer-size (:width 7))
@@ -1338,7 +1369,6 @@ Some nicer candidate view when switching buffers.
 	 )
          :predicate
          (lambda (cand) (get-buffer cand)))))
-  :config
   (ivy-rich-mode 1))
 #+END_SRC
 
@@ -1631,9 +1661,13 @@ Highlight sections by edit date.
 
 Show completions for =M-x= in a buffer.
 
+Only used for sorting at the moment.
+
 #+BEGIN_SRC emacs-lisp
 (use-package smex
-  :bind ("M-x" . smex))
+  :defer 1
+  ;; :bind ("M-x" . smex)
+  :after counsel)
 #+END_SRC
 
 **** smooth-scrolling
@@ -1668,7 +1702,9 @@ Smart searching with =ivy=.
 (use-package swiper
   :after ivy
   :bind (("C-c s" . swiper)
-         ("H-s"   . swiper)))
+         ("H-s"   . swiper)
+         (:map swiper-map
+           ("C-c v" . swiper-avy))))
 #+END_SRC
 
 **** symon
@@ -2482,6 +2518,7 @@ If that is the case do the following:
 + [[https://github.com/Wilfred/ag.el][ag]]
 + [[https://github.com/domtronn/all-the-icons.el][all-the-icons]]
 + [[https://github.com/rranelli/auto-package-update.el][auto-package-update]]
++ [[https://github.com/jasonm23/autothemer][autothemer]]
 + [[https://github.com/abo-abo/avy][avy]]
 + [[https://github.com/Malabarba/beacon][beacon]]
 + [[https://github.com/joodland/bm][bm]]
@@ -2509,6 +2546,7 @@ If that is the case do the following:
 + [[https://github.com/roman/golden-ratio.el][golden-ratio]]
 + [[https://github.com/Malabarba/emacs-google-this][google-this]]
 + [[https://github.com/haskell/haskell-mode][haskell-mode]]
++ [[https://github.com/Wilfred/helpful][helpful]]
 + [[https://github.com/zk-phi/indent-guide][highlight-indent-guide]]
 + [[https://github.com/Fanael/highlight-numbers][highlight-numbers]]
 + [[https://github.com/abo-abo/hydra][hydra]]
