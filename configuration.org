@@ -564,6 +564,8 @@ and =treemacs= buffer check.
 
 ;; creating parent dirs
 (defun my-create-non-existent-directory ()
+  "If a file is found in a not (yet) existing directory,
+ask if it should get created."
   (let ((parent-directory (file-name-directory buffer-file-name)))
     (when (and (not (file-exists-p parent-directory))
       (y-or-n-p (format "Directory `%s' does not exist! Create it?" parent-directory)))
@@ -961,9 +963,11 @@ Make dimmed frames a bit dimmer.
   (setq dimmer-fraction       0.3
         dimmer-adjustmentmode :both)  
   :config
-  (dimmer-configure-org)
-  (dimmer-configure-magit)
+  (dimmer-configure-company-box)
   (dimmer-configure-hydra)
+  (dimmer-configure-magit)
+  (dimmer-configure-org)
+  (dimmer-configure-which-key)
   (dimmer-mode t))
 #+END_SRC
 
@@ -1167,15 +1171,15 @@ You can bring up actions (skip, save) with =M-o=.
 (use-package flyspell
   :delight " fsp"
   :init
-  (setq ispell-dictionary "american")
-  (setq flyspell-issue-message-flag nil)
-  :bind (("<f9>" . flyspell-mode)
-         (:map flyspell-mode-map
-             ("n" . flyspell-correct-next)
-	     ("p" . flyspell-correct-previous))))
+  (setq ispell-dictionary "american"
+        flyspell-issue-message-flag nil)
+  :bind ("<f8>" . flyspell-mode))
 
 (use-package flyspell-correct
-  :after flyspell)
+  :after flyspell
+  :bind (:map flyspell-mode-map
+          ("n" . flyspell-correct-next)
+	  ("p" . flyspell-correct-previous)))
 
 (use-package flyspell-correct-ivy
   :after flyspell-correct)
@@ -1285,7 +1289,8 @@ We use =ivy= for narrowing our options.
   "\\`\\*tramp/"))
 
 ;; toggle custom ignore on or off
-(defun my-toggle-ivy-ignore ()
+(defun my/query-ivy-ignore ()
+  "Query if custom ivy buffer ignore list should be used."
   (interactive)
   (if (y-or-n-p "Use custom ivy buffer ignore?")
     (setq ivy-ignore-buffers my-ivy-ignore-buffers)
@@ -1535,8 +1540,6 @@ You don't really _need_ =treemacs=.
   :config
   ;; (add-to-list 'projectile-globally-ignored-directories "node_modules")
   ;; (add-to-list 'projectile-globally-ignored-directories "build")
-  ;; (add-to-list 'projectile-other-file-alist '("org" "org_archive"))
-  ;; (add-to-list 'projectile-other-file-alist '("org_archive" "org"))
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (projectile-mode +1))
 #+END_SRC
@@ -1674,6 +1677,7 @@ Show some system stats when nothing else is going on.
 
 #+BEGIN_SRC emacs-lisp
 (use-package symon
+  :if (eq system-type 'gnu/linux)
   :init
   (setq symon-sparkline-type 'bounded
         symon-delay          10
@@ -1926,8 +1930,8 @@ You might think Angular is dead and you'd be right but not everyone knows yet.
   :init
   ;; adapt, obviouisly
   (let* ((node-lts "14.8.0")
-       (node-nvm-lib (format ".config/nvm/%s/lib/node_modules" node-lts))
-       (node-abs (expand-file-name node-nvm-lib "~")))
+         (node-nvm-lib (format ".config/nvm/%s/lib/node_modules" node-lts))
+         (node-abs (expand-file-name node-nvm-lib "~")))
     (setq lsp-clients-angular-server-command
   	  `("node"
             ,(expand-file-name "@angular/language-server" node-abs)
@@ -2207,7 +2211,7 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
 
 (setq org-agenda-files `(,my-agenda-tasks-directory))
 
-;; more cool stuff rom mwfogleman's emacs.d
+;; more cool stuff from mwfogleman's emacs.d
 (defhydra hydra-org-clock (:color blue :hint nil)
   "
 Clock   In/out^     ^Edit^   ^Summary     (_?_)
