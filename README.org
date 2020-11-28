@@ -396,6 +396,7 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =<f7>= to present org file.
 + =<f8>= to spell-check.
 + =<f9>= to resume =ivy=.
++ =<f10>= to show help for thing at point.
 + =M-o= goes to the "other" window or the last buffer.
 + =M-x= opens smex.
 + =s-k= kills the whole line.
@@ -636,9 +637,9 @@ at the end of this readme/configuration or the [[https://github.com/emacs-tw/awe
 Many packages bind keys.
 Check the [[*Key Bindings][key bindings section]] if you need a list of all of them.
 
-**** ace
+**** ace-window
 
-=ace= allows for some nifty window swapping.
+=ace-window= allows for some nifty window swapping.
 We do some customization to integrate better with our buffer
 switching setup.
 
@@ -842,7 +843,7 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
          ("C-c c d"      . crux-duplicate-current-line-or-region)))
 #+END_SRC
 
-**** dap
+**** dap-mode
 
 Debugging using VSCode's DAP.
 
@@ -1081,7 +1082,7 @@ Note that this packag requires you to install =all-the-icons= fonts[fn:4].
   (doom-modeline-mode 1))
 #+END_SRC
 
-**** drag stuff
+**** drag-stuff
 
 Use the default key bindings.
 
@@ -1161,7 +1162,7 @@ Set up =eshell=.
         eshell-prompt-function 'epe-theme-lambda))
 #+END_SRC
 
-**** evilnc
+**** evil-nerd-commenter
 
 Comment code like in =vim=, evil, evil =vim=.
 
@@ -1188,7 +1189,7 @@ Finding files by name should be easy.
 (use-package find-file-in-project)
 #+END_SRC
 
-**** fira-code
+**** fira-code-mode
 
 I use FiraCode, this mode allows us to use ligatures.
 
@@ -1223,6 +1224,7 @@ You can bring up actions (skip, save) with =M-o=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package flyspell
+  :ensure nil
   :delight " fsp"
   :init
   (setq ispell-dictionary           "american"
@@ -1296,6 +1298,7 @@ Let's try (to be) =helpful=.
   (counsel-describe-function-function #'helpful-callable)
   (counsel-describe-variable-function #'helpful-variable)
   :bind
+  ("<f10>"                   . helpful-at-point)
   ([remap describe-function] . counsel-describe-function)
   ([remap describe-command]  . helpful-command)
   ([remap describe-variable] . counsel-describe-variable)
@@ -1443,7 +1446,7 @@ Who doesn't like pods and stuff?
   :commands (kubernetes-overview))
 #+END_SRC
 
-**** lsp
+**** lsp-mode
 
 Prefer =capf=, bigger delay.
 
@@ -2293,7 +2296,7 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
 (unless (file-directory-p my-agenda-tasks-directory)
   (make-directory my-agenda-tasks-directory))
 
-(setq org-agenda-files `(,my-agenda-tasks-directory))
+(setq org-agenda-files my-agenda-tasks-directory)
 
 ;; more cool stuff from mwfogleman's emacs.d
 (defhydra hydra-org-clock (:color blue :hint nil)
@@ -2439,8 +2442,6 @@ Web mode uses =flycheck=, prompts user if =lsp= should be enabled.
   (enable-tabs)
   (web-mode-use-tabs)
   (add-node-modules-path)
-  (if (y-or-n-p "Do you want to enable lsp?")
-      (lsp))
   (flycheck-mode)
   (add-hook 'local-write-file-hooks
 	    (lambda ()
@@ -2555,17 +2556,19 @@ If that is the case do the following:
 
 + hit =M-x=, type =package-install= and hit return
 + type =dash= and hit return again
-+ once the installation is complete, re-run Emacs
+
+Once the installation is complete, re-run Emacs
 
 [fn:5] 107 code blocks, to be exact.
 
 [fn:6] Send me an email, why don't you?
 
-[fn:7] Repositories (almost complete):
+[fn:7] Repositories:
 + [[https://github.com/abo-abo/ace-window][ace-window]]
 + [[https://github.com/codesuki/add-node-modules-path][add-node-modules-path]]
 + [[https://github.com/Wilfred/ag.el][ag]]
 + [[https://github.com/domtronn/all-the-icons.el][all-the-icons]]
++ [[https://github.com/jtbm37/all-the-icons-dired][all-the-icons-dired]]
 + [[https://github.com/rranelli/auto-package-update.el][auto-package-update]]
 + [[https://github.com/jasonm23/autothemer][autothemer]]
 + [[https://github.com/abo-abo/avy][avy]]
@@ -2576,7 +2579,9 @@ If that is the case do the following:
 + [[https://github.com/emacs-lsp/dap-mode][dap-mode]]
 + [[https://github.com/magnars/dash.el][dash]]
 + [[https://github.com/emacs-dashboard/emacs-dashboard][dashboard]]
++ [[https://elpa.gnu.org/packages/delight.html][delight]]
 + [[https://github.com/dgutov/diff-hl][diff-hl]]
++ [[https://github.com/emacsmirror/diminish][diminish]]
 + [[https://github.com/gonewest818/dimmer.el][dimmer]]
 + [[https://github.com/Fuco1/dired-hacks/][dired-filter]]
 + [[https://github.com/Silex/docker.el][docker]]
@@ -2586,21 +2591,25 @@ If that is the case do the following:
 + [[https://github.com/elixir-editors/emacs-elixir][elixir-mode]]
 + [[https://github.com/iqbalansari/emacs-emojify][emojify]]
 + [[https://github.com/dieggsy/esh-autosuggest/][esh-autosuggest]]
++ [[https://github.com/zwild/eshell-prompt-extras][eshell-prompt-extras]]
++ [[https://github.com/akreisher/eshell-syntax-highlighting][eshell-syntax-highlighting]]
 + [[https://github.com/redguardtoo/evil-nerd-commenter][evil-nerd-commenter]]
 + [[https://github.com/magnars/expand-region.el][expand-region]]
 + [[https://github.com/technomancy/find-file-in-project][find-file-in-project]]
-+ [[https://github.com/jming422/fira-code-mode][fira-code]]
++ [[https://github.com/jming422/fira-code-mode][fira-code-mode]]
 + [[https://github.com/flycheck/flycheck][flycheck]]
-+ [[https://github.com/d12frosted/flyspell-correct][flyspell-correct]]
++ [[https://github.com/d12frosted/flyspell-correct][flyspell-correct(-ivy)]]
++ [[https://github.com/emacsmirror/git-timemachine][git-timemachine]]
 + [[https://github.com/roman/golden-ratio.el][golden-ratio]]
 + [[https://github.com/Malabarba/emacs-google-this][google-this]]
 + [[https://github.com/haskell/haskell-mode][haskell-mode]]
 + [[https://github.com/Wilfred/helpful][helpful]]
-+ [[https://github.com/zk-phi/indent-guide][highlight-indent-guide]]
++ [[https://github.com/zk-phi/indent-guide][highlight-indent-guides]]
 + [[https://github.com/Fanael/highlight-numbers][highlight-numbers]]
++ [[https://github.com/tarsius/hl-todo][hl-todo]]
 + [[https://github.com/abo-abo/hydra][hydra]]
 + [[https://github.com/Yevgnen/ivy-rich][ivy-rich]]
-+ [[https://github.com/abo-abo/swiper][ivy/swiper]]
++ [[https://github.com/abo-abo/swiper][ivy/swiper/counsel]]
 + [[https://github.com/mooz/js2-mode/][js2-mode]]
 + [[https://github.com/ogdenwebb/emacs-kaolin-themes][kaolin]]
 + [[https://github.com/chrisbarrett/kubernetes-el][kubernetes]]
@@ -2623,16 +2632,20 @@ If that is the case do the following:
 + [[https://github.com/emacsmirror/rainbow-mode][rainbow-mode]]
 + [[https://github.com/tkf/emacs-request][request]]
 + [[https://github.com/iqbalansari/restart-emacs][restart-emacs]]
++ [[https://github.com/pashky/restclient.el][restclient]]
 + [[https://github.com/felipeochoa/rjsx-mode][rjsx-mode]]
 + [[https://github.com/magnars/s.el][s]]
 + [[https://github.com/Fuco1/smartparens][smartparens]]
++ [[https://github.com/emacsorphanage/smeargle][smeargle]]
 + [[https://github.com/nonsequitur/smex/][smex]]
 + [[https://github.com/aspiers/smooth-scrolling/tree/2462c13640aa4c75ab3ddad443fedc29acf68f84][smooth-scrolling]]
++ [[https://www.emacswiki.org/emacs/SoLong][so-long]]
 + [[https://github.com/zk-phi/symon][symon]]
 + [[https://github.com/dbordak/telephone-line][telephone-line]]
 + [[https://github.com/Alexander-Miller/treemacs][treemacs]]
 + [[https://gitlab.com/ideasman42/emacs-undo-fu][undo-fu]]
 + [[https://github.com/jwiegley/use-package][use-package]]
++ [[https://github.com/waymondo/use-package-ensure-system-package][ensure-system-package]]
 + [[https://github.com/akermu/emacs-libvterm][vterm]]
 + [[https://github.com/jixiuf/vterm-toggle][vterm-toggle]]
 + [[http://web-mode.org/][web-mode]]
