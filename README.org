@@ -6,7 +6,7 @@
 
 This project is my personal Emacs (27.1)[fn:1] config.
 
-Its base is an org file so it doubles as a readme[fn:2].
+Its base is an org file so it doubles as a readme.
 
 #+TOC: headlines 3
 
@@ -29,21 +29,21 @@ it's mostly just how I (think I) like things to be.
 If you're interested in trying out Emacs using my config anyway,
 here are the necessary steps:
 
-+ Install Emacs if you haven't[fn:3]
-+ Clone this repository into your =user-emacs-directory=[fn:4]
++ Install Emacs if you haven't[fn:2]
++ Clone this repository into your =user-emacs-directory=[fn:3]
 + Copy the config file included in this repo by running =cp ~/.emacs.d/emacs-config/.emacs.example ~/.emacs=
-+ Close and re-run Emacs which should download and install (almost[fn:5]) all packages
++ Close and re-run Emacs which should download and install (almost[fn:4]) all packages
 
 If you did not init this repo in your =user-emacs-directory= using the default name,
 you will need to adapt the variable =walheimat-emacs-config-default-path= in the example config you just copied.
 
 ** Config
 
-The init script will evaluate _everything_[fn:6] that follows.
+The init script will evaluate _everything_[fn:5] that follows.
 
 *** Personal
 
-Set some personal info.[fn:7]
+Set some personal info.[fn:6]
 
 #+BEGIN_SRC emacs-lisp
 (setq user-full-name    "Krister Schuchardt"
@@ -103,16 +103,18 @@ This (and some other things) was cribbed from [[https://www.john2x.com/emacs.htm
 ;; empty scratch message
 (setq initial-scratch-message ";; Howdy, stranger ...")
 
-(setq scratch-persist-file (expand-file-name ".cache/scratch-persist" user-emacs-directory))
+(defconst scratch-persist-file
+  (expand-file-name ".cache/scratch-persist" user-emacs-directory)
+  "The file to persist the *scratch* buffer's content in.")
 
 (defun persist-scratch ()
+  "Persist contents of *scratch* buffer."
   (interactive)
-  "Persist contents of *scratch* buffer"
   (with-current-buffer (get-buffer-create "*scratch*")
     (write-region (point-min) (point-max) scratch-persist-file)))
 
 (defun rehydrate-scratch ()
-  "Re-hydrate scratch buffer (if persisted)"
+  "Re-hydrate scratch buffer (if persisted)."
   (if (file-exists-p scratch-persist-file)
       (with-current-buffer (get-buffer "*scratch*")
         (delete-region (point-min) (point-max))
@@ -130,9 +132,9 @@ We'll be getting most (if not all) packages from the prior.
 #+BEGIN_SRC emacs-lisp
 (require 'package)
 (let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
-         (not (gnutls-available-p))))
-	 (proto (if no-ssl "http" "https")))
- (when no-ssl (warn "\
+		    (not (gnutls-available-p))))
+       (proto (if no-ssl "http" "https")))
+  (when no-ssl (warn "\
    Your version of Emacs does not support SSL connections,
    which is unsafe because it allows man-in-the-middle attacks.
    There are two things you can do about this warning:
@@ -143,7 +145,7 @@ We'll be getting most (if not all) packages from the prior.
   ;; Comment/uncomment this line to enable MELPA Stable if desired.  See `package-archive-priorities`
   ;; and `package-pinned-packages`. Most users will not need or want to do this.
   ;;(add-to-list 'package-archives (cons "melpa-stable" (concat proto "://stable.melpa.org/packages/")) t)
-)
+  )
 (setq package-pinned-packages '())
 (package-initialize)
 #+END_SRC
@@ -156,7 +158,7 @@ We need dash.
 ;; we need dash for the upcoming loop
 (unless (package-installed-p 'dash)
   (condition-case nil
-    (package-install 'dash)
+      (package-install 'dash)
     (error (package-refresh-contents)
            (package-install 'dash))))
 (require 'dash)
@@ -199,8 +201,8 @@ Now we can install the other dependencies.
 (condition-case nil
     (init--install-packages)
   (error
-    (package-refresh-contents)
-    (init--install-packages)))
+   (package-refresh-contents)
+   (init--install-packages)))
 #+END_SRC
 
 **** Site-Lisp
@@ -216,10 +218,15 @@ Adapt if necessary.
 (unless (file-directory-p (expand-file-name "site-lisp" user-emacs-directory))
   (make-directory (expand-file-name "site-lisp" user-emacs-directory)))
 
-(setq site-lisp-dir
-  (expand-file-name "site-lisp" user-emacs-directory))
+(defconst site-lisp-dir
+  (expand-file-name "site-lisp" user-emacs-directory)
+  "Directory of site lisp packages.")
 
 (add-to-list 'load-path site-lisp-dir)
+
+;; allow us to load from site-lisp package
+(add-to-list 'custom-theme-load-path
+	     (expand-file-name "emacs-site-lisp" site-lisp-dir))
 
 ;; add subdirs as well
 (dolist (project (directory-files site-lisp-dir t "\\w+"))
@@ -262,12 +269,12 @@ Don't clutter up workspaces.
 
 ;; store backups in backups folder.
 (setq backup-directory-alist
-  `(("." . ,(expand-file-name
-    (concat user-emacs-directory "backups")))))
+      `(("." . ,(expand-file-name
+		 (concat user-emacs-directory "backups")))))
 
 ;; store autosaves in temp folder.
 (setq auto-save-file-name-transforms
-  `((".*" ,temporary-file-directory t)))
+      `((".*" ,temporary-file-directory t)))
 
 ;; we don't want this to mess with git.
 (setq create-lockfiles nil)
@@ -388,6 +395,7 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =<f6>= to google this.
 + =<f7>= to present org file.
 + =<f8>= to spell-check.
++ =<f9>= to resume =ivy=.
 + =M-o= goes to the "other" window or the last buffer.
 + =M-x= opens smex.
 + =s-k= kills the whole line.
@@ -446,9 +454,14 @@ Most bindings are declared in the [[*Packages][packages]] section.
 
 ;; emacs
 (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
+
+(defconst my/readme-config
+  (expand-file-name "README.org" walheimat-emacs-config-default-path)
+  "The path to this config file.")
+
 (global-set-key
   (kbd "C-x C-c")
-  (lambda () (interactive)(switch-to-buffer (find-file-noselect (expand-file-name "configuration.org" walheimat-emacs-config-default-path)))))
+  (lambda () (interactive)(switch-to-buffer (find-file-noselect my/readme-config))))
 #+END_SRC
 
 **** Theme
@@ -460,30 +473,32 @@ Otherwise the colors might clash.
 
 #+BEGIN_SRC emacs-lisp
 ;; two themes and a switch
-(defcustom my-primary-emacs-theme 'kaolin-light
+(defconst my-primary-emacs-theme 'kaolin-light
   "The quote-unquote default emacs theme.")
 
-(defcustom my-secondary-emacs-theme 'paper
+(defconst my-secondary-emacs-theme 'paper
   "The non-default emacs theme.")
 
-(setq my-active-theme my-primary-emacs-theme)
+(defvar my-active-theme
+  my-primary-emacs-theme
+  "The active theme.")
 
 (defun theme-light-switch (&optional selection)
   "Switch from light to dark theme and vice-versa."
   (interactive)
   (disable-theme my-active-theme)
   (cond ((or (equal my-active-theme my-primary-emacs-theme) (equal selection 'secondary))  
-           (load-theme my-secondary-emacs-theme)
-           (setq my-active-theme my-secondary-emacs-theme))
+         (load-theme my-secondary-emacs-theme)
+         (setq my-active-theme my-secondary-emacs-theme))
         ((or (equal my-active-theme my-secondary-emacs-theme) (equal selection 'secondary))
-           (load-theme my-primary-emacs-theme)
-           (setq my-active-theme my-primary-emacs-theme))))
+         (load-theme my-primary-emacs-theme)
+         (setq my-active-theme my-primary-emacs-theme))))
 
 ;; some themes require configuration, so we only load after intialization
 (add-hook 'after-init-hook '(lambda()
-  (load-theme my-primary-emacs-theme)
-  ;; if you don't mind some transparency
-  (transparency 95)))
+			      (load-theme my-primary-emacs-theme)
+			      ;; if you don't mind some transparency
+			      (transparency 95)))
 #+END_SRC
 
 **** Font
@@ -508,7 +523,7 @@ To get support for ligatures, install the symbol font from [[https://github.com/
     found-switch))
 
 (if (found-custom-arg "--bigger")
-  (set-default-font (font-candidate '"Fira Code 14" "mononoki 14" "Liberation Mono 14" "DejaVu Sans Mono 14")))
+    (set-default-font (font-candidate '"Fira Code 14" "mononoki 14" "Liberation Mono 14" "DejaVu Sans Mono 14")))
 #+END_SRC
 
 **** Zoning
@@ -536,68 +551,86 @@ I don't want to see the CPU load though.
 
 **** Additional Functions
 
-Better (?) garbage collection, transparency,
-and =treemacs= buffer check.
+Some additional functions.
+
+***** Package-Specific
+
+Need to know if buffer is =treemacs= buffer sometimes.
 
 #+BEGIN_SRC emacs-lisp
-;; check if buffer is treemacs buffer
-;; similar to minibufferp
 (defun treemacsbufferp ()
   "Check if this is the treemacs buffer."
   (eq (current-buffer) (treemacs-get-local-buffer)))
+#+END_SRC
 
+***** Garbage Collection
+
+Better(?) garbage collection.
+
+#+BEGIN_SRC emacs-lisp
 ;; trick garbage collection
-(defvar hundred-mb (* 1024 1024 100))
-(defun my-minibuffer-setup-hook ()
+(defconst hundred-mb (* 1024 1024 100))
+
+(defun my/minibuffer-setup-hook ()
+  "Increase gc threshold to maximum on minibuffer setup."
   (setq gc-cons-threshold most-positive-fixnum))
-(defun my-minibuffer-exit-hook ()
+
+(defun my/minibuffer-exit-hook ()
+  "Decrease it again on minibuffer exit."
   (setq gc-cons-threshold hundred-mb))
 
-(add-hook 'minibuffer-setup-hook #'my-minibuffer-setup-hook)
-(add-hook 'minibuffer-exit-hook  #'my-minibuffer-exit-hook)
+(add-hook 'minibuffer-setup-hook #'my/minibuffer-setup-hook)
+(add-hook 'minibuffer-exit-hook  #'my/minibuffer-exit-hook)
+#+END_SRC
 
-;; transparency
+***** Transparency
+
+#+BEGIN_SRC emacs-lisp
 (defun transparency (value)
   "Sets the transparency of the frame window. 0=transparent/100=opaque"
   (interactive "nTransparency Value 0 - 100 opaque:")
   (set-frame-parameter (selected-frame) 'alpha value))
+#+END_SRC
 
+***** Directories
+
+#+BEGIN_SRC emacs-lisp
 ;; creating parent dirs
 (defun my-create-non-existent-directory ()
+  "If a file is found in a not (yet) existing directory,
+ask if it should get created."
   (let ((parent-directory (file-name-directory buffer-file-name)))
     (when (and (not (file-exists-p parent-directory))
-      (y-or-n-p (format "Directory `%s' does not exist! Create it?" parent-directory)))
-        (make-directory parent-directory t))))
+	       (y-or-n-p (format "Directory `%s' does not exist! Create it?" parent-directory)))
+      (make-directory parent-directory t))))
 (add-to-list 'find-file-not-found-functions #'my-create-non-existent-directory)
+#+END_SRC
 
-;; finding dired buffers
-(defun is-dired-buffer (buffer-or-string)
-  "Check if provided buffer is dired-buffer."
-  (eq (with-current-buffer (get-buffer-create buffer-or-string) major-mode) 'dired-mode))
+***** Buffers
 
-;; finding docker buffers
-(defun is-docker-buffer (buffer-or-string)
-  "Check if provided buffer is docker-buffer."
-  (string-match "* docker " buffer-or-string))
+I want to ignore some buffers when switching.
 
-;; finding some default emacs buffers I don't need to see
-(defun is-default-emacs-buffer (buffer-or-string)
-  "Check if provided buffer is a default emacs buffer."
-  (or (string-match "*Messages*" buffer-or-string)
-      (string-match "*scratch*" buffer-or-string)
-      (eq (with-current-buffer (get-buffer-create buffer-or-string) major-mode) 'help-mode)))
-
-;; finding ag buffers
-(defun is-ag-buffer (buffer-or-string)
-  "Check if provided buffer is an ag buffer."
-  (string-match "*ag search " buffer-or-string))
+#+BEGIN_SRC emacs-lisp
+(defun is-commonly-ignored-buffer (buffer-or-string)
+  "Check if provided buffer is commonly ignored."
+  (or
+   ;; starred buffers
+   (string-match "^\\*[[:ascii:]]+\\*\\'" buffer-or-string)
+   ;; dired
+   (eq (with-current-buffer
+           (get-buffer-create buffer-or-string)
+         major-mode) 'dired-mode)
+   ;; helpful buffers
+   (eq (with-current-buffer
+           (get-buffer-create buffer-or-string)
+         major-mode) 'helpful-mode)))
 #+END_SRC
 
 *** Packages
     
 What follows is a list of MELPA packages that make Emacs even more awesome.
 
-If you wish to know more about any of them, check out the list[fn:8] of repositories
+If you wish to know more about any of them, check out the list[fn:7] of repositories
 at the end of this readme/configuration or the [[https://github.com/emacs-tw/awesome-emacs][awesome-emacs]] project.
 
 Many packages bind keys.
@@ -611,24 +644,20 @@ switching setup.
 
 #+BEGIN_SRC emacs-lisp
 (use-package ace-window
-  :custom
-  (aw-leading-char-style 'path) ;; does this work?
   :init
+  (advice-add
+   'aw--switch-buffer
+   :override (lambda (&rest r) (my-switch-buffer r))
+   '((name . "aw--switch-buffer")))
   (setq aw-dispatch-always t
-        aw-minibuffer-flag t
-        aw-dispatch-alist  '((?x aw-delete-window           "delete")
-	                     (?s aw-swap-window             "swap")
-                             (?b aw-switch-buffer-in-window "buffer")
+        aw-dispatch-alist  '((?s aw-swap-window             "swap")
                              (?h aw-split-window-horz       "horizontal split")
                              (?v aw-split-window-vert       "vertical split")
                              (?f aw-split-window-fair       "fair split")
-                             (?? aw-show-dispatch-help      "help")))
-  :config
-  ;; overriding this because we want our custom buffer switch
-  (advice-add
-    'aw--switch-buffer
-    :override (lambda (&rest r) (my-switch-buffer r))
-    '((name . "aw--switch-buffer")))
+                             (?b aw-switch-buffer-in-window "buffer")
+	                     (?x aw-delete-window           "delete")
+			     ;; if this has a description, it doesn't work
+                             (?? aw-show-dispatch-help)))
   :bind (("H-w"   . ace-window)
          ("C-c w" . ace-window)))
 #+END_SRC
@@ -660,7 +689,7 @@ to download it automatically, but might fail).
 
 **** all-the-icons
 
-You need to install the icons yourself[fn:5].
+You need to install the icons yourself[fn:4].
 
 #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons)
@@ -689,10 +718,18 @@ Keep packages updated (disabled for now).
 (use-package auto-package-update
   :disabled
   :init
-  (setq auto-package-update-delete-old-versions t)
-  (setq auto-package-update-hide-results        t)
+  (setq auto-package-update-delete-old-versions t
+        auto-package-update-hide-results        t)
   :config
   (auto-package-update-maybe))
+#+END_SRC
+
+**** autothemer
+
+Create new themes more easily.
+
+#+BEGIN_SRC emacs-lisp
+(use-package autothemer)
 #+END_SRC
 
 **** avy
@@ -744,10 +781,10 @@ Bookmarks are useful. I don't remember where I was. _Who are you?!_
    (after-revert .      bm-buffer-restore)
    (vc-before-checkin . bm-buffer-save))
   :bind
-   (("C-c o s" . bm-show)
-    ("C-c o n" . bm-next)
-    ("C-c o b" . bm-toggle)
-    ("H-o"     . bm-toggle))) ;; ho-ho-ho!
+  (("C-c o s" . bm-show)
+   ("C-c o n" . bm-next)
+   ("C-c o b" . bm-toggle)
+   ("H-o"     . bm-toggle))) ;; ho-ho-ho!
 #+END_SRC
 
 **** company
@@ -772,6 +809,19 @@ Code-completion. In a box.
 
 (use-package company-web
   :after company)
+#+END_SRC
+
+**** counsel
+
+Counsel me this, Counselor.
+
+#+BEGIN_SRC emacs-lisp
+(use-package counsel
+  :bind ("M-x" . counsel-M-x)
+  :custom
+  (counsel-linux-app-format-function #'counsel-linux-app-format-function-command-only)
+  :config
+  (setcdr (assq 'counsel-M-x ivy-initial-inputs-alist) ""))
 #+END_SRC
 
 **** crux
@@ -890,26 +940,29 @@ Let's have a dash of board.
 (use-package page-break-lines)
 
 ;; using my gitlab status messages, only one so far
-(setq my/dashboard-footer-messages
-  '(":whale2: breaching your favorite stupid framework"))
+(defconst my/dashboard-footer-messages
+  '(":whale2: breaching your favorite stupid framework")
+  "The footer messages I can stand to see.")
 
 (use-package dashboard
   :after page-break-lines
   :init
-  (setq dashboard-banner-logo-title "Walheimat's Emacs Config"
-        dashboard-startup-banner    (expand-file-name
-	                               "logo.png"
-                                       walheimat-emacs-config-default-path)
-        dashboard-projects-backend  'projectile
-        dashboard-items             '((recents   . 5)
-	                              (projects  . 5)
-                                      (agenda)
-                                      (bookmarks . 5))
-        dashboard-center-content    t
-        dashboard-set-file-icons    t
-        dashboard-set-navigator     t
-        dashboard-footer-messages   my/dashboard-footer-messages
-        dashboard-set-init-info     t)
+  (setq dashboard-banner-logo-title          "Walheimat's Emacs Config"
+        dashboard-startup-banner             (expand-file-name
+	                                      "logo.png"
+                                              walheimat-emacs-config-default-path)
+        dashboard-projects-backend           'projectile
+        dashboard-items                      '((recents   . 5)
+	                                       (projects  . 5)
+                                               (agenda)
+                                               (bookmarks . 5))
+        dashboard-center-content             t
+        dashboard-set-file-icons             t
+        dashboard-set-navigator              t
+        dashboard-footer-messages            my/dashboard-footer-messages
+        dashboard-set-init-info              t
+	dashboard-week-agenda                nil
+        dashboard-agenda-time-string-format "%d/%m/%y")
   :config
   (dashboard-setup-startup-hook))
 #+END_SRC
@@ -963,9 +1016,11 @@ Make dimmed frames a bit dimmer.
   (setq dimmer-fraction       0.3
         dimmer-adjustmentmode :both)  
   :config
-  (dimmer-configure-org)
-  (dimmer-configure-magit)
+  (dimmer-configure-company-box)
   (dimmer-configure-hydra)
+  (dimmer-configure-magit)
+  (dimmer-configure-org)
+  (dimmer-configure-which-key)
   (dimmer-mode t))
 #+END_SRC
 
@@ -985,8 +1040,8 @@ override some keybindings.
   :custom ((dired-listing-switches "-lah --group-directories-first"))
   :bind (("H-d" . dired-jump)
          (:map dired-mode-map
-         ("V" . dired-display-file)   ;; overrides dired-do-run-mail
-         ("-" . dired-up-directory)))) ;; overrides negative-argument
+               ("V" . dired-display-file)    ;; overrides dired-do-run-mail
+               ("-" . dired-up-directory)))) ;; overrides negative-argument
 #+END_SRC
 
 **** dired-filter
@@ -1014,7 +1069,7 @@ I use Docker a lot, don't always have to use the command line.
 **** doom-modeline
 
 Busier and prettier modeline.
-Note that this packag requires you to install =all-the-icons= fonts[fn:5].
+Note that this packag requires you to install =all-the-icons= fonts[fn:4].
 
 #+BEGIN_SRC emacs-lisp
 (use-package doom-modeline
@@ -1086,6 +1141,7 @@ Set up =eshell=.
   (eshell-syntax-highlighting-global-mode))
 
 (defun setup-eshell-ivy-completion ()
+  "Setup eshell completion to use ivy."
   (define-key eshell-mode-map [remap eshell-pcomplete] 'completion-at-point))
 
 (defun my-eshell-mode-hook ()
@@ -1111,7 +1167,7 @@ Comment code like in =vim=, evil, evil =vim=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package evil-nerd-commenter
-  :bind (("H-#" . evilnc-comment-or-uncomment-lines)
+  :bind (("H-#"      . evilnc-comment-or-uncomment-lines)
          ("C-c c #"  . evilnc-comment-or-uncomment-lines)))
 #+END_SRC
 
@@ -1169,15 +1225,15 @@ You can bring up actions (skip, save) with =M-o=.
 (use-package flyspell
   :delight " fsp"
   :init
-  (setq ispell-dictionary "american")
-  (setq flyspell-issue-message-flag nil)
-  :bind (("<f9>" . flyspell-mode)
-         (:map flyspell-mode-map
-             ("n" . flyspell-correct-next)
-	     ("p" . flyspell-correct-previous))))
+  (setq ispell-dictionary           "american"
+        flyspell-issue-message-flag nil)
+  :bind ("<f8>" . flyspell-mode))
 
 (use-package flyspell-correct
-  :after flyspell)
+  :after flyspell
+  :bind (:map flyspell-mode-map
+              ("n" . flyspell-correct-next)
+	      ("p" . flyspell-correct-previous)))
 
 (use-package flyspell-correct-ivy
   :after flyspell-correct)
@@ -1230,6 +1286,22 @@ If you're too lazy to copy and paste.
   (google-this-mode 1))
 #+END_SRC
 
+**** helpful
+
+Let's try (to be) =helpful=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package helpful
+  :custom
+  (counsel-describe-function-function #'helpful-callable)
+  (counsel-describe-variable-function #'helpful-variable)
+  :bind
+  ([remap describe-function] . counsel-describe-function)
+  ([remap describe-command]  . helpful-command)
+  ([remap describe-variable] . counsel-describe-variable)
+  ([remap describe-key]      . helpful-key))
+#+END_SRC
+
 **** highlight-indent-guides
 
 Show indentation.
@@ -1278,28 +1350,31 @@ We use =ivy= for narrowing our options.
 (defalias 'my-switch-buffer 'persp-ivy-switch-buffer)
 
 ;; hide dired, docker, ag and default emacs buffers when switching
-(setq my-ivy-ignore-buffers '(
-  is-dired-buffer
-  is-docker-buffer
-  is-ag-buffer
-  is-default-emacs-buffer
-  "\\` "
-  "\\`\\*tramp/"))
+(defconst my-ivy-ignore-buffers
+  '(is-commonly-ignored-buffer
+    "\\` "
+    "\\`\\*tramp/")
+  "The buffers I don't want to see unless I have to.")
 
 ;; toggle custom ignore on or off
-(defun my-toggle-ivy-ignore ()
+(defun my/query-ivy-ignore ()
+  "Query if custom ivy buffer ignore list should be used."
   (interactive)
   (if (y-or-n-p "Use custom ivy buffer ignore?")
-    (setq ivy-ignore-buffers my-ivy-ignore-buffers)
+      (setq ivy-ignore-buffers my-ivy-ignore-buffers)
     (setq ivy-ignore-buffers '("\\` " "\\`\\*tramp/"))))
 
 (use-package ivy
   :init
   (setq ivy-use-virtual-buffers      t
         enable-recursive-minibuffers t
-        ivy-ignore-buffers           my-ivy-ignore-buffers)
+        ivy-ignore-buffers           my-ivy-ignore-buffers
+        ivy-count-format             "%d/%d "
+        ivy-wrap                     t)
+  ;; don't force a ^ on me!
   :bind (("C-x b" . my-switch-buffer)
-         ("H-b"   . my-switch-buffer))
+         ("H-b"   . my-switch-buffer)
+         ("<f9>"  . ivy-resume))
   :config
   (ivy-mode 1))
 #+END_SRC
@@ -1310,32 +1385,31 @@ Some nicer candidate view when switching buffers.
 
 #+BEGIN_SRC emacs-lisp
 (defun ivy-rich-switch-buffer-icon (candidate)
+  "Switch buffer icon for CANDIDATE."
   (with-current-buffer (get-buffer candidate)
     (let ((icon (all-the-icons-icon-for-mode major-mode)))
       (if (symbolp icon)
           (all-the-icons-icon-for-mode 'fundamental-mode)
-           icon))))
+        icon))))
 
 (use-package ivy-rich
   :after ivy
-  :init
+  :config
   (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
   (setq ivy-rich-display-transformers-list
-      '(my-switch-buffer
-        (:columns
-         (
-          (ivy-rich-candidate (:width 30))
-          (ivy-rich-switch-buffer-size (:width 7))
-          (ivy-rich-switch-buffer-indicators (:width 4 :face error :align right))
-          (ivy-rich-switch-buffer-project (:width 30 :face success))
-	  ;; (ivy-rich-switch-buffer-major-mode (:width 8 :face warning))
-	  (ivy-rich-switch-buffer-icon (:width 2))
-	  (ivy-rich-switch-buffer-path (:width (lambda (x)
-            (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3)))))
-	 )
-         :predicate
-         (lambda (cand) (get-buffer cand)))))
-  :config
+        (plist-put ivy-rich-display-transformers-list 
+		   'my-switch-buffer
+		   '(:columns
+		     ((ivy-rich-candidate (:width 30))
+		      (ivy-rich-switch-buffer-size (:width 7))
+		      (ivy-rich-switch-buffer-indicators (:width 4 :face error :align right))
+		      (ivy-rich-switch-buffer-project (:width 30 :face success))
+		      ;; (ivy-rich-switch-buffer-major-mode (:width 8 :face warning))
+		      (ivy-rich-switch-buffer-icon (:width 2))
+		      (ivy-rich-switch-buffer-path (:width (lambda (x)
+							     (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3))))))
+		     :predicate
+		     (lambda (cand) (get-buffer cand)))))
   (ivy-rich-mode 1))
 #+END_SRC
 
@@ -1392,28 +1466,31 @@ Prefer =capf=, bigger delay.
 
 Configure or register language servers.
 
-You will have to install them yourself.[fn:9]
+You will have to install them yourself.[fn:8]
 
 #+BEGIN_SRC emacs-lisp
 ;;; elixir
-(setq elixir-ls-release-location (expand-file-name "ls/elixir" user-emacs-directory))
+(defconst elixir-ls-release-location
+  (expand-file-name "ls/elixir" user-emacs-directory)
+  "Location of the Elixir language server.")
+
 (if (file-exists-p (expand-file-name "language_server.sh" elixir-ls-release-location))
-  (add-to-list 'exec-path elixir-ls-release-location)
+    (add-to-list 'exec-path elixir-ls-release-location)
   (add-hook 'elixir-mode-hook 'lsp))
 
 ;;; prolog
 (lsp-register-client
-  (make-lsp-client
-   :new-connection
-   (lsp-stdio-connection (list "swipl"
-                               "-g" "use_module(library(lsp_server))."
-                               "-g" "lsp_server:main"
-                               "-t" "halt"
-                               "--" "stdio"))
-   :major-modes '(prolog-mode)
-   :priority 1
-   :multi-root t
-   :server-id 'prolog-ls))
+ (make-lsp-client
+  :new-connection
+  (lsp-stdio-connection (list "swipl"
+                              "-g" "use_module(library(lsp_server))."
+                              "-g" "lsp_server:main"
+                              "-t" "halt"
+                              "--" "stdio"))
+  :major-modes '(prolog-mode)
+  :priority 1
+  :multi-root t
+  :server-id 'prolog-ls))
 #+END_SRC
 
 **** magit
@@ -1484,8 +1561,9 @@ Disabled for now.
 Have some perspective, man.
 
 #+BEGIN_SRC emacs-lisp
-;; default is "main"
-(setq my-default-perspective "walheimat")
+(defconst my-default-perspective
+  "walheimat"
+  "The name of my default perspective.")
 
 (use-package perspective
   :custom-face
@@ -1517,7 +1595,7 @@ Format code quickly.
 (use-package prettier-js
   :init
   ;; you might want to remove/edit this
-  (setq prettier-js-args '("--print-width" "91")))
+  (setq prettier-js-args '("--print-width" "91"))) 
 #+END_SRC
 
 **** projectile
@@ -1537,8 +1615,6 @@ You don't really _need_ =treemacs=.
   :config
   ;; (add-to-list 'projectile-globally-ignored-directories "node_modules")
   ;; (add-to-list 'projectile-globally-ignored-directories "build")
-  ;; (add-to-list 'projectile-other-file-alist '("org" "org_archive"))
-  ;; (add-to-list 'projectile-other-file-alist '("org_archive" "org"))
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (projectile-mode +1))
 #+END_SRC
@@ -1614,11 +1690,12 @@ Highlight sections by edit date.
 (defvar smeargle-on nil)
 
 (defun smeargle-toggle ()
+  "Toggle smeargle on/off."
   (interactive)
   (if smeargle-on
-    (progn
-      (setq smeargle-on nil)
-      (smeargle-clear))
+      (progn
+	(setq smeargle-on nil)
+	(smeargle-clear))
     (progn
       (setq smeargle-on t)
       (smeargle))))
@@ -1630,9 +1707,13 @@ Highlight sections by edit date.
 
 Show completions for =M-x= in a buffer.
 
+Only used for sorting at the moment.
+
 #+BEGIN_SRC emacs-lisp
 (use-package smex
-  :bind ("M-x" . smex))
+  :defer 1
+  ;; :bind ("M-x" . smex)
+  :after counsel)
 #+END_SRC
 
 **** smooth-scrolling
@@ -1667,7 +1748,9 @@ Smart searching with =ivy=.
 (use-package swiper
   :after ivy
   :bind (("C-c s" . swiper)
-         ("H-s"   . swiper)))
+         ("H-s"   . swiper)
+         (:map swiper-map
+               ("C-c v" . swiper-avy))))
 #+END_SRC
 
 **** symon
@@ -1676,6 +1759,7 @@ Show some system stats when nothing else is going on.
 
 #+BEGIN_SRC emacs-lisp
 (use-package symon
+  :if (eq system-type 'gnu/linux)
   :init
   (setq symon-sparkline-type 'bounded
         symon-delay          10
@@ -1696,15 +1780,15 @@ A slightly nicer mode-line (disabled in favor of =doom-modeline= for now).
   :disabled
   :init
   (setq telephone-line-lhs
-    '((evil   . (telephone-line-buffer-segment))
-      (accent . (telephone-line-vc-segment))
-      (nil    . (telephone-line-minor-mode-segment
-		 telephone-line-process-segment))))
+	'((evil   . (telephone-line-buffer-segment))
+	  (accent . (telephone-line-vc-segment))
+	  (nil    . (telephone-line-minor-mode-segment
+		     telephone-line-process-segment))))
   (setq telephone-line-rhs
-    '((nil    . (telephone-line-misc-info-segment
-                 telephone-line-flycheck-segment))
-      (accent . (telephone-line-major-mode-segment))
-      (evil  . (telephone-line-airline-position-segment))))
+	'((nil    . (telephone-line-misc-info-segment
+                     telephone-line-flycheck-segment))
+	  (accent . (telephone-line-major-mode-segment))
+	  (evil   . (telephone-line-airline-position-segment))))
   (setq telephone-line-primary-right-separator 'telephone-line-identity-left
         telephone-line-secondary-right-separator 'telephone-line-identity-hollow-left
         telephone-line-primary-left-separator 'telephone-line-identity-right
@@ -1743,13 +1827,13 @@ visible" is nice, so let's show some _dirs_.
     (treemacs-fringe-indicator-mode t)
 
     (pcase (cons (not (null (executable-find "git")))
-               (not (null treemacs-python-executable)))
+		 (not (null treemacs-python-executable)))
       (`(t . t)
-        (treemacs-git-mode 'deferred))
+       (treemacs-git-mode 'deferred))
       (`(t . _)
-        (treemacs-git-mode 'extended))))
+       (treemacs-git-mode 'extended))))
   :bind
-    (:map global-map
+  (:map global-map
         ("M-0"       . treemacs-select-window)
         ("C-c n 1"   . treemacs-delete-other-windows)
         ("C-c n n"   . treemacs)
@@ -1797,8 +1881,8 @@ Undoing un-undoing is weird in Emacs.
 (use-package undo-fu
   :init
   (global-unset-key (kbd "C-z"))
-  :bind ("C-z"   . undo-fu-only-undo)
-        ("C-S-z" . undo-fu-only-redo))
+  :bind (("C-z"   . undo-fu-only-undo)
+         ("C-S-z" . undo-fu-only-redo)))
 #+END_SRC
 
 **** use-package-ensure-system-package
@@ -1831,12 +1915,12 @@ always try to build from source ...
     :init
     (setq vterm-toggle-fullscreen-p nil)
     (add-to-list 'display-buffer-alist
-             '((lambda(bufname _) (with-current-buffer bufname (equal major-mode 'vterm-mode)))
-                (display-buffer-reuse-window display-buffer-in-side-window)
-                (side . bottom)
-                (dedicated . t)
-                (reusable-frames . visible)
-                (window-height . 0.3)))))
+		 '((lambda(bufname _) (with-current-buffer bufname (equal major-mode 'vterm-mode)))
+                   (display-buffer-reuse-window display-buffer-in-side-window)
+                   (side . bottom)
+                   (dedicated . t)
+                   (reusable-frames . visible)
+                   (window-height . 0.3)))))
 #+END_SRC
 
 **** which-key
@@ -1880,9 +1964,9 @@ if you don't have a hyper key, bind it to a personal binding.
 (use-package yasnippet
   :delight " yas"
   :bind ((:map yas-minor-mode-map
-              ("<tab>"    . nil)
-	      ("TAB"      . nil)
-	      ("H-<tab>"  . #'yas-expand)))
+               ("<tab>"    . nil)
+	       ("TAB"      . nil)
+	       ("H-<tab>"  . #'yas-expand)))
   ;; :config
   ;; (add-hook 'company-mode-hook (lambda ()
   ;;   (substitute-key-definition 'company-complete-common
@@ -1905,13 +1989,13 @@ This is buggy sometimes, so I prefer =golden-ratio=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package zoom
- :disabled
- :diminish
- :init 
- (custom-set-variables
+  :disabled
+  :diminish
+  :init 
+  (custom-set-variables
    '(zoom-size '(0.618 . 0.618)))
- :config
- (zoom-mode 1))
+  :config
+  (zoom-mode 1))
 #+END_SRC
 
 *** Mode Configs
@@ -1928,8 +2012,8 @@ You might think Angular is dead and you'd be right but not everyone knows yet.
   :init
   ;; adapt, obviouisly
   (let* ((node-lts "14.8.0")
-       (node-nvm-lib (format ".config/nvm/%s/lib/node_modules" node-lts))
-       (node-abs (expand-file-name node-nvm-lib "~")))
+         (node-nvm-lib (format ".config/nvm/%s/lib/node_modules" node-lts))
+         (node-abs (expand-file-name node-nvm-lib "~")))
     (setq lsp-clients-angular-server-command
   	  `("node"
             ,(expand-file-name "@angular/language-server" node-abs)
@@ -2049,9 +2133,9 @@ Enable =flycheck= and disable internal checker.
   (flycheck-mode 1)
   (rainbow-delimiters-mode)
   (add-hook 'local-write-file-hooks
-    (lambda ()
-      (delete-trailing-whitespace)
-        nil)))
+	    (lambda ()
+	      (delete-trailing-whitespace)
+              nil)))
 #+END_SRC
 
 **** lua mode
@@ -2085,11 +2169,14 @@ state =CANCELLED=.
   :hook (org-mode . (lambda() (org-bullets-mode t))))
 
 ;; change if necessary
-(defconst my-org-directory (expand-file-name "org" "~"))
+(defconst my-org-directory (expand-file-name "org" "~")
+  "My default directory for org files.")
+
 (unless (file-directory-p my-org-directory)
   (make-directory my-org-directory))
 
 (use-package org
+  :ensure nil
   ;; disable drag-stuff-mode in org-mode
   :hook (org-mode . (lambda() (drag-stuff-mode -1)))
   :config
@@ -2106,7 +2193,7 @@ state =CANCELLED=.
         ;; be sure to add archive tag with org-toggle-archive-tag
 	org-archive-location           "::* Archived"
 	org-todo-keywords
-	  '((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
+	'((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
   (add-to-list 'org-global-properties
                '("Effort_ALL". "30m 1h 2h 4h 6h 1d 2d")))
 
@@ -2131,13 +2218,13 @@ state =CANCELLED=.
 (org-load-modules-maybe t)
 
 (defun org-make-habit()
-    (interactive)
-    (org-set-property "STYLE" "habit"))
+  "Make it a habit, dammi!"
+  (interactive)
+  (org-set-property "STYLE" "habit"))
 
 (setq org-use-speed-commands t
       org-speed-commands-user
-      '(
-        ("w" widen)
+      '(("w" widen)
         ("n" org-narrow-to-subtree)
 	;; defaults are I and O
 	("i" org-clock-in)
@@ -2146,28 +2233,28 @@ state =CANCELLED=.
         ("r" org-clock-report)))
 
 ;; tags differentiated by # and @
-(setq org-tag-alist '(
-  ;; depth
-  ("#immersive" . ?i)
-  ("#process"   . ?p)
-  ;; context
-  ("@work"      . ?w)
-  ("@home"      . ?h)
-  ("@away"      . ?a)
-  ("@repeated"  . ?r)
-  ;; time
-  ("@short"     . ?<)
-  ("@medium"    . ?=)
-  ("@long"      . ?>)
-  ;; energy
-  ("@easy"      . ?1)
-  ("@average"   . ?2)
-  ("@challenge" . ?3)
-  ;; category
-  ("@dev"       . ?d)
-  ("@bla"       . ?b)
-  ("@edu"       . ?e)
-))
+(setq org-tag-alist
+      '(;; depth
+	("#immersive" . ?i)
+	("#process"   . ?p)
+	;; context
+	("@work"      . ?w)
+	("@home"      . ?h)
+	("@away"      . ?a)
+	("@repeated"  . ?r)
+	;; time
+	("@short"     . ?<)
+	("@medium"    . ?=)
+	("@long"      . ?>)
+	;; energy
+	("@easy"      . ?1)
+	("@average"   . ?2)
+	("@challenge" . ?3)
+	;; category
+	("@dev"       . ?d)
+	("@bla"       . ?b)
+	("@edu"       . ?e)
+	))
 #+END_SRC
 
 ***** Agendas
@@ -2180,17 +2267,16 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
 (use-package org-super-agenda
   :init
   (setq org-super-agenda-groups
-           '((:name "Schedule"
-              :time-grid t)
-             (:name "Unscheduled"
-              :scheduled nil)
-	     (:name "Leftovers"
-              :and (
-                :todo ("IN PROGRESS" "WAITING")
-                :scheduled past
-                :not (:tag "@repeated")))
-	     (:discard (:anything t))
-	      ))
+        '((:name "Schedule"
+		 :time-grid t)
+          (:name "Unscheduled"
+		 :scheduled nil)
+	  (:name "Leftovers"
+		 :and (
+                       :todo ("IN PROGRESS" "WAITING")
+                       :scheduled past
+                       :not (:tag "@repeated")))
+	  (:discard (:anything t))))
   ;; not sure why this can't be in config
   (org-super-agenda-mode)
   :bind (("C-c a" . org-agenda)
@@ -2209,7 +2295,7 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
 
 (setq org-agenda-files `(,my-agenda-tasks-directory))
 
-;; more cool stuff rom mwfogleman's emacs.d
+;; more cool stuff from mwfogleman's emacs.d
 (defhydra hydra-org-clock (:color blue :hint nil)
   "
 Clock   In/out^     ^Edit^   ^Summary     (_?_)
@@ -2282,9 +2368,9 @@ This mode is built-in.
   (flycheck-mode 1)
   (lsp)
   (add-hook 'local-write-file-hooks
-    (lambda ()
-      (delete-trailing-whitespace)
-        nil)))
+	    (lambda ()
+	      (delete-trailing-whitespace)
+              nil)))
 #+END_SRC
 
 **** rjsx mode
@@ -2307,9 +2393,9 @@ Pretty much like =js2=.
   (flycheck-mode)
   (rjsx-indent)
   (add-hook 'local-write-file-hooks
-    (lambda ()
-      (delete-trailing-whitespace)
-        nil)))
+	    (lambda ()
+	      (delete-trailing-whitespace)
+              nil)))
 #+END_SRC
 
 **** typescript mode
@@ -2329,9 +2415,9 @@ Enable =lsp=, =flycheck=.
   (flycheck-mode 1)
   (lsp)
   (add-hook 'local-write-file-hooks
-    (lambda ()
-      (delete-trailing-whitespace)
-        nil)))
+	    (lambda ()
+	      (delete-trailing-whitespace)
+              nil)))
 #+END_SRC
 
 **** web mode
@@ -2354,12 +2440,12 @@ Web mode uses =flycheck=, prompts user if =lsp= should be enabled.
   (web-mode-use-tabs)
   (add-node-modules-path)
   (if (y-or-n-p "Do you want to enable lsp?")
-        (lsp))
+      (lsp))
   (flycheck-mode)
   (add-hook 'local-write-file-hooks
-    (lambda ()
-      (delete-trailing-whitespace)
-        nil)))
+	    (lambda ()
+	      (delete-trailing-whitespace)
+              nil)))
 #+END_SRC
 
 **** yaml mode
@@ -2393,14 +2479,17 @@ This is not good code, but =lsp= doesn't play nice with =tslint=.
 
 #+BEGIN_SRC emacs-lisp
 (defun switch-to-tslint ()
+  "Switch from LSP to TSLint."
   (lsp-disconnect)
   (setq flycheck-checker 'typescript-tslint))
 
 (defun switch-back-to-lsp ()
+  "Switch from TSLint back to LSP."
   (lsp)
   (setq flycheck-checker 'lsp))
 
 (defun tslint ()
+  "Switch depending on mode between LSP and TSLint."
   (interactive)
   (if (bound-and-true-p lsp-mode)
       (switch-to-tslint)
@@ -2412,38 +2501,36 @@ This is not good code, but =lsp= doesn't play nice with =tslint=.
 Use the locally installed =eslint= and =tslint= binaries.
 
 #+BEGIN_SRC emacs-lisp
-  (defun my-use-eslint-from-node-modules ()
-    (let* ((root (locate-dominating-file
-		  (or (buffer-file-name) default-directory)
-		  "node_modules"))
-	   (eslint
-	    (and root
-		 (expand-file-name "node_modules/.bin/eslint"
+(defun my-use-eslint-from-node-modules ()
+  (let* ((root (locate-dominating-file
+		(or (buffer-file-name) default-directory)
+		"node_modules"))
+	 (eslint
+	  (and root
+	       (expand-file-name "node_modules/.bin/eslint"
 				 root))))
-      (when (and eslint (file-executable-p eslint))
-	(setq-local flycheck-javascript-eslint-executable eslint))))
+    (when (and eslint (file-executable-p eslint))
+      (setq-local flycheck-javascript-eslint-executable eslint))))
 
-  (defun my-use-tslint-from-node-modules ()
-    (let* ((root (locate-dominating-file
-		  (or (buffer-file-name) default-directory)
-		  "node_modules"))
-	   (tslint
-	    (and root
-		 (expand-file-name "node_modules/.bin/tslint"
-				   root))))
-      (when (and tslint (file-executable-p tslint))
-	(setq-local flycheck-typescript-tslint-executable tslint))))
+(defun my-use-tslint-from-node-modules ()
+  (let* ((root (locate-dominating-file
+		(or (buffer-file-name) default-directory)
+		"node_modules"))
+	 (tslint
+	  (and root
+	       (expand-file-name "node_modules/.bin/tslint"
+				 root))))
+    (when (and tslint (file-executable-p tslint))
+      (setq-local flycheck-typescript-tslint-executable tslint))))
 #+END_SRC
 
 * Footnotes
 
 [fn:1] I jumped ship from =26.3=. Most of the things will work there.
 
-[fn:2] What you're reading is likely a markdown version exported from it.
+[fn:2] If you're feeling adventurous, [[https://git.savannah.gnu.org/cgit/emacs.git/tree/INSTALL][build from source]].
 
-[fn:3] If you're feeling adventurous, [[https://git.savannah.gnu.org/cgit/emacs.git/tree/INSTALL][build from source]].
-
-[fn:4] If you're not sure where your =user-emacs-directory= might be,
+[fn:3] If you're not sure where your =user-emacs-directory= might be,
 you can do the following:
   + run Emacs
   + hit =M-x= (that is your Alt/Option key followed by the letter =x=)
@@ -2455,7 +2542,7 @@ you can do the following:
   Finally run =git clone git@gitlab.com:Walheimat/emacs-config.git ~/.emacs.d=
   (replace =~/.emacs.d= with your actual path if it differs)
 
-[fn:5] This config uses the =all-the-icons= package
+[fn:4] This config uses the =all-the-icons= package
 whose icons need to be downloaded manually
 by running =M-x all-the-icons-install-fonts= and selecting =yes=.
 
@@ -2470,16 +2557,17 @@ If that is the case do the following:
 + type =dash= and hit return again
 + once the installation is complete, re-run Emacs
 
-[fn:6] 107 code blocks, to be exact.
+[fn:5] 107 code blocks, to be exact.
 
-[fn:7] Send me an email, why don't you?
+[fn:6] Send me an email, why don't you?
 
-[fn:8] Repositories (almost complete):
+[fn:7] Repositories (almost complete):
 + [[https://github.com/abo-abo/ace-window][ace-window]]
 + [[https://github.com/codesuki/add-node-modules-path][add-node-modules-path]]
 + [[https://github.com/Wilfred/ag.el][ag]]
 + [[https://github.com/domtronn/all-the-icons.el][all-the-icons]]
 + [[https://github.com/rranelli/auto-package-update.el][auto-package-update]]
++ [[https://github.com/jasonm23/autothemer][autothemer]]
 + [[https://github.com/abo-abo/avy][avy]]
 + [[https://github.com/Malabarba/beacon][beacon]]
 + [[https://github.com/joodland/bm][bm]]
@@ -2507,6 +2595,7 @@ If that is the case do the following:
 + [[https://github.com/roman/golden-ratio.el][golden-ratio]]
 + [[https://github.com/Malabarba/emacs-google-this][google-this]]
 + [[https://github.com/haskell/haskell-mode][haskell-mode]]
++ [[https://github.com/Wilfred/helpful][helpful]]
 + [[https://github.com/zk-phi/indent-guide][highlight-indent-guide]]
 + [[https://github.com/Fanael/highlight-numbers][highlight-numbers]]
 + [[https://github.com/abo-abo/hydra][hydra]]
@@ -2553,7 +2642,7 @@ If that is the case do the following:
 + [[https://www.emacswiki.org/emacs/ZoneMode][zone]]
 + [[https://github.com/cyrus-and/zoom][zoom]]
 
-[fn:9] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+[fn:8] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
 
 Currently I only need three:
 + [[https://github.com/elixir-lsp/elixir-ls][Elixir]]
