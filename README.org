@@ -411,6 +411,7 @@ guaranteed).
 + =H-4= kills window and buffer.
 + =H-a= shows agenda.
 + =H-b= switches buffer.
++ =H-B= switches to a commonly ignored buffer.
 + =H-d= opens dired relative to open file.
 + =H-f= to find with ag.
 + =H-i= switches prespective.
@@ -625,6 +626,15 @@ I want to ignore some buffers when switching.
    (eq (with-current-buffer
            (get-buffer-create buffer-or-string)
          major-mode) 'helpful-mode)))
+
+(defun ivy-switch-ignored-buffers (&rest r)
+  "Show only commonly ignored buffers."
+  (let ((ivy-ignore-buffers
+	 '((lambda(buffer-or-string)
+	     (if (is-commonly-ignored-buffer buffer-or-string)
+		 nil
+	       t)))))
+    (my-switch-buffer r)))
 #+END_SRC
 
 *** Packages
@@ -1377,6 +1387,7 @@ We use =ivy= for narrowing our options.
   ;; don't force a ^ on me!
   :bind (("C-x b" . my-switch-buffer)
          ("H-b"   . my-switch-buffer)
+         ("H-B" . ivy-switch-ignored-buffers)
          ("<f9>"  . ivy-resume))
   :config
   (ivy-mode 1))
