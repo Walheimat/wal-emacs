@@ -338,25 +338,34 @@ I (generally) prefer tabs over spaces.
 To make this work, we need to tweak a few things.
 
 #+BEGIN_SRC emacs-lisp
-(setq custom-tab-width 4)
+(defconst wal/tab-width
+  4
+  "A tab width 4 spaces wide.")
 
-(defun disable-tabs ()
+(defun wal/disable-tabs ()
   "Disable indent-tabs-mode."
   (interactive)
-  (setq indent-tabs-mode nil))
+  (local-unset-key (kbd "TAB"))
+  (setq indent-tabs-mode nil)
+  (setq tab-width (eval (car (get 'tab-width 'standard-value)))))
 
-(defun enable-tabs  ()
+(defun wal/enable-tabs ()
   "Use TAB key and turn on indent-tabs-mode."
   (interactive)
   (local-set-key (kbd "TAB") 'tab-to-tab-stop)
   (setq indent-tabs-mode t)
-  (setq tab-width custom-tab-width))
+  (setq tab-width wal/tab-width))
 
-(setq-default python-indent-offset    custom-tab-width ;; Python
-              js-indent-level         custom-tab-width ;; Javascript
-              electric-indent-inhibit t)
+(defun wal/set-tab-defaults (&optional num)
+  "Resets tab defaults, optionally to NUM."
+  (interactive)
+  (let ((width (if (numberp num) num wal/tab-width)))
+    (setq-default python-indent-offset    width ;; Python
+                  js-indent-level         width ;; Javascript
+                  electric-indent-inhibit t)
+    (setq backward-delete-char-untabify-method 'hungry)))
 
-(setq backward-delete-char-untabify-method 'hungry)
+(add-hook 'after-init-hook 'wal/set-tab-defaults)
 #+END_SRC
 
 **** Key Bindings
