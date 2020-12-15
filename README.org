@@ -35,11 +35,14 @@ here are the necessary steps:
 + Close and re-run Emacs which should download and install (almost[fn:4]) all packages
 
 If you did not init this repo in your =user-emacs-directory= using the default name,
-you will need to adapt the variable =walheimat-emacs-config-default-path= in the example config you just copied.
+you will need to adapt the variable =wal/emacs-config-default-path= in the example config you just copied.
 
 ** Config
 
 The init script will evaluate _everything_[fn:5] that follows.
+
+I've tried to keep custom functions and variables in a scope
+called =wal= to avoid potential interferences.
 
 *** Personal
 
@@ -76,15 +79,14 @@ We store bookmarks and perspectives here.
 Customize start-up.
 
 #+BEGIN_SRC emacs-lisp
-;; if you're using a tiling wm, comment the following two lines
+;; comment the following line if you're using a tiling window manager 
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
-;; (add-hook 'window-setup-hook 'toggle-frame-fullscreen t)
 
 ;; no splash
 (setq inhibit-startup-message t)
 
 ;; use a distinct file for customization
-(setq custom-file (expand-file-name "custom.el" walheimat-emacs-config-default-path))
+(setq custom-file (expand-file-name "custom.el" wal/emacs-config-default-path))
 
 ;; we'll create that file if it doesn't yet exist
 (unless (file-exists-p custom-file)
@@ -97,7 +99,7 @@ Customize start-up.
 
 Let's keep the scratch contents.
 
-This (and some other things) was cribbed from [[https://www.john2x.com/emacs.html][john2x's config]] and only slightly adapted.
+This was cribbed from [[https://www.john2x.com/emacs.html][john2x's config]].
 
 #+BEGIN_SRC emacs-lisp
 ;; empty scratch message
@@ -469,7 +471,7 @@ Most bindings are declared in the [[*Packages][packages]] section.
 (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
 
 (defconst wal/readme-config
-  (expand-file-name "README.org" walheimat-emacs-config-default-path)
+  (expand-file-name "README.org" wal/emacs-config-default-path)
   "The path to this config file.")
 
 (global-set-key
@@ -977,7 +979,7 @@ Let's have a dash of board.
   (setq dashboard-banner-logo-title          "Walheimat's Emacs Config"
         dashboard-startup-banner             (expand-file-name
 	                                      "logo.png"
-                                              walheimat-emacs-config-default-path)
+                                              wal/emacs-config-default-path)
         dashboard-projects-backend           'projectile
         dashboard-items                      '((recents   . 5)
 	                                       (projects  . 5)
