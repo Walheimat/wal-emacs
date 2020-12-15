@@ -1165,14 +1165,14 @@ Set up =eshell=.
   :config
   (eshell-syntax-highlighting-global-mode))
 
-(defun setup-eshell-ivy-completion ()
+(defun wal/setup-eshell-ivy-completion ()
   "Setup eshell completion to use ivy."
   (define-key eshell-mode-map [remap eshell-pcomplete] 'completion-at-point))
 
 (defun wal/eshell-mode-hook ()
   "Hooks for eshell mode."
   (esh-autosuggest-mode)
-  (setup-eshell-ivy-completion))
+  (wal/setup-eshell-ivy-completion))
 
 ;; override how clearing the eshell works
 (defun eshell/clear ()
@@ -1726,9 +1726,11 @@ Highlight sections by edit date.
 
 #+BEGIN_SRC emacs-lisp
 ;; make it toggle
-(defvar smeargle-on nil)
+(defvar wal/smeargle-on
+  nil
+  "Whether smeargle is already on.")
 
-(defun smeargle-toggle ()
+(defun wal/smeargle-toggle ()
   "Toggle smeargle on/off."
   (interactive)
   (if smeargle-on
@@ -2144,7 +2146,7 @@ Enable tabs and =flycheck=.
 
 (defun wal/json-mode-hook ()
   "Hooks for json mode."
-  (message "JSON? JSON?! JSON!!")
+  (message "JSON ...? JSON?! JSON!!")
   (when (y-or-n-p "Do you want to enables tabs?")
     (wal/enable-tabs))
   (flycheck-mode 1)
@@ -2255,7 +2257,7 @@ state =CANCELLED=.
 
 (org-load-modules-maybe t)
 
-(defun org-make-habit()
+(defun wal/org-make-habit()
   "Make it a habit, dammi!"
   (interactive)
   (org-set-property "STYLE" "habit"))
@@ -2420,7 +2422,7 @@ Pretty much like =js2=.
   :mode "\\.jsx\\'"
   :hook (rjsx-mode . wal/rjsx-mode-hook))
 
-(defun rjsx-indent ()
+(defun wal/rjsx-indent ()
   (interactive)
   (setq-local indent-line-function 'js-jsx-indent-line))
 
@@ -2429,7 +2431,7 @@ Pretty much like =js2=.
   (add-node-modules-path)
   (wal/enable-tabs)
   (flycheck-mode)
-  (rjsx-indent)
+  (wal/rjsx-indent)
   (add-hook 'local-write-file-hooks
 	    (lambda ()
 	      (delete-trailing-whitespace)
@@ -2524,7 +2526,7 @@ This is not good code, but =lsp= doesn't play nice with =tslint=.
   (lsp)
   (setq flycheck-checker 'lsp))
 
-(defun tslint ()
+(defun wal/tslint ()
   "Switch depending on mode between LSP and TSLint."
   (interactive)
   (if (bound-and-true-p lsp-mode)
