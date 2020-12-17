@@ -2222,10 +2222,15 @@ state =CANCELLED=.
 (unless (file-directory-p wal/org-directory)
   (make-directory wal/org-directory))
 
+(defun wal/org-mode ()
+  "Life shouldn't be a drag in org-mode."
+  (message "Organize! Seize the means of production!")
+  (drag-stuff-mode -1))
+
 (use-package org
   :ensure nil
   ;; disable drag-stuff-mode in org-mode
-  :hook (org-mode . (lambda() (drag-stuff-mode -1)))
+  :hook (org-mode . wal/org-mode)
   :config
   ;; sometimes md export is missing
   (require 'ox-md nil t)
@@ -2386,13 +2391,37 @@ Clock   In/out^
 Use =org-tree-slide= for presentations.
 
 #+BEGIN_SRC emacs-lisp
+;; these should always be fixed pitch
+
+(defun wal/tree-slide-play ()
+  "Make presentable."
+  (beacon-mode -1)
+  (variable-pitch-mode 1)
+  (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
+  (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
+  (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
+  (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch) 
+  (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
+  (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch)))
+
+(defun wal/tree-slide-stop ()
+  "We no longer care about presentation."
+  (variable-pitch-mode 0)
+  (beacon-mode 1))
+
 (use-package org-tree-slide
-  :hook ((org-tree-slide-play . (lambda () (beacon-mode -1)))
-         (org-tree-slide-stop . (lambda () (beacon-mode 1))))
+  :hook ((org-tree-slide-play . wal/tree-slide-play)
+         (org-tree-slide-stop . wal/tree-slide-stop))
   :bind (("<f7>" . org-tree-slide-mode)
          (:map org-tree-slide-mode-map
           ("n" . org-tree-slide-move-next-tree)
-	  ("p" . org-tree-slide-move-previous-tree))))
+	    ("p" . org-tree-slide-move-previous-tree))))
 #+END_SRC
 
 **** python mode
@@ -2667,7 +2696,6 @@ Once the installation is complete, re-run Emacs
 + [[https://github.com/magnars/multiple-cursors.el][multiple-cursors]]
 + [[https://github.com/alezost/mwim.el][mwim]]
 + [[https://orgmode.org/][org-mode]]
-+ [[https://github.com/rlister/org-present][org-present]]
 + [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]]
 + [[https://github.com/gregsexton/origami.el][origami]]
 + [[https://github.com/nex3/perspective-el][perspective]]
