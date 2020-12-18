@@ -525,11 +525,22 @@ If Emacs runs with the custom argument =--bigger=, the default font size is 14 (
 To get support for ligatures, install the symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
 
 #+BEGIN_SRC emacs-lisp
+(defconst wal/default-font-size 120)
+(defconst wal/default-variable-font-size 140)
+
 (defun wal/font-candidate (&rest fonts)
   "Return the first available font from a list of fonts."
   (--first (find-font (font-spec :name it)) fonts))
 
-(set-face-attribute 'default nil :font (wal/font-candidate '"Fira Code 12" "mononoki 12" "Liberation Mono 12" "DejaVu Sans Mono 12"))
+(set-face-attribute 'default nil
+  :font (wal/font-candidate '"Fira Code" "mononoki" "Liberation Mono" "DejaVu Sans Mono")
+  :height wal/default-font-size)
+
+;; Set the variable pitch face
+(set-face-attribute 'variable-pitch nil
+  :font "Cantarell"
+  :height wal/default-variable-font-size
+  :weight 'regular)
 
 (defun wal/found-custom-arg (switch)
   "Check for custom arg and delete it right away so emacs doesn't complain."
@@ -1941,6 +1952,14 @@ Ensure binaries.
 (use-package use-package-ensure-system-package)
 #+END_SRC
 
+**** visual-fill-column
+
+Makes presentations a bit nicer.
+
+#+BEGIN_SRC emacs-lisp
+(use-package visual-fill-column)
+#+END_SRC
+
 **** vterm
 
 =vterm= can be an alternative to included shells.
@@ -2397,6 +2416,9 @@ Use =org-tree-slide= for presentations.
   "Make presentable."
   (beacon-mode -1)
   (variable-pitch-mode 1)
+  (setq visual-fill-column-width 100
+        visual-fill-column-center-text t)
+  (visual-fill-column-mode 1)
   (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
   (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
   (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
@@ -2412,6 +2434,7 @@ Use =org-tree-slide= for presentations.
 
 (defun wal/tree-slide-stop ()
   "We no longer care about presentation."
+  (visual-fill-column-mode 0)
   (variable-pitch-mode 0)
   (beacon-mode 1))
 
