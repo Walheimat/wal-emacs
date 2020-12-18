@@ -491,7 +491,7 @@ Otherwise the colors might clash.
 (defconst wal/primary-emacs-theme 'kaolin-aurora
   "The quote-unquote default emacs theme.")
 
-(defconst wal/secondary-emacs-theme 'brutalist
+(defconst wal/secondary-emacs-theme 'kaolin-valley-light
   "The non-default emacs theme.")
 
 (defvar wal/active-theme
@@ -538,7 +538,7 @@ To get support for ligatures, install the symbol font from [[https://github.com/
 
 ;; Set the variable pitch face
 (set-face-attribute 'variable-pitch nil
-  :font "Cantarell"
+  :font "Roboto"
   :height wal/default-variable-font-size
   :weight 'regular)
 #+END_SRC
@@ -2413,19 +2413,29 @@ Clock   In/out^
 Use =org-tree-slide= for presentations.
 
 #+BEGIN_SRC emacs-lisp
-;; these should always be fixed pitch
+(defun wal/tree-slide-toggle-visibility ()
+  "Toggle visibility of line and cursor."
+  (interactive)
+  (if (bound-and-true-p global-hl-line-mode)
+    (progn
+      (setq cursor-type nil)
+      (global-hl-line-mode -1))
+    (progn
+      (setq cursor-type t)
+      (global-hl-line-mode 1))))
 
 (defun wal/tree-slide-play ()
   "Make presentable."
   (setq cursor-type nil)
-  (global-hl-line-mode -1)
+  (global-hl-line-mode 1)
   (beacon-mode -1)
   (variable-pitch-mode 1)
   (setq visual-fill-column-width 140
         visual-fill-column-center-text t
 	visible-cursor nil)
   (visual-fill-column-mode 1)
-  (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
+  ;; cribbed from daviwil's emacs-from-scratch
+  (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch :height 160)
   (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
   (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
   (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
@@ -2444,6 +2454,7 @@ Use =org-tree-slide= for presentations.
   (global-hl-line-mode 1)
   (visual-fill-column-mode 0)
   (variable-pitch-mode 0)
+  (set-face-attribute 'org-block nil :inherit 'fixed-pitch :height 120)
   (beacon-mode 1))
 
 (use-package org-tree-slide
@@ -2452,7 +2463,8 @@ Use =org-tree-slide= for presentations.
   :bind (("<f7>" . org-tree-slide-mode)
          (:map org-tree-slide-mode-map
           ("n" . org-tree-slide-move-next-tree)
-	    ("p" . org-tree-slide-move-previous-tree))))
+	  ("p" . org-tree-slide-move-previous-tree)
+	  ("v" . wal/tree-slide-toggle-visibility))))
 #+END_SRC
 
 **** python mode
@@ -2734,6 +2746,7 @@ Once the installation is complete, re-run Emacs
 + [[https://github.com/alezost/mwim.el][mwim]]
 + [[https://orgmode.org/][org-mode]]
 + [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]]
++ [[https://github.com/takaxp/org-tree-slide][org-tree-slide]]
 + [[https://github.com/gregsexton/origami.el][origami]]
 + [[https://github.com/nex3/perspective-el][perspective]]
 + [[https://github.com/prettier/prettier-emacs/tree/e9b73e81d3e1642aec682195f127a42dfb0b5774][prettier-js]]
