@@ -2570,27 +2570,33 @@ ESLint configs can be found using a file, not a directory.
     (eq exitcode 0)))
 #+END_SRC
 
-**** Switch Between Language Server and TSLint
+**** Switch Between Language Server and Other Checker
 
-This is not good code, but =lsp= doesn't play nice with =tslint=.
+The =lsp= checker seemingly can't be chained,
+so we provide some functionality to switch from
+to it depending on current major mode.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/switch-to-tslint ()
-  "Switch from LSP to TSLint."
-  (lsp-disconnect)
-  (setq flycheck-checker 'typescript-tslint))
+(defun wal/switch-from-lsp ()
+  "Switch back from LSP to previous checker."
+  (pcase (with-current-buffer
+           (current-buffer)
+         major-mode)
+    ('python-mode     (setq flycheck-checker 'python-pylint))
+    ('typescript-mode (setq flycheck-checker 'typescript-tslint))
+    (_ (setq flycheck-checker nil))))
 
-(defun wal/switch-back-to-lsp ()
-  "Switch from TSLint back to LSP."
-  (lsp)
+(defun wal/switch-to-lsp ()
+  "Switch to LSP."
   (setq flycheck-checker 'lsp))
 
-(defun wal/tslint ()
-  "Switch depending on mode between LSP and TSLint."
+(defun wal/flycheck-switch ()
+  "Switch depending on mode between LSP and other default checker."
   (interactive)
-  (if (bound-and-true-p lsp-mode)
-      (wal/switch-to-tslint)
-    (wal/switch-back-to-lsp)))
+  (when (bound-and-true-p lsp-mode)
+    (if (eq flycheck-checker 'lsp)
+        (wal/switch-from-lsp)
+      (wal/switch-to-lsp))))
 #+END_SRC
 
 **** Loading ESLint/TSLint
