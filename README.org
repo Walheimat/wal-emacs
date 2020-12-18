@@ -526,7 +526,7 @@ To get support for ligatures, install the symbol font from [[https://github.com/
 
 #+BEGIN_SRC emacs-lisp
 (defconst wal/default-font-size 120)
-(defconst wal/default-variable-font-size 140)
+(defconst wal/default-variable-font-size 240)
 
 (defun wal/font-candidate (&rest fonts)
   "Return the first available font from a list of fonts."
@@ -541,15 +541,6 @@ To get support for ligatures, install the symbol font from [[https://github.com/
   :font "Cantarell"
   :height wal/default-variable-font-size
   :weight 'regular)
-
-(defun wal/found-custom-arg (switch)
-  "Check for custom arg and delete it right away so emacs doesn't complain."
-  (let ((found-switch (member switch command-line-args)))
-    (setq command-line-args (delete switch command-line-args))
-    found-switch))
-
-(if (wal/found-custom-arg "--bigger")
-    (set-default-font (wal/font-candidate '"Fira Code 14" "mononoki 14" "Liberation Mono 14" "DejaVu Sans Mono 14")))
 #+END_SRC
 
 **** Zoning
@@ -662,6 +653,18 @@ I want to ignore some buffers when switching.
 		 nil
 	       t)))))
     (wal/switch-buffer r)))
+#+END_SRC
+
+***** Other
+
+Check for custom arguments.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/found-custom-arg (switch)
+  "Check for custom SWITCH arg and delete it right away."
+  (let ((found-switch (member switch command-line-args)))
+    (setq command-line-args (delete switch command-line-args))
+    found-switch))
 #+END_SRC
 
 *** Packages
@@ -2414,10 +2417,13 @@ Use =org-tree-slide= for presentations.
 
 (defun wal/tree-slide-play ()
   "Make presentable."
+  (setq cursor-type nil)
+  (global-hl-line-mode -1)
   (beacon-mode -1)
   (variable-pitch-mode 1)
-  (setq visual-fill-column-width 100
-        visual-fill-column-center-text t)
+  (setq visual-fill-column-width 140
+        visual-fill-column-center-text t
+	visible-cursor nil)
   (visual-fill-column-mode 1)
   (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
   (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
@@ -2434,6 +2440,8 @@ Use =org-tree-slide= for presentations.
 
 (defun wal/tree-slide-stop ()
   "We no longer care about presentation."
+  (setq cursor-type t)
+  (global-hl-line-mode 1)
   (visual-fill-column-mode 0)
   (variable-pitch-mode 0)
   (beacon-mode 1))
