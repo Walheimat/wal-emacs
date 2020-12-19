@@ -494,8 +494,7 @@ Otherwise the colors might clash.
 (defconst wal/secondary-emacs-theme 'kaolin-valley-light
   "The non-default emacs theme.")
 
-(defvar wal/active-theme
-  wal/primary-emacs-theme
+(defvar wal/active-theme wal/primary-emacs-theme
   "The active theme.")
 
 (defun wal/theme-light-switch (&optional selection)
@@ -511,7 +510,7 @@ Otherwise the colors might clash.
 
 ;; some themes require configuration, so we only load after intialization
 (add-hook 'after-init-hook '(lambda()
-			      (load-theme wal/primary-emacs-theme)
+			      (load-theme wal/primary-emacs-theme t)
 			      ;; if you don't mind some transparency
 			      (wal/transparency 95)))
 #+END_SRC
@@ -520,25 +519,24 @@ Otherwise the colors might clash.
 
 Prefer FiraCode (-> mononoki -> Liberation -> DejaVu).
 
-If Emacs runs with the custom argument =--bigger=, the default font size is 14 (instead of 10).
-
 To get support for ligatures, install the symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
 
 #+BEGIN_SRC emacs-lisp
 (defconst wal/default-font-size 120)
-(defconst wal/default-variable-font-size 240)
+(defconst wal/default-variable-font-size 160)
 
 (defun wal/font-candidate (&rest fonts)
   "Return the first available font from a list of fonts."
   (--first (find-font (font-spec :name it)) fonts))
 
+;; default face
 (set-face-attribute 'default nil
   :font (wal/font-candidate '"Fira Code" "mononoki" "Liberation Mono" "DejaVu Sans Mono")
   :height wal/default-font-size)
 
-;; Set the variable pitch face
+;; variable pitch face
 (set-face-attribute 'variable-pitch nil
-  :font "Roboto"
+  :font "Roboto" ;; you might want to change this one
   :height wal/default-variable-font-size
   :weight 'regular)
 #+END_SRC
@@ -604,6 +602,8 @@ Better(?) garbage collection.
 
 ***** Transparency
 
+Anyone wanna see their background?
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/transparency (value)
   "Sets the transparency of the frame window. 0=transparent/100=opaque"
@@ -612,6 +612,8 @@ Better(?) garbage collection.
 #+END_SRC
 
 ***** Directories
+
+Finding files should =mkdir -p= its parents.
 
 #+BEGIN_SRC emacs-lisp
 ;; creating parent dirs
@@ -622,6 +624,7 @@ ask if it should get created."
     (when (and (not (file-exists-p parent-directory))
 	       (y-or-n-p (format "Directory `%s' does not exist! Create it?" parent-directory)))
       (make-directory parent-directory t))))
+
 (add-to-list 'find-file-not-found-functions #'wal/create-non-existent-directory)
 #+END_SRC
 
@@ -687,24 +690,24 @@ switching setup.
 (use-package ace-window
   :custom
   (aw-fair-aspect-ratio 4)
+  (aw-dispatch-always   t)
+  (aw-dispatch-alist    '((?s aw-swap-window                "swap")
+                          (?h aw-split-window-horz          "horizontal split")
+                          (?v aw-split-window-vert          "vertical split")
+                          (?w aw-split-window-fair          "fair split")
+                          (?b aw-switch-buffer-in-window    "buffer focus")
+			  (?u aw-switch-buffer-other-window "buffer unfocus")
+			  (?o delete-other-windows          "only")
+	                  (?x aw-delete-window              "delete")
+			  ;; if this has a description, it doesn't work
+                          (?? aw-show-dispatch-help)))
   :init
   (advice-add
    'aw--switch-buffer
    :override (lambda (&rest r) (wal/switch-buffer r))
    '((name . "aw--switch-buffer")))
-  (setq aw-dispatch-always t
-        aw-dispatch-alist  '((?s aw-swap-window                "swap")
-                             (?h aw-split-window-horz          "horizontal split")
-                             (?v aw-split-window-vert          "vertical split")
-                             (?w aw-split-window-fair          "fair split")
-                             (?b aw-switch-buffer-in-window    "buffer focus")
-			     (?u aw-switch-buffer-other-window "buffer unfocus")
-			     (?o delete-other-windows          "only")
-	                     (?x aw-delete-window              "delete")
-			     ;; if this has a description, it doesn't work
-                             (?? aw-show-dispatch-help)))
   :bind (("H-w"   . ace-window)
-  ("C-c w" . ace-window)))
+         ("C-c w" . ace-window)))
 #+END_SRC
 
 **** add-node-modules-path
@@ -725,11 +728,19 @@ to download it automatically, but might fail).
 #+BEGIN_SRC emacs-lisp
 (use-package ag
   :ensure-system-package ag
-  :init
-  (setq ag-highlight-search t)
+  :custom
+  (ag-highlight-search t)
+  (ag-reuse-buffers    t)
+  (ag-ignore-list      '("[/\\\\]\\.git\\'"
+                         "[/\\\\]\\.idea\\'"
+                         "[/\\\\]node_modules"
+                         "[/\\\\]dist\\'"
+		         "[/\\\\]build\\'"
+                         "[/\\\\]\\.vscode\\'"
+		         "[/\\\\]deps\\'"))
   :bind (("C-c f a" . ag)
          ("C-c f p" . ag-project)
-	 ("H-f"     . ag)))
+         ("H-f"     . ag)))
 #+END_SRC
 
 **** all-the-icons
@@ -762,9 +773,9 @@ Keep packages updated (disabled for now).
 #+BEGIN_SRC emacs-lisp
 (use-package auto-package-update
   :disabled
-  :init
-  (setq auto-package-update-delete-old-versions t
-        auto-package-update-hide-results        t)
+  :custom
+  (auto-package-update-delete-old-versions t)
+  (auto-package-update-hide-results        t)
   :config
   (auto-package-update-maybe))
 #+END_SRC
@@ -796,10 +807,11 @@ Help me find my cursor!
 (use-package beacon
   :config
   (beacon-mode 1)
-  (setq beacon-color                             0.4
-        beacon-blink-duration                    0.4
-	beacon-size                              60
-        beacon-blink-when-point-moves-vertically 2))
+  :custom
+  (beacon-color                             0.4)
+  (beacon-blink-duration                    0.4)
+  (beacon-size                              60)
+  (beacon-blink-when-point-moves-vertically 2))
 #+END_SRC
 
 **** bm
@@ -810,20 +822,21 @@ Bookmarks are useful. I don't remember where I was. _Who are you?!_
 (use-package bm
   :init
   (setq-default bm-buffer-persistence t)
-  (setq bm-restore-repository-on-load t
-        bm-repository-file            (expand-file-name ".cache/bm-persist" user-emacs-directory)
-        bm-annotate-on-create         t
-        bm-highlight-style            'bm-highlight-only-fringe
-        bm-cycle-all-buffers          t)
+  :custom
+  (bm-restore-repository-on-load t)
+  (bm-repository-file            (expand-file-name ".cache/bm-persist" user-emacs-directory))
+  (bm-annotate-on-create         t)
+  (bm-highlight-style            'bm-highlight-only-fringe)
+  (bm-cycle-all-buffers          t)
   :hook
-  ((after-init   .      bm-repository-load)
-   (after-save   .      bm-buffer-save)
-   (kill-buffer  .      bm-buffer-save)
-   (kill-emacs   .      (lambda nil
+  ((after-init        . bm-repository-load)
+   (after-save        . bm-buffer-save)
+   (kill-buffer       . bm-buffer-save)
+   (kill-emacs        . (lambda nil
                           (bm-buffer-save-all)
                           (bm-repository-save)))
-   (find-file    .      bm-buffer-restore)
-   (after-revert .      bm-buffer-restore)
+   (find-file         . bm-buffer-restore)
+   (after-revert      . bm-buffer-restore)
    (vc-before-checkin . bm-buffer-save))
   :bind
   (("C-c o s" . bm-show)
@@ -843,10 +856,10 @@ Code-completion. In a box.
 
 (use-package company
   :delight " cmp"
-  :init
-  (setq company-prefer-capf           t
-        company-minimum-prefix-length 3
-        company-idle-delay            0.5)
+  :custom
+  (company-prefer-capf           t)
+  (company-minimum-prefix-length 3)
+  (company-idle-delay            0.5)
   :hook (prog-mode . company-mode))
 
 (use-package company-restclient
@@ -896,9 +909,8 @@ Debugging using VSCode's DAP.
   :delight " dap"
   :custom
   (lsp-enable-dap-auto-configure nil)
-  :init
-  (setq dap-python-executable "python3")
-  ;; (setq dap-auto-configure-features '(sessions locals breakpoints))
+  (dap-python-executable "python3")
+  ;; (dap-auto-configure-features '(sessions locals breakpoints))
   :config
   (dap-ui-mode 1)
   (require 'dap-node)
@@ -992,23 +1004,23 @@ Let's have a dash of board.
 
 (use-package dashboard
   :after page-break-lines
-  :init
-  (setq dashboard-banner-logo-title          "Walheimat's Emacs Config"
-        dashboard-startup-banner             (expand-file-name
-	                                      "logo.png"
-                                              wal/emacs-config-default-path)
-        dashboard-projects-backend           'projectile
-        dashboard-items                      '((recents   . 5)
-	                                       (projects  . 5)
-                                               (agenda)
-                                               (bookmarks . 5))
-        dashboard-center-content             t
-        dashboard-set-file-icons             t
-        dashboard-set-navigator              t
-        dashboard-footer-messages            wal/dashboard-footer-messages
-        dashboard-set-init-info              t
-	dashboard-week-agenda                nil
-        dashboard-agenda-time-string-format "%d/%m/%y")
+  :custom
+  (dashboard-banner-logo-title          "Walheimat's Emacs Config")
+  (dashboard-startup-banner             (expand-file-name
+	                                 "logo.png"
+                                         wal/emacs-config-default-path))
+  (dashboard-projects-backend           'projectile)
+  (dashboard-items                      '((recents   . 5)
+	                                  (projects  . 5)
+                                          (agenda)
+                                          (bookmarks . 5)))
+  (dashboard-center-content             t)
+  (dashboard-set-file-icons             t)
+  (dashboard-set-navigator              t)
+  (dashboard-footer-messages            wal/dashboard-footer-messages)
+  ( dashboard-set-init-info              t)
+  (dashboard-week-agenda                nil)
+  (dashboard-agenda-time-string-format "%d/%m/%y")
   :config
   (dashboard-setup-startup-hook))
 #+END_SRC
@@ -1058,9 +1070,9 @@ Make dimmed frames a bit dimmer.
 #+BEGIN_SRC emacs-lisp
 (use-package dimmer
   :diminish
-  :init
-  (setq dimmer-fraction       0.3
-        dimmer-adjustmentmode :both)  
+  :custom
+  (dimmer-fraction       0.3)
+  (dimmer-adjustmentmode :both)  
   :config
   (dimmer-configure-company-box)
   (dimmer-configure-hydra)
@@ -1080,8 +1092,6 @@ override some keybindings.
   :ensure nil
   :init
   (put 'dired-find-alternate-file 'disabled nil)
-  :config
-  (setq delete-by-moving-to-trash t)
   :commands (dired dired-jump delete-file)
   :custom ((dired-listing-switches "-lah --group-directories-first"))
   :bind (("H-d" . dired-jump)
@@ -1106,8 +1116,8 @@ I use Docker a lot, don't always have to use the command line.
 
 #+BEGIN_SRC emacs-lisp
 (use-package docker
-  :init
-  (setq docker-container-default-sort-key '("Names"))
+  :custom
+  (docker-container-default-sort-key '("Names"))
   :bind (("C-c k" . docker)
          ("H-k"   . docker)))
 #+END_SRC
@@ -1119,10 +1129,10 @@ Note that this packag requires you to install =all-the-icons= fonts[fn:4].
 
 #+BEGIN_SRC emacs-lisp
 (use-package doom-modeline
-  :init
-  (setq doom-modeline-project-detection 'projectile
-        doom-modeline-minor-modes       t
-        doom-modeline-buffer-encoding   nil)
+  :custom
+  (doom-modeline-project-detection 'projectile)
+  (doom-modeline-minor-modes       t)
+  (doom-modeline-buffer-encoding   nil)
   :config
   (doom-modeline-mode 1))
 #+END_SRC
@@ -1148,8 +1158,9 @@ Configure it for =ivy=.
 (use-package dumb-jump
   :init
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
-  (setq dumb-jump-selector       'ivy
-        dumb-jump-force-searcher 'ag)
+  :custom
+  (dumb-jump-selector       'ivy)
+  (dumb-jump-force-searcher 'ag)
   :config
   (dumb-jump-mode)
   :bind (("C-c j" . xref-find-definitions)
@@ -1243,7 +1254,8 @@ I use FiraCode, this mode allows us to use ligatures.
   :diminish
   ;; use fira mode if it's the default font and the symbol font is installed
   :if (and (x-list-fonts "Fira Code Symbol") (string= "Fira Code" (face-attribute 'default :family)))
-  :custom (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
+  :custom
+  (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
   :hook prog-mode)                                         ; mode to enable fira-code-mode in
 #+END_SRC
 
@@ -1254,8 +1266,8 @@ I use FiraCode, this mode allows us to use ligatures.
 #+BEGIN_SRC emacs-lisp
 (use-package flycheck
   :delight " fly"
-  :init
-  (setq flycheck-keymap-prefix (kbd "C-c q"))
+  :custom
+  (flycheck-keymap-prefix (kbd "C-c q"))
   :hook ((flycheck-mode . wal/use-eslint-from-node-modules)
          (flycheck-mode . wal/use-tslint-from-node-modules)))
 #+END_SRC
@@ -1272,8 +1284,9 @@ You can bring up actions (skip, save) with =M-o=.
   :ensure nil
   :delight " fsp"
   :init
-  (setq ispell-dictionary           "american"
-        flyspell-issue-message-flag nil)
+  (setq ispell-dictionary "american")
+  :custom
+  (flyspell-issue-message-flag nil)
   :bind ("<f8>" . flyspell-mode))
 
 (use-package flyspell-correct
@@ -1358,8 +1371,8 @@ Show indentation.
 (use-package highlight-indent-guides
   ;; don't need to see this
   :diminish highlight-indent-guides-mode
-  :init
-  (setq highlight-indent-guides-method 'character)
+  :custom
+  (highlight-indent-guides-method 'character)
   :hook (prog-mode . highlight-indent-guides-mode))
 #+END_SRC
 
@@ -1414,15 +1427,15 @@ We use =ivy= for narrowing our options.
 
 (use-package ivy
   :init
-  (setq ivy-use-virtual-buffers      t
-        enable-recursive-minibuffers t
-        ivy-ignore-buffers           wal/ivy-ignore-buffers
-        ivy-count-format             "%d/%d "
-        ivy-wrap                     t)
-  ;; don't force a ^ on me!
+  (setq enable-recursive-minibuffers t)
+  :custom
+  (ivy-use-virtual-buffers t)
+  (ivy-ignore-buffers      wal/ivy-ignore-buffers)
+  (ivy-count-format        "%d/%d ")
+  (ivy-wrap                t)
   :bind (("C-x b" . wal/switch-buffer)
          ("H-b"   . wal/switch-buffer)
-         ("H-B" . wal/ivy-switch-ignored-buffers)
+         ("H-B"   . wal/ivy-switch-ignored-buffers)
          ("<f9>"  . ivy-resume))
   :config
   (ivy-mode 1))
@@ -1468,16 +1481,16 @@ This is a themes collection I sometimes pick from.
 
 #+BEGIN_SRC emacs-lisp
 (use-package kaolin-themes
-  :init
-  (setq kaolin-ocean-alt-bg                      t
-        kaolin-themes-italic-comments            t
-        kaolin-themes-git-gutter-solid           t
-        ;; modeline border
-	kaolin-themes-modeline-border            nil
-        ;; distinct background for fringe and line numbers
-        kaolin-themes-distinct-fringe            t
-        ;; distinct colors for company popup scrollbar
-        kaolin-themes-distinct-company-scrollbar t)
+  :custom
+  (kaolin-ocean-alt-bg                      t)
+  (kaolin-themes-italic-comments            t)
+  (kaolin-themes-git-gutter-solid           t)
+  ;; modeline border
+  (kaolin-themes-modeline-border            nil)
+  ;; distinct background for fringe and line numbers
+  (kaolin-themes-distinct-fringe            t)
+  ;; distinct colors for company popup scrollbar
+  (kaolin-themes-distinct-company-scrollbar t)
   :config
   ;; treemacs
   (kaolin-treemacs-theme))
@@ -1498,11 +1511,10 @@ Prefer =capf=, bigger delay.
 
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
-  :init
-  (setq lsp-completion-provider :capf
-        lsp-prefer-capf         t
-        lsp-idle-delay          1.5)
-  ;; (setq lsp-semantic-highlighting t)
+  :custom
+  (lsp-completion-provider :capf)
+  (lsp-prefer-capf         t)
+  (lsp-idle-delay          1.5)
   :config
   ;; ignore elixir build and dependency folders
   (add-to-list 'lsp-file-watch-ignored "[/\\\\]_build$")
@@ -1600,8 +1612,8 @@ Disabled for now.
 #+BEGIN_SRC emacs-lisp
 (use-package origami
   :disabled
-  :init
-  (setq origami-fold-replacement "⋯")
+  :custom
+  (origami-fold-replacement "⋯")
   :hook (prog-mode . origami-mode)
   :bind (("C-c o" . origami-toggle-node)))
 #+END_SRC
@@ -1619,11 +1631,11 @@ Have some perspective, man.
   :custom-face
   (persp-selected-face ((t (:weight bold :foreground "burlywood"))))
   :bind ("H-i" . persp-switch)
-  :init
-  (setq persp-modestring-dividers '("(" ")" "/")
-        persp-initial-frame-name  wal/default-perspective
-        persp-state-default-file  (expand-file-name ".cache/persp-persist" user-emacs-directory)
-        persp-mode-prefix-key     (kbd "C-c i"))
+  :custom
+  (persp-modestring-dividers '("(" ")" "/"))
+  (persp-initial-frame-name  wal/default-perspective)
+  (persp-state-default-file  (expand-file-name ".cache/persp-persist" user-emacs-directory))
+  (persp-mode-prefix-key     (kbd "C-c i"))
   :config
   (persp-mode))
 
@@ -1656,11 +1668,11 @@ You don't really _need_ =treemacs=.
 (use-package projectile
   :diminish " pjt"
   :bind ("H-p" . projectile-switch-project)
-  :init
-  (setq projectile-completion-system     'ivy
-        projectile-mode-line-function    '(lambda() (format " {%s}" (projectile-project-name)))
-        projectile-switch-project-action #'projectile-dired
-        projectile-sort-order            'recentf)
+  :custom
+  (projectile-completion-system     'ivy)
+  (projectile-mode-line-function    '(lambda() (format " {%s}" (projectile-project-name))))
+  (projectile-switch-project-action #'projectile-dired)
+  (projectile-sort-order            'recentf)
   :config
   ;; (add-to-list 'projectile-globally-ignored-directories "node_modules")
   ;; (add-to-list 'projectile-globally-ignored-directories "build")
@@ -1698,8 +1710,8 @@ Sometimes I restart for fun.
 
 #+BEGIN_SRC emacs-lisp
 (use-package restart-emacs
-  :init
-  (setq restart-emacs-restore-frames t)
+  :custom
+  (restart-emacs-restore-frames t)
   :bind ("C-x r s" . restart-emacs))
 #+END_SRC
 
@@ -1784,8 +1796,8 @@ Smooth scrolling at the margins using =C-n= and =C-p=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package smooth-scrolling
-  :init
-  (setq smooth-scroll-margin 4)
+  :custom
+  (smooth-scroll-margin 4)
   :config
   (smooth-scrolling-mode 1))
 #+END_SRC
@@ -1822,13 +1834,13 @@ Show some system stats when nothing else is going on.
 #+BEGIN_SRC emacs-lisp
 (use-package symon
   :if (eq system-type 'gnu/linux)
-  :init
-  (setq symon-sparkline-type 'bounded
-        symon-delay          10
-	symon-monitors       '(symon-linux-cpu-monitor
-			       symon-linux-memory-monitor
-			       symon-linux-network-rx-monitor
-			       symon-linux-network-tx-monitor))
+  :custom
+  (symon-sparkline-type 'bounded)
+  (symon-delay          10)
+  (symon-monitors       '(symon-linux-cpu-monitor
+			  symon-linux-memory-monitor
+			  symon-linux-network-rx-monitor
+			  symon-linux-network-tx-monitor))
   :config
   (symon-mode))
 #+END_SRC
@@ -1975,22 +1987,26 @@ always try to build from source ...
 #+BEGIN_SRC emacs-lisp
 (unless (version< emacs-version "27.0")
   (use-package vterm
+    :custom
+    (vterm-kill-buffer-on-exit t)
     :config
     (when (file-exists-p "/bin/fish")
-      (setq vterm-shell "/bin/fish"))
-    (setq vterm-kill-buffer-on-exit t))
+      (setq vterm-shell "/bin/fish")))
+
   (use-package vterm-toggle
-    :bind (("H-t"   . vterm-toggle)
-           ("C-c t v" . vterm-toggle))
+    :custom
+    (vterm-toggle-fullscreen-p nil)
+    (vterm-toggle-scope 'project)
     :init
-    (setq vterm-toggle-fullscreen-p nil)
     (add-to-list 'display-buffer-alist
 		 '((lambda(bufname _) (with-current-buffer bufname (equal major-mode 'vterm-mode)))
                    (display-buffer-reuse-window display-buffer-in-side-window)
                    (side . bottom)
                    (dedicated . t)
-                   (reusable-frames . visible)
-                   (window-height . 0.3)))))
+		   (window-height . 0.3)
+                   (reusable-frames . visible)))
+   :bind (("H-t"     . vterm-toggle)
+          ("C-c t v" . vterm-toggle))))
 #+END_SRC
 
 **** which-key
@@ -2000,9 +2016,9 @@ Show the next possible key presses towards an action.
 #+BEGIN_SRC emacs-lisp
 (use-package which-key
   :diminish
-  :init
+  :custom
   ;; big enough to not mess up avy line search
-  (setq which-key-idle-delay 1.5)
+  (which-key-idle-delay 1.5)
   :config
   (which-key-mode))
 #+END_SRC
@@ -2257,19 +2273,20 @@ state =CANCELLED=.
   ;; sometimes md export is missing
   (require 'ox-md nil t)
   :init
-  (setq org-ellipsis                   "↷"
-	org-log-done                   t
-	org-startup-truncated          nil
-        org-startup-folded             'overview
-	org-directory                  wal/org-directory
-	org-default-notes-file         (concat org-directory "/notes.org")
-	org-startup-with-inline-images t
-        ;; be sure to add archive tag with org-toggle-archive-tag
-	org-archive-location           "::* Archived"
-	org-todo-keywords
-	'((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
   (add-to-list 'org-global-properties
-               '("Effort_ALL". "30m 1h 2h 4h 6h 1d 2d")))
+               '("Effort_ALL". "30m 1h 2h 4h 6h 1d 2d"))
+  :custom
+  (org-ellipsis                   "↷")
+  (org-log-done                   t)
+  (org-startup-truncated          nil)
+  (org-startup-folded             'overview)
+  (org-directory                  wal/org-directory)
+  (org-default-notes-file         (concat org-directory "/notes.org"))
+  (org-startup-with-inline-images t)
+  ;; be sure to add archive tag with org-toggle-archive-tag
+  (org-archive-location           "::* Archived")
+  (org-todo-keywords
+	'((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)"))))
 
 (setq org-log-done                           'time
       org-clock-idle-time                    nil
@@ -2339,18 +2356,19 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-super-agenda
+  :custom
+  (org-super-agenda-groups
+   '((:name "Schedule"
+	    :time-grid t)
+     (:name "Unscheduled"
+	    :scheduled nil)
+     (:name "Leftovers"
+	    :and (
+                  :todo ("IN PROGRESS" "WAITING")
+                  :scheduled past
+                  :not (:tag "@repeated")))
+     (:discard (:anything t))))
   :init
-  (setq org-super-agenda-groups
-        '((:name "Schedule"
-		 :time-grid t)
-          (:name "Unscheduled"
-		 :scheduled nil)
-	  (:name "Leftovers"
-		 :and (
-                       :todo ("IN PROGRESS" "WAITING")
-                       :scheduled past
-                       :not (:tag "@repeated")))
-	  (:discard (:anything t))))
   ;; not sure why this can't be in config
   (org-super-agenda-mode)
   :bind (("C-c a" . org-agenda)
@@ -2435,7 +2453,7 @@ Use =org-tree-slide= for presentations.
 	visible-cursor nil)
   (visual-fill-column-mode 1)
   ;; cribbed from daviwil's emacs-from-scratch
-  (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch :height 160)
+  (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch :height wal/default-font-size)
   (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
   (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
   (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
@@ -2454,7 +2472,6 @@ Use =org-tree-slide= for presentations.
   (global-hl-line-mode 1)
   (visual-fill-column-mode 0)
   (variable-pitch-mode 0)
-  (set-face-attribute 'org-block nil :inherit 'fixed-pitch :height 120)
   (beacon-mode 1))
 
 (use-package org-tree-slide
@@ -2543,8 +2560,8 @@ Web mode uses =flycheck=, prompts user if =lsp= should be enabled.
 #+BEGIN_SRC emacs-lisp
 (use-package web-mode
   :hook (web-mode . wal/web-mode-hook)
-  :init
-  (setq web-mode-comment-style 2)
+  :custom
+  (web-mode-comment-style 2)
   :mode ("\\.vue\\'"
          "\\.component.html\\'"
          "\\.ejs\\'"))
