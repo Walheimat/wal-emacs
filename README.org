@@ -2501,16 +2501,13 @@ Pretty much like =js2=.
   :mode "\\.jsx\\'"
   :hook (rjsx-mode . wal/rjsx-mode-hook))
 
-(defun wal/rjsx-indent ()
-  (interactive)
-  (setq-local indent-line-function 'js-jsx-indent-line))
-
 (defun wal/rjsx-mode-hook ()
   "Hooks for rjsx mode."
+  (message "Extend those ugly JavaScripts of yours!")
   (add-node-modules-path)
   (wal/enable-tabs)
   (flycheck-mode)
-  (wal/rjsx-indent)
+  (setq-local indent-line-function 'js-jsx-indent-line)
   (add-hook 'local-write-file-hooks
 	    (lambda ()
 	      (delete-trailing-whitespace)
@@ -2600,8 +2597,8 @@ to it depending on current major mode.
 (defun wal/switch-from-lsp ()
   "Switch back from LSP to previous checker."
   (pcase (with-current-buffer
-           (current-buffer)
-         major-mode)
+             (current-buffer)
+           major-mode)
     ('python-mode     (setq flycheck-checker 'python-pylint))
     ('typescript-mode (setq flycheck-checker 'typescript-tslint))
     (_ (setq flycheck-checker nil))))
