@@ -428,8 +428,9 @@ guaranteed).
 + =H-f= to find with ag.
 + =H-i= switches prespective.
 + =H-k= to interact with docker.
-+ =H-m= mark next like this (multiple cursors).
 + =H-M= mark all like this (multiple cursors).
++ =H-m= mark next like this (multiple cursors).
++ =H-<mouse3>= adds another cursor at point.
 + =H-o= to toggle bookmarks.
 + =H-p= switches project.
 + =H-s= searches with swiper.
@@ -438,6 +439,24 @@ guaranteed).
 + =H-u= to debug.
 + =H-v= jumps to line with avy.
 + =H-w= swaps windows.
+
+***** General
+
+There's a third layer of key-bindings.
+The =general= mappings perform useful but not
+foundational actions (say instead of switching
+projects we can =ag-project=).
+
+#+BEGIN_SRC emacs-lisp
+;; if already bound, just pick another that suits you
+(defconst wal/leader-key "C-."
+  "Wal's leader key.")
+
+(use-package general
+  :config
+  (general-create-definer wal/leader
+    :prefix wal/leader-key))
+#+END_SRC
 
 ****** Caps to Hyper
 
@@ -466,6 +485,8 @@ Most bindings are declared in the [[*Packages][packages]] section.
 #+BEGIN_SRC emacs-lisp
 ;; windows
 (global-set-key (kbd "H-4") 'kill-buffer-and-window)
+(global-set-key (kbd "H-5")  'make-frame-command)
+;; (wal/leader "4" '(kill-buffer-and-window :which-key "kill buffer and window"))
 
 ;; emacs
 (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
@@ -740,7 +761,7 @@ to download it automatically, but might fail).
 		         "[/\\\\]deps\\'"))
   :bind (("C-c f a" . ag)
          ("C-c f p" . ag-project)
-         ("H-f"     . ag)))
+         ("H-f"     . ag-project)))
 #+END_SRC
 
 **** all-the-icons
@@ -875,6 +896,8 @@ Counsel me this, Counselor.
 
 #+BEGIN_SRC emacs-lisp
 (use-package counsel
+  :general
+  (wal/leader "t" '(counsel-load-theme :which-key "load theme"))
   :bind ("M-x" . counsel-M-x)
   :custom
   (counsel-linux-app-format-function #'counsel-linux-app-format-function-command-only)
@@ -892,7 +915,6 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
   :bind (("M-o"          . crux-other-window-or-switch-buffer)
          ("C-c c k"      . crux-kill-other-buffers)
          ;; need to find solution with treemacs open
-         ("C-c c t"      . crux-transpose-windows)
          ("C-c c o"      . crux-open-with)
          ("S-s-<return>" . crux-smart-open-line-above)
 	 ("s-<return>"   . crux-smart-open-line)
@@ -1018,7 +1040,7 @@ Let's have a dash of board.
   (dashboard-set-file-icons             t)
   (dashboard-set-navigator              t)
   (dashboard-footer-messages            wal/dashboard-footer-messages)
-  ( dashboard-set-init-info              t)
+  (dashboard-set-init-info              t)
   (dashboard-week-agenda                nil)
   (dashboard-agenda-time-string-format "%d/%m/%y")
   :config
@@ -1268,6 +1290,8 @@ I use FiraCode, this mode allows us to use ligatures.
   :delight " fly"
   :custom
   (flycheck-keymap-prefix (kbd "C-c q"))
+  :general
+  (wal/leader "q" '(flycheck-mode :which-key "toggle fylcheck"))
   :hook ((flycheck-mode . wal/use-eslint-from-node-modules)
          (flycheck-mode . wal/use-tslint-from-node-modules)))
 #+END_SRC
@@ -1315,7 +1339,9 @@ Necessary even for =.gitignore= files.
 If you want to go back in time and point fingers at the progenitors of doom.
 
 #+BEGIN_SRC emacs-lisp
-(use-package git-timemachine)
+(use-package git-timemachine
+  :general
+  (wal/leader "m" '(git-timemachine-toggle :which-key "toggle git timemachine")))
 #+END_SRC
 
 **** golden-ratio
@@ -1341,6 +1367,8 @@ If you're too lazy to copy and paste.
 #+BEGIN_SRC emacs-lisp
 (use-package google-this
   :diminish
+  :general
+  (wal/leader "g" '(google-this-region :which-key "google selected region"))
   :bind ("<f6>" . 'google-this-mode-submap)
   :config
   (google-this-mode 1))
@@ -1511,6 +1539,8 @@ Prefer =capf=, bigger delay.
 
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
+  :general
+  (wal/leader "l" '(lsp-mode :which-key "toggle LSP"))
   :custom
   (lsp-completion-provider :capf)
   (lsp-prefer-capf         t)
@@ -1631,6 +1661,8 @@ Have some perspective, man.
 (use-package perspective
   :custom-face
   (persp-selected-face ((t (:weight bold :foreground "burlywood"))))
+  :general
+  (wal/leader "i" '(persp-kill :which-key "kill perspective"))
   :bind ("H-i" . persp-switch)
   :custom
   (persp-modestring-dividers '("(" ")" "/"))
@@ -1668,6 +1700,8 @@ You don't really _need_ =treemacs=.
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
   :diminish " pjt"
+  :general
+  (wal/leader "f" '(projectile-find-file :which-key "find file in project")) 
   :bind ("H-p" . projectile-switch-project)
   :custom
   (projectile-completion-system     'ivy)
@@ -2033,6 +2067,8 @@ I use a different (light) theme here.
 (use-package writeroom-mode
   :hook ((writeroom-mode-enable  . (lambda() (wal/theme-light-switch 'secondary)))
          (writeroom-mode-disable . (lambda() (wal/theme-light-switch 'primary))))
+  :general
+  (wal/leader "w" '(writeroom-mode :which-key "toggle writeroom"))
   :bind ("<f5>" . writeroom-mode))
 #+END_SRC
 
@@ -2050,6 +2086,8 @@ if you don't have a hyper key, bind it to a personal binding.
 
 (use-package yasnippet
   :delight " yas"
+  :general
+  (wal/leader "y" '(yas-minor-mode :which-key "toggle yasnippet"))
   :bind ((:map yas-minor-mode-map
                ("<tab>"    . nil)
 	       ("TAB"      . nil)
@@ -2066,23 +2104,6 @@ if you don't have a hyper key, bind it to a personal binding.
 ;;   (let ((yas-fallback-behavior nil))
 ;;     (unless (yas-expand)
 ;;       (call-interactively #'company-complete-common))))
-#+END_SRC
-
-**** zoom
-
-Use the golden ratio between (in-)active buffers.
-
-This is buggy sometimes, so I prefer =golden-ratio=.
-
-#+BEGIN_SRC emacs-lisp
-(use-package zoom
-  :disabled
-  :diminish
-  :init 
-  (custom-set-variables
-   '(zoom-size '(0.618 . 0.618)))
-  :config
-  (zoom-mode 1))
 #+END_SRC
 
 *** Mode Configs
@@ -2372,6 +2393,8 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
   :init
   ;; not sure why this can't be in config
   (org-super-agenda-mode)
+  :general
+  (wal/leader "a" '(org-agenda :which-key "open agenda"))
   :bind (("C-c a" . org-agenda)
          ("H-a"   . org-agenda)))
 
@@ -2737,6 +2760,7 @@ Once the installation is complete, re-run Emacs
 + [[https://github.com/jming422/fira-code-mode][fira-code-mode]]
 + [[https://github.com/flycheck/flycheck][flycheck]]
 + [[https://github.com/d12frosted/flyspell-correct][flyspell-correct(-ivy)]]
++ [[https://github.com/noctuid/general.el][general]]
 + [[https://github.com/emacsmirror/git-timemachine][git-timemachine]]
 + [[https://github.com/roman/golden-ratio.el][golden-ratio]]
 + [[https://github.com/Malabarba/emacs-google-this][google-this]]
@@ -2791,7 +2815,6 @@ Once the installation is complete, re-run Emacs
 + [[https://github.com/joostkremers/writeroom-mode][writeroom-mode]]
 + [[https://github.com/joaotavora/yasnippet][yasnippet]]
 + [[https://www.emacswiki.org/emacs/ZoneMode][zone]]
-+ [[https://github.com/cyrus-and/zoom][zoom]]
 
 [fn:8] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
 
