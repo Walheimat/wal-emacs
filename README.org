@@ -542,10 +542,14 @@ Otherwise the colors might clash.
          (setq wal/active-theme wal/primary-emacs-theme))))
 
 ;; some themes require configuration, so we only load after intialization
-(add-hook 'after-init-hook '(lambda()
-			      (load-theme wal/primary-emacs-theme t)
-			      ;; if you don't mind some transparency
-			      (wal/transparency 95)))
+(defun wal/setup-visuals ()
+  "Setup visual frills like theme and transparency."
+  (load-theme wal/primary-emacs-theme t)
+  (wal/transparency 95))
+
+(if (daemonp)
+    (add-hook 'server-after-make-frame-hook 'wal/setup-visuals)
+  (wal/setup-visuals))
 #+END_SRC
 
 **** Font
@@ -559,19 +563,25 @@ To get support for ligatures, install the symbol font from [[https://github.com/
 (defconst wal/default-variable-font-size 160)
 
 (defun wal/font-candidate (&rest fonts)
-  "Return the first available font from a list of fonts."
+  "Return the first available font from a list of FONTS."
   (--first (find-font (font-spec :name it)) fonts))
 
-;; default face
-(set-face-attribute 'default nil
-  :font (wal/font-candidate '"Fira Code" "mononoki" "Liberation Mono" "DejaVu Sans Mono")
-  :height wal/default-font-size)
+(defun wal/setup-fonts ()
+  "Setup fonts."
+  (set-face-attribute 'default nil
+    :font (wal/font-candidate '"Fira Code" "mononoki" "Liberation Mono" "DejaVu Sans Mono")
+    :height wal/default-font-size)
 
-;; variable pitch face
-(set-face-attribute 'variable-pitch nil
-  :font (wal/font-candidate '"Roboto" "Ubuntu" "San Francisco" "Arial") ;; you might want to change this one
-  :height wal/default-variable-font-size
-  :weight 'regular)
+  ;; variable pitch face
+  (set-face-attribute 'variable-pitch nil
+    :font (wal/font-candidate '"Roboto" "Ubuntu" "San Francisco" "Arial") ;; you might want to change this one
+    :height wal/default-variable-font-size
+    :weight 'regular))
+
+;; fonts can't be initialized thru daemon
+(if (daemonp)
+    (add-hook 'server-after-make-frame-hook 'wal/setup-fonts) 
+  (wal/setup-fonts)) 
 #+END_SRC
 
 **** Zoning
@@ -1206,6 +1216,7 @@ Note that this packag requires you to install =all-the-icons= fonts[fn:4].
   (doom-modeline-project-detection 'projectile)
   (doom-modeline-minor-modes       t)
   (doom-modeline-buffer-encoding   nil)
+  (doom-modeline-icon              t)
   :config
   (doom-modeline-mode 1))
 #+END_SRC
@@ -1336,13 +1347,18 @@ Finding files by name should be easy.
 I use FiraCode, this mode allows us to use ligatures.
 
 #+BEGIN_SRC emacs-lisp
-(use-package fira-code-mode
-  :diminish
-  ;; use fira mode if it's the default font and the symbol font is installed
-  :if (and (x-list-fonts "Fira Code Symbol") (string= "Fira Code" (face-attribute 'default :family)))
-  :custom
-  (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
-  :hook prog-mode)                                         ; mode to enable fira-code-mode in
+(defun wal/fira-code()
+  (use-package fira-code-mode
+    :diminish
+    ;; use fira mode if it's the default font and the symbol font is installed
+    :if (and (x-list-fonts "Fira Code Symbol") (string= "Fira Code" (face-attribute 'default :family)))
+    :custom
+    (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
+    :hook prog-mode))
+
+(if (daemonp)
+    (add-hook 'server-after-make-frame-hook 'wal/fira-code)
+    (wal/fira-code))
 #+END_SRC
 
 **** flycheck
