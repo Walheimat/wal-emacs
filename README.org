@@ -443,19 +443,31 @@ guaranteed).
 ***** General
 
 There's a third layer of key-bindings.
-The =general= mappings perform useful but not
-foundational actions (say instead of switching
-projects we can =ag-project=).
+The three =general= mappings perform useful but not
+foundational actions.
+
+Fittingly, all =major mode= toggle actions are invoked
+using the =wal/major-key= prefix.
 
 #+BEGIN_SRC emacs-lisp
-;; if already bound, just pick another that suits you
-(defconst wal/leader-key "C-."
-  "Wal's leader key.")
+;; American ranks
+(defconst wal/general-key "H-,"
+  "Wal's primary (or general) leader key.")
+
+(defconst wal/colonel-key "H-."
+  "Wal's secondary (or colonel) leader key.")
+
+(defconst wal/major-key "H-/"
+  "Wal's tertiary (or major) leader key.")
 
 (use-package general
   :config
-  (general-create-definer wal/leader
-    :prefix wal/leader-key))
+  (general-create-definer wal/general
+    :prefix wal/general-key)
+  (general-create-definer wal/colonel
+    :prefix wal/colonel-key)
+  (general-create-definer wal/major
+    :prefix wal/major-key))
 #+END_SRC
 
 ****** Caps to Hyper
@@ -759,9 +771,14 @@ to download it automatically, but might fail).
 		         "[/\\\\]build\\'"
                          "[/\\\\]\\.vscode\\'"
 		         "[/\\\\]deps\\'"))
+  :general
+  (wal/colonel "f" '(ag-files :which-key "find in files of type"))
   :bind (("C-c f a" . ag)
          ("C-c f p" . ag-project)
-         ("H-f"     . ag-project)))
+         ("H-f"     . ag-project)
+	 ;; in dired, we change this a bit
+	 (:map dired-mode-map
+	   ("H-f" . ag-dired))))
 #+END_SRC
 
 **** all-the-icons
@@ -815,6 +832,10 @@ Jumping to (visible) lines and chars is fun if you are too lazy to use your mous
 
 #+BEGIN_SRC emacs-lisp
 (use-package avy
+  :general
+  (wal/general "v" '(avy-goto-whitespace-end :which-key "go to whitespace"))
+  (wal/colonel "v" '(avy-kill-whole-line :which-key "kill specific line"))
+  (wal/major   "v" '(avy-copy-line :which-key "copy line and paste above"))
   :bind (("C-c v v" . avy-goto-line)
          ("C-c v c" . avy-goto-char)
 	 ("H-v"     . avy-goto-line)))
@@ -897,7 +918,8 @@ Counsel me this, Counselor.
 #+BEGIN_SRC emacs-lisp
 (use-package counsel
   :general
-  (wal/leader "t" '(counsel-load-theme :which-key "load theme"))
+  ;; still need to find a scheme for non-package prefixes
+  (wal/major "#" '(counsel-load-theme :which-key "load theme"))
   :bind ("M-x" . counsel-M-x)
   :custom
   (counsel-linux-app-format-function #'counsel-linux-app-format-function-command-only)
@@ -1140,6 +1162,10 @@ I use Docker a lot, don't always have to use the command line.
 (use-package docker
   :custom
   (docker-container-default-sort-key '("Names"))
+  :general
+  (wal/general "k" '(docker-compose-up :which-key "docker-compose up"))
+  (wal/colonel "k" '(docker-compose-exec :which-key "docker-compose exec"))
+  (wal/major   "k" '(docker-compose-logs :which-key "docker-compose logs"))
   :bind (("C-c k" . docker)
          ("H-k"   . docker)))
 #+END_SRC
@@ -1291,7 +1317,7 @@ I use FiraCode, this mode allows us to use ligatures.
   :custom
   (flycheck-keymap-prefix (kbd "C-c q"))
   :general
-  (wal/leader "q" '(flycheck-mode :which-key "toggle fylcheck"))
+  (wal/major "q" '(flycheck-mode :which-key "toggle fylcheck"))
   :hook ((flycheck-mode . wal/use-eslint-from-node-modules)
          (flycheck-mode . wal/use-tslint-from-node-modules)))
 #+END_SRC
@@ -1341,7 +1367,7 @@ If you want to go back in time and point fingers at the progenitors of doom.
 #+BEGIN_SRC emacs-lisp
 (use-package git-timemachine
   :general
-  (wal/leader "m" '(git-timemachine-toggle :which-key "toggle git timemachine")))
+  (wal/colonel "@" '(git-timemachine-toggle :which-key "toggle git timemachine")))
 #+END_SRC
 
 **** golden-ratio
@@ -1368,7 +1394,9 @@ If you're too lazy to copy and paste.
 (use-package google-this
   :diminish
   :general
-  (wal/leader "g" '(google-this-region :which-key "google selected region"))
+  (wal/general "g" '(google-this :which-key "google this"))
+  (wal/colonel "g" '(google-this-region :which-key "google selected region"))
+  (wal/major   "g" '(counsel-google :which-key "google with counsel"))
   :bind ("<f6>" . 'google-this-mode-submap)
   :config
   (google-this-mode 1))
@@ -1383,6 +1411,10 @@ Let's try (to be) =helpful=.
   :custom
   (counsel-describe-function-function #'helpful-callable)
   (counsel-describe-variable-function #'helpful-variable)
+  :general
+  (wal/general "h" '(counsel-describe-variable :which-key "describe variable"))
+  (wal/colonel "h" '(counsel-describe-function :which-key "describe function"))
+  (wal/major "h" '(helpful-at-point :which-key "helpful at point"))
   :bind
   ("<f10>"                   . helpful-at-point)
   ([remap describe-function] . counsel-describe-function)
@@ -1540,7 +1572,7 @@ Prefer =capf=, bigger delay.
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
   :general
-  (wal/leader "l" '(lsp-mode :which-key "toggle LSP"))
+  (wal/major "l" '(lsp-mode :which-key "toggle LSP"))
   :custom
   (lsp-completion-provider :capf)
   (lsp-prefer-capf         t)
@@ -1662,7 +1694,9 @@ Have some perspective, man.
   :custom-face
   (persp-selected-face ((t (:weight bold :foreground "burlywood"))))
   :general
-  (wal/leader "i" '(persp-kill :which-key "kill perspective"))
+  (wal/general "i" '(persp-kill :which-key "set buffer to perspective"))
+  (wal/colonel "i" '(persp-add-buffer :which-key "add buffer to perspective"))
+  (wal/major "i" '(persp-remove-buffer :which-key "remove buffer from perspective"))
   :bind ("H-i" . persp-switch)
   :custom
   (persp-modestring-dividers '("(" ")" "/"))
@@ -1688,8 +1722,8 @@ Prettify your ugly JavaScript.
 
 #+BEGIN_SRC emacs-lisp
 (use-package prettier
-  :bind ((:map js2-mode-map
-           ("H-," . prettier-prettify))))
+  :general
+  (wal/general js2-mode-map "," '(prettier-prettify :which-key "prettify")))
 #+END_SRC
 
 **** projectile
@@ -1701,7 +1735,9 @@ You don't really _need_ =treemacs=.
 (use-package projectile
   :diminish " pjt"
   :general
-  (wal/leader "f" '(projectile-find-file :which-key "find file in project")) 
+  (wal/general "p" '(projectile-find-file :which-key "find file in project")) 
+  (wal/colonel "p" '(projectile-find-dir :which-key "find dir in project")) 
+  (wal/major   "p" '(projectile-kill-buffers :which-key "kill project buffers")) 
   :bind ("H-p" . projectile-switch-project)
   :custom
   (projectile-completion-system     'ivy)
@@ -1856,6 +1892,10 @@ Smart searching with =ivy=.
 #+BEGIN_SRC emacs-lisp
 (use-package swiper
   :after ivy
+  :general
+  (wal/general "s" '(swiper-all :which-key "search all buffers"))
+  (wal/colonel "s" '(swiper-multi :which-key "search multiple buffers"))
+  (wal/major   "s" '(swiper-thing-at-point :which-key "search thing at point"))
   :bind (("C-c s" . swiper)
          ("H-s"   . swiper)
          (:map swiper-map
@@ -2068,7 +2108,7 @@ I use a different (light) theme here.
   :hook ((writeroom-mode-enable  . (lambda() (wal/theme-light-switch 'secondary)))
          (writeroom-mode-disable . (lambda() (wal/theme-light-switch 'primary))))
   :general
-  (wal/leader "w" '(writeroom-mode :which-key "toggle writeroom"))
+  (wal/major "w" '(writeroom-mode :which-key "toggle writeroom"))
   :bind ("<f5>" . writeroom-mode))
 #+END_SRC
 
@@ -2394,7 +2434,7 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
   ;; not sure why this can't be in config
   (org-super-agenda-mode)
   :general
-  (wal/leader "a" '(org-agenda :which-key "open agenda"))
+  (wal/general org-agenda-keymap "w" '(org-agenda-write :which-key "write agenda"))
   :bind (("C-c a" . org-agenda)
          ("H-a"   . org-agenda)))
 
