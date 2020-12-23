@@ -443,19 +443,31 @@ guaranteed).
 ***** General
 
 There's a third layer of key-bindings.
-The =general= mappings perform useful but not
-foundational actions (say instead of switching
-projects we can =ag-project=).
+The three =general= mappings perform useful but not
+foundational actions.
+
+Fittingly, all =minor mode= toggle actions are invoked
+using the =wal/major-key= prefix.
 
 #+BEGIN_SRC emacs-lisp
-;; if already bound, just pick another that suits you
-(defconst wal/leader-key "C-."
-  "Wal's leader key.")
+;; American ranks
+(defconst wal/general-key "H-,"
+  "Wal's primary (or general) leader key.")
+
+(defconst wal/colonel-key "H-."
+  "Wal's secondary (or colonel) leader key.")
+
+(defconst wal/major-key "H-/"
+  "Wal's tertiary (or major) leader key.")
 
 (use-package general
   :config
-  (general-create-definer wal/leader
-    :prefix wal/leader-key))
+  (general-create-definer wal/general
+    :prefix wal/general-key)
+  (general-create-definer wal/colonel
+    :prefix wal/colonel-key)
+  (general-create-definer wal/major
+    :prefix wal/major-key))
 #+END_SRC
 
 ****** Caps to Hyper
@@ -530,10 +542,14 @@ Otherwise the colors might clash.
          (setq wal/active-theme wal/primary-emacs-theme))))
 
 ;; some themes require configuration, so we only load after intialization
-(add-hook 'after-init-hook '(lambda()
-			      (load-theme wal/primary-emacs-theme t)
-			      ;; if you don't mind some transparency
-			      (wal/transparency 95)))
+(defun wal/setup-visuals ()
+  "Setup visual frills like theme and transparency."
+  (load-theme wal/primary-emacs-theme t)
+  (wal/transparency 95))
+
+(if (daemonp)
+    (add-hook 'server-after-make-frame-hook 'wal/setup-visuals)
+  (wal/setup-visuals))
 #+END_SRC
 
 **** Font
@@ -547,19 +563,25 @@ To get support for ligatures, install the symbol font from [[https://github.com/
 (defconst wal/default-variable-font-size 160)
 
 (defun wal/font-candidate (&rest fonts)
-  "Return the first available font from a list of fonts."
+  "Return the first available font from a list of FONTS."
   (--first (find-font (font-spec :name it)) fonts))
 
-;; default face
-(set-face-attribute 'default nil
-  :font (wal/font-candidate '"Fira Code" "mononoki" "Liberation Mono" "DejaVu Sans Mono")
-  :height wal/default-font-size)
+(defun wal/setup-fonts ()
+  "Setup fonts."
+  (set-face-attribute 'default nil
+    :font (wal/font-candidate '"Fira Code" "mononoki" "Liberation Mono" "DejaVu Sans Mono")
+    :height wal/default-font-size)
 
-;; variable pitch face
-(set-face-attribute 'variable-pitch nil
-  :font "Roboto" ;; you might want to change this one
-  :height wal/default-variable-font-size
-  :weight 'regular)
+  ;; variable pitch face
+  (set-face-attribute 'variable-pitch nil
+    :font (wal/font-candidate '"Roboto" "Ubuntu" "San Francisco" "Arial") ;; you might want to change this one
+    :height wal/default-variable-font-size
+    :weight 'regular))
+
+;; fonts can't be initialized thru daemon
+(if (daemonp)
+    (add-hook 'server-after-make-frame-hook 'wal/setup-fonts) 
+  (wal/setup-fonts)) 
 #+END_SRC
 
 **** Zoning
@@ -713,6 +735,7 @@ switching setup.
   (aw-fair-aspect-ratio 4)
   (aw-dispatch-always   t)
   (aw-dispatch-alist    '((?s aw-swap-window                "swap")
+                          (?m aw-move-window                "move")
                           (?h aw-split-window-horz          "horizontal split")
                           (?v aw-split-window-vert          "vertical split")
                           (?w aw-split-window-fair          "fair split")
@@ -759,9 +782,14 @@ to download it automatically, but might fail).
 		         "[/\\\\]build\\'"
                          "[/\\\\]\\.vscode\\'"
 		         "[/\\\\]deps\\'"))
+  :general
+  (wal/colonel "f" '(ag-files :which-key "find in files of type"))
   :bind (("C-c f a" . ag)
          ("C-c f p" . ag-project)
-         ("H-f"     . ag-project)))
+         ("H-f"     . ag-project)
+	 ;; in dired, we change this a bit
+	 (:map dired-mode-map
+	   ("H-f" . ag-dired))))
 #+END_SRC
 
 **** all-the-icons
@@ -815,6 +843,10 @@ Jumping to (visible) lines and chars is fun if you are too lazy to use your mous
 
 #+BEGIN_SRC emacs-lisp
 (use-package avy
+  :general
+  (wal/general "v" '(avy-goto-whitespace-end :which-key "go to whitespace"))
+  (wal/colonel "v" '(avy-kill-whole-line :which-key "kill specific line"))
+  (wal/major   "v" '(avy-copy-line :which-key "copy line and paste above"))
   :bind (("C-c v v" . avy-goto-line)
          ("C-c v c" . avy-goto-char)
 	 ("H-v"     . avy-goto-line)))
@@ -897,8 +929,12 @@ Counsel me this, Counselor.
 #+BEGIN_SRC emacs-lisp
 (use-package counsel
   :general
-  (wal/leader "t" '(counsel-load-theme :which-key "load theme"))
-  :bind ("M-x" . counsel-M-x)
+  ;; still need to find a scheme for non-package prefixes
+  (wal/major "#" '(counsel-load-theme :which-key "load theme"))
+  (wal/major "$" '(counsel-command-history :which-key "command history"))
+  (wal/major "!" '(counsel-set-variable :which-key "set variable"))
+  :bind (("M-x"    . counsel-M-x)
+         ("<menu>" . counsel-M-x))
   :custom
   (counsel-linux-app-format-function #'counsel-linux-app-format-function-command-only)
   :config
@@ -1047,6 +1083,21 @@ Let's have a dash of board.
   (dashboard-setup-startup-hook))
 #+END_SRC
 
+**** default-text-scale
+
+Scale text in all buffers.
+Unfortunately, the calculations are off to me; until
+this is fixed, I'll disable the package.
+
+#+BEGIN_SRC emacs-lisp
+(use-package default-text-scale
+  :disabled
+  :custom
+  (default-text-scale-amount 5)
+  :config
+  (default-text-scale-mode 1))
+#+END_SRC
+
 **** delight
 
 Refine a couple of major-mode names.
@@ -1132,6 +1183,14 @@ Hit =/= to filter in =dired= buffers.
   :diminish "def")
 #+END_SRC
 
+**** diredfl
+
+#+BEGIN_SRC emacs-lisp
+(use-package diredfl
+  :config
+  (diredfl-global-mode))
+#+END_SRC
+
 **** docker
 
 I use Docker a lot, don't always have to use the command line.
@@ -1140,6 +1199,10 @@ I use Docker a lot, don't always have to use the command line.
 (use-package docker
   :custom
   (docker-container-default-sort-key '("Names"))
+  :general
+  (wal/general "k" '(docker-compose-up :which-key "docker-compose up"))
+  (wal/colonel "k" '(docker-compose-exec :which-key "docker-compose exec"))
+  (wal/major   "k" '(docker-compose-logs :which-key "docker-compose logs"))
   :bind (("C-c k" . docker)
          ("H-k"   . docker)))
 #+END_SRC
@@ -1155,6 +1218,7 @@ Note that this packag requires you to install =all-the-icons= fonts[fn:4].
   (doom-modeline-project-detection 'projectile)
   (doom-modeline-minor-modes       t)
   (doom-modeline-buffer-encoding   nil)
+  (doom-modeline-icon              t)
   :config
   (doom-modeline-mode 1))
 #+END_SRC
@@ -1250,6 +1314,19 @@ Comment code like in =vim=, evil, evil =vim=.
          ("C-c c #"  . evilnc-comment-or-uncomment-lines)))
 #+END_SRC
 
+**** eww
+
+Browse web in Emacs.
+
+This requires Emacs to have been compiled with =--with-xml2= flag.
+
+#+BEGIN_SRC emacs-lisp
+(use-package eww
+  :ensure nil
+  :bind (("C-c n" . eww)
+         ("H-n"   . eww)))
+#+END_SRC
+
 **** expand-region
 
 One thing that can be a bit tricky is selecting regions, not anymore.
@@ -1272,13 +1349,20 @@ Finding files by name should be easy.
 I use FiraCode, this mode allows us to use ligatures.
 
 #+BEGIN_SRC emacs-lisp
-(use-package fira-code-mode
-  :diminish
-  ;; use fira mode if it's the default font and the symbol font is installed
-  :if (and (x-list-fonts "Fira Code Symbol") (string= "Fira Code" (face-attribute 'default :family)))
-  :custom
-  (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
-  :hook prog-mode)                                         ; mode to enable fira-code-mode in
+(defun wal/fira-code()
+  (use-package fira-code-mode
+    :diminish
+    ;; use fira mode if it's the default font and the symbol font is installed
+    :if (and (x-list-fonts "Fira Code Symbol") (string= "Fira Code" (face-attribute 'default :family)))
+    :custom
+    ;; ligatures you don't want
+    (fira-code-mode-disabled-ligatures '("[]" "x"))
+    :hook prog-mode))
+
+;; we guard against font-related actions
+(if (daemonp)
+    (add-hook 'server-after-make-frame-hook 'wal/fira-code)
+    (wal/fira-code))
 #+END_SRC
 
 **** flycheck
@@ -1291,7 +1375,7 @@ I use FiraCode, this mode allows us to use ligatures.
   :custom
   (flycheck-keymap-prefix (kbd "C-c q"))
   :general
-  (wal/leader "q" '(flycheck-mode :which-key "toggle fylcheck"))
+  (wal/major "q" '(flycheck-mode :which-key "toggle flycheck"))
   :hook ((flycheck-mode . wal/use-eslint-from-node-modules)
          (flycheck-mode . wal/use-tslint-from-node-modules)))
 #+END_SRC
@@ -1341,7 +1425,7 @@ If you want to go back in time and point fingers at the progenitors of doom.
 #+BEGIN_SRC emacs-lisp
 (use-package git-timemachine
   :general
-  (wal/leader "m" '(git-timemachine-toggle :which-key "toggle git timemachine")))
+  (wal/colonel "@" '(git-timemachine-toggle :which-key "toggle git timemachine")))
 #+END_SRC
 
 **** golden-ratio
@@ -1368,7 +1452,9 @@ If you're too lazy to copy and paste.
 (use-package google-this
   :diminish
   :general
-  (wal/leader "g" '(google-this-region :which-key "google selected region"))
+  (wal/general "g" '(google-this :which-key "google this"))
+  (wal/colonel "g" '(google-this-region :which-key "google selected region"))
+  (wal/major   "g" '(counsel-google :which-key "google with counsel"))
   :bind ("<f6>" . 'google-this-mode-submap)
   :config
   (google-this-mode 1))
@@ -1383,6 +1469,10 @@ Let's try (to be) =helpful=.
   :custom
   (counsel-describe-function-function #'helpful-callable)
   (counsel-describe-variable-function #'helpful-variable)
+  :general
+  (wal/general "h" '(counsel-describe-variable :which-key "describe variable"))
+  (wal/colonel "h" '(counsel-describe-function :which-key "describe function"))
+  (wal/major "h" '(helpful-at-point :which-key "helpful at point"))
   :bind
   ("<f10>"                   . helpful-at-point)
   ([remap describe-function] . counsel-describe-function)
@@ -1540,7 +1630,7 @@ Prefer =capf=, bigger delay.
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
   :general
-  (wal/leader "l" '(lsp-mode :which-key "toggle LSP"))
+  (wal/major "l" '(lsp-mode :which-key "toggle LSP"))
   :custom
   (lsp-completion-provider :capf)
   (lsp-prefer-capf         t)
@@ -1662,7 +1752,9 @@ Have some perspective, man.
   :custom-face
   (persp-selected-face ((t (:weight bold :foreground "burlywood"))))
   :general
-  (wal/leader "i" '(persp-kill :which-key "kill perspective"))
+  (wal/general "i" '(persp-kill :which-key "set buffer to perspective"))
+  (wal/colonel "i" '(persp-add-buffer :which-key "add buffer to perspective"))
+  (wal/major "i" '(persp-remove-buffer :which-key "remove buffer from perspective"))
   :bind ("H-i" . persp-switch)
   :custom
   (persp-modestring-dividers '("(" ")" "/"))
@@ -1688,8 +1780,8 @@ Prettify your ugly JavaScript.
 
 #+BEGIN_SRC emacs-lisp
 (use-package prettier
-  :bind ((:map js2-mode-map
-           ("H-," . prettier-prettify))))
+  :general
+  (wal/general js2-mode-map "," '(prettier-prettify :which-key "prettify")))
 #+END_SRC
 
 **** projectile
@@ -1701,7 +1793,9 @@ You don't really _need_ =treemacs=.
 (use-package projectile
   :diminish " pjt"
   :general
-  (wal/leader "f" '(projectile-find-file :which-key "find file in project")) 
+  (wal/general "p" '(projectile-find-file :which-key "find file in project")) 
+  (wal/colonel "p" '(projectile-find-dir :which-key "find dir in project")) 
+  (wal/major   "p" '(projectile-kill-buffers :which-key "kill project buffers")) 
   :bind ("H-p" . projectile-switch-project)
   :custom
   (projectile-completion-system     'ivy)
@@ -1856,6 +1950,10 @@ Smart searching with =ivy=.
 #+BEGIN_SRC emacs-lisp
 (use-package swiper
   :after ivy
+  :general
+  (wal/general "s" '(swiper-all :which-key "search all buffers"))
+  (wal/colonel "s" '(swiper-multi :which-key "search multiple buffers"))
+  (wal/major   "s" '(swiper-thing-at-point :which-key "search thing at point"))
   :bind (("C-c s" . swiper)
          ("H-s"   . swiper)
          (:map swiper-map
@@ -1982,6 +2080,21 @@ Some treemacs integration packages.
 ;; (treemacs)
 #+END_SRC
 
+**** typo
+
+Access complex punctuation.
+
+To me this doesn't necessarily make sense for all =text-mode=
+modes (like =org-mode=), so instead it needs to be triggered
+explicitly.
+
+#+BEGIN_SRC emacs-lisp
+(use-package typo
+  :diminish " typ"
+  :general
+  (wal/general text-mode-map "," '(typo-mode :which-key "toggle typo mode")))
+#+END_SRC
+
 **** undo-fu
 
 Undoing un-undoing is weird in Emacs.
@@ -2068,7 +2181,7 @@ I use a different (light) theme here.
   :hook ((writeroom-mode-enable  . (lambda() (wal/theme-light-switch 'secondary)))
          (writeroom-mode-disable . (lambda() (wal/theme-light-switch 'primary))))
   :general
-  (wal/leader "w" '(writeroom-mode :which-key "toggle writeroom"))
+  (wal/major "w" '(writeroom-mode :which-key "toggle writeroom"))
   :bind ("<f5>" . writeroom-mode))
 #+END_SRC
 
@@ -2087,7 +2200,9 @@ if you don't have a hyper key, bind it to a personal binding.
 (use-package yasnippet
   :delight " yas"
   :general
-  (wal/leader "y" '(yas-minor-mode :which-key "toggle yasnippet"))
+  (wal/general "y" '(yas-visit-snippet-file :which-key "visit snippet file"))
+  (wal/colonel "y" '(yas-new-snippet :which-key "create new snippet"))
+  (wal/major   "y" '(yas-minor-mode :which-key "toggle yasnippet"))
   :bind ((:map yas-minor-mode-map
                ("<tab>"    . nil)
 	       ("TAB"      . nil)
@@ -2214,8 +2329,6 @@ Enable tabs and =flycheck=.
 (defun wal/json-mode-hook ()
   "Hooks for json mode."
   (message "JSON ...? JSON?! JSON!!")
-  (when (y-or-n-p "Do you want to enables tabs?")
-    (wal/enable-tabs))
   (flycheck-mode 1)
   (rainbow-delimiters-mode))
 #+END_SRC
@@ -2394,7 +2507,7 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
   ;; not sure why this can't be in config
   (org-super-agenda-mode)
   :general
-  (wal/leader "a" '(org-agenda :which-key "open agenda"))
+  (wal/general org-agenda-keymap "w" '(org-agenda-write :which-key "write agenda"))
   :bind (("C-c a" . org-agenda)
          ("H-a"   . org-agenda)))
 
@@ -2501,6 +2614,8 @@ Use =org-tree-slide= for presentations.
 (use-package org-tree-slide
   :hook ((org-tree-slide-play . wal/tree-slide-play)
          (org-tree-slide-stop . wal/tree-slide-stop))
+  :general
+  (wal/general org-mode-map "," '(org-tree-slide-mode :which-key "slideshow"))
   :bind (("<f7>" . org-tree-slide-mode)
          (:map org-tree-slide-mode-map
           ("n" . org-tree-slide-move-next-tree)
@@ -2740,11 +2855,13 @@ Once the installation is complete, re-run Emacs
 + [[https://github.com/emacs-lsp/dap-mode][dap-mode]]
 + [[https://github.com/magnars/dash.el][dash]]
 + [[https://github.com/emacs-dashboard/emacs-dashboard][dashboard]]
++ [[https://github.com/purcell/default-text-scale][default-text-scale]]
 + [[https://elpa.gnu.org/packages/delight.html][delight]]
 + [[https://github.com/dgutov/diff-hl][diff-hl]]
 + [[https://github.com/emacsmirror/diminish][diminish]]
 + [[https://github.com/gonewest818/dimmer.el][dimmer]]
 + [[https://github.com/Fuco1/dired-hacks/][dired-filter]]
++ [[https://github.com/purcell/diredfl][diredfl]]
 + [[https://github.com/Silex/docker.el][docker]]
 + [[https://github.com/seagle0128/doom-modeline][doom-modeline]]
 + [[https://github.com/rejeep/drag-stuff.el][drag-stuff]]
