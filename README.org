@@ -446,7 +446,7 @@ There's a third layer of key-bindings.
 The three =general= mappings perform useful but not
 foundational actions.
 
-Fittingly, all =major mode= toggle actions are invoked
+Fittingly, all =minor mode= toggle actions are invoked
 using the =wal/major-key= prefix.
 
 #+BEGIN_SRC emacs-lisp
@@ -1353,9 +1353,11 @@ I use FiraCode, this mode allows us to use ligatures.
     ;; use fira mode if it's the default font and the symbol font is installed
     :if (and (x-list-fonts "Fira Code Symbol") (string= "Fira Code" (face-attribute 'default :family)))
     :custom
-    (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
+    ;; ligatures you don't want
+    (fira-code-mode-disabled-ligatures '("[]" "x"))
     :hook prog-mode))
 
+;; we guard against font-related actions
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/fira-code)
     (wal/fira-code))
@@ -1371,7 +1373,7 @@ I use FiraCode, this mode allows us to use ligatures.
   :custom
   (flycheck-keymap-prefix (kbd "C-c q"))
   :general
-  (wal/major "q" '(flycheck-mode :which-key "toggle fylcheck"))
+  (wal/major "q" '(flycheck-mode :which-key "toggle flycheck"))
   :hook ((flycheck-mode . wal/use-eslint-from-node-modules)
          (flycheck-mode . wal/use-tslint-from-node-modules)))
 #+END_SRC
@@ -2612,6 +2614,8 @@ Use =org-tree-slide= for presentations.
 (use-package org-tree-slide
   :hook ((org-tree-slide-play . wal/tree-slide-play)
          (org-tree-slide-stop . wal/tree-slide-stop))
+  :general
+  (wal/general org-mode-map "," '(org-tree-slide-mode :which-key "slideshow"))
   :bind (("<f7>" . org-tree-slide-mode)
          (:map org-tree-slide-mode-map
           ("n" . org-tree-slide-move-next-tree)
