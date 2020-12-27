@@ -549,7 +549,8 @@ Otherwise the colors might clash.
 
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-visuals)
-  (wal/setup-visuals))
+  ;; function `wal/transparency` hasn't been untangeled yet
+  (add-hook 'after-init-hook 'wal/setup-visuals))
 #+END_SRC
 
 **** Font
@@ -1060,6 +1061,7 @@ Let's have a dash of board.
     ":whale: I propel myself forward on nothing but flukes")
   "The footer messages I can stand to see.")
 
+;; the issue here is that magit will keep re-creating the dashboard
 (defun wal/daemon-dash ()
   "For daemon mode run all functions."
   (dashboard-insert-startupify-lists)
@@ -1068,6 +1070,7 @@ Let's have a dash of board.
   (redisplay)
   (run-hooks 'dashboard-after-initialize-hook))
 
+;; see above
 (defun wal/dashboard-setup ()
   "Set up dashboard."
   (if (daemonp)
@@ -1094,9 +1097,8 @@ Let's have a dash of board.
   (dashboard-week-agenda                nil)
   (dashboard-agenda-time-string-format "%d/%m/%y")
   :config
-  (wal/dashboard-setup))
+  (dashboard-setup-startup-hook))
 #+END_SRC
-
 
 **** default-text-scale
 
