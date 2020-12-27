@@ -1060,6 +1060,20 @@ Let's have a dash of board.
     ":whale: I propel myself forward on nothing but flukes")
   "The footer messages I can stand to see.")
 
+(defun wal/daemon-dash ()
+  "For daemon mode run all functions."
+  (dashboard-insert-startupify-lists)
+  (switch-to-buffer dashboard-buffer-name)
+  (goto-char (point-min))
+  (redisplay)
+  (run-hooks 'dashboard-after-initialize-hook))
+
+(defun wal/dashboard-setup ()
+  "Set up dashboard."
+  (if (daemonp)
+      (add-hook 'server-after-make-frame-hook 'wal/daemon-dash t)
+  (dashboard-setup-startup-hook)))
+
 (use-package dashboard
   :after page-break-lines
   :custom
@@ -1080,7 +1094,7 @@ Let's have a dash of board.
   (dashboard-week-agenda                nil)
   (dashboard-agenda-time-string-format "%d/%m/%y")
   :config
-  (dashboard-setup-startup-hook))
+  (wal/dashboard-setup))
 #+END_SRC
 
 **** default-text-scale
@@ -1361,7 +1375,7 @@ I use FiraCode, this mode allows us to use ligatures.
 
 ;; we guard against font-related actions
 (if (daemonp)
-    (add-hook 'server-after-make-frame-hook 'wal/fira-code)
+    (add-hook 'server-after-make-frame-hook 'wal/fira-code t)
     (wal/fira-code))
 #+END_SRC
 
