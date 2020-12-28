@@ -953,8 +953,9 @@ Counsel me this, Counselor.
   (wal/major "#" '(counsel-load-theme :wk "load theme"))
   (wal/major "$" '(counsel-command-history :wk "command history"))
   (wal/major "!" '(counsel-set-variable :wk "set variable"))
-  :bind (("M-x"    . counsel-M-x)
-         ("<menu>" . counsel-M-x))
+  :bind (("M-x"     . counsel-M-x)
+         ("<menu>"  . counsel-M-x)
+         ("C-x C-f" . counsel-find-file))
   :custom
   (counsel-linux-app-format-function #'counsel-linux-app-format-function-command-only)
   :config
@@ -1811,6 +1812,32 @@ Have some perspective, man.
 (add-hook 'kill-emacs-hook #'persp-state-save)
 #+END_SRC
 
+**** prescient
+
+Better short-term-memory for =ivy=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package prescient
+  :custom
+  (prescient-save-file (expand-file-name ".cache/prescient-persist" user-emacs-directory))
+  (prescient-filter-method '(literal initialism fuzzy))
+  :config
+  (prescient-persist-mode +1))
+
+(use-package ivy-prescient
+  :after (ivy counsel)
+  :custom
+  (prescient-sort-length-enable nil)
+  :config
+  (ivy-prescient-mode +1))
+
+(use-package company-prescient
+  :after company
+  :config
+  (company-prescient-mode +1))
+#+END_SRC
+
+
 **** prettier
 
 Prettify your ugly JavaScript.
@@ -1907,6 +1934,18 @@ String manipulation utility.
 (use-package s)
 #+END_SRC
 
+**** selectrum
+
+Alternative for ivy.
+Sunken cost thinking prevents a switch for now.
+
+#+BEGIN_SRC emacs-lisp
+(use-package selectrum
+  :disabled
+  :config
+  (selectrum-mode +1))
+#+END_SRC
+
 **** smartparens
 
 Create a pairs automatically.
@@ -1951,6 +1990,7 @@ Only used for sorting at the moment.
 
 #+BEGIN_SRC emacs-lisp
 (use-package smex
+  :disabled
   :defer 1
   ;; :bind ("M-x" . smex)
   :after counsel)
