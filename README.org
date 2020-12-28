@@ -31,11 +31,28 @@ here are the necessary steps:
 
 + Install Emacs if you haven't[fn:2]
 + Clone this repository into your =user-emacs-directory=[fn:3]
-+ Copy the config file included in this repo by running =cp ~/.emacs.d/emacs-config/.emacs.example ~/.emacs=
++ Copy the config file included in this repo by running =cp ~/.emacs.d/emacs-config/templates/.emacs ~=
 + Close and re-run Emacs which should download and install (almost[fn:4]) all packages
 
 If you did not init this repo in your =user-emacs-directory= using the default name,
 you will need to adapt the variable =wal/emacs-config-default-path= in the example config you just copied.
+
+**** Daemon Mode
+
+This config is /daemon-ready/, i.e. if you start Emacs with the =--daemon= flag,
+the config will make sure that any customization that requires a frame
+will only be loaded once a frame was created.
+
+A =systemd= service config can be found in the =/templates= directory to
+get you started:
+
++ run =mkdir -p ~/.config/systemd/user=
++ run =cp ~/.emacs.d/emacs-config/templates/emacs.service ~/.config/systemd/user=
++ adapt the =emacs.service= file to point to the correct path
++ run =systemctl --user enable emacs=
+
+Now an Emacs daemon will start on start-up. To connect you can use, for example,
+=emacsclient -c -h=, which I alias to =ec=.
 
 ** Config
 
