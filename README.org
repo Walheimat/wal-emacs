@@ -81,16 +81,6 @@ Set some personal info.[fn:6]
 
 Set up Emacs, package manager and packages.
 
-**** Folders
-
-Make sure the cache folder exists.
-We store bookmarks and perspectives here.
-
-#+BEGIN_SRC emacs-lisp
-(unless (file-directory-p (expand-file-name ".cache" user-emacs-directory))
-  (make-directory (expand-file-name ".cache" user-emacs-directory)))
-#+END_SRC
-
 **** Start-Up
 
 Customize start-up.
@@ -123,7 +113,7 @@ This was cribbed from [[https://www.john2x.com/emacs.html][john2x's config]].
 (setq initial-scratch-message ";; Howdy, stranger ...")
 
 (defconst wal/scratch-persist-file
-  (expand-file-name ".cache/scratch-persist" user-emacs-directory)
+  (expand-file-name "scratch-persist" user-emacs-directory)
   "The file to persist the *scratch* buffer's content in.")
 
 (defun wal/persist-scratch ()
@@ -169,7 +159,12 @@ We'll be getting most (if not all) packages from the prior.
 (package-initialize)
 #+END_SRC
 
-**** Lisp extensions
+**** Dependencies
+
+We manage our packages with =use-package=, before we can use it,
+we have to install it and a few other packages the hard way.
+
+***** Lisp Extensions
 
 We need dash.
 
@@ -183,12 +178,7 @@ We need dash.
 (require 'dash)
 #+END_SRC
 
-**** Dependencies
-
-We manage our packages with =use-package=, before we can use it,
-we have to install it and a few other packages the hard way.
-
-***** Other packages
+***** Other Packages
 
 Now we can install the other dependencies.
 
@@ -225,6 +215,44 @@ Now we can install the other dependencies.
    (wal/init--install-packages)))
 #+END_SRC
 
+**** Folders
+
+Make sure that all folders exists.
+
++ a cache folder to store bookmarks, perspectives, prescience et al.
++ a folder for site lisp
++ a default folder for org files.
+
+#+BEGIN_SRC emacs-lisp
+(defconst wal/cache-folder
+  (expand-file-name ".cache" user-emacs-directory)
+  "The name of the cache folder.")
+
+(defconst wal/site-lisp-directory
+  (expand-file-name "site-lisp" user-emacs-directory)
+  "Directory of site lisp packages.")
+
+;; change if necessary
+(defconst wal/org-directory (expand-file-name "org" "~")
+  "My default directory for org files.")
+
+;; I put all of my tasks into a subfolder `tasks` inside the org directory
+(defconst wal/agenda-tasks-directory
+  (expand-file-name "tasks" wal/org-directory)
+  "One-size-fits-all directory for agenda tasks.")
+
+;; create all dirs
+(--each
+    `(
+      ,wal/agenda-tasks-directory
+      ,wal/org-directory
+      ,wal/site-lisp-directory
+      ,wal/cache-folder
+      )
+  (unless (file-directory-p it)
+    (make-directory it)))
+#+END_SRC
+
 **** Site-Lisp
 
 Add =site-lisp= directory and sub-directories to load path.
@@ -234,22 +262,14 @@ If the directory doesn't exist, it will get created.
 Adapt if necessary.
 
 #+BEGIN_SRC emacs-lisp
-;; create the dir if it does not exist to avoid error
-(unless (file-directory-p (expand-file-name "site-lisp" user-emacs-directory))
-  (make-directory (expand-file-name "site-lisp" user-emacs-directory)))
-
-(defconst wal/site-lisp-dir
-  (expand-file-name "site-lisp" user-emacs-directory)
-  "Directory of site lisp packages.")
-
-(add-to-list 'load-path wal/site-lisp-dir)
+(add-to-list 'load-path wal/site-lisp-directory)
 
 ;; allow us to load from site-lisp package
 (add-to-list 'custom-theme-load-path
-	     (expand-file-name "emacs-site-lisp" wal/site-lisp-dir))
+	     (expand-file-name "emacs-site-lisp" wal/site-lisp-directory))
 
 ;; add subdirs as well
-(dolist (project (directory-files wal/site-lisp-dir t "\\w+"))
+(dolist (project (directory-files wal/site-lisp-directory t "\\w+"))
   (when (file-directory-p project)
     (add-to-list 'load-path project)))
 #+END_SRC
@@ -279,7 +299,7 @@ I used key-chords for a few, common actions but prefer using hyper key now.
 
 Configure built-in settings.
 
-**** Saving and backups
+**** Saving and Backups
 
 Don't clutter up workspaces.
 
@@ -495,7 +515,7 @@ I re-bound my =<CAPS>= (caps-lock) key to =Hyper_L= to use these
 hyper bindings.
 
 If you use Xorg Display Server,
-you can do this by editing your =/usr/share/X11/xkb/symbols/pc= file like so:
+you can do this by editing[fn:7] your =/usr/share/X11/xkb/symbols/pc= file like so:
 
 #+BEGIN_SRC
 ...
@@ -540,10 +560,11 @@ Otherwise the colors might clash.
 
 #+BEGIN_SRC emacs-lisp
 ;; two themes and a switch
-(defconst wal/primary-emacs-theme 'kaolin-aurora
+(defvar wal/primary-emacs-theme 'kaolin-valley
   "The quote-unquote default emacs theme.")
 
-(defconst wal/secondary-emacs-theme 'kaolin-valley-light
+;; use `setq` in your .emacs to switch
+(defvar wal/secondary-emacs-theme 'kaolin-valley-light
   "The non-default emacs theme.")
 
 (defvar wal/active-theme wal/primary-emacs-theme
@@ -572,7 +593,7 @@ Otherwise the colors might clash.
   (add-hook 'after-init-hook 'wal/setup-visuals))
 #+END_SRC
 
-**** Font
+**** Fonts
 
 Prefer FiraCode (-> mononoki -> Liberation -> DejaVu).
 
@@ -737,7 +758,7 @@ Check for custom arguments.
     
 What follows is a list of MELPA packages that make Emacs even more awesome.
 
-If you wish to know more about any of them, check out the list[fn:7] of repositories
+If you wish to know more about any of them, check out the list[fn:8] of repositories
 at the end of this readme/configuration or the [[https://github.com/emacs-tw/awesome-emacs][awesome-emacs]] project.
 
 Many packages bind keys.
@@ -897,7 +918,7 @@ Bookmarks are useful. I don't remember where I was. _Who are you?!_
   (setq-default bm-buffer-persistence t)
   :custom
   (bm-restore-repository-on-load t)
-  (bm-repository-file            (expand-file-name ".cache/bm-persist" user-emacs-directory))
+  (bm-repository-file            (expand-file-name "bm-persist" wal/cache-folder))
   (bm-annotate-on-create         t)
   (bm-highlight-style            'bm-highlight-only-fringe)
   (bm-cycle-all-buffers          t)
@@ -982,9 +1003,12 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
 **** ctrlf
 
 Replacement for =isearch=.
+Important command is =C-o c= to change search style.
 
 #+BEGIN_SRC emacs-lisp
 (use-package ctrlf
+  :custom
+  (ctrlf-auto-recenter t)
   :config
   (ctrlf-mode +1))
 #+END_SRC
@@ -1091,6 +1115,10 @@ Let's have a dash of board.
     ":whale: I propel myself forward on nothing but flukes")
   "The footer messages I can stand to see.")
 
+;; ignore all files that were loaded on start-up
+(defconst wal/recentf-exclude
+  (append (directory-files wal/agenda-tasks-directory t "org$") '("bookmarks$" "\\.emacs$")))
+
 ;; the issue here is that magit will keep re-creating the dashboard
 (defun wal/daemon-dash ()
   "For daemon mode run all functions."
@@ -1126,7 +1154,9 @@ Let's have a dash of board.
   (dashboard-set-init-info              t)
   (dashboard-week-agenda                nil)
   (dashboard-agenda-time-string-format "%d/%m/%y")
+  
   :config
+  (setq recentf-exclude wal/recentf-exclude)
   (dashboard-setup-startup-hook))
 #+END_SRC
 
@@ -1695,7 +1725,7 @@ Prefer =capf=, bigger delay.
 
 Configure or register language servers.
 
-You will have to install them yourself.[fn:8]
+You will have to install them yourself.[fn:9]
 
 #+BEGIN_SRC emacs-lisp
 ;;; elixir
@@ -1807,7 +1837,7 @@ Have some perspective, man.
   :custom
   (persp-modestring-dividers '("(" ")" "/"))
   (persp-initial-frame-name  wal/default-perspective)
-  (persp-state-default-file  (expand-file-name ".cache/persp-persist" user-emacs-directory))
+  (persp-state-default-file  (expand-file-name "persp-persist" wal/cache-folder))
   (persp-mode-prefix-key     (kbd "C-c i"))
   :config
   (persp-mode))
@@ -1829,7 +1859,7 @@ Better short-term-memory for =ivy=.
 #+BEGIN_SRC emacs-lisp
 (use-package prescient
   :custom
-  (prescient-save-file (expand-file-name ".cache/prescient-persist" user-emacs-directory))
+  (prescient-save-file (expand-file-name "prescient-persist" wal/cache-folder))
   (prescient-filter-method '(literal initialism fuzzy))
   :config
   (prescient-persist-mode +1))
@@ -1846,7 +1876,6 @@ Better short-term-memory for =ivy=.
   :config
   (company-prescient-mode +1))
 #+END_SRC
-
 
 **** prettier
 
@@ -2112,7 +2141,7 @@ visible" is nice, so let's show some _dirs_.
           treemacs-indentation-string            " ⁝ "
           treemacs-is-never-other-window         t
 	  treemacs-no-delete-other-windows       nil
-          treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+          treemacs-persist-file                  (expand-file-name "treemacs-persist" wal/cache-folder)
           treemacs-show-hidden-files             t
           treemacs-file-event-delay              1000)
 
@@ -2475,13 +2504,6 @@ state =CANCELLED=.
 (use-package org-bullets
   :hook (org-mode . (lambda() (org-bullets-mode t))))
 
-;; change if necessary
-(defconst wal/org-directory (expand-file-name "org" "~")
-  "My default directory for org files.")
-
-(unless (file-directory-p wal/org-directory)
-  (make-directory wal/org-directory))
-
 (defun wal/org-mode ()
   "Life shouldn't be a drag in org-mode."
   (message "Organize! Seize the means of production!")
@@ -2600,14 +2622,6 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
 
 ;; we hide all @-tags
 (setq org-agenda-hide-tags-regexp "@")
-
-;; I put all of my tasks into a subfolder `tasks` inside the org directory
-(defconst wal/agenda-tasks-directory
-  (expand-file-name "tasks" org-directory)
-  "One-size-fits-all directory for agenda tasks.")
-
-(unless (file-directory-p wal/agenda-tasks-directory)
-  (make-directory wal/agenda-tasks-directory))
 
 (setq org-agenda-files `(,wal/agenda-tasks-directory))
 #+END_SRC
@@ -2887,7 +2901,10 @@ Once the installation is complete, re-run Emacs
 
 [fn:6] Send me an email, why don't you?
 
-[fn:7] Repositories:
+[fn:7] Be careful! If you make a mistake you could render your
+keyboard unuseable.
+
+[fn:8] Repositories:
 + [[https://github.com/abo-abo/ace-window][ace-window]]
 + [[https://github.com/codesuki/add-node-modules-path][add-node-modules-path]]
 + [[https://github.com/Wilfred/ag.el][ag]]
@@ -2955,6 +2972,7 @@ Once the installation is complete, re-run Emacs
 + [[https://github.com/takaxp/org-tree-slide][org-tree-slide]]
 + [[https://github.com/gregsexton/origami.el][origami]]
 + [[https://github.com/nex3/perspective-el][perspective]]
++ [[https://github.com/raxod502/prescient.el][prescient]]
 + [[https://github.com/prettier/prettier-emacs/tree/e9b73e81d3e1642aec682195f127a42dfb0b5774][prettier-js]]
 + [[https://github.com/bbatsov/projectile][projectile]]
 + [[https://github.com/Fanael/rainbow-delimiters][rainbow-delimiters]]
@@ -2983,7 +3001,7 @@ Once the installation is complete, re-run Emacs
 + [[https://github.com/joaotavora/yasnippet][yasnippet]]
 + [[https://www.emacswiki.org/emacs/ZoneMode][zone]]
 
-[fn:8] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+[fn:9] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
 
 Currently I only need three:
 + [[https://github.com/elixir-lsp/elixir-ls][Elixir]]
