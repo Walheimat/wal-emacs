@@ -102,37 +102,6 @@ Customize start-up.
 (load custom-file)
 #+END_SRC
 
-***** Persistent *scratch*
-
-Let's keep the scratch contents.
-
-This was cribbed from [[https://www.john2x.com/emacs.html][john2x's config]].
-
-#+BEGIN_SRC emacs-lisp
-;; empty scratch message
-(setq initial-scratch-message ";; Howdy, stranger ...")
-
-(defconst wal/scratch-persist-file
-  (expand-file-name "scratch-persist" user-emacs-directory)
-  "The file to persist the *scratch* buffer's content in.")
-
-(defun wal/persist-scratch ()
-  "Persist contents of *scratch* buffer."
-  (interactive)
-  (with-current-buffer (get-buffer-create "*scratch*")
-    (write-region (point-min) (point-max) wal/scratch-persist-file)))
-
-(defun wal/rehydrate-scratch ()
-  "Re-hydrate scratch buffer (if persisted)."
-  (if (file-exists-p wal/scratch-persist-file)
-      (with-current-buffer (get-buffer "*scratch*")
-        (delete-region (point-min) (point-max))
-        (insert-file-contents wal/scratch-persist-file))))
-
-(add-hook 'after-init-hook #'wal/rehydrate-scratch)
-(add-hook 'kill-emacs-hook #'wal/persist-scratch)
-#+END_SRC
-
 **** Package Archives
 
 Add MELPA and org-mode to our package archives.
@@ -253,7 +222,38 @@ Make sure that all folders exists.
     (make-directory it)))
 #+END_SRC
 
-**** Site-Lisp
+***** Persistent *scratch*
+
+Let's keep the scratch contents.
+
+This was cribbed from [[https://www.john2x.com/emacs.html][john2x's config]].
+
+#+BEGIN_SRC emacs-lisp
+;; empty scratch message
+(setq initial-scratch-message ";; Howdy, stranger ...")
+
+(defconst wal/scratch-persist-file
+  (expand-file-name "scratch-persist" wal/cache-folder)
+  "The file to persist the *scratch* buffer's content in.")
+
+(defun wal/persist-scratch ()
+  "Persist contents of *scratch* buffer."
+  (interactive)
+  (with-current-buffer (get-buffer-create "*scratch*")
+    (write-region (point-min) (point-max) wal/scratch-persist-file)))
+
+(defun wal/rehydrate-scratch ()
+  "Re-hydrate scratch buffer (if persisted)."
+  (if (file-exists-p wal/scratch-persist-file)
+      (with-current-buffer (get-buffer "*scratch*")
+        (delete-region (point-min) (point-max))
+        (insert-file-contents wal/scratch-persist-file))))
+
+(add-hook 'after-init-hook #'wal/rehydrate-scratch)
+(add-hook 'kill-emacs-hook #'wal/persist-scratch)
+#+END_SRC
+
+***** Site-Lisp
 
 Add =site-lisp= directory and sub-directories to load path.
 I put non-MELPA packages here.
