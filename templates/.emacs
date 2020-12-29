@@ -16,4 +16,8 @@
   (org-babel-load-file
    (expand-file-name "README.org" wal/emacs-config-default-path)))
 
+;; just an example: changing primary and secondary themes
+;; (setq wal/primary-emacs-theme   'doom-dracula
+;;       wal/secondary-emacs-theme 'doom-opera-light)
+
 ;;; .emacs ends here
