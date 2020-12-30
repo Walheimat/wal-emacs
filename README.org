@@ -210,9 +210,14 @@ Make sure that all folders exists.
   (expand-file-name "tasks" wal/org-directory)
   "One-size-fits-all directory for agenda tasks.")
 
+(defconst wal/org-roam-directory
+  (expand-file-name "zettelkasten" wal/org-directory)
+  "Directory for our note-taking.")
+
 ;; create all dirs
 (--each
     `(
+      ,wal/org-roam-directory
       ,wal/agenda-tasks-directory
       ,wal/org-directory
       ,wal/site-lisp-directory
@@ -1401,8 +1406,8 @@ This requires Emacs to have been compiled with =--with-xml2= flag.
 #+BEGIN_SRC emacs-lisp
 (use-package eww
   :ensure nil
-  :bind (("C-c n" . eww)
-         ("H-n"   . eww)))
+  :general
+  (wal/general "w" '(eww :wk "www the web")))
 #+END_SRC
 
 **** expand-region
@@ -2691,6 +2696,54 @@ Use =org-tree-slide= for presentations.
 	  ("v" . wal/tree-slide-toggle-visibility))))
 #+END_SRC
 
+***** Zettelkasten
+
+Let's give =org-roam= a try.
+
+You will need to install =sqlite3= and =graphviz= manually.
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/org-roam-dailies-directory "tagebuch/"
+  "The directory for dailies.")
+
+;; has to be created manually for now
+(defvar wal/org-roam-index-file "verzeichnis.org"
+  "The name of the index file.")
+
+(use-package org-roam
+  :if (executable-find "sqlite3")
+  :hook (after-init . org-roam-mode)
+  :custom
+  (org-roam-directory wal/org-roam-directory)
+  (org-roam-index-file wal/org-roam-index-file)
+  (org-roam-dailies-directory wal/org-roam-dailies-directory)
+  (org-roam-completion-system 'ivy)
+  :bind (("H-n" . org-roam-jump-to-index)
+         (:map org-roam-mode-map
+              (("C-c n l" . org-roam)
+               ("C-c n f" . org-roam-find-file)
+               ("C-c n g" . org-roam-graph)))
+         (:map org-mode-map
+              (("C-c n i" . org-roam-insert)
+               ("C-c n I" . org-roam-insert-immediate))))
+  :config
+  (let* ((fname (concat wal/org-roam-dailies-directory "%<%Y-%m-%d>")))
+    (setq org-roam-dailies-capture-templates
+        `(("w" "work" entry
+           #'org-roam-capture--get-point
+           "* %?"
+           :file-name ,fname
+           :head "#+title: %<%Y-%m-%d>\n"
+           :olp ("Work notes"))
+
+          ("j" "journal" entry
+           #'org-roam-capture--get-point
+           "* %?"
+           :file-name ,fname
+           :head "#+title: %<%Y-%m-%d>\n"
+           :olp ("Journal"))))))
+#+END_SRC
+
 **** python-mode
 
 Enable =flycheck=.
@@ -2973,6 +3026,7 @@ keyboard unuseable.
 + [[https://github.com/magnars/multiple-cursors.el][multiple-cursors]]
 + [[https://github.com/alezost/mwim.el][mwim]]
 + [[https://orgmode.org/][org-mode]]
++ [[https://github.com/org-roam/org-roam][org-roam]]
 + [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]]
 + [[https://github.com/takaxp/org-tree-slide][org-tree-slide]]
 + [[https://github.com/gregsexton/origami.el][origami]]
