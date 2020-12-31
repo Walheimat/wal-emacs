@@ -612,29 +612,37 @@ Prefer FiraCode (-> mononoki -> Liberation -> DejaVu).
 To get support for ligatures, install the symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/fixed-fonts
+   '("Fira Code" "mononoki" "Liberation Mono" "DejaVu Sans Mono")
+   "Fixed fonts ordered by preference.")
+
+(defvar wal/variable-fonts
+  '("Roboto" "Ubuntu" "San Francisco" "Arial")
+  "Variable fonts ordered by preference.")
+
 (defconst wal/default-font-size 120)
 (defconst wal/default-variable-font-size 160)
 
-(defun wal/font-candidate (&rest fonts)
+(defun wal/font-candidate (fonts)
   "Return the first available font from a list of FONTS."
   (--first (find-font (font-spec :name it)) fonts))
 
 (defun wal/setup-fonts ()
   "Setup fonts."
   (set-face-attribute 'default nil
-    :font (wal/font-candidate '"Fira Code" "mononoki" "Liberation Mono" "DejaVu Sans Mono")
+    :font (wal/font-candidate wal/fixed-fonts)
     :height wal/default-font-size)
 
   ;; variable pitch face
   (set-face-attribute 'variable-pitch nil
-    :font (wal/font-candidate '"Roboto" "Ubuntu" "San Francisco" "Arial") ;; you might want to change this one
+    :font (wal/font-candidate wal/variable-fonts) ;; you might want to change this one
     :height wal/default-variable-font-size
     :weight 'regular))
 
 ;; fonts can't be initialized thru daemon
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-fonts) 
-  (wal/setup-fonts)) 
+  (add-hook 'after-init-hook 'wal/setup-fonts)) 
 #+END_SRC
 
 **** Zoning
@@ -1461,7 +1469,7 @@ I use FiraCode, this mode allows us to use ligatures.
 ;; we guard against font-related actions
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/fira-code t)
-    (wal/fira-code))
+  (add-hook 'after-init-hook 'wal/fira-code))
 #+END_SRC
 
 **** flycheck
