@@ -722,6 +722,11 @@ ask if it should get created."
       (make-directory parent-directory t))))
 
 (add-to-list 'find-file-not-found-functions #'wal/create-non-existent-directory)
+
+;; don't care about `.` and `..`
+(defun wal/directory-files (directory)
+  "Get all directory files except for current and parent directories."
+  (nthcdr 2 (directory-files directory t)))
 #+END_SRC
 
 ***** Buffers
@@ -1130,7 +1135,11 @@ Let's have a dash of board.
 
 ;; ignore all files that were loaded on start-up
 (defconst wal/recentf-exclude
-  (append (directory-files wal/agenda-tasks-directory t "org$") '("bookmarks$" "\\.emacs$")))
+  (append (wal/directory-files wal/agenda-tasks-directory)
+          (wal/directory-files wal/org-roam-directory)
+          (wal/directory-files wal/cache-folder)
+	  (wal/directory-files user-emacs-directory))
+  "Files that should not be considered recent files.")
 
 ;; the issue here is that magit will keep re-creating the dashboard
 (defun wal/daemon-dash ()
