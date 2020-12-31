@@ -1727,6 +1727,7 @@ Prefer =capf=, bigger delay.
   (lsp-completion-provider :capf)
   (lsp-prefer-capf         t)
   (lsp-idle-delay          1.5)
+  (lsp-keymap-prefix "C-c l")
   :config
   ;; ignore elixir build and dependency folders
   (add-to-list 'lsp-file-watch-ignored "[/\\\\]_build$")
@@ -1782,6 +1783,8 @@ Make the bell visual.
 
 #+BEGIN_SRC emacs-lisp
 (use-package mode-line-bell
+  :custom
+  (mode-line-bell-flash-time 0.1)
   :config
   (mode-line-bell-mode))
 #+END_SRC
@@ -1844,7 +1847,7 @@ Have some perspective, man.
   :custom-face
   (persp-selected-face ((t (:weight bold :foreground "burlywood"))))
   :general
-  (wal/general "i" '(persp-kill :wk "set buffer to perspective"))
+  (wal/general "i" '(persp-kill :wk "change perspective name"))
   (wal/colonel "i" '(persp-add-buffer :wk "add buffer to perspective"))
   (wal/major "i" '(persp-remove-buffer :wk "remove buffer from perspective"))
   :bind ("H-i" . persp-switch)
@@ -2562,8 +2565,8 @@ state =CANCELLED=.
       org-clock-into-drawer                  1)
 
 (require 'org-install)
-(setq org-modules                     '(org-habit org-info)
-      org-habit-graph-column          105
+(add-to-list 'org-modules 'org-habit)
+(setq org-habit-graph-column          105
       ;; this doesn't seem to affect anything
       org-archive-subtree-save-file-p t)
 
