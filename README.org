@@ -2717,6 +2717,11 @@ You will need to install =sqlite3= and =graphviz= manually.
 (defvar wal/org-roam-index-file "verzeichnis.org"
   "The name of the index file.")
 
+;; not sure why we need to do it this way
+(let ((index-file (expand-file-name wal/org-roam-index-file wal/org-roam-directory)))
+  (unless (file-exists-p index-file)
+    (write-region "* Zettelkasten" nil index-file)))
+
 (use-package org-roam
   :if (executable-find "sqlite3")
   :hook (after-init . org-roam-mode)
