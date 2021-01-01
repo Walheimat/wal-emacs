@@ -2530,6 +2530,8 @@ We also make the sequence from =TODO= to =DONE= more granular and add another =D
 state =CANCELLED=.
 
 #+BEGIN_SRC emacs-lisp
+(require 'org-install)
+
 (use-package org-bullets
   :hook (org-mode . (lambda() (org-bullets-mode t))))
 
@@ -2548,6 +2550,9 @@ state =CANCELLED=.
   :init
   (add-to-list 'org-global-properties
                '("Effort_ALL". "30m 1h 2h 4h 6h 1d 2d"))
+  (add-to-list 'org-modules 'org-habit)
+  :config
+  (org-load-modules-maybe t)
   :custom
   (org-ellipsis                   "↷")
   (org-log-done                   t)
@@ -2555,49 +2560,16 @@ state =CANCELLED=.
   (org-startup-folded             'overview)
   (org-directory                  wal/org-directory)
   (org-default-notes-file         (concat org-directory "/notes.org"))
+  (org-agenda-files               `(,wal/agenda-tasks-directory))
   (org-startup-with-inline-images t)
   ;; be sure to add archive tag with org-toggle-archive-tag
   (org-archive-location           "::* Archived")
+  (org-log-done                   'time)
+  ;; Too many clock entries clutter up a heading
+  (org-log-into-drawer            t)
   (org-todo-keywords
-	'((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)"))))
-
-(setq org-log-done                           'time
-      org-clock-idle-time                    nil
-      org-clock-continuously                 nil
-      org-clock-persist                      t
-      org-clock-in-switch-to-state           "IN PROGRESS"
-      org-clock-in-resume                    nil
-      org-clock-report-include-clocking-task t
-      org-clock-out-remove-zero-time-clocks  t
-      ;; Too many clock entries clutter up a heading
-      org-log-into-drawer                    t
-      org-clock-into-drawer                  1)
-
-(require 'org-install)
-(add-to-list 'org-modules 'org-habit)
-(setq org-habit-graph-column          105
-      ;; this doesn't seem to affect anything
-      org-archive-subtree-save-file-p t)
-
-(org-load-modules-maybe t)
-
-(defun wal/org-make-habit()
-  "Make it a habit, dammi!"
-  (interactive)
-  (org-set-property "STYLE" "habit"))
-
-(setq org-use-speed-commands t
-      org-speed-commands-user
-      '(("w" widen)
-        ("n" org-narrow-to-subtree)
-	;; defaults are I and O
-	("i" org-clock-in)
-	("o" org-clock-out)
-        ("a" org-archive-subtree)
-        ("r" org-clock-report)))
-
-;; tags differentiated by # and @
-(setq org-tag-alist
+	'((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
+  (org-tag-alist
       '(;; depth
 	("@immersive" . ?i)
 	("@process"   . ?p)
@@ -2618,7 +2590,42 @@ state =CANCELLED=.
 	("@dev"       . ?d)
 	("@bla"       . ?b)
 	("@edu"       . ?e)
-	))
+	)))
+
+(use-package org-clock
+  :ensure nil
+  :custom
+  (org-clock-idle-time                    10)
+  (org-clock-continuously                 t)
+  (org-clock-persist                      t)
+  (org-clock-in-switch-to-state           "IN PROGRESS")
+  (org-clock-in-resume                    t)
+  (org-clock-report-include-clocking-task t)
+  (org-clock-out-remove-zero-time-clocks  t)
+  (org-clock-into-drawer                  t))
+
+(use-package org-habit
+  :ensure nil
+  :custom
+  (org-habit-graph-column 105))
+
+(defun wal/org-make-habit()
+  "Make it a habit, dammi!"
+  (interactive)
+  (org-set-property "STYLE" "habit"))
+
+(use-package org-keys
+  :ensure nil
+  :custom
+  (org-use-speed-commands t)
+  (org-speed-commands-user
+      '(("w" widen)
+        ("n" org-narrow-to-subtree)
+	;; defaults are I and O
+	("i" org-clock-in)
+	("o" org-clock-out)
+        ("a" org-archive-subtree)
+        ("r" org-clock-report))))
 #+END_SRC
 
 ***** Agendas
@@ -2628,6 +2635,12 @@ Everything concerning agendas.
 This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/michael.org][mwfogleman]]'s Emacs config.
 
 #+BEGIN_SRC emacs-lisp
+(use-package org-agenda
+  :ensure nil
+  :custom
+  ;; we hide all @-tags
+  (org-agenda-hide-tags-regexp "@"))
+
 (use-package org-super-agenda
   :custom
   (org-super-agenda-groups
@@ -2648,11 +2661,6 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
   (wal/general org-agenda-keymap "w" '(org-agenda-write :wk "write agenda"))
   :bind (("C-c a" . org-agenda)
          ("H-a"   . org-agenda)))
-
-;; we hide all @-tags
-(setq org-agenda-hide-tags-regexp "@")
-
-(setq org-agenda-files `(,wal/agenda-tasks-directory))
 #+END_SRC
 
 ***** Presentations
