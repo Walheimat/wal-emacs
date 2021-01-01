@@ -312,16 +312,16 @@ Don't clutter up workspaces.
 ;; save places and do so in a file
 (setq save-place-file (expand-file-name ".places" user-emacs-directory))
 
-;; store backups in backups folder.
+;; store backups in backups folder
 (setq backup-directory-alist
       `(("." . ,(expand-file-name
 		 (concat user-emacs-directory "backups")))))
 
-;; store autosaves in temp folder.
+;; store autosaves in temp folder
 (setq auto-save-file-name-transforms
       `((".*" ,temporary-file-directory t)))
 
-;; we don't want this to mess with git.
+;; we don't want this to mess with git
 (setq create-lockfiles nil)
 #+END_SRC
 
@@ -369,9 +369,13 @@ Easy on the eyes.
 Make things snappier.
 
 #+BEGIN_SRC emacs-lisp
+(defconst wal/one-mb
+  (* 1024 1024)
+  "One megabyte.")
+
 (setq mouse-yank-at-point       t
       show-paren-delay          0.0
-      read-process-output-max   (* 1024 1024) ;; 1mb
+      read-process-output-max   wal/one-mb
       sentence-end-double-space nil
       echo-keystrokes           0.1)
 #+END_SRC
@@ -382,9 +386,11 @@ I (generally) prefer tabs over spaces.
 To make this work, we need to tweak a few things.
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/tab-width
-  4
+(defvar wal/tab-width 4
   "A tab width 4 spaces wide.")
+
+(defvar wal/prefer-tabs t
+  "Whether tabs are used for indentation.")
 
 (defun wal/disable-tabs ()
   "Disable indent-tabs-mode."
@@ -409,7 +415,8 @@ To make this work, we need to tweak a few things.
                   electric-indent-inhibit t)
     (setq backward-delete-char-untabify-method 'hungry)))
 
-(add-hook 'after-init-hook 'wal/set-tab-defaults)
+(when wal/prefer-tabs
+    (add-hook 'after-init-hook 'wal/set-tab-defaults))
 #+END_SRC
 
 ***** Dir Local Indentation
@@ -558,8 +565,10 @@ Most bindings are declared in the [[*Packages][packages]] section.
   "The path to this config file.")
 
 (global-set-key
-  (kbd "C-x C-c")
-  (lambda () (interactive)(switch-to-buffer (find-file-noselect wal/readme-config))))
+ (kbd "C-x C-c")
+ (lambda ()
+   (interactive)
+   (switch-to-buffer (find-file-noselect wal/readme-config))))
 #+END_SRC
 
 **** Theme
@@ -588,7 +597,7 @@ Otherwise the colors might clash.
   (cond ((or (equal wal/active-theme wal/primary-emacs-theme) (equal selection 'secondary))  
          (load-theme wal/secondary-emacs-theme t)
          (setq wal/active-theme wal/secondary-emacs-theme))
-        ((or (equal wal/active-theme wal/secondary-emacs-theme) (equal selection 'secondary))
+        ((or (equal wal/active-theme wal/secondary-emacs-theme) (equal selection 'primary))
          (load-theme wal/primary-emacs-theme t)
          (setq wal/active-theme wal/primary-emacs-theme))))
 
@@ -910,8 +919,8 @@ Jumping to (visible) lines and chars is fun if you are too lazy to use your mous
 (use-package avy
   :general
   (wal/general "v" '(avy-goto-whitespace-end :wk "go to whitespace"))
-  (wal/colonel "v" '(avy-kill-whole-line :wk "kill specific line"))
-  (wal/major   "v" '(avy-copy-line :wk "copy line and paste above"))
+  (wal/colonel "v" '(avy-kill-whole-line     :wk "kill specific line"))
+  (wal/major   "v" '(avy-copy-line           :wk "copy line and paste above"))
   :bind (("C-c v v" . avy-goto-line)
          ("C-c v c" . avy-goto-char)
 	 ("H-v"     . avy-goto-line)))
@@ -995,9 +1004,9 @@ Counsel me this, Counselor.
 (use-package counsel
   :general
   ;; still need to find a scheme for non-package prefixes
-  (wal/major "#" '(counsel-load-theme :wk "load theme"))
+  (wal/major "#" '(counsel-load-theme      :wk "load theme"))
   (wal/major "$" '(counsel-command-history :wk "command history"))
-  (wal/major "!" '(counsel-set-variable :wk "set variable"))
+  (wal/major "!" '(counsel-set-variable    :wk "set variable"))
   :bind (("M-x"     . counsel-M-x)
          ("<menu>"  . counsel-M-x)
          ("C-x C-f" . counsel-find-file))
@@ -1046,7 +1055,7 @@ Debugging using VSCode's DAP.
   :delight " dap"
   :custom
   (lsp-enable-dap-auto-configure nil)
-  (dap-python-executable "python3")
+  (dap-python-executable         "python3")
   ;; (dap-auto-configure-features '(sessions locals breakpoints))
   :config
   (dap-ui-mode 1)
@@ -1250,8 +1259,8 @@ Make dimmed frames a bit dimmer.
 (use-package dimmer
   :diminish
   :custom
-  (dimmer-fraction       0.3)
-  (dimmer-adjustmentmode :both)  
+  (dimmer-fraction        0.3)
+  (dimmer-adjustment-mode :both)  
   :config
   (dimmer-configure-company-box)
   (dimmer-configure-hydra)
@@ -1306,7 +1315,7 @@ I use Docker a lot, don't always have to use the command line.
   :custom
   (docker-container-default-sort-key '("Names"))
   :general
-  (wal/general "k" '(docker-compose-up :wk "docker-compose up"))
+  (wal/general "k" '(docker-compose-up   :wk "docker-compose up"))
   (wal/colonel "k" '(docker-compose-exec :wk "docker-compose exec"))
   (wal/major   "k" '(docker-compose-logs :wk "docker-compose logs"))
   :bind (("C-c k" . docker)
@@ -1407,7 +1416,7 @@ Set up =eshell=.
 (with-eval-after-load "esh-opt"
   (autoload 'epe-theme-lambda "eshell-prompt-extras")
   (setq eshell-highlight-prompt nil
-        eshell-prompt-function 'epe-theme-lambda))
+        eshell-prompt-function  'epe-theme-lambda))
 #+END_SRC
 
 **** evil-nerd-commenter
@@ -1558,9 +1567,10 @@ If you're too lazy to copy and paste.
 (use-package google-this
   :diminish
   :general
-  (wal/general "g" '(google-this :wk "google this"))
+  ;; there's no magit command we really need, so let's use `g`
+  (wal/general "g" '(google-this        :wk "google this"))
   (wal/colonel "g" '(google-this-region :wk "google selected region"))
-  (wal/major   "g" '(counsel-google :wk "google with counsel"))
+  (wal/major   "g" '(counsel-google     :wk "google with counsel"))
   :bind ("<f6>" . 'google-this-mode-submap)
   :config
   (google-this-mode 1))
@@ -1578,7 +1588,7 @@ Let's try (to be) =helpful=.
   :general
   (wal/general "h" '(counsel-describe-variable :wk "describe variable"))
   (wal/colonel "h" '(counsel-describe-function :wk "describe function"))
-  (wal/major "h" '(helpful-at-point :wk "helpful at point"))
+  (wal/major   "h" '(helpful-at-point          :wk "helpful at point"))
   :bind
   ("<f10>"                   . helpful-at-point)
   ([remap describe-function] . counsel-describe-function)
@@ -1862,9 +1872,9 @@ Have some perspective, man.
   :custom-face
   (persp-selected-face ((t (:weight bold :foreground "burlywood"))))
   :general
-  (wal/general "i" '(persp-kill :wk "change perspective name"))
-  (wal/colonel "i" '(persp-add-buffer :wk "add buffer to perspective"))
-  (wal/major "i" '(persp-remove-buffer :wk "remove buffer from perspective"))
+  (wal/general "i" '(persp-kill          :wk "change perspective name"))
+  (wal/colonel "i" '(persp-add-buffer    :wk "add buffer to perspective"))
+  (wal/major   "i" '(persp-remove-buffer :wk "remove buffer from perspective"))
   :bind ("H-i" . persp-switch)
   :custom
   (persp-modestring-dividers '("(" ")" "/"))
