@@ -438,7 +438,7 @@ but some =C-x <key>= mappings snuck in.
 If you want to see all personal keybindings, execute =describe-personal-keybindings=.
 
 + =C-c a <key>= opens today's (=t=), this week's (=w=) or my personal (=p=) agenda.
-+ =C-c c <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
++ =C-c x <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
 + =C-c c ;= (un-)comments lines.
 + =C-c f <key>= runs ag (=a= for generic, =p= for in-project search). _Requires ag_!
 + =C-c g= opens magit status.
@@ -446,13 +446,12 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =C-c j= dumb-jumps.
 + =C-c k= for docker actions.
 + =C-c m <key>= for multiple cursors.
-+ =C-c n= browses the web.
++ =C-c n= interacts with notes.
 + =C-c o <key>= toggle (=o=), go to next (=n=) or show (=s=) bookmarks.
 + =C-c p <key>= interacts with projects.
 + =C-c q <key>= interacts with fly-checking.
 + =C-c s= uses swiper to search.
 + =C-c t <key>= opens eshell (=e=), ansi-term (=a=) or vterm (=v=).
-+ =C-c u <key>= to debug (=u=) or edit template (=t=).
 + =C-c v <key>= jumps to char (=c=) or line (=v=) with avy.
 + =C-c w <key>= swaps (=s=) or deletes other windows (=d=).
 + =C-+= expands region.
@@ -468,8 +467,6 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =<f10>= to show help for thing at point.
 + =M-o= goes to the "other" window or the last buffer.
 + =M-x= opens smex.
-+ =s-k= kills the whole line.
-+ =s-(S)-RET= will open an indented line above (below).
 
 ***** Hyper
 
@@ -483,20 +480,19 @@ guaranteed).
 + =H-b= switches buffer.
 + =H-B= switches to a commonly ignored buffer.
 + =H-d= opens dired relative to open file.
-+ =H-f= to find with ag.
++ =H-f= finds with ag.
 + =H-i= switches prespective.
-+ =H-k= to interact with docker.
-+ =H-M= mark all like this (multiple cursors).
-+ =H-m= mark next like this (multiple cursors).
++ =H-k= interacts with docker.
++ =H-M= marks all like this (multiple cursors).
++ =H-m= marks next like this (multiple cursors).
 + =H-<mouse3>= adds another cursor at point.
-+ =H-o= to toggle bookmarks.
++ =H-o= toggles bookmarks.
 + =H-p= switches project.
 + =H-s= searches with swiper.
 + =H-<TAB>= expands snippets (in =yas-minor-mode=).
 + =H-;= (un-)comments lines.
-+ =H-u= to debug.
 + =H-v= jumps to line with avy.
-+ =H-w= swaps windows.
++ =H-w= interacts with windows.
 
 ***** General
 
@@ -506,6 +502,9 @@ foundational actions.
 
 Fittingly, all =minor mode= toggle actions are invoked
 using the =wal/major-key= prefix.
+
+Generally, major modes will have =,=, =.=, =/= perform
+specific actions only possible in their modes.
 
 #+BEGIN_SRC emacs-lisp
 ;; American ranks
@@ -1023,14 +1022,13 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
 
 #+BEGIN_SRC emacs-lisp
 (use-package crux
-  :bind (("M-o"          . crux-other-window-or-switch-buffer)
-         ("C-c c k"      . crux-kill-other-buffers)
+  :bind (("M-o"            . crux-other-window-or-switch-buffer)
+         ("C-c x b"        . crux-kill-other-buffers)
          ;; need to find solution with treemacs open
-         ("C-c c o"      . crux-open-with)
-         ("S-s-<return>" . crux-smart-open-line-above)
-	 ("s-<return>"   . crux-smart-open-line)
-         ("s-k"          . crux-kill-whole-line)
-         ("C-c c d"      . crux-duplicate-current-line-or-region)))
+         ("C-c x o"        . crux-open-with)
+         ("C-c x <return>" . crux-smart-open-line-above)
+         ("C-c x k"        . crux-kill-whole-line)
+         ("C-c x d"        . crux-duplicate-current-line-or-region)))
 #+END_SRC
 
 **** ctrlf
@@ -1061,9 +1059,10 @@ Debugging using VSCode's DAP.
   (dap-ui-mode 1)
   (require 'dap-node)
   (require 'dap-python)
-  :bind (("C-c u" . dap-mode)
-         (:map dap-mode-map
-               ("H-u" . dap-hydra))))
+  :general
+  (wal/major "d" '(dap-mode :wk "debug"))
+  ;; we're already using `,` for prettier et al.
+  (:keymaps 'dap-mode-map (wal/general "."  '(dap-hydra :wk "debug hydra"))))
 #+END_SRC
 
 ***** Debug Templates
