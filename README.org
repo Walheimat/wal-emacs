@@ -164,16 +164,13 @@ Now we can install the other dependencies.
   (wal/packages-install
    '(
      use-package
-     diminish
      delight
-     ample-theme
+     ;; themes
      doom-themes
      kaolin-themes
      naysayer-theme
      nord-theme
-     panda-theme
      paper-theme
-     spacemacs-theme
      brutalist-theme
      )))
 
@@ -193,26 +190,31 @@ Make sure that all folders exists.
 + a default folder for org files.
 
 #+BEGIN_SRC emacs-lisp
-(defconst wal/cache-folder
+(defvar wal/cache-folder
   (expand-file-name ".cache" user-emacs-directory)
   "The name of the cache folder.")
 
-(defconst wal/site-lisp-directory
+(defvar wal/site-lisp-directory
   (expand-file-name "site-lisp" user-emacs-directory)
   "Directory of site lisp packages.")
 
 ;; change if necessary
-(defconst wal/org-directory (expand-file-name "org" "~")
+(defvar wal/org-directory (expand-file-name "org" "~")
   "My default directory for org files.")
 
 ;; I put all of my tasks into a subfolder `tasks` inside the org directory
-(defconst wal/agenda-tasks-directory
+(defvar wal/agenda-tasks-directory
   (expand-file-name "tasks" wal/org-directory)
   "One-size-fits-all directory for agenda tasks.")
+
+(defvar wal/org-roam-directory
+  (expand-file-name "zettelkasten" wal/org-directory)
+  "Directory for our note-taking.")
 
 ;; create all dirs
 (--each
     `(
+      ,wal/org-roam-directory
       ,wal/agenda-tasks-directory
       ,wal/org-directory
       ,wal/site-lisp-directory
@@ -232,7 +234,7 @@ This was cribbed from [[https://www.john2x.com/emacs.html][john2x's config]].
 ;; empty scratch message
 (setq initial-scratch-message ";; Howdy, stranger ...")
 
-(defconst wal/scratch-persist-file
+(defvar wal/scratch-persist-file
   (expand-file-name "scratch-persist" wal/cache-folder)
   "The file to persist the *scratch* buffer's content in.")
 
@@ -283,16 +285,6 @@ I used key-chords for a few, common actions but prefer using hyper key now.
 #+BEGIN_SRC emacs-lisp
 (require 'use-package-ensure)
 (setq use-package-always-ensure t)
-
-(require 'diminish)
-(require 'delight)
-(require 'bind-key)
-
-;; has to come here to be useable
-(use-package use-package-chords
-  :disabled
-  :config
-  (key-chord-mode 1))
 #+END_SRC
 
 *** Built-in
@@ -307,16 +299,16 @@ Don't clutter up workspaces.
 ;; save places and do so in a file
 (setq save-place-file (expand-file-name ".places" user-emacs-directory))
 
-;; store backups in backups folder.
+;; store backups in backups folder
 (setq backup-directory-alist
       `(("." . ,(expand-file-name
 		 (concat user-emacs-directory "backups")))))
 
-;; store autosaves in temp folder.
+;; store autosaves in temp folder
 (setq auto-save-file-name-transforms
       `((".*" ,temporary-file-directory t)))
 
-;; we don't want this to mess with git.
+;; we don't want this to mess with git
 (setq create-lockfiles nil)
 #+END_SRC
 
@@ -329,10 +321,7 @@ Easy on the eyes.
 (show-paren-mode 1)
 (global-auto-revert-mode t)
 (global-hl-line-mode)
-;; (add-hook 'prog-mode-hook 'linum-mode)
-;; (add-hook 'prog-mode-hook 'display-line-numbers-mode)
 (global-prettify-symbols-mode +1)
-;; (global-whitespace-mode)
 (save-place-mode 1)
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -364,9 +353,13 @@ Easy on the eyes.
 Make things snappier.
 
 #+BEGIN_SRC emacs-lisp
+(defconst wal/one-mb
+  (* 1024 1024)
+  "One megabyte.")
+
 (setq mouse-yank-at-point       t
       show-paren-delay          0.0
-      read-process-output-max   (* 1024 1024) ;; 1mb
+      read-process-output-max   wal/one-mb
       sentence-end-double-space nil
       echo-keystrokes           0.1)
 #+END_SRC
@@ -377,9 +370,11 @@ I (generally) prefer tabs over spaces.
 To make this work, we need to tweak a few things.
 
 #+BEGIN_SRC emacs-lisp
-(defconst wal/tab-width
-  4
+(defvar wal/tab-width 4
   "A tab width 4 spaces wide.")
+
+(defvar wal/prefer-tabs t
+  "Whether tabs are used for indentation.")
 
 (defun wal/disable-tabs ()
   "Disable indent-tabs-mode."
@@ -401,11 +396,20 @@ To make this work, we need to tweak a few things.
   (let ((width (if (numberp num) num wal/tab-width)))
     (setq-default python-indent-offset    width ;; Python
                   js-indent-level         width ;; Javascript
+		  css-indent-offset       width ;; CSS and SCSS
                   electric-indent-inhibit t)
     (setq backward-delete-char-untabify-method 'hungry)))
 
-(add-hook 'after-init-hook 'wal/set-tab-defaults)
+(when wal/prefer-tabs
+    (add-hook 'after-init-hook 'wal/set-tab-defaults))
 #+END_SRC
+
+***** Dir Local Indentation
+
+Sometimes you have to play using other people's rules.
+You can run =add-dir-local-variable= to do so.
+Check out the =.dir-locals.el= template found in the =/templates= folder
+for an example using spaces.
 
 **** Key Bindings
 
@@ -419,7 +423,7 @@ but some =C-x <key>= mappings snuck in.
 If you want to see all personal keybindings, execute =describe-personal-keybindings=.
 
 + =C-c a <key>= opens today's (=t=), this week's (=w=) or my personal (=p=) agenda.
-+ =C-c c <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
++ =C-c x <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
 + =C-c c ;= (un-)comments lines.
 + =C-c f <key>= runs ag (=a= for generic, =p= for in-project search). _Requires ag_!
 + =C-c g= opens magit status.
@@ -427,13 +431,12 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =C-c j= dumb-jumps.
 + =C-c k= for docker actions.
 + =C-c m <key>= for multiple cursors.
-+ =C-c n= browses the web.
++ =C-c n= interacts with notes.
 + =C-c o <key>= toggle (=o=), go to next (=n=) or show (=s=) bookmarks.
 + =C-c p <key>= interacts with projects.
 + =C-c q <key>= interacts with fly-checking.
 + =C-c s= uses swiper to search.
 + =C-c t <key>= opens eshell (=e=), ansi-term (=a=) or vterm (=v=).
-+ =C-c u <key>= to debug (=u=) or edit template (=t=).
 + =C-c v <key>= jumps to char (=c=) or line (=v=) with avy.
 + =C-c w <key>= swaps (=s=) or deletes other windows (=d=).
 + =C-+= expands region.
@@ -449,8 +452,6 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =<f10>= to show help for thing at point.
 + =M-o= goes to the "other" window or the last buffer.
 + =M-x= opens smex.
-+ =s-k= kills the whole line.
-+ =s-(S)-RET= will open an indented line above (below).
 
 ***** Hyper
 
@@ -464,20 +465,19 @@ guaranteed).
 + =H-b= switches buffer.
 + =H-B= switches to a commonly ignored buffer.
 + =H-d= opens dired relative to open file.
-+ =H-f= to find with ag.
++ =H-f= finds with ag.
 + =H-i= switches prespective.
-+ =H-k= to interact with docker.
-+ =H-M= mark all like this (multiple cursors).
-+ =H-m= mark next like this (multiple cursors).
++ =H-k= interacts with docker.
++ =H-M= marks all like this (multiple cursors).
++ =H-m= marks next like this (multiple cursors).
 + =H-<mouse3>= adds another cursor at point.
-+ =H-o= to toggle bookmarks.
++ =H-o= toggles bookmarks.
 + =H-p= switches project.
 + =H-s= searches with swiper.
 + =H-<TAB>= expands snippets (in =yas-minor-mode=).
 + =H-;= (un-)comments lines.
-+ =H-u= to debug.
 + =H-v= jumps to line with avy.
-+ =H-w= swaps windows.
++ =H-w= interacts with windows.
 
 ***** General
 
@@ -488,15 +488,18 @@ foundational actions.
 Fittingly, all =minor mode= toggle actions are invoked
 using the =wal/major-key= prefix.
 
+Generally, major modes will have =,=, =.=, =/= perform
+specific actions only possible in their modes.
+
 #+BEGIN_SRC emacs-lisp
 ;; American ranks
-(defconst wal/general-key "H-,"
+(defvar wal/general-key "H-,"
   "Wal's primary (or general) leader key.")
 
-(defconst wal/colonel-key "H-."
+(defvar wal/colonel-key "H-."
   "Wal's secondary (or colonel) leader key.")
 
-(defconst wal/major-key "H-/"
+(defvar wal/major-key "H-/"
   "Wal's tertiary (or major) leader key.")
 
 (use-package general
@@ -507,6 +510,9 @@ using the =wal/major-key= prefix.
     :prefix wal/colonel-key)
   (general-create-definer wal/major
     :prefix wal/major-key))
+
+(wal/major "N" '(linum-mode :wk "toggle line numbers"))
+(wal/major "W" '(whitespace-mode :wk "toggle whitespaces"))
 #+END_SRC
 
 ****** Caps to Hyper
@@ -536,19 +542,21 @@ Most bindings are declared in the [[*Packages][packages]] section.
 #+BEGIN_SRC emacs-lisp
 ;; windows
 (global-set-key (kbd "H-4") 'kill-buffer-and-window)
-(global-set-key (kbd "H-5")  'make-frame-command)
-;; (wal/leader "4" '(kill-buffer-and-window :wk "kill buffer and window"))
+(global-set-key (kbd "H-5") 'make-frame-command)
+(global-set-key (kbd "H-0") 'delete-window)
 
 ;; emacs
 (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
 
-(defconst wal/readme-config
+(defvar wal/readme-config
   (expand-file-name "README.org" wal/emacs-config-default-path)
   "The path to this config file.")
 
 (global-set-key
-  (kbd "C-x C-c")
-  (lambda () (interactive)(switch-to-buffer (find-file-noselect wal/readme-config))))
+ (kbd "C-x C-c")
+ (lambda ()
+   (interactive)
+   (switch-to-buffer (find-file-noselect wal/readme-config))))
 #+END_SRC
 
 **** Theme
@@ -560,31 +568,32 @@ Otherwise the colors might clash.
 
 #+BEGIN_SRC emacs-lisp
 ;; two themes and a switch
-(defvar wal/primary-emacs-theme 'kaolin-valley
+(defvar wal/primary-emacs-theme 'kaolin-valley-dark
   "The quote-unquote default emacs theme.")
 
 ;; use `setq` in your .emacs to switch
 (defvar wal/secondary-emacs-theme 'kaolin-valley-light
   "The non-default emacs theme.")
 
-(defvar wal/active-theme wal/primary-emacs-theme
+(defvar wal/active-theme nil
   "The active theme.")
 
 (defun wal/theme-light-switch (&optional selection)
   "Switch from light to dark theme and vice-versa."
   (interactive)
   (disable-theme wal/active-theme)
-  (cond ((or (equal wal/active-theme wal/primary-emacs-theme) (equal selection 'secondary))  
-         (load-theme wal/secondary-emacs-theme t)
+  (cond ((or (equal wal/active-theme wal/primary-emacs-theme) (equal selection 'secondary))
+         (load-theme wal/secondary-emacs-theme t)  
          (setq wal/active-theme wal/secondary-emacs-theme))
-        ((or (equal wal/active-theme wal/secondary-emacs-theme) (equal selection 'secondary))
-         (load-theme wal/primary-emacs-theme t)
+        ((or (equal wal/active-theme wal/secondary-emacs-theme) (equal selection 'primary))
+	 (load-theme wal/primary-emacs-theme t)
          (setq wal/active-theme wal/primary-emacs-theme))))
 
 ;; some themes require configuration, so we only load after intialization
 (defun wal/setup-visuals ()
   "Setup visual frills like theme and transparency."
   (load-theme wal/primary-emacs-theme t)
+  (setq wal/active-theme wal/primary-emacs-theme)
   (wal/transparency 95))
 
 (if (daemonp)
@@ -600,29 +609,38 @@ Prefer FiraCode (-> mononoki -> Liberation -> DejaVu).
 To get support for ligatures, install the symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
 
 #+BEGIN_SRC emacs-lisp
-(defconst wal/default-font-size 120)
-(defconst wal/default-variable-font-size 160)
+(defvar wal/fixed-fonts
+   '("Fira Code" "mononoki" "Liberation Mono" "DejaVu Sans Mono")
+   "Fixed fonts ordered by preference.")
 
-(defun wal/font-candidate (&rest fonts)
+(defvar wal/variable-fonts
+  '("Roboto" "Ubuntu" "San Francisco" "Arial")
+  "Variable fonts ordered by preference.")
+
+(defvar wal/default-font-size 120)
+(defvar wal/default-variable-font-size 160)
+
+(defun wal/font-candidate (fonts)
   "Return the first available font from a list of FONTS."
   (--first (find-font (font-spec :name it)) fonts))
 
 (defun wal/setup-fonts ()
   "Setup fonts."
+  (interactive)
   (set-face-attribute 'default nil
-    :font (wal/font-candidate '"Fira Code" "mononoki" "Liberation Mono" "DejaVu Sans Mono")
+    :font (wal/font-candidate wal/fixed-fonts)
     :height wal/default-font-size)
 
   ;; variable pitch face
   (set-face-attribute 'variable-pitch nil
-    :font (wal/font-candidate '"Roboto" "Ubuntu" "San Francisco" "Arial") ;; you might want to change this one
+    :font (wal/font-candidate wal/variable-fonts) ;; you might want to change this one
     :height wal/default-variable-font-size
     :weight 'regular))
 
 ;; fonts can't be initialized thru daemon
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-fonts) 
-  (wal/setup-fonts)) 
+  (add-hook 'after-init-hook 'wal/setup-fonts)) 
 #+END_SRC
 
 **** Zoning
@@ -710,6 +728,11 @@ ask if it should get created."
       (make-directory parent-directory t))))
 
 (add-to-list 'find-file-not-found-functions #'wal/create-non-existent-directory)
+
+;; don't care about `.` and `..`
+(defun wal/directory-files (directory)
+  "Get all directory files except for current and parent directories."
+  (nthcdr 2 (directory-files directory t)))
 #+END_SRC
 
 ***** Buffers
@@ -816,13 +839,14 @@ to download it automatically, but might fail).
   :custom
   (ag-highlight-search t)
   (ag-reuse-buffers    t)
-  (ag-ignore-list      '("[/\\\\]\\.git\\'"
-                         "[/\\\\]\\.idea\\'"
-                         "[/\\\\]node_modules"
-                         "[/\\\\]dist\\'"
-		         "[/\\\\]build\\'"
-                         "[/\\\\]\\.vscode\\'"
-		         "[/\\\\]deps\\'"))
+  (ag-ignore-list      '(".git"
+                         ".idea"
+                         "node_modules"
+                         "dist"
+		         "build"
+                         ".vscode"
+			 "*.svg"
+		         "deps"))
   :general
   (wal/colonel "f" '(ag-files :wk "find in files of type"))
   :bind (("C-c f a" . ag)
@@ -886,8 +910,8 @@ Jumping to (visible) lines and chars is fun if you are too lazy to use your mous
 (use-package avy
   :general
   (wal/general "v" '(avy-goto-whitespace-end :wk "go to whitespace"))
-  (wal/colonel "v" '(avy-kill-whole-line :wk "kill specific line"))
-  (wal/major   "v" '(avy-copy-line :wk "copy line and paste above"))
+  (wal/colonel "v" '(avy-kill-whole-line     :wk "kill specific line"))
+  (wal/major   "v" '(avy-copy-line           :wk "copy line and paste above"))
   :bind (("C-c v v" . avy-goto-line)
          ("C-c v c" . avy-goto-char)
 	 ("H-v"     . avy-goto-line)))
@@ -971,9 +995,9 @@ Counsel me this, Counselor.
 (use-package counsel
   :general
   ;; still need to find a scheme for non-package prefixes
-  (wal/major "#" '(counsel-load-theme :wk "load theme"))
+  (wal/major "#" '(counsel-load-theme      :wk "load theme"))
   (wal/major "$" '(counsel-command-history :wk "command history"))
-  (wal/major "!" '(counsel-set-variable :wk "set variable"))
+  (wal/major "!" '(counsel-set-variable    :wk "set variable"))
   :bind (("M-x"     . counsel-M-x)
          ("<menu>"  . counsel-M-x)
          ("C-x C-f" . counsel-find-file))
@@ -990,14 +1014,13 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
 
 #+BEGIN_SRC emacs-lisp
 (use-package crux
-  :bind (("M-o"          . crux-other-window-or-switch-buffer)
-         ("C-c c k"      . crux-kill-other-buffers)
+  :bind (("M-o"            . crux-other-window-or-switch-buffer)
+         ("C-c x b"        . crux-kill-other-buffers)
          ;; need to find solution with treemacs open
-         ("C-c c o"      . crux-open-with)
-         ("S-s-<return>" . crux-smart-open-line-above)
-	 ("s-<return>"   . crux-smart-open-line)
-         ("s-k"          . crux-kill-whole-line)
-         ("C-c c d"      . crux-duplicate-current-line-or-region)))
+         ("C-c x o"        . crux-open-with)
+         ("C-c x <return>" . crux-smart-open-line-above)
+         ("C-c x k"        . crux-kill-whole-line)
+         ("C-c x d"        . crux-duplicate-current-line-or-region)))
 #+END_SRC
 
 **** ctrlf
@@ -1022,15 +1045,16 @@ Debugging using VSCode's DAP.
   :delight " dap"
   :custom
   (lsp-enable-dap-auto-configure nil)
-  (dap-python-executable "python3")
+  (dap-python-executable         "python3")
   ;; (dap-auto-configure-features '(sessions locals breakpoints))
   :config
   (dap-ui-mode 1)
   (require 'dap-node)
   (require 'dap-python)
-  :bind (("C-c u" . dap-mode)
-         (:map dap-mode-map
-               ("H-u" . dap-hydra))))
+  :general
+  (wal/major "d" '(dap-mode :wk "debug"))
+  ;; we're already using `,` for prettier et al.
+  (:keymaps 'dap-mode-map (wal/general "."  '(dap-hydra :wk "debug hydra"))))
 #+END_SRC
 
 ***** Debug Templates
@@ -1110,15 +1134,19 @@ Let's have a dash of board.
 (use-package page-break-lines)
 
 ;; using my gitlab status messages, only one so far
-(defconst wal/dashboard-footer-messages
+(defvar wal/dashboard-footer-messages
   '(":whale2: breaching your favorite stupid framework"
     ":whale: I propel myself forward on nothing but flukes"
     ":whale: devout and up the spout")
   "The footer messages I can stand to see.")
 
 ;; ignore all files that were loaded on start-up
-(defconst wal/recentf-exclude
-  (append (directory-files wal/agenda-tasks-directory t "org$") '("bookmarks$" "\\.emacs$")))
+(defvar wal/recentf-exclude
+  (append (wal/directory-files wal/agenda-tasks-directory)
+          (wal/directory-files wal/org-roam-directory)
+          (wal/directory-files wal/cache-folder)
+	  (wal/directory-files user-emacs-directory))
+  "Files that should not be considered recent files.")
 
 ;; the issue here is that magit will keep re-creating the dashboard
 (defun wal/daemon-dash ()
@@ -1222,8 +1250,8 @@ Make dimmed frames a bit dimmer.
 (use-package dimmer
   :diminish
   :custom
-  (dimmer-fraction       0.3)
-  (dimmer-adjustmentmode :both)  
+  (dimmer-fraction        0.3)
+  (dimmer-adjustment-mode :foreground)
   :config
   (dimmer-configure-company-box)
   (dimmer-configure-hydra)
@@ -1278,7 +1306,7 @@ I use Docker a lot, don't always have to use the command line.
   :custom
   (docker-container-default-sort-key '("Names"))
   :general
-  (wal/general "k" '(docker-compose-up :wk "docker-compose up"))
+  (wal/general "k" '(docker-compose-up   :wk "docker-compose up"))
   (wal/colonel "k" '(docker-compose-exec :wk "docker-compose exec"))
   (wal/major   "k" '(docker-compose-logs :wk "docker-compose logs"))
   :bind (("C-c k" . docker)
@@ -1379,7 +1407,7 @@ Set up =eshell=.
 (with-eval-after-load "esh-opt"
   (autoload 'epe-theme-lambda "eshell-prompt-extras")
   (setq eshell-highlight-prompt nil
-        eshell-prompt-function 'epe-theme-lambda))
+        eshell-prompt-function  'epe-theme-lambda))
 #+END_SRC
 
 **** evil-nerd-commenter
@@ -1401,8 +1429,8 @@ This requires Emacs to have been compiled with =--with-xml2= flag.
 #+BEGIN_SRC emacs-lisp
 (use-package eww
   :ensure nil
-  :bind (("C-c n" . eww)
-         ("H-n"   . eww)))
+  :general
+  (wal/general "w" '(eww :wk "www the web")))
 #+END_SRC
 
 **** expand-region
@@ -1427,7 +1455,7 @@ Finding files by name should be easy.
 I use FiraCode, this mode allows us to use ligatures.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/fira-code()
+(defun wal/fira-code ()
   (use-package fira-code-mode
     :diminish
     ;; use fira mode if it's the default font and the symbol font is installed
@@ -1440,9 +1468,8 @@ I use FiraCode, this mode allows us to use ligatures.
 ;; we guard against font-related actions
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/fira-code t)
-    (wal/fira-code))
+  (add-hook 'after-init-hook 'wal/fira-code t))
 #+END_SRC
-
 
 **** flycheck
 
@@ -1479,8 +1506,8 @@ You can bring up actions (skip, save) with =M-o=.
 (use-package flyspell-correct
   :after flyspell
   :bind (:map flyspell-mode-map
-              ("n" . flyspell-correct-next)
-	      ("p" . flyspell-correct-previous)))
+              ("C-n" . flyspell-correct-next)
+	      ("C-p" . flyspell-correct-previous)))
 
 (use-package flyspell-correct-ivy
   :after flyspell-correct)
@@ -1531,9 +1558,10 @@ If you're too lazy to copy and paste.
 (use-package google-this
   :diminish
   :general
-  (wal/general "g" '(google-this :wk "google this"))
+  ;; there's no magit command we really need, so let's use `g`
+  (wal/general "g" '(google-this        :wk "google this"))
   (wal/colonel "g" '(google-this-region :wk "google selected region"))
-  (wal/major   "g" '(counsel-google :wk "google with counsel"))
+  (wal/major   "g" '(counsel-google     :wk "google with counsel"))
   :bind ("<f6>" . 'google-this-mode-submap)
   :config
   (google-this-mode 1))
@@ -1551,7 +1579,7 @@ Let's try (to be) =helpful=.
   :general
   (wal/general "h" '(counsel-describe-variable :wk "describe variable"))
   (wal/colonel "h" '(counsel-describe-function :wk "describe function"))
-  (wal/major "h" '(helpful-at-point :wk "helpful at point"))
+  (wal/major   "h" '(helpful-at-point          :wk "helpful at point"))
   :bind
   ("<f10>"                   . helpful-at-point)
   ([remap describe-function] . counsel-describe-function)
@@ -1570,6 +1598,7 @@ Show indentation.
   :diminish highlight-indent-guides-mode
   :custom
   (highlight-indent-guides-method 'character)
+  (highlight-indent-guides-responsive 'top)
   :hook (prog-mode . highlight-indent-guides-mode))
 #+END_SRC
 
@@ -1608,7 +1637,7 @@ We use =ivy= for narrowing our options.
 (defalias 'wal/switch-buffer 'persp-ivy-switch-buffer)
 
 ;; hide dired, docker, ag and default emacs buffers when switching
-(defconst wal/ivy-ignore-buffers
+(defvar wal/ivy-ignore-buffers
   '(wal/is-commonly-ignored-buffer
     "\\` "
     "\\`\\*tramp/")
@@ -1714,6 +1743,7 @@ Prefer =capf=, bigger delay.
   (lsp-completion-provider :capf)
   (lsp-prefer-capf         t)
   (lsp-idle-delay          1.5)
+  (lsp-keymap-prefix "C-c l")
   :config
   ;; ignore elixir build and dependency folders
   (add-to-list 'lsp-file-watch-ignored "[/\\\\]_build$")
@@ -1730,7 +1760,7 @@ You will have to install them yourself.[fn:9]
 
 #+BEGIN_SRC emacs-lisp
 ;;; elixir
-(defconst elixir-ls-release-location
+(defvar elixir-ls-release-location
   (expand-file-name "ls/elixir" user-emacs-directory)
   "Location of the Elixir language server.")
 
@@ -1769,6 +1799,8 @@ Make the bell visual.
 
 #+BEGIN_SRC emacs-lisp
 (use-package mode-line-bell
+  :custom
+  (mode-line-bell-flash-time 0.1)
   :config
   (mode-line-bell-mode))
 #+END_SRC
@@ -1823,7 +1855,7 @@ Disabled for now.
 Have some perspective, man.
 
 #+BEGIN_SRC emacs-lisp
-(defconst wal/default-perspective
+(defvar wal/default-perspective
   "walheimat"
   "The name of my default perspective.")
 
@@ -1831,9 +1863,9 @@ Have some perspective, man.
   :custom-face
   (persp-selected-face ((t (:weight bold :foreground "burlywood"))))
   :general
-  (wal/general "i" '(persp-kill :wk "set buffer to perspective"))
-  (wal/colonel "i" '(persp-add-buffer :wk "add buffer to perspective"))
-  (wal/major "i" '(persp-remove-buffer :wk "remove buffer from perspective"))
+  (wal/general "i" '(persp-kill          :wk "change perspective name"))
+  (wal/colonel "i" '(persp-add-buffer    :wk "add buffer to perspective"))
+  (wal/major   "i" '(persp-remove-buffer :wk "remove buffer from perspective"))
   :bind ("H-i" . persp-switch)
   :custom
   (persp-modestring-dividers '("(" ")" "/"))
@@ -1842,12 +1874,6 @@ Have some perspective, man.
   (persp-mode-prefix-key     (kbd "C-c i"))
   :config
   (persp-mode))
-
-;; not sure there's much benefit to this
-(use-package persp-projectile
-  :disabled
-  :after perspective
-  :bind ("C-c ö" . projectile-persp-switch-project))
 
 ;; no idea why putting this in :hook kills the package
 (add-hook 'kill-emacs-hook #'persp-state-save)
@@ -1860,15 +1886,15 @@ Better short-term-memory for =ivy=.
 #+BEGIN_SRC emacs-lisp
 (use-package prescient
   :custom
+  (prescient-sort-length-enable nil)
   (prescient-save-file (expand-file-name "prescient-persist" wal/cache-folder))
-  (prescient-filter-method '(literal initialism fuzzy))
+  (prescient-filter-method '(literal regexp initialism))
   :config
   (prescient-persist-mode +1))
 
 (use-package ivy-prescient
-  :after (ivy counsel)
+  :after counsel
   :custom
-  (prescient-sort-length-enable nil)
   ;; default plus `wal/switch-buffer`
   (ivy-prescient-sort-commands '(:not swiper swiper-isearch ivy-switch-buffer wal/switch-buffer))
   (ivy-prescient-retain-classic-highlighting t)
@@ -1900,8 +1926,8 @@ You don't really _need_ =treemacs=.
 (use-package projectile
   :diminish " pjt"
   :general
-  (wal/general "p" '(projectile-find-file :wk "find file in project")) 
-  (wal/colonel "p" '(projectile-find-dir :wk "find dir in project")) 
+  (wal/general "p" '(projectile-find-file    :wk "find file in project")) 
+  (wal/colonel "p" '(projectile-find-dir     :wk "find dir in project")) 
   (wal/major   "p" '(projectile-kill-buffers :wk "kill project buffers")) 
   :bind ("H-p" . projectile-switch-project)
   :custom
@@ -2029,7 +2055,7 @@ Highlight sections by edit date.
 
 Show completions for =M-x= in a buffer.
 
-Only used for sorting at the moment.
+Currently replaced by =counsel-M-x= and =ivy-prescient=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package smex
@@ -2071,8 +2097,8 @@ Smart searching with =ivy=.
 (use-package swiper
   :after ivy
   :general
-  (wal/general "s" '(swiper-all :wk "search all buffers"))
-  (wal/colonel "s" '(swiper-multi :wk "search multiple buffers"))
+  (wal/general "s" '(swiper-all            :wk "search all buffers"))
+  (wal/colonel "s" '(swiper-multi          :wk "search multiple buffers"))
   (wal/major   "s" '(swiper-thing-at-point :wk "search thing at point"))
   :bind (("C-c s" . swiper)
          ("H-s"   . swiper)
@@ -2212,7 +2238,7 @@ explicitly.
 (use-package typo
   :diminish " typ"
   :general
-  (wal/general text-mode-map "," '(typo-mode :wk "toggle typo mode")))
+  (wal/major text-mode-map "/" '(typo-mode :wk "toggle typo mode")))
 #+END_SRC
 
 **** undo-fu
@@ -2233,6 +2259,26 @@ Ensure binaries.
 
 #+BEGIN_SRC emacs-lisp
 (use-package use-package-ensure-system-package)
+#+END_SRC
+
+**** vdiff-magit
+
+I find =ediff= quite cumbersome, so I'm giving =vdiff= a try.
+
+#+BEGIN_SRC emacs-lisp
+(use-package vdiff-magit
+  :after magit
+  :bind (:map vdiff-3way-mode-map
+          ("q" . vdiff-quit)
+	  ("h" . vdiff-hydra/body)
+         :map magit-mode-map
+          ("e" . vdiff-magit-dwim)
+	  ("E" . vdiff-magit))
+  :init
+  (transient-suffix-put 'magit-dispatch "e" :description "vdiff (dwim)")
+  (transient-suffix-put 'magit-dispatch "e" :command 'vdiff-magit-dwim)
+  (transient-suffix-put 'magit-dispatch "E" :description "vdiff")
+  (transient-suffix-put 'magit-dispatch "E" :command 'vdiff-magit))
 #+END_SRC
 
 **** visual-fill-column
@@ -2264,14 +2310,14 @@ always try to build from source ...
   (use-package vterm-toggle
     :custom
     (vterm-toggle-fullscreen-p nil)
-    (vterm-toggle-scope 'project)
+    (vterm-toggle-scope        'project)
     :init
     (add-to-list 'display-buffer-alist
 		 '((lambda(bufname _) (with-current-buffer bufname (equal major-mode 'vterm-mode)))
                    (display-buffer-reuse-window display-buffer-in-side-window)
-                   (side . bottom)
-                   (dedicated . t)
-		   (window-height . 0.3)
+                   (side            . bottom)
+                   (dedicated       . t)
+		   (window-height   . 0.3)
                    (reusable-frames . visible)))
    :bind (("H-t"     . vterm-toggle)
           ("C-c t v" . vterm-toggle))))
@@ -2286,7 +2332,7 @@ Show the next possible key presses towards an action.
   :diminish
   :custom
   ;; big enough to not mess up avy line search
-  (which-key-idle-delay 1.5)
+  (which-key-idle-delay 0.5)
   :config
   (which-key-mode))
 #+END_SRC
@@ -2321,8 +2367,8 @@ if you don't have a hyper key, bind it to a personal binding.
   :delight " yas"
   :general
   (wal/general "y" '(yas-visit-snippet-file :wk "visit snippet file"))
-  (wal/colonel "y" '(yas-new-snippet :wk "create new snippet"))
-  (wal/major   "y" '(yas-minor-mode :wk "toggle yasnippet"))
+  (wal/colonel "y" '(yas-new-snippet        :wk "create new snippet"))
+  (wal/major   "y" '(yas-minor-mode         :wk "toggle yasnippet"))
   :bind ((:map yas-minor-mode-map
                ("<tab>"    . nil)
 	       ("TAB"      . nil)
@@ -2461,7 +2507,7 @@ Enable =flycheck= and disable internal checker.
 (use-package js2-mode
   :mode "\\.js\\'"
   :init
-  (setq-default js2-show-parse-errors nil
+  (setq-default js2-show-parse-errors           nil
                 js2-strict-missing-semi-warning nil)
   :hook (js2-mode . wal/js2-mode-hook))
 
@@ -2505,6 +2551,8 @@ We also make the sequence from =TODO= to =DONE= more granular and add another =D
 state =CANCELLED=.
 
 #+BEGIN_SRC emacs-lisp
+(require 'org-install)
+
 (use-package org-bullets
   :hook (org-mode . (lambda() (org-bullets-mode t))))
 
@@ -2523,6 +2571,9 @@ state =CANCELLED=.
   :init
   (add-to-list 'org-global-properties
                '("Effort_ALL". "30m 1h 2h 4h 6h 1d 2d"))
+  (add-to-list 'org-modules 'org-habit)
+  :config
+  (org-load-modules-maybe t)
   :custom
   (org-ellipsis                   "↷")
   (org-log-done                   t)
@@ -2530,49 +2581,16 @@ state =CANCELLED=.
   (org-startup-folded             'overview)
   (org-directory                  wal/org-directory)
   (org-default-notes-file         (concat org-directory "/notes.org"))
+  (org-agenda-files               `(,wal/agenda-tasks-directory))
   (org-startup-with-inline-images t)
   ;; be sure to add archive tag with org-toggle-archive-tag
   (org-archive-location           "::* Archived")
+  (org-log-done                   'time)
+  ;; Too many clock entries clutter up a heading
+  (org-log-into-drawer            t)
   (org-todo-keywords
-	'((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)"))))
-
-(setq org-log-done                           'time
-      org-clock-idle-time                    nil
-      org-clock-continuously                 nil
-      org-clock-persist                      t
-      org-clock-in-switch-to-state           "IN PROGRESS"
-      org-clock-in-resume                    nil
-      org-clock-report-include-clocking-task t
-      org-clock-out-remove-zero-time-clocks  t
-      ;; Too many clock entries clutter up a heading
-      org-log-into-drawer                    t
-      org-clock-into-drawer                  1)
-
-(require 'org-install)
-(setq org-modules                     '(org-habit org-info)
-      org-habit-graph-column          105
-      ;; this doesn't seem to affect anything
-      org-archive-subtree-save-file-p t)
-
-(org-load-modules-maybe t)
-
-(defun wal/org-make-habit()
-  "Make it a habit, dammi!"
-  (interactive)
-  (org-set-property "STYLE" "habit"))
-
-(setq org-use-speed-commands t
-      org-speed-commands-user
-      '(("w" widen)
-        ("n" org-narrow-to-subtree)
-	;; defaults are I and O
-	("i" org-clock-in)
-	("o" org-clock-out)
-        ("a" org-archive-subtree)
-        ("r" org-clock-report)))
-
-;; tags differentiated by # and @
-(setq org-tag-alist
+	'((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
+  (org-tag-alist
       '(;; depth
 	("@immersive" . ?i)
 	("@process"   . ?p)
@@ -2593,7 +2611,42 @@ state =CANCELLED=.
 	("@dev"       . ?d)
 	("@bla"       . ?b)
 	("@edu"       . ?e)
-	))
+	)))
+
+(use-package org-clock
+  :ensure nil
+  :custom
+  (org-clock-idle-time                    10)
+  (org-clock-continuously                 t)
+  (org-clock-persist                      t)
+  (org-clock-in-switch-to-state           "IN PROGRESS")
+  (org-clock-in-resume                    t)
+  (org-clock-report-include-clocking-task t)
+  (org-clock-out-remove-zero-time-clocks  t)
+  (org-clock-into-drawer                  t))
+
+(use-package org-habit
+  :ensure nil
+  :custom
+  (org-habit-graph-column 105))
+
+(defun wal/org-make-habit()
+  "Make it a habit, dammi!"
+  (interactive)
+  (org-set-property "STYLE" "habit"))
+
+(use-package org-keys
+  :ensure nil
+  :custom
+  (org-use-speed-commands t)
+  (org-speed-commands-user
+      '(("w" widen)
+        ("n" org-narrow-to-subtree)
+	;; defaults are I and O
+	("i" org-clock-in)
+	("o" org-clock-out)
+        ("a" org-archive-subtree)
+        ("r" org-clock-report))))
 #+END_SRC
 
 ***** Agendas
@@ -2603,6 +2656,12 @@ Everything concerning agendas.
 This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/michael.org][mwfogleman]]'s Emacs config.
 
 #+BEGIN_SRC emacs-lisp
+(use-package org-agenda
+  :ensure nil
+  :custom
+  ;; we hide all @-tags
+  (org-agenda-hide-tags-regexp "@"))
+
 (use-package org-super-agenda
   :custom
   (org-super-agenda-groups
@@ -2623,11 +2682,6 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
   (wal/general org-agenda-keymap "w" '(org-agenda-write :wk "write agenda"))
   :bind (("C-c a" . org-agenda)
          ("H-a"   . org-agenda)))
-
-;; we hide all @-tags
-(setq org-agenda-hide-tags-regexp "@")
-
-(setq org-agenda-files `(,wal/agenda-tasks-directory))
 #+END_SRC
 
 ***** Presentations
@@ -2688,6 +2742,60 @@ Use =org-tree-slide= for presentations.
           ("n" . org-tree-slide-move-next-tree)
 	  ("p" . org-tree-slide-move-previous-tree)
 	  ("v" . wal/tree-slide-toggle-visibility))))
+#+END_SRC
+
+***** Zettelkasten
+
+Let's give =org-roam= a try.
+
+You will need to install =sqlite3= and =graphviz= manually.
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/org-roam-dailies-directory "tagebuch/"
+  "The directory for dailies.")
+
+;; has to be created manually for now
+(defvar wal/org-roam-index-file "verzeichnis.org"
+  "The name of the index file.")
+
+;; not sure why we need to do it this way
+(let ((index-file (expand-file-name wal/org-roam-index-file wal/org-roam-directory)))
+  (unless (file-exists-p index-file)
+    (write-region "* Zettelkasten" nil index-file)))
+
+(use-package org-roam
+  :delight " zet"
+  :if (executable-find "sqlite3")
+  :hook (after-init . org-roam-mode)
+  :custom
+  (org-roam-directory wal/org-roam-directory)
+  (org-roam-index-file wal/org-roam-index-file)
+  (org-roam-dailies-directory wal/org-roam-dailies-directory)
+  (org-roam-completion-system 'ivy)
+  :bind (("H-n" . org-roam-jump-to-index)
+         (:map org-roam-mode-map
+              (("C-c n l" . org-roam)
+               ("C-c n f" . org-roam-find-file)
+               ("C-c n g" . org-roam-graph)))
+         (:map org-mode-map
+              (("C-c n i" . org-roam-insert)
+               ("C-c n I" . org-roam-insert-immediate))))
+  :config
+  (let* ((fname (concat wal/org-roam-dailies-directory "%<%Y-%m-%d>")))
+    (setq org-roam-dailies-capture-templates
+        `(("w" "work" entry
+           #'org-roam-capture--get-point
+           "* %?"
+           :file-name ,fname
+           :head "#+title: %<%Y-%m-%d>\n"
+           :olp ("Work notes"))
+
+          ("j" "journal" entry
+           #'org-roam-capture--get-point
+           "* %?"
+           :file-name ,fname
+           :head "#+title: %<%Y-%m-%d>\n"
+           :olp ("Journal"))))))
 #+END_SRC
 
 **** python-mode
@@ -2972,6 +3080,7 @@ keyboard unuseable.
 + [[https://github.com/magnars/multiple-cursors.el][multiple-cursors]]
 + [[https://github.com/alezost/mwim.el][mwim]]
 + [[https://orgmode.org/][org-mode]]
++ [[https://github.com/org-roam/org-roam][org-roam]]
 + [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]]
 + [[https://github.com/takaxp/org-tree-slide][org-tree-slide]]
 + [[https://github.com/gregsexton/origami.el][origami]]
@@ -2994,9 +3103,11 @@ keyboard unuseable.
 + [[https://github.com/zk-phi/symon][symon]]
 + [[https://github.com/dbordak/telephone-line][telephone-line]]
 + [[https://github.com/Alexander-Miller/treemacs][treemacs]]
++ [[https://github.com/jorgenschaefer/typoel][typo]]
 + [[https://gitlab.com/ideasman42/emacs-undo-fu][undo-fu]]
 + [[https://github.com/jwiegley/use-package][use-package]]
 + [[https://github.com/waymondo/use-package-ensure-system-package][ensure-system-package]]
++ [[https://github.com/justbur/emacs-vdiff-magit][vdiff-magit]]
 + [[https://github.com/akermu/emacs-libvterm][vterm]]
 + [[https://github.com/jixiuf/vterm-toggle][vterm-toggle]]
 + [[http://web-mode.org/][web-mode]]
