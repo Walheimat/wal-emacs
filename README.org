@@ -648,8 +648,11 @@ To get support for ligatures, install the symbol font from [[https://github.com/
 Zone out after a couple of minutes.
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/zone-timer 180
+  "The time in seconds when we will zone out.")
+
 (require 'zone)
-(zone-when-idle 180)
+(zone-when-idle wal/zone-timer)
 #+END_SRC
 
 **** Time
@@ -2704,6 +2707,7 @@ Use =org-tree-slide= for presentations.
 (defun wal/tree-slide-play ()
   "Make presentable."
   (setq cursor-type nil)
+  (zone-leave-me-alone)
   (global-hl-line-mode 1)
   (beacon-mode -1)
   (variable-pitch-mode 1)
@@ -2728,6 +2732,7 @@ Use =org-tree-slide= for presentations.
 (defun wal/tree-slide-stop ()
   "We no longer care about presentation."
   (setq cursor-type t)
+  (zone-when-idle wal/zone-timer)
   (global-hl-line-mode 1)
   (visual-fill-column-mode 0)
   (variable-pitch-mode 0)
