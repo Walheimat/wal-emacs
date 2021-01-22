@@ -548,6 +548,9 @@ Most bindings are declared in the [[*Packages][packages]] section.
 ;; emacs
 (global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
 
+;; no triple-ESC
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+
 (defvar wal/readme-config
   (expand-file-name "README.org" wal/emacs-config-default-path)
   "The path to this config file.")
@@ -1045,6 +1048,13 @@ Important command is =C-o c= to change search style.
 (use-package ctrlf
   :custom
   (ctrlf-auto-recenter t)
+  ;; prefer fuzzy over literal
+  (ctrlf-mode-bindings '(("C-s"   . ctrlf-forward-fuzzy)
+                         ("C-r"   . ctrlf-backward-fuzzy)
+			 ("C-M-s" . ctrlf-forward-literal)
+                         ("C-M-r" . ctrlf-backward-literal)))
+  ;; not relased yet
+  ;; (ctrlf-go-to-end-of-match nil)
   :config
   (ctrlf-mode +1))
 #+END_SRC
@@ -1300,7 +1310,7 @@ Hit =/= to filter in =dired= buffers.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired-filter
-  :diminish "def")
+  :delight "def")
 #+END_SRC
 
 **** diredfl
@@ -1801,10 +1811,17 @@ You will have to install them yourself.[fn:9]
 
 Version control has never been this easy before.
 
+Also trying out `magit-todos`.
+
 #+BEGIN_SRC emacs-lisp
 (use-package magit
   :bind (("C-c g" . magit-status)
          ("H-g"   . magit-status)))
+
+(use-package magit-todos
+  :after magit
+  :config
+  (magit-todos-mode))
 #+END_SRC
 
 **** mode-line-bell
@@ -1938,7 +1955,7 @@ You don't really _need_ =treemacs=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
-  :diminish " pjt"
+  :delight " pjt"
   :general
   (wal/general "p" '(projectile-find-file    :wk "find file in project")) 
   (wal/colonel "p" '(projectile-find-dir     :wk "find dir in project")) 
@@ -2260,7 +2277,7 @@ explicitly.
 
 #+BEGIN_SRC emacs-lisp
 (use-package typo
-  :diminish " typ"
+  :delight " typ"
   :general
   (wal/major text-mode-map "/" '(typo-mode :wk "toggle typo mode")))
 #+END_SRC
@@ -2594,7 +2611,7 @@ state =CANCELLED=.
   (require 'ox-md nil t)
   :init
   (add-to-list 'org-global-properties
-               '("Effort_ALL". "30m 1h 2h 4h 6h 1d 2d"))
+               '("Effort_ALL" . "30m 1h 2h 4h 6h 1d 2d"))
   (add-to-list 'org-modules 'org-habit)
   :config
   (org-load-modules-maybe t)
@@ -2759,6 +2776,7 @@ Use =org-tree-slide= for presentations.
   (beacon-mode 1))
 
 (use-package org-tree-slide
+  :diminish buffer-face-mode
   :hook ((org-tree-slide-play . wal/tree-slide-play)
          (org-tree-slide-stop . wal/tree-slide-stop))
   :general
