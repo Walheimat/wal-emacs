@@ -539,10 +539,12 @@ Leader key =general= should only prefix actions that should be possible
 no matter the major mode.
 
 Leader key =conolel= should only prefix actions that make sense within
-the current major mode.
+the current major mode, like toggling minor modes.
 
-Leader keys =major=, =captain= and =lieutenant= all bind actions from
-packages that didn't fit elsewhere.
+Leader keys =major=, =captain= and =lieutenant= all bind
+additional actions that didn't fit elsewhere.
+The letters follow the custom binding scheme,
+so =f= will perform an =ag= action.
 
 ***** Non-Use-Package Bindings
 
@@ -763,11 +765,13 @@ I want to ignore some buffers when switching.
    ;; dired
    (eq (with-current-buffer
            (get-buffer-create buffer-or-string)
-         major-mode) 'dired-mode)
+         major-mode)
+       'dired-mode)
    ;; helpful buffers
    (eq (with-current-buffer
            (get-buffer-create buffer-or-string)
-         major-mode) 'helpful-mode)))
+         major-mode)
+       'helpful-mode)))
 
 (defun wal/ivy-switch-ignored-buffers (&rest r)
   "Show only commonly ignored buffers."
@@ -863,8 +867,9 @@ to download it automatically, but might fail).
 			 "*.svg"
 		         "deps"))
   :general
-  (wal/colonel "f" '(ag-files :wk "find in files of type"))
-  :bind (("C-c f a" . ag)
+  (wal/major   "f" '(ag-files :wk "find in files of type"))
+  (wal/captain "f" '(ag-kill-buffesr :wk "kill ag buffers"))
+  :bind (("C-c f f" . ag)
          ("C-c f p" . ag-project)
          ("H-f"     . ag-project)
 	 ;; in dired, we change this a bit
@@ -911,7 +916,7 @@ Keep packages updated (disabled for now).
 
 #+BEGIN_SRC emacs-lisp
 (use-package auto-package-update
-  :disabled
+  :disable
   :custom
   (auto-package-update-delete-old-versions t)
   (auto-package-update-hide-results        t)
@@ -1041,9 +1046,9 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
 (use-package crux
   :bind (("M-o"            . crux-other-window-or-switch-buffer)
          ("C-c x b"        . crux-kill-other-buffers)
-         ;; need to find solution with treemacs open
          ("C-c x o"        . crux-open-with)
          ("C-c x <return>" . crux-smart-open-line-above)
+         ("C-c x a"        . crux-smart-open-line)
          ("C-c x k"        . crux-kill-whole-line)
          ("C-c x d"        . crux-duplicate-current-line-or-region)))
 #+END_SRC
@@ -1084,9 +1089,9 @@ Debugging using VSCode's DAP.
   (require 'dap-node)
   (require 'dap-python)
   :general
-  (wal/major "d" '(dap-mode :wk "debug"))
+  (wal/colonel "d" '(dap-mode :wk "debug"))
   ;; we're already using `,` for prettier et al.
-  (:keymaps 'dap-mode-map (wal/general "."  '(dap-hydra :wk "debug hydra"))))
+  (:keymaps 'dap-mode-map (wal/general "d"  '(dap-hydra :wk "debug hydra"))))
 #+END_SRC
 
 ***** Debug Templates
@@ -1216,7 +1221,6 @@ Let's have a dash of board.
   (dashboard-set-init-info              t)
   (dashboard-week-agenda                nil)
   (dashboard-agenda-time-string-format "%d/%m/%y")
-  
   :config
   (setq recentf-exclude wal/recentf-exclude)
   (dashboard-setup-startup-hook))
@@ -1339,9 +1343,9 @@ I use Docker a lot, don't always have to use the command line.
   :custom
   (docker-container-default-sort-key '("Names"))
   :general
-  (wal/general "k" '(docker-compose-up   :wk "docker-compose up"))
-  (wal/colonel "k" '(docker-compose-exec :wk "docker-compose exec"))
-  (wal/major   "k" '(docker-compose-logs :wk "docker-compose logs"))
+  (wal/major       "k" '(docker-compose-up   :wk "docker-compose up"))
+  (wal/captain     "k" '(docker-compose-exec :wk "docker-compose exec"))
+  (wal/lieutentant "k" '(docker-compose-logs :wk "docker-compose logs"))
   :bind (("C-c k" . docker)
          ("H-k"   . docker)))
 #+END_SRC
@@ -1449,8 +1453,8 @@ Comment code like in =vim=, evil, evil =vim=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package evil-nerd-commenter
-  :bind (("H-;"      . evilnc-comment-or-uncomment-lines)
-         ("C-c c ;"  . evilnc-comment-or-uncomment-lines)))
+  :bind (("H-c"   . evilnc-comment-or-uncomment-lines)
+         ("C-c c" . evilnc-comment-or-uncomment-lines)))
 #+END_SRC
 
 **** eww
@@ -1472,6 +1476,7 @@ One thing that can be a bit tricky is selecting regions, not anymore.
 
 #+BEGIN_SRC emacs-lisp
 (use-package expand-region
+  :general
   :bind ("C-+" . er/expand-region))
 #+END_SRC
 
@@ -1492,7 +1497,8 @@ I use FiraCode, this mode allows us to use ligatures.
   (use-package fira-code-mode
     :diminish
     ;; use fira mode if it's the default font and the symbol font is installed
-    :if (and (x-list-fonts "Fira Code Symbol") (string= "Fira Code" (face-attribute 'default :family)))
+    :if (and (x-list-fonts "Fira Code Symbol")
+             (string= "Fira Code" (face-attribute 'default :family)))
     :custom
     ;; ligatures you don't want
     (fira-code-mode-disabled-ligatures '("[]" "x"))
@@ -1532,9 +1538,10 @@ You can bring up actions (skip, save) with =M-o=.
   :delight " fsp"
   :init
   (setq ispell-dictionary "american")
+  :general
+  (wal/colonel "s" '(flyspell-mode :wk "toggle spell-check"))
   :custom
-  (flyspell-issue-message-flag nil)
-  :bind ("<f8>" . flyspell-mode))
+  (flyspell-issue-message-flag nil))
 
 (use-package flyspell-correct
   :after flyspell
@@ -1564,7 +1571,7 @@ If you want to go back in time and point fingers at the progenitors of doom.
 #+BEGIN_SRC emacs-lisp
 (use-package git-timemachine
   :general
-  (wal/colonel "@" '(git-timemachine-toggle :wk "toggle git timemachine")))
+  (wal/colonel "g" '(git-timemachine-toggle :wk "toggle timemachine")))
 #+END_SRC
 
 **** golden-ratio
@@ -1592,9 +1599,9 @@ If you're too lazy to copy and paste.
   :diminish
   :general
   ;; there's no magit command we really need, so let's use `g`
-  (wal/general "g" '(google-this        :wk "google this"))
-  (wal/colonel "g" '(google-this-region :wk "google selected region"))
-  (wal/major   "g" '(counsel-google     :wk "google with counsel"))
+  (wal/major      "g" '(google-this        :wk "google this"))
+  (wal/captain    "g" '(google-this-region :wk "google selected region"))
+  (wal/lieutenant "g" '(counsel-google     :wk "google with counsel"))
   :bind ("<f6>" . 'google-this-mode-submap)
   :config
   (google-this-mode 1))
@@ -1610,11 +1617,10 @@ Let's try (to be) =helpful=.
   (counsel-describe-function-function #'helpful-callable)
   (counsel-describe-variable-function #'helpful-variable)
   :general
-  (wal/general "h" '(counsel-describe-variable :wk "describe variable"))
-  (wal/colonel "h" '(counsel-describe-function :wk "describe function"))
-  (wal/major   "h" '(helpful-at-point          :wk "helpful at point"))
+  (wal/colonel "h" '(helpful-at-point          :wk "helpful at point"))
+  (wal/major   "h" '(counsel-describe-variable :wk "describe variable"))
+  (wal/captain "h" '(counsel-describe-function :wk "describe function"))
   :bind
-  ("<f10>"                   . helpful-at-point)
   ([remap describe-function] . counsel-describe-function)
   ([remap describe-command]  . helpful-command)
   ([remap describe-variable] . counsel-describe-variable)
@@ -1692,10 +1698,11 @@ We use =ivy= for narrowing our options.
   (ivy-ignore-buffers      wal/ivy-ignore-buffers)
   (ivy-count-format        "%d/%d ")
   (ivy-wrap                t)
+  :general
+  (wal/colonel "b" '(ivy-resume :wk "resume ivy"))
   :bind (("C-x b" . wal/switch-buffer)
          ("H-b"   . wal/switch-buffer)
-         ("H-B"   . wal/ivy-switch-ignored-buffers)
-         ("<f9>"  . ivy-resume))
+         ("H-B"   . wal/ivy-switch-ignored-buffers))
   :config
   (ivy-mode 1))
 #+END_SRC
@@ -1776,7 +1783,7 @@ Prefer =capf=, bigger delay.
   (lsp-completion-provider :capf)
   (lsp-prefer-capf         t)
   (lsp-idle-delay          1.5)
-  (lsp-keymap-prefix "C-c l")
+  (lsp-keymap-prefix       "C-c l")
   :config
   ;; ignore elixir build and dependency folders
   (add-to-list 'lsp-file-watch-ignored "[/\\\\]_build$")
@@ -1903,9 +1910,9 @@ Have some perspective, man.
   :custom-face
   (persp-selected-face ((t (:weight bold :foreground "burlywood"))))
   :general
-  (wal/general "i" '(persp-kill          :wk "change perspective name"))
-  (wal/colonel "i" '(persp-add-buffer    :wk "add buffer to perspective"))
-  (wal/major   "i" '(persp-remove-buffer :wk "remove buffer from perspective"))
+  (wal/major      "i" '(persp-kill          :wk "change perspective name"))
+  (wal/captain    "i" '(persp-add-buffer    :wk "add buffer to perspective"))
+  (wal/lieutenant "i" '(persp-remove-buffer :wk "remove buffer from perspective"))
   :bind ("H-i" . persp-switch)
   :custom
   (persp-modestring-dividers '("(" ")" "/"))
@@ -1954,7 +1961,7 @@ Prettify your ugly JavaScript.
 #+BEGIN_SRC emacs-lisp
 (use-package prettier
   :general
-  (wal/general js2-mode-map "," '(prettier-prettify :wk "prettify")))
+  (wal/colonel js2-mode-map "p" '(prettier-prettify :wk "prettify")))
 #+END_SRC
 
 **** projectile
@@ -1966,9 +1973,9 @@ You don't really _need_ =treemacs=.
 (use-package projectile
   :delight " pjt"
   :general
-  (wal/general "p" '(projectile-find-file    :wk "find file in project")) 
-  (wal/colonel "p" '(projectile-find-dir     :wk "find dir in project")) 
-  (wal/major   "p" '(projectile-kill-buffers :wk "kill project buffers")) 
+  (wal/major      "p" '(projectile-find-file    :wk "find file in project")) 
+  (wal/captain    "p" '(projectile-find-dir     :wk "find dir in project")) 
+  (wal/lieutenant "p" '(projectile-kill-buffers :wk "kill project buffers")) 
   :bind ("H-p" . projectile-switch-project)
   :custom
   (projectile-completion-system     'ivy)
@@ -2147,9 +2154,9 @@ Smart searching with =ivy=.
 (use-package swiper
   :after ivy
   :general
-  (wal/general "s" '(swiper-all            :wk "search all buffers"))
-  (wal/colonel "s" '(swiper-multi          :wk "search multiple buffers"))
-  (wal/major   "s" '(swiper-thing-at-point :wk "search thing at point"))
+  (wal/major      "s" '(swiper-all            :wk "search all buffers"))
+  (wal/captain    "s" '(swiper-multi          :wk "search multiple buffers"))
+  (wal/lieutenant "s" '(swiper-thing-at-point :wk "search thing at point"))
   :bind (("C-c s" . swiper)
          ("H-s"   . swiper)
          (:map swiper-map
@@ -2288,7 +2295,7 @@ explicitly.
 (use-package typo
   :delight " typ"
   :general
-  (wal/major text-mode-map "/" '(typo-mode :wk "toggle typo mode")))
+  (wal/colonel text-mode-map "t" '(typo-mode :wk "toggle typo mode")))
 #+END_SRC
 
 **** undo-fu
@@ -2397,8 +2404,7 @@ I use a different (light) theme here.
   :hook ((writeroom-mode-enable  . (lambda() (wal/theme-light-switch 'secondary)))
          (writeroom-mode-disable . (lambda() (wal/theme-light-switch 'primary))))
   :general
-  (wal/major "w" '(writeroom-mode :wk "toggle writeroom"))
-  :bind ("<f5>" . writeroom-mode))
+  (wal/global "r" '(writeroom-mode :wk "toggle writeroom")))
 #+END_SRC
 
 **** yasnippet
@@ -2416,9 +2422,9 @@ if you don't have a hyper key, bind it to a personal binding.
 (use-package yasnippet
   :delight " yas"
   :general
-  (wal/general "y" '(yas-visit-snippet-file :wk "visit snippet file"))
-  (wal/colonel "y" '(yas-new-snippet        :wk "create new snippet"))
-  (wal/major   "y" '(yas-minor-mode         :wk "toggle yasnippet"))
+  (wal/major      "y" '(yas-visit-snippet-file :wk "visit snippet file"))
+  (wal/captain    "y" '(yas-new-snippet        :wk "create new snippet"))
+  (wal/lieutenant "y" '(yas-minor-mode         :wk "toggle yasnippet"))
   :bind ((:map yas-minor-mode-map
                ("<tab>"    . nil)
 	       ("TAB"      . nil)
@@ -2729,7 +2735,7 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
   ;; not sure why this can't be in config
   (org-super-agenda-mode)
   :general
-  (wal/general org-agenda-keymap "w" '(org-agenda-write :wk "write agenda"))
+  (wal/colonel org-agenda-keymap "w" '(org-agenda-write :wk "write agenda"))
   :bind (("C-c a" . org-agenda)
          ("H-a"   . org-agenda)))
 #+END_SRC
@@ -2789,12 +2795,11 @@ Use =org-tree-slide= for presentations.
   :hook ((org-tree-slide-play . wal/tree-slide-play)
          (org-tree-slide-stop . wal/tree-slide-stop))
   :general
-  (wal/general org-mode-map "," '(org-tree-slide-mode :wk "slideshow"))
-  :bind (("<f7>" . org-tree-slide-mode)
-         (:map org-tree-slide-mode-map
-          ("n" . org-tree-slide-move-next-tree)
-	  ("p" . org-tree-slide-move-previous-tree)
-	  ("v" . wal/tree-slide-toggle-visibility))))
+  (wal/colonel org-mode-map "p" '(org-tree-slide-mode :wk "presentation"))
+  :bind ((:map org-tree-slide-mode-map
+           ("n" . org-tree-slide-move-next-tree)
+	   ("p" . org-tree-slide-move-previous-tree)
+	   ("v" . wal/tree-slide-toggle-visibility))))
 #+END_SRC
 
 ***** Zettelkasten
