@@ -425,7 +425,7 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =C-c a <key>= opens today's (=t=), this week's (=w=) or my personal (=p=) agenda.
 + =C-c x <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
 + =C-c c ;= (un-)comments lines.
-+ =C-c f <key>= runs ag (=a= for generic, =p= for in-project search). _Requires ag_!
++ =C-c f <key>= runs ag (=f= for generic, =p= for in-project search). _Requires ag_!
 + =C-c g= opens magit status.
 + =C-c i <key>= interacts with perspectives.
 + =C-c j= dumb-jumps.
@@ -444,14 +444,9 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =C-x r q= (really) quits.
 + =C-x r s= restarts.
 + =C-z=/=C-S-z= undos/redos.
-+ =<f5>= to enter writeroom mode.
-+ =<f6>= to google this.
-+ =<f7>= to present org file.
-+ =<f8>= to spell-check.
-+ =<f9>= to resume =ivy=.
-+ =<f10>= to show help for thing at point.
++ =C-c c= (un-)comments.
 + =M-o= goes to the "other" window or the last buffer.
-+ =M-x= opens smex.
++ =M-x= opens =counsel-M-x=.
 
 ***** Hyper
 
@@ -460,60 +455,23 @@ actions or those that aren't essential (since having a hyper key is not
 guaranteed).
 
 + =H-4= kills window and buffer.
+= =H-0= deletes window.
 + =H-5= creates a new frame.
-+ =H-a= shows agenda.
++ =H-a= opens agenda dispatch.
 + =H-b= switches buffer.
 + =H-B= switches to a commonly ignored buffer.
 + =H-d= opens dired relative to open file.
 + =H-f= finds with ag.
 + =H-i= switches prespective.
 + =H-k= interacts with docker.
-+ =H-M= marks all like this (multiple cursors).
 + =H-m= marks next like this (multiple cursors).
 + =H-<mouse3>= adds another cursor at point.
 + =H-o= toggles bookmarks.
 + =H-p= switches project.
-+ =H-s= searches with swiper.
 + =H-<TAB>= expands snippets (in =yas-minor-mode=).
-+ =H-;= (un-)comments lines.
++ =H-c= (un-)comments lines.
 + =H-v= jumps to line with avy.
-+ =H-w= interacts with windows.
-
-***** General
-
-There's a third layer of key-bindings.
-The three =general= mappings perform useful but not
-foundational actions.
-
-Fittingly, all =minor mode= toggle actions are invoked
-using the =wal/major-key= prefix.
-
-Generally, major modes will have =,=, =.=, =/= perform
-specific actions only possible in their modes.
-
-#+BEGIN_SRC emacs-lisp
-;; American ranks
-(defvar wal/general-key "H-,"
-  "Wal's primary (or general) leader key.")
-
-(defvar wal/colonel-key "H-."
-  "Wal's secondary (or colonel) leader key.")
-
-(defvar wal/major-key "H-/"
-  "Wal's tertiary (or major) leader key.")
-
-(use-package general
-  :config
-  (general-create-definer wal/general
-    :prefix wal/general-key)
-  (general-create-definer wal/colonel
-    :prefix wal/colonel-key)
-  (general-create-definer wal/major
-    :prefix wal/major-key))
-
-(wal/major "N" '(linum-mode :wk "toggle line numbers"))
-(wal/major "W" '(whitespace-mode :wk "toggle whitespaces"))
-#+END_SRC
++ =H-w= opens =ace= dispatch.
 
 ****** Caps to Hyper
 
@@ -534,6 +492,57 @@ modifier_map Mod3   { Hyper_L, Hyper_R };
 // modifier_map Mod4   { <HYPR> };   
 modifier_map Mod3   { <HYPR> };   
 #+END_SRC 
+
+***** General
+
+There's a third layer of key-bindings.
+The five =general= mappings perform useful but never
+essential actions.
+
+#+BEGIN_SRC emacs-lisp
+;; American ranks
+(defvar wal/general-key "H-;"
+  "Wal's primary (or general) leader key.")
+
+(defvar wal/colonel-key "H-'"
+  "Wal's secondary (or colonel) leader key.")
+
+(defvar wal/major-key "H-,"
+  "Wal's tertiary (or major) leader key.")
+
+(defvar wal/captain-key "H-."
+  "Wal's quaternary (or captain) leader key.")
+
+(defvar wal/lieutenant-key "H-/"
+  "Wal's quinary (or lieutenant) leader key.")
+
+(use-package general
+  :config
+  (general-create-definer wal/general
+    :prefix wal/general-key)
+  (general-create-definer wal/colonel
+    :prefix wal/colonel-key)
+  (general-create-definer wal/major
+    :prefix wal/major-key)
+  (general-create-definer wal/captain
+    :prefix wal/captain-key)
+  (general-create-definer wal/lieutenant
+    :prefix wal/lieutenant-key))
+
+;; (wal/major "N" '(linum-mode :wk "toggle line numbers"))
+;; (wal/major "W" '(whitespace-mode :wk "toggle whitespaces"))
+#+END_SRC
+
+****** Leader Keys
+
+Leader key =general= should only prefix actions that should be possible
+no matter the major mode.
+
+Leader key =conolel= should only prefix actions that make sense within
+the current major mode.
+
+Leader keys =major=, =captain= and =lieutenant= all bind actions from
+packages that didn't fit elsewhere.
 
 ***** Non-Use-Package Bindings
 
@@ -925,9 +934,9 @@ Jumping to (visible) lines and chars is fun if you are too lazy to use your mous
 #+BEGIN_SRC emacs-lisp
 (use-package avy
   :general
-  (wal/general "v" '(avy-goto-whitespace-end :wk "go to whitespace"))
-  (wal/colonel "v" '(avy-kill-whole-line     :wk "kill specific line"))
-  (wal/major   "v" '(avy-copy-line           :wk "copy line and paste above"))
+  (wal/major      "v" '(avy-goto-whitespace-end :wk "go to whitespace"))
+  (wal/captain    "v" '(avy-kill-whole-line     :wk "kill specific line"))
+  (wal/lieutenant "v" '(avy-copy-line           :wk "copy line and paste above"))
   :bind (("C-c v v" . avy-goto-line)
          ("C-c v c" . avy-goto-char)
 	 ("H-v"     . avy-goto-line)))
@@ -1011,9 +1020,9 @@ Counsel me this, Counselor.
 (use-package counsel
   :general
   ;; still need to find a scheme for non-package prefixes
-  (wal/major "#" '(counsel-load-theme      :wk "load theme"))
-  (wal/major "$" '(counsel-command-history :wk "command history"))
-  (wal/major "!" '(counsel-set-variable    :wk "set variable"))
+  (wal/general "t" '(counsel-load-theme      :wk "load theme"))
+  (wal/general "h" '(counsel-command-history :wk "command history"))
+  (wal/general "v" '(counsel-set-variable    :wk "set variable"))
   :bind (("M-x"     . counsel-M-x)
          ("<menu>"  . counsel-M-x)
          ("C-x C-f" . counsel-find-file))
