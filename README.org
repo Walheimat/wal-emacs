@@ -531,8 +531,8 @@ essential actions.
   (general-create-definer wal/lieutenant
     :prefix wal/lieutenant-key))
 
-;; (wal/major "N" '(linum-mode :wk "toggle line numbers"))
-;; (wal/major "W" '(whitespace-mode :wk "toggle whitespaces"))
+(wal/colonel "N" '(linum-mode      :wk "toggle line numbers"))
+(wal/colonel "W" '(whitespace-mode :wk "toggle whitespaces"))
 #+END_SRC
 
 ****** Leader Keys
@@ -540,7 +540,7 @@ essential actions.
 Leader key =general= should only prefix actions that should be possible
 no matter the major mode.
 
-Leader key =conolel= should only prefix actions that make sense within
+Leader key =colonel= should only prefix actions that make sense within
 the current major mode, like toggling minor modes.
 
 Leader keys =major=, =captain= and =lieutenant= all bind
@@ -1130,9 +1130,9 @@ Debugging using VSCode's DAP.
   (require 'dap-node)
   (require 'dap-python)
   :general
-  (wal/colonel "d" '(dap-mode :wk "dap mode"))
+  (wal/colonel "D" '(dap-mode :wk "dap mode"))
   ;; we're already using `,` for prettier et al.
-  (wal/colonel "h"  '(dap-hydra :wk "debug hydra") :keymaps 'dap-mode-map ))
+  (wal/colonel dap-mode-map "d" '(dap-hydra :wk "debug hydra")))
 #+END_SRC
 
 ***** Debug Templates
@@ -1592,8 +1592,8 @@ Use the locally installed =eslint= and =tslint= binaries.
   :custom
   (flycheck-keymap-prefix (kbd "C-c q"))
   :general
-  (wal/colonel "q" '(flycheck-mode :wk "toggle flycheck"))
-  (wal/colonel   "n" '(flycheck-next-error :wk "next error") :keymaps 'flycheck-mode-map)
+  (wal/colonel "Q" '(flycheck-mode :wk "toggle flycheck"))
+  (wal/colonel flycheck-mode-map "n" '(flycheck-next-error :wk "next error"))
   :hook ((flycheck-mode . wal/use-eslint-from-node-modules)
          (flycheck-mode . wal/use-tslint-from-node-modules)))
 #+END_SRC
@@ -1625,7 +1625,7 @@ You can bring up actions (skip, save) with =M-o=.
   :init
   (setq ispell-dictionary "american")
   :general
-  (wal/colonel "s" '(flyspell-mode :wk "toggle spell-check"))
+  (wal/colonel "S" '(flyspell-mode :wk "toggle spell-check"))
   :custom
   (flyspell-issue-message-flag nil))
 
@@ -1657,7 +1657,7 @@ If you want to go back in time and point fingers at the progenitors of doom.
 #+BEGIN_SRC emacs-lisp
 (use-package git-timemachine
   :general
-  (wal/colonel "g" '(git-timemachine-toggle :wk "toggle timemachine")))
+  (wal/colonel "G" '(git-timemachine-toggle :wk "toggle timemachine")))
 #+END_SRC
 
 **** golden-ratio
@@ -1702,9 +1702,9 @@ Let's try (to be) =helpful=.
   (counsel-describe-function-function #'helpful-callable)
   (counsel-describe-variable-function #'helpful-variable)
   :general
-  (wal/major      "h" '(helpful-at-point          :wk "helpful at point")  :keymaps 'emacs-lisp-mode-map)
-  (wal/captain    "h" '(counsel-describe-variable :wk "describe variable") :keymaps 'emacs-lisp-mode-map)
-  (wal/lieutenant "h" '(counsel-describe-function :wk "describe function") :keymaps 'emacs-lisp-mode-map)
+  (wal/major      emacs-lisp-mode-map "h" '(helpful-at-point          :wk "helpful at point"))
+  (wal/captain    emacs-lisp-mode-map "h" '(counsel-describe-variable :wk "describe variable"))
+  (wal/lieutenant emacs-lisp-mode-map "h" '(counsel-describe-function :wk "describe function"))
   :bind
   ([remap describe-function] . counsel-describe-function)
   ([remap describe-command]  . helpful-command)
@@ -1784,7 +1784,7 @@ We use =ivy= for narrowing our options.
   (ivy-count-format        "%d/%d ")
   (ivy-wrap                t)
   :general
-  (wal/colonel "b" '(ivy-resume :wk "resume ivy"))
+  (wal/colonel "i" '(ivy-resume :wk "resume ivy"))
   :bind (("C-x b" . wal/switch-buffer)
          ("H-b"   . wal/switch-buffer)
          ("H-B"   . wal/ivy-switch-ignored-buffers))
@@ -2417,7 +2417,7 @@ explicitly.
 (use-package typo
   :delight " typ"
   :general
-  (wal/colonel text-mode-map "t" '(typo-mode :wk "toggle typo mode")))
+  (wal/colonel text-mode-map "T" '(typo-mode :wk "toggle typo mode")))
 #+END_SRC
 
 **** undo-fu
@@ -2544,7 +2544,7 @@ if you don't have a hyper key, bind it to a personal binding.
 (use-package yasnippet
   :delight " yas"
   :general
-  (wal/colonel    "y" '(yas-minor-mode         :wk "toggle snippet mode"))
+  (wal/colonel    "Y" '(yas-minor-mode         :wk "toggle snippet mode"))
   (wal/major      "y" '(yas-visit-snippet-file :wk "visit snippet file"))
   (wal/captain    "y" '(yas-new-snippet        :wk "create new snippet"))
   :bind ((:map yas-minor-mode-map
