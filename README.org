@@ -784,6 +784,34 @@ I want to ignore some buffers when switching.
     (wal/switch-buffer r)))
 #+END_SRC
 
+***** Windows
+
+I keep messing up, splitting verticall when I meant horizontally.
+This is inspired by [[https://github.com/purcell/emacs.d/blob/master][purcell's config]].
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/split-window-the-other-way ()
+  "Split window the other way.
+This means if horizontally split, split vertically;
+if vertically split, split horizontally."
+  (interactive)
+  (let* ((other-buffer (and (next-window) (window-buffer (next-window))))
+         (win (selected-window))
+         (split-direction (cond ((or (windows-sharing-edge win 'above)
+	                             (windows-sharing-edge win 'below))
+                                 'vert)
+                                ((or (windows-sharing-edge win 'right)
+                                     (windows-sharing-edge win 'left))
+                                 'hori)
+				(t nil))))
+    (delete-other-windows)
+    (pcase split-direction
+      ('vert (split-window-horizontally))
+      ('hori (split-window-vertically)))
+    (when other-buffer
+      (set-window-buffer (next-window) other-buffer))))
+#+END_SRC
+
 ***** Other
 
 Check for custom arguments.
@@ -833,6 +861,8 @@ switching setup.
    'aw--switch-buffer
    :override (lambda (&rest r) (wal/switch-buffer r))
    '((name . "aw--switch-buffer")))
+  :general
+  (wal/major "w" '(wal/split-window-the-other-way :wk "split the other way"))
   :bind (("H-w"   . ace-window)
          ("C-c w" . ace-window)))
 #+END_SRC
@@ -1089,9 +1119,9 @@ Debugging using VSCode's DAP.
   (require 'dap-node)
   (require 'dap-python)
   :general
-  (wal/colonel "d" '(dap-mode :wk "debug"))
+  (wal/colonel "d" '(dap-mode :wk "dap mode"))
   ;; we're already using `,` for prettier et al.
-  (:keymaps 'dap-mode-map (wal/general "d"  '(dap-hydra :wk "debug hydra"))))
+  (wal/colonel "h"  '(dap-hydra :wk "debug hydra") :keymaps 'dap-mode-map ))
 #+END_SRC
 
 ***** Debug Templates
@@ -2143,7 +2173,8 @@ privileges.
 
 #+BEGIN_SRC emacs-lisp
 (use-package sudo-edit
-  :bind ("H-e" . sudo-edit-find-file))
+  :general
+  (wal/general "e" '(sudo-edit-find-file :wk "find file as root")))
 #+END_SRC
 
 **** swiper
