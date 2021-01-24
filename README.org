@@ -1057,7 +1057,11 @@ Code-completion. In a box.
 Counsel me this, Counselor.
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/use-prescient t
+  "Whether prescient is used.")
+
 (use-package counsel
+  :after ivy
   :general
   (wal/general "t" '(counsel-load-theme      :wk "load theme"))
   (wal/general "h" '(counsel-command-history :wk "command history"))
@@ -1069,7 +1073,9 @@ Counsel me this, Counselor.
   :custom
   (counsel-linux-app-format-function #'counsel-linux-app-format-function-command-only)
   :config
-  (setcdr (assq 'counsel-M-x ivy-initial-inputs-alist) ""))
+  ;; package ivy-prescient sets `ivy-initial-inputs-alist` to nil!
+  (unless wal/use-prescient
+    (setcdr (assq 'counsel-M-x ivy-initial-inputs-alist) "")))
 #+END_SRC
 
 **** crux
@@ -2045,6 +2051,7 @@ Better short-term-memory for =ivy=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package prescient
+  :if wal/use-prescient
   :custom
   (prescient-sort-length-enable nil)
   (prescient-save-file (expand-file-name "prescient-persist" wal/cache-folder))
@@ -2053,6 +2060,7 @@ Better short-term-memory for =ivy=.
   (prescient-persist-mode +1))
 
 (use-package ivy-prescient
+  :if wal/use-prescient
   :after counsel
   :custom
   ;; default plus `wal/switch-buffer`
@@ -2062,6 +2070,7 @@ Better short-term-memory for =ivy=.
   (ivy-prescient-mode +1))
 
 (use-package company-prescient
+  :if wal/use-prescient
   :after company
   :config
   (company-prescient-mode +1))
