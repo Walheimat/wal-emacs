@@ -392,6 +392,13 @@ To make this work, we need to tweak a few things.
   (setq indent-tabs-mode t)
   (setq tab-width wal/tab-width))
 
+(defun wal/maybe-enable-tabs (&optional tab-indent-fun)
+  "Maybe enable tabs and use TAB-INDENT-FUN to do so."
+  (when wal/prefer-tabs
+    (wal/enable-tabs)
+    (when tab-indent-fun
+        (setq-local indent-line-function tab-indent-fun))))
+
 (defun wal/set-tab-defaults (&optional num)
   "Reset tab defaults, optionally to NUM."
   (interactive)
@@ -764,8 +771,9 @@ I want to ignore some buffers when switching.
 (defun wal/is-commonly-ignored-buffer (buffer-or-string)
   "Check if provided BUFFER-OR-STRING is commonly ignored."
   (or
-   ;; starred buffers
-   (string-match "^\\*[[:ascii:]]+\\*\\'" buffer-or-string)
+   ;; starred buffers other than scratch buffers
+   (and (not (string-match "^\\*scratch" buffer-or-string))
+        (string-match "^\\*[[:ascii:]]+\\*\\'" buffer-or-string))
    ;; dired
    (eq (with-current-buffer
            (get-buffer-create buffer-or-string)
@@ -1254,7 +1262,9 @@ Let's have a dash of board.
   (dashboard-projects-backend           'projectile)
   (dashboard-items                      '((recents   . 5)
 	                                  (projects  . 5)
-                                          (agenda    . 5)
+					  ;; this means all agenda files are opened
+					  ;; which I find annoying
+                                          ;; (agenda    . 5)
                                           (bookmarks . 5)))
   (dashboard-center-content             t)
   (dashboard-set-file-icons             t)
@@ -2624,7 +2634,7 @@ Just activate =flycheck= and tabs for now.
   "Hooks for css mode."
   (message "Centering? It's simple. Here's 15 ways to do it.")
   (add-node-modules-path)
-  (wal/enable-tabs)
+  (wal/maybe-enable-tabs)
   (flycheck-mode))
 
 (use-package css-mode
@@ -2686,7 +2696,7 @@ Enable =flycheck= and disable internal checker.
 (defun wal/js2-mode-hook ()
   "Hooks for js2 mode."
   (message "NaN !== NaN")
-  (wal/enable-tabs)
+  (wal/maybe-enable-tabs)
   (add-node-modules-path)
   (flycheck-mode 1)
   (rainbow-delimiters-mode)
@@ -3013,9 +3023,9 @@ Pretty much like =js2=.
   "Hooks for rjsx mode."
   (message "Extend those ugly JavaScripts of yours!")
   (add-node-modules-path)
-  (wal/enable-tabs)
+  ;; maybe pass 'js-jsx-indent-line here
+  (wal/maybe-enable-tabs)
   (flycheck-mode)
-  (setq-local indent-line-function 'js-jsx-indent-line)
   (add-hook 'write-file-functions
 	    (lambda ()
 	      (delete-trailing-whitespace)
@@ -3034,7 +3044,7 @@ Enable =lsp=, =flycheck=.
 (defun wal/typescript-mode-hook ()
   "Hooks for typescript mode."
   (message "This is any, that is any, everything is any!")
-  (wal/enable-tabs)
+  (wal/maybe-enable-tabs)
   (add-node-modules-path)
   (flycheck-mode 1)
   (lsp)
@@ -3056,7 +3066,7 @@ Web mode uses =flycheck=, prompts user if =lsp= should be enabled.
 (defun wal/web-mode-hook ()
   "Hooks for web mode."
   (message "This is the Internet")
-  (wal/enable-tabs)
+  (wal/maybe-enable-tabs)
   (web-mode-use-tabs)
   (add-node-modules-path)
   (flycheck-mode)
