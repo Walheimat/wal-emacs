@@ -1415,6 +1415,7 @@ Note that this packag requires you to install =all-the-icons= fonts[fn:4].
   (doom-modeline-minor-modes       t)
   (doom-modeline-buffer-encoding   nil)
   (doom-modeline-icon              t)
+  (doom-modeline-vcs-max-length    20)
   :config
   (doom-modeline-mode 1))
 #+END_SRC
@@ -2628,19 +2629,23 @@ Enable =flycheck=.
 
 **** css-mode
 
-Just activate =flycheck= and tabs for now.
+We want quicker =company= suggestions when in CSS modes.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/css-mode-hook ()
+(defun wal/css-modes-hook ()
   "Hooks for css mode."
   (message "Centering? It's simple. Here's 15 ways to do it.")
   (add-node-modules-path)
   (wal/maybe-enable-tabs)
-  (flycheck-mode))
+  (flycheck-mode)
+  ;; faster  company
+  (setq-local company-idle-delay 0.1
+              company-minimum-prefix-length 2))
 
-(use-package css-mode
+(use-package css-modes
   :ensure nil
-  :hook (css-mode . wal/css-mode-hook))
+  :hook (css-mode  . wal/css-modes-hook)
+        (scss-mode . wal/css-modes-hook))
 #+END_SRC
 
 **** dockerfile-mode
