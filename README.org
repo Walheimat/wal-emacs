@@ -109,6 +109,7 @@ We'll be getting most (if not all) packages from the prior.
 
 #+BEGIN_SRC emacs-lisp
 (require 'package)
+
 (let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
 		    (not (gnutls-available-p))))
        (proto (if no-ssl "http" "https")))
@@ -119,11 +120,8 @@ We'll be getting most (if not all) packages from the prior.
    1. Install an Emacs version that does support SSL and be safe.
    2. Remove this warning from your init file so you won't see it again."))
   (add-to-list 'package-archives (cons "melpa" (concat proto "://melpa.org/packages/")) t)
-  (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
-  ;; Comment/uncomment this line to enable MELPA Stable if desired.  See `package-archive-priorities`
-  ;; and `package-pinned-packages`. Most users will not need or want to do this.
-  ;;(add-to-list 'package-archives (cons "melpa-stable" (concat proto "://stable.melpa.org/packages/")) t)
-  )
+  (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t))
+
 (setq package-pinned-packages '())
 (package-initialize)
 #+END_SRC
@@ -379,14 +377,14 @@ To make this work, we need to tweak a few things.
   "Whether tabs are used for indentation.")
 
 (defun wal/disable-tabs ()
-  "Disable `indent-tabs-mode`."
+  "Disable `indent-tabs-mode'."
   (interactive)
   (local-unset-key (kbd "TAB"))
   (setq indent-tabs-mode nil)
   (setq tab-width (eval (car (get 'tab-width 'standard-value)))))
 
 (defun wal/enable-tabs ()
-  "Use TAB key and turn on `indent-tabs-mode`."
+  "Use TAB key and turn on `indent-tabs-mode'."
   (interactive)
   (local-set-key (kbd "TAB") 'tab-to-tab-stop)
   (setq indent-tabs-mode t)
@@ -595,7 +593,7 @@ Otherwise the colors might clash.
 (defvar wal/primary-emacs-theme 'kaolin-valley-dark
   "The quote-unquote default Emacs theme.")
 
-;; use `setq` in your .emacs to switch
+;; use `setq' in your .emacs to switch
 (defvar wal/secondary-emacs-theme 'kaolin-valley-light
   "The non-default Emacs theme.")
 
@@ -622,7 +620,7 @@ Otherwise the colors might clash.
 
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-visuals)
-  ;; function `wal/transparency` hasn't been untangeled yet
+  ;; function `wal/transparency' hasn't been untangeled yet
   (add-hook 'after-init-hook 'wal/setup-visuals))
 #+END_SRC
 
@@ -759,7 +757,7 @@ ask if it should get created."
 
 (add-to-list 'find-file-not-found-functions #'wal/create-non-existent-directory)
 
-;; don't care about `.` and `..`
+;; don't care about . and ..
 (defun wal/directory-files (directory)
   "Get all directory files in DIRECTORY except for current and parent directories."
   (nthcdr 2 (directory-files directory t)))
@@ -977,7 +975,8 @@ Keep packages updated (disabled for now).
 Create new themes more easily.
 
 #+BEGIN_SRC emacs-lisp
-(use-package autothemer)
+(use-package autothemer
+  :defer t)
 #+END_SRC
 
 **** avy
@@ -1086,7 +1085,7 @@ Counsel me this, Counselor.
   :custom
   (counsel-linux-app-format-function #'counsel-linux-app-format-function-command-only)
   :config
-  ;; package ivy-prescient sets `ivy-initial-inputs-alist` to nil!
+  ;; package ivy-prescient sets `ivy-initial-inputs-alist' to nil!
   (unless wal/use-prescient
     (setcdr (assq 'counsel-M-x ivy-initial-inputs-alist) "")))
 #+END_SRC
@@ -1146,7 +1145,6 @@ Debugging using VSCode's DAP.
   (require 'dap-python)
   :general
   (wal/colonel "D" '(dap-mode :wk "dap mode"))
-  ;; we're already using `,` for prettier et al.
   (wal/colonel dap-mode-map "d" '(dap-hydra :wk "debug hydra")))
 #+END_SRC
 
@@ -1644,14 +1642,16 @@ You can bring up actions (skip, save) with =M-o=.
   (setq ispell-dictionary "american")
   :general
   (wal/colonel "S" '(flyspell-mode :wk "toggle spell-check"))
+  (wal/colonel prog-mode-map "S" '(flyspell-prog-mode :wk "toggle spell-check (prog)"))
+  (wal/colonel "s" '(flyspell-buffer :wk "check spelling"))
   :custom
   (flyspell-issue-message-flag nil))
 
 (use-package flyspell-correct
   :after flyspell
-  :bind (:map flyspell-mode-map
-              ("C-n" . flyspell-correct-next)
-	      ("C-p" . flyspell-correct-previous)))
+  :general
+  (wal/colonel flyspell-mode-map "n" '(flyspell-correct-next     :wk "correct next error"))
+  (wal/colonel flyspell-mode-map "p" '(flyspell-correct-previous :wk "correct prev error")))
 
 (use-package flyspell-correct-ivy
   :after flyspell-correct)
@@ -1704,7 +1704,6 @@ If you're too lazy to copy and paste.
   :commands (google-this google-this-region)
   :diminish
   :general
-  ;; there's no magit command we really need, so let's use `g`
   (wal/major      "g" '(google-this        :wk "google this"))
   (wal/captain    "g" '(google-this-region :wk "google selected region"))
   (wal/lieutenant "g" '(counsel-search     :wk "search with counsel")))
@@ -1963,7 +1962,7 @@ You will have to install them yourself.[fn:9]
 
 Version control has never been this easy before.
 
-Also trying out `magit-todos`.
+Also trying out =magit-todos=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
@@ -2081,7 +2080,7 @@ Better short-term-memory for =ivy=.
   :if wal/use-prescient
   :after counsel
   :custom
-  ;; default plus `wal/switch-buffer`
+  ;; default plus `wal/switch-buffer'
   (ivy-prescient-sort-commands '(:not swiper swiper-isearch ivy-switch-buffer wal/switch-buffer))
   (ivy-prescient-retain-classic-highlighting t)
   :config
@@ -2766,7 +2765,7 @@ state =CANCELLED=.
   :hook (org-mode . (lambda() (org-bullets-mode t))))
 
 (defun wal/org-mode ()
-  "Life shouldn't be a drag in `org-mode`."
+  "Life shouldn't be a drag in `org-mode'."
   (message "Organize! Seize the means of production!")
   (drag-stuff-mode -1))
 
