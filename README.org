@@ -432,8 +432,7 @@ but some =C-x <key>= mappings snuck in.
 If you want to see all personal keybindings, execute =describe-personal-keybindings=.
 
 + =C-c a <key>= opens today's (=t=), this week's (=w=) or my personal (=p=) agenda.
-+ =C-c x <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
-+ =C-c c ;= (un-)comments lines.
++ =C-c c= (un-)comments.
 + =C-c f <key>= runs ag (=f= for generic, =p= for in-project search). _Requires ag_!
 + =C-c g= opens magit status.
 + =C-c i <key>= interacts with perspectives.
@@ -448,12 +447,12 @@ If you want to see all personal keybindings, execute =describe-personal-keybindi
 + =C-c t <key>= opens eshell (=e=), ansi-term (=a=) or vterm (=v=).
 + =C-c v <key>= jumps to char (=c=) or line (=v=) with avy.
 + =C-c w <key>= swaps (=s=) or deletes other windows (=d=).
++ =C-c x <key>= to duplicate (=d=) the current line, kill (=k=) other buffers and (=o=) open with outside program.
 + =C-+= expands region.
-+ =C-x C-c= opens this config org file.
++ =C-/= (un-)comments lines.
 + =C-x r q= (really) quits.
 + =C-x r s= restarts.
 + =C-z=/=C-S-z= undos/redos.
-+ =C-c c= (un-)comments.
 + =M-o= goes to the "other" window or the last buffer.
 + =M-x= opens =counsel-M-x=.
 
@@ -469,16 +468,17 @@ guaranteed).
 + =H-a= opens agenda dispatch.
 + =H-b= switches buffer.
 + =H-B= switches to a commonly ignored buffer.
++ =H-c= opens this config.
 + =H-d= opens dired relative to open file.
 + =H-f= finds with ag.
 + =H-i= switches prespective.
 + =H-k= interacts with docker.
++ =H-M= marks all like this (multiple cursors).
 + =H-m= marks next like this (multiple cursors).
 + =H-<mouse3>= adds another cursor at point.
 + =H-o= toggles bookmarks.
 + =H-p= switches project.
 + =H-<TAB>= expands snippets (in =yas-minor-mode=).
-+ =H-c= (un-)comments lines.
 + =H-v= jumps to line with avy.
 + =H-w= opens =ace= dispatch.
 
@@ -555,31 +555,32 @@ additional actions that didn't fit elsewhere.
 The letters follow the custom binding scheme,
 so =f= will perform an =ag= action.
 
-***** Non-Use-Package Bindings
+***** Additional (Un-)Bindings
 
 Most bindings are declared in the [[*Packages][packages]] section.
 
 #+BEGIN_SRC emacs-lisp
-;; windows
-(global-set-key (kbd "H-4") 'kill-buffer-and-window)
-(global-set-key (kbd "H-5") 'make-frame-command)
-(global-set-key (kbd "H-0") 'delete-window)
-
-;; emacs
-(global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
-
-;; no triple-ESC
-(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-
 (defvar wal/readme-config
   (expand-file-name "README.org" wal/emacs-config-default-path)
   "The path to this config file.")
 
-(global-set-key
- (kbd "C-x C-c")
- (lambda ()
-   (interactive)
-   (switch-to-buffer (find-file-noselect wal/readme-config))))
+(defun wal/readme-config-open ()
+  "Open this very config."
+  (interactive)
+  (switch-to-buffer (find-file-noselect wal/readme-config)))
+
+;; windows
+(global-set-key (kbd "H-4") 'kill-buffer-and-window)
+(global-set-key (kbd "H-5") 'make-frame-command)
+(global-set-key (kbd "H-0") 'delete-window)
+(global-set-key (kbd "H-c") 'wal/readme-config-open)
+
+;; emacs
+(global-set-key (kbd "C-x r q") 'save-buffers-kill-terminal)
+(global-unset-key (kbd "C-x C-c"))
+
+;; no triple-ESC
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 #+END_SRC
 
 **** Theme
@@ -855,6 +856,7 @@ switching setup.
 
 #+BEGIN_SRC emacs-lisp
 (use-package ace-window
+  :commands ace-window
   :custom
   (aw-fair-aspect-ratio 4)
   (aw-dispatch-always   t)
@@ -897,6 +899,7 @@ to download it automatically, but might fail).
 
 #+BEGIN_SRC emacs-lisp
 (use-package ag
+  :commands (ag ag-project ag-files ag-kill-buffers ag-dired)
   :ensure-system-package ag
   :custom
   (ag-highlight-search t)
@@ -982,6 +985,11 @@ Jumping to (visible) lines and chars is fun if you are too lazy to use your mous
 
 #+BEGIN_SRC emacs-lisp
 (use-package avy
+  :commands (avy-goto-line
+             avy-goto-char
+             avy-goto-whitespace-end
+             avy-kill-whole-line
+             avy-copy-line)
   :general
   (wal/major      "v" '(avy-goto-whitespace-end :wk "go to whitespace"))
   (wal/captain    "v" '(avy-kill-whole-line     :wk "kill specific line"))
@@ -1130,6 +1138,7 @@ Debugging using VSCode's DAP.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dap-mode
+  :commands dap-mode
   :delight " dap"
   :custom
   (lsp-enable-dap-auto-configure nil)
@@ -1505,8 +1514,9 @@ Comment code like in =vim=, evil, evil =vim=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package evil-nerd-commenter
-  :bind (("H-c"   . evilnc-comment-or-uncomment-lines)
-         ("C-c c" . evilnc-comment-or-uncomment-lines)))
+  :commands evilnc-comment-or-uncomment-lines
+  :bind (:map prog-mode-map 
+          ("C-/"   . evilnc-comment-or-uncomment-lines)))
 #+END_SRC
 
 **** eww
@@ -1528,7 +1538,7 @@ One thing that can be a bit tricky is selecting regions, not anymore.
 
 #+BEGIN_SRC emacs-lisp
 (use-package expand-region
-  :general
+  :commands er/expand-region
   :bind ("C-+" . er/expand-region))
 #+END_SRC
 
@@ -1669,6 +1679,7 @@ If you want to go back in time and point fingers at the progenitors of doom.
 
 #+BEGIN_SRC emacs-lisp
 (use-package git-timemachine
+  :commands git-timemachine-toggle
   :general
   (wal/colonel "G" '(git-timemachine-toggle :wk "toggle timemachine")))
 #+END_SRC
@@ -1695,14 +1706,13 @@ If you're too lazy to copy and paste.
 
 #+BEGIN_SRC emacs-lisp
 (use-package google-this
+  :commands (google-this google-this-region)
   :diminish
   :general
   ;; there's no magit command we really need, so let's use `g`
   (wal/major      "g" '(google-this        :wk "google this"))
   (wal/captain    "g" '(google-this-region :wk "google selected region"))
-  (wal/lieutenant "g" '(counsel-search     :wk "search with counsel"))
-  :config
-  (google-this-mode 1))
+  (wal/lieutenant "g" '(counsel-search     :wk "search with counsel")))
 #+END_SRC
 
 **** helpful
@@ -1866,7 +1876,7 @@ Who doesn't like pods and stuff?
 
 #+BEGIN_SRC emacs-lisp
 (use-package kubernetes
-  :commands (kubernetes-overview))
+  :commands kubernetes-overview)
 #+END_SRC
 
 **** lsp-mode
@@ -1962,6 +1972,7 @@ Also trying out `magit-todos`.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
+  :commands magit-status
   :bind (("C-c g" . magit-status)
          ("H-g"   . magit-status)))
 
@@ -2094,6 +2105,7 @@ Prettify your ugly JavaScript.
 
 #+BEGIN_SRC emacs-lisp
 (use-package prettier
+  :commands prettier-prettify
   :general
   (wal/colonel js2-mode-map "p" '(prettier-prettify :wk "prettify")))
 #+END_SRC
@@ -2229,7 +2241,8 @@ Highlight sections by edit date.
       (setq wal/smeargle-on t)
       (smeargle))))
 
-(use-package smeargle)
+(use-package smeargle
+  :commands smeargle)
 #+END_SRC
 
 **** smex
@@ -2277,6 +2290,7 @@ privileges.
 
 #+BEGIN_SRC emacs-lisp
 (use-package sudo-edit
+  :commands (sudo-edit sudo-edit-find-file)
   :general
   (wal/general "e" '(sudo-edit-find-file :wk "find file as root")))
 #+END_SRC
@@ -2288,6 +2302,7 @@ Smart searching with =ivy=.
 #+BEGIN_SRC emacs-lisp
 (use-package swiper
   :after ivy
+  :commands (swiper swiper-all swiper-multi swiper-thing-at-point swiper-avy)
   :general
   (wal/major      "s" '(swiper-all            :wk "search all buffers"))
   (wal/captain    "s" '(swiper-multi          :wk "search multiple buffers"))
@@ -2428,6 +2443,7 @@ explicitly.
 
 #+BEGIN_SRC emacs-lisp
 (use-package typo
+  :commands typo-mode
   :delight " typ"
   :general
   (wal/colonel text-mode-map "T" '(typo-mode :wk "toggle typo mode")))
@@ -2500,6 +2516,7 @@ always try to build from source ...
       (setq vterm-shell "/bin/fish")))
 
   (use-package vterm-toggle
+    :after vterm
     :custom
     (vterm-toggle-fullscreen-p nil)
     (vterm-toggle-scope        'project)
@@ -2536,10 +2553,11 @@ I use a different (light) theme here.
 
 #+BEGIN_SRC emacs-lisp
 (use-package writeroom-mode
+  :commands writeroom-mode
   :hook ((writeroom-mode-enable  . (lambda() (wal/theme-light-switch 'secondary)))
          (writeroom-mode-disable . (lambda() (wal/theme-light-switch 'primary))))
   :general
-  (wal/global "r" '(writeroom-mode :wk "toggle writeroom")))
+  (wal/colonel "R" '(writeroom-mode :wk "toggle writeroom")))
 #+END_SRC
 
 **** yasnippet
@@ -2555,6 +2573,7 @@ if you don't have a hyper key, bind it to a personal binding.
   (yas-reload-all))
 
 (use-package yasnippet
+  :commands (yas-minor-mode yas-visit-snippet-file yas-new-snippet)
   :delight " yas"
   :general
   (wal/colonel    "Y" '(yas-minor-mode         :wk "toggle snippet mode"))
@@ -2930,6 +2949,7 @@ Use =org-tree-slide= for presentations.
   (beacon-mode 1))
 
 (use-package org-tree-slide
+  :commands org-tree-slide-mode
   :diminish buffer-face-mode
   :hook ((org-tree-slide-play . wal/tree-slide-play)
          (org-tree-slide-stop . wal/tree-slide-stop))
