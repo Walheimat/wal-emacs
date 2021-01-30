@@ -1061,21 +1061,30 @@ nice despite us using =ivy= for completion everywhere.
   :custom
   (consult-project-root-function #'projectile-project-root)
   :bind
-  ("M-g g" . consult-goto-line)
+  ("M-g g"   . consult-goto-line)
+  ("M-g m m" . consult-mark)
+  ("M-g m g" . consult-global-mark)
   :init
   ;; advise functions to use selectrum when
   ;; `ivy' behaves unpredictably
   (--each
-    '(consult-yank
+    '(consult-buffer
+      consult-focus-lines
+      consult-global-mark
+      consult-grep
       consult-mark
+      consult-minor-mode-menu
       consult-mode-command
-      consult-grep)
+      consult-outline
+      consult-yank)
     (advice-add it :around #'wal/advise-selectrum))
   :general
-  (wal/general "y" '(consult-yank         :wk "yank select"))
-  (wal/general "m" '(consult-mark         :wk "go to mark"))
+  (wal/general "f" '(consult-focus-lines  :wk "focus-lines"))
   (wal/general "g" '(consult-grep         :wk "grep"))
-  (wal/colonel "c" '(consult-mode-command :wk "load theme")))
+  (wal/general "m" '(consult-mark         :wk "go to mark"))
+  (wal/general "y" '(consult-yank         :wk "yank select"))
+  (wal/colonel "c" '(consult-mode-command :wk "invoke mode command"))
+  (wal/colonel org-mode-map "h" '(consult-outline :wk "jump to heading")))
 
 (use-package consult-flycheck
   :init
@@ -2184,7 +2193,7 @@ but we still use it to advise a few =consult= functions.
 
 **** smartparens
 
-Create a pairs automatically.
+I didn't have smart parens growing up so I need help.
 
 #+BEGIN_SRC emacs-lisp
 (use-package smartparens
