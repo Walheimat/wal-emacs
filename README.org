@@ -859,16 +859,16 @@ switching setup.
   :custom
   (aw-fair-aspect-ratio 4)
   (aw-dispatch-always   t)
+  (aw-keys              '(?j ?k ?l ?\; ?u ?i ?o ?p))
   :config
   (setq aw-dispatch-alist '((?s aw-swap-window                "swap")
                             (?m aw-move-window                "move")
                             (?h aw-split-window-horz          "horizontal split")
                             (?v aw-split-window-vert          "vertical split")
                             (?w aw-split-window-fair          "fair split")
-                            (?b aw-switch-buffer-in-window    "buffer focus")
-			    (?u aw-switch-buffer-other-window "buffer unfocus")
-			    (?o delete-other-windows          "only")
-	                    (?x aw-delete-window              "delete")
+                            (?b aw-switch-buffer-in-window    "switch buffer")
+			    (?e delete-other-windows          "delete except")
+	                    (?d aw-delete-window              "delete")
 			    ;; if this has a description, it doesn't work
                             (?? aw-show-dispatch-help)))
   :init
@@ -877,7 +877,7 @@ switching setup.
    :override (lambda (&rest r) (wal/switch-buffer r))
    '((name . "aw--switch-buffer")))
   :general
-  (wal/major "w" '(wal/split-window-the-other-way :wk "split the other way"))
+  (wal/general "s" '(wal/split-window-the-other-way :wk "split the other way"))
   :bind (("H-w"   . ace-window)
          ("C-c w" . ace-window)))
 #+END_SRC
@@ -1097,6 +1097,8 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
 
 #+BEGIN_SRC emacs-lisp
 (use-package crux
+  :general
+  (wal/general "." '(crux-find-user-init-file :wk "find init file"))
   :bind (("M-o"            . crux-other-window-or-switch-buffer)
          ("C-c x k"        . crux-kill-other-buffers)
          ("C-c x o"        . crux-open-with)
@@ -1240,22 +1242,6 @@ Let's have a dash of board.
 	  (wal/directory-files user-emacs-directory))
   "Files that should not be considered recent files.")
 
-;; the issue here is that magit will keep re-creating the dashboard
-(defun wal/daemon-dash ()
-  "For daemon mode run all functions."
-  (dashboard-insert-startupify-lists)
-  (switch-to-buffer dashboard-buffer-name)
-  (goto-char (point-min))
-  (redisplay)
-  (run-hooks 'dashboard-after-initialize-hook))
-
-;; see above
-(defun wal/dashboard-setup ()
-  "Set up dashboard."
-  (if (daemonp)
-      (add-hook 'server-after-make-frame-hook 'wal/daemon-dash t)
-  (dashboard-setup-startup-hook)))
-
 (use-package dashboard
   :after page-break-lines
   :custom
@@ -1364,7 +1350,8 @@ override some keybindings.
   :ensure nil
   :init
   (put 'dired-find-alternate-file 'disabled nil)
-  :custom ((dired-listing-switches "-lah --group-directories-first"))
+  :custom
+  (dired-listing-switches "-lah --group-directories-first")
   :bind (("H-d" . dired-jump)
          (:map dired-mode-map
                ("V" . dired-display-file)    ;; overrides dired-do-run-mail
@@ -1383,6 +1370,8 @@ Hit =/= to filter in =dired= buffers.
 
 **** diredfl
 
+Highlighting in =dired= buffers.
+
 #+BEGIN_SRC emacs-lisp
 (use-package diredfl
   :config
@@ -1398,9 +1387,9 @@ I use Docker a lot, don't always have to use the command line.
   :custom
   (docker-container-default-sort-key '("Names"))
   :general
-  (wal/major       "k" '(docker-compose-up   :wk "docker-compose up"))
-  (wal/captain     "k" '(docker-compose-exec :wk "docker-compose exec"))
-  (wal/lieutentant "k" '(docker-compose-logs :wk "docker-compose logs"))
+  (wal/major      "k" '(docker-compose-up   :wk "docker-compose up"))
+  (wal/captain    "k" '(docker-compose-exec :wk "docker-compose exec"))
+  (wal/lieutenant "k" '(docker-compose-logs :wk "docker-compose logs"))
   :bind (("C-c k" . docker)
          ("H-k"   . docker)))
 #+END_SRC
@@ -1467,38 +1456,33 @@ download a set that supports your emojis.
 Set up =eshell=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/eshell-mode-hook ()
-  "Hooks for eshell mode."
-  (esh-autosuggest-mode)
-  (wal/setup-eshell-ivy-completion))
-
 (use-package eshell
   :ensure nil
-  :hook (eshell-mode . wal/eshell-mode-hook)
-  :bind ("C-c t e" . eshell))
+  :init
+  ;; override how clearing the eshell works
+  (advice-add
+   'eshell/clear :override
+   (lambda nil
+     (let ((eshell-buffer-maximum-lines 0))
+       (eshell-truncate-buffer))))
+  :bind
+  ("C-c t e" . eshell)
+  (:map eshell-mode-map
+	([remap eshell-pcomplete] . completion-at-point)
+	("C-l"                    . eshell/clear)))
 
-(use-package esh-autosuggest)
+(use-package esh-autosuggest
+  :hook
+  (eshell-mode . esh-autosuggest-mode))
 
-(use-package eshell-prompt-extras)
+(use-package eshell-prompt-extras
+  :init
+  (setq eshell-highlight-prompt nil
+        eshell-prompt-function 'epe-theme-lambda))
 
 (use-package eshell-syntax-highlighting
-  :config
-  (eshell-syntax-highlighting-global-mode))
-
-(defun wal/setup-eshell-ivy-completion ()
-  "Setup eshell completion to use ivy."
-  (define-key eshell-mode-map [remap eshell-pcomplete] 'completion-at-point))
-
-;; override how clearing the eshell works
-(defun eshell/clear ()
-  "Clear the shell by truncating everything."
-  (interactive)
-  (let ((eshell-buffer-maximum-lines 0)) (eshell-truncate-buffer)))
-
-(with-eval-after-load "esh-opt"
-  (autoload 'epe-theme-lambda "eshell-prompt-extras")
-  (setq eshell-highlight-prompt nil
-        eshell-prompt-function  'epe-theme-lambda))
+  :hook
+  (eshell-mode . eshell-syntax-highlighting-mode))
 #+END_SRC
 
 **** evil-nerd-commenter
@@ -1655,17 +1639,6 @@ You can bring up actions (skip, save) with =M-o=.
 
 (use-package flyspell-correct-ivy
   :after flyspell-correct)
-#+END_SRC
-
-**** gitignore-mode
-
-Syntax highlighting.
-
-Necessary even for =.gitignore= files.
-
-#+BEGIN_SRC emacs-lisp
-(use-package gitignore-mode
-  :mode ("/\\.npmignore\\'" "/\\.gitignore\\'"))
 #+END_SRC
 
 **** git-timemachine
@@ -2694,6 +2667,17 @@ Enable =flycheck=.
 
 (use-package elixir-mode
   :hook (elixir-mode . wal/elixir-mode-hook))
+#+END_SRC
+
+**** gitignore-mode
+
+Syntax highlighting.
+
+Necessary even for =.gitignore= files.
+
+#+BEGIN_SRC emacs-lisp
+(use-package gitignore-mode
+  :mode ("/\\.npmignore\\'" "/\\.gitignore\\'"))
 #+END_SRC
 
 **** haskell-mode
