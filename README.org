@@ -956,20 +956,6 @@ It's currently mostly a dependency of other packages.
   (dired-async-mode 1))
 #+END_SRC
 
-**** auto-package-update
-
-Keep packages updated (disabled for now).
-
-#+BEGIN_SRC emacs-lisp
-(use-package auto-package-update
-  :disabled
-  :custom
-  (auto-package-update-delete-old-versions t)
-  (auto-package-update-hide-results        t)
-  :config
-  (auto-package-update-maybe))
-#+END_SRC
-
 **** autothemer
 
 Create new themes more easily.
@@ -1062,6 +1048,40 @@ Code-completion. In a box.
 
 (use-package company-web
   :after company)
+#+END_SRC
+
+**** consult
+
+More nice functions.
+We have do advise some of the functions to play
+nice despite us using =ivy= for completion everywhere.
+
+#+BEGIN_SRC emacs-lisp
+(use-package consult
+  :custom
+  (consult-project-root-function #'projectile-project-root)
+  :bind
+  ("M-g g" . consult-goto-line)
+  :init
+  ;; advise functions to use selectrum when
+  ;; `ivy' behaves unpredictably
+  (--each
+    '(consult-yank
+      consult-mark
+      consult-mode-command
+      consult-grep)
+    (advice-add it :around #'wal/advise-selectrum))
+  :general
+  (wal/general "y" '(consult-yank         :wk "yank select"))
+  (wal/general "m" '(consult-mark         :wk "go to mark"))
+  (wal/general "g" '(consult-grep         :wk "grep"))
+  (wal/colonel "c" '(consult-mode-command :wk "load theme")))
+
+(use-package consult-flycheck
+  :init
+  (advice-add 'consult-flycheck :around #'wal/advise-selectrum)
+  :general
+  (wal/colonel flycheck-mode-map "f" '(consult-flycheck :wk "find error")))
 #+END_SRC
 
 **** counsel
@@ -1266,21 +1286,6 @@ Let's have a dash of board.
   :config
   (setq recentf-exclude wal/recentf-exclude)
   (dashboard-setup-startup-hook))
-#+END_SRC
-
-**** default-text-scale
-
-Scale text in all buffers.
-Unfortunately, the calculations are off to me; until
-this is fixed, I'll disable the package.
-
-#+BEGIN_SRC emacs-lisp
-(use-package default-text-scale
-  :disabled
-  :custom
-  (default-text-scale-amount 5)
-  :config
-  (default-text-scale-mode 1))
 #+END_SRC
 
 **** delight
@@ -2000,24 +2005,6 @@ Useful for comments.
          ("C-e" . mwim-end)))
 #+END_SRC
 
-**** origami
-
-Code folding.
-Unfortunately has some performance issues.
-This package also uses the deprecated =cl= package,
-leading to warning from emacs version 27 onwards.
-
-Disabled for now.
-
-#+BEGIN_SRC emacs-lisp
-(use-package origami
-  :disabled
-  :custom
-  (origami-fold-replacement "⋯")
-  :hook (prog-mode . origami-mode)
-  :bind (("C-c o" . origami-toggle-node)))
-#+END_SRC
-
 **** perspective
 
 Have some perspective, man.
@@ -2177,14 +2164,22 @@ String manipulation utility.
 
 **** selectrum
 
-Alternative for ivy.
-Sunken cost thinking prevents a switch for now.
+A potential =ivy= replacement.
+Sunken cost thinking prevents a switch for now
+but we still use it to advise a few =consult= functions.
 
 #+BEGIN_SRC emacs-lisp
-(use-package selectrum
-  :disabled
-  :config
-  (selectrum-mode +1))
+(defun wal/advise-selectrum(func &rest r)
+  "Call FUNC applying R using `selectrum' for read completion."
+  (let ((completing-read-function    #'selectrum-completing-read)
+        (read-buffer-function        #'selectrum-read-buffer)
+        (read-file-name-function     #'selectrum-read-file-name)
+        (complete-in-region-function #'selectrum-complete-in-region)
+        (completion-styles           '(substring partial-completion))
+        (read-libary-name            #'selectrum-read-libarary-name))
+   (apply func r)))
+
+(use-package selectrum)
 #+END_SRC
 
 **** smartparens
@@ -2197,45 +2192,6 @@ Create a pairs automatically.
   :init
   (require 'smartparens-config)
   :hook (prog-mode . smartparens-mode))
-#+END_SRC
-
-**** smeargle
-
-Highlight sections by edit date.
-
-#+BEGIN_SRC emacs-lisp
-;; make it toggle
-(defvar wal/smeargle-on
-  nil
-  "Whether smeargle is already on.")
-
-(defun wal/smeargle-toggle ()
-  "Toggle smeargle on/off."
-  (interactive)
-  (if wal/smeargle-on
-      (progn
-	(setq wal/smeargle-on nil)
-	(smeargle-clear))
-    (progn
-      (setq wal/smeargle-on t)
-      (smeargle))))
-
-(use-package smeargle
-  :commands smeargle)
-#+END_SRC
-
-**** smex
-
-Show completions for =M-x= in a buffer.
-
-Currently replaced by =counsel-M-x= and =ivy-prescient=.
-
-#+BEGIN_SRC emacs-lisp
-(use-package smex
-  :disabled
-  :defer 1
-  ;; :bind ("M-x" . smex)
-  :after counsel)
 #+END_SRC
 
 **** smooth-scrolling
@@ -2308,108 +2264,6 @@ Show some system stats when nothing else is going on.
 			  symon-linux-network-tx-monitor))
   :config
   (symon-mode))
-#+END_SRC
-
-**** telephone-line
-
-A slightly nicer mode-line (disabled in favor of =doom-modeline= for now).
-
-#+BEGIN_SRC emacs-lisp
-(use-package telephone-line
-  :disabled
-  :init
-  (setq telephone-line-lhs
-	'((evil   . (telephone-line-buffer-segment))
-	  (accent . (telephone-line-vc-segment))
-	  (nil    . (telephone-line-minor-mode-segment
-		     telephone-line-process-segment))))
-  (setq telephone-line-rhs
-	'((nil    . (telephone-line-misc-info-segment
-                     telephone-line-flycheck-segment))
-	  (accent . (telephone-line-major-mode-segment))
-	  (evil   . (telephone-line-airline-position-segment))))
-  (setq telephone-line-primary-right-separator 'telephone-line-identity-left
-        telephone-line-secondary-right-separator 'telephone-line-identity-hollow-left
-        telephone-line-primary-left-separator 'telephone-line-identity-right
-        telephone-line-secondary-left-separator 'telephone-line-identity-hollow-right)
-  :config
-  (telephone-line-mode t))
-#+END_SRC
-
-**** treemacs
-
-I'm now a fan of =dired=, but sometimes the "ineluctable modality of the
-visible" is nice, so let's show some _dirs_.
-
-#+BEGIN_SRC emacs-lisp
-(use-package treemacs
-  :disabled
-  :defer t
-  :init
-  (with-eval-after-load 'winum
-    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
-  :config
-  (progn
-    (setq treemacs-indentation                   1
-          treemacs-width                         35
-	  treemacs-move-forward-on-expand        t
-	  treemacs-follow-after-init             nil
-          treemacs-indentation-string            " ⁝ "
-          treemacs-is-never-other-window         t
-	  treemacs-no-delete-other-windows       nil
-          treemacs-persist-file                  (expand-file-name "treemacs-persist" wal/cache-folder)
-          treemacs-show-hidden-files             t
-          treemacs-file-event-delay              1000)
-
-    (treemacs-follow-mode t)
-    (treemacs-filewatch-mode t)
-    (treemacs-fringe-indicator-mode t)
-
-    (pcase (cons (not (null (executable-find "git")))
-		 (not (null treemacs-python-executable)))
-      (`(t . t)
-       (treemacs-git-mode 'deferred))
-      (`(t . _)
-       (treemacs-git-mode 'extended))))
-  :bind
-  (:map global-map
-        ("M-0"       . treemacs-select-window)
-        ("C-c n 1"   . treemacs-delete-other-windows)
-        ("C-c n n"   . treemacs)
-        ("C-c n b"   . treemacs-bookmark)
-        ("C-c n M-t" . treemacs-find-tag)))
-#+END_SRC
-
-***** Treemacs Packages
-
-Some treemacs integration packages.
-
-#+BEGIN_SRC emacs-lisp
-(use-package treemacs-evil
-  :disabled
-  :after treemacs evil)
-
-(use-package treemacs-projectile
-  :disabled
-  :after treemacs projectile)
-
-(use-package treemacs-icons-dired
-  :disabled
-  :after treemacs dired
-  :config (treemacs-icons-dired-mode))
-
-(use-package treemacs-magit
-  :disabled
-  :after treemacs magit)
-
-;; this supposedly works with perspective but it fails
-(use-package treemacs-persp
-  :disabled
-  :after treemacs persp-mode
-  :config (treemacs-set-scope-type 'Perspectives))
-
-;; start with treemacs open (or not)
-;; (treemacs)
 #+END_SRC
 
 **** typo
@@ -3106,6 +2960,198 @@ Sometimes you need YAMLs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package yaml-mode)
+#+END_SRC
+
+*** Disabled Packages
+
+What follows are currently disabled and/or unused packages
+that I still might have already configured somewhat satisfactorily.
+
+**** auto-package-update
+
+Keep packages updated (disabled for now).
+
+#+BEGIN_SRC emacs-lisp
+(use-package auto-package-update
+  :disabled
+  :custom
+  (auto-package-update-delete-old-versions t)
+  (auto-package-update-hide-results        t)
+  :config
+  (auto-package-update-maybe))
+#+END_SRC
+
+**** default-text-scale
+
+Scale text in all buffers.
+Unfortunately, the calculations are off to me; until
+this is fixed, I'll disable the package.
+
+#+BEGIN_SRC emacs-lisp
+(use-package default-text-scale
+  :disabled
+  :custom
+  (default-text-scale-amount 5)
+  :config
+  (default-text-scale-mode 1))
+#+END_SRC
+
+**** origami
+
+Code folding.
+Unfortunately has some performance issues.
+This package also uses the deprecated =cl= package,
+leading to warning from emacs version 27 onwards.
+
+#+BEGIN_SRC emacs-lisp
+(use-package origami
+  :disabled
+  :custom
+  (origami-fold-replacement "⋯")
+  :hook (prog-mode . origami-mode)
+  :bind (("C-c o" . origami-toggle-node)))
+#+END_SRC
+
+**** smeargle
+
+Highlight sections by edit date.
+
+#+BEGIN_SRC emacs-lisp
+;; make it toggle
+(defvar wal/smeargle-on
+  nil
+  "Whether smeargle is already on.")
+
+(defun wal/smeargle-toggle ()
+  "Toggle smeargle on/off."
+  (interactive)
+  (if wal/smeargle-on
+      (progn
+	(setq wal/smeargle-on nil)
+	(smeargle-clear))
+    (progn
+      (setq wal/smeargle-on t)
+      (smeargle))))
+
+(use-package smeargle
+  :disabled
+  :commands smeargle)
+#+END_SRC
+
+**** smex
+
+Show completions for =M-x= in a buffer.
+
+Currently replaced by =counsel-M-x= and =ivy-prescient=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package smex
+  :disabled
+  :defer 1
+  ;; :bind ("M-x" . smex)
+  :after counsel)
+#+END_SRC
+
+**** telephone-line
+
+A slightly nicer mode-line (disabled in favor of =doom-modeline= for now).
+
+#+BEGIN_SRC emacs-lisp
+(use-package telephone-line
+  :disabled
+  :init
+  (setq telephone-line-lhs
+	'((evil   . (telephone-line-buffer-segment))
+	  (accent . (telephone-line-vc-segment))
+	  (nil    . (telephone-line-minor-mode-segment
+		     telephone-line-process-segment))))
+  (setq telephone-line-rhs
+	'((nil    . (telephone-line-misc-info-segment
+                     telephone-line-flycheck-segment))
+	  (accent . (telephone-line-major-mode-segment))
+	  (evil   . (telephone-line-airline-position-segment))))
+  (setq telephone-line-primary-right-separator 'telephone-line-identity-left
+        telephone-line-secondary-right-separator 'telephone-line-identity-hollow-left
+        telephone-line-primary-left-separator 'telephone-line-identity-right
+        telephone-line-secondary-left-separator 'telephone-line-identity-hollow-right)
+  :config
+  (telephone-line-mode t))
+#+END_SRC
+
+**** treemacs
+
+I'm now a fan of =dired=, but sometimes the "ineluctable modality of the
+visible" is nice, so let's show some _dirs_.
+
+#+BEGIN_SRC emacs-lisp
+(use-package treemacs
+  :disabled
+  :defer t
+  :init
+  (with-eval-after-load 'winum
+    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  :config
+  (progn
+    (setq treemacs-indentation                   1
+          treemacs-width                         35
+	  treemacs-move-forward-on-expand        t
+	  treemacs-follow-after-init             nil
+          treemacs-indentation-string            " ⁝ "
+          treemacs-is-never-other-window         t
+	  treemacs-no-delete-other-windows       nil
+          treemacs-persist-file                  (expand-file-name "treemacs-persist" wal/cache-folder)
+          treemacs-show-hidden-files             t
+          treemacs-file-event-delay              1000)
+
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (treemacs-fringe-indicator-mode t)
+
+    (pcase (cons (not (null (executable-find "git")))
+		 (not (null treemacs-python-executable)))
+      (`(t . t)
+       (treemacs-git-mode 'deferred))
+      (`(t . _)
+       (treemacs-git-mode 'extended))))
+  :bind
+  (:map global-map
+        ("M-0"       . treemacs-select-window)
+        ("C-c n 1"   . treemacs-delete-other-windows)
+        ("C-c n n"   . treemacs)
+        ("C-c n b"   . treemacs-bookmark)
+        ("C-c n M-t" . treemacs-find-tag)))
+#+END_SRC
+
+***** Treemacs Packages
+
+Some treemacs integration packages.
+
+#+BEGIN_SRC emacs-lisp
+(use-package treemacs-evil
+  :disabled
+  :after treemacs evil)
+
+(use-package treemacs-projectile
+  :disabled
+  :after treemacs projectile)
+
+(use-package treemacs-icons-dired
+  :disabled
+  :after treemacs dired
+  :config (treemacs-icons-dired-mode))
+
+(use-package treemacs-magit
+  :disabled
+  :after treemacs magit)
+
+;; this supposedly works with perspective but it fails
+(use-package treemacs-persp
+  :disabled
+  :after treemacs persp-mode
+  :config (treemacs-set-scope-type 'Perspectives))
+
+;; start with treemacs open (or not)
+;; (treemacs)
 #+END_SRC
 
 * Footnotes
