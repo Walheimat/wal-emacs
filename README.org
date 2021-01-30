@@ -1253,8 +1253,12 @@ Let's have a dash of board.
   (dashboard-set-init-info              t)
   (dashboard-week-agenda                nil)
   (dashboard-agenda-time-string-format "%d/%m/%y")
+  :init
+  (advice-add 'dashboard-insert-startupify-lists
+    :around (lambda (fun &rest r)
+              (let ((recentf-exclude wal/recentf-exclude))
+                (apply fun r))))
   :config
-  (setq recentf-exclude wal/recentf-exclude)
   (dashboard-setup-startup-hook))
 #+END_SRC
 
