@@ -103,7 +103,7 @@ We'll be getting most (if not all) packages from the prior.
 (require 'package)
 
 (let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
-		    (not (gnutls-available-p))))
+                    (not (gnutls-available-p))))
        (proto (if no-ssl "http" "https")))
   (when no-ssl (warn "\
    Your version of Emacs does not support SSL connections,
@@ -223,7 +223,7 @@ Adapt if necessary.
 
 ;; allow us to load from site-lisp package
 (add-to-list 'custom-theme-load-path
-	     (expand-file-name "emacs-site-lisp" wal/site-lisp-directory))
+             (expand-file-name "emacs-site-lisp" wal/site-lisp-directory))
 
 ;; add subdirs as well
 (dolist (project (directory-files wal/site-lisp-directory t "\\w+"))
@@ -272,8 +272,7 @@ Don't clutter up workspaces.
 
 ;; store backups in backups folder
 (setq backup-directory-alist
-      `(("." . ,(expand-file-name
-		 (concat user-emacs-directory "backups")))))
+      `(("." . ,(expand-file-name (concat user-emacs-directory "backups")))))
 
 ;; store autosaves in temp folder
 (setq auto-save-file-name-transforms
@@ -366,7 +365,7 @@ To make this work, we need to tweak a few things.
   (when wal/prefer-tabs
     (wal/enable-tabs)
     (when tab-indent-fun
-        (setq-local indent-line-function tab-indent-fun))))
+      (setq-local indent-line-function tab-indent-fun))))
 
 (defun wal/set-tab-defaults (&optional num)
   "Reset tab defaults, optionally to NUM."
@@ -374,7 +373,7 @@ To make this work, we need to tweak a few things.
   (let ((width (if (numberp num) num wal/tab-width)))
     (setq-default python-indent-offset    width ;; Python
                   js-indent-level         width ;; Javascript
-		  css-indent-offset       width ;; CSS and SCSS
+                  css-indent-offset       width ;; CSS and SCSS
                   electric-indent-inhibit t)
     (setq backward-delete-char-untabify-method 'hungry)))
 
@@ -609,7 +608,7 @@ Otherwise the colors might clash.
          (load-theme wal/secondary-emacs-theme t)
          (setq wal/active-theme wal/secondary-emacs-theme))
         ((or (equal wal/active-theme wal/secondary-emacs-theme) (equal selection 'primary))
-	 (load-theme wal/primary-emacs-theme t)
+         (load-theme wal/primary-emacs-theme t)
          (setq wal/active-theme wal/primary-emacs-theme))))
 
 ;; some themes require configuration, so we only load after intialization
@@ -712,7 +711,7 @@ If a file is found in a not (yet) existing directory,
 ask if it should get created."
   (let ((parent-directory (file-name-directory buffer-file-name)))
     (when (and (not (file-exists-p parent-directory))
-	       (y-or-n-p (format "Create non-existing directory `%s'? " parent-directory)))
+               (y-or-n-p (format "Create non-existing directory `%s'? " parent-directory)))
       (make-directory parent-directory t))))
 
 (add-to-list 'find-file-not-found-functions #'wal/create-non-existent-directory)
@@ -750,10 +749,10 @@ I want to ignore some buffers when switching.
 Pass R to the switch buffer function."
   (interactive)
   (let ((ivy-ignore-buffers
-	 '((lambda(buffer-or-string)
-	     (if (wal/is-commonly-ignored-buffer buffer-or-string)
-		 nil
-	       t)))))
+          '((lambda(buffer-or-string)
+              (if (wal/is-commonly-ignored-buffer buffer-or-string)
+                  nil
+                t)))))
     (wal/switch-buffer r)))
 #+END_SRC
 
@@ -771,12 +770,12 @@ if vertically split, split horizontally."
   (let* ((other-buffer (and (next-window) (window-buffer (next-window))))
          (win (selected-window))
          (split-direction (cond ((or (windows-sharing-edge win 'above)
-	                             (windows-sharing-edge win 'below))
+                                     (windows-sharing-edge win 'below))
                                  'vert)
                                 ((or (windows-sharing-edge win 'right)
                                      (windows-sharing-edge win 'left))
                                  'hori)
-				(t nil))))
+                                (t nil))))
     (delete-other-windows)
     (pcase split-direction
       ('vert (split-window-horizontally))
@@ -827,9 +826,9 @@ switching setup.
                             (?v aw-split-window-vert          "vertical split")
                             (?w aw-split-window-fair          "fair split")
                             (?b aw-switch-buffer-in-window    "switch buffer")
-			    (?e delete-other-windows          "delete except")
-	                    (?d aw-delete-window              "delete")
-			    ;; if this has a description, it doesn't work
+                            (?e delete-other-windows          "delete except")
+                            (?d aw-delete-window              "delete")
+                            ;; if this has a description, it doesn't work
                             (?? aw-show-dispatch-help)))
   :init
   (advice-add
@@ -867,19 +866,19 @@ to download it automatically, but might fail).
                          ".idea"
                          "node_modules"
                          "dist"
-		         "build"
+                         "build"
                          ".vscode"
-			 "*.svg"
-		         "deps"))
+                         "*.svg"
+                         "deps"))
   :general
   (wal/major   "f" '(ag-files        :wk "find in files of type"))
   (wal/captain "f" '(ag-kill-buffers :wk "kill ag buffers"))
   :bind (("C-c f f" . ag)
          ("C-c f p" . ag-project)
          ("H-f"     . ag-project)
-	 ;; in dired, we change this a bit
-	 (:map dired-mode-map
-	   ("H-f" . ag-dired))))
+         ;; in dired, we change this a bit
+         (:map dired-mode-map
+           ("H-f" . ag-dired))))
 #+END_SRC
 
 ** all-the-icons
@@ -937,7 +936,7 @@ Jumping to (visible) lines and chars is fun if you are too lazy to use your mous
   (wal/lieutenant "v" '(avy-copy-line           :wk "copy line and paste above"))
   :bind (("C-c v v" . avy-goto-line)
          ("C-c v c" . avy-goto-char)
-	 ("H-v"     . avy-goto-line)))
+         ("H-v"     . avy-goto-line)))
 #+END_SRC
 
 ** beacon
@@ -1095,7 +1094,7 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
          ("C-c x d"        . crux-duplicate-current-line-or-region)
          (:map prog-mode-map
            (("C-k"   . crux-smart-kill-line)
-	    ("C-o"   . crux-smart-open-line)
+            ("C-o"   . crux-smart-open-line)
             ("C-S-o" . crux-smart-open-line-above)))))
 #+END_SRC
 
@@ -1111,7 +1110,7 @@ Important command is =C-o c= to change search style.
   ;; prefer fuzzy over literal
   (ctrlf-mode-bindings '(("C-s"   . ctrlf-forward-fuzzy)
                          ("C-r"   . ctrlf-backward-fuzzy)
-			 ("C-M-s" . ctrlf-forward-literal)
+                         ("C-M-s" . ctrlf-forward-literal)
                          ("C-M-r" . ctrlf-backward-literal)))
   ;; not relased yet
   ;; (ctrlf-go-to-end-of-match nil)
@@ -1156,15 +1155,15 @@ This one is for attaching to a containerized node app.
 (when (require 'dap-mode nil 'noerror)
   (progn
     (let* ((remote-root "/usr/src/app")
-	   (local-root (file-name-directory buffer-file-name)))
+           (local-root (file-name-directory buffer-file-name)))
       (dap-register-debug-template
        "attach::node"
        (list :type "node"
              :request "attach"
-	     :sourceMaps t
+             :sourceMaps t
              :remoteRoot remote-root
-  	     :localRoot local-root
-	     :port 9229)))))
+             :localRoot local-root
+             :port 9229)))))
 #+END_SRC
 
 **** Transpiled Node.js
@@ -1175,16 +1174,16 @@ Still some =babel= projects left.
 (when (require 'dap-mode nil 'noerror)
   (progn
     (let* ((build-directory "build")
-	   (remote-root (concat "/usr/src/app/" build-directory))
-	   (local-root (concat (file-name-directory buffer-file-name) build-directory)))
+           (remote-root (concat "/usr/src/app/" build-directory))
+           (local-root (concat (file-name-directory buffer-file-name) build-directory)))
       (dap-register-debug-template
        "attach::babel"
        (list :type "node"
              :request "attach"
-	     :sourceMaps t
+             :sourceMaps t
              :remoteRoot remote-root
-  	     :localRoot local-root
-	     :port 9229)))))
+             :localRoot local-root
+             :port 9229)))))
 #+END_SRC
 
 **** TypeScript
@@ -1196,16 +1195,16 @@ your =tsconfig.json=.
 (when (require 'dap-mode nil 'noerror)
   (progn
     (let* ((build-directory "build")
-	   (remote-root (concat "/usr/src/app/" build-directory))
-	   (local-root (concat (file-name-directory buffer-file-name) build-directory)))
+           (remote-root (concat "/usr/src/app/" build-directory))
+           (local-root (concat (file-name-directory buffer-file-name) build-directory)))
       (dap-register-debug-template
        "attach::typescript"
        (list :type "node"
              :request "attach"
-	     :sourceMaps t
+             :sourceMaps t
              :remoteRoot remote-root
-  	     :localRoot local-root
-	     :port 9229)))))
+             :localRoot local-root
+             :port 9229)))))
 #+END_SRC
 
 ** dashboard
@@ -1229,7 +1228,7 @@ Let's have a dash of board.
   (append (wal/directory-files wal/agenda-tasks-directory)
           (wal/directory-files wal/org-roam-directory)
           (wal/directory-files wal/cache-folder)
-	  (wal/directory-files user-emacs-directory))
+          (wal/directory-files user-emacs-directory))
   "Files that should not be considered recent files.")
 
 (use-package dashboard
@@ -1237,13 +1236,13 @@ Let's have a dash of board.
   :custom
   (dashboard-banner-logo-title          "Walheimat's Emacs Config")
   (dashboard-startup-banner             (expand-file-name
-	                                 "logo.png"
+                                        "logo.png"
                                          wal/emacs-config-default-path))
   (dashboard-projects-backend           'projectile)
   (dashboard-items                      '((recents   . 5)
-	                                  (projects  . 5)
-					  ;; this means all agenda files are opened
-					  ;; which I find annoying
+                                          (projects  . 5)
+                                          ;; this means all agenda files are opened
+                                          ;; which I find annoying
                                           ;; (agenda    . 5)
                                           (bookmarks . 5)))
   (dashboard-center-content             t)
@@ -1447,8 +1446,8 @@ Set up =eshell=.
   :bind
   ("C-c t e" . eshell)
   (:map eshell-mode-map
-	([remap eshell-pcomplete] . completion-at-point)
-	("C-l"                    . eshell/clear)))
+    ([remap eshell-pcomplete] . completion-at-point)
+    ("C-l"                    . eshell/clear)))
 
 (use-package esh-autosuggest
   :hook
@@ -1541,24 +1540,24 @@ Use the locally installed =eslint= and =tslint= binaries.
 (defun wal/use-eslint-from-node-modules ()
   "Use locally installed ESLint binary."
   (let* ((root (locate-dominating-file
-		(or (buffer-file-name) default-directory)
-		"node_modules"))
-	 (eslint
-	  (and root
-	       (expand-file-name "node_modules/.bin/eslint"
-				 root))))
+                 (or (buffer-file-name) default-directory)
+                 "node_modules"))
+         (eslint
+           (and root
+                (expand-file-name "node_modules/.bin/eslint"
+                                  root))))
     (when (and eslint (file-executable-p eslint))
       (setq-local flycheck-javascript-eslint-executable eslint))))
 
 (defun wal/use-tslint-from-node-modules ()
   "Use locally installed TSLint binary."
   (let* ((root (locate-dominating-file
-		(or (buffer-file-name) default-directory)
-		"node_modules"))
-	 (tslint
-	  (and root
-	       (expand-file-name "node_modules/.bin/tslint"
-				 root))))
+                 (or (buffer-file-name) default-directory)
+                 "node_modules"))
+         (tslint
+           (and root
+                (expand-file-name "node_modules/.bin/tslint"
+                                  root))))
     (when (and tslint (file-executable-p tslint))
       (setq-local flycheck-typescript-tslint-executable tslint))))
 #+END_SRC
@@ -1792,18 +1791,18 @@ Some nicer candidate view when switching buffers.
   (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
   (setq ivy-rich-display-transformers-list
         (plist-put ivy-rich-display-transformers-list
-		   'wal/switch-buffer
-		   '(:columns
-		     ((ivy-rich-candidate (:width 30))
-		      (ivy-rich-switch-buffer-size (:width 7))
-		      (ivy-rich-switch-buffer-indicators (:width 4 :face error :align right))
-		      (ivy-rich-switch-buffer-project (:width 30 :face success))
-		      ;; (ivy-rich-switch-buffer-major-mode (:width 8 :face warning))
-		      (wal/ivy-rich-switch-buffer-icon (:width 2))
-		      (ivy-rich-switch-buffer-path (:width (lambda (x)
-							     (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3))))))
-		     :predicate
-		     (lambda (cand) (get-buffer cand)))))
+                   'wal/switch-buffer
+                   '(:columns
+                     ((ivy-rich-candidate (:width 30))
+                      (ivy-rich-switch-buffer-size (:width 7))
+                      (ivy-rich-switch-buffer-indicators (:width 4 :face error :align right))
+                      (ivy-rich-switch-buffer-project (:width 30 :face success))
+                      ;; (ivy-rich-switch-buffer-major-mode (:width 8 :face warning))
+                      (wal/ivy-rich-switch-buffer-icon (:width 2))
+                      (ivy-rich-switch-buffer-path (:width (lambda (x)
+                                                             (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3))))))
+                     :predicate
+                     (lambda (cand) (get-buffer cand)))))
   (ivy-rich-mode 1))
 #+END_SRC
 
@@ -2233,9 +2232,9 @@ Show some system stats when nothing else is going on.
   (symon-sparkline-type 'bounded)
   (symon-delay          10)
   (symon-monitors       '(symon-linux-cpu-monitor
-			  symon-linux-memory-monitor
-			  symon-linux-network-rx-monitor
-			  symon-linux-network-tx-monitor))
+                          symon-linux-memory-monitor
+                          symon-linux-network-rx-monitor
+                          symon-linux-network-tx-monitor))
   :config
   (symon-mode))
 #+END_SRC
@@ -2285,10 +2284,10 @@ I find =ediff= quite cumbersome, so I'm giving =vdiff= a try.
   :after magit
   :bind (:map vdiff-3way-mode-map
           ("q" . vdiff-quit)
-	  ("h" . vdiff-hydra/body)
+          ("h" . vdiff-hydra/body)
          :map magit-mode-map
           ("e" . vdiff-magit-dwim)
-	  ("E" . vdiff-magit))
+          ("E" . vdiff-magit))
   :init
   (transient-suffix-put 'magit-dispatch "e" :description "vdiff (dwim)")
   (transient-suffix-put 'magit-dispatch "e" :command 'vdiff-magit-dwim)
@@ -2329,11 +2328,11 @@ always try to build from source ...
     (vterm-toggle-scope        'project)
     :init
     (add-to-list 'display-buffer-alist
-		 '((lambda(bufname _) (with-current-buffer bufname (equal major-mode 'vterm-mode)))
+                 '((lambda(bufname _) (with-current-buffer bufname (equal major-mode 'vterm-mode)))
                    (display-buffer-reuse-window display-buffer-in-side-window)
                    (side            . bottom)
                    (dedicated       . t)
-		   (window-height   . 0.3)
+                   (window-height   . 0.3)
                    (reusable-frames . visible)))
    :bind (("H-t"     . vterm-toggle)
           ("C-c t v" . vterm-toggle))))
@@ -2388,8 +2387,8 @@ if you don't have a hyper key, bind it to a personal binding.
   (wal/captain    "y" '(yas-new-snippet        :wk "create new snippet"))
   :bind ((:map yas-minor-mode-map
                ("<tab>"    . nil)
-	       ("TAB"      . nil)
-	       ("H-<tab>"  . #'yas-expand)))
+               ("TAB"      . nil)
+               ("H-<tab>"  . #'yas-expand)))
   ;; :config
   ;; (add-hook 'company-mode-hook (lambda ()
   ;;   (substitute-key-definition 'company-complete-common
@@ -2469,8 +2468,8 @@ Highlight sections by edit date.
   (interactive)
   (if wal/smeargle-on
       (progn
-	(setq wal/smeargle-on nil)
-	(smeargle-clear))
+        (setq wal/smeargle-on nil)
+        (smeargle-clear))
     (progn
       (setq wal/smeargle-on t)
       (smeargle))))
@@ -2503,15 +2502,15 @@ A slightly nicer mode-line (disabled in favor of =doom-modeline= for now).
   :disabled
   :init
   (setq telephone-line-lhs
-	'((evil   . (telephone-line-buffer-segment))
-	  (accent . (telephone-line-vc-segment))
-	  (nil    . (telephone-line-minor-mode-segment
-		     telephone-line-process-segment))))
+          '((evil   . (telephone-line-buffer-segment))
+            (accent . (telephone-line-vc-segment))
+            (nil    . (telephone-line-minor-mode-segment
+                        telephone-line-process-segment))))
   (setq telephone-line-rhs
-	'((nil    . (telephone-line-misc-info-segment
-                     telephone-line-flycheck-segment))
-	  (accent . (telephone-line-major-mode-segment))
-	  (evil   . (telephone-line-airline-position-segment))))
+          '((nil    . (telephone-line-misc-info-segment
+                        telephone-line-flycheck-segment))
+            (accent . (telephone-line-major-mode-segment))
+            (evil   . (telephone-line-airline-position-segment))))
   (setq telephone-line-primary-right-separator 'telephone-line-identity-left
         telephone-line-secondary-right-separator 'telephone-line-identity-hollow-left
         telephone-line-primary-left-separator 'telephone-line-identity-right
@@ -2536,11 +2535,11 @@ visible" is nice, so let's show some _dirs_.
   (progn
     (setq treemacs-indentation                   1
           treemacs-width                         35
-	  treemacs-move-forward-on-expand        t
-	  treemacs-follow-after-init             nil
+          treemacs-move-forward-on-expand        t
+          treemacs-follow-after-init             nil
           treemacs-indentation-string            " ⁝ "
           treemacs-is-never-other-window         t
-	  treemacs-no-delete-other-windows       nil
+          treemacs-no-delete-other-windows       nil
           treemacs-persist-file                  (expand-file-name "treemacs-persist" wal/cache-folder)
           treemacs-show-hidden-files             t
           treemacs-file-event-delay              1000)
@@ -2550,7 +2549,7 @@ visible" is nice, so let's show some _dirs_.
     (treemacs-fringe-indicator-mode t)
 
     (pcase (cons (not (null (executable-find "git")))
-		 (not (null treemacs-python-executable)))
+                 (not (null treemacs-python-executable)))
       (`(t . t)
        (treemacs-git-mode 'deferred))
       (`(t . _)
@@ -2613,13 +2612,13 @@ You might think Angular is dead and you'd be right but not everyone knows yet.
          (node-nvm-lib (format ".config/nvm/%s/lib/node_modules" node-lts))
          (node-abs (expand-file-name node-nvm-lib "~")))
     (setq lsp-clients-angular-server-command
-  	  `("node"
-            ,(expand-file-name "@angular/language-server" node-abs)
-	    "--ngProbeLocations"
-	    ,node-abs
-	    "--tsProbeLocations"
-	    ,node-abs
-	    "--stdio"))))
+            `("node"
+              ,(expand-file-name "@angular/language-server" node-abs)
+              "--ngProbeLocations"
+              ,node-abs
+              "--tsProbeLocations"
+              ,node-abs
+              "--stdio"))))
 #+END_SRC
 
 ** crontab-mode
@@ -2736,9 +2735,9 @@ Enable =flycheck= and disable internal checker.
   (flycheck-mode 1)
   (rainbow-delimiters-mode)
   (add-hook 'write-file-functions
-	    (lambda ()
-	      (delete-trailing-whitespace)
-              nil)))
+              (lambda ()
+                (delete-trailing-whitespace)
+                nil)))
 
 (use-package js2-mode
   :mode "\\.js\\'"
@@ -2813,29 +2812,28 @@ state =CANCELLED=.
   ;; Too many clock entries clutter up a heading
   (org-log-into-drawer            t)
   (org-todo-keywords
-	'((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
+    '((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
   (org-tag-alist
       '(;; depth
-	("@immersive" . ?i)
-	("@process"   . ?p)
-	;; context
-	("@work"      . ?w)
-	("@home"      . ?h)
-	("@away"      . ?a)
-	("@repeated"  . ?r)
-	;; time
-	("@short"     . ?<)
-	("@medium"    . ?=)
-	("@long"      . ?>)
-	;; energy
-	("@easy"      . ?1)
-	("@average"   . ?2)
-	("@challenge" . ?3)
-	;; category
-	("@dev"       . ?d)
-	("@bla"       . ?b)
-	("@edu"       . ?e)
-	)))
+        ("@immersive" . ?i)
+        ("@process"   . ?p)
+        ;; context
+        ("@work"      . ?w)
+        ("@home"      . ?h)
+        ("@away"      . ?a)
+        ("@repeated"  . ?r)
+        ;; time
+        ("@short"     . ?<)
+        ("@medium"    . ?=)
+        ("@long"      . ?>)
+        ;; energy
+        ("@easy"      . ?1)
+        ("@average"   . ?2)
+        ("@challenge" . ?3)
+        ;; category
+        ("@dev"       . ?d)
+        ("@bla"       . ?b)
+        ("@edu"       . ?e))))
 
 (use-package org-clock
   :ensure nil
@@ -2866,9 +2864,9 @@ state =CANCELLED=.
   (org-speed-commands-user
       '(("w" widen)
         ("n" org-narrow-to-subtree)
-	;; defaults are I and O
-	("i" org-clock-in)
-	("o" org-clock-out)
+        ;; defaults are I and O
+        ("i" org-clock-in)
+        ("o" org-clock-out)
         ("a" org-archive-subtree)
         ("r" org-clock-report))))
 #+END_SRC
@@ -2890,14 +2888,13 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
   :custom
   (org-super-agenda-groups
    '((:name "Schedule"
-	    :time-grid t)
+      :time-grid t)
      (:name "Unscheduled"
-	    :scheduled nil)
+      :scheduled nil)
      (:name "Leftovers"
-	    :and (
-                  :todo ("IN PROGRESS" "WAITING")
-                  :scheduled past
-                  :not (:tag "@repeated")))
+      :and (:todo ("IN PROGRESS" "WAITING")
+            :scheduled past
+            :not (:tag "@repeated")))
      (:discard (:anything t))))
   :init
   ;; not sure why this can't be in config
@@ -2933,7 +2930,7 @@ Use =org-tree-slide= for presentations.
   (variable-pitch-mode 1)
   (setq visual-fill-column-width 140
         visual-fill-column-center-text t
-	visible-cursor nil)
+        visible-cursor nil)
   (visual-fill-column-mode 1)
   ;; cribbed from daviwil's emacs-from-scratch
   (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch :height wal/default-font-size)
@@ -2967,8 +2964,8 @@ Use =org-tree-slide= for presentations.
   (wal/colonel org-mode-map "p" '(org-tree-slide-mode :wk "presentation"))
   :bind ((:map org-tree-slide-mode-map
            ("n" . org-tree-slide-move-next-tree)
-	   ("p" . org-tree-slide-move-previous-tree)
-	   ("v" . wal/tree-slide-toggle-visibility))))
+           ("p" . org-tree-slide-move-previous-tree)
+           ("v" . wal/tree-slide-toggle-visibility))))
 #+END_SRC
 
 *** Zettelkasten
@@ -3037,8 +3034,8 @@ This mode is built-in.
   (flycheck-mode 1)
   (lsp)
   (add-hook 'write-file-functions
-	    (lambda ()
-	      (delete-trailing-whitespace)
+            (lambda ()
+              (delete-trailing-whitespace)
               nil)))
 
 (use-package python-mode
@@ -3063,8 +3060,8 @@ Pretty much like =js2=.
   (wal/maybe-enable-tabs)
   (flycheck-mode)
   (add-hook 'write-file-functions
-	    (lambda ()
-	      (delete-trailing-whitespace)
+            (lambda ()
+              (delete-trailing-whitespace)
               nil)))
 
 (use-package rjsx-mode
@@ -3085,8 +3082,8 @@ Enable =lsp=, =flycheck=.
   (flycheck-mode 1)
   (lsp)
   (add-hook 'write-file-functions
-	    (lambda ()
-	      (delete-trailing-whitespace)
+            (lambda ()
+              (delete-trailing-whitespace)
               nil)))
 
 (use-package typescript-mode
@@ -3107,8 +3104,8 @@ Web mode uses =flycheck=, prompts user if =lsp= should be enabled.
   (add-node-modules-path)
   (flycheck-mode)
   (add-hook 'write-file-functions
-	    (lambda ()
-	      (delete-trailing-whitespace)
+            (lambda ()
+              (delete-trailing-whitespace)
               nil)))
 
 (use-package web-mode
