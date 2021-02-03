@@ -346,39 +346,45 @@ To make this work, we need to tweak a few things.
 (defvar wal/prefer-tabs t
   "Whether tabs are used for indentation.")
 
+(defun wal/reset-tab-width ()
+  "Reset the tab width to the standard."
+  (interactive)
+  (setq tab-width (eval (car (get 'tab-width 'standard-value)))))
+
 (defun wal/disable-tabs ()
   "Disable `indent-tabs-mode'."
   (interactive)
   (local-unset-key (kbd "TAB"))
-  (setq indent-tabs-mode nil)
-  (setq tab-width (eval (car (get 'tab-width 'standard-value)))))
+  (setq indent-tabs-mode nil))
 
 (defun wal/enable-tabs ()
   "Use TAB key and turn on `indent-tabs-mode'."
   (interactive)
   (local-set-key (kbd "TAB") 'tab-to-tab-stop)
-  (setq indent-tabs-mode t)
-  (setq tab-width wal/tab-width))
+  (setq indent-tabs-mode t))
 
 (defun wal/maybe-enable-tabs (&optional tab-indent-fun)
   "Maybe enable tabs and use TAB-INDENT-FUN to do so."
-  (when wal/prefer-tabs
-    (wal/enable-tabs)
-    (when tab-indent-fun
-      (setq-local indent-line-function tab-indent-fun))))
+  (if wal/prefer-tabs
+    (progn
+      (wal/enable-tabs)
+      (when tab-indent-fun
+        (setq-local indent-line-function tab-indent-fun)))
+    (wal/disable-tabs)))
 
-(defun wal/set-tab-defaults (&optional num)
-  "Reset tab defaults, optionally to NUM."
+(defun wal/set-indent-defaults (&optional num)
+  "Set indent defaults, optionally to NUM."
   (interactive)
-  (let ((width (if (numberp num) num wal/tab-width)))
+  (let ((width (or num wal/tab-width)))
     (setq-default python-indent-offset    width ;; Python
                   js-indent-level         width ;; Javascript
                   css-indent-offset       width ;; CSS and SCSS
-                  electric-indent-inhibit t)
+                  electric-indent-inhibit t
+                  tab-width               width)
     (setq backward-delete-char-untabify-method 'hungry)))
 
 (when wal/prefer-tabs
-    (add-hook 'after-init-hook 'wal/set-tab-defaults))
+    (add-hook 'after-init-hook 'wal/set-indent-defaults))
 #+END_SRC
 
 *** Dir Local Indentation
@@ -529,7 +535,6 @@ essential actions.
     :prefix wal/lieutenant-key))
 
 (wal/colonel "N" '(linum-mode      :wk "toggle line numbers"))
-(wal/colonel "W" '(whitespace-mode :wk "toggle whitespaces"))
 #+END_SRC
 
 *** Leader Keys
@@ -1689,9 +1694,12 @@ Show indentation.
   ;; don't need to see this
   :diminish highlight-indent-guides-mode
   :custom
-  (highlight-indent-guides-method 'character)
+  (highlight-indent-guides-method     'character)
   (highlight-indent-guides-responsive 'top)
-  :hook (prog-mode . highlight-indent-guides-mode))
+  :hook
+  (prog-mode . highlight-indent-guides-mode)
+  :general
+  (wal/colonel "I" '(highlight-indent-guides-mode :wk "toggle indent highlighting")))
 #+END_SRC
 
 ** highlight-numbers
@@ -2355,6 +2363,18 @@ Show the next possible key presses towards an action.
   (which-key-mode))
 #+END_SRC
 
+** whitespace-mode
+
+Toggle =highlight-indent-guide= with =whitespace-mode=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package whitespace-mode
+  :ensure nil
+  :hook (whitespace-mode . (lambda() (highlight-indent-guides-mode -1)))
+  :general
+  (wal/colonel "W" '(whitespace-mode :wk "toggle whitespaces")))
+#+END_SRC
+
 ** writeroom-mode
 
 Create a room of one's own.
@@ -2656,11 +2676,12 @@ We want quicker =company= suggestions when in CSS modes.
   "Hooks for css mode."
   (message "Centering? It's simple. Here's 15 ways to do it.")
   (add-node-modules-path)
-  (wal/maybe-enable-tabs)
   (flycheck-mode)
   ;; faster  company
   (setq-local company-idle-delay 0.1
-              company-minimum-prefix-length 2))
+              company-minimum-prefix-length 2)
+  (hack-local-variables)
+  (wal/maybe-enable-tabs))
 
 (use-package css-modes
   :ensure nil
@@ -2733,14 +2754,15 @@ Enable =flycheck= and disable internal checker.
 (defun wal/js2-mode-hook ()
   "Hooks for js2 mode."
   (message "NaN !== NaN")
-  (wal/maybe-enable-tabs)
   (add-node-modules-path)
   (flycheck-mode 1)
   (rainbow-delimiters-mode)
   (add-hook 'write-file-functions
               (lambda ()
                 (delete-trailing-whitespace)
-                nil)))
+                nil))
+  (hack-local-variables)
+  (wal/maybe-enable-tabs))
 
 (use-package js2-mode
   :mode "\\.js\\'"
@@ -3059,13 +3081,14 @@ Pretty much like =js2=.
   "Hooks for rjsx mode."
   (message "Extend those ugly JavaScripts of yours!")
   (add-node-modules-path)
-  ;; maybe pass 'js-jsx-indent-line here
-  (wal/maybe-enable-tabs)
   (flycheck-mode)
   (add-hook 'write-file-functions
             (lambda ()
               (delete-trailing-whitespace)
-              nil)))
+              nil))
+  (hack-local-variables)
+  ;; maybe pass 'js-jsx-indent-line here
+  (wal/maybe-enable-tabs))
 
 (use-package rjsx-mode
   :mode "\\.jsx\\'"
@@ -3080,14 +3103,15 @@ Enable =lsp=, =flycheck=.
 (defun wal/typescript-mode-hook ()
   "Hooks for typescript mode."
   (message "This is any, that is any, everything is any!")
-  (wal/maybe-enable-tabs)
   (add-node-modules-path)
   (flycheck-mode 1)
   (lsp)
   (add-hook 'write-file-functions
             (lambda ()
               (delete-trailing-whitespace)
-              nil)))
+              nil))
+  (hack-local-variables)
+  (wal/maybe-enable-tabs))
 
 (use-package typescript-mode
   :mode "\\.ts\\'"
@@ -3102,14 +3126,15 @@ Web mode uses =flycheck=, prompts user if =lsp= should be enabled.
 (defun wal/web-mode-hook ()
   "Hooks for web mode."
   (message "This is the Internet")
-  (wal/maybe-enable-tabs)
   (web-mode-use-tabs)
   (add-node-modules-path)
   (flycheck-mode)
   (add-hook 'write-file-functions
             (lambda ()
               (delete-trailing-whitespace)
-              nil)))
+              nil))
+  (hack-local-variables)
+  (wal/maybe-enable-tabs))
 
 (use-package web-mode
   :hook (web-mode . wal/web-mode-hook)
