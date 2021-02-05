@@ -882,8 +882,8 @@ to download it automatically, but might fail).
          ("C-c f p" . ag-project)
          ("H-f"     . ag-project)
          ;; in dired, we change this a bit
-         (:map dired-mode-map
-           ("H-f" . ag-dired))))
+         :map dired-mode-map
+         ("H-f" . ag-dired)))
 #+END_SRC
 
 ** all-the-icons
@@ -1097,10 +1097,10 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
          ("C-c x k"        . crux-kill-other-buffers)
          ("C-c x o"        . crux-open-with)
          ("C-c x d"        . crux-duplicate-current-line-or-region)
-         (:map prog-mode-map
-           (("C-k"   . crux-smart-kill-line)
-            ("C-o"   . crux-smart-open-line)
-            ("C-S-o" . crux-smart-open-line-above)))))
+         :map prog-mode-map
+         ("C-k"   . crux-smart-kill-line)
+         ("C-o"   . crux-smart-open-line)
+         ("C-S-o" . crux-smart-open-line-above)))
 #+END_SRC
 
 ** ctrlf
@@ -1340,9 +1340,9 @@ override some keybindings.
   (dired-listing-switches "-lah --group-directories-first")
   :bind
   (("H-d" . dired-jump)
-   (:map dired-mode-map
-         ("," . dired-display-file)  ;; overrides dired-do-run-mail
-         ("-" . dired-up-directory)))) ;; overrides negative-argumen
+   :map dired-mode-map
+   ("," . dired-display-file)   ;; overrides dired-do-run-mail
+   ("-" . dired-up-directory))) ;; overrides negative-argumen
 #+END_SRC
 
 ** dired-filter
@@ -1453,14 +1453,13 @@ Set up =eshell=.
      (let ((eshell-buffer-maximum-lines 0))
        (eshell-truncate-buffer))))
   :bind
-  ("C-c t e" . eshell)
-  (:map eshell-mode-map
-    ([remap eshell-pcomplete] . completion-at-point)
-    ("C-l"                    . eshell/clear)))
+  (("C-c t e" . eshell)
+   :map eshell-mode-map
+   ([remap eshell-pcomplete] . completion-at-point)
+   ("C-l"                    . eshell/clear)))
 
 (use-package esh-autosuggest
-  :hook
-  (eshell-mode . esh-autosuggest-mode))
+  :hook (eshell-mode . esh-autosuggest-mode))
 
 (use-package eshell-prompt-extras
   :init
@@ -1468,8 +1467,7 @@ Set up =eshell=.
         eshell-prompt-function 'epe-theme-lambda))
 
 (use-package eshell-syntax-highlighting
-  :hook
-  (eshell-mode . eshell-syntax-highlighting-mode))
+  :hook (eshell-mode . eshell-syntax-highlighting-mode))
 #+END_SRC
 
 ** evil-nerd-commenter
@@ -1760,8 +1758,8 @@ Show indentation.
   (highlight-indent-guides-method     'character)
   (highlight-indent-guides-responsive 'top)
   :hook
-  (prog-mode . highlight-indent-guides-mode)
-  (yaml-mode . highlight-indent-guides-mode)
+  ((prog-mode . highlight-indent-guides-mode)
+   (yaml-mode . highlight-indent-guides-mode))
   :general
   (wal/colonel prog-mode-map "I" '(highlight-indent-guides-mode :wk "toggle indent highlighting"))
   (wal/colonel yaml-mode-map "I" '(highlight-indent-guides-mode :wk "toggle indent highlighting")))
@@ -2016,8 +2014,8 @@ Also trying out =magit-todos=.
   (magit-todos-branch-list nil)
   :after magit
   :bind (:map magit-mode-map
-          ("," . ivy-magit-todos)
-          ("." . magit-todos-list)))
+         ("," . ivy-magit-todos)
+         ("." . magit-todos-list)))
 #+END_SRC
 
 ** mode-line-bell
@@ -2163,7 +2161,7 @@ Add =counsel= integration.
 (use-package counsel-projectile
   :after projectile
   :bind (:map projectile-command-map
-          ("s s" . counsel-projectile-ag)))
+         ("s s" . counsel-projectile-ag)))
 #+END_SRC
 
 ** rainbow
@@ -2176,7 +2174,7 @@ Show colors in source code and make delimiters stand out.
 
 (use-package rainbow-mode
   :diminish
-  :hook (prog-mode . rainbow-mode))
+  :hook prog-mode)
 #+END_SRC
 
 ** restart-emacs
@@ -2298,8 +2296,8 @@ Smart searching with =ivy=.
   (wal/lieutenant "s" '(swiper-thing-at-point :wk "search thing at point"))
   :bind (("C-c s" . swiper)
          ("H-s"   . swiper)
-         (:map swiper-map
-               ("C-c v" . swiper-avy))))
+         :map swiper-map
+         ("C-c v" . swiper-avy)))
 #+END_SRC
 
 ** symon
@@ -2364,11 +2362,11 @@ I find =ediff= quite cumbersome, so I'm giving =vdiff= a try.
 (use-package vdiff-magit
   :after magit
   :bind (:map vdiff-3way-mode-map
-          ("q" . vdiff-quit)
-          ("h" . vdiff-hydra/body)
+         ("q" . vdiff-quit)
+         ("h" . vdiff-hydra/body)
          :map magit-mode-map
-          ("e" . vdiff-magit-dwim)
-          ("E" . vdiff-magit))
+         ("e" . vdiff-magit-dwim)
+         ("E" . vdiff-magit))
   :init
   (transient-suffix-put 'magit-dispatch "e" :description "vdiff (dwim)")
   (transient-suffix-put 'magit-dispatch "e" :command 'vdiff-magit-dwim)
@@ -2478,10 +2476,10 @@ if you don't have a hyper key, bind it to a personal binding.
   (wal/colonel    "Y" '(yas-minor-mode         :wk "toggle snippet mode"))
   (wal/major      "y" '(yas-visit-snippet-file :wk "visit snippet file"))
   (wal/captain    "y" '(yas-new-snippet        :wk "create new snippet"))
-  :bind ((:map yas-minor-mode-map
-               ("<tab>"    . nil)
-               ("TAB"      . nil)
-               ("H-<tab>"  . #'yas-expand)))
+  :bind (:map yas-minor-mode-map
+         ("<tab>"    . nil)
+         ("TAB"      . nil)
+         ("H-<tab>"  . #'yas-expand))
   ;; :config
   ;; (add-hook 'company-mode-hook (lambda ()
   ;;   (substitute-key-definition 'company-complete-common
@@ -2755,8 +2753,8 @@ We want quicker =company= suggestions when in CSS modes.
 
 (use-package css-modes
   :ensure nil
-  :hook (css-mode  . wal/css-modes-hook)
-        (scss-mode . wal/css-modes-hook))
+  :hook ((css-mode  . wal/css-modes-hook)
+         (scss-mode . wal/css-modes-hook)))
 #+END_SRC
 
 ** dockerfile-mode
@@ -2862,6 +2860,42 @@ Markdown. Sometimes you need it.
 
 Org mode is the best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]].
 
+*** Variable Pitch
+
+If =variable-pitch-mode= is turned on,
+make sure it's not applied to elements that need fixed pitch.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/org-set-variable-faces ()
+  "Set faces to `fixed-pitch' where applicable."
+  (set-face-attribute 'org-block nil           :foreground nil :inherit 'fixed-pitch :height wal/default-font-size)
+  (set-face-attribute 'org-table nil           :inherit 'fixed-pitch)
+  (set-face-attribute 'org-formula nil         :inherit 'fixed-pitch)
+  (set-face-attribute 'org-code nil            :inherit 'fixed-pitch)
+  (set-face-attribute 'org-table nil           :inherit 'fixed-pitch)
+  (set-face-attribute 'org-verbatim nil        :inherit 'fixed-pitch)
+  (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-meta-line nil       :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-checkbox nil        :inherit 'fixed-pitch)
+  (set-face-attribute 'org-block nil           :inherit 'fixed-pitch)
+  (set-face-attribute 'org-code nil            :inherit 'fixed-pitch)
+  (set-face-attribute 'org-verbatim nil        :inherit 'fixed-pitch))
+
+(defvar wal/variable-org nil
+  "Whether `org-mode' should use variable fonts.")
+
+(defun wal/variable-org ()
+  "Turn variable fonts on/off in `org-mode'."
+  (interactive)
+  (if wal/variable-org
+      (progn
+        (setq wal/variable-org nil)
+        (variable-pitch-mode -1))
+    (setq wal/variable-org t)
+    (variable-pitch-mode 1)
+    (wal/org-set-variable-faces)))
+#+END_SRC
+
 *** The Mode Itself
 
 Use bullets mode and make the ellipses bendy arrows. When a =TODO= is =DONE=, log time.
@@ -2869,8 +2903,6 @@ We also make the sequence from =TODO= to =DONE= more granular and add another =D
 state =CANCELLED=.
 
 #+BEGIN_SRC emacs-lisp
-(require 'org-install)
-
 (use-package org-bullets
   :hook (org-mode . (lambda() (org-bullets-mode t))))
 
@@ -2883,10 +2915,9 @@ state =CANCELLED=.
   :ensure nil
   ;; disable drag-stuff-mode in org-mode
   :hook (org-mode . wal/org-mode)
-  :config
-  ;; sometimes md export is missing
-  (require 'ox-md nil t)
   :init
+  (require 'org-install)
+  (require 'ox-md nil t)
   (add-to-list 'org-global-properties
                '("Effort_ALL" . "30m 1h 2h 4h 6h 1d 2d"))
   (add-to-list 'org-modules 'org-habit)
@@ -3018,39 +3049,33 @@ Use =org-tree-slide= for presentations.
 
 (defun wal/tree-slide-play ()
   "Make presentable."
-  (setq cursor-type nil)
-  (zone-leave-me-alone)
-  (global-hl-line-mode 1)
-  (beacon-mode -1)
-  (variable-pitch-mode 1)
   (setq visual-fill-column-width 140
         visual-fill-column-center-text t
-        visible-cursor nil)
-  (visual-fill-column-mode 1)
-  ;; cribbed from daviwil's emacs-from-scratch
-  (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch :height wal/default-font-size)
-  (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
-  (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
-  (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
-  (set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
-  (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
-  (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
-  (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
-  (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
-  (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
-  (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
-  (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch)))
+        visible-cursor nil
+        cursor-type nil)
+  (zone-leave-me-alone)
+  (global-hl-line-mode -1)
+  (beacon-mode -1)
+  (visual-fill-column-mode 1))
 
 (defun wal/tree-slide-stop ()
   "We no longer care about presentation."
-  (setq cursor-type t)
+  (setq visual-fill-column-width nil
+        visual-fill-column-center-text nil
+        visible-cursor t
+        cursor-type t)
   (zone-when-idle wal/zone-timer)
   (global-hl-line-mode 1)
-  (visual-fill-column-mode 0)
-  (variable-pitch-mode 0)
-  (beacon-mode 1))
+  (beacon-mode 1)
+  (visual-fill-column-mode -1))
 
 (use-package org-tree-slide
+  :custom
+  (org-tree-slide-never-touch-face   t)
+  (org-tree-slide-cursor-init        nil)
+  (org-tree-slide-activate-message   "We're on a road to nowhere")
+  (org-tree-slide-deactivate-message "Take you here, take you there")
+  (org-tree-slide-indicator          '(:next "   >>>" :previous "<<<" :content "< Here is where time is on our side >"))
   :commands org-tree-slide-mode
   :diminish buffer-face-mode
   :hook ((org-tree-slide-play . wal/tree-slide-play)
@@ -3058,9 +3083,9 @@ Use =org-tree-slide= for presentations.
   :general
   (wal/colonel org-mode-map "p" '(org-tree-slide-mode :wk "presentation"))
   :bind ((:map org-tree-slide-mode-map
-           ("n" . org-tree-slide-move-next-tree)
-           ("p" . org-tree-slide-move-previous-tree)
-           ("v" . wal/tree-slide-toggle-visibility))))
+          ("n" . org-tree-slide-move-next-tree)
+          ("p" . org-tree-slide-move-previous-tree)
+          ("v" . wal/tree-slide-toggle-visibility))))
 #+END_SRC
 
 *** Zettelkasten
@@ -3092,13 +3117,13 @@ You will need to install =sqlite3= and =graphviz= manually.
   (org-roam-dailies-directory wal/org-roam-dailies-directory)
   (org-roam-completion-system 'ivy)
   :bind (("H-n" . org-roam-jump-to-index)
-         (:map org-roam-mode-map
-              (("C-c n l" . org-roam)
-               ("C-c n f" . org-roam-find-file)
-               ("C-c n g" . org-roam-graph)))
-         (:map org-mode-map
-              (("C-c n i" . org-roam-insert)
-               ("C-c n I" . org-roam-insert-immediate))))
+         :map org-roam-mode-map
+         ("C-c n l" . org-roam)
+         ("C-c n f" . org-roam-find-file)
+         ("C-c n g" . org-roam-graph)
+         :map org-mode-map
+         ("C-c n i" . org-roam-insert)
+         ("C-c n I" . org-roam-insert-immediate))
   :config
   (let* ((fname (concat wal/org-roam-dailies-directory "%<%Y-%m-%d>")))
     (setq org-roam-dailies-capture-templates
@@ -3228,7 +3253,7 @@ Sometimes you need YAMLs.
 (use-package yaml-mode
   :bind
   (:map yaml-mode-map
-        ("C-;" . evilnc-comment-or-uncomment-lines)))
+   ("C-;" . evilnc-comment-or-uncomment-lines)))
 #+END_SRC
 
 * Footnotes
