@@ -950,6 +950,7 @@ Help me find my cursor!
 
 #+BEGIN_SRC emacs-lisp
 (use-package beacon
+  :diminish
   :config
   (beacon-mode 1)
   :custom
@@ -1134,6 +1135,8 @@ Debugging using VSCode's DAP.
   :custom
   (lsp-enable-dap-auto-configure nil)
   (dap-python-executable         "python3")
+  ;; be sure to install with `pip3'
+  (dap-python-debugger           'debugpy)
   ;; (dap-auto-configure-features '(sessions locals breakpoints))
   :config
   (dap-ui-mode 1)
@@ -1141,7 +1144,7 @@ Debugging using VSCode's DAP.
   (require 'dap-python)
   :general
   (wal/colonel "D" '(dap-mode :wk "dap mode"))
-  (wal/colonel dap-mode-map "d" '(dap-hydra :wk "debug hydra")))
+  (wal/colonel dap-mode-map "d" '(dap-hydra :wk "debug")))
 #+END_SRC
 
 *** Debug Templates
@@ -1275,7 +1278,8 @@ Refine a couple of major-mode names.
   :config
   (delight 'dired-mode "Dired" :major)
   (delight 'js2-mode "JavaScript" :major)
-  (delight 'emacs-lisp-mode "Elisp" :major))
+  (delight 'emacs-lisp-mode "Elisp" :major)
+  (delight 'inferior-python-mode "Infthon" :major))
 #+END_SRC
 
 ** diff-hl
@@ -1300,7 +1304,8 @@ since we =delight= in/diminish them there.
 #+BEGIN_SRC emacs-lisp
 (use-package diminish
   :config
-  (diminish 'eldoc-mode))
+  (diminish 'eldoc-mode)
+  (diminish 'compilation-shell-minor-mode))
 #+END_SRC
 
 ** dimmer
@@ -3066,7 +3071,7 @@ You will need to install =sqlite3= and =graphviz= manually.
     (write-region "* Zettelkasten" nil index-file)))
 
 (use-package org-roam
-  :delight " zet"
+  :diminish
   :if (executable-find "sqlite3")
   :hook (after-init . org-roam-mode)
   :custom
@@ -3118,6 +3123,11 @@ This mode is built-in.
 
 (use-package python-mode
   :ensure nil
+  :general
+  (wal/colonel python-mode-map "s" '(run-python               :wk "run pyshell"))
+  (wal/colonel python-mode-map "r" '(python-shell-send-region :wk "send region"))
+  (wal/colonel python-mode-map "b" '(python-shell-send-buffer :wk "send buffer"))
+  (wal/colonel python-mode-map "f" '(python-shell-send-file   :wk "send file"))
   :hook (python-mode . wal/python-mode-hook)
   :init
   ;; use python3 as default python command
