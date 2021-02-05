@@ -524,20 +524,54 @@ essential actions.
 (use-package general
   :config
   (general-create-definer wal/general
-    :prefix wal/general-key)
+    :prefix-command 'wal/general-prefix-command
+    :prefix-name    "<general>"
+    :prefix          wal/general-key)
   (general-create-definer wal/colonel
-    :prefix wal/colonel-key)
+    :prefix-command 'wal/colonel-prefix-command
+    :prefix-name    "<colonel>"
+    :prefix         wal/colonel-key)
   (general-create-definer wal/major
-    :prefix wal/major-key)
+    :prefix-command 'wal/major-prefix-command
+    :prefix-name    "<major>"
+    :prefix         wal/major-key)
   (general-create-definer wal/captain
-    :prefix wal/captain-key)
+    :prefix-command 'wal/captain-prefix-command
+    :prefix-name    "<captain>"
+    :prefix         wal/captain-key)
   (general-create-definer wal/lieutenant
-    :prefix wal/lieutenant-key))
-
-(wal/colonel "N" '(linum-mode :wk "toggle line numbers"))
+    :prefix-command 'wal/lieutenant-prefix-command
+    :prefix-name    "<lieutenant>"
+    :prefix          wal/lieutenant-key))
 #+END_SRC
 
-*** Leader Keys
+*** Additional Mode Controls
+
+Turning off certain minor modes and
+switching between =major mode= and =fundamental mode=.
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/before-emergency-mode nil
+  "The major mode before emergency was engaged.")
+
+(defun wal/emergency-mode ()
+  "Switch from `major-mode' to `fundamental-mode' and back."
+  (interactive)
+  (let ((m-mode major-mode))
+    (if wal/before-emergency-mode
+        (progn
+          (funcall wal/before-emergency-mode)
+          (setq wal/before-emergency-mode nil))
+      (fundamental-mode)
+	  (make-local-variable 'wal/before-emergency-mode)
+	  (setq wal/before-emergency-mode m-mode))))
+
+
+(wal/colonel "E" '(wal/emergency-mode :wk "toggle emergency"))
+(wal/colonel "N" '(linum-mode         :wk "toggle line numbers"))
+#+END_SRC
+
+*** About Leader Keys
 
 Leader key =general= mainly prefix actions that should be possible
 no matter the major mode.
@@ -1274,10 +1308,11 @@ Refine a couple of major-mode names.
 #+BEGIN_SRC emacs-lisp
 (use-package delight
   :config
-  (delight 'dired-mode "Dired" :major)
-  (delight 'js2-mode "JavaScript" :major)
-  (delight 'emacs-lisp-mode "Elisp" :major)
-  (delight 'inferior-python-mode "Infthon" :major))
+  (delight 'dired-mode           "Dired"    :major)
+  (delight 'python-mode          "Snake"    :major)
+  (delight 'js2-mode             "NaNsense" :major)
+  (delight 'emacs-lisp-mode      "Elisp"    :major)
+  (delight 'inferior-python-mode "Bite"     :major))
 #+END_SRC
 
 ** diff-hl
@@ -2426,7 +2461,7 @@ Show the next possible key presses towards an action.
   :diminish
   :custom
   ;; big enough to not mess up avy line search
-  (which-key-idle-delay 0.5)
+  (which-key-idle-delay 1.5)
   :config
   (which-key-mode))
 #+END_SRC
