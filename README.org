@@ -534,7 +534,7 @@ essential actions.
   (general-create-definer wal/lieutenant
     :prefix wal/lieutenant-key))
 
-(wal/colonel "N" '(linum-mode      :wk "toggle line numbers"))
+(wal/colonel "N" '(linum-mode :wk "toggle line numbers"))
 #+END_SRC
 
 *** Leader Keys
@@ -950,7 +950,6 @@ Help me find my cursor!
 
 #+BEGIN_SRC emacs-lisp
 (use-package beacon
-  :diminish
   :config
   (beacon-mode 1)
   :custom
@@ -1137,14 +1136,13 @@ Debugging using VSCode's DAP.
   (dap-python-executable         "python3")
   ;; be sure to install with `pip3'
   (dap-python-debugger           'debugpy)
-  ;; (dap-auto-configure-features '(sessions locals breakpoints))
   :config
   (dap-ui-mode 1)
   (require 'dap-node)
   (require 'dap-python)
   :general
-  (wal/colonel "D" '(dap-mode :wk "dap mode"))
-  (wal/colonel dap-mode-map "d" '(dap-hydra :wk "debug")))
+  (wal/colonel prog-mode-map "D" '(dap-mode  :wk "dap mode"))
+  (wal/colonel dap-mode-map  "d" '(dap-hydra :wk "debug")))
 #+END_SRC
 
 *** Debug Templates
@@ -1482,7 +1480,7 @@ Comment code like in =vim=, evil, evil =vim=.
 (use-package evil-nerd-commenter
   :commands evilnc-comment-or-uncomment-lines
   :bind (:map prog-mode-map
-          ("C-;" . evilnc-comment-or-uncomment-lines)))
+         ("C-;" . evilnc-comment-or-uncomment-lines)))
 #+END_SRC
 
 ** eww
@@ -1581,7 +1579,7 @@ Use the locally installed =eslint= and =tslint= binaries.
   :custom
   (flycheck-keymap-prefix (kbd "C-c q"))
   :general
-  (wal/colonel "Q" '(flycheck-mode :wk "toggle flycheck"))
+  (wal/colonel prog-mode-map "Q" '(flycheck-mode :wk "toggle flycheck"))
   (wal/colonel flycheck-mode-map "e" '(flycheck-next-error :wk "next error"))
   :hook ((flycheck-mode . wal/use-eslint-from-node-modules)
          (flycheck-mode . wal/use-tslint-from-node-modules)))
@@ -1660,6 +1658,13 @@ Use American English for =flyspell=.
 You can bring up actions (skip, save) with =M-o=.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/flyspell-prog-mode ()
+  "Toggle `flyspell-prog-mode' properly."
+  (interactive)
+  (if flyspell-mode
+      (flyspell-mode -1)
+    (flyspell-prog-mode)))
+
 (use-package flyspell
   :ensure nil
   :delight " fsp"
@@ -1667,8 +1672,8 @@ You can bring up actions (skip, save) with =M-o=.
   (setq ispell-dictionary "american")
   :general
   (wal/colonel "S" '(flyspell-mode :wk "toggle spell-check"))
-  (wal/colonel prog-mode-map "S" '(flyspell-prog-mode :wk "toggle spell-check (prog)"))
-  (wal/colonel "s" '(flyspell-buffer :wk "check spelling"))
+  (wal/colonel prog-mode-map "S" '(wal/flyspell-prog-mode :wk "toggle spell-check (prog)"))
+  (wal/colonel flyspell-mode-map "s" '(flyspell-buffer :wk "check spelling"))
   :custom
   (flyspell-issue-message-flag nil))
 
@@ -1690,7 +1695,7 @@ If you want to go back in time and point fingers at the progenitors of doom.
 (use-package git-timemachine
   :commands git-timemachine-toggle
   :general
-  (wal/colonel "G" '(git-timemachine-toggle :wk "toggle timemachine")))
+  (wal/colonel prog-mode-map "G" '(git-timemachine-toggle :wk "toggle timemachine")))
 #+END_SRC
 
 ** golden-ratio
@@ -1756,8 +1761,10 @@ Show indentation.
   (highlight-indent-guides-responsive 'top)
   :hook
   (prog-mode . highlight-indent-guides-mode)
+  (yaml-mode . highlight-indent-guides-mode)
   :general
-  (wal/colonel "I" '(highlight-indent-guides-mode :wk "toggle indent highlighting")))
+  (wal/colonel prog-mode-map "I" '(highlight-indent-guides-mode :wk "toggle indent highlighting"))
+  (wal/colonel yaml-mode-map "I" '(highlight-indent-guides-mode :wk "toggle indent highlighting")))
 #+END_SRC
 
 ** highlight-numbers
@@ -1912,8 +1919,9 @@ Prefer =capf=, bigger delay.
 
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
+  :delight " lsp"
   :general
-  (wal/colonel "L" '(lsp-mode :wk "toggle LSP"))
+  (wal/colonel prog-mode-map   "L" '(lsp-mode :wk "toggle LSP"))
   (wal/colonel lsp-ui-mode-map "o" '(lsp-ui-doc-focus-frame :wk "focus doc frame"))
   :custom
   (lsp-completion-provider :capf)
@@ -3075,7 +3083,7 @@ You will need to install =sqlite3= and =graphviz= manually.
     (write-region "* Zettelkasten" nil index-file)))
 
 (use-package org-roam
-  :diminish
+  :delight " zet"
   :if (executable-find "sqlite3")
   :hook (after-init . org-roam-mode)
   :custom
@@ -3217,7 +3225,10 @@ Web mode uses =flycheck=, prompts user if =lsp= should be enabled.
 Sometimes you need YAMLs.
 
 #+BEGIN_SRC emacs-lisp
-(use-package yaml-mode)
+(use-package yaml-mode
+  :bind
+  (:map yaml-mode-map
+        ("C-;" . evilnc-comment-or-uncomment-lines)))
 #+END_SRC
 
 * Footnotes
