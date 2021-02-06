@@ -466,7 +466,7 @@ guaranteed).
 + =H-<mouse3>= adds another cursor at point.
 + =H-p= switches project.
 + =H-<TAB>= expands snippets (in =yas-minor-mode=).
-+ =H-v= jumps to line with avy.
++ =H-v= jumps to line with =avy=.
 + =H-w= opens =ace= dispatch.
 
 *** Caps to Hyper
@@ -1080,8 +1080,8 @@ nice despite us using =ivy= for completion everywhere.
   :general
   (wal/general "f" '(consult-focus-lines  :wk "focus-lines")
                "m" '(consult-mark :wk "go to mark"))
-  (wal/major "c" '(consult-mode-command :wk "invoke mode command")
-             :keymaps 'org-mode-map
+  (wal/major "c" '(consult-mode-command :wk "invoke mode command"))
+  (wal/major :keymaps 'org-mode-map
              "h" '(consult-outline :wk "jump to heading"))
   (wal/lieutenant "g" '(consult-grep :wk "grep")))
 
@@ -1090,7 +1090,7 @@ nice despite us using =ivy= for completion everywhere.
   (advice-add 'consult-flycheck :around #'wal/advise-selectrum)
   :general
   (wal/captain :keymaps 'flycheck-mode-map
-               "f" '(consult-flycheck :wk "find error")))
+               "e" '(consult-flycheck :wk "find error")))
 #+END_SRC
 
 ** counsel
@@ -1710,14 +1710,23 @@ You can bring up actions (skip, save) with =M-o=.
       (flyspell-mode -1)
     (flyspell-prog-mode)))
 
+(defun wal/flyspell-mode ()
+  "Toggle `flyspell-mode' properly."
+  (interactive)
+  (if flyspell-mode
+      (flyspell-mode -1)
+    (flyspell-mode 1)))
+
 (use-package flyspell
   :ensure nil
+  :commands flyspell-mode
   :delight " fsp"
   :init
   (setq ispell-dictionary "american")
   :general
-  (wal/colonel "S" '(flyspell-mode :wk "flyspell")
-               :keymaps 'prog-mode-map
+  (wal/colonel :keymaps 'text-mode-map
+               "S" '(wal/flyspell-mode :wk "flyspell"))
+  (wal/colonel :keymaps 'prog-mode-map
                "S" '(wal/flyspell-prog-mode :wk "flyspell-prog"))
   (wal/captain :keymaps 'flyspell-mode-map
                "s" '(flyspell-buffer :wk "spell-check buffer"))
@@ -1727,9 +1736,8 @@ You can bring up actions (skip, save) with =M-o=.
 (use-package flyspell-correct
   :after flyspell
   :general
-  (wal/captain :keymaps flyspell-mode-map
-               "n" '(flyspell-correct-next     :wk "correct next error")
-               "p" '(flyspell-correct-previous :wk "correct prev error")))
+  (wal/captain :keymaps 'flyspell-mode-map
+               "c" '(flyspell-correct-wrapper :wk "flyspell correct")))
 
 (use-package flyspell-correct-ivy
   :after flyspell-correct)
@@ -1976,8 +1984,8 @@ Prefer =capf=, bigger delay.
   (wal/colonel :keymaps 'prog-mode-map
                "L" '(lsp-mode :wk "LSP"))
   (wal/captain :keymaps 'lsp-mode-map
-               "r" '(lsp-rename :wk "rename symbol")
-               :keymaps 'lsp-ui-mode-map
+               "r" '(lsp-rename :wk "rename symbol"))
+  (wal/captain :keymaps 'lsp-ui-mode-map
                "o" '(lsp-ui-doc-focus-frame :wk "focus doc frame"))
   :custom
   (lsp-completion-provider :capf)
@@ -2063,13 +2071,11 @@ Also trying out =magit-todos=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
-  :commands magit-status
   :bind ("H-g" . magit-status))
 
 (use-package magit-todos
   :custom
   (magit-todos-branch-list nil)
-  :after magit
   :bind
   (:map magit-mode-map
    ("," . ivy-magit-todos)
@@ -3187,14 +3193,13 @@ You will need to install =sqlite3= and =graphviz= manually.
   (org-roam-dailies-directory wal/org-roam-dailies-directory)
   (org-roam-completion-system 'ivy)
   :general
-  ;; theoretically these should be `wal/general' but these are minor of major 
+  ;; theoretically these should be `wal/major' but these are minor of major 
   (wal/captain :keymaps 'org-mode-map
                "i" '(org-roam-insert           :wk "roam insert")
-               "m" '(org-roam-insert-immediate :wk "roam insert immediate")
                "r" '(org-roam                  :wk "roam")
-               "f" '(org-roam-find-file        :wk "roam find file")
                "g" '(org-roam-graph            :wk "roam graph"))
-
+  (wal/major :keymaps 'org-mode-map
+             "r" '(org-roam-find-file        :wk "find file (roam)"))
   :bind ("H-n" . org-roam-jump-to-index)
   :config
   (let* ((fname (concat wal/org-roam-dailies-directory "%<%Y-%m-%d>")))
@@ -3363,7 +3368,7 @@ If that is the case do the following:
 
 Once the installation is complete, re-run Emacs
 
-[fn:5] 141 code blocks, to be exact.
+[fn:5] 142 code blocks, to be exact.
 
 [fn:6] Send me an email, why don't you?
 
