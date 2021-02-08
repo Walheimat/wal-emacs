@@ -2454,8 +2454,15 @@ always try to build from source ...
 #+BEGIN_SRC emacs-lisp
 (unless (version< emacs-version "27.0")
   (use-package vterm
+    :delight
+    (vterm-copy-mode " vcp")
     :custom
     (vterm-kill-buffer-on-exit t)
+    :general
+    (wal/major :keymaps 'vterm-mode-map
+               "w" '(vterm-copy-mode :wk "enter copy mode"))
+    (wal/major :keymaps 'vterm-copy-mode-map
+               "w" '(vterm-copy-mode :wk "exit copy mode"))
     :config
     (when (file-exists-p "/bin/fish")
       (setq vterm-shell "/bin/fish")))
