@@ -395,6 +395,17 @@ You can run =add-dir-local-variable= to do so.
 Check out the =.dir-locals.el= template found in the =/templates= folder
 for an example using spaces.
 
+** White space
+
+Delete trailing whitespace before saving.
+
+#+BEGIN_SRC emacs-lisp
+(add-hook 'write-file-functions
+              (lambda ()
+                (delete-trailing-whitespace)
+                nil))
+#+END_SRC
+
 ** Zoning
 
  Zone out after a couple of minutes.
@@ -2824,13 +2835,12 @@ We want quicker =company= suggestions when in CSS modes.
 (defun wal/css-modes-hook ()
   "Hooks for css mode."
   (message "Centering? It's simple. Here's 15 ways to do it.")
-  (add-node-modules-path)
-  (flycheck-mode)
   ;; faster  company
   (setq-local company-idle-delay 0.1
               company-minimum-prefix-length 2)
   (hack-local-variables)
-  (wal/maybe-enable-tabs))
+  (wal/maybe-enable-tabs)
+  (flycheck-mode 1))
 
 (use-package css-modes
   :ensure nil
@@ -2854,8 +2864,9 @@ Enable =flycheck=.
 (defun wal/elixir-mode-hook ()
   "Hooks for elixir mode."
   (message "Mixin' potions")
+  (wal/disable-tabs)
   (lsp)
-  (flycheck-mode))
+  (flycheck-mode 1))
 
 (use-package elixir-mode
   :hook (elixir-mode . wal/elixir-mode-hook))
@@ -2888,10 +2899,10 @@ Enable tabs and =flycheck=.
 (defun wal/json-mode-hook ()
   "Hooks for json mode."
   (message "JSON ...? JSON?! JSON!!")
-  (flycheck-mode 1)
   (rainbow-delimiters-mode)
   (hack-local-variables)
-  (wal/maybe-enable-tabs))
+  (wal/maybe-enable-tabs)
+  (flycheck-mode 1))
 
 (use-package json-mode
   :hook (json-mode . wal/json-mode-hook))
@@ -2906,14 +2917,10 @@ Enable =flycheck= and disable internal checker.
   "Hooks for js2 mode."
   (message "NaN !== NaN")
   (add-node-modules-path)
-  (flycheck-mode 1)
   (rainbow-delimiters-mode)
-  (add-hook 'write-file-functions
-              (lambda ()
-                (delete-trailing-whitespace)
-                nil))
   (hack-local-variables)
-  (wal/maybe-enable-tabs))
+  (wal/maybe-enable-tabs)
+  (flycheck-mode 1))
 
 (use-package js2-mode
   :mode "\\.js\\'"
@@ -3238,12 +3245,9 @@ This mode is built-in.
 (defun wal/python-mode-hook ()
   "Hooks for python mode."
   (message "Sssnake_case!")
-  (flycheck-mode 1)
+  (wal/disable-tabs)
   (lsp)
-  (add-hook 'write-file-functions
-            (lambda ()
-              (delete-trailing-whitespace)
-              nil)))
+  (flycheck-mode 1))
 
 (use-package python-mode
   :ensure nil
@@ -3269,14 +3273,10 @@ Pretty much like =js2=.
   "Hooks for rjsx mode."
   (message "Extend those ugly JavaScripts of yours!")
   (add-node-modules-path)
-  (flycheck-mode)
-  (add-hook 'write-file-functions
-            (lambda ()
-              (delete-trailing-whitespace)
-              nil))
   (hack-local-variables)
   ;; maybe pass 'js-jsx-indent-line here
-  (wal/maybe-enable-tabs))
+  (wal/maybe-enable-tabs)
+  (flycheck-mode 1))
 
 (use-package rjsx-mode
   :mode "\\.jsx\\'"
@@ -3292,14 +3292,10 @@ Enable =lsp=, =flycheck=.
   "Hooks for typescript mode."
   (message "This is any, that is any, everything is any!")
   (add-node-modules-path)
-  (flycheck-mode 1)
-  (lsp)
-  (add-hook 'write-file-functions
-            (lambda ()
-              (delete-trailing-whitespace)
-              nil))
   (hack-local-variables)
-  (wal/maybe-enable-tabs))
+  (wal/maybe-enable-tabs)
+  (lsp)
+  (flycheck-mode 1))
 
 (use-package typescript-mode
   :mode "\\.ts\\'"
@@ -3316,13 +3312,9 @@ Web mode uses =flycheck=, prompts user if =lsp= should be enabled.
   (message "This is the Internet")
   (web-mode-use-tabs)
   (add-node-modules-path)
-  (flycheck-mode)
-  (add-hook 'write-file-functions
-            (lambda ()
-              (delete-trailing-whitespace)
-              nil))
   (hack-local-variables)
-  (wal/maybe-enable-tabs))
+  (wal/maybe-enable-tabs)
+  (flycheck-mode 1))
 
 (use-package web-mode
   :hook (web-mode . wal/web-mode-hook)
