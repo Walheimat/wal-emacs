@@ -1489,32 +1489,29 @@ download a set that supports your emojis.
 Set up =eshell=.
 
 #+BEGIN_SRC emacs-lisp
-(use-package esh-mode
+(use-package esh-autosuggest
+  :hook (eshell-mode . esh-autosuggest-mode))
+
+(use-package eshell-prompt-extras)
+
+(use-package eshell-syntax-highlighting
+  :hook (eshell-mode . eshell-syntax-highlighting-mode))
+
+(use-package eshell-mode
   :ensure nil
   :init
-
   ;; override how clearing the eshell works
   (advice-add
     'eshell/clear :override
     (lambda nil
       (let ((eshell-buffer-maximum-lines 0))
         (eshell-truncate-buffer))))
+  (setq eshell-highlight-prompt nil
+        eshell-prompt-function 'epe-theme-lambda)
   :bind
   (("C-c t e" . eshell)
    :map eshell-mode-map
-   ([remap eshell-pcomplete] . completion-at-point)
-   ("C-l" . eshell/clear)))
-
-(use-package esh-autosuggest
-  :hook (eshell-mode . esh-autosuggest-mode))
-
-(use-package eshell-prompt-extras
-  :init
-  (setq eshell-highlight-prompt nil
-        eshell-prompt-function 'epe-theme-lambda))
-
-(use-package eshell-syntax-highlighting
-  :hook (eshell-mode . eshell-syntax-highlighting-mode))
+   ([remap eshell-pcomplete] . completion-at-point)))
 #+END_SRC
 
 ** evil-nerd-commenter
