@@ -167,18 +167,18 @@ we have to install it and a few other packages the hard way.
 (setq use-package-always-ensure t)
 #+END_SRC
 
-** Folders
+** Directories
 
-Make sure that all folders exists.
+Make sure that custom directories exists.
 
-+ a cache folder to store bookmarks, perspectives, prescience et al.
-+ a folder for site lisp
-+ a default folder for org files.
++ a cache directory to store bookmarks, perspectives, prescience et al.
++ a directory for site lisp
++ a default directory for org files.
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/cache-folder
+(defvar wal/cache-directory
   (expand-file-name ".cache" user-emacs-directory)
-  "The name of the cache folder.")
+  "The cache directory.")
 
 (defvar wal/site-lisp-directory
   (expand-file-name "site-lisp" user-emacs-directory)
@@ -204,7 +204,7 @@ Make sure that all folders exists.
       ,wal/agenda-tasks-directory
       ,wal/org-directory
       ,wal/site-lisp-directory
-      ,wal/cache-folder
+      ,wal/cache-directory
       )
   (unless (file-directory-p it)
     (make-directory it)))
@@ -242,7 +242,7 @@ This was cribbed from [[https://www.john2x.com/emacs.html][john2x's config]].
 (setq initial-scratch-message ";; Howdy, stranger ...")
 
 (defvar wal/scratch-persist-file
-  (expand-file-name "scratch-persist" wal/cache-folder)
+  (expand-file-name "scratch-persist" wal/cache-directory)
   "The file to persist the *scratch* buffer's content in.")
 
 (defun wal/persist-scratch ()
@@ -397,7 +397,7 @@ for an example using spaces.
 
 ** White space
 
-Delete trailing whitespace before saving.
+Delete trailing white space before saving.
 
 #+BEGIN_SRC emacs-lisp
 (add-hook 'write-file-functions
@@ -420,7 +420,7 @@ Delete trailing whitespace before saving.
 
 ** Time
 
-I want to see the time sometimes (fullscreen).
+I want to see the time sometimes (full screen).
 I don't want to see the CPU load though.
 
 #+BEGIN_SRC emacs-lisp
@@ -434,17 +434,20 @@ I don't want to see the CPU load though.
 
 * Key Bindings
 
+I use many[fn:7] custom keybindings.
+
 ** Control
 
 Some control sequences but user-reserved combinations
 only for some command maps.
 
 + =C->=/=C-<= expands/contracts region.
++ =C-c a" for =org-agenda=.
 + =C-c f= for =flyspell=.
 + =C-c i= for =perspective=.
 + =C-c p= for =projectile=.
 + =C-;= (un-)comments lines.
-+ =C-z=/=C-S-z= undos/redos.
++ =C-z=/=C-S-z= undoes/redoes.
 + =M-o= goes to the "other" window or the last buffer.
 + =M-x= opens =counsel-M-x=.
 
@@ -454,9 +457,8 @@ All hyper bindings are quick-access actions.
 
 + =H-4= kills window and buffer.
 + =H-5= creates a new frame.
-+ =H-a= opens agenda dispatch.
-+ =H-d= opens dired relative to open file.
-+ =H-f= finds with =ag=.
++ =H-d= opens =dired= relative to open file.
++ =H-a= finds with =ag=.
 + =H-i= switches perspective.
 + =H-k= interacts with docker.
 + =H-M= marks all like this (multiple cursors).
@@ -661,51 +663,51 @@ Set fonts (with preference).
 To get support for ligatures, install the symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/fonts--fixed
+(defvar wal/fixed-fonts
    '("Fira Code" "mononoki" "Liberation Mono" "DejaVu Sans Mono")
    "Fixed fonts ordered by preference.")
 
-(defvar wal/fonts--variable
+(defvar wal/variable-fonts
   '("Roboto" "Ubuntu" "San Francisco" "Arial")
   "Variable fonts ordered by preference.")
 
-(defvar wal/fonts--fixed-size 120
+(defvar wal/fixed-fonts-size 120
   "The font size for fixed fonts.")
 
-(defvar wal/fonts--variable-size 160
+(defvar wal/variable-fonts-size 160
   "The font size for variable fonts.")
 
-(defun wal/fonts--fixed-select (font)
+(defun wal/fixed-fonts-select (font)
   "Select fixed FONT."
-  (interactive (list (completing-read "Select font: " wal/fonts--fixed)))
+  (interactive (list (completing-read "Select font: " wal/fixed-fonts)))
   (let ((found (find-font (font-spec :name font))))
     (when found
       (set-face-attribute 'default nil
         :font found
-        :height wal/fonts--fixed-size))))
+        :height wal/fixed-fonts-size))))
 
-(wal/general "af" '(wal/fonts--fixed-select :wk "select (fixed) font"))
+(wal/general "af" '(wal/fixed-fonts-select :wk "select (fixed) font"))
 
-(defun wal/fonts--candidate (fonts)
+(defun wal/fonts-candidate (fonts)
   "Return the first available font from a list of FONTS."
   (--first (find-font (font-spec :name it)) fonts))
 
-(defun wal/setup--fonts ()
+(defun wal/setup-fonts ()
   "Setup fonts."
   (interactive)
   (set-face-attribute 'default nil
-    :font (wal/fonts--candidate wal/fonts--fixed)
-    :height wal/fonts--fixed-size)
+    :font (wal/fonts-candidate wal/fixed-fonts)
+    :height wal/fixed-fonts-size)
   ;; Variable pitch face.
   (set-face-attribute 'variable-pitch nil
-    :font (wal/fonts--candidate wal/fonts--variable)
-    :height wal/fonts--variable-size
+    :font (wal/fonts-candidate wal/variable-fonts)
+    :height wal/variable-fonts-size
     :weight 'regular))
 
 ;; Fonts can't be initialized thru daemon.
 (if (daemonp)
-    (add-hook 'server-after-make-frame-hook 'wal/setup--fonts)
-  (add-hook 'after-init-hook 'wal/setup--fonts))
+    (add-hook 'server-after-make-frame-hook 'wal/setup-fonts)
+  (add-hook 'after-init-hook 'wal/setup-fonts))
 #+END_SRC
 
 * Additional Functions
@@ -915,12 +917,12 @@ to download it automatically, but might fail).
                          "build"
                          "*.svg"))
   :general
-  (wal/lieutenant "f"  '(:ignore t  :wk "ag")
-                  "ff" '(ag-files   :wk "files")
-                  "fp" '(ag-project :wk "project"))
+  (wal/lieutenant "a"  '(:ignore t  :wk "ag")
+                  "af" '(ag-files   :wk "files")
+                  "ap" '(ag-project :wk "project"))
   (wal/lieutenant :keymaps 'dired-mode-map
-                  "fd" '(ag-dired   :wk "dired"))
-  :bind ("H-f"     . ag))
+                  "ad" '(ag-dired   :wk "dired"))
+  :bind ("H-a"     . ag))
 #+END_SRC
 
 ** all-the-icons
@@ -1008,7 +1010,7 @@ Bookmarks are useful. I don't remember where I was. _Who are you?!_
   (setq-default bm-buffer-persistence t)
   :custom
   (bm-restore-repository-on-load t)
-  (bm-repository-file            (expand-file-name "bm-persist" wal/cache-folder))
+  (bm-repository-file            (expand-file-name "bm-persist" wal/cache-directory))
   (bm-annotate-on-create         t)
   (bm-highlight-style            'bm-highlight-only-fringe)
   (bm-cycle-all-buffers          t)
@@ -1283,7 +1285,7 @@ Let's have a dash of board.
 (defvar wal/recentf-exclude
   (append (wal/directory-files wal/agenda-tasks-directory)
           (wal/directory-files wal/org-roam-directory)
-          (wal/directory-files wal/cache-folder)
+          (wal/directory-files wal/cache-directory)
           (wal/directory-files user-emacs-directory))
   "Files that should not be considered recent files.")
 
@@ -1440,7 +1442,7 @@ I use Docker a lot, don't always have to use the command line.
 
 ** doom-modeline
 
-Busier and prettier modeline.
+Busier and prettier =modeline=.
 Note that this package requires you to install =all-the-icons= fonts[fn:4].
 
 #+BEGIN_SRC emacs-lisp
@@ -1751,7 +1753,7 @@ You can bring up actions (skip, save) with =M-o=.
   :after flyspell
   :general
   (wal/captain :keymaps 'flyspell-mode-map
-               "sc" '(flyspell-correct-wrapper :wk "correct")))
+               "sc" '(flyspell-correct-at-point :wk "correct at point")))
 
 (use-package flyspell-correct-ivy
   :after flyspell-correct)
@@ -2155,7 +2157,7 @@ Have some perspective, man.
   :custom
   (persp-modestring-dividers '("(" ")" "/"))
   (persp-initial-frame-name  wal/default-perspective)
-  (persp-state-default-file  (expand-file-name "persp-persist" wal/cache-folder))
+  (persp-state-default-file  (expand-file-name "persp-persist" wal/cache-directory))
   (persp-mode-prefix-key     (kbd "C-c i"))
   :config
   (persp-mode))
@@ -2173,7 +2175,7 @@ Better short-term-memory for =ivy=.
   :if wal/use-prescient
   :custom
   (prescient-sort-length-enable nil)
-  (prescient-save-file (expand-file-name "prescient-persist" wal/cache-folder))
+  (prescient-save-file (expand-file-name "prescient-persist" wal/cache-directory))
   (prescient-filter-method '(literal regexp initialism))
   :config
   (prescient-persist-mode +1))
@@ -2634,7 +2636,7 @@ If you're too lazy to copy and paste.
 Code folding.
 Unfortunately has some performance issues.
 This package also uses the deprecated =cl= package,
-leading to warning from emacs version 27 onward.
+leading to warning from Emacs version 27 onward.
 
 #+BEGIN_SRC emacs-lisp
 (use-package origami
@@ -2732,7 +2734,7 @@ visible" is nice, so let's show some _dirs_.
           treemacs-indentation-string            " ⁝ "
           treemacs-is-never-other-window         t
           treemacs-no-delete-other-windows       nil
-          treemacs-persist-file                  (expand-file-name "treemacs-persist" wal/cache-folder)
+          treemacs-persist-file                  (expand-file-name "treemacs-persist" wal/cache-directory)
           treemacs-show-hidden-files             t
           treemacs-file-event-delay              1000)
 
@@ -2757,7 +2759,7 @@ visible" is nice, so let's show some _dirs_.
 
 **** Treemacs Packages
 
-Some treemacs integration packages.
+Some =treemacs= integration packages.
 
 #+BEGIN_SRC emacs-lisp
 (use-package treemacs-evil
@@ -2894,7 +2896,7 @@ Necessary even for =.gitignore= files.
 
 ** haskell-mode
 
-Don't use haskell much yet.
+Don't use Haskell much yet.
 
 #+BEGIN_SRC emacs-lisp
 (use-package haskell-mode)
@@ -2967,7 +2969,7 @@ make sure it's not applied to elements that need fixed pitch.
 #+BEGIN_SRC emacs-lisp
 (defun wal/org-set-variable-faces ()
   "Set faces to `fixed-pitch' where applicable."
-  (set-face-attribute 'org-block nil           :foreground nil :inherit 'fixed-pitch :height wal/fonts--fixed-size)
+  (set-face-attribute 'org-block nil           :foreground nil :inherit 'fixed-pitch :height wal/fixed-fonts-size)
   (set-face-attribute 'org-table nil           :inherit 'fixed-pitch)
   (set-face-attribute 'org-formula nil         :inherit 'fixed-pitch)
   (set-face-attribute 'org-code nil            :inherit 'fixed-pitch)
@@ -3128,7 +3130,7 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
   (wal/major :keymaps 'org-agenda-keymap
              "w" '(org-agenda-write :wk "write"))
   :bind
-  ("H-a"   . org-agenda))
+  ("C-c a"   . org-agenda))
 #+END_SRC
 
 *** Presentations
@@ -3380,13 +3382,14 @@ If that is the case do the following:
 + hit =M-x=, type =package-install= and hit return
 + type =dash= and hit return again
 
-Once the installation is complete, re-run Emacs
+Once the installation is complete, re-run Emacs.
 
-[fn:5] 142 code blocks, to be exact.
+[fn:5] Around 140 code blocks.
 
 [fn:6] Send me an email, why don't you?
 
-[fn:7] If you want to see all personal keybindings, execute =describe-personal-keybindings=.
+[fn:7] To get a full overview you'll have to call =describe-personal-keybindings=
+and =general-describe-keybindings=. From my count around 150.
 
 [fn:8] Be careful! If you make a mistake you could render your
 keyboard unusable.
@@ -3500,3 +3503,5 @@ Currently I only need three:
 + [[https://github.com/elixir-lsp/elixir-ls][Elixir]]
 + [[https://emacs-lsp.github.io/lsp-mode/page/lsp-prolog/][Prolog]]
 + [[https://emacs-lsp.github.io/lsp-mode/page/lsp-pyls/][Python]]
+
+[fn:11] If you want to see all personal keybindings, execute =describe-personal-keybindings=.
