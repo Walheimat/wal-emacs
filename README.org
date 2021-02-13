@@ -363,13 +363,15 @@ To make this work, we need to tweak a few things.
   (local-set-key (kbd "TAB") 'tab-to-tab-stop)
   (setq indent-tabs-mode t))
 
-(defun wal/maybe-enable-tabs (&optional tab-indent-fun)
-  "Maybe enable tabs and use TAB-INDENT-FUN to do so."
+(defun wal/maybe-enable-tabs (&optional tab-indent-fun mode-fun)
+  "Maybe enable tabs using TAB-INDENT-FUN and MODE-FUN to do so."
   (if wal/prefer-tabs
     (progn
       (wal/enable-tabs)
       (when tab-indent-fun
-        (setq-local indent-line-function tab-indent-fun)))
+        (setq-local indent-line-function tab-indent-fun))
+      (when mode-fun
+        (funcall mode-fun)))
     (wal/disable-tabs)))
 
 (defun wal/set-indent-defaults (&optional num)
@@ -438,18 +440,19 @@ I use many[fn:7] custom keybindings.
 
 ** Control
 
-Some control sequences but user-reserved combinations
-only for some command maps.
+There are some non-standard control sequences:
 
 + =C->=/=C-<= expands/contracts region.
-+ =C-c a" for =org-agenda=.
++ =C-.= marks next point like this.
++ =C-;= (un-)comments lines.
++ =C-z=/=C-S-z= undoes/redoes.
+
+User-reserved combinations are used for certain command maps:
+
++ =C-c a= for =org-agenda=.
 + =C-c f= for =flyspell=.
 + =C-c i= for =perspective=.
 + =C-c p= for =projectile=.
-+ =C-;= (un-)comments lines.
-+ =C-z=/=C-S-z= undoes/redoes.
-+ =M-o= goes to the "other" window or the last buffer.
-+ =M-x= opens =counsel-M-x=.
 
 ** Hyper
 
@@ -461,8 +464,6 @@ All hyper bindings are quick-access actions.
 + =H-a= finds with =ag=.
 + =H-i= switches perspective.
 + =H-k= interacts with docker.
-+ =H-M= marks all like this (multiple cursors).
-+ =H-m= marks next like this (multiple cursors).
 + =H-n= opens notes index file.
 + =H-<mouse3>= adds another cursor at point.
 + =H-p= switches project.
@@ -1142,10 +1143,11 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
   :general
   (wal/general "ei" '(crux-find-user-init-file :wk "open init file"))
   (wal/general "gk" '(crux-kill-other-buffers  :wk "kill other buffers")
-               "eo" '(crux-open-with))
+               "xo" '(crux-open-with           :wk "open with default program"))
+  (wal/lieutenant "x"  '(:ignore t                             :wk "crux")
+                  "xd" '(crux-duplicate-current-line-or-region :wk "duplicate"))
   :bind
   (("M-o"     . crux-other-window-or-switch-buffer)
-   ("C-c x d" . crux-duplicate-current-line-or-region)
    :map prog-mode-map
    ("C-k"   . crux-smart-kill-line)
    ("C-o"   . crux-smart-open-line)
@@ -1299,8 +1301,8 @@ Let's have a dash of board.
   (dashboard-projects-backend           'projectile)
   (dashboard-items                      '((recents   . 5)
                                           (projects  . 5)
-                                          ;; This means all agenda files are opened.
-                                          ;; Which I find annoying.
+                                          ;; This means all agenda files are opened
+                                          ;; which I find annoying.
                                           ;; (agenda    . 5)
                                           (bookmarks . 5)))
   (dashboard-center-content             t)
@@ -2091,10 +2093,11 @@ Also trying out =magit-todos=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
-  :defer nil
   :bind ("H-g" . magit-status))
 
 (use-package magit-todos
+  :after magit
+  :commands (ivy-magit-todos magit-todos-list)
   :custom
   (magit-todos-branch-list nil)
   :bind
@@ -2117,15 +2120,26 @@ Make the bell visual.
 
 ** multiple-cursors
 
-Sometimes a lot of things are similarly wrong.
-It's nice to change everything at once.
+Don't you want to edit your buffer in multiple places at once?
 
 #+BEGIN_SRC emacs-lisp
 (use-package multiple-cursors
+  :init
+  ;; Since the map is `nil', using `:bind' would fail.
+  (setq mc/keymap (make-sparse-keymap))
+  :general
+  (wal/lieutenant "m"   '(:ignore t :wk "multiple cursors")
+                  "ma"  '(mc/mark-all-like-this :wk "all like this")
+                  "mr"  '(:ignore t :wk "region")
+                  "mrb" '(mc/edit-beginnings-of-lines :wk "beginnings")
+                  "mre" '(mc/edit-ends-of-lines :wk "end"))
   :bind
   (("H-<mouse-3>" . mc/add-cursor-on-click)
-   ("H-m"         . mc/mark-next-like-this)
-   ("H-M"         . mc/mark-all-like-this)))
+   ("C-."         . mc/mark-next-like-this)
+   :map mc/keymap
+   ("C-g" . mc/keyboard-quit) ; We keep this from the default map.
+   ("C-," . mc/unmark-next-like-this)
+   ("C-/" . mc/skip-to-next-like-this)))
 #+END_SRC
 
 ** mwim
@@ -2219,6 +2233,7 @@ You don't really _need_ =treemacs=.
 (use-package projectile
   :delight " pjt"
   :bind ("H-p" . projectile-switch-project)
+  ;; :bind-keymap ("C-c p" . projectile-command-map)
   :custom
   (projectile-completion-system     'ivy)
   (projectile-mode-line-function    '(lambda() (format " {%s}" (projectile-project-name))))
@@ -2441,6 +2456,12 @@ I find =ediff= quite cumbersome, so I'm giving =vdiff= a try.
 #+BEGIN_SRC emacs-lisp
 (use-package vdiff-magit
   :after magit
+  :init
+  ;; `:bind-keymap' doesn't seem to allow mode predicates.
+  (define-key vdiff-mode-map (kbd "C-c v") vdiff-mode-prefix-map)
+  :custom
+  (vdiff-diff-algorithm      'git-diff)
+  (vdiff-magit-stage-is-2way t)
   :bind
   (:map vdiff-3way-mode-map
    ("q" . vdiff-quit)
@@ -2799,20 +2820,21 @@ You might think Angular is dead and you'd be right but not everyone knows yet.
 
 #+BEGIN_SRC emacs-lisp
 (use-package angular-mode
-  :mode ("\\.component.css\\'" . css-mode)
   :init
-  ;; Adapt, obviouisly.
-  (let* ((node-lts "14.8.0")
-         (node-nvm-lib (format ".config/nvm/%s/lib/node_modules" node-lts))
-         (node-abs (expand-file-name node-nvm-lib "~")))
-    (setq lsp-clients-angular-server-command
+  ;; I use nvm and I assume the language server is installed.
+  (let* ((node-v    (string-trim (substring (shell-command-to-string "node -v") 1)))
+         (node-m    (format ".config/nvm/%s/lib/node_modules" node-v))
+         (node-abs  (expand-file-name node-m "~"))
+         (lang-serv (expand-file-name "@angular/language-server" node-abs)))
+    (when (f-directory? lang-serv)
+      (setq lsp-clients-angular-server-command
             `("node"
-              ,(expand-file-name "@angular/language-server" node-abs)
+              ,lang-serv
               "--ngProbeLocations"
               ,node-abs
               "--tsProbeLocations"
               ,node-abs
-              "--stdio"))))
+              "--stdio")))))
 #+END_SRC
 
 ** crontab-mode
@@ -2872,7 +2894,7 @@ Make =Dockerfiles= look nice.
 Enable =flycheck=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/elixir-mode-hook ()
+(defun wal/elixir-mode ()
   "Hooks for elixir mode."
   (message "Mixin' potions")
   (wal/disable-tabs)
@@ -2880,7 +2902,7 @@ Enable =flycheck=.
   (flycheck-mode 1))
 
 (use-package elixir-mode
-  :hook (elixir-mode . wal/elixir-mode-hook))
+  :hook (elixir-mode . wal/elixir-mode))
 #+END_SRC
 
 ** gitignore-mode
@@ -2907,7 +2929,7 @@ Don't use Haskell much yet.
 Enable tabs and =flycheck=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/json-mode-hook ()
+(defun wal/json-mode ()
   "Hooks for json mode."
   (message "JSON ...? JSON?! JSON!!")
   (rainbow-delimiters-mode)
@@ -2924,11 +2946,10 @@ Enable tabs and =flycheck=.
 Enable =flycheck= and disable internal checker.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/js2-mode-hook ()
+(defun wal/js2-mode ()
   "Hooks for js2 mode."
   (message "NaN !== NaN")
   (add-node-modules-path)
-  (rainbow-delimiters-mode)
   (hack-local-variables)
   (wal/maybe-enable-tabs)
   (flycheck-mode 1))
@@ -2938,7 +2959,7 @@ Enable =flycheck= and disable internal checker.
   :init
   (setq-default js2-show-parse-errors           nil
                 js2-strict-missing-semi-warning nil)
-  :hook (js2-mode . wal/js2-mode-hook))
+  :hook (js2-mode . wal/js2-mode))
 #+END_SRC
 
 ** lua-mode
@@ -3024,6 +3045,7 @@ state =CANCELLED=.
   (add-to-list 'org-modules 'org-habit)
   :config
   (org-load-modules-maybe t)
+  (define-key org-mode-map (kbd "C-,") nil) ; Remove `org-cycle-agenda-files'.
   :custom
   (org-ellipsis                   "↷")
   (org-log-done                   t)
@@ -3255,7 +3277,7 @@ Enable =flycheck=.
 This mode is built-in.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/python-mode-hook ()
+(defun wal/python-mode ()
   "Hooks for python mode."
   (message "Sssnake_case!")
   (wal/disable-tabs)
@@ -3271,7 +3293,7 @@ This mode is built-in.
              "sr" '(python-shell-send-region :wk "region")
              "sb" '(python-shell-send-buffer :wk "buffer")
              "sf" '(python-shell-send-file   :wk "file"))
-  :hook (python-mode . wal/python-mode-hook)
+  :hook (python-mode . wal/python-mode)
   :init
   ;; Use `python3' as default Python command.
   (setq py-python-command        "python3"
@@ -3283,7 +3305,7 @@ This mode is built-in.
 Pretty much like =js2=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/rjsx-mode-hook ()
+(defun wal/rjsx-mode ()
   "Hooks for rjsx mode."
   (message "Extend those ugly JavaScripts of yours!")
   (add-node-modules-path)
@@ -3294,7 +3316,7 @@ Pretty much like =js2=.
 
 (use-package rjsx-mode
   :mode "\\.jsx\\'"
-  :hook (rjsx-mode . wal/rjsx-mode-hook))
+  :hook (rjsx-mode . wal/rjsx-mode))
 #+END_SRC
 
 ** typescript-mode
@@ -3302,7 +3324,7 @@ Pretty much like =js2=.
 Enable =lsp=, =flycheck=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/typescript-mode-hook ()
+(defun wal/typescript-mode ()
   "Hooks for typescript mode."
   (message "This is any, that is any, everything is any!")
   (add-node-modules-path)
@@ -3313,7 +3335,7 @@ Enable =lsp=, =flycheck=.
 
 (use-package typescript-mode
   :mode "\\.ts\\'"
-  :hook (typescript-mode . wal/typescript-mode-hook))
+  :hook (typescript-mode . wal/typescript-mode))
 #+END_SRC
 
 ** web-mode
@@ -3321,17 +3343,16 @@ Enable =lsp=, =flycheck=.
 Web mode uses =flycheck=, prompts user if =lsp= should be enabled.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/web-mode-hook ()
+(defun wal/web-mode ()
   "Hooks for web mode."
   (message "This is the Internet")
-  (web-mode-use-tabs)
   (add-node-modules-path)
   (hack-local-variables)
-  (wal/maybe-enable-tabs)
+  (wal/maybe-enable-tabs nil #'web-mode-use-tabs)
   (flycheck-mode 1))
 
 (use-package web-mode
-  :hook (web-mode . wal/web-mode-hook)
+  :hook (web-mode . wal/web-mode)
   :custom
   (web-mode-comment-style 2)
   :mode ("\\.vue\\'"
@@ -3347,7 +3368,10 @@ Sometimes you need YAMLs.
 (use-package yaml-mode
   :bind
   (:map yaml-mode-map
-   ("C-;" . evilnc-comment-or-uncomment-lines)))
+   ("C-;"   . evilnc-comment-or-uncomment-lines)
+   ("C-k"   . crux-smart-kill-line)
+   ("C-o"   . crux-smart-open-line)
+   ("C-S-o" . crux-smart-open-line-above)))
 #+END_SRC
 
 * Footnotes
