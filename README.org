@@ -346,6 +346,9 @@ To make this work, we need to tweak a few things.
 (defvar wal/prefer-tabs t
   "Whether tabs are used for indentation.")
 
+(defvar wal/allow-custom-indent-line-fun t
+  "Whether a custom `indent-line-function' can be passed.")
+
 (defun wal/reset-tab-width ()
   "Reset the tab width to the standard."
   (interactive)
@@ -368,7 +371,7 @@ To make this work, we need to tweak a few things.
   (if wal/prefer-tabs
     (progn
       (wal/enable-tabs)
-      (when tab-indent-fun
+      (when (and wal/allow-custom-indent-line-fun tab-indent-fun)
         (setq-local indent-line-function tab-indent-fun))
       (when mode-fun
         (funcall mode-fun)))
@@ -3317,8 +3320,7 @@ Pretty much like =js2=.
   (message "Extend those ugly JavaScripts of yours!")
   (add-node-modules-path)
   (hack-local-variables)
-  ;; Maybe pass `js-jsx-indent-line' here.
-  (wal/maybe-enable-tabs)
+  (wal/maybe-enable-tabs 'js-jsx-indent-line)
   (flycheck-mode 1))
 
 (use-package rjsx-mode
