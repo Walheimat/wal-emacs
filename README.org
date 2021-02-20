@@ -978,15 +978,25 @@ Create new themes more easily.
 Jumping to (visible) lines and chars is fun if you are too lazy to use your mouse.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/avy-goto-line ()
+  "Go to line and then (unless empty) to char in line."
+  (interactive)
+  (avy-goto-line)
+  (let ((line-length (save-excursion (end-of-line) (current-column))))
+    (unless (zerop line-length)
+      (let ((char (read-char "char: " t)))
+        (avy-goto-char-in-line char)))))
+
 (use-package avy
   :general
   (wal/lieutenant "v"   '(:ignore t               :wk "avy")
                   "vg"  '(:ignore t               :wk "go to")
                   "vgc" '(avy-goto-char           :wk "char")
+                  "vgl" '(avy-goto-line           :wk "line")
                   "vgw" '(avy-goto-whitespace-end :wk "whitespace")
                   "vc"  '(avy-copy-line           :wk "copy")
                   "vk"  '(avy-kill-whole-line     :wk "kill"))
-  :bind ("H-v"       . avy-goto-line))
+  :bind ("H-v"       . wal/avy-goto-line))
 #+END_SRC
 
 ** beacon
