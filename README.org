@@ -411,14 +411,14 @@ Delete trailing white space before saving.
 
 ** Zoning
 
- Zone out after a couple of minutes.
+Zone out after a couple of minutes.
 
  #+BEGIN_SRC emacs-lisp
- (defvar wal/zone-timer 180
-   "The time in seconds when we will zone out.")
+(defvar wal/zone-timer (* 5 60)
+  "The time in seconds when we will zone out.")
 
- (require 'zone)
- (zone-when-idle wal/zone-timer)
+(require 'zone)
+(zone-when-idle wal/zone-timer)
  #+END_SRC
 
 ** Time
@@ -441,12 +441,18 @@ I use many[fn:7] custom keybindings.
 
 ** Control
 
-There are some non-standard control sequences:
+There are some non-standard control sequences.
+Anywhere:
+
++ =C-z=/=C-S-z= undoes/redoes.
+
+And in =prog mode= derived modes:
 
 + =C->=/=C-<= expands/contracts region.
-+ =C-.= marks next point like this.
++ =C-.= marks next point like this allowing
+  + =C-,= to delet last mark and
+  + =C-/= to move it.
 + =C-;= (un-)comments lines.
-+ =C-z=/=C-S-z= undoes/redoes.
 
 User-reserved combinations are used for certain command maps:
 
@@ -454,6 +460,7 @@ User-reserved combinations are used for certain command maps:
 + =C-c f= for =flyspell=.
 + =C-c i= for =perspective=.
 + =C-c p= for =projectile=.
++ =C-c k= for =docker=.
 
 ** Hyper
 
@@ -461,16 +468,15 @@ All hyper bindings are quick-access actions.
 
 + =H-4= kills window and buffer.
 + =H-5= creates a new frame.
-+ =H-d= opens =dired= relative to open file.
 + =H-a= finds with =ag=.
 + =H-i= switches perspective.
-+ =H-k= interacts with docker.
 + =H-n= opens notes index file.
 + =H-<mouse3>= adds another cursor at point.
 + =H-p= switches project.
 + =H-<TAB>= expands snippets (in =yas-minor-mode=).
 + =H-v= jumps to line with =avy=.
 + =H-w= opens =ace= dispatch.
++ =H-s= for =swiper= search.
 
 *** Caps to Hyper
 
@@ -871,12 +877,13 @@ switching setup.
   :config
   (setq aw-dispatch-alist '((?h aw-split-window-horz "horizontal split")
                             (?v aw-split-window-vert "vertical split")
-                            (?b aw-switch-buffer-in-window "switch focused")
-                            (?o aw-switch-buffer-other-window "switch unfocused")
+                            (?d aw-delete-window "delete")
+                            (?w delete-other-windows "delete other")
                             (?s aw-swap-window "swap")
                             (?m aw-move-window "move")
-                            (?d aw-delete-window "delete")
-                            (?w aw-split-window-fair "fair split")
+                            (?b aw-switch-buffer-in-window "switch focused")
+                            (?o aw-switch-buffer-other-window "switch unfocused")
+                            (?f aw-split-window-fair "fair split")
                             ;; If this has a description, it doesn't work.
                             (?? aw-show-dispatch-help)))
   :init
@@ -920,6 +927,7 @@ to download it automatically, but might fail).
                     "*.svg"))
   :general
   (wal/lieutenant "a" '(:ignore t :wk "ag")
+                  "ad" '(ag :wk "directory")
                   "af" '(ag-files :wk "files")
                   "ap" '(ag-project :wk "project"))
   (wal/lieutenant :keymaps 'dired-mode-map
@@ -1129,6 +1137,7 @@ Counsel me this, Counselor.
   :general
   (wal/general "at" '(counsel-load-theme :wk "load theme")
                "eh" '(counsel-command-history :wk "show command history")
+               "el" '(counsel-find-library :wk "find library")
                "ev" '(counsel-set-variable :wk "set variable")
                "xa" '(counsel-linux-app :wk "launch app")
                "xs" '(counsel-search :wk "duck-duck-go"))
@@ -1411,7 +1420,7 @@ override some keybindings.
   :custom
   (dired-listing-switches "-lah --group-directories-first")
   :bind
-  (("H-d" . dired-jump)
+  (("C-x j" . dired-jump-other-window)
    :map dired-mode-map
    ("-" . dired-up-directory)  ; Overrides negative-argument.
    ("," . dired-display-file)))
@@ -1450,7 +1459,7 @@ I use Docker a lot, don't always have to use the command line.
                   "ku" '(docker-compose-up :wk "up")
                   "ke" '(docker-compose-exec :wk "exec")
                   "kl" '(docker-compose-logs :wk "logs"))
-  :bind ("H-k" . docker))
+  :bind ("C-c k" . docker))
 #+END_SRC
 
 ** doom-modeline
@@ -1935,7 +1944,7 @@ We use =ivy= for narrowing our options.
                "ir" '(ivy-resume :wk "resume"))
   :bind
   (("C-x b" . wal/switch-buffer)
-   ("C-x B" . wal/ivy-switch-ignored-buffers))
+   ("C-x C-b" . wal/ivy-switch-ignored-buffers)) ; replaces `list-buffers'
   :config
   (ivy-mode 1))
 #+END_SRC
@@ -3300,8 +3309,9 @@ This mode is built-in.
 #+BEGIN_SRC emacs-lisp
 (defun wal/python-mode ()
   "Hooks for python mode."
-  (message "Sssnake_case!")
+  (message "Watch out for snakes!")
   (wal/disable-tabs)
+  (hack-local-variables)
   (lsp)
   (flycheck-mode 1))
 
