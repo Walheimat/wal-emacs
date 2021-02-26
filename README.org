@@ -469,6 +469,7 @@ All hyper bindings are quick-access actions.
 + =H-4= kills window and buffer.
 + =H-5= creates a new frame.
 + =H-a= finds with =ag=.
++ =H-d= duplicates current line/region with =crux=.
 + =H-i= switches perspective.
 + =H-n= opens notes index file.
 + =H-<mouse3>= adds another cursor at point.
@@ -1168,6 +1169,7 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
                   "xd" '(crux-duplicate-current-line-or-region :wk "duplicate"))
   :bind
   (("M-o" . crux-other-window-or-switch-buffer)
+   ("H-d" . crux-duplicate-current-line-or-region)
    :map prog-mode-map
    ("C-k" . crux-smart-kill-line)
    ("C-o" . crux-smart-open-line)
@@ -1203,10 +1205,12 @@ Debugging using VSCode's DAP.
   :commands dap-mode
   :delight " dap"
   :custom
-  (lsp-enable-dap-auto-configure nil)
+  ;; (lsp-enable-dap-auto-configure nil)
   (dap-python-executable "python3")
   ;; Be sure to install with `pip3'.
   (dap-python-debugger 'debugpy)
+  (dap-print-io t)
+  ;; (dap-python-terminal "sudo ")
   :config
   (dap-ui-mode 1)
   (require 'dap-node)
@@ -1218,6 +1222,80 @@ Debugging using VSCode's DAP.
                "d" '(:ignore t :wk "dap")
                "dh" '(dap-hydra :wk "hydra")))
 #+END_SRC
+
+*** Unmerged Fixes
+
+**** debugpy
+
+Attaching to =debugpy= currently doesn't work but there's this
+unmerged proposed fix I will put here for now.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/dap-python--populate-start-file-args (conf)
+  "Populate CONF with the required arguments."
+  (let* ((python-executable (dap-python--pyenv-executable-find dap-python-executable))
+         (python-args (plist-get conf :args))
+         (program (or (plist-get conf :target-module)
+                      (plist-get conf :program)
+                      (buffer-file-name)))
+         (module (plist-get conf :module))
+         (debugger (plist-get conf :debugger))
+         (targetPid (plist-get conf :processId)))
+    (cl-remf conf :debugger)
+    (pcase (or debugger dap-python-debugger)
+      ('ptvsd
+       (let ((host "localhost")
+             (debug-port (dap--find-available-port)))
+         ;; support :args ["foo" "bar"]; NOTE: :args can be nil; however, nil is
+         ;; a list, so it will be mapconcat'ed, yielding the empty string.
+         (when (sequencep python-args)
+           (setq python-args (mapconcat #'shell-quote-argument python-args " ")))
+         (plist-put conf :program-to-start
+                    (format "%s%s -m ptvsd --wait --host %s --port %s %s"
+                            (or (and dap-python-terminal (concat dap-python-terminal " ") ""))
+                            (shell-quote-argument python-executable)
+                            host
+                            debug-port
+                            (if targetPid
+                                (format "--pid %s" targetPid)
+                              (format "%s %s %s"
+                                      (if module (concat " -m " (shell-quote-argument module)) "")
+                                      (shell-quote-argument program)
+                                      python-args))))
+         (plist-put conf :debugServer debug-port)
+         (plist-put conf :port debug-port)
+         (plist-put conf :hostName host)
+         (plist-put conf :host host)))
+      ('debugpy
+       ;; If certain properties are nil, issues will arise, as debugpy expects
+       ;; them to unspecified instead. Some templates in this file set such
+       ;; properties (e.g. :module) to nil instead of leaving them undefined. To
+       ;; support them, sanitize CONF before passing it on.
+       (when (or (null python-args) (stringp python-args))
+         (cl-remf conf :args))
+       (when (stringp python-args)
+         (let ((args (split-string-and-unquote python-args)))
+           (if args
+               (plist-put conf :args args)
+             ;; :args "" -> :args nil -> {"args": null}; to handle that edge
+             ;; case, use the empty vector instead.
+             (plist-put conf :args []))))
+       (unless program
+         (cl-remf conf :target-module)
+         (cl-remf conf :program))
+       (unless module
+         (cl-remf conf :module))
+       (unless (plist-get conf :cwd)
+         (cl-remf conf :cwd))
+       (unless targetPid
+         (cl-remf conf :listen))
+       (plist-put conf :dap-server-path
+                  (list python-executable "-m" "debugpy.adapter"))))
+    (plist-put conf :program program)
+    conf))
+(advice-add 'dap-python--populate-start-file-args :override #'wal/dap-python--populate-start-file-args)
+#+END_SRC
+
 
 *** Debug Templates
 
@@ -1285,6 +1363,19 @@ your =tsconfig.json=.
              :remoteRoot remote-root
              :localRoot local-root
              :port 9229)))))
+#+END_SRC
+
+**** Python
+
+Pick pid to attach to running =debugpy= session (see above).
+
+#+BEGIN_SRC emacs-lisp
+(when (require 'dap-mode nil 'noerror)
+  (dap-register-debug-template "Python :: Attach to running process"
+                               (list :type "python"
+                                     :request "attach"
+                                     :processId "${command:pickProcess}"
+                                     :name "Python :: Attach to running process")))
 #+END_SRC
 
 ** dashboard
