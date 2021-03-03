@@ -2117,6 +2117,8 @@ Prefer =capf=, bigger delay.
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
   :delight " lsp"
+  :bind-keymap
+  ("C-c l" . lsp-command-map) ;; Setting `lsp-keymap-prefix' doesn't work.
   :general
   (wal/colonel :keymaps 'prog-mode-map
                "L" '(lsp-mode :wk "lsp"))
@@ -2129,7 +2131,6 @@ Prefer =capf=, bigger delay.
   (lsp-completion-provider :capf)
   (lsp-prefer-capf t)
   (lsp-idle-delay 1.5)
-  (lsp-keymap-prefix "C-c l")
   ;; These have to be defined here.
   (lsp-ui-doc-position 'top) ; alternatively 'at-point
   (lsp-ui-doc-delay 2)
@@ -2144,10 +2145,6 @@ Prefer =capf=, bigger delay.
   (add-to-list 'lsp-file-watch-ignored "[/\\\\]deps$"))
 
 (use-package lsp-ui)
-
-;; (use-package pyvenv
-;;  :init
-;;  (setenv "WORKON_HOME" "~/.pyenv/versions"))
 #+END_SRC
 
 *** Checker switching
@@ -2280,16 +2277,19 @@ Useful for comments.
 
 ** poetry
 
-I need this for work. Do you?
+It's like =npm= for Python, it's why it rhymes.
 
 #+BEGIN_SRC emacs-lisp
 (use-package poetry
+  :defer nil
   :delight
   (poetry-tracking-mode " poe") ; Doesn't seem to work!
+  :custom
+  (poetry-tracking-strategy 'projectile)
   :config
-  (poetry-tracking-mode t)
+  (poetry-tracking-mode) ; Turn on global minor mode.
   :general
-  (wal/major :keymaps 'python-mode-map
+  (wal/major :keymaps '(python-mode-map dired-mode-map)
              "p" '(poetry :wk "poetry dispatch")))
 #+END_SRC
 
