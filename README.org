@@ -296,9 +296,10 @@ Easy on the eyes.
 (scroll-bar-mode -1)
 (global-font-lock-mode 1)
 (delete-selection-mode 1)
+(column-number-mode 1)
 
 ;; Trying to not touch the mouse as much.
-;; (Mouse-avoidance-mode 'banish)
+;; (mouse-avoidance-mode 'banish)
 
 ;; Simple y/n is enough.
 (defalias 'yes-or-no-p 'y-or-n-p)
@@ -404,9 +405,9 @@ Delete trailing white space before saving.
 
 #+BEGIN_SRC emacs-lisp
 (add-hook 'write-file-functions
-              (lambda ()
-                (delete-trailing-whitespace)
-                nil))
+          (lambda ()
+            (delete-trailing-whitespace)
+            nil))
 #+END_SRC
 
 ** Zoning
@@ -566,7 +567,7 @@ switching between =major mode= and =fundamental mode=.
 (defvar wal/before-emergency-mode nil
   "The major mode before emergency was engaged.")
 
-(defun wal/emergency-mode ()
+(defun wal/fundamental-mode ()
   "Switch from `major-mode' to `fundamental-mode' and back."
   (interactive)
   (let ((m-mode major-mode))
@@ -578,7 +579,7 @@ switching between =major mode= and =fundamental mode=.
 	  (make-local-variable 'wal/before-emergency-mode)
 	  (setq wal/before-emergency-mode m-mode))))
 
-(wal/colonel "F" '(wal/emergency-mode :wk "fundamental")
+(wal/colonel "F" '(wal/fundamental-mode :wk "fundamental")
              "N" '(linum-mode :wk "linum"))
 #+END_SRC
 
@@ -750,7 +751,7 @@ Better(?) garbage collection.
   (setq gc-cons-threshold wal/hundred-mb))
 
 (add-hook 'minibuffer-setup-hook #'wal/minibuffer-setup-hook)
-(add-hook 'minibuffer-exit-hook  #'wal/minibuffer-exit-hook)
+(add-hook 'minibuffer-exit-hook #'wal/minibuffer-exit-hook)
 #+END_SRC
 
 ** Directories
@@ -1088,6 +1089,7 @@ nice despite us using =ivy= for completion everywhere.
 
 #+BEGIN_SRC emacs-lisp
 (use-package consult
+  :defer nil
   :custom
   (consult-project-root-function #'projectile-project-root)
   :bind
@@ -2369,7 +2371,9 @@ You don't really _need_ =treemacs=.
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
   :delight " pjt"
-  :bind ("H-p" . projectile-switch-project)
+  :bind
+  (("H-p" . projectile-switch-project)
+   ("H-f" . projectile-find-file))
   ;; :bind-keymap ("C-c p" . projectile-command-map)
   :custom
   (projectile-completion-system 'ivy)
