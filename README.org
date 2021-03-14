@@ -458,27 +458,28 @@ And in =prog mode= derived modes:
 User-reserved combinations are used for certain command maps:
 
 + =C-c a= for =org-agenda=.
++ =C-c d= for =docker=.
 + =C-c f= for =flyspell=.
 + =C-c i= for =perspective=.
 + =C-c p= for =projectile=.
-+ =C-c k= for =docker=.
 
 ** Hyper
 
 All hyper bindings are quick-access actions.
 
-+ =H-4= kills window and buffer.
 + =H-5= creates a new frame.
 + =H-a= finds with =ag=.
 + =H-d= duplicates current line/region with =crux=.
 + =H-i= switches perspective.
-+ =H-n= opens notes index file.
++ =H-m= for =kmacro= commands.
 + =H-<mouse3>= adds another cursor at point.
++ =H-n= opens notes index file.
 + =H-p= switches project.
++ =H-q= kills window and buffer.
++ =H-s= for =swiper= search.
 + =H-<TAB>= expands snippets (in =yas-minor-mode=).
 + =H-v= jumps to line with =avy=.
 + =H-w= opens =ace= dispatch.
-+ =H-s= for =swiper= search.
 
 *** Caps to Hyper
 
@@ -600,7 +601,7 @@ Most bindings are declared in the [[*Packages][packages]] section.
 (wal/general "ec" '(wal/readme-config-open :wk "open config"))
 
 ;; windows
-(global-set-key (kbd "H-4") 'kill-buffer-and-window) ; C-x 4 0
+(global-set-key (kbd "H-q") 'kill-buffer-and-window) ; C-x 4 0
 (global-set-key (kbd "H-5") 'make-frame-command) ; C-x 5 2
 
 ;; Killing Emacs.
@@ -1114,7 +1115,7 @@ nice despite us using =ivy= for completion everywhere.
       consult-yank)
     (advice-add it :around #'wal/advise-selectrum))
   :general
-  (wal/general "bf" '(consult-focus-lines :wk "focus lines")
+  (wal/general "bl" '(consult-focus-lines :wk "focus lines")
                "gm" '(consult-global-mark :wk "go to mark")
                "dg" '(consult-grep :wk "grep here"))
   (wal/major "c" '(consult-mode-command :wk "invoke mode command"))
@@ -1550,12 +1551,12 @@ I use Docker a lot, don't always have to use the command line.
   :custom
   (docker-container-default-sort-key '("Names"))
   :general
-  (wal/lieutenant "k" '(:ignore t :wk "docker")
-                  "ku" '(docker-compose-up :wk "up")
-                  "ke" '(docker-compose-exec :wk "exec")
-                  "kl" '(docker-compose-logs :wk "logs"))
+  (wal/lieutenant "d" '(:ignore t :wk "docker")
+                  "du" '(docker-compose-up :wk "up")
+                  "de" '(docker-compose-exec :wk "exec")
+                  "dl" '(docker-compose-logs :wk "logs"))
   :bind
-  (("C-c k" . docker)
+  (("C-c d" . docker)
    ("H-c"   . docker-containers)))
 #+END_SRC
 
@@ -2311,7 +2312,11 @@ Have some perspective, man.
   :defer nil
   :custom-face
   (persp-selected-face ((t (:weight bold :foreground "burlywood"))))
-  :bind ("H-i" . persp-switch)
+  :bind
+  (("H-i" . persp-switch)
+   ("C-x k" . persp-kill-buffer*)
+   ("C-x C-k" . kill-buffer) ;; Replaces kmacro.
+   ("H-m" . kmacro-keymap))  ;; Make it available again.
   :custom
   (persp-modestring-dividers '("(" ")" "/"))
   (persp-initial-frame-name wal/default-perspective)
