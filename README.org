@@ -20,12 +20,12 @@ it's mostly just how I (think I) like things to be.
 If you're interested in trying out Emacs using my config,
 here are the necessary steps:
 
-+ Install Emacs if you haven't[fn:2]
-+ Clone this repository into your =user-emacs-directory=[fn:3]
-+ Copy the config file included in this repo by running =cp ~/.emacs.d/emacs-config/templates/.emacs ~=
-+ Close and re-run Emacs which should download and install (almost[fn:4]) all packages
++ install Emacs if you haven't[fn:2]
++ =git clone= this repository into your =user-emacs-directory=[fn:3]
++ copy the config file included in this repo by running =cp ~/.emacs.d/emacs-config/templates/.emacs ~=
++ close and re-run Emacs which should download and install (almost[fn:4]) all packages
 
-If you did not init this repo in your =user-emacs-directory= using the default name,
+If you do not wish to =clone= this repo in your =user-emacs-directory= or use the default name,
 you will need to adapt the variable =wal/emacs-config-default-path= in the example config you just copied.
 
 ** Peculiarities
@@ -41,7 +41,7 @@ get you started:
 
 + run =mkdir -p ~/.config/systemd/user=
 + run =cp ~/.emacs.d/emacs-config/templates/emacs.service ~/.config/systemd/user=
-+ adapt the =emacs.service= file to point to the correct path
++ adapt that =emacs.service= file to point to the correct path
 + run =systemctl --user enable emacs=
 
 Or you just execute =emacs --daemon= in a terminal or your shell's config.
@@ -783,32 +783,27 @@ ask if it should get created."
 I want to ignore some buffers when switching.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/is-commonly-ignored-buffer (buffer-or-string)
+(defvar wal/commonly-ignored-major-modes
+  '(dired-mode helpful-mode magit-status-mode)
+  "Major modes whose buffers should be commonly ignored.")
+
+(defun wal/commmonly-ignored-buffer-p (buffer-or-string)
   "Check if provided BUFFER-OR-STRING is commonly ignored."
-  (or
-   ;; Starred buffers other than scratch buffers.
-   (and (not (string-match "^\\*scratch" buffer-or-string))
-        (string-match "^\\*[[:ascii:]]+\\*\\'" buffer-or-string))
-   ;; dired
-   (eq (with-current-buffer
-           (get-buffer-create buffer-or-string)
-         major-mode)
-       'dired-mode)
-   ;; `helpful' buffers
-   (eq (with-current-buffer
-           (get-buffer-create buffer-or-string)
-         major-mode)
-       'helpful-mode)))
+  (let ((maj (with-current-buffer
+               (get-buffer-create buffer-or-string)
+			   major-mode)))
+    (or (member maj wal/commonly-ignored-major-modes)
+        ;; Starred buffers other than scratch buffers.
+        (and (not (string-match "^\\*scratch" buffer-or-string))
+             (string-match "^\\*[[:ascii:]]+\\*\\'" buffer-or-string)))))
 
 (defun wal/ivy-switch-ignored-buffers (&rest r)
   "Show only commonly ignored buffers.
 Pass R to the switch buffer function."
   (interactive)
   (let ((ivy-ignore-buffers
-          '((lambda(buffer-or-string)
-              (if (wal/is-commonly-ignored-buffer buffer-or-string)
-                  nil
-                t)))))
+          '((lambda (buffer-or-string)
+              (not (wal/commmonly-ignored-buffer-p buffer-or-string))))))
     (wal/switch-buffer r)))
 #+END_SRC
 
@@ -859,16 +854,14 @@ Check for custom arguments.
 What follows is a list of MELPA packages that make Emacs even more awesome.
 
 If you wish to know more about any of them, check out the list[fn:9] of repositories
-at the end of this readme/configuration or the [[https://github.com/emacs-tw/awesome-emacs][awesome-emacs]] project.
+at the end of this readme or the [[https://github.com/emacs-tw/awesome-emacs][awesome-emacs]] project.
 
-Many packages bind keys.
+/Note/ that many packages bind keys.
 Check the [[*Key Bindings][key bindings section]] if you need a list of all of them.
 
 ** ace-window
 
 =ace-window= allows for some nifty window swapping.
-We do some customization to integrate better with our buffer
-switching setup.
 
 #+BEGIN_SRC emacs-lisp
 (use-package ace-window
@@ -890,6 +883,7 @@ switching setup.
                             ;; If this has a description, it doesn't work.
                             (?? aw-show-dispatch-help)))
   :init
+  ;; Use our custom `switch-buffer' function.
   (advice-add
     'aw--switch-buffer
     :override (lambda (&rest r) (wal/switch-buffer r))
@@ -924,6 +918,7 @@ to download it automatically, but might fail).
   :custom
   (ag-highlight-search t)
   (ag-reuse-buffers t)
+  ;; Include hidden files. We ignore only specific dirs.
   (ag-arguments '("--smart-case" "--stats" "--hidden"))
   (ag-ignore-list '(".git"
                     ".idea"
@@ -993,7 +988,8 @@ Jumping to (visible) lines and chars is fun if you are too lazy to use your mous
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/avy-goto-line-and-char ()
-  "Go to line and then (unless empty) to char in line."
+  "Go to line and then to char in line.
+Only goes to line if line is empty."
   (interactive)
   (avy-goto-line)
   (let ((line-length (save-excursion (end-of-line) (current-column))))
@@ -1032,7 +1028,9 @@ Help me find my cursor!
 
 ** bm
 
-Bookmarks are useful. I don't remember where I was. _Who are you?!_
+Bookmarks are useful.
+I don't remember where I was.
+/Who are you?!/
 
 #+BEGIN_SRC emacs-lisp
 (use-package bm
@@ -1048,7 +1046,7 @@ Bookmarks are useful. I don't remember where I was. _Who are you?!_
   ((after-init . bm-repository-load)
    (after-save . bm-buffer-save)
    (kill-buffer . bm-buffer-save)
-   (kill-emacs . (lambda nil
+   (kill-emacs . (lambda ()
                    (bm-buffer-save-all)
                    (bm-repository-save)))
    (find-file . bm-buffer-restore)
@@ -1106,8 +1104,7 @@ nice despite us using =ivy= for completion everywhere.
    ;; Don't see the point of `consult-yank-pop'.
    ("M-y" . consult-yank))
   :init
-  ;; Advise functions to use selectrum when.
-  ;; `ivy' behaves unpredictably.
+  ;; Advise functions to use selectrum when `ivy' behaves unpredictably.
   (--each
     '(consult-buffer
       consult-focus-lines
@@ -1137,7 +1134,7 @@ nice despite us using =ivy= for completion everywhere.
 
 ** counsel
 
-Counsel me this, Counselor.
+=counsel= me this, Counselor.
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal/use-prescient t
@@ -1172,11 +1169,9 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
 #+BEGIN_SRC emacs-lisp
 (use-package crux
   :general
-  (wal/general "ei" '(crux-find-user-init-file :wk "open init file"))
-  (wal/general "gk" '(crux-kill-other-buffers :wk "kill other buffers")
+  (wal/general "ei" '(crux-find-user-init-file :wk "open init file")
+               "gk" '(crux-kill-other-buffers :wk "kill other buffers")
                "xo" '(crux-open-with :wk "open with default program"))
-  (wal/lieutenant "x" '(:ignore t :wk "crux")
-                  "xd" '(crux-duplicate-current-line-or-region :wk "duplicate"))
   :bind
   (("M-o" . crux-other-window-or-switch-buffer)
    ("H-d" . crux-duplicate-current-line-or-region)
@@ -1442,6 +1437,22 @@ Let's have a dash of board.
   (dashboard-setup-startup-hook))
 #+END_SRC
 
+** debug
+
+Just want to position this.
+
+#+BEGIN_SRC emacs-lisp
+(use-package debug
+  :ensure nil
+  :init
+  (add-to-list 'display-buffer-alist
+               '((lambda (bufname _)
+                   (with-current-buffer bufname
+                     (equal major-mode 'debugger-mode)))
+                 (display-buffer-in-side-window)
+                 (side . bottom))))
+#+END_SRC
+
 ** delight
 
 Refine a couple of major-mode names.
@@ -1523,7 +1534,7 @@ override some keybindings.
   :bind
   (("C-x j" . dired-jump-other-window)
    :map dired-mode-map
-   ("-" . dired-up-directory)  ; Overrides negative-argument.
+   ("-" . dired-up-directory) ; Overrides `negative-argument'.
    ("," . dired-display-file)))
 #+END_SRC
 
@@ -1567,7 +1578,7 @@ I use Docker a lot, don't always have to use the command line.
                   "dl" '(docker-compose-logs :wk "logs"))
   :bind
   (("C-c d" . docker)
-   ("H-c"   . docker-containers)))
+   ("H-c" . docker-containers)))
 #+END_SRC
 
 ** doom-modeline
@@ -1607,6 +1618,7 @@ Jumping is done using =M-.=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dumb-jump
+  :defer nil
   :init
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
   :custom
@@ -1629,6 +1641,7 @@ download a set that supports your emojis.
 ** eshell
 
 Set up =eshell=.
+I like the idea of it but I don't really use it.
 
 #+BEGIN_SRC emacs-lisp
 (use-package esh-autosuggest
@@ -1672,7 +1685,6 @@ Comment code like in =vim=, evil, evil =vim=.
 ** eww
 
 Browse web in Emacs.
-
 This requires Emacs to have been compiled with =--with-xml2= flag.
 
 #+BEGIN_SRC emacs-lisp
@@ -1795,7 +1807,7 @@ ESLint configs can be found using a file, not a directory.
     (eq exitcode 0)))
 #+END_SRC
 
-*** Fix =pylint= False Positive
+*** Fix =pylint= False Positives
 
 The =pylint= checker creates false positives for
 relative import mistakes. There is a fix but it doesn't seem
@@ -1916,10 +1928,10 @@ Use the golden ratio.
   :defer nil
   :diminish
   :init
-  ;; Make sure to run golden ratio after ace switch.
+  ;; Make sure to run golden ratio after `ace-switch-to-window'.
   (advice-add 'aw-switch-to-window :after #'golden-ratio)
   :config
-  ;; This doesn't work for me, see alt solution above.
+  ;; This doesn't work for me, see alternative solution above.
   ;; (push 'aw-switch-to-window golden-ratio-extra-commands)
   (golden-ratio-mode 1)
   :general
@@ -2008,13 +2020,16 @@ Highlight =TODO=, =FIXME= etc. in =prog= modes.
 
 ** hungry-delete
 
+I know you're hiding that sweet, sweet whitespace
+in that basket, Little Red Riding Hood!
+
 #+BEGIN_SRC emacs-lisp
 (use-package hungry-delete
   :delight " hun"
   :custom
   (hungry-delete-join-reluctantly t)
   :general
-  (wal/colonel :keymaps 'prog-mode-map
+  (wal/colonel :keymaps '(prog-mode-map org-mode-map)
                "h" '(hungry-delete-mode :wk "hungry delete")))
 #+END_SRC
 
@@ -2037,7 +2052,7 @@ We use =ivy= for narrowing our options.
 
 ;; Hide `dired', `docker', `ag' and default Emacs buffers when switching.
 (defvar wal/ivy-ignore-buffers
-  '(wal/is-commonly-ignored-buffer
+  '(wal/commmonly-ignored-buffer-p
     "\\` "
     "\\`\\*tramp/")
   "The buffers I don't want to see unless I have to.")
@@ -2063,7 +2078,7 @@ We use =ivy= for narrowing our options.
                "ir" '(ivy-resume :wk "resume"))
   :bind
   (("C-x b" . wal/switch-buffer)
-   ("C-x C-b" . wal/ivy-switch-ignored-buffers)) ; replaces `list-buffers'
+   ("C-x C-b" . wal/ivy-switch-ignored-buffers)) ; Replaces `list-buffers'
   :config
   (ivy-mode 1))
 #+END_SRC
@@ -2112,7 +2127,7 @@ This is a themes collection I sometimes pick from.
   (kaolin-ocean-alt-bg t)
   (kaolin-themes-italic-comments t)
   (kaolin-themes-git-gutter-solid t)
-  ;; `modeline' border
+  ;; Remove that `modeline' border.
   (kaolin-themes-modeline-border nil)
   ;; Distinct background for fringe and line numbers.
   (kaolin-themes-distinct-fringe t)
@@ -2144,7 +2159,7 @@ Prefer =capf=, bigger delay.
 (use-package lsp-mode
   :delight " lsp"
   :bind-keymap
-  ("C-c l" . lsp-command-map) ;; Setting `lsp-keymap-prefix' doesn't work.
+  ("C-c l" . lsp-command-map) ; Setting `lsp-keymap-prefix' doesn't work.
   :general
   (wal/colonel :keymaps 'prog-mode-map
                "l" '(lsp-mode :wk "lsp"))
@@ -2158,7 +2173,7 @@ Prefer =capf=, bigger delay.
   (lsp-prefer-capf t)
   (lsp-idle-delay 1.5)
   ;; These have to be defined here.
-  (lsp-ui-doc-position 'top) ; alternatively 'at-point
+  (lsp-ui-doc-position 'top) ; Alternatively `at-point'.
   (lsp-ui-doc-delay 2)
   (lsp-log-io t)
   ;; Enable `pylint'.
@@ -2178,7 +2193,9 @@ Prefer =capf=, bigger delay.
 
 The =lsp= checker seemingly can't be chained,
 so we provide some functionality to switch from
-to it depending on current major mode.
+to it depending on current =major-mode=.
+
+Don't need this using =pyls= anymore, thankfully.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/switch-from-lsp ()
@@ -2336,8 +2353,8 @@ Have some perspective, man.
   :bind
   (("H-i" . persp-switch)
    ("C-x k" . persp-kill-buffer*)
-   ("C-x C-k" . kill-buffer) ;; Replaces kmacro.
-   ("H-m" . kmacro-keymap))  ;; Make it available again.
+   ("C-x C-k" . kill-buffer) ; Replaces `kmacro-keymap'.
+   ("H-m" . kmacro-keymap)) ; Make it available again.
   :custom
   (persp-modestring-dividers '("(" ")" "/"))
   (persp-initial-frame-name wal/default-perspective)
@@ -2363,9 +2380,11 @@ Be a =winner= without the mode.
   :custom
   (popper-reference-buffers '("\\*Messages\\*"
                               "\\*HTTP Response\\*"
+							  org-agenda-mode
                               docker-container-mode
                               ag-mode
                               helpful-mode
+							  help-mode
                               debugger-mode
                               magit-status-mode))
   (popper-group-function #'popper-group-by-projectile)
@@ -2429,7 +2448,6 @@ Prettify your ugly JavaScript.
 ** projectile
 
 Projects in Emacs.
-You don't really _need_ =treemacs=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
@@ -2644,7 +2662,7 @@ Undoing un-undoing is weird in Emacs.
 #+BEGIN_SRC emacs-lisp
 (use-package undo-fu
   :init
-  (global-unset-key (kbd "C-z")) ;; Unsets `suspend-frame'.
+  (global-unset-key (kbd "C-z")) ; Unsets `suspend-frame'.
   :bind (("C-z" . undo-fu-only-undo)
          ("C-S-z" . undo-fu-only-redo)))
 #+END_SRC
@@ -2712,10 +2730,9 @@ always try to build from source ...
     (vterm-kill-buffer-on-exit t)
     :general
     (wal/major :keymaps 'vterm-mode-map
-               "c" '(:ignore t :wk "copy mode")
-               "ce" '(vterm-copy-mode :wk "enter"))
+               "c" '(vterm-copy-mode :wk "copy mode"))
     (wal/major :keymaps 'vterm-copy-mode-map
-               "cx" '(vterm-copy-mode-done :wk "exit copy mode"))
+               "c" '(vterm-copy-mode-done :wk "exit copy mode"))
     :config
     (when (file-exists-p "/bin/fish")
       (setq vterm-shell "/bin/fish")))
@@ -3366,6 +3383,13 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
 #+BEGIN_SRC emacs-lisp
 (use-package org-agenda
   :ensure nil
+  :init
+  (add-to-list 'display-buffer-alist
+               '((lambda (bufname _)
+                   (with-current-buffer bufname
+                     (equal major-mode 'org-agenda-mode)))
+                 (display-buffer-in-side-window)
+                 (side . right)))
   :custom
   ;; We hide all @-tags.
   (org-agenda-hide-tags-regexp "@"))
