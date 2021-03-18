@@ -386,11 +386,10 @@ To make this work, we need to tweak a few things.
                   css-indent-offset width ; CSS and SCSS
                   electric-indent-inhibit t
                   tab-width width
-                  indent-tabs-mode nil)
+                  indent-tabs-mode wal/prefer-tabs)
     (setq backward-delete-char-untabify-method 'hungry)))
 
-(when wal/prefer-tabs
-    (add-hook 'after-init-hook 'wal/set-indent-defaults))
+(add-hook 'after-init-hook 'wal/set-indent-defaults)
 #+END_SRC
 
 *** Dir Local Indentation
@@ -578,11 +577,11 @@ switching between =major mode= and =fundamental mode=.
           (funcall wal/before-emergency-mode)
           (setq wal/before-emergency-mode nil))
       (fundamental-mode)
-	  (make-local-variable 'wal/before-emergency-mode)
-	  (setq wal/before-emergency-mode m-mode))))
+      (make-local-variable 'wal/before-emergency-mode)
+      (setq wal/before-emergency-mode m-mode))))
 
-(wal/colonel "F" '(wal/fundamental-mode :wk "fundamental")
-             "N" '(linum-mode :wk "linum"))
+(wal/colonel "f" '(wal/fundamental-mode :wk "fundamental")
+             "n" '(linum-mode :wk "linum"))
 #+END_SRC
 
 ** Additional (Un-)Bindings
@@ -916,6 +915,11 @@ to download it automatically, but might fail).
 
 #+BEGIN_SRC emacs-lisp
 (use-package ag
+  :init
+  (add-to-list 'display-buffer-alist
+               '("\\*ag-search\\*"
+                 (display-buffer-in-side-window)
+                 (side . right)))
   :ensure-system-package ag
   :custom
   (ag-highlight-search t)
@@ -1071,7 +1075,7 @@ Code-completion. In a box.
   :delight " cmp"
   :general
   (wal/colonel :keymaps 'prog-mode
-               "C" '(company-mode :wk "company"))
+               "c" '(company-mode :wk "company"))
   :custom
   (company-prefer-capf t)
   (company-minimum-prefix-length 3)
@@ -1177,6 +1181,7 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
   (("M-o" . crux-other-window-or-switch-buffer)
    ("H-d" . crux-duplicate-current-line-or-region)
    :map prog-mode-map
+   ("C-S-k" . crux-kill-line-backwards)
    ("C-k" . crux-smart-kill-line)
    ("C-o" . crux-smart-open-line)
    ("C-S-o" . crux-smart-open-line-above)))
@@ -1223,7 +1228,7 @@ Debugging using VSCode's DAP.
   (require 'dap-python)
   :general
   (wal/colonel :keymaps 'prog-mode-map
-               "D" '(dap-mode :wk "dap"))
+               "d" '(dap-mode :wk "dap"))
   (wal/captain :keymaps 'dap-mode-map
                "d" '(:ignore t :wk "dap")
                "dh" '(dap-hydra :wk "hydra")))
@@ -1301,7 +1306,6 @@ unmerged proposed fix I will put here for now.
     conf))
 (advice-add 'dap-python--populate-start-file-args :override #'wal/dap-python--populate-start-file-args)
 #+END_SRC
-
 
 *** Debug Templates
 
@@ -1549,6 +1553,11 @@ I use Docker a lot, don't always have to use the command line.
 
 #+BEGIN_SRC emacs-lisp
 (use-package docker
+  :init
+  (add-to-list 'display-buffer-alist
+               '("\\*docker-containers\\*"
+                 (display-buffer-in-side-window)
+                 (side . top)))
   :custom
   (docker-container-default-sort-key '("Names"))
   :general
@@ -1705,7 +1714,7 @@ for this to work!
   "Wraps macro to only maybe enable."
   (use-package fira-code-mode
     :diminish
-    ;; Use fira mode if the symbol code exists
+    ;; Use only if the code symbol font exists.
     :if (x-list-fonts "Fira Code Symbol")
     :custom
     ;; Ligatures you don't want.
@@ -1761,7 +1770,7 @@ Use the locally installed =eslint= and =tslint= binaries.
   (flycheck-keymap-prefix (kbd "C-c f"))
   :general
   (wal/colonel :keymaps 'prog-mode-map
-               "F" '(flycheck-mode :wk "flycheck"))
+               "f" '(flycheck-mode :wk "flycheck"))
   (wal/captain :keymaps 'flycheck-mode-map
                "f" '(:ignore t :wk "flycheck")
                "fn" '(flycheck-next-error :wk "next error"))
@@ -1867,9 +1876,9 @@ You can bring up actions (skip, save) with =M-o=.
   (setq ispell-dictionary "american")
   :general
   (wal/colonel :keymaps 'text-mode-map
-               "S" '(wal/flyspell-mode :wk "flyspell"))
+               "s" '(wal/flyspell-mode :wk "flyspell"))
   (wal/colonel :keymaps 'prog-mode-map
-               "S" '(wal/flyspell-prog-mode :wk "flyspell-prog"))
+               "s" '(wal/flyspell-prog-mode :wk "flyspell-prog"))
   (wal/captain :keymaps 'flyspell-mode-map
                "s" '(:ignore t :wk "spell-check")
                "sb" '(flyspell-buffer :wk "buffer"))
@@ -1895,7 +1904,7 @@ If you want to go back in time and point fingers at the progenitors of doom.
   :commands git-timemachine-toggle
   :general
   (wal/colonel :keymaps 'prog-mode-map
-               "M" '(git-timemachine-toggle :wk "git-timemachine")))
+               "m" '(git-timemachine-toggle :wk "git-timemachine")))
 #+END_SRC
 
 ** golden-ratio
@@ -1914,7 +1923,7 @@ Use the golden ratio.
   ;; (push 'aw-switch-to-window golden-ratio-extra-commands)
   (golden-ratio-mode 1)
   :general
-  (wal/colonel "G" '(golden-ratio-mode :wk "golden ratio")))
+  (wal/colonel "g" '(golden-ratio-mode :wk "golden ratio")))
 #+END_SRC
 
 ** helpful
@@ -1923,6 +1932,13 @@ Let's try (to be) =helpful=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package helpful
+  :init
+  (add-to-list 'display-buffer-alist
+               '((lambda (bufname _)
+                   (with-current-buffer bufname
+                     (equal major-mode 'helpful-mode)))
+                (display-buffer-in-side-window)
+                (side . right)))
   :custom
   (counsel-describe-function-function #'helpful-callable)
   (counsel-describe-variable-function #'helpful-variable)
@@ -1956,7 +1972,7 @@ Show indentation.
    (whitespace-mode . (lambda() (highlight-indent-guides-mode -1))))
   :general
   (wal/colonel :keymaps '(prog-mode-map yaml-mode-map)
-               "I" '(highlight-indent-guides-mode :wk "highlight indent")))
+               "i" '(highlight-indent-guides-mode :wk "highlight indent")))
 #+END_SRC
 
 ** highlight-numbers
@@ -1978,7 +1994,7 @@ Highlight symbols.
   (highlight-thing-delay-seconds 1.0)
   :general
   (wal/colonel :keymaps 'prog-mode-map
-               "T" '(highlight-thing-mode :wk "highlight thing")))
+               "t" '(highlight-thing-mode :wk "highlight thing")))
 #+END_SRC
 
 ** hl-todo
@@ -1994,16 +2010,18 @@ Highlight =TODO=, =FIXME= etc. in =prog= modes.
 
 #+BEGIN_SRC emacs-lisp
 (use-package hungry-delete
+  :delight " hun"
   :custom
   (hungry-delete-join-reluctantly t)
   :general
   (wal/colonel :keymaps 'prog-mode-map
-               "H" '(hungry-delete-mode :wk "hungry delete")))
+               "h" '(hungry-delete-mode :wk "hungry delete")))
 #+END_SRC
 
 ** hydra
 
-We use =hydra= to trigger grouped actions.
+Make key combos easier.
+Currently not used.
 
 #+BEGIN_SRC emacs-lisp
 (use-package hydra)
@@ -2129,7 +2147,7 @@ Prefer =capf=, bigger delay.
   ("C-c l" . lsp-command-map) ;; Setting `lsp-keymap-prefix' doesn't work.
   :general
   (wal/colonel :keymaps 'prog-mode-map
-               "L" '(lsp-mode :wk "lsp"))
+               "l" '(lsp-mode :wk "lsp"))
   (wal/captain :keymaps 'lsp-mode-map
                "l" '(:ignore t :wk "lsp")
                "lr" '(lsp-rename :wk "rename symbol"))
@@ -2332,6 +2350,35 @@ Have some perspective, man.
 (add-hook 'kill-emacs-hook #'persp-state-save)
 #+END_SRC
 
+** popper
+
+Be a =winner= without the mode.
+
+#+BEGIN_SRC emacs-lisp
+(use-package popper
+  :defer nil
+  :bind
+  (("H-SPC" . popper-toggle-latest)
+   ("H-<escape>" . popper-cycle))
+  :custom
+  (popper-reference-buffers '("\\*Messages\\*"
+                              "\\*HTTP Response\\*"
+                              docker-container-mode
+                              ag-mode
+                              helpful-mode
+                              debugger-mode
+                              magit-status-mode))
+  (popper-group-function #'popper-group-by-projectile)
+  (popper-display-control 'user)
+  ;; Remove if you don't use/have `doom-modeline'.
+  (popper-mode-line '(:eval (doom-modeline-icon 'faicon "fort-awesome" nil nil
+                                                :face 'all-the-icons-dsilver
+                                                :height 0.9
+                                                :v-adjust 0.0)))
+  :config
+  (popper-mode +1))
+#+END_SRC
+
 ** prescient
 
 Better short-term-memory for =ivy=.
@@ -2445,6 +2492,11 @@ I use a =.http= file extension for my request examples.
 
 #+BEGIN_SRC emacs-lisp
 (use-package restclient
+  :config
+  (add-to-list 'display-buffer-alist
+               '("\\*HTTP Response\\*"
+                 (display-buffer-in-side-window)
+                 (side . right)))
   :mode ("\\.http\\'" . restclient-mode))
 #+END_SRC
 
@@ -2579,7 +2631,7 @@ explicitly.
   :delight " typ"
   :general
   (wal/colonel :keymaps 'text-mode-map
-               "T" '(typo-mode :wk "toggle typo mode")))
+               "t" '(typo-mode :wk "toggle typo mode")))
 #+END_SRC
 
 ** undo-fu
@@ -2589,7 +2641,7 @@ Undoing un-undoing is weird in Emacs.
 #+BEGIN_SRC emacs-lisp
 (use-package undo-fu
   :init
-  (global-unset-key (kbd "C-z"))
+  (global-unset-key (kbd "C-z")) ;; Unsets `suspend-frame'.
   :bind (("C-z" . undo-fu-only-undo)
          ("C-S-z" . undo-fu-only-redo)))
 #+END_SRC
@@ -2674,8 +2726,6 @@ always try to build from source ...
                  '((lambda(bufname _) (with-current-buffer bufname (equal major-mode 'vterm-mode)))
                    (display-buffer-reuse-window display-buffer-in-side-window)
                    (side . bottom)
-                   (dedicated . t)
-                   (window-height . 0.3)
                    (reusable-frames . visible)))
     :general
     (wal/general "tv" '(vterm-toggle :wk "open vterm"))
@@ -2706,7 +2756,7 @@ Toggle =highlight-indent-guide= with =whitespace-mode=.
 (use-package whitespace-mode
   :ensure nil
   :general
-  (wal/colonel "W" '(whitespace-mode :wk "whitespace")))
+  (wal/colonel "w" '(whitespace-mode :wk "whitespace")))
 #+END_SRC
 
 ** writeroom-mode
@@ -2720,7 +2770,7 @@ I use a different (light) theme here.
   :hook ((writeroom-mode-enable . (lambda() (wal/light-switch 'secondary)))
          (writeroom-mode-disable . (lambda() (wal/light-switch 'primary))))
   :general
-  (wal/colonel "R" '(writeroom-mode :wk "toggle writeroom")))
+  (wal/colonel "r" '(writeroom-mode :wk "toggle writeroom")))
 #+END_SRC
 
 ** yasnippet
@@ -2739,7 +2789,7 @@ if you don't have a hyper key, bind it to a personal binding.
   :commands (yas-minor-mode yas-visit-snippet-file yas-new-snippet)
   :delight " yas"
   :general
-  (wal/colonel "Y" '(yas-minor-mode :wk "yasnippet"))
+  (wal/colonel "y" '(yas-minor-mode :wk "yasnippet"))
   (wal/captain :keymaps 'yas-minor-mode-map
                "y" '(:ignore t :wk "yasnippet")
                "yv" '(yas-visit-snippet-file :wk "visit snippet file")
@@ -3675,6 +3725,7 @@ keyboard unusable.
 + [[https://github.com/takaxp/org-tree-slide][org-tree-slide]]
 + [[https://github.com/gregsexton/origami.el][origami]]
 + [[https://github.com/nex3/perspective-el][perspective]]
++ [[https://github.com/karthink/popper][popper]]
 + [[https://github.com/raxod502/prescient.el][prescient]]
 + [[https://github.com/prettier/prettier-emacs/tree/e9b73e81d3e1642aec682195f127a42dfb0b5774][prettier-js]]
 + [[https://github.com/bbatsov/projectile][projectile]]
