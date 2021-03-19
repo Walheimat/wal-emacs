@@ -2375,16 +2375,23 @@ Be a =winner= without the mode.
 (use-package popper
   :defer nil
   :bind
-  (("H-SPC" . popper-toggle-latest)
-   ("H-<escape>" . popper-cycle))
+  (:map popper-mode-map
+   ("H-[" . popper-toggle-latest)
+   ("H-]" . popper-cycle))
+  :general
+  (wal/captain "[" '(:ignore t :wk "popper")
+               "[r" '(popper-toggle-type :wk "raise or drop")
+               "[k" '(popper-kill-latest-popup :wk "kill latest"))
   :custom
   (popper-reference-buffers '("\\*Messages\\*"
                               "\\*HTTP Response\\*"
-							  org-agenda-mode
+                              "\\*poetry-shell\\*"
+                              org-agenda-mode
                               docker-container-mode
+                              inferior-python-mode
                               ag-mode
                               helpful-mode
-							  help-mode
+                              help-mode
                               debugger-mode
                               magit-status-mode))
   (popper-group-function #'popper-group-by-projectile)
@@ -3559,7 +3566,14 @@ This mode is built-in.
   :init
   ;; Use `python3' as default Python command.
   (setq py-python-command "python3"
-        python-shell-interpreter "python3"))
+        python-shell-interpreter "python3")
+  ;; Treat inferior shell as a pop-up.
+  (add-to-list 'display-buffer-alist
+               '((lambda (bufname _)
+                   (with-current-buffer bufname
+                     (equal major-mode 'inferior-python-mode)))
+                 (display-buffer-in-side-window)
+                 (side . right))))
 #+END_SRC
 
 ** rjsx-mode
