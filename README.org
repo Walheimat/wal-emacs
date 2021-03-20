@@ -166,6 +166,11 @@ we have to install it and a few other packages the hard way.
 ;; Ensure all packages by default.
 (require 'use-package-ensure)
 (setq use-package-always-ensure t)
+
+;; Uncomment to test start-up time.
+;; (setq use-package-minimum-reported-time 0.05)
+;; (setq use-package-verbose t)
+;; (setq use-package-compute-statistics t)
 #+END_SRC
 
 ** Directories
@@ -883,7 +888,6 @@ Check the [[*Key Bindings][key bindings section]] if you need a list of all of t
                             (?f aw-split-window-fair "fair split")
                             ;; If this has a description, it doesn't work.
                             (?? aw-show-dispatch-help)))
-  :init
   ;; Use our custom `switch-buffer' function.
   (advice-add
     'aw--switch-buffer
@@ -898,7 +902,8 @@ Check the [[*Key Bindings][key bindings section]] if you need a list of all of t
 Allows accessing a project's =node_modules=.
 
 #+BEGIN_SRC emacs-lisp
-(use-package add-node-modules-path)
+(use-package add-node-modules-path
+  :defer t)
 #+END_SRC
 
 ** ag
@@ -910,7 +915,7 @@ to download it automatically, but might fail).
 
 #+BEGIN_SRC emacs-lisp
 (use-package ag
-  :init
+  :config
   (add-to-list 'display-buffer-alist
                '("\\*ag-search\\*"
                  (display-buffer-in-side-window)
@@ -948,7 +953,6 @@ You need to install the icons yourself[fn:4].
 
 ;; Use it for dired.
 (use-package all-the-icons-dired
-  :after all-the-icons
   :diminish
   :hook (dired-mode . all-the-icons-dired-mode))
 #+END_SRC
@@ -970,18 +974,10 @@ It's currently mostly a dependency of other packages.
 
 #+BEGIN_SRC emacs-lisp
 (use-package async
+  :defer 4
   :diminish 'dired-async-mode
-  :init
+  :config
   (dired-async-mode 1))
-#+END_SRC
-
-** autothemer
-
-Create new themes more easily.
-
-#+BEGIN_SRC emacs-lisp
-(use-package autothemer
-  :defer t)
 #+END_SRC
 
 ** avy
@@ -1019,6 +1015,7 @@ Help me find my cursor!
 
 #+BEGIN_SRC emacs-lisp
 (use-package beacon
+  :defer 2
   :config
   (beacon-mode 1)
   :custom
@@ -1036,8 +1033,9 @@ I don't remember where I was.
 
 #+BEGIN_SRC emacs-lisp
 (use-package bm
-  :init
+  :config
   (setq-default bm-buffer-persistence t)
+  (bm-repository-load)
   :custom
   (bm-restore-repository-on-load t)
   (bm-repository-file (expand-file-name "bm-persist" wal/cache-directory))
@@ -1045,8 +1043,7 @@ I don't remember where I was.
   (bm-highlight-style 'bm-highlight-only-fringe)
   (bm-cycle-all-buffers t)
   :hook
-  ((after-init . bm-repository-load)
-   (after-save . bm-buffer-save)
+  ((after-save . bm-buffer-save)
    (kill-buffer . bm-buffer-save)
    (kill-emacs . (lambda ()
                    (bm-buffer-save-all)
@@ -1067,10 +1064,6 @@ I don't remember where I was.
 Code-completion. In a box.
 
 #+BEGIN_SRC emacs-lisp
-(use-package company-box
-  :diminish
-  :hook (company-mode . company-box-mode))
-
 (use-package company
   :delight " cmp"
   :general
@@ -1082,8 +1075,12 @@ Code-completion. In a box.
   (company-idle-delay 0.5)
   :hook (prog-mode . company-mode))
 
+(use-package company-box
+  :diminish
+  :hook (company-mode . company-box-mode))
+
 (use-package company-restclient
-  :after company)
+  :after (company restclient))
 
 (use-package company-web
   :after company)
@@ -1097,7 +1094,6 @@ nice despite us using =ivy= for completion everywhere.
 
 #+BEGIN_SRC emacs-lisp
 (use-package consult
-  :defer nil
   :custom
   (consult-project-root-function #'projectile-project-root)
   :bind
@@ -1105,7 +1101,7 @@ nice despite us using =ivy= for completion everywhere.
    ("M-g m" . consult-mark)
    ;; Don't see the point of `consult-yank-pop'.
    ("M-y" . consult-yank))
-  :init
+  :config
   ;; Advise functions to use selectrum when `ivy' behaves unpredictably.
   (--each
     '(consult-buffer
@@ -1119,7 +1115,7 @@ nice despite us using =ivy= for completion everywhere.
       consult-yank)
     (advice-add it :around #'wal/advise-selectrum))
   :general
-  (wal/general "bl" '(consult-focus-lines :wk "focus lines")
+  (wal/general "bf" '(consult-focus-lines :wk "focus lines")
                "gm" '(consult-global-mark :wk "go to mark")
                "dg" '(consult-grep :wk "grep here"))
   (wal/major "c" '(consult-mode-command :wk "invoke mode command"))
@@ -1127,7 +1123,7 @@ nice despite us using =ivy= for completion everywhere.
              "j" '(consult-outline :wk "jump to heading")))
 
 (use-package consult-flycheck
-  :init
+  :config
   (advice-add 'consult-flycheck :around #'wal/advise-selectrum)
   :general
   (wal/captain :keymaps 'flycheck-mode-map
@@ -1144,7 +1140,12 @@ nice despite us using =ivy= for completion everywhere.
 
 (use-package counsel
   :after ivy
-  :init
+  :custom
+  (counsel-linux-app-format-function #'counsel-linux-app-format-function-command-only)
+  :config
+  ;; Package ivy-prescient sets `ivy-initial-inputs-alist' to nil!
+  (unless wal/use-prescient
+    (setcdr (assq 'counsel-M-x ivy-initial-inputs-alist) ""))
   ;; Any theme set by `counsel-load-theme' should also set
   ;; `wal/*-theme' so that calling `wal/light-switch' doesn't
   ;; undo things.
@@ -1166,13 +1167,7 @@ nice despite us using =ivy= for completion everywhere.
   :bind
   ("M-x" . counsel-M-x)
   ("<menu>" . counsel-M-x)
-  ("C-x C-f" . counsel-find-file)
-  :custom
-  (counsel-linux-app-format-function #'counsel-linux-app-format-function-command-only)
-  :config
-  ;; Package ivy-prescient sets `ivy-initial-inputs-alist' to nil!
-  (unless wal/use-prescient
-    (setcdr (assq 'counsel-M-x ivy-initial-inputs-alist) "")))
+  ("C-x C-f" . counsel-find-file))
 #+END_SRC
 
 ** crux
@@ -1189,7 +1184,6 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
   :bind
   (("M-o" . crux-other-window-or-switch-buffer)
    ("H-d" . crux-duplicate-current-line-or-region)
-   :map prog-mode-map
    ("C-S-k" . crux-kill-line-backwards)
    ("C-k" . crux-smart-kill-line)
    ("C-o" . crux-smart-open-line)
@@ -1203,16 +1197,18 @@ Important command is =C-o c= to change search style.
 
 #+BEGIN_SRC emacs-lisp
 (use-package ctrlf
+  :defer 2
   :custom
   (ctrlf-auto-recenter t)
-  ;; Prefer fuzzy over literal.
-  (ctrlf-mode-bindings '(("C-s" . ctrlf-forward-fuzzy)
-                         ("C-r" . ctrlf-backward-fuzzy)
-                         ("M-s" . ctrlf-forward-literal)
-                         ("M-r" . ctrlf-backward-literal)))
   ;; Not relased yet.
   ;; (ctrlf-go-to-end-of-match nil)
   :config
+  ;; Prefer fuzzy over literal.
+  ;; Can't defer if this is part of `:custom'.
+  (setq ctrlf-mode-bindings '(("C-s" . ctrlf-forward-fuzzy)
+                         ("C-r" . ctrlf-backward-fuzzy)
+                         ("M-s" . ctrlf-forward-literal)
+                         ("M-r" . ctrlf-backward-literal)))
   (ctrlf-mode +1))
 #+END_SRC
 
@@ -1223,7 +1219,6 @@ This will mess up your windows!
 
 #+BEGIN_SRC emacs-lisp
 (use-package dap-mode
-  :commands dap-mode
   :delight " dap"
   :custom
   ;; (lsp-enable-dap-auto-configure nil)
@@ -1389,7 +1384,7 @@ your =tsconfig.json=.
 
 Pick pid to attach to running =debugpy= session (see above).
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (when (require 'dap-mode nil 'noerror)
   (dap-register-debug-template "Python :: Attach to running process"
                                (list :type "python"
@@ -1443,12 +1438,11 @@ Let's have a dash of board.
   (dashboard-set-init-info t)
   (dashboard-week-agenda nil)
   (dashboard-agenda-time-string-format "%d/%m/%y")
-  :init
+  :config
   (advice-add 'dashboard-insert-startupify-lists
     :around (lambda (fun &rest r)
               (let ((recentf-exclude wal/recentf-exclude))
                 (apply fun r))))
-  :config
   (dashboard-setup-startup-hook))
 #+END_SRC
 
@@ -1459,7 +1453,7 @@ Just want to position this.
 #+BEGIN_SRC emacs-lisp
 (use-package debug
   :ensure nil
-  :init
+  :config
   (add-to-list 'display-buffer-alist
                '((lambda (bufname _)
                    (with-current-buffer bufname
@@ -1477,6 +1471,7 @@ Refine a couple of =major-mode= names.
   "Whether some major modes are delighted beyond reason.")
 
 (use-package delight
+  :defer 2
   :config
   (delight 'dired-mode "Dired" :major)
   (delight 'emacs-lisp-mode "Elisp" :major)
@@ -1496,7 +1491,7 @@ Refresh after =magit= is done.
 
 #+BEGIN_SRC emacs-lisp
 (use-package diff-hl
-  :defer nil
+  :demand
   :config
   (global-diff-hl-mode)
   :hook ((magit-post-refresh . diff-hl-magit-post-refresh)
@@ -1510,6 +1505,7 @@ since we =delight= in/diminish them there.
 
 #+BEGIN_SRC emacs-lisp
 (use-package diminish
+  :defer 2
   :config
   (diminish 'eldoc-mode))
 #+END_SRC
@@ -1521,6 +1517,7 @@ Make dimmed frames a bit dimmer.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dimmer
+  :defer 2
   :diminish
   :custom
   (dimmer-fraction 0.3)
@@ -1541,8 +1538,9 @@ override some keybindings.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired
+  :demand
   :ensure nil
-  :init
+  :config
   (put 'dired-find-alternate-file 'disabled nil)
   :custom
   (dired-listing-switches "-lah --group-directories-first")
@@ -1560,6 +1558,7 @@ Hit =/= to filter in =dired= buffers.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired-filter
+  :after dired
   :delight " def")
 #+END_SRC
 
@@ -1569,6 +1568,7 @@ Highlighting in =dired= buffers.
 
 #+BEGIN_SRC emacs-lisp
 (use-package diredfl
+  :after dired
   :config
   (diredfl-global-mode))
 #+END_SRC
@@ -1579,13 +1579,13 @@ What goes =docker-compose= up, goes =docker-compose= down.
 
 #+BEGIN_SRC emacs-lisp
 (use-package docker
-  :init
+  :custom
+  (docker-container-default-sort-key '("Names"))
+  :config
   (add-to-list 'display-buffer-alist
                '("\\*docker-containers\\*"
                  (display-buffer-in-side-window)
                  (side . top)))
-  :custom
-  (docker-container-default-sort-key '("Names"))
   :general
   (wal/lieutenant "d" '(:ignore t :wk "docker")
                   "du" '(docker-compose-up :wk "up")
@@ -1633,12 +1633,12 @@ Jumping is done using =M-.=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dumb-jump
-  :defer nil
-  :init
-  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
+  :commands dumb-jump-xref-activate
   :custom
   (dumb-jump-selector 'ivy)
-  (dumb-jump-force-searcher 'ag))
+  (dumb-jump-force-searcher 'ag)
+  :init
+  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
 #+END_SRC
 
 ** emojify
@@ -1650,7 +1650,8 @@ download a set that supports your emojis.
 
 #+BEGIN_SRC emacs-lisp
 (use-package emojify
-  :hook (after-init . global-emojify-mode))
+  :general
+  (wal/major "e" '(emojify-mode :wk "emojify")))
 #+END_SRC
 
 ** eshell
@@ -1662,22 +1663,24 @@ I like the idea of it but I don't really use it.
 (use-package esh-autosuggest
   :hook (eshell-mode . esh-autosuggest-mode))
 
-(use-package eshell-prompt-extras)
+(use-package eshell-prompt-extras
+  :after eshell
+  :config
+  (setq eshell-highlight-prompt nil
+        eshell-prompt-function 'epe-theme-lambda))
 
 (use-package eshell-syntax-highlighting
   :hook (eshell-mode . eshell-syntax-highlighting-mode))
 
-(use-package eshell-mode
+(use-package eshell
   :ensure nil
-  :init
+  :config
   ;; Override how clearing the eshell works.
   (advice-add
     'eshell/clear :override
     (lambda nil
       (let ((eshell-buffer-maximum-lines 0))
         (eshell-truncate-buffer))))
-  (setq eshell-highlight-prompt nil
-        eshell-prompt-function 'epe-theme-lambda)
   :general
   (wal/general "te" '(eshell :wk "open eshell"))
   :bind
@@ -1691,10 +1694,8 @@ Comment code like in =vim=, evil, evil =vim=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package evil-nerd-commenter
-  :commands evilnc-comment-or-uncomment-lines
   :bind
-  (:map prog-mode-map
-   ("C-;" . evilnc-comment-or-uncomment-lines)))
+  ("C-;" . evilnc-comment-or-uncomment-lines))
 #+END_SRC
 
 ** eww
@@ -1715,7 +1716,6 @@ One thing that can be a bit tricky is selecting regions, not anymore.
 
 #+BEGIN_SRC emacs-lisp
 (use-package expand-region
-  :commands er/expand-region
   :bind
   (("C->" . er/expand-region)
    ("C-<" . er/contract-region)))
@@ -1897,9 +1897,10 @@ You can bring up actions (skip, save) with =M-o=.
 
 (use-package flyspell
   :ensure nil
-  :commands flyspell-mode
   :delight " fsp"
-  :init
+  :custom
+  (flyspell-issue-message-flag nil)
+  :config
   (setq ispell-dictionary "american")
   :general
   (wal/colonel :keymaps 'text-mode-map
@@ -1908,9 +1909,7 @@ You can bring up actions (skip, save) with =M-o=.
                "s" '(wal/flyspell-prog-mode :wk "flyspell-prog"))
   (wal/captain :keymaps 'flyspell-mode-map
                "s" '(:ignore t :wk "spell-check")
-               "sb" '(flyspell-buffer :wk "buffer"))
-  :custom
-  (flyspell-issue-message-flag nil))
+               "sb" '(flyspell-buffer :wk "buffer")))
 
 (use-package flyspell-correct
   :after flyspell
@@ -1928,7 +1927,6 @@ If you want to go back in time and point fingers at the progenitors of doom.
 
 #+BEGIN_SRC emacs-lisp
 (use-package git-timemachine
-  :commands git-timemachine-toggle
   :general
   (wal/colonel :keymaps 'prog-mode-map
                "m" '(git-timemachine-toggle :wk "git-timemachine")))
@@ -1940,12 +1938,11 @@ Use the golden ratio.
 
 #+BEGIN_SRC emacs-lisp
 (use-package golden-ratio
-  :defer nil
+  :defer 1
   :diminish
-  :init
+  :config
   ;; Make sure to run golden ratio after `ace-switch-to-window'.
   (advice-add 'aw-switch-to-window :after #'golden-ratio)
-  :config
   ;; This doesn't work for me, see alternative solution above.
   ;; (push 'aw-switch-to-window golden-ratio-extra-commands)
   (golden-ratio-mode 1)
@@ -1959,16 +1956,17 @@ Let's try (to be) =helpful=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package helpful
-  :init
+  :after counsel
+  :custom
+  (counsel-describe-function-function #'helpful-callable)
+  (counsel-describe-variable-function #'helpful-variable)
+  :config
   (add-to-list 'display-buffer-alist
                '((lambda (bufname _)
                    (with-current-buffer bufname
                      (equal major-mode 'helpful-mode)))
                 (display-buffer-in-side-window)
                 (side . right)))
-  :custom
-  (counsel-describe-function-function #'helpful-callable)
-  (counsel-describe-variable-function #'helpful-variable)
   :general
   (wal/major :keymaps '(emacs-lisp-mode-map org-mode-map)
              "h" '(:ignore t :wk "helpful")
@@ -2054,7 +2052,8 @@ Make key combos easier.
 Currently not used.
 
 #+BEGIN_SRC emacs-lisp
-(use-package hydra)
+(use-package hydra
+  :defer t)
 #+END_SRC
 
 ** ivy
@@ -2081,21 +2080,21 @@ We use =ivy= for narrowing our options.
     (setq ivy-ignore-buffers '("\\` " "\\`\\*tramp/"))))
 
 (use-package ivy
-  :init
-  (setq enable-recursive-minibuffers t)
+  :demand
   :custom
   (ivy-use-virtual-buffers t)
   (ivy-ignore-buffers wal/ivy-ignore-buffers)
   (ivy-count-format "%d/%d ")
   (ivy-wrap t)
+  :config
+  (setq enable-recursive-minibuffers t)
+  (ivy-mode 1)
   :general
   (wal/captain "i" '(:ignore t :wk "ivy")
                "ir" '(ivy-resume :wk "resume"))
   :bind
   (("C-x b" . wal/switch-buffer)
-   ("C-x C-b" . wal/ivy-switch-ignored-buffers)) ; Replaces `list-buffers'
-  :config
-  (ivy-mode 1))
+   ("C-x C-b" . wal/ivy-switch-ignored-buffers))) ; Replaces `list-buffers'
 #+END_SRC
 
 ** ivy-rich
@@ -2199,9 +2198,23 @@ Prefer =capf=, bigger delay.
   :config
   ;; Ignore elixir build and dependency folders.
   (add-to-list 'lsp-file-watch-ignored "[/\\\\]_build$")
-  (add-to-list 'lsp-file-watch-ignored "[/\\\\]deps$"))
+  (add-to-list 'lsp-file-watch-ignored "[/\\\\]deps$")
+  ;;; prolog
+  (lsp-register-client
+    (make-lsp-client
+      :new-connection
+      (lsp-stdio-connection (list "swipl"
+                                  "-g" "use_module(library(lsp_server))."
+                                  "-g" "lsp_server:main"
+                                  "-t" "halt"
+                                  "--" "stdio"))
+      :major-modes '(prolog-mode)
+      :priority 1
+      :multi-root t
+      :server-id 'prolog-ls)))
 
-(use-package lsp-ui)
+(use-package lsp-ui
+  :after lsp-mode)
 #+END_SRC
 
 *** Checker switching
@@ -2249,20 +2262,6 @@ You will have to install them yourself.[fn:10]
 (if (file-exists-p (expand-file-name "language_server.sh" elixir-ls-release-location))
     (add-to-list 'exec-path elixir-ls-release-location)
   (add-hook 'elixir-mode-hook 'lsp))
-
-;;; prolog
-(lsp-register-client
- (make-lsp-client
-  :new-connection
-  (lsp-stdio-connection (list "swipl"
-                              "-g" "use_module(library(lsp_server))."
-                              "-g" "lsp_server:main"
-                              "-t" "halt"
-                              "--" "stdio"))
-  :major-modes '(prolog-mode)
-  :priority 1
-  :multi-root t
-  :server-id 'prolog-ls))
 #+END_SRC
 
 ** magit
@@ -2277,7 +2276,6 @@ Also trying out =magit-todos=.
 
 (use-package magit-todos
   :after magit
-  :commands (ivy-magit-todos magit-todos-list)
   :custom
   (magit-todos-branch-list nil)
   :bind
@@ -2292,6 +2290,7 @@ Make the bell visual.
 
 #+BEGIN_SRC emacs-lisp
 (use-package mode-line-bell
+  :defer 2
   :custom
   (mode-line-bell-flash-time 0.1)
   :config
@@ -2340,7 +2339,6 @@ It's like =npm= for Python, it's why it rhymes.
 
 #+BEGIN_SRC emacs-lisp
 (use-package poetry
-  :defer nil
   :delight
   (poetry-tracking-mode " poe") ; Doesn't seem to work!
   :custom
@@ -2362,24 +2360,22 @@ Have some perspective, man.
   "The name of my default perspective.")
 
 (use-package perspective
-  :defer nil
   :custom-face
   (persp-selected-face ((t (:weight bold :foreground "burlywood"))))
-  :bind
-  (("H-i" . persp-switch)
-   ("C-x k" . persp-kill-buffer*)
-   ("C-x C-k" . kill-buffer) ; Replaces `kmacro-keymap'.
-   ("H-m" . kmacro-keymap)) ; Make it available again.
   :custom
   (persp-modestring-dividers '("(" ")" "/"))
   (persp-initial-frame-name wal/default-perspective)
   (persp-state-default-file (expand-file-name "persp-persist" wal/cache-directory))
   (persp-mode-prefix-key (kbd "C-c i"))
   :config
-  (persp-mode))
-
-;; No idea why putting this in `:hook' kills the package.
-(add-hook 'kill-emacs-hook #'persp-state-save)
+  (persp-mode)
+  ;; No idea why putting this in `:hook' kills the package.
+  (add-hook 'kill-emacs-hook #'persp-state-save)
+  :bind
+  (("H-i" . persp-switch)
+   ("C-x k" . persp-kill-buffer*)
+   ("C-x C-k" . kill-buffer) ; Replaces `kmacro-keymap'.
+   ("H-m" . kmacro-keymap))) ; Make it available again.
 #+END_SRC
 
 ** popper
@@ -2388,7 +2384,8 @@ Be a =winner= without the mode.
 
 #+BEGIN_SRC emacs-lisp
 (use-package popper
-  :defer nil
+  :demand
+  :after projectile
   :bind
   (:map popper-mode-map
    ("H-[" . popper-toggle-latest)
@@ -2429,6 +2426,7 @@ Better short-term-memory for =ivy=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package prescient
+  :after counsel
   :if wal/use-prescient
   :custom
   (prescient-sort-length-enable nil)
@@ -2460,7 +2458,6 @@ Prettify your ugly JavaScript.
 
 #+BEGIN_SRC emacs-lisp
 (use-package prettier
-  :commands prettier-prettify
   :general
   (wal/major :keymaps 'js2-mode-map
              "l" '(:ignore t :wk "linting")
@@ -2473,6 +2470,7 @@ Projects in Emacs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
+  :demand
   :delight " pjt"
   :bind
   (("H-p" . projectile-switch-project)
@@ -2497,7 +2495,7 @@ Add =counsel= integration.
 
 #+BEGIN_SRC emacs-lisp
 (use-package counsel-projectile
-  :after projectile
+  :after (projectile counsel)
   :bind
   (:map projectile-command-map
    ("s s" . counsel-projectile-ag)))
@@ -2548,7 +2546,8 @@ I use a =.http= file extension for my request examples.
 Not used yet, but will in the future.
 
 #+BEGIN_SRC emacs-lisp
-(use-package request)
+(use-package request
+  :defer t)
 #+END_SRC
 
 ** s
@@ -2556,7 +2555,8 @@ Not used yet, but will in the future.
 String manipulation utility.
 
 #+BEGIN_SRC emacs-lisp
-(use-package s)
+(use-package s
+  :defer t)
 #+END_SRC
 
 ** selectrum
@@ -2576,7 +2576,8 @@ but we still use it to advise a few =consult= functions.
         (completion-styles '(substring partial-completion)))
    (apply func r)))
 
-(use-package selectrum)
+(use-package selectrum
+  :defer t)
 #+END_SRC
 
 ** smartparens
@@ -2586,7 +2587,7 @@ I didn't have smart parens growing up so I need help.
 #+BEGIN_SRC emacs-lisp
 (use-package smartparens
   :diminish smartparens-mode
-  :init
+  :config
   (require 'smartparens-config)
   :hook (prog-mode . smartparens-mode))
 #+END_SRC
@@ -2597,6 +2598,7 @@ Smooth scrolling at the margins using =C-n= and =C-p=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package smooth-scrolling
+  :defer 2
   :custom
   (smooth-scroll-margin 4)
   :config
@@ -2610,6 +2612,7 @@ needed in Emacs 27+).
 
 #+BEGIN_SRC emacs-lisp
 (use-package so-long
+  :defer 2
   :config
   (global-so-long-mode 1))
 #+END_SRC
@@ -2648,6 +2651,7 @@ Show some system stats when nothing else is going on.
 
 #+BEGIN_SRC emacs-lisp
 (use-package symon
+  :defer 2
   :if (eq system-type 'gnu/linux)
   :custom
   (symon-sparkline-type 'bounded)
@@ -2670,7 +2674,6 @@ explicitly.
 
 #+BEGIN_SRC emacs-lisp
 (use-package typo
-  :commands typo-mode
   :delight " typ"
   :general
   (wal/colonel :keymaps 'text-mode-map
@@ -2694,7 +2697,8 @@ Undoing un-undoing is weird in Emacs.
 Ensure binaries.
 
 #+BEGIN_SRC emacs-lisp
-(use-package use-package-ensure-system-package)
+(use-package use-package-ensure-system-package
+  :demand)
 #+END_SRC
 
 ** vdiff-magit
@@ -2704,24 +2708,25 @@ I find =ediff= quite cumbersome, so I'm giving =vdiff= a try.
 #+BEGIN_SRC emacs-lisp
 (use-package vdiff-magit
   :after magit
-  :config
-  ;; `:bind-keymap' doesn't seem to allow mode predicates.
-  (define-key vdiff-mode-map (kbd "C-c v") vdiff-mode-prefix-map)
+  :commands (vdiff-magit-dwim vdiff-magit)
   :custom
   (vdiff-diff-algorithm 'git-diff)
   (vdiff-magit-stage-is-2way t)
+  :config
+  ;; `:bind-keymap' doesn't seem to allow mode predicates.
+  (define-key vdiff-mode-map (kbd "C-c v") vdiff-mode-prefix-map)
+  ;; Add to `magit' dispatch.
+  (transient-suffix-put 'magit-dispatch "e" :description "vdiff (dwim)")
+  (transient-suffix-put 'magit-dispatch "e" :command 'vdiff-magit-dwim)
+  (transient-suffix-put 'magit-dispatch "E" :description "vdiff")
+  (transient-suffix-put 'magit-dispatch "E" :command 'vdiff-magit)
   :bind
   (:map vdiff-mode-map
    ("q" . vdiff-quit)
    ("h" . vdiff-hydra/body)
    :map magit-mode-map
    ("e" . vdiff-magit-dwim)
-   ("E" . vdiff-magit))
-  :init
-  (transient-suffix-put 'magit-dispatch "e" :description "vdiff (dwim)")
-  (transient-suffix-put 'magit-dispatch "e" :command 'vdiff-magit-dwim)
-  (transient-suffix-put 'magit-dispatch "E" :description "vdiff")
-  (transient-suffix-put 'magit-dispatch "E" :command 'vdiff-magit))
+   ("E" . vdiff-magit)))
 #+END_SRC
 
 ** visual-fill-column
@@ -2729,7 +2734,8 @@ I find =ediff= quite cumbersome, so I'm giving =vdiff= a try.
 Makes presentations a bit nicer.
 
 #+BEGIN_SRC emacs-lisp
-(use-package visual-fill-column)
+(use-package visual-fill-column
+  :defer t)
 #+END_SRC
 
 ** vterm
@@ -2748,7 +2754,6 @@ always try to build from source ...
 
 (unless (version< emacs-version "27.0")
   (use-package vterm
-    :commands vterm-toggle
     :hook (vterm-mode . wal/vterm-mode)
     :delight
     (vterm-copy-mode " vcp")
@@ -2762,7 +2767,7 @@ always try to build from source ...
     :custom
     (vterm-toggle-fullscreen-p nil)
     (vterm-toggle-scope 'project)
-    :init
+    :config
     (add-to-list 'display-buffer-alist
                  '((lambda (bufname _)
                      (with-current-buffer bufname (equal major-mode 'vterm-mode)))
@@ -2790,6 +2795,7 @@ Show the next possible key presses towards an action.
 
 #+BEGIN_SRC emacs-lisp
 (use-package which-key
+  :defer 2
   :diminish
   :custom
   (which-key-idle-delay 1.2)
@@ -2817,7 +2823,6 @@ I use a different (light) theme here.
 
 #+BEGIN_SRC emacs-lisp
 (use-package writeroom-mode
-  :commands writeroom-mode
   :hook ((writeroom-mode-enable . (lambda() (wal/light-switch 'secondary)))
          (writeroom-mode-disable . (lambda() (wal/light-switch 'primary))))
   :general
@@ -2831,13 +2836,7 @@ Because I also use company, =yas-expand= is mapped to =H-e=,
 if you don't have a hyper key, bind it to a personal binding.
 
 #+BEGIN_SRC emacs-lisp
-(use-package yasnippet-snippets
-  :after yasnippet
-  :config
-  (yas-reload-all))
-
 (use-package yasnippet
-  :commands (yas-minor-mode yas-visit-snippet-file yas-new-snippet)
   :delight " yas"
   :general
   (wal/colonel "y" '(yas-minor-mode :wk "yasnippet"))
@@ -2845,22 +2844,27 @@ if you don't have a hyper key, bind it to a personal binding.
                "y" '(:ignore t :wk "yasnippet")
                "yv" '(yas-visit-snippet-file :wk "visit snippet file")
                "yc" '(yas-new-snippet :wk "create new snippet"))
-  :bind (:map yas-minor-mode-map
-         ("<tab>" . nil)
-         ("TAB" . nil)
-         ("H-<tab>" . #'yas-expand))
-  ;; :config
+  :bind
+  (:map yas-minor-mode-map
+   ("H-<tab>" . #'yas-expand))
+  :config
+  (setq yas-minor-mode-map (make-sparse-keymap))
+  (define-key yas-minor-mode-map (kbd "<tab>") nil)
+  (define-key yas-minor-mode-map "TAB" nil)
+  (yas-reload-all))
   ;; (add-hook 'company-mode-hook (lambda ()
   ;;   (substitute-key-definition 'company-complete-common
   ;;                              'company-yasnippet-or-completion
   ;;                               company-active-map)))
-  :hook (prog-mode . yas-minor-mode))
 
 ;; (defun company-yasnippet-or-completion ()
 ;;   (interactive)
 ;;   (let ((yas-fallback-behavior nil))
 ;;     (unless (yas-expand)
 ;;       (call-interactively #'company-complete-common))))
+
+(use-package yasnippet-snippets
+  :after yasnippet)
 #+END_SRC
 
 ** Disabled Packages
@@ -2881,6 +2885,15 @@ Keep packages updated (disabled for now).
   :config
   (auto-package-update-maybe))
 #+END_SRC
+
+*** autothemer
+
+ Create new themes more easily.
+
+ #+BEGIN_SRC emacs-lisp
+ (use-package autothemer
+   :disabled)
+ #+END_SRC
 
 *** default-text-scale
 
@@ -2958,7 +2971,6 @@ Currently replaced by =counsel-M-x= and =ivy-prescient=.
 #+BEGIN_SRC emacs-lisp
 (use-package smex
   :disabled
-  :defer 1
   ;; :bind ("M-x" . smex)
   :after counsel)
 #+END_SRC
@@ -3075,7 +3087,8 @@ You might think Angular is dead and you'd be right but not everyone knows yet.
 
 #+BEGIN_SRC emacs-lisp
 (use-package angular-mode
-  :init
+  :defer t
+  :config
   ;; I use nvm and I assume the language server is installed.
   (let* ((node-v (string-trim (substring (shell-command-to-string "node -v") 1)))
          (node-m (format ".config/nvm/%s/lib/node_modules" node-v))
@@ -3097,7 +3110,8 @@ You might think Angular is dead and you'd be right but not everyone knows yet.
 It's time to deal with this.
 
 #+BEGIN_SRC emacs-lisp
-(use-package crontab-mode)
+(use-package crontab-mode
+  :defer t)
 #+END_SRC
 
 ** csharp-mode
@@ -3158,7 +3172,8 @@ We want quicker =company= suggestions when in CSS modes.
 Make =Dockerfiles= look nice.
 
 #+BEGIN_SRC emacs-lisp
-(use-package dockerfile-mode)
+(use-package dockerfile-mode
+  :defer t)
 #+END_SRC
 
 ** elixir-mode
@@ -3193,7 +3208,8 @@ Necessary even for =.gitignore= files.
 Don't use Haskell much yet.
 
 #+BEGIN_SRC emacs-lisp
-(use-package haskell-mode)
+(use-package haskell-mode
+  :defer t)
 #+END_SRC
 
 ** json-mode
@@ -3228,7 +3244,7 @@ Enable =flycheck= and disable internal checker.
 
 (use-package js2-mode
   :mode "\\.js\\'"
-  :init
+  :config
   (setq-default js2-show-parse-errors nil
                 js2-strict-missing-semi-warning nil)
   :hook (js2-mode . wal/js2-mode))
@@ -3239,7 +3255,8 @@ Enable =flycheck= and disable internal checker.
 Why not. It can be /awesome/.
 
 #+BEGIN_SRC emacs-lisp
-(use-package lua-mode)
+(use-package lua-mode
+  :defer t)
 #+END_SRC
 
 ** markdown-mode
@@ -3247,7 +3264,8 @@ Why not. It can be /awesome/.
 Markdown. Sometimes you need it.
 
 #+BEGIN_SRC emacs-lisp
-(use-package markdown-mode)
+(use-package markdown-mode
+  :defer t)
 #+END_SRC
 
 ** nginx-mode
@@ -3256,6 +3274,7 @@ Make nginx configuration files look pretty.
 
 #+BEGIN_SRC emacs-lisp
 (use-package nginx-mode
+  :defer t
   :config
   (add-to-list 'auto-mode-alist
                '("/nginx/sites-\\(?:available\\|enabled\\)/" . nginx-mode)))
@@ -3317,17 +3336,16 @@ state =CANCELLED=.
   (wal/disable-tabs)
   (drag-stuff-mode -1))
 
-(use-package org
+(use-package org-mode
   :ensure nil
   ;; Disable `drag-stuff-mode' in `org-mode'.
   :hook (org-mode . wal/org-mode)
-  :init
+  :config
   (require 'org-install)
   (require 'ox-md nil t)
   (add-to-list 'org-global-properties
                '("Effort_ALL" . "30m 1h 2h 4h 6h 1d 2d"))
   (add-to-list 'org-modules 'org-habit)
-  :config
   (org-load-modules-maybe t)
   (define-key org-mode-map (kbd "C-,") nil) ; Remove `org-cycle-agenda-files'.
   (add-to-list 'org-src-lang-modes '("docker" . dockerfile))
@@ -3372,6 +3390,7 @@ state =CANCELLED=.
 
 (use-package org-clock
   :ensure nil
+  :after org-mode
   :custom
   (org-clock-idle-time 10)
   (org-clock-continuously t)
@@ -3384,6 +3403,7 @@ state =CANCELLED=.
 
 (use-package org-habit
   :ensure nil
+  :after org-mode
   :custom
   (org-habit-graph-column 105))
 
@@ -3394,6 +3414,7 @@ state =CANCELLED=.
 
 (use-package org-keys
   :ensure nil
+  :after org-mode
   :custom
   (org-use-speed-commands t)
   (org-speed-commands-user
@@ -3415,7 +3436,7 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
 #+BEGIN_SRC emacs-lisp
 (use-package org-agenda
   :ensure nil
-  :init
+  :config
   (add-to-list 'display-buffer-alist
                '((lambda (bufname _)
                    (with-current-buffer bufname
@@ -3424,9 +3445,13 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
                  (side . right)))
   :custom
   ;; We hide all @-tags.
-  (org-agenda-hide-tags-regexp "@"))
+  (org-agenda-hide-tags-regexp "@")
+  :bind
+  ("C-c a" . org-agenda))
 
 (use-package org-super-agenda
+  :after org-agenda
+  :demand
   :custom
   (org-super-agenda-groups
    '((:name "Schedule"
@@ -3438,14 +3463,12 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
             :scheduled past
             :not (:tag "@repeated")))
      (:discard (:anything t))))
-  :init
+  :config
   ;; Not sure why this can't be in config.
   (org-super-agenda-mode)
   :general
   (wal/major :keymaps 'org-agenda-keymap
-             "w" '(org-agenda-write :wk "write"))
-  :bind
-  ("C-c a" . org-agenda))
+             "w" '(org-agenda-write :wk "write")))
 #+END_SRC
 
 *** Presentations
@@ -3493,7 +3516,6 @@ Use =org-tree-slide= for presentations.
   (org-tree-slide-activate-message "We're on a road to nowhere")
   (org-tree-slide-deactivate-message "Take you here, take you there")
   (org-tree-slide-indicator '(:next "   >>>" :previous "<<<" :content "< Here is where time is on our side >"))
-  :commands org-tree-slide-mode
   :diminish buffer-face-mode
   :hook ((org-tree-slide-play . wal/tree-slide-play)
          (org-tree-slide-stop . wal/tree-slide-stop))
@@ -3527,9 +3549,9 @@ You will need to install =sqlite3= and =graphviz= manually.
     (write-region "* Zettelkasten" nil index-file)))
 
 (use-package org-roam
+  :defer 4
   :delight " zet"
   :if (executable-find "sqlite3")
-  :hook (after-init . org-roam-mode)
   :custom
   (org-roam-directory wal/org-roam-directory)
   (org-roam-index-file wal/org-roam-index-file)
@@ -3561,7 +3583,8 @@ You will need to install =sqlite3= and =graphviz= manually.
            "* %?"
            :file-name ,fname
            :head "#+title: %<%Y-%m-%d>\n"
-           :olp ("Journal"))))))
+           :olp ("Journal")))))
+   (org-roam-mode))
 #+END_SRC
 
 ** python-mode
@@ -3588,7 +3611,7 @@ This mode is built-in.
              "sb" '(python-shell-send-buffer :wk "buffer")
              "sf" '(python-shell-send-file :wk "file"))
   :hook (python-mode . wal/python-mode)
-  :init
+  :config
   ;; Use `python3' as default Python command.
   (setq py-python-command "python3"
         python-shell-interpreter "python3")
@@ -3666,12 +3689,7 @@ Sometimes you need YAMLs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package yaml-mode
-  :bind
-  (:map yaml-mode-map
-   ("C-;" . evilnc-comment-or-uncomment-lines)
-   ("C-k" . crux-smart-kill-line)
-   ("C-o" . crux-smart-open-line)
-   ("C-S-o" . crux-smart-open-line-above)))
+  :defer t)
 #+END_SRC
 
 * Footnotes
