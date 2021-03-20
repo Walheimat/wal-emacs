@@ -2730,19 +2730,18 @@ the =libvterm= package might be too old, but you could
 always try to build from source ...
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/vterm-mode ()
+  "Adjustments for `vterm'."
+  (ctrlf-local-mode -1))
+
 (unless (version< emacs-version "27.0")
   (use-package vterm
     :commands vterm-toggle
-    :hook (vterm-mode . (lambda () (ctrlf-local-mode -1)))
+    :hook (vterm-mode . wal/vterm-mode)
     :delight
     (vterm-copy-mode " vcp")
     :custom
     (vterm-kill-buffer-on-exit t)
-    :general
-    (wal/major :keymaps 'vterm-mode-map
-               "c" '(vterm-copy-mode :wk "copy mode"))
-    (wal/major :keymaps 'vterm-copy-mode-map
-               "c" '(vterm-copy-mode-done :wk "exit copy mode"))
     :config
     (when (file-exists-p "/bin/fish")
       (setq vterm-shell "/bin/fish")))
@@ -2753,7 +2752,8 @@ always try to build from source ...
     (vterm-toggle-scope 'project)
     :init
     (add-to-list 'display-buffer-alist
-                 '((lambda(bufname _) (with-current-buffer bufname (equal major-mode 'vterm-mode)))
+                 '((lambda (bufname _)
+                     (with-current-buffer bufname (equal major-mode 'vterm-mode)))
                    (display-buffer-reuse-window display-buffer-in-side-window)
                    (side . bottom)
                    (reusable-frames . visible)))
@@ -2762,6 +2762,15 @@ always try to build from source ...
     :bind
     ("H-t" . vterm-toggle)))
 #+END_SRC
+
+*** =vterm= Key Bindings
+
+Some common shell commands require an additional =C-c=:
+
++ =C-c C-c= to send =C-c=
++ =C-c C-g= to send =C-g=
++ =C-c C-u= to send =C-u=
++ =C-c C-t= to enter/exit =copy-mode=
 
 ** which-key
 
@@ -3293,6 +3302,7 @@ state =CANCELLED=.
 (defun wal/org-mode ()
   "Life shouldn't be a drag in `org-mode'."
   (message "Organize! Seize the means of production!")
+  (wal/disable-tabs)
   (drag-stuff-mode -1))
 
 (use-package org
