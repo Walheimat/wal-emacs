@@ -1144,6 +1144,18 @@ nice despite us using =ivy= for completion everywhere.
 
 (use-package counsel
   :after ivy
+  :init
+  ;; Any theme set by `counsel-load-theme' should also set
+  ;; `wal/*-theme' so that calling `wal/light-switch' doesn't
+  ;; undo things.
+  (advice-add
+    'counsel-load-theme :filter-return
+                        (lambda (theme)
+                           (if (eq wal/primary-emacs-theme wal/active-theme)
+                               (setq wal/primary-emacs-theme (intern theme))
+                             (setq wal/secondary-emacs-theme (intern theme)))
+                           (setq wal/active-theme (intern theme)))
+    '((name . "counsel-load-theme")))
   :general
   (wal/general "at" '(counsel-load-theme :wk "load theme")
                "eh" '(counsel-command-history :wk "show command history")
