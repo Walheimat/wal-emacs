@@ -93,6 +93,9 @@ Customize start-up.
 (unless (file-exists-p custom-file)
   (write-region "" nil custom-file))
 
+;; Accept redefinitions.
+(setq ad-redefinition-action 'accept)
+
 (load custom-file)
 #+END_SRC
 
@@ -287,9 +290,9 @@ Don't clutter up workspaces.
 (setq create-lockfiles nil)
 #+END_SRC
 
-** Prettifying
+** Global Modes
 
-Be easy on the eyes.
+Modes that should be on no matter what.
 
 #+BEGIN_SRC emacs-lisp
 ;; A bunch of useful modes.
@@ -301,25 +304,23 @@ Be easy on the eyes.
 (global-font-lock-mode 1)
 (delete-selection-mode 1)
 (column-number-mode 1)
+;; (winner-mode 1)
 ;; I don't need to see the GUI.
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
+#+END_SRC
 
+** Simplifying
+
+Be easy on the eyes.
+
+#+BEGIN_SRC emacs-lisp
 ;; Trying to not touch the mouse as much.
 ;; (mouse-avoidance-mode 'banish)
 
 ;; Simple y/n is enough.
 (defalias 'yes-or-no-p 'y-or-n-p)
-
-;; I want my comments slanted and my keywords bold.
-;; The FiraCode font does not support this.
-(defun wal/font-lock ()
-  "Slanted and enchanted."
-  (set-face-attribute 'font-lock-comment-face nil :slant 'italic)
-  (set-face-attribute 'font-lock-keyword-face nil :weight 'bold))
-
-(add-hook 'font-lock-mode-hook 'wal/font-lock)
 
 ;; Huge cursor.
 ;; (setq x-stretch-cursor t)
@@ -725,6 +726,15 @@ To get support for ligatures, install the symbol font from [[https://github.com/
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-fonts)
   (add-hook 'after-init-hook 'wal/setup-fonts))
+
+;; I want my comments slanted and my keywords bold.
+;; The FiraCode font does not support this.
+(defun wal/font-lock ()
+  "Slanted and enchanted."
+  (set-face-attribute 'font-lock-comment-face nil :slant 'italic)
+  (set-face-attribute 'font-lock-keyword-face nil :weight 'bold))
+
+(add-hook 'font-lock-mode-hook 'wal/font-lock)
 #+END_SRC
 
 * Additional Functions
@@ -843,6 +853,55 @@ if vertically split, split horizontally."
 (wal/general "ws" '(wal/split-window-the-other-way :wk "split the other way"))
 #+END_SRC
 
+** Buffer Display
+
+Utility functions to configure displaying buffers of a certain type.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/display-buffer-condition (buffer-or-mode)
+  "Get a display buffer condition for BUFFER-OR-MODE."
+  (pcase buffer-or-mode
+    ((pred stringp) buffer-or-mode)
+    ((pred symbolp) `(lambda (bufname _)
+                       (with-current-buffer bufname
+                         (equal major-mode (intern ,(symbol-name buffer-or-mode))))))))
+
+(defun wal/configure-shell-buffer-display (buffer)
+  "Configure `display-buffer' for shell BUFFER."
+  (let ((condition (wal/display-buffer-condition buffer)))
+    (add-to-list 'display-buffer-alist
+                 `(,condition
+                   (display-buffer-reuse-window display-buffer-in-side-window)
+                   (side . bottom)
+                   (dedicated . t)
+                   (reusable-frames . visible)))))
+
+(defun wal/configure-result-buffer-display (buffer &optional side)
+  "Configure `display-buffer' for result BUFFER."
+  (let ((condition (wal/display-buffer-condition buffer)))
+    (add-to-list 'display-buffer-alist
+                 `(,condition
+                   (display-buffer-in-side-window)
+                   (side . ,(or side 'right))))))
+
+(defun wal/configure-help-buffer-display (buffer)
+  "Configure `display-buffer' for help BUFFER."
+  (let ((condition (wal/display-buffer-condition buffer)))
+    (add-to-list 'display-buffer-alist
+                 `(,condition
+                   (display-buffer-reuse-window display-buffer-in-side-window)
+                   (side . left)
+                   (dedicated . t)
+                   (resuable-frames . visible)))))
+
+(defun wal/configure-focus-buffer-display (buffer)
+  "Configure `display-buffer' for focus BUFFER."
+  (let ((condition (wal/display-buffer-condition buffer)))
+    (add-to-list 'display-buffer-alist
+                 `(,condition
+                   (display-buffer-same-window)))))
+#+END_SRC
+
 ** Other
 
 Check for custom arguments.
@@ -916,10 +975,7 @@ to download it automatically, but might fail).
 #+BEGIN_SRC emacs-lisp
 (use-package ag
   :config
-  (add-to-list 'display-buffer-alist
-               '("\\*ag-search\\*"
-                 (display-buffer-in-side-window)
-                 (side . right)))
+  (wal/configure-result-buffer-display "\\*ag-search\\*")
   :ensure-system-package ag
   :custom
   (ag-highlight-search t)
@@ -1015,7 +1071,6 @@ Help me find my cursor!
 
 #+BEGIN_SRC emacs-lisp
 (use-package beacon
-  :defer 2
   :config
   (beacon-mode 1)
   :custom
@@ -1197,7 +1252,7 @@ Important command is =C-o c= to change search style.
 
 #+BEGIN_SRC emacs-lisp
 (use-package ctrlf
-  :defer 2
+  :defer 1
   :custom
   (ctrlf-auto-recenter t)
   ;; Not relased yet.
@@ -1454,12 +1509,7 @@ Just want to position this.
 (use-package debug
   :ensure nil
   :config
-  (add-to-list 'display-buffer-alist
-               '((lambda (bufname _)
-                   (with-current-buffer bufname
-                     (equal major-mode 'debugger-mode)))
-                 (display-buffer-in-side-window)
-                 (side . bottom))))
+  (wal/configure-result-buffer-display 'debugger-mode 'bottom))
 #+END_SRC
 
 ** delight
@@ -1471,7 +1521,7 @@ Refine a couple of =major-mode= names.
   "Whether some major modes are delighted beyond reason.")
 
 (use-package delight
-  :defer 2
+  :defer 1
   :config
   (delight 'dired-mode "Dired" :major)
   (delight 'emacs-lisp-mode "Elisp" :major)
@@ -1505,7 +1555,7 @@ since we =delight= in/diminish them there.
 
 #+BEGIN_SRC emacs-lisp
 (use-package diminish
-  :defer 2
+  :defer 1
   :config
   (diminish 'eldoc-mode))
 #+END_SRC
@@ -1517,7 +1567,7 @@ Make dimmed frames a bit dimmer.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dimmer
-  :defer 2
+  :defer 4
   :diminish
   :custom
   (dimmer-fraction 0.3)
@@ -1582,10 +1632,7 @@ What goes =docker-compose= up, goes =docker-compose= down.
   :custom
   (docker-container-default-sort-key '("Names"))
   :config
-  (add-to-list 'display-buffer-alist
-               '("\\*docker-containers\\*"
-                 (display-buffer-in-side-window)
-                 (side . top)))
+  (wal/configure-focus-buffer-display "\\*docker-containers\\*")
   :general
   (wal/lieutenant "d" '(:ignore t :wk "docker")
                   "du" '(docker-compose-up :wk "up")
@@ -1650,8 +1697,9 @@ download a set that supports your emojis.
 
 #+BEGIN_SRC emacs-lisp
 (use-package emojify
+  :hook (dashboard-mode . emojify-mode)
   :general
-  (wal/major "e" '(emojify-mode :wk "emojify")))
+  (wal/colonel "e" '(emojify-mode :wk "emojify")))
 #+END_SRC
 
 ** eshell
@@ -1961,12 +2009,7 @@ Let's try (to be) =helpful=.
   (counsel-describe-function-function #'helpful-callable)
   (counsel-describe-variable-function #'helpful-variable)
   :config
-  (add-to-list 'display-buffer-alist
-               '((lambda (bufname _)
-                   (with-current-buffer bufname
-                     (equal major-mode 'helpful-mode)))
-                (display-buffer-in-side-window)
-                (side . right)))
+  (wal/configure-help-buffer-display 'helpful-mode)
   :general
   (wal/major :keymaps '(emacs-lisp-mode-map org-mode-map)
              "h" '(:ignore t :wk "helpful")
@@ -2292,7 +2335,7 @@ Make the bell visual.
 
 #+BEGIN_SRC emacs-lisp
 (use-package mode-line-bell
-  :defer 2
+  :defer 1
   :custom
   (mode-line-bell-flash-time 0.1)
   :config
@@ -2347,6 +2390,7 @@ It's like =npm= for Python, it's why it rhymes.
   (poetry-tracking-strategy 'projectile)
   :config
   (poetry-tracking-mode) ; Turn on global minor mode.
+  (wal/configure-shell-buffer-display "\\*poetry-shell\\*")
   :general
   (wal/major :keymaps '(python-mode-map dired-mode-map)
              "p" '(poetry :wk "poetry dispatch")))
@@ -2362,6 +2406,7 @@ Have some perspective, man.
   "The name of my default perspective.")
 
 (use-package perspective
+  :defer 0.5
   :custom-face
   (persp-selected-face ((t (:weight bold :foreground "burlywood"))))
   :custom
@@ -2385,9 +2430,13 @@ Have some perspective, man.
 Be a =winner= without the mode.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/popper-group-by-perspective ()
+  "Group pop-ups by perspective."
+  (intern (persp-current-name)))
+
 (use-package popper
+  :after perspective
   :demand
-  :after projectile
   :bind
   (:map popper-mode-map
    ("H-[" . popper-toggle-latest)
@@ -2408,7 +2457,7 @@ Be a =winner= without the mode.
                               help-mode
                               debugger-mode
                               magit-status-mode))
-  (popper-group-function #'popper-group-by-projectile)
+  (popper-group-function #'wal/popper-group-by-perspective)
   (popper-display-control 'user)
   ;; Remove if you don't use/have `doom-modeline'.
   (popper-mode-line '(:eval (concat
@@ -2536,10 +2585,7 @@ I use a =.http= file extension for my request examples.
 #+BEGIN_SRC emacs-lisp
 (use-package restclient
   :config
-  (add-to-list 'display-buffer-alist
-               '("\\*HTTP Response\\*"
-                 (display-buffer-in-side-window)
-                 (side . right)))
+  (wal/configure-result-buffer-display "\\*HTTP Response\\*")
   :mode ("\\.http\\'" . restclient-mode))
 #+END_SRC
 
@@ -2614,7 +2660,7 @@ needed in Emacs 27+).
 
 #+BEGIN_SRC emacs-lisp
 (use-package so-long
-  :defer 2
+  :defer 4
   :config
   (global-so-long-mode 1))
 #+END_SRC
@@ -2653,7 +2699,7 @@ Show some system stats when nothing else is going on.
 
 #+BEGIN_SRC emacs-lisp
 (use-package symon
-  :defer 2
+  :defer 6
   :if (eq system-type 'gnu/linux)
   :custom
   (symon-sparkline-type 'bounded)
@@ -2770,12 +2816,7 @@ always try to build from source ...
     (vterm-toggle-fullscreen-p nil)
     (vterm-toggle-scope 'project)
     :config
-    (add-to-list 'display-buffer-alist
-                 '((lambda (bufname _)
-                     (with-current-buffer bufname (equal major-mode 'vterm-mode)))
-                   (display-buffer-reuse-window display-buffer-in-side-window)
-                   (side . bottom)
-                   (reusable-frames . visible)))
+    (wal/configure-shell-buffer-display 'vterm-mode)
     :general
     (wal/general "tv" '(vterm-toggle :wk "open vterm"))
     :bind
@@ -2850,7 +2891,6 @@ if you don't have a hyper key, bind it to a personal binding.
   (:map yas-minor-mode-map
    ("H-<tab>" . #'yas-expand))
   :config
-  (setq yas-minor-mode-map (make-sparse-keymap))
   (define-key yas-minor-mode-map (kbd "<tab>") nil)
   (define-key yas-minor-mode-map "TAB" nil)
   (yas-reload-all))
@@ -3439,12 +3479,7 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
 (use-package org-agenda
   :ensure nil
   :config
-  (add-to-list 'display-buffer-alist
-               '((lambda (bufname _)
-                   (with-current-buffer bufname
-                     (equal major-mode 'org-agenda-mode)))
-                 (display-buffer-in-side-window)
-                 (side . right)))
+  (wal/configure-result-buffer-display 'org-agenda-mode)
   :custom
   ;; We hide all @-tags.
   (org-agenda-hide-tags-regexp "@")
@@ -3603,7 +3638,8 @@ This mode is built-in.
   (lsp)
   (flycheck-mode 1))
 
-(use-package python-mode
+(use-package python
+  :demand
   :ensure nil
   :general
   (wal/major :keymaps 'python-mode-map
@@ -3618,12 +3654,7 @@ This mode is built-in.
   (setq py-python-command "python3"
         python-shell-interpreter "python3")
   ;; Treat inferior shell as a pop-up.
-  (add-to-list 'display-buffer-alist
-               '((lambda (bufname _)
-                   (with-current-buffer bufname
-                     (equal major-mode 'inferior-python-mode)))
-                 (display-buffer-in-side-window)
-                 (side . right))))
+  (wal/configure-shell-buffer-display 'inferior-python-mode))
 #+END_SRC
 
 ** rjsx-mode
