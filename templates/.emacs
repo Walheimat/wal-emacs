@@ -12,9 +12,10 @@
   (expand-file-name "emacs-config" user-emacs-directory)
   "The default path to Walheimat's Emacs org config.")
 
-(let ((gc-cons-threshold most-positive-fixnum))
+(let ((gc-cons-threshold most-positive-fixnum)
+	  (gc-cons-percentage 0.6))
   (org-babel-load-file
-   (expand-file-name "README.org" wal/emacs-config-default-path)))
+    (expand-file-name "README.org" wal/emacs-config-default-path)))
 
 ;; just an example: changing primary and secondary themes
 ;; (setq wal/primary-emacs-theme   'doom-dracula
