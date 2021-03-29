@@ -59,6 +59,15 @@ The init script will evaluate _everything_[fn:5] that follows.
 
 * Settings
 
+** Speed
+
+You want speed?
+Then bind lexically!
+
+#+BEGIN_SRC emacs-lisp
+;;; README.el -*- lexical-binding: t; -*-
+#+END_SRC
+
 ** Personal
 
 Set some personal info.[fn:6]
@@ -85,6 +94,7 @@ Customize start-up.
 
 ;; No splash.
 (setq inhibit-startup-message t)
+(setq initial-major-mode 'fundamental-mode)
 
 ;; Use a distinct file for customization.
 (setq custom-file (expand-file-name "custom.el" wal/emacs-config-default-path))
@@ -169,11 +179,6 @@ we have to install it and a few other packages the hard way.
 ;; Ensure all packages by default.
 (require 'use-package-ensure)
 (setq use-package-always-ensure t)
-
-;; Uncomment to test start-up time.
-;; (setq use-package-minimum-reported-time 0.05)
-;; (setq use-package-verbose t)
-;; (setq use-package-compute-statistics t)
 #+END_SRC
 
 ** Directories
@@ -443,6 +448,211 @@ Don't show the CPU load if time is shown.
 (display-time-mode -1)
 #+END_SRC
 
+* Additional Functions
+
+** Package-Specific
+
+Need to know if buffer is =treemacs= buffer sometimes.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/treemacsbufferp ()
+  "Check if this is the treemacs buffer."
+  (eq (current-buffer) (treemacs-get-local-buffer)))
+#+END_SRC
+
+** Garbage Collection
+
+Better(?) garbage collection.
+
+#+BEGIN_SRC emacs-lisp
+;; Trick garbage collection.
+(defconst wal/hundred-mb
+  (* 1024 1024 100)
+  "A hundred megabytes.")
+
+(defun wal/minibuffer-setup-hook ()
+  "Increase gc threshold to maximum on minibuffer setup."
+  (setq gc-cons-threshold most-positive-fixnum))
+
+(defun wal/minibuffer-exit-hook ()
+  "Decrease it again on minibuffer exit."
+  (setq gc-cons-threshold wal/hundred-mb))
+
+(add-hook 'minibuffer-setup-hook #'wal/minibuffer-setup-hook)
+(add-hook 'minibuffer-exit-hook #'wal/minibuffer-exit-hook)
+#+END_SRC
+
+** Directories
+
+Finding files should =mkdir -p= its parents.
+
+#+BEGIN_SRC emacs-lisp
+;; Creating parent dirs.
+(defun wal/create-non-existent-directory ()
+  "Ask whether to create non-existent directory.
+If a file is found in a not (yet) existing directory,
+ask if it should get created."
+  (let ((parent-directory (file-name-directory buffer-file-name)))
+    (when (and (not (file-exists-p parent-directory))
+               (y-or-n-p (format "Create non-existing directory `%s'? " parent-directory)))
+      (make-directory parent-directory t))))
+
+(add-to-list 'find-file-not-found-functions #'wal/create-non-existent-directory)
+
+;; Don't care about `.' and `..'.
+(defun wal/directory-files (directory)
+  "Get all directory files in DIRECTORY except for current and parent directories."
+  (nthcdr 2 (directory-files directory t)))
+#+END_SRC
+
+** Buffers
+
+Ignore some buffers when switching.
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/commonly-ignored-major-modes
+  '(dired-mode helpful-mode magit-status-mode magit-diff-mode)
+  "Major modes whose buffers should be commonly ignored.")
+
+(defun wal/commmonly-ignored-buffer-p (buffer-or-string)
+  "Check if provided BUFFER-OR-STRING is commonly ignored."
+  (let ((maj (with-current-buffer
+               (get-buffer-create buffer-or-string)
+               major-mode)))
+    (or (member maj wal/commonly-ignored-major-modes)
+        ;; Starred buffers other than scratch buffers.
+        (and (not (string-match "^\\*scratch" buffer-or-string))
+             (string-match "^\\*[[:ascii:]]+\\*\\'" buffer-or-string)))))
+
+(defun wal/ivy-switch-ignored-buffers (&rest r)
+  "Show only commonly ignored buffers.
+Pass R to the switch buffer function."
+  (interactive)
+  (let ((ivy-ignore-buffers
+          '((lambda (buffer-or-string)
+              (not (wal/commmonly-ignored-buffer-p buffer-or-string))))))
+    (wal/switch-buffer r)))
+#+END_SRC
+
+** Windows
+
+I keep messing up, splitting vertically when I meant horizontally.
+This is inspired by [[https://github.com/purcell/emacs.d/blob/master][purcell's config]].
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/split-window-the-other-way ()
+  "Split window the other way.
+This means if horizontally split, split vertically;
+if vertically split, split horizontally."
+  (interactive)
+  (let* ((other-buffer (and (next-window) (window-buffer (next-window))))
+         (win (selected-window))
+         (split-direction (cond ((or (windows-sharing-edge win 'above)
+                                     (windows-sharing-edge win 'below))
+                                 'vert)
+                                ((or (windows-sharing-edge win 'right)
+                                     (windows-sharing-edge win 'left))
+                                 'hori)
+                                (t nil))))
+    (delete-other-windows)
+    (pcase split-direction
+      ('vert (split-window-horizontally))
+      ('hori (split-window-vertically)))
+    (when other-buffer
+      (set-window-buffer (next-window) other-buffer))))
+
+(defun wal/shrink-window (&optional horizontally)
+  "Shrink the selected window (HORIZONTALLY)."
+  (interactive)
+  (let* ((available (window-min-delta (selected-window) horizontally))
+         (chunk (floor (* available 0.2))))
+    (if horizontally
+        (shrink-window-horizontally chunk)
+      (shrink-window chunk))))
+
+(defun wal/shrink-window-horizontally ()
+  "Shrink the selected window horizontally."
+  (interactive)
+  (wal/shrink-window t))
+
+(defun wal/enlarge-window (&optional horizontally)
+  "Enlarge the selected window (HORIZONTALLY)."
+  (interactive)
+  (let* ((available (window-max-delta (selected-window) horizontally))
+         (chunk (floor (* available 0.2))))
+    (if horizontally
+        (enlarge-window-horizontally chunk)
+      (enlarge-window chunk))))
+
+(defun wal/enlarge-window-horizontally ()
+  "Enlarge the selected window horizontally."
+  (interactive)
+  (wal/enlarge-window t))
+#+END_SRC
+
+** Buffer Display
+
+Utility functions to configure displaying buffers of a certain type.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/display-buffer-condition (buffer-or-mode)
+  "Get a display buffer condition for BUFFER-OR-MODE."
+  (pcase buffer-or-mode
+    ((pred stringp) buffer-or-mode)
+    ((pred symbolp) `(lambda (bufname _)
+                       (with-current-buffer bufname
+                         (equal major-mode (intern ,(symbol-name buffer-or-mode))))))))
+
+(defun wal/configure-shell-buffer-display (buffer)
+  "Configure `display-buffer' for shell BUFFER."
+  (let ((condition (wal/display-buffer-condition buffer)))
+    (add-to-list 'display-buffer-alist
+                 `(,condition
+                   (display-buffer-reuse-window display-buffer-in-side-window)
+                   (side . bottom)
+                   (window-height . 20)
+                   (dedicated . t)
+                   (reusable-frames . visible)))))
+
+(defun wal/configure-result-buffer-display (buffer &optional side)
+  "Configure `display-buffer' for result BUFFER shown on SIDE."
+  (let ((condition (wal/display-buffer-condition buffer)))
+    (add-to-list 'display-buffer-alist
+                 `(,condition
+                   (display-buffer-in-side-window)
+                   (side . ,(or side 'right))))))
+
+(defun wal/configure-help-buffer-display (buffer)
+  "Configure `display-buffer' for help BUFFER."
+  (let ((condition (wal/display-buffer-condition buffer)))
+    (add-to-list 'display-buffer-alist
+                 `(,condition
+                   (display-buffer-reuse-window display-buffer-in-side-window)
+                   (side . left)
+                   (dedicated . t)
+                   (window-width . 100)
+                   (resuable-frames . visible)))))
+
+(defun wal/configure-focus-buffer-display (buffer)
+  "Configure `display-buffer' for focus BUFFER."
+  (let ((condition (wal/display-buffer-condition buffer)))
+    (add-to-list 'display-buffer-alist
+                 `(,condition
+                   (display-buffer-same-window)))))
+#+END_SRC
+
+** Other
+
+Check for custom arguments.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/found-custom-arg (switch)
+  "Check for custom SWITCH arg and delete it right away."
+  (let ((found-switch (member switch command-line-args)))
+    (setq command-line-args (delete switch command-line-args))
+    found-switch))
+#+END_SRC
+
 * Key Bindings
 
 I use many[fn:7] custom keybindings.
@@ -607,9 +817,17 @@ Most bindings are declared in the [[*Packages][packages]] section.
 
 (wal/general "ec" '(wal/readme-config-open :wk "open config"))
 
-;; windows
+;;; Windows/Frames.
 (global-set-key (kbd "H-q") 'kill-buffer-and-window) ; C-x 4 0
 (global-set-key (kbd "H-5") 'make-frame-command) ; C-x 5 2
+
+(wal/general "ws" '(wal/split-window-the-other-way :wk "split the other way"))
+
+;; Enlarging/shrinking if we don't want `golden-ratio'.
+(global-set-key (kbd "C-H-h") #'wal/shrink-window-horizontally)
+(global-set-key (kbd "C-H-l") #'wal/enlarge-window-horizontally)
+(global-set-key (kbd "C-H-k") #'wal/enlarge-window)
+(global-set-key (kbd "C-H-j") #'wal/shrink-window)
 
 ;; Killing Emacs.
 (global-unset-key (kbd "C-x C-c"))
@@ -631,7 +849,7 @@ Otherwise the colors might clash.
 (defun wal/transparency (value)
   "Set the transparency of the frame window to VALUE.
 1 being (almost) completely transparent, 100 being opaque."
-  (interactive "nSet transparency (1-100):")
+  (interactive "nSet transparency (1-100): ")
   (let ((transparency (min (max value 1) 100)))
     (set-frame-parameter (selected-frame) 'alpha transparency)))
 
@@ -666,7 +884,7 @@ Otherwise the colors might clash.
   "Setup visual frills like theme and transparency."
   (load-theme wal/primary-emacs-theme t)
   (setq wal/active-theme wal/primary-emacs-theme)
-  (wal/transparency 95))
+  (wal/transparency 90))
 
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-visuals)
@@ -735,183 +953,6 @@ To get support for ligatures, install the symbol font from [[https://github.com/
   (set-face-attribute 'font-lock-keyword-face nil :weight 'bold))
 
 (add-hook 'font-lock-mode-hook 'wal/font-lock)
-#+END_SRC
-
-* Additional Functions
-
-** Package-Specific
-
-Need to know if buffer is =treemacs= buffer sometimes.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/treemacsbufferp ()
-  "Check if this is the treemacs buffer."
-  (eq (current-buffer) (treemacs-get-local-buffer)))
-#+END_SRC
-
-** Garbage Collection
-
-Better(?) garbage collection.
-
-#+BEGIN_SRC emacs-lisp
-;; Trick garbage collection.
-(defconst wal/hundred-mb
-  (* 1024 1024 100)
-  "A hundred megabytes.")
-
-(defun wal/minibuffer-setup-hook ()
-  "Increase gc threshold to maximum on minibuffer setup."
-  (setq gc-cons-threshold most-positive-fixnum))
-
-(defun wal/minibuffer-exit-hook ()
-  "Decrease it again on minibuffer exit."
-  (setq gc-cons-threshold wal/hundred-mb))
-
-(add-hook 'minibuffer-setup-hook #'wal/minibuffer-setup-hook)
-(add-hook 'minibuffer-exit-hook #'wal/minibuffer-exit-hook)
-#+END_SRC
-
-** Directories
-
-Finding files should =mkdir -p= its parents.
-
-#+BEGIN_SRC emacs-lisp
-;; Creating parent dirs.
-(defun wal/create-non-existent-directory ()
-  "Ask whether to create non-existent directory.
-If a file is found in a not (yet) existing directory,
-ask if it should get created."
-  (let ((parent-directory (file-name-directory buffer-file-name)))
-    (when (and (not (file-exists-p parent-directory))
-               (y-or-n-p (format "Create non-existing directory `%s'? " parent-directory)))
-      (make-directory parent-directory t))))
-
-(add-to-list 'find-file-not-found-functions #'wal/create-non-existent-directory)
-
-;; Don't care about `.' and `..'.
-(defun wal/directory-files (directory)
-  "Get all directory files in DIRECTORY except for current and parent directories."
-  (nthcdr 2 (directory-files directory t)))
-#+END_SRC
-
-** Buffers
-
-Ignore some buffers when switching.
-
-#+BEGIN_SRC emacs-lisp
-(defvar wal/commonly-ignored-major-modes
-  '(dired-mode helpful-mode magit-status-mode magit-diff-mode)
-  "Major modes whose buffers should be commonly ignored.")
-
-(defun wal/commmonly-ignored-buffer-p (buffer-or-string)
-  "Check if provided BUFFER-OR-STRING is commonly ignored."
-  (let ((maj (with-current-buffer
-               (get-buffer-create buffer-or-string)
-			   major-mode)))
-    (or (member maj wal/commonly-ignored-major-modes)
-        ;; Starred buffers other than scratch buffers.
-        (and (not (string-match "^\\*scratch" buffer-or-string))
-             (string-match "^\\*[[:ascii:]]+\\*\\'" buffer-or-string)))))
-
-(defun wal/ivy-switch-ignored-buffers (&rest r)
-  "Show only commonly ignored buffers.
-Pass R to the switch buffer function."
-  (interactive)
-  (let ((ivy-ignore-buffers
-          '((lambda (buffer-or-string)
-              (not (wal/commmonly-ignored-buffer-p buffer-or-string))))))
-    (wal/switch-buffer r)))
-#+END_SRC
-
-** Windows
-
-I keep messing up, splitting vertically when I meant horizontally.
-This is inspired by [[https://github.com/purcell/emacs.d/blob/master][purcell's config]].
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/split-window-the-other-way ()
-  "Split window the other way.
-This means if horizontally split, split vertically;
-if vertically split, split horizontally."
-  (interactive)
-  (let* ((other-buffer (and (next-window) (window-buffer (next-window))))
-         (win (selected-window))
-         (split-direction (cond ((or (windows-sharing-edge win 'above)
-                                     (windows-sharing-edge win 'below))
-                                 'vert)
-                                ((or (windows-sharing-edge win 'right)
-                                     (windows-sharing-edge win 'left))
-                                 'hori)
-                                (t nil))))
-    (delete-other-windows)
-    (pcase split-direction
-      ('vert (split-window-horizontally))
-      ('hori (split-window-vertically)))
-    (when other-buffer
-      (set-window-buffer (next-window) other-buffer))))
-
-(wal/general "ws" '(wal/split-window-the-other-way :wk "split the other way"))
-#+END_SRC
-
-** Buffer Display
-
-Utility functions to configure displaying buffers of a certain type.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/display-buffer-condition (buffer-or-mode)
-  "Get a display buffer condition for BUFFER-OR-MODE."
-  (pcase buffer-or-mode
-    ((pred stringp) buffer-or-mode)
-    ((pred symbolp) `(lambda (bufname _)
-                       (with-current-buffer bufname
-                         (equal major-mode (intern ,(symbol-name buffer-or-mode))))))))
-
-(defun wal/configure-shell-buffer-display (buffer)
-  "Configure `display-buffer' for shell BUFFER."
-  (let ((condition (wal/display-buffer-condition buffer)))
-    (add-to-list 'display-buffer-alist
-                 `(,condition
-                   (display-buffer-reuse-window display-buffer-in-side-window)
-                   (side . bottom)
-                   (dedicated . t)
-                   (reusable-frames . visible)))))
-
-(defun wal/configure-result-buffer-display (buffer &optional side)
-  "Configure `display-buffer' for result BUFFER."
-  (let ((condition (wal/display-buffer-condition buffer)))
-    (add-to-list 'display-buffer-alist
-                 `(,condition
-                   (display-buffer-in-side-window)
-                   (side . ,(or side 'right))))))
-
-(defun wal/configure-help-buffer-display (buffer)
-  "Configure `display-buffer' for help BUFFER."
-  (let ((condition (wal/display-buffer-condition buffer)))
-    (add-to-list 'display-buffer-alist
-                 `(,condition
-                   (display-buffer-reuse-window display-buffer-in-side-window)
-                   (side . left)
-                   (dedicated . t)
-                   (resuable-frames . visible)))))
-
-(defun wal/configure-focus-buffer-display (buffer)
-  "Configure `display-buffer' for focus BUFFER."
-  (let ((condition (wal/display-buffer-condition buffer)))
-    (add-to-list 'display-buffer-alist
-                 `(,condition
-                   (display-buffer-same-window)))))
-#+END_SRC
-
-** Other
-
-Check for custom arguments.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/found-custom-arg (switch)
-  "Check for custom SWITCH arg and delete it right away."
-  (let ((found-switch (member switch command-line-args)))
-    (setq command-line-args (delete switch command-line-args))
-    found-switch))
 #+END_SRC
 
 * Packages
@@ -1005,7 +1046,8 @@ to download it automatically, but might fail).
 You need to install the icons yourself[fn:4].
 
 #+BEGIN_SRC emacs-lisp
-(use-package all-the-icons)
+(use-package all-the-icons
+  :defer t)
 
 ;; Use it for dired.
 (use-package all-the-icons-dired
@@ -1061,8 +1103,8 @@ Only goes to line if line is empty."
                   "vc" '(avy-copy-line :wk "copy")
                   "vk" '(avy-kill-whole-line :wk "kill"))
   :bind
-  (("H-v" . wal/avy-goto-line-and-char)
-   ("H-V" . avy-goto-line)))
+  (("H-V" . wal/avy-goto-line-and-char)
+   ("H-v" . avy-goto-line)))
 #+END_SRC
 
 ** beacon
@@ -1071,6 +1113,7 @@ Help me find my cursor!
 
 #+BEGIN_SRC emacs-lisp
 (use-package beacon
+  :defer 1
   :config
   (beacon-mode 1)
   :custom
@@ -1088,6 +1131,7 @@ I don't remember where I was.
 
 #+BEGIN_SRC emacs-lisp
 (use-package bm
+  :defer 1
   :config
   (setq-default bm-buffer-persistence t)
   (bm-repository-load)
@@ -1220,6 +1264,7 @@ nice despite us using =ivy= for completion everywhere.
                "xa" '(counsel-linux-app :wk "launch app")
                "xs" '(counsel-search :wk "duck-duck-go"))
   :bind
+  ("C-x B" . counsel-switch-buffer)
   ("M-x" . counsel-M-x)
   ("<menu>" . counsel-M-x)
   ("C-x C-f" . counsel-find-file))
@@ -1286,6 +1331,8 @@ This will mess up your windows!
   (dap-ui-mode 1)
   (require 'dap-node)
   (require 'dap-python)
+  ;; This package uses `treemacs'.
+  (kaolin-treemacs-theme)
   :general
   (wal/colonel :keymaps 'prog-mode-map
                "d" '(dap-mode :wk "dap"))
@@ -1437,7 +1484,7 @@ your =tsconfig.json=.
 
 **** Python
 
-Pick pid to attach to running =debugpy= session (see above).
+Pick PID to attach to running =debugpy= session (see above).
 
 #+BEGIN_SRC emacs-lisp :tangle no
 (when (require 'dap-mode nil 'noerror)
@@ -1455,6 +1502,7 @@ Let's have a dash of board.
 #+BEGIN_SRC emacs-lisp
 ;; dependency
 (use-package page-break-lines
+  :defer 1
   :delight " pbl")
 
 ;; Using my gitlab status messages, only one so far.
@@ -1473,7 +1521,7 @@ Let's have a dash of board.
   "Files that should not be considered recent files.")
 
 (use-package dashboard
-  :after page-break-lines
+  :hook (after-init . dashboard-setup-startup-hook)
   :custom
   (dashboard-banner-logo-title "Walheimat's Emacs Config")
   (dashboard-startup-banner (expand-file-name
@@ -1497,8 +1545,7 @@ Let's have a dash of board.
   (advice-add 'dashboard-insert-startupify-lists
     :around (lambda (fun &rest r)
               (let ((recentf-exclude wal/recentf-exclude))
-                (apply fun r))))
-  (dashboard-setup-startup-hook))
+                (apply fun r)))))
 #+END_SRC
 
 ** debug
@@ -1507,6 +1554,7 @@ Just want to position this.
 
 #+BEGIN_SRC emacs-lisp
 (use-package debug
+  :defer 1
   :ensure nil
   :config
   (wal/configure-result-buffer-display 'debugger-mode 'bottom))
@@ -1541,7 +1589,7 @@ Refresh after =magit= is done.
 
 #+BEGIN_SRC emacs-lisp
 (use-package diff-hl
-  :demand
+  :defer 1
   :config
   (global-diff-hl-mode)
   :hook ((magit-post-refresh . diff-hl-magit-post-refresh)
@@ -1608,7 +1656,7 @@ Hit =/= to filter in =dired= buffers.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired-filter
-  :after dired
+  :defer 1
   :delight " def")
 #+END_SRC
 
@@ -1618,7 +1666,7 @@ Highlighting in =dired= buffers.
 
 #+BEGIN_SRC emacs-lisp
 (use-package diredfl
-  :after dired
+  :defer 1
   :config
   (diredfl-global-mode))
 #+END_SRC
@@ -1650,6 +1698,8 @@ Note that this package requires you to install =all-the-icons= fonts[fn:4].
 
 #+BEGIN_SRC emacs-lisp
 (use-package doom-modeline
+  :after all-the-icons
+  :defer 1
   :custom
   (doom-modeline-project-detection 'projectile)
   (doom-modeline-minor-modes t)
@@ -1680,7 +1730,7 @@ Jumping is done using =M-.=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dumb-jump
-  :commands dumb-jump-xref-activate
+  :defer 1
   :custom
   (dumb-jump-selector 'ivy)
   (dumb-jump-force-searcher 'ag)
@@ -1774,7 +1824,8 @@ One thing that can be a bit tricky is selecting regions, not anymore.
 Finding files by name should be easy.
 
 #+BEGIN_SRC emacs-lisp
-(use-package find-file-in-project)
+(use-package find-file-in-project
+  :defer 2)
 #+END_SRC
 
 ** fira-code-mode
@@ -1961,6 +2012,9 @@ You can bring up actions (skip, save) with =M-o=.
 
 (use-package flyspell-correct
   :after flyspell
+  :bind
+  (:map flyspell-mode-map
+   ("C-/" . flyspell-correct-at-point))
   :general
   (wal/captain :keymaps 'flyspell-mode-map
                "sc" '(flyspell-correct-at-point :wk "correct at point")))
@@ -1985,17 +2039,24 @@ If you want to go back in time and point fingers at the progenitors of doom.
 Use the golden ratio.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/aw-switch-maybe-golden-ratio ()
+  "Invoke `golden-ratio' if mode is active.
+Used to advise `aw-switch-to-window'."
+  (when (golden-ratio-mode)
+    golden-ratio))
+
 (use-package golden-ratio
   :defer 1
   :diminish
   :config
-  ;; Make sure to run golden ratio after `ace-switch-to-window'.
-  (advice-add 'aw-switch-to-window :after #'golden-ratio)
+  ;; Make sure to run golden ratio after `aw-switch-to-window'.
+  (advice-add 'aw-switch-to-window :after #'wal/aw-switch-maybe-golden-ratio)
   ;; This doesn't work for me, see alternative solution above.
   ;; (push 'aw-switch-to-window golden-ratio-extra-commands)
-  (golden-ratio-mode 1)
+  ;; (golden-ratio-mode 1)
   :general
-  (wal/colonel "g" '(golden-ratio-mode :wk "golden ratio")))
+  (wal/colonel "g" '(golden-ratio-mode :wk "golden ratio"))
+  (wal/captain "g" '(golden-ratio :wk "golden ratio")))
 #+END_SRC
 
 ** helpful
@@ -2123,7 +2184,7 @@ We use =ivy= for narrowing our options.
     (setq ivy-ignore-buffers '("\\` " "\\`\\*tramp/"))))
 
 (use-package ivy
-  :demand
+  :defer 1
   :custom
   (ivy-use-virtual-buffers t)
   (ivy-ignore-buffers wal/ivy-ignore-buffers)
@@ -2169,6 +2230,7 @@ Some nicer candidate view when switching buffers.
 
 (use-package ivy-rich
   :after ivy
+  :defer 1
   :config
   (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
   (plist-put ivy-rich-display-transformers-list 'wal/switch-buffer wal/ivy-rich-transformer)
@@ -2182,6 +2244,7 @@ This is a themes collection I sometimes pick from.
 
 #+BEGIN_SRC emacs-lisp
 (use-package kaolin-themes
+  :defer 1
   :custom
   (kaolin-ocean-alt-bg t)
   (kaolin-themes-italic-comments t)
@@ -2191,10 +2254,7 @@ This is a themes collection I sometimes pick from.
   ;; Distinct background for fringe and line numbers.
   (kaolin-themes-distinct-fringe t)
   ;; Distinct colors for company popup scrollbar.
-  (kaolin-themes-distinct-company-scrollbar t)
-  :config
-  ;; `treemacs'
-  (kaolin-treemacs-theme))
+  (kaolin-themes-distinct-company-scrollbar t))
 #+END_SRC
 
 ** kubernetes
@@ -2406,7 +2466,7 @@ Have some perspective, man.
   "The name of my default perspective.")
 
 (use-package perspective
-  :defer 0.5
+  :defer 1
   :custom-face
   (persp-selected-face ((t (:weight bold :foreground "burlywood"))))
   :custom
@@ -2436,7 +2496,7 @@ Be a =winner= without the mode.
 
 (use-package popper
   :after perspective
-  :demand
+  :defer 1
   :bind
   (:map popper-mode-map
    ("H-[" . popper-toggle-latest)
@@ -2449,6 +2509,7 @@ Be a =winner= without the mode.
   (popper-reference-buffers '("\\*Messages\\*"
                               "\\*HTTP Response\\*"
                               "\\*poetry-shell\\*"
+                              "^\\*docker-compose"
                               org-agenda-mode
                               docker-container-mode
                               inferior-python-mode
@@ -2478,6 +2539,7 @@ Better short-term-memory for =ivy=.
 #+BEGIN_SRC emacs-lisp
 (use-package prescient
   :after counsel
+  :defer 1
   :if wal/use-prescient
   :custom
   (prescient-sort-length-enable nil)
@@ -2488,7 +2550,7 @@ Better short-term-memory for =ivy=.
 
 (use-package ivy-prescient
   :if wal/use-prescient
-  :after counsel
+  :after (counsel prescient)
   :custom
   ;; Default plus `wal/switch-buffer'.
   (ivy-prescient-sort-commands '(:not swiper swiper-isearch ivy-switch-buffer wal/switch-buffer))
@@ -2521,7 +2583,7 @@ Projects in Emacs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
-  :demand
+  :defer 1
   :delight " pjt"
   :bind
   (("H-p" . projectile-switch-project)
@@ -2892,7 +2954,7 @@ if you don't have a hyper key, bind it to a personal binding.
    ("H-<tab>" . #'yas-expand))
   :config
   (define-key yas-minor-mode-map (kbd "<tab>") nil)
-  (define-key yas-minor-mode-map "TAB" nil)
+  (define-key yas-minor-mode-map (kbd "TAB") nil)
   (yas-reload-all))
   ;; (add-hook 'company-mode-hook (lambda ()
   ;;   (substitute-key-definition 'company-complete-common
@@ -3173,21 +3235,6 @@ Unity.
   :hook (csharp-mode . wal/csharp-mode))
 #+END_SRC
 
-** emacs-lisp
-
-Enable =flycheck=.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/elisp-mode-hook ()
-  "Hooks for Lisp interaction mode."
-  (message "So it's just a bunch of lists?")
-  (flycheck-mode 1))
-
-(use-package emacs-lisp
-  :ensure nil
-  :hook (emacs-lisp-mode . wal/elisp-mode-hook))
-#+END_SRC
-
 ** css-mode
 
 We want quicker =company= suggestions when in CSS modes.
@@ -3216,6 +3263,22 @@ Make =Dockerfiles= look nice.
 #+BEGIN_SRC emacs-lisp
 (use-package dockerfile-mode
   :defer t)
+#+END_SRC
+
+** emacs-lisp
+
+Enable =flycheck= and disable tabs.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/elisp-mode-hook ()
+  "Hooks for Lisp interaction mode."
+  (message "So it's just a bunch of lists?")
+  (wal/disable-tabs)
+  (flycheck-mode 1))
+
+(use-package emacs-lisp
+  :ensure nil
+  :hook (emacs-lisp-mode . wal/elisp-mode-hook))
 #+END_SRC
 
 ** elixir-mode
@@ -3289,6 +3352,9 @@ Enable =flycheck= and disable internal checker.
   :config
   (setq-default js2-show-parse-errors nil
                 js2-strict-missing-semi-warning nil)
+  ;; Remove `js2-jump-to-definition' binding which
+  ;; rarely works and gets in the way of `dumb-jump-go'.
+  (define-key js2-mode-map (kbd "M-.") nil)
   :hook (js2-mode . wal/js2-mode))
 #+END_SRC
 
@@ -3370,21 +3436,23 @@ state =CANCELLED=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-bullets
+  :defer 1
   :hook (org-mode . (lambda() (org-bullets-mode t))))
 
 (defun wal/org-mode ()
   "Life shouldn't be a drag in `org-mode'."
   (message "Organize! Seize the means of production!")
+  ;; Require here to shorten start-up time.
+  (require 'org-install nil t)
+  (require 'ox-md nil t)
   (wal/disable-tabs)
   (drag-stuff-mode -1))
 
-(use-package org-mode
+(use-package org
   :ensure nil
   ;; Disable `drag-stuff-mode' in `org-mode'.
   :hook (org-mode . wal/org-mode)
   :config
-  (require 'org-install)
-  (require 'ox-md nil t)
   (add-to-list 'org-global-properties
                '("Effort_ALL" . "30m 1h 2h 4h 6h 1d 2d"))
   (add-to-list 'org-modules 'org-habit)
@@ -3432,7 +3500,8 @@ state =CANCELLED=.
 
 (use-package org-clock
   :ensure nil
-  :after org-mode
+  :after org
+  :defer t
   :custom
   (org-clock-idle-time 10)
   (org-clock-continuously t)
@@ -3445,7 +3514,7 @@ state =CANCELLED=.
 
 (use-package org-habit
   :ensure nil
-  :after org-mode
+  :after org
   :custom
   (org-habit-graph-column 105))
 
@@ -3456,7 +3525,7 @@ state =CANCELLED=.
 
 (use-package org-keys
   :ensure nil
-  :after org-mode
+  :after org
   :custom
   (org-use-speed-commands t)
   (org-speed-commands-user
@@ -3478,8 +3547,6 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
 #+BEGIN_SRC emacs-lisp
 (use-package org-agenda
   :ensure nil
-  :config
-  (wal/configure-result-buffer-display 'org-agenda-mode)
   :custom
   ;; We hide all @-tags.
   (org-agenda-hide-tags-regexp "@")
@@ -3488,7 +3555,7 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
 
 (use-package org-super-agenda
   :after org-agenda
-  :demand
+  :defer 1
   :custom
   (org-super-agenda-groups
    '((:name "Schedule"
@@ -3527,9 +3594,7 @@ Use =org-tree-slide= for presentations.
 (defun wal/tree-slide-play ()
   "Make presentable."
   (setq visual-fill-column-width 140
-        visual-fill-column-center-text t
-        visible-cursor nil
-        cursor-type nil)
+        visual-fill-column-center-text t)
   (zone-leave-me-alone)
   (global-hl-line-mode -1)
   (beacon-mode -1)
@@ -3538,9 +3603,7 @@ Use =org-tree-slide= for presentations.
 (defun wal/tree-slide-stop ()
   "We no longer care about presentation."
   (setq visual-fill-column-width nil
-        visual-fill-column-center-text nil
-        visible-cursor t
-        cursor-type t)
+        visual-fill-column-center-text nil)
   (zone-when-idle wal/zone-timer)
   (global-hl-line-mode 1)
   (beacon-mode 1)
@@ -3639,8 +3702,8 @@ This mode is built-in.
   (flycheck-mode 1))
 
 (use-package python
-  :demand
   :ensure nil
+  :hook (python-mode . wal/python-mode)
   :general
   (wal/major :keymaps 'python-mode-map
              "i" '(run-python :wk "inferior shell")
@@ -3648,7 +3711,6 @@ This mode is built-in.
              "sr" '(python-shell-send-region :wk "region")
              "sb" '(python-shell-send-buffer :wk "buffer")
              "sf" '(python-shell-send-file :wk "file"))
-  :hook (python-mode . wal/python-mode)
   :config
   ;; Use `python3' as default Python command.
   (setq py-python-command "python3"
