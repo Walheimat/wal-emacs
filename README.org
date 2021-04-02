@@ -252,7 +252,7 @@ This was cribbed from [[https://www.john2x.com/emacs.html][john2x's config]].
 
 #+BEGIN_SRC emacs-lisp
 ;; Empty scratch message.
-(setq initial-scratch-message ";; Howdy, stranger ...")
+(setq initial-scratch-message "")
 
 (defvar wal/scratch-persist-file
   (expand-file-name "scratch-persist" wal/cache-directory)
@@ -310,6 +310,7 @@ Modes that should be on no matter what.
 (delete-selection-mode 1)
 (column-number-mode 1)
 ;; (winner-mode 1)
+
 ;; I don't need to see the GUI.
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -318,7 +319,7 @@ Modes that should be on no matter what.
 
 ** Simplifying
 
-Be easy on the eyes.
+Keep things simple.
 
 #+BEGIN_SRC emacs-lisp
 ;; Trying to not touch the mouse as much.
@@ -417,10 +418,16 @@ for an example using spaces.
 Delete trailing white space before saving.
 
 #+BEGIN_SRC emacs-lisp
-(add-hook 'write-file-functions
-          (lambda ()
-            (delete-trailing-whitespace)
-            nil))
+(defvar wal/delete-trailing-whitespace t
+  "Whether to delete trailing whitespace.")
+
+(defun wal/delete-trailing-whitespace-maybe ()
+  "Maybe delete trailing whitespace."
+  (when wal/delete-trailing-whitespace
+    (delete-trailing-whitespace))
+  nil)
+
+(add-hook 'write-file-functions #'wal/delete-trailing-whitespace-maybe)
 #+END_SRC
 
 ** Zoning
@@ -431,8 +438,11 @@ Zone out after a couple of minutes.
 (defvar wal/zone-timer (* 5 60)
   "The time in seconds when we will zone out.")
 
-(require 'zone)
-(zone-when-idle wal/zone-timer)
+(use-package zone
+  :ensure nil
+  :defer 10
+  :config
+  (zone-when-idle wal/zone-timer))
  #+END_SRC
 
 ** Time
@@ -619,7 +629,7 @@ Utility functions to configure displaying buffers of a certain type.
   (let ((condition (wal/display-buffer-condition buffer)))
     (add-to-list 'display-buffer-alist
                  `(,condition
-                   (display-buffer-in-side-window)
+                   (display-buffer-pop-up-window)
                    (side . ,(or side 'right))))))
 
 (defun wal/configure-help-buffer-display (buffer)
@@ -662,22 +672,23 @@ I use many[fn:7] custom keybindings.
 There are some non-standard control sequences.
 Anywhere:
 
-+ =C-z=/=C-S-z= undoes/redoes.
-
-And in =prog mode= derived modes:
-
 + =C->=/=C-<= expands/contracts region.
 + =C-.= marks next point like this allowing
   + =C-,= to delete last mark and
   + =C-/= to move it.
++ =C-?= redoes (as =C-/= undoes).
+
+And in =prog mode=-derived modes (as well as =yaml-mode= and =org-mode=):
+
 + =C-;= (un-)comments lines.
 
 User-reserved combinations are used for certain command maps:
 
 + =C-c a= for =org-agenda=.
 + =C-c d= for =docker=.
-+ =C-c f= for =flyspell=.
++ =C-c f= for =flycheck=.
 + =C-c i= for =perspective=.
++ =C-c l= for =lsp=.
 + =C-c p= for =projectile=.
 
 ** Hyper
@@ -686,7 +697,11 @@ All hyper bindings are quick-access actions.
 
 + =H-5= creates a new frame.
 + =H-a= finds with =ag=.
++ =H-[= and =H-]= toggle/cycle open popups.
++ =H-c= lists Docker containers.
 + =H-d= duplicates current line/region with =crux=.
++ =H-f= finds file in project.
++ =H-g= invokes =magit=.
 + =H-i= switches perspective.
 + =H-m= for =kmacro= commands.
 + =H-<mouse3>= adds another cursor at point.
@@ -695,7 +710,8 @@ All hyper bindings are quick-access actions.
 + =H-q= kills window and buffer.
 + =H-s= for =swiper= search.
 + =H-<TAB>= expands snippets (in =yas-minor-mode=).
-+ =H-v= jumps to line with =avy=.
++ =H-t= toggles =vterm=.
++ =H-v= jumps to line (and char with =V=) with =avy=.
 + =H-w= opens =ace= dispatch.
 
 *** Caps to Hyper
@@ -766,15 +782,15 @@ The five =general= mappings perform all non-standard actions.
 *** About Leader Keys
 
 Leader key =general= prefixes editor actions
-like loading a theme, going to a mark etc.
+like loading a theme, opening a file as root.
 
 Leader key =colonel= prefixes mode toggles.
 Available modes might depend on =major-mode=.
 
-Leader keys =major=, =captain= prefix mode-specific actions,
+Leader keys =major= and =captain= prefix mode-specific actions,
 for major and minor modes respectively.
 
-Leader key =lieutenant= is a sink for additional useful actions.
+Leader key =lieutenant= is a sink for non-mode-package actions.
 
 ** Additional Mode Controls
 
@@ -782,19 +798,19 @@ Turning off certain minor modes and
 switching between =major mode= and =fundamental mode=.
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/before-emergency-mode nil
-  "The major mode before emergency was engaged.")
+(defvar wal/before-fundamental-mode nil
+  "The major mode before fundamental was engaged.")
 
 (defun wal/fundamental-mode ()
   "Switch from `major-mode' to `fundamental-mode' and back."
   (interactive)
   (let ((m-mode major-mode))
-    (if wal/before-emergency-mode
+    (if wal/before-fundamental-mode
         (progn
-          (funcall wal/before-emergency-mode)
-          (setq wal/before-emergency-mode nil))
+          (funcall wal/before-fundamental-mode)
+          (setq wal/before-fundamental-mode nil))
       (fundamental-mode)
-      (make-local-variable 'wal/before-emergency-mode)
+      (make-local-variable 'wal/before-fundamental-mode)
       (setq wal/before-emergency-mode m-mode))))
 
 (wal/colonel "f" '(wal/fundamental-mode :wk "fundamental")
@@ -846,11 +862,14 @@ Otherwise the colors might clash.
 
 #+BEGIN_SRC emacs-lisp
 ;; transparency
-(defun wal/transparency (value)
+(defvar wal/transparency 90
+  "The default frame transparency.")
+
+(defun wal/transparency (&optional value)
   "Set the transparency of the frame window to VALUE.
 1 being (almost) completely transparent, 100 being opaque."
   (interactive "nSet transparency (1-100): ")
-  (let ((transparency (min (max value 1) 100)))
+  (let ((transparency (min (max (or value wal/transparency) 1) 100)))
     (set-frame-parameter (selected-frame) 'alpha transparency)))
 
 (wal/general "aa" '(wal/transparency :wk "set frame alpha param"))
@@ -884,7 +903,7 @@ Otherwise the colors might clash.
   "Setup visual frills like theme and transparency."
   (load-theme wal/primary-emacs-theme t)
   (setq wal/active-theme wal/primary-emacs-theme)
-  (wal/transparency 90))
+  (wal/transparency))
 
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-visuals)
@@ -900,7 +919,7 @@ To get support for ligatures, install the symbol font from [[https://github.com/
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal/fixed-fonts
-   '("mononoki" "Fira Code" "Liberation Mono" "DejaVu Sans Mono")
+   '("mononoki" "Input Mono" "Fira Code" "Liberation Mono" "DejaVu Sans Mono")
    "Fixed fonts ordered by preference.")
 
 (defvar wal/variable-fonts
@@ -910,7 +929,7 @@ To get support for ligatures, install the symbol font from [[https://github.com/
 (defvar wal/fixed-fonts-size 120
   "The font size for fixed fonts.")
 
-(defvar wal/variable-fonts-size 160
+(defvar wal/variable-fonts-size 140
   "The font size for variable fonts.")
 
 (defun wal/fixed-fonts-select (font)
@@ -930,15 +949,13 @@ To get support for ligatures, install the symbol font from [[https://github.com/
 
 (defun wal/setup-fonts ()
   "Setup fonts."
-  (interactive)
   (set-face-attribute 'default nil
     :font (wal/fonts-candidate wal/fixed-fonts)
     :height wal/fixed-fonts-size)
   ;; Variable pitch face.
   (set-face-attribute 'variable-pitch nil
     :font (wal/fonts-candidate wal/variable-fonts)
-    :height wal/variable-fonts-size
-    :weight 'regular))
+    :height wal/variable-fonts-size))
 
 ;; Fonts can't be initialized thru daemon.
 (if (daemonp)
@@ -1016,7 +1033,7 @@ to download it automatically, but might fail).
 #+BEGIN_SRC emacs-lisp
 (use-package ag
   :config
-  (wal/configure-result-buffer-display "\\*ag-search\\*")
+  (wal/configure-result-buffer-display 'ag-mode)
   :ensure-system-package ag
   :custom
   (ag-highlight-search t)
@@ -1051,6 +1068,7 @@ You need to install the icons yourself[fn:4].
 
 ;; Use it for dired.
 (use-package all-the-icons-dired
+  :after all-the-icons
   :diminish
   :hook (dired-mode . all-the-icons-dired-mode))
 #+END_SRC
@@ -1085,7 +1103,7 @@ Jumping to (visible) lines and chars is fun if you are too lazy to use your mous
 #+BEGIN_SRC emacs-lisp
 (defun wal/avy-goto-line-and-char ()
   "Go to line and then to char in line.
-Only goes to line if line is empty."
+Just goes to line if line is empty."
   (interactive)
   (avy-goto-line)
   (let ((line-length (save-excursion (end-of-line) (current-column))))
@@ -1198,6 +1216,7 @@ nice despite us using =ivy= for completion everywhere.
   :bind
   (("M-g g" . consult-goto-line)
    ("M-g m" . consult-mark)
+   ("M-g M-m" . consult-global-mark)
    ;; Don't see the point of `consult-yank-pop'.
    ("M-y" . consult-yank))
   :config
@@ -1215,7 +1234,6 @@ nice despite us using =ivy= for completion everywhere.
     (advice-add it :around #'wal/advise-selectrum))
   :general
   (wal/general "bf" '(consult-focus-lines :wk "focus lines")
-               "gm" '(consult-global-mark :wk "go to mark")
                "dg" '(consult-grep :wk "grep here"))
   (wal/major "c" '(consult-mode-command :wk "invoke mode command"))
   (wal/major :keymaps 'org-mode-map
@@ -1279,6 +1297,7 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
 (use-package crux
   :general
   (wal/general "ei" '(crux-find-user-init-file :wk "open init file")
+               "br" '(crux-rename-buffer-and-file :wk "rename buffer and file")
                "gk" '(crux-kill-other-buffers :wk "kill other buffers")
                "xo" '(crux-open-with :wk "open with default program"))
   :bind
@@ -1326,19 +1345,20 @@ This will mess up your windows!
   ;; Be sure to install with `pip3'.
   (dap-python-debugger 'debugpy)
   (dap-print-io t)
+  (dap-auto-configure-features '(repl))
   ;; (dap-python-terminal "sudo ")
   :config
   (dap-ui-mode 1)
   (require 'dap-node)
   (require 'dap-python)
+  (wal/configure-shell-buffer-display 'dap-ui-repl-mode)
   ;; This package uses `treemacs'.
   (kaolin-treemacs-theme)
   :general
   (wal/colonel :keymaps 'prog-mode-map
                "d" '(dap-mode :wk "dap"))
   (wal/captain :keymaps 'dap-mode-map
-               "d" '(:ignore t :wk "dap")
-               "dh" '(dap-hydra :wk "hydra")))
+               "d" '(dap-hydra :wk "dap")))
 #+END_SRC
 
 *** Unmerged Fixes
@@ -1357,60 +1377,79 @@ unmerged proposed fix I will put here for now.
                       (plist-get conf :program)
                       (buffer-file-name)))
          (module (plist-get conf :module))
-         (debugger (plist-get conf :debugger))
-         (targetPid (plist-get conf :processId)))
+         (debugger (plist-get conf :debugger)))
+    ;; These are `dap-python'-specific and always ignored.
     (cl-remf conf :debugger)
+    (cl-remf conf :target-module)
+
+    ;; Ignored by ptsvd and set explicitly for debugpy.
+    (cl-remf conf :program)
     (pcase (or debugger dap-python-debugger)
-      ('ptvsd
+      ((or 'ptvsd "ptvsd")
        (let ((host "localhost")
              (debug-port (dap--find-available-port)))
          ;; support :args ["foo" "bar"]; NOTE: :args can be nil; however, nil is
          ;; a list, so it will be mapconcat'ed, yielding the empty string.
          (when (sequencep python-args)
            (setq python-args (mapconcat #'shell-quote-argument python-args " ")))
+         ;; ignored by ptsvd anyway
+         (cl-remf conf :module)
+         (cl-remf conf :args)
          (plist-put conf :program-to-start
-                    (format "%s%s -m ptvsd --wait --host %s --port %s %s"
-                            (or (and dap-python-terminal (concat dap-python-terminal " ") ""))
+                    (format "%s%s -m ptvsd --wait --host %s --port %s%s %s%s"
+                            (or dap-python-terminal "")
                             (shell-quote-argument python-executable)
                             host
                             debug-port
-                            (if targetPid
-                                (format "--pid %s" targetPid)
-                              (format "%s %s %s"
-                                      (if module (concat " -m " (shell-quote-argument module)) "")
-                                      (shell-quote-argument program)
-                                      python-args))))
+                            (if module (concat " -m " (shell-quote-argument module)) "")
+                            (if program (shell-quote-argument program) "")
+                            (if (not (string-empty-p python-args)) (concat " " python-args) "")))
          (plist-put conf :debugServer debug-port)
          (plist-put conf :port debug-port)
          (plist-put conf :hostName host)
          (plist-put conf :host host)))
-      ('debugpy
+      ((or 'debugpy "debugpy")
+       (cond ((stringp python-args)
+              (cl-callf split-string-and-unquote python-args))
+             ;; If both :module and :program are specified, we'll need to push
+             ;; :program to PYTHON-ARGS instead, to behave like ptvsd. This is
+             ;; needed for the debug-test-at-point functionality.
+             ((and (vectorp python-args) module program)
+              (cl-callf cl-coerce python-args 'list)))
+
        ;; If certain properties are nil, issues will arise, as debugpy expects
        ;; them to unspecified instead. Some templates in this file set such
        ;; properties (e.g. :module) to nil instead of leaving them undefined. To
        ;; support them, sanitize CONF before passing it on.
-       (when (or (null python-args) (stringp python-args))
-         (cl-remf conf :args))
-       (when (stringp python-args)
-         (let ((args (split-string-and-unquote python-args)))
-           (if args
-               (plist-put conf :args args)
-             ;; :args "" -> :args nil -> {"args": null}; to handle that edge
-             ;; case, use the empty vector instead.
-             (plist-put conf :args []))))
-       (unless program
-         (cl-remf conf :target-module)
-         (cl-remf conf :program))
+       (when program
+         (if module
+             (push program python-args)
+           (plist-put conf :program program)))
+
+       (cl-remf conf :args)
+       (plist-put conf :args (or python-args []))
+
        (unless module
          (cl-remf conf :module))
+
        (unless (plist-get conf :cwd)
          (cl-remf conf :cwd))
-       (unless targetPid
-         (cl-remf conf :listen))
-       (plist-put conf :dap-server-path
-                  (list python-executable "-m" "debugpy.adapter"))))
-    (plist-put conf :program program)
+
+       (pcase (plist-get conf :request)
+         ("launch"
+          (plist-put conf :dap-server-path
+                     (list python-executable "-m" "debugpy.adapter")))
+         ("attach"
+          (let* ((connect (plist-get conf :connect))
+                 (host (or (plist-get connect :host) "localhost"))
+                 (port (or (plist-get connect :port) 5678)))
+            (plist-put conf :host host)
+            (plist-put conf :debugServer port)
+            (cl-remf conf :connect)))))
+
+      (_ (error "`dap-python': unknown :debugger type %S" debugger)))
     conf))
+
 (advice-add 'dap-python--populate-start-file-args :override #'wal/dap-python--populate-start-file-args)
 #+END_SRC
 
@@ -1636,7 +1675,7 @@ override some keybindings.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired
-  :demand
+  :defer t
   :ensure nil
   :config
   (put 'dired-find-alternate-file 'disabled nil)
@@ -1656,7 +1695,7 @@ Hit =/= to filter in =dired= buffers.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired-filter
-  :defer 1
+  :after dired
   :delight " def")
 #+END_SRC
 
@@ -1666,7 +1705,7 @@ Highlighting in =dired= buffers.
 
 #+BEGIN_SRC emacs-lisp
 (use-package diredfl
-  :defer 1
+  :after dired
   :config
   (diredfl-global-mode))
 #+END_SRC
@@ -1698,8 +1737,7 @@ Note that this package requires you to install =all-the-icons= fonts[fn:4].
 
 #+BEGIN_SRC emacs-lisp
 (use-package doom-modeline
-  :after all-the-icons
-  :defer 1
+  :defer 0.5
   :custom
   (doom-modeline-project-detection 'projectile)
   (doom-modeline-minor-modes t)
@@ -1730,7 +1768,7 @@ Jumping is done using =M-.=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dumb-jump
-  :defer 1
+  :defer t
   :custom
   (dumb-jump-selector 'ivy)
   (dumb-jump-force-searcher 'ag)
@@ -1792,8 +1830,10 @@ Comment code like in =vim=, evil, evil =vim=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package evil-nerd-commenter
+  :defer 2
   :bind
-  ("C-;" . evilnc-comment-or-uncomment-lines))
+  (:map prog-mode-map
+   ("C-;" . evilnc-comment-or-uncomment-lines)))
 #+END_SRC
 
 ** eww
@@ -2039,15 +2079,14 @@ If you want to go back in time and point fingers at the progenitors of doom.
 Use the golden ratio.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/aw-switch-maybe-golden-ratio ()
+(defun wal/aw-switch-maybe-golden-ratio (_window)
   "Invoke `golden-ratio' if mode is active.
 Used to advise `aw-switch-to-window'."
-  (when (golden-ratio-mode)
-    golden-ratio))
+  (when (eq golden-ratio-mode t)
+    (golden-ratio)))
 
 (use-package golden-ratio
-  :defer 1
-  :diminish
+  :delight " gol"
   :config
   ;; Make sure to run golden ratio after `aw-switch-to-window'.
   (advice-add 'aw-switch-to-window :after #'wal/aw-switch-maybe-golden-ratio)
@@ -2082,6 +2121,12 @@ Let's try (to be) =helpful=.
   ([remap describe-command] . helpful-command)
   ([remap describe-variable] . counsel-describe-variable)
   ([remap describe-key] . helpful-key))
+
+(use-package help-mode
+  :defer t
+  :ensure nil
+  :config
+  (wal/configure-help-buffer-display 'help-mode))
 #+END_SRC
 
 ** highlight-indent-guides
@@ -2199,6 +2244,12 @@ We use =ivy= for narrowing our options.
   :bind
   (("C-x b" . wal/switch-buffer)
    ("C-x C-b" . wal/ivy-switch-ignored-buffers))) ; Replaces `list-buffers'
+
+(use-package ivy-avy
+  :after ivy
+  :bind
+  (:map ivy-minibuffer-map
+   ("H-v" . ivy-avy)))
 #+END_SRC
 
 ** ivy-rich
@@ -2517,6 +2568,7 @@ Be a =winner= without the mode.
                               helpful-mode
                               help-mode
                               debugger-mode
+                              dap-ui-repl-mode
                               magit-status-mode))
   (popper-group-function #'wal/popper-group-by-perspective)
   (popper-display-control 'user)
@@ -2746,7 +2798,6 @@ Smart searching with =ivy=.
 #+BEGIN_SRC emacs-lisp
 (use-package swiper
   :after ivy
-  :commands (swiper swiper-all swiper-multi swiper-thing-at-point swiper-avy)
   :general
   (wal/general "gs" '(swiper-all :wk "search all buffers"))
   :bind
@@ -2798,8 +2849,8 @@ Undoing un-undoing is weird in Emacs.
 (use-package undo-fu
   :init
   (global-unset-key (kbd "C-z")) ; Unsets `suspend-frame'.
-  :bind (("C-z" . undo-fu-only-undo)
-         ("C-S-z" . undo-fu-only-redo)))
+  :bind (("C-/" . undo-fu-only-undo)
+         ("C-?" . undo-fu-only-redo)))
 #+END_SRC
 
 ** use-package-ensure-system-package
@@ -2937,7 +2988,7 @@ I use a different (light) theme here.
 ** yasnippet
 
 Use snippets in =prog= mode buffers.
-Because I also use company, =yas-expand= is mapped to =H-e=,
+Because I also use company, =yas-expand= is mapped to =H-<TAB>=,
 if you don't have a hyper key, bind it to a personal binding.
 
 #+BEGIN_SRC emacs-lisp
@@ -3294,7 +3345,9 @@ Enable =flycheck=.
   (flycheck-mode 1))
 
 (use-package elixir-mode
-  :hook (elixir-mode . wal/elixir-mode))
+  :hook (elixir-mode . wal/elixir-mode)
+  :general
+  (wal/major "f" '(elixir-format :wk "format")))
 #+END_SRC
 
 ** gitignore-mode
@@ -3436,7 +3489,7 @@ state =CANCELLED=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-bullets
-  :defer 1
+  :after org
   :hook (org-mode . (lambda() (org-bullets-mode t))))
 
 (defun wal/org-mode ()
@@ -3496,7 +3549,10 @@ state =CANCELLED=.
         ;; category
         ("@dev" . ?d)
         ("@bla" . ?b)
-        ("@edu" . ?e))))
+        ("@edu" . ?e)))
+  :bind
+  (:map org-mode-map ; For source blocks.
+   ("C-;" . evilnc-comment-or-uncomment-lines)))
 
 (use-package org-clock
   :ensure nil
@@ -3555,7 +3611,7 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
 
 (use-package org-super-agenda
   :after org-agenda
-  :defer 1
+  :demand
   :custom
   (org-super-agenda-groups
    '((:name "Schedule"
@@ -3649,7 +3705,6 @@ You will need to install =sqlite3= and =graphviz= manually.
     (write-region "* Zettelkasten" nil index-file)))
 
 (use-package org-roam
-  :defer 4
   :delight " zet"
   :if (executable-find "sqlite3")
   :custom
@@ -3784,7 +3839,10 @@ Sometimes you need YAMLs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package yaml-mode
-  :defer t)
+  :defer t
+  :bind
+  (:map yaml-mode-map
+   ("C-;" . evilnc-comment-or-uncomment-lines)))
 #+END_SRC
 
 * Footnotes

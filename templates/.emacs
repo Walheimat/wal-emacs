@@ -31,17 +31,17 @@ tangle the blocks without loading the created file."
     (when load
       (load-file tangled))))
 
+;; Uncomment to test start-up time.
+;; (setq use-package-minimum-reported-time 0.05)
+;; (setq use-package-verbose t)
+;; (setq use-package-compute-statistics t)
+
 ;; This will tangle source blocks on first load and
 ;; afterwards just load the tangled file `README.el'.
 (let ((gc-cons-threshold most-positive-fixnum)
 	  (gc-cons-percentage 0.6))
   ;; Maybe tangle config and then load the file.
   (wal/tangle-config t t))
-
-;; Uncomment to test start-up time.
-;; (setq use-package-minimum-reported-time 0.05)
-;; (setq use-package-verbose t)
-;; (setq use-package-compute-statistics t)
 
 ;; Just an example: changing primary and secondary themes
 ;; (setq wal/primary-emacs-theme   'doom-dracula
