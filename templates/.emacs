@@ -36,10 +36,15 @@ tangle the blocks without loading the created file."
 ;; (setq use-package-verbose t)
 ;; (setq use-package-compute-statistics t)
 
+;; Turns on native-compile, ignoring warnings.
+;; (setq package-native-compile t)
+;; (setq comp-async-report-warnings-errors nil)
+
 ;; This will tangle source blocks on first load and
 ;; afterwards just load the tangled file `README.el'.
 (let ((gc-cons-threshold most-positive-fixnum)
-	  (gc-cons-percentage 0.6))
+	  (gc-cons-percentage 0.6)
+      (file-name-handler-alist nil))
   ;; Maybe tangle config and then load the file.
   (wal/tangle-config t t))
 
