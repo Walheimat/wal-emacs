@@ -558,8 +558,34 @@ if vertically split, split horizontally."
     (when other-buffer
       (set-window-buffer (next-window) other-buffer))))
 
+(define-minor-mode walled-mode
+  "Dedicate the window."
+  :init-value nil
+  :lighter " wld"
+  (cond
+   (noninteractive
+    (setq walled-mode nil))
+   (walled-mode
+    (walled-mode--enable))
+   (t
+    (walled-mode--disable))))
+
+(defun walled-mode--enable ()
+  "Dedicate the window to buffer."
+  (let ((window (selected-window))
+        (bufname (current-buffer)))
+    (set-window-dedicated-p window bufname)
+    (message "Dedicating window")))
+
+(defun walled-mode--disable ()
+  "Make window no longer dedicated."
+  (let ((window (selected-window))
+        (bufname (current-buffer)))
+    (set-window-dedicated-p window nil)
+    (message "Window no longer dedicated")))
+
 (defun wal/edge (scale-above scale-below)
-  "Move the window edge using SCALE-ABOVE and SCALE-BELOW."
+  "Move the window splitter using SCALE-ABOVE and SCALE-BELOW."
   (interactive)
   (let* ((other-buffer (and (next-window) (window-buffer (next-window))))
          (win (selected-window))
@@ -572,7 +598,7 @@ if vertically split, split horizontally."
       (_ nil))))
 
 (defun wal/edge-horizontally (scale-left scale-right)
-  "Move the window edge using SCALE-LEFT and SCALE-RIGHT."
+  "Move the window splitter using SCALE-LEFT and SCALE-RIGHT."
   (interactive)
   (let* ((other-buffer (and (next-window) (window-buffer (next-window))))
          (win (selected-window))
@@ -585,25 +611,25 @@ if vertically split, split horizontally."
       (_ nil))))
 
 (defun wal/edge-left ()
-  "Move the edge of the selected window left.
+  "Move the splitter of the selected window left.
 This shrinks or enlarges the window depending on its position."
   (interactive)
   (wal/edge-horizontally 'enlarge 'shrink))
 
 (defun wal/edge-right ()
-  "Move the edge of the selected window right.
+  "Move the splitter of the selected window right.
 This shrinks or enlarges the window depending on its position."
   (interactive)
   (wal/edge-horizontally 'shrink 'enlarge))
 
 (defun wal/edge-up ()
-  "Move the edge of the selected window up.
+  "Move the splitter of the selected window up.
 This shrinks or enlarges the window depending on its position."
   (interactive)
   (wal/edge 'enlarge 'shrink))
 
 (defun wal/edge-down ()
-  "Move the edge of the selected window down.
+  "Move the splitter of the selected window down.
 This shrinks or enlarges the window depending on its position."
   (interactive)
   (wal/edge 'shrink 'enlarge))
@@ -673,17 +699,16 @@ Utility functions to configure displaying buffers of a certain type.
   (let ((condition (wal/display-buffer-condition buffer)))
     (add-to-list 'display-buffer-alist
                  `(,condition
-                   (display-buffer-in-direction)
-                   (direction . ,(or direction 'right))))))
+                   (display-buffer-reuse-window display-buffer-in-direction)
+                   (direction . ,(or direction 'rightmost))))))
 
 (defun wal/configure-focus-buffer-display (buffer)
   "Configure `display-buffer' for focus BUFFER."
   (let ((condition (wal/display-buffer-condition buffer)))
     (add-to-list 'display-buffer-alist
                  `(,condition
-                   ;; (display-buffer-in-side-window)
-                   ;; (side . top)
-                   (display-buffer-same-window)))))
+                   (display-buffer-in-side-window)
+                   (side . top)))))
 #+END_SRC
 
 ** Other
@@ -828,6 +853,33 @@ for major and minor modes respectively.
 
 Leader key =lieutenant= is a sink for non-mode-package actions.
 
+** Hydra
+
+Provides a context for related commands that can
+be (re-)executed in quick succession.
+
+#+BEGIN_SRC emacs-lisp
+(use-package hydra
+  :defer t)
+
+;; Use `hydra' to resize windows.
+(defhydra wal/resize-window (:timeout 2
+                             :hint nil)
+  "
+  ^_k_^
+_h_   _l_ Move window splitter.
+  ^_j_^
+"
+  ("h" wal/edge-left)
+  ("l" wal/edge-right)
+  ("j" wal/edge-down)
+  ("k" wal/edge-up)
+  ("o" wal/split-window-the-other-way "split the other way")
+  ("q" nil "cancel"))
+
+(global-set-key (kbd "H-\\") 'wal/resize-window/body)
+#+END_SRC
+
 ** Additional Mode Controls
 
 Turning off certain minor modes and
@@ -867,20 +919,15 @@ Most bindings are declared in the [[*Packages][packages]] section.
   (interactive)
   (switch-to-buffer (find-file-noselect wal/readme-config)))
 
-(wal/general "ec" '(wal/readme-config-open :wk "open config"))
-(wal/general "et" '(wal/tangle-config :wk "tangle configuration"))
+(wal/general "ec" '(wal/readme-config-open :wk "open config")
+             "et" '(wal/tangle-config :wk "tangle configuration"))
 
 ;;; Windows/Frames.
 (global-set-key (kbd "H-q") 'kill-buffer-and-window) ; C-x 4 0
 (global-set-key (kbd "H-5") 'make-frame-command) ; C-x 5 2
 
 (wal/general "ws" '(wal/split-window-the-other-way :wk "split the other way"))
-
-;; Enlarging/shrinking if we don't want `golden-ratio'.
-(global-set-key (kbd "C-H-h") #'wal/edge-left)
-(global-set-key (kbd "C-H-l") #'wal/edge-right)
-(global-set-key (kbd "C-H-j") #'wal/edge-down)
-(global-set-key (kbd "C-H-k") #'wal/edge-up)
+(wal/colonel "." '(walled-mode :wk "walled"))
 
 ;; Killing Emacs.
 (global-unset-key (kbd "C-x C-c"))
@@ -888,6 +935,16 @@ Most bindings are declared in the [[*Packages][packages]] section.
 
 ;; No triple-ESC.
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+
+;; Scaling text in buffer.
+(defhydra wal/text-scale (:timeout 2)
+  "
+_i_ncrease or _d_ecrease text size
+"
+  ("i" text-scale-increase)
+  ("d" text-scale-decrease))
+
+(wal/general "bt" '(wal/text-scale/body :wk "text scale"))
 #+END_SRC
 
 * Look
@@ -896,7 +953,7 @@ Make frame transparent and set themes.
 [[https://peach-melpa.org/][PeachMelpa]] has more themes.
 
 #+BEGIN_SRC emacs-lisp
-;; transparency
+;; Transparency.
 (defvar wal/transparency 90
   "The default frame transparency.")
 
@@ -946,7 +1003,10 @@ Make frame transparent and set themes.
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-visuals)
   ;; Function `wal/transparency' hasn't been untangeled yet.
-  (add-hook 'after-init-hook 'wal/setup-visuals))
+  (add-hook 'after-init-hook 'wal/setup-visuals)
+  ;; This means all future frames will have the original transparency
+  ;; not the current one.
+  (add-to-list 'default-frame-alist `(alpha . ,wal/transparency)))
 #+END_SRC
 
 * Fonts
@@ -1069,7 +1129,7 @@ Let's try (to be) =helpful=.
 Let's have a dash of board.
 
 #+BEGIN_SRC emacs-lisp
-;; dependency
+;; Dependency.
 (use-package page-break-lines
   :defer 1
   :delight " pbl")
@@ -1171,7 +1231,7 @@ Just want to position this.
   :defer t
   :ensure nil
   :config
-  (wal/configure-help-buffer-display 'bottom))
+  (wal/configure-help-buffer-display 'debug-mode 'bottom))
 #+END_SRC
 
 *** bookmark
@@ -1233,9 +1293,9 @@ This configuration is a bit elaborate.
   (add-to-list 'org-src-lang-modes '("docker" . dockerfile))
   (add-to-list 'org-src-lang-modes '("conf" . conf))
   :custom
-  (org-src-tab-acts-natively nil) ;; Defaults to `t' nowadays.
-  (org-edit-src-content-indentation 0) ;; Defaults to `2' nowadays.
-  (org-adapt-indentation nil) ;; Defaults to `t' nowadays ...
+  (org-src-tab-acts-natively nil) ; Defaults to `t' nowadays.
+  (org-edit-src-content-indentation 0) ; Defaults to `2' nowadays.
+  (org-adapt-indentation nil) ; Defaults to `t' nowadays ...
   (org-ellipsis "↷")
   (org-log-done t)
   (org-startup-truncated nil)
@@ -1593,8 +1653,10 @@ Have some perspective, man.
   ;; No idea why putting this in `:hook' kills the package.
   (add-hook 'kill-emacs-hook #'persp-state-save)
   :bind
-  (("H-i" . persp-switch)
+  (:map persp-mode-map
+   ("H-i" . persp-switch)
    ("C-x k" . persp-kill-buffer*)
+   ;; The following binding is trashed by `all-the-icons-ivy-rich-kill-buffer'.
    ("C-x C-k" . kill-buffer) ; Replaces `kmacro-keymap'.
    ("H-m" . kmacro-keymap))) ; Make it available again.
 #+END_SRC
@@ -1625,11 +1687,14 @@ Projects in Emacs.
 
 **** counsel-projectile
 
-Add =counsel= integration.
+Add =counsel= integration to =projectile=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package counsel-projectile
   :after (projectile counsel)
+  :defer 1
+  :config
+  (counsel-projectile-mode +1)
   :bind
   (:map projectile-command-map
    ("s s" . counsel-projectile-ag)))
@@ -2033,8 +2098,8 @@ Unity.
   "Hook into `csharp-mode'."
   (message "Ouch!")
   (wal/disable/tabs)
-  (wal/lsp) ; Run `lsp-install-server' to install.
-  (flycheck-mode 1))
+   ; If you're using `lsp-mode' you can run `lsp-install-server'.
+  (wal/lsp))
 
 (use-package csharp-mode
   :mode "\\.cs\\'"
@@ -2042,6 +2107,26 @@ Unity.
   :general
   (wal/major :keymaps 'csharp-mode-map
     "f" '(wal/lsp-format :wk "format")))
+#+END_SRC
+
+**** cc-mode
+
+I want to be ready for =jai=.
+Make sure to install =ccls= and =clang=.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/c++-mode ()
+  "Hook into `cc-mode'."
+  (message "Make tidy! Make clean!")
+  (wal/disable-tabs)
+  (wal/lsp))
+
+(use-package cc-mode
+  :ensure nil
+  :ensure-system-package (ccls clang)
+  :general
+  (wal/major "f" '(wal/lsp-format :wk "format"))
+  :hook (c++-mode . wal/c++-mode))
 #+END_SRC
 
 **** crontab-mode
@@ -2134,14 +2219,16 @@ Don't use Haskell much yet.
 Language servers are awesome. Thanks, Microsoft.
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/lsp-client 'lsp-mode
+(defvar wal/lsp-client 'eglot-mode
   "Which lsp client to use.")
 
 (defun wal/lsp ()
   "Activate lsp client."
   (pcase wal/lsp-client
     ('lsp-mode (lsp-deferred))
-    ('eglot (eglot-ensure))
+    ('eglot (progn
+              (eglot-ensure)
+              (yas-minor-mode)))
     (_ nil)))
 
 (defun wal/lsp-format ()
@@ -2200,7 +2287,7 @@ This is the fancy version.
   ;; Ignore elixir build and dependency folders.
   (add-to-list 'lsp-file-watch-ignored "[/\\\\]_build$")
   (add-to-list 'lsp-file-watch-ignored "[/\\\\]deps$")
-  ;;; prolog
+  ;;; Prolog:
   (lsp-register-client
    (make-lsp-client
     :new-connection
@@ -2565,6 +2652,62 @@ Be a =winner= without the mode.
   :config
   (winner-mode 1)
   (popper-mode +1))
+#+END_SRC
+
+*** purpose
+
+Give your windows purpose.
+This does not seem to respect changes made to
+=display-buffer-alist= unfortunately.
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/mode-purpose-terminal
+  '(vterm-mode)
+  "`terminal' purpose defined by mode.")
+
+(defvar wal/regexp-purpose-result
+  '("\\*HTTP Response\\*")
+  "`result' purpose defined by regexp.")
+
+(defvar wal/mode-purpose-prompt
+  '(magit-status-mode docker-container-mode)
+  "`prompt' purpose defined by mode.")
+
+(defun wal/configure-purposes()
+  "Configure purposes."
+  (setq purpose-user-mode-purposes nil)
+  ;; `terminal' purpose.
+  (--each
+      wal/mode-purpose-terminal
+    (add-to-list 'purpose-user-mode-purposes
+                 `(,it . terminal)))
+  ;; `result' purpose.
+  (--each
+      wal/regexp-purpose-result
+    (add-to-list 'purpose-user-regexp-purposes
+                 `(,it . result)))
+  ;; `prompt' purpose.
+  (--each
+      wal/mode-purpose-prompt
+    (add-to-list 'purpose-user-mode-purposes
+                 `(,it . prompt)))
+  (purpose-compile-user-configuration))
+
+(use-package window-purpose
+  :custom
+  (default-purpose 'none)
+  (default-file-purpose 'write)
+  (purpose-display-fallback nil)
+  :config
+  (define-key purpose-mode-map (kbd "C-x b") nil) ; Just don't!
+  ;; Require additional packages.
+  (require 'window-purpose-x)
+  (purpose-x-persp-setup)
+  (purpose-x-kill-setup)
+  ;; Configure.
+  (wal/configure-purposes)
+  :general
+  (wal/colonel "p" '(purpose-mode :wk "purpose")))
 #+END_SRC
 
 ** Editing
@@ -3010,6 +3153,7 @@ I like the idea of it but I don't really use it.
    (lambda nil
      (let ((eshell-buffer-maximum-lines 0))
        (eshell-truncate-buffer))))
+  (wal/configure-shell-buffer-display 'eshell-mode)
   :general
   (wal/general "te" '(eshell :wk "open eshell"))
   :bind
@@ -3038,7 +3182,7 @@ We use =ivy= for narrowing our options.
 
 #+BEGIN_SRC emacs-lisp
 ;; Change to ivy-switch-buffer if you don't use perspective.
-(defalias 'wal/switch-buffer 'persp-ivy-switch-buffer)
+(defalias 'wal/switch-buffer 'persp-counsel-switch-buffer)
 
 ;; Hide `dired', `docker', `ag' and default Emacs buffers when switching.
 (defvar wal/ivy-ignore-buffers
@@ -3071,7 +3215,7 @@ We use =ivy= for narrowing our options.
   :bind
   (("C-x b" . wal/switch-buffer)
    ("H-SPC" . wal/switch-buffer)
-   ("C-x C-b" . wal/ivy-switch-ignored-buffers))) ; Replaces `list-buffers'
+   ("C-x C-b" . wal/ivy-switch-ignored-buffers))) ; Replaces `list-buffers'.
 #+END_SRC
 
 **** ivy-avy
@@ -3099,7 +3243,7 @@ Some nicer candidate view when switching buffers.
   (ivy-rich-mode 1))
 
 (use-package all-the-icons-ivy-rich
-  :after (all-the-icons ivy-rich)
+  :after (all-the-icons ivy-rich counsel projectile counsel-projectile)
   :config
   (all-the-icons-ivy-rich-mode 1))
 #+END_SRC
@@ -3115,6 +3259,7 @@ Some nicer candidate view when switching buffers.
 
 (use-package counsel
   :after ivy
+  :demand
   :custom
   (counsel-linux-app-format-function #'counsel-linux-app-format-function-command-only)
   :config
@@ -3229,20 +3374,24 @@ but we still use it to advise a few =consult= functions.
   :defer t)
 #+END_SRC
 
-*** hydra
-
-Make key combos easier.
-Currently not used.
-
-#+BEGIN_SRC emacs-lisp
-(use-package hydra
-  :defer t)
-#+END_SRC
-
 ** Fixing
 
 Please let me know when I screwed up.
 I promise I will learn.
+
+*** flymake
+
+Built-in syntax checker. Used by =eglot=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package flymake
+  :ensure nil
+  :defer t
+  :config
+  (advice-add 'flymake--mode-line-title
+            :override (lambda () "flm")
+            '((name . "flymake--mode-line-title"))))
+#+END_SRC
 
 *** flycheck
 
@@ -3569,6 +3718,8 @@ Refine a couple of =major-mode= names.
   (delight 'dired-mode "Dired" :major)
   (delight 'emacs-lisp-mode "Elisp" :major)
   (delight 'compilation-shell-minor-mode " csh" "compile")
+  (delight 'c++-mode "CPP" :major)
+  (delight 'abbrev-mode " abb" "abbrev")
   ;; Only confuse/delight if allowed.
   (when wal/major-delight
     (delight 'python-mode "Snake" :major)
@@ -3797,6 +3948,11 @@ I use a =.http= file extension for my request examples.
   :bind
   (:map restclient-mode-map
    ("C-;" . evilnc-comment-or-uncomment-lines)))
+
+;; We use this for hooks.
+(use-package jq-mode
+  :defer t
+  :after restclient)
 #+END_SRC
 
 ** Writing
@@ -3854,19 +4010,10 @@ Finally run =git clone git@gitlab.com:Walheimat/emacs-config.git ~/.emacs.d=
 whose icons need to be downloaded manually
 by running =M-x all-the-icons-install-fonts= and selecting =yes=.
 
-This config uses =dash=.
+If the installation process should fail for any reason,
+close Emacs and re-run it.
 
-We will try to install it before installing the other packages
-but this might fail.
-
-If that is the case do the following:
-
-+ hit =M-x=, type =package-install= and hit return
-+ type =dash= and hit return again
-
-Once the installation is complete, re-run Emacs.
-
-[fn:5] Around 160 code blocks.
+[fn:5] Around 150 code blocks.
 
 [fn:6] Send me an email, why don't you?
 

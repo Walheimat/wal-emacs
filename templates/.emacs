@@ -32,13 +32,13 @@ tangle the blocks without loading the created file."
       (load-file tangled))))
 
 ;; Uncomment to test start-up time.
-;; (setq use-package-minimum-reported-time 0.05)
-;; (setq use-package-verbose t)
-;; (setq use-package-compute-statistics t)
+;; (setq use-package-minimum-reported-time 0.05
+;;       use-package-verbose t
+;;       use-package-compute-statistics t)
 
 ;; Turns on native-compile, ignoring warnings.
-;; (setq package-native-compile t)
-;; (setq comp-async-report-warnings-errors nil)
+;; (setq package-native-compile t
+;;       comp-async-report-warnings-errors nil)
 
 ;; This will tangle source blocks on first load and
 ;; afterwards just load the tangled file `README.el'.
