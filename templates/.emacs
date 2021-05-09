@@ -43,7 +43,7 @@ tangle the blocks without loading the created file."
 ;; This will tangle source blocks on first load and
 ;; afterwards just load the tangled file `README.el'.
 (let ((gc-cons-threshold most-positive-fixnum)
-	  (gc-cons-percentage 0.6)
+	  (gc-cons-percentage 0.8)
       (file-name-handler-alist nil))
   ;; Maybe tangle config and then load the file.
   (wal/tangle-config t t))

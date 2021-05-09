@@ -20,10 +20,10 @@ it's mostly just how I (think I) like things to be.
 If you're interested in trying out Emacs using my config,
 here are the necessary steps:
 
-+ install Emacs if you haven't[fn:2]
++ Install Emacs if you haven't[fn:2]
 + =git clone= this repository into your =user-emacs-directory=[fn:3]
 + copy the config file included in this repo by running =cp ~/.emacs.d/emacs-config/templates/.emacs ~=
-+ close and re-run Emacs which should download and install (almost[fn:4]) all packages
++ close and re-run Emacs which should download and install all[fn:4] packages.
 
 If you do not wish to =clone= this repo in your =user-emacs-directory= or use the default name,
 you will need to adapt the variable =wal/emacs-config-default-path= in the example config you just copied.
@@ -39,10 +39,10 @@ will only be loaded once a frame was created.
 A =systemd= service config can be found in the =/templates= directory to
 get you started:
 
-+ run =mkdir -p ~/.config/systemd/user=
++ Run =mkdir -p ~/.config/systemd/user=
 + run =cp ~/.emacs.d/emacs-config/templates/emacs.service ~/.config/systemd/user=
 + adapt that =emacs.service= file to point to the correct path
-+ run =systemctl --user enable emacs=
++ run =systemctl --user enable emacs=.
 
 Or you just execute =emacs --daemon= in a terminal or your shell's config.
 
@@ -184,7 +184,7 @@ we have to install it and a few other packages the hard way.
 Make sure that custom directories exist.
 We want:
 
-+ a cache directory to store bookmarks, perspectives, prescience et al.
++ A cache directory to store bookmarks, perspectives, prescience et al.
 + a directory for site lisp
 + a default directory for org files.
 
@@ -305,7 +305,6 @@ Modes that should be on/off no matter what.
 (global-font-lock-mode 1)
 (delete-selection-mode 1)
 (column-number-mode 1)
-;; (winner-mode 1)
 
 ;; I don't need to see the GUI.
 (tool-bar-mode -1)
@@ -746,7 +745,7 @@ User-reserved combinations are used for certain command maps:
 
 + =C-c a= for =org-agenda=.
 + =C-c d= for =docker=.
-+ =C-c f= for =flycheck=.
++ =C-c f= for =flycheck= (if active).
 + =C-c i= for =perspective=.
 + =C-c l= for =lsp=.
 + =C-c p= for =projectile=.
@@ -755,23 +754,20 @@ User-reserved combinations are used for certain command maps:
 
 All hyper bindings are quick-access actions.
 
-+ =H-5= creates a new frame.
-+ =H-[= and =H-]= toggle/cycle open popups.
-+ =H-c= lists Docker containers.
++ =H-[= to open (or cycle if focusing) pop-up.
++ =H-c= jumps to char with =avy=.
 + =H-d= duplicates current line/region with =crux=.
 + =H-f= finds file in project.
 + =H-g= invokes =magit=.
 + =H-i= switches perspective.
-+ =H-m= for =kmacro= commands.
 + =H-<mouse3>= adds another cursor at point.
 + =H-n= opens notes index file.
 + =H-p= switches project.
-+ =H-q= kills window and buffer.
 + =H-SPC= also switches buffers.
 + =H-s= searches with =ag=.
 + =H-<TAB>= expands snippets (in =yas-minor-mode=).
 + =H-t= toggles =vterm=.
-+ =H-v= jumps to line (and char with =V=) with =avy=.
++ =H-l= jumps to line with =avy=.
 + =H-w= opens =ace= dispatch.
 
 *** Caps to Hyper
@@ -830,13 +826,8 @@ The five =general= mappings perform all non-standard actions.
 
 ;; Define some global prefixes.
 (wal/general
-  "a" '(:ignore t :wk "appearance")
-  "x" '(:ignore t :wk "external")
   "e" '(:ignore t :wk "Emacs") ; Emacs is so particular about case.
-  "b" '(:ignore t :wk "buffer")
-  "d" '(:ignore t :wk "directory")
-  "g" '(:ignore t :wk "global")
-  "w" '(:ignore t :wk "window")
+  "ec" '(:ignore t :wk "config")
   "t" '(:ignore t :wk "terminal"))
 #+END_SRC
 
@@ -852,6 +843,40 @@ Leader keys =major= and =captain= prefix mode-specific actions,
 for major and minor modes respectively.
 
 Leader key =lieutenant= is a sink for non-mode-package actions.
+The packages and their leading keys:
+
++ =a= for =ag=
++ =d= for =docker=
++ =l= for =avy=
++ =m= for =multiple-cursors=
++ =z= for =org-roam=.
+
+** Hydra
+
+Provides a context for related commands that can
+be (re-)executed in quick succession.
+
+#+BEGIN_SRC emacs-lisp
+(use-package hydra
+  :defer t)
+
+;; Use `hydra' to resize windows.
+(defhydra wal/resize-window (:timeout 2
+                             :hint nil)
+  "
+  ^_k_^
+_h_   _l_ Move window splitter.
+  ^_j_^
+"
+  ("h" wal/edge-left)
+  ("l" wal/edge-right)
+  ("j" wal/edge-down)
+  ("k" wal/edge-up)
+  ("o" wal/split-window-the-other-way "split the other way")
+  ("q" nil "cancel"))
+
+(global-set-key (kbd "H-\\") 'wal/resize-window/body)
+#+END_SRC
 
 ** Hydra
 
@@ -883,7 +908,7 @@ _h_   _l_ Move window splitter.
 ** Additional Mode Controls
 
 Turning off certain minor modes and
-switching between =major mode= and =fundamental mode=.
+switching between =major-mode= and =fundamental-mode=.
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal/before-fundamental-mode nil
@@ -919,32 +944,30 @@ Most bindings are declared in the [[*Packages][packages]] section.
   (interactive)
   (switch-to-buffer (find-file-noselect wal/readme-config)))
 
-(wal/general "ec" '(wal/readme-config-open :wk "open config")
-             "et" '(wal/tangle-config :wk "tangle configuration"))
+(wal/general "ec" '(:ignore t :wk "config")
+             "eco" '(wal/readme-config-open :wk "open")
+             "ect" '(wal/tangle-config :wk "tangle"))
 
 ;;; Windows/Frames.
-(global-set-key (kbd "H-q") 'kill-buffer-and-window) ; C-x 4 0
-(global-set-key (kbd "H-5") 'make-frame-command) ; C-x 5 2
-
-(wal/general "ws" '(wal/split-window-the-other-way :wk "split the other way"))
 (wal/colonel "." '(walled-mode :wk "walled"))
 
 ;; Killing Emacs.
 (global-unset-key (kbd "C-x C-c"))
-(wal/general "eq" '(save-buffers-kill-terminal :wk "quit"))
+(wal/general "eq" '(save-buffers-kill-terminal :wk "quit Emacs"))
 
 ;; No triple-ESC.
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
 ;; Scaling text in buffer.
-(defhydra wal/text-scale (:timeout 2)
+(defhydra wal/text-scale (:timeout 3)
   "
 _i_ncrease or _d_ecrease text size
 "
   ("i" text-scale-increase)
-  ("d" text-scale-decrease))
+  ("d" text-scale-decrease)
+  ("q" nil "cancel"))
 
-(wal/general "bt" '(wal/text-scale/body :wk "text scale"))
+(wal/general "s" '(wal/text-scale/body :wk "scale text"))
 #+END_SRC
 
 * Look
@@ -963,8 +986,6 @@ Make frame transparent and set themes.
   (interactive "nSet transparency (1-100): ")
   (let ((transparency (min (max (or value wal/transparency) 1) 100)))
     (set-frame-parameter (selected-frame) 'alpha transparency)))
-
-(wal/general "aa" '(wal/transparency :wk "set frame alpha param"))
 
 ;; Two themes and a switch.
 (defvar wal/primary-emacs-theme 'kaolin-valley-dark
@@ -987,8 +1008,6 @@ Make frame transparent and set themes.
         ((or (equal wal/active-theme wal/secondary-emacs-theme) (equal selection 'primary))
          (load-theme wal/primary-emacs-theme t)
          (setq wal/active-theme wal/primary-emacs-theme))))
-
-(wal/general "al" '(wal/light-switch :wk "hit light switch"))
 
 ;; Some themes require configuration, so we only load after intialization.
 (defun wal/setup-visuals ()
@@ -1016,7 +1035,7 @@ To get support for ligatures, install the symbol font from [[https://github.com/
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal/fixed-fonts
-  '("mononoki" "Input Mono" "Fira Code" "Liberation Mono" "DejaVu Sans Mono")
+  '("Input Mono" "mononoki" "Fira Code" "Liberation Mono" "DejaVu Sans Mono")
   "Fixed fonts ordered by preference.")
 
 (defvar wal/variable-fonts
@@ -1037,8 +1056,6 @@ To get support for ligatures, install the symbol font from [[https://github.com/
       (set-face-attribute 'default nil
                           :font found
                           :height wal/fixed-fonts-size))))
-
-(wal/general "af" '(wal/fixed-fonts-select :wk "select (fixed) font"))
 
 (defun wal/fonts-candidate (fonts)
   "Return the first available font from a list of FONTS."
@@ -1138,6 +1155,7 @@ Let's have a dash of board.
 (defvar wal/dashboard-footer-messages
   '(":whale2: breaching your favorite stupid framework"
     ":whale: I propel myself forward on nothing but flukes"
+    ":whale2: krill, filter feeders and hit sulphur bottom"
     ":whale: devout and up the spout")
   "The footer messages I can stand to see.")
 
@@ -1207,7 +1225,7 @@ privileges.
 (use-package sudo-edit
   :commands (sudo-edit sudo-edit-find-file)
   :general
-  (wal/general "r" '(sudo-edit-find-file :wk "find file as root")))
+  (wal/general "u" '(sudo-edit-find-file :wk "find file as root")))
 #+END_SRC
 
 *** restart-emacs
@@ -1219,7 +1237,7 @@ Sometimes I restart for fun.
   :custom
   (restart-emacs-restore-frames nil)
   :general
-  (wal/general "er" '(restart-emacs :wk "restart")))
+  (wal/general "er" '(restart-emacs :wk "restart Emacs")))
 #+END_SRC
 
 *** debug
@@ -1694,6 +1712,9 @@ Add =counsel= integration to =projectile=.
   :after (projectile counsel)
   :defer 1
   :config
+  ;; Make opening with `dired' the default action.
+  (setq counsel-projectile-switch-project-action
+        (-replace-at 0 4 counsel-projectile-switch-project-action))
   (counsel-projectile-mode +1)
   :bind
   (:map projectile-command-map
@@ -1801,9 +1822,8 @@ We don't use tabs here.
   :hook (elixir-mode . wal/elixir-mode)
   :general
   (wal/major :keymaps 'elixir-mode-map
-    "f" '(:ignore :wk "format")
-    "fe" '(elixir-format :wk "elixir")
-    "fl" '(wal/lsp-format :wk "lsp")))
+    "m" '(elixir-format :wk "format with mode")
+    "f" '(wal/lsp-format :wk "format with lsp")))
 #+END_SRC
 
 *** Python
@@ -1824,8 +1844,7 @@ This mode is built-in.
   :hook (python-mode . wal/python-mode)
   :general
   (wal/major :keymaps 'python-mode-map
-    "f" '(:ignore :wk "format")
-    "fl" '(wal/lsp-format :wk "format buffer")
+    "f" '(wal/lsp-format :wk "format buffer")
     "i" '(run-python :wk "inferior shell")
     "s" '(:ignore t :wk "send")
     "sr" '(python-shell-send-region :wk "region")
@@ -1848,7 +1867,7 @@ Using the formatter provided by LSP is probably better.
 (use-package blacken
   :general
   (wal/major :keymaps 'python-mode-map
-    "fb" '(blacken-buffer :wk "blacken buffer")))
+    "b" '(blacken-buffer :wk "blacken buffer")))
 #+END_SRC
 
 **** poetry
@@ -1890,6 +1909,9 @@ Enable =flycheck= and disable internal checker.
   (add-node-modules-path)
   (hack-local-variables)
   (wal/maybe-enable-tabs)
+  ;; With `eglot' using `flymake' and `flymake-eslint'
+  ;; not reliably working, we force `lsp-mode' for JS.
+  (lsp-deferred)
   (flycheck-mode 1))
 
 (use-package js2-mode
@@ -2098,7 +2120,7 @@ Unity.
   "Hook into `csharp-mode'."
   (message "Ouch!")
   (wal/disable/tabs)
-   ; If you're using `lsp-mode' you can run `lsp-install-server'.
+  ;; If you're using `lsp-mode' you can run `lsp-install-server'.
   (wal/lsp))
 
 (use-package csharp-mode
@@ -2232,12 +2254,12 @@ Language servers are awesome. Thanks, Microsoft.
     (_ nil)))
 
 (defun wal/lsp-format ()
-   "Format using the language server."
-   (interactive)
-   (pcase wal/lsp-client
-     ('lsp-mode (lsp-format-buffer))
-     ('eglot (eglot-format-buffer))
-     (_ nil)))
+  "Format using the language server."
+  (interactive)
+  (pcase wal/lsp-client
+    ('lsp-mode (lsp-format-buffer))
+    ('eglot (eglot-format-buffer))
+    (_ nil)))
 #+END_SRC
 
 *** Server Configurations
@@ -2253,7 +2275,7 @@ You will have to install them yourself[fn:10].
 
 ;; Add executable to path.
 (when (file-exists-p (expand-file-name "language_server.sh" elixir-ls-release-location))
-    (add-to-list 'exec-path elixir-ls-release-location))
+  (add-to-list 'exec-path elixir-ls-release-location))
 #+END_SRC
 
 *** lsp-mode
@@ -2555,6 +2577,10 @@ Everything that has to do with windows.
 =ace-window= allows for some nifty window swapping.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/aw-delete-window-kill-buffer (window)
+  "Call `aw-delete-window' on WINDOW requesting buffer kill."
+  (aw-delete-window window t))
+
 (use-package ace-window
   :delight " ace"
   :custom
@@ -2565,6 +2591,7 @@ Everything that has to do with windows.
   (setq aw-dispatch-alist '((?h aw-split-window-horz "horizontal split")
                             (?v aw-split-window-vert "vertical split")
                             (?d aw-delete-window "delete")
+                            (?x wal/aw-delete-window-kill-buffer "kill")
                             (?w delete-other-windows "delete other")
                             (?s aw-swap-window "swap")
                             (?m aw-move-window "move")
@@ -2611,17 +2638,29 @@ Be a =winner= without the mode.
   "Group pop-ups by perspective."
   (intern (persp-current-name)))
 
+(defun wal/popper-toggle ()
+  "Toggle latest or cycle when focusing pop-up."
+  (interactive)
+  (if (popper-popup-p (current-buffer))
+      (popper-cycle)
+    (popper-toggle-latest)))
+
+(defun wal/popper-open-all ()
+  "Same as `popper-open-all' but interactive."
+  (interactive)
+  (popper-open-all))
+
 (use-package popper
   :after perspective
   :defer 1
   :bind
   (:map popper-mode-map
-   ("H-[" . popper-toggle-latest)
-   ("H-]" . popper-cycle))
+   ("H-[" . wal/popper-toggle))
   :general
   (wal/captain "[" '(:ignore t :wk "popper")
     "[r" '(popper-toggle-type :wk "raise or drop")
-    "[k" '(popper-kill-latest-popup :wk "kill latest"))
+    "[k" '(popper-kill-latest-popup :wk "kill latest")
+    "[a" '(wal/popper-open-all :wk "open all"))
   :custom
   (popper-reference-buffers '("\\*Messages\\*"
                               "\\*HTTP Response\\*"
@@ -2746,11 +2785,8 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
 #+BEGIN_SRC emacs-lisp
 (use-package crux
   :general
-  (wal/general
-    "ei" '(crux-find-user-init-file :wk "open init file")
-    "br" '(crux-rename-buffer-and-file :wk "rename buffer and file")
-    "gk" '(crux-kill-other-buffers :wk "kill other buffers")
-    "xo" '(crux-open-with :wk "open with default program"))
+  (wal/general "eci" '(crux-find-user-init-file :wk "init file"))
+  (wal/general "r" '(crux-rename-file-and-buffer :wk "rename file"))
   :bind
   (("M-o" . crux-other-window-or-switch-buffer)
    ("H-d" . crux-duplicate-current-line-or-region)
@@ -2900,16 +2936,13 @@ Just goes to line if line is empty."
 (use-package avy
   :general
   (wal/lieutenant
-    "v" '(:ignore t :wk "avy")
-    "vg" '(:ignore t :wk "go to")
-    "vgc" '(avy-goto-char :wk "char")
-    "vgl" '(avy-goto-line :wk "line")
-    "vgw" '(avy-goto-whitespace-end :wk "whitespace")
-    "vc" '(avy-copy-line :wk "copy")
-    "vk" '(avy-kill-whole-line :wk "kill"))
+    "l" '(:ignore t :wk "avy")
+    "ll" '(wal/avy-goto-line-and-char :wk "line and char")
+    "lw" '(avy-goto-whitespace-end :wk "whitespace")
+    "lc" '(avy-copy-line :wk "copy")
+    "lk" '(avy-kill-whole-line :wk "kill"))
   :bind
-  (("H-V" . wal/avy-goto-line-and-char)
-   ("H-l" . avy-goto-line)
+  (("H-l" . avy-goto-line)
    ("H-c" . avy-goto-char)))
 #+END_SRC
 
@@ -2957,14 +2990,12 @@ nice despite us using =ivy= for completion everywhere.
         consult-yank)
     (advice-add it :around #'wal/advise-selectrum))
   :general
-  (wal/general
-    "bf" '(consult-focus-lines :wk "focus lines")
-    "dg" '(consult-grep :wk "grep here"))
+  (wal/general "f" '(consult-focus-lines :wk "focus lines"))
   (wal/major "c" '(consult-mode-command :wk "invoke mode command"))
   (wal/major :keymaps 'org-mode-map
     "j" '(consult-outline :wk "jump to heading"))
   (wal/captain :keymaps 'flymake-mode-map
-    "f" '(consult-flymake :wk "search error")))
+    "e" '(consult-flymake :wk "search error")))
 
 (use-package consult-flycheck
   :config
@@ -3076,10 +3107,10 @@ Finding files by name should be easy.
 
 ** Terminal
 
-#+begin_quote
+#+BEGIN_QUOTE
 I am convinced that we are in a terminal process.
 — E. P. Thompson
-#+end_quote
+#+END_QUOTE
 
 *** vterm
 
@@ -3121,10 +3152,10 @@ always try to build from source ...
 
 Some common shell commands require an additional =C-c=:
 
-+ =C-c C-c= to send =C-c=
-+ =C-c C-g= to send =C-g=
-+ =C-c C-u= to send =C-u=
-+ =C-c C-t= to enter/exit =copy-mode=
++ =C-c C-c= to send =C-c=.
++ =C-c C-g= to send =C-g=.
++ =C-c C-u= to send =C-u=.
++ =C-c C-t= to enter/exit =copy-mode=.
 
 *** eshell
 
@@ -3227,7 +3258,7 @@ Using =avy= inside =ivy=.
   :after ivy
   :bind
   (:map ivy-minibuffer-map
-   ("H-v" . ivy-avy)))
+   ("H-l" . ivy-avy)))
 #+END_SRC
 
 **** ivy-rich
@@ -3279,12 +3310,11 @@ Some nicer candidate view when switching buffers.
    '((name . "counsel-load-theme")))
   :general
   (wal/general
-    "at" '(counsel-load-theme :wk "load theme")
+    "et" '(counsel-load-theme :wk "load theme")
     "eh" '(counsel-command-history :wk "show command history")
     "el" '(counsel-find-library :wk "find library")
     "ev" '(counsel-set-variable :wk "set variable")
-    "xa" '(counsel-linux-app :wk "launch app")
-    "xs" '(counsel-search :wk "duck-duck-go"))
+    "g" '(counsel-search :wk "duck-duck-go"))
   :bind
   ("C-x B" . counsel-switch-buffer)
   ("M-x" . counsel-M-x)
@@ -3508,6 +3538,7 @@ See URL `https://www.pylint.org/'."
   :modes python-mode
   :next-checkers ((warning . python-mypy)))
 #+END_SRC
+
 *** flyspell
 
 My spelling is bad.
@@ -3556,6 +3587,7 @@ You can bring up actions (skip, save) with =M-o=.
 (use-package flyspell-correct-ivy
   :after flyspell-correct)
 #+END_SRC
+
 ** Visuals
 
 I like nice-looking things.
@@ -3932,7 +3964,7 @@ This requires Emacs to have been compiled with =--with-xml2= flag.
 (use-package eww
   :ensure nil
   :general
-  (wal/general "ew" '(eww :wk "www the web")))
+  (wal/general "w" '(eww :wk "www the web")))
 #+END_SRC
 
 *** restclient
@@ -3996,15 +4028,15 @@ I use a different (light) theme here.
 [fn:3] If you're not sure where your =user-emacs-directory= might be,
 you can do the following:
 
-+ run Emacs
++ Run Emacs
 + hit =M-x= (that is your Alt/Option key followed by the letter =x=)
 + type =describe-variable= and hit return
-+ type =user-emacs-directory= and hit return again
++ type =user-emacs-directory= and hit return again.
 
-A window (or is it a frame?) should pop up telling you the path
+A window should pop up telling you the path
 
 Finally run =git clone git@gitlab.com:Walheimat/emacs-config.git ~/.emacs.d=
-(replace =~/.emacs.d= with your actual path if it differs)
+(replace =~/.emacs.d= with your actual path if it differs).
 
 [fn:4] This config uses the =all-the-icons= package
 whose icons need to be downloaded manually
