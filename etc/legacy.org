@@ -1,0 +1,212 @@
+* Legacy
+
+Everything defined using =:tangle no= which would need
+to be removed for blocks one wants to tangle from this file.
+
+** Package Configurations
+
+This is a list of packages I no longer use
+but I have configured in the past.
+
+Some might still prove useful at some point.
+
+*** blacken
+
+Reformat buffer using =black=.
+Using the formatter provided by LSP is probably better.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(use-package blacken
+  :general
+  (wal/major :keymaps 'python-mode-map
+    "b" '(blacken-buffer :wk "blacken buffer")))
+#+END_SRC
+
+*** web-mode
+
+Web mode uses =flycheck=, prompts user if =lsp= should be enabled.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defun wal/web-mode ()
+  "Hook into `web-mode'."
+  (message "This is the Internet")
+  (add-node-modules-path)
+  (hack-local-variables)
+  (wal/maybe-enable-tabs nil #'web-mode-use-tabs)
+  (flycheck-mode 1))
+
+(use-package web-mode
+  :hook (web-mode . wal/web-mode)
+  :custom
+  (web-mode-comment-style 2)
+  :mode ("\\.vue\\'"
+         "\\.component.html\\'"
+         "\\.ejs\\'"))
+#+END_SRC
+
+*** angular-mode
+
+You might think Angular is dead and you'd be right but not everyone knows yet.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(use-package angular-mode
+  :defer t
+  :config
+  ;; I use nvm and I assume the language server is installed.
+  (let* ((node-v (string-trim (substring (shell-command-to-string "node -v") 1)))
+         (node-m (format ".config/nvm/%s/lib/node_modules" node-v))
+         (node-abs (expand-file-name node-m "~"))
+         (lang-serv (expand-file-name "@angular/language-server" node-abs)))
+    (when (f-directory? lang-serv)
+      (setq lsp-clients-angular-server-command
+            `("node"
+              ,lang-serv
+              "--ngProbeLocations"
+              ,node-abs
+              "--tsProbeLocations"
+              ,node-abs
+              "--stdio")))))
+#+END_SRC
+
+*** window-purpose
+
+Give your windows purpose.
+This does not seem to respect changes made to
+=display-buffer-alist= unfortunately.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defvar wal/mode-purpose-terminal
+  '(vterm-mode)
+  "`terminal' purpose defined by mode.")
+
+(defvar wal/regexp-purpose-result
+  '("\\*HTTP Response\\*")
+  "`result' purpose defined by regexp.")
+
+(defvar wal/mode-purpose-prompt
+  '(docker-container-mode)
+  "`prompt' purpose defined by mode.")
+
+(defun wal/configure-purposes()
+  "Configure purposes."
+  (setq purpose-user-mode-purposes nil)
+  ;; `terminal' purpose.
+  (--each
+      wal/mode-purpose-terminal
+    (add-to-list 'purpose-user-mode-purposes
+                 `(,it . terminal)))
+  ;; `result' purpose.
+  (--each
+      wal/regexp-purpose-result
+    (add-to-list 'purpose-user-regexp-purposes
+                 `(,it . result)))
+  ;; `prompt' purpose.
+  (--each
+      wal/mode-purpose-prompt
+    (add-to-list 'purpose-user-mode-purposes
+                 `(,it . prompt)))
+  (purpose-compile-user-configuration))
+
+(use-package window-purpose
+  :custom
+  (default-purpose 'none)
+  (default-file-purpose 'write)
+  (purpose-display-fallback nil)
+  :config
+  (define-key purpose-mode-map (kbd "C-x b") nil) ; Just don't!
+  ;; Require additional packages.
+  (require 'window-purpose-x)
+  (purpose-x-persp-setup)
+  (purpose-x-kill-setup)
+  ;; Configure.
+  (wal/configure-purposes)
+  :general
+  (wal/colonel "p" '(purpose-mode :wk "purpose")))
+#+END_SRC
+
+*** symon
+
+Show some system stats when nothing else is going on.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(use-package symon
+  :defer 6
+  :if (and (eq system-type 'gnu/linux)
+           ;; This package doesn't seem to work with `native-comp'.
+           (not (fboundp 'native-comp-available-p)))
+  :custom
+  (symon-sparkline-type 'bounded)
+  (symon-delay 10)
+  (symon-monitors '(symon-linux-cpu-monitor
+                    symon-linux-memory-monitor
+                    symon-linux-network-rx-monitor
+                    symon-linux-network-tx-monitor))
+  :config
+  (symon-mode))
+#+END_SRC
+
+*** kubernetes
+
+Who doesn't like pods and stuff?
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(use-package kubernetes
+  :commands kubernetes-overview)
+#+END_SRC
+
+*** company-prescient
+
+#+begin_src emacs-lisp :tangle no
+(use-package company-prescient
+  :if wal/use-prescient
+  :after (company prescient)
+  :config
+  (company-prescient-mode +1))
+#+end_src
+*** find-file-in-project
+
+Finding files by name should be easy.
+
+#+BEGIN_SRC emacs-lisp
+(use-package find-file-in-project
+  :defer 2)
+#+END_SRC
+
+*** ansi-term
+
+Sometimes you need an =ansi= terminal.
+Is that true?
+
+#+BEGIN_SRC emacs-lisp
+(use-package term
+  :ensure nil)
+#+END_SRC
+
+** Other Configurations
+
+*** Time
+
+Don't show the CPU load if time is shown.
+
+#+BEGIN_SRC emacs-lisp
+(setq display-time-default-load-average nil
+      display-time-format "%k:%M ")
+
+;; Note that turning this on will persist the mode in your custom.el,
+;; so delete it from there if you want it gone again.
+(display-time-mode -1)
+#+END_SRC
+
+** Functions
+
+*** Custom Args
+
+Check for custom args.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/found-custom-arg (switch)
+  "Check for custom SWITCH arg and delete it right away."
+  (let ((found-switch (member switch command-line-args)))
+    (setq command-line-args (delete switch command-line-args))
+    found-switch))
+#+END_SRC
