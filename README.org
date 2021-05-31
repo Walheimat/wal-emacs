@@ -1915,7 +1915,6 @@ nice despite us using =ivy= for completion everywhere.
   (consult-project-root-function #'projectile-project-root)
   :bind
   (("M-g g" . consult-goto-line)
-   ("M-g m" . consult-mark)
    ("M-g M-m" . consult-global-mark))
   :config
   ;; Advise functions to use selectrum when `ivy' behaves unpredictably.
@@ -1925,7 +1924,6 @@ nice despite us using =ivy= for completion everywhere.
         consult-flymake
         consult-global-mark
         consult-grep
-        consult-mark
         consult-minor-mode-menu
         consult-mode-command
         consult-outline)
@@ -2175,6 +2173,7 @@ Some nicer candidate view when switching buffers.
     "og" '(counsel-search :wk "duck-duck-go"))
   :bind
   (:map ivy-mode-map
+   ("M-g m" . counsel-mark-ring)
    ("C-x B" . counsel-switch-buffer)
    ("M-x" . counsel-M-x)
    ("<menu>" . counsel-M-x)
@@ -2237,11 +2236,17 @@ but we still use it to advise a few =consult= functions.
 (defun wal/advise-selectrum(func &rest r)
   "Call FUNC applying R using `selectrum' for read completion."
   (let ((completing-read-function #'selectrum-completing-read)
-        (read-buffer-function #'selectrum-read-buffer)
-        (read-file-name-function #'selectrum-read-file-name)
-        (complete-in-region-function #'selectrum-complete-in-region)
-        (read-libary-name #'selectrum-read-libarary-name)
-        (completion-styles '(substring partial-completion)))
+         (read-buffer-function #'selectrum-read-buffer)
+         (read-file-name-function #'selectrum-read-file-name)
+         (completion-in-region-function #'selectrum-completion-in-region)
+         (coompleting-read-multiple #'selectrum-completing-read-multiple)
+         (read-libary-name #'selectrum-read-libarary-name)
+         (completion-styles '(substring partial-completion))
+         ;; Cannot advise `dired-read-dir-and-switches' and
+         ;; `minibuffer-message'.
+         (map (make-sparse-keymap)))
+    (set-keymap-parent map minibuffer-local-map)
+    (define-key map [remap previous-matching-history-element] 'selectrum-select-from-history)
     (apply func r)))
 
 (use-package selectrum
