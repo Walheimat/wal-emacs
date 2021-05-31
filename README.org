@@ -1881,14 +1881,17 @@ Just goes to line if line is empty."
   :config
   :general
   (wal/avy-leader
-    "l" '(avy-goto-line :wk "go to line")
-    "c" '(avy-goto-char :wk "go to char")
-    "w" '(avy-copy-line :wk "copy line")
-    "r" '(avy-copy-region :wk "copy region")
-    "m" '(avy-move-line :wk "move line")
-    "e" '(avy-goto-whitespace-end :wk "go to whitespace end")
-    "k" '(avy-kill-whole-line :wk "kill line")
-    "b" '(wal/avy-goto-line-and-char :wk "go to line and char")))
+    "l" '(avy-goto-line :wk "line")
+    "c" '(avy-goto-char :wk "char")
+    "k" '(avy-kill-whole-line :wk "kill")
+    "m" '(avy-move-line :wk "move")
+    "w" '(avy-copy-line :wk "copy")
+    "d" '(avy-goto-word-0 :wk "word")
+    "b" '(wal/avy-goto-line-and-char :wk "go to line and char")
+    "r" '(:ignore t :wk "region")
+    "rw" '(avy-copy-region :wk "copy")
+    "rk" '(avy-kill-region :wk "kill")
+    "rm" '(avy-move-region :wk "move")))
 #+END_SRC
 
 *** mwim
@@ -1940,19 +1943,6 @@ nice despite us using =ivy= for completion everywhere.
   :after (consult flycheck)
   :config
   (advice-add 'consult-flycheck :around #'wal/advise-selectrum))
-#+END_SRC
-
-*** smooth-scrolling
-
-Smooth scrolling at the margins using =C-n= and =C-p=.
-
-#+BEGIN_SRC emacs-lisp
-(use-package smooth-scrolling
-  :defer 3.5
-  :custom
-  (smooth-scroll-margin 4)
-  :config
-  (smooth-scrolling-mode 1))
 #+END_SRC
 
 ** Finding Things
@@ -2288,6 +2278,7 @@ Have some perspective, man.
   :general
   (wal/perspective-leader
     "i" '(persp-switch :wk "switch")
+    "k" '(persp-kill :wk "kill")
     "n" '(persp-rename :wk "rename")
     "r" '(persp-remove-buffer :wk "remove buffer")
     "a" '(persp-add-buffer :wk "add")))
@@ -3233,8 +3224,7 @@ Enable tabs and =flycheck=.
   "Hook into `json-mode'."
   (message "JSON ...? JSON?! JSON!!")
   (rainbow-delimiters-mode)
-  (hack-local-variables)
-  (wal/maybe-enable-tabs)
+  (wal/disable-tabs)
   (flycheck-mode 1))
 
 (use-package json-mode
