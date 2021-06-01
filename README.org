@@ -182,7 +182,9 @@ We want:
 
 + A cache directory to store bookmarks, perspectives, prescience et al.
 + a directory for site lisp
-+ a default directory for org files.
++ a default directory for org files
++ a default directory for agenda tasks
++ a default directory for notes.
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal/cache-directory
@@ -360,24 +362,6 @@ Sometimes you have to play using other people's rules.
 You can run =add-dir-local-variable= to do so.
 Check out the =.dir-locals.el= template found in the =/templates= folder
 for an example using spaces.
-
-** White space
-
-Delete trailing white space before saving.
-
-#+BEGIN_SRC emacs-lisp
-;; Set to `nil' in `.dir-locals.el' if necessary.
-(defvar wal/delete-trailing-whitespace t
-  "Whether to delete trailing whitespace.")
-
-(defun wal/delete-trailing-whitespace-maybe ()
-  "Maybe delete trailing whitespace."
-  (when wal/delete-trailing-whitespace
-    (delete-trailing-whitespace))
-  nil)
-
-(add-hook 'write-file-functions #'wal/delete-trailing-whitespace-maybe)
-#+END_SRC
 
 ** Persistent =*scratch*=
 
@@ -682,6 +666,23 @@ Better(?) garbage collection.
 (add-hook 'minibuffer-setup-hook #'wal/minibuffer-setup-hook)
 (add-hook 'minibuffer-exit-hook #'wal/minibuffer-exit-hook)
 #+END_SRC
+
+** Advice
+
+I have some advice for you.
+
+#+begin_src emacs-lisp
+;; Set to `t' in `.dir-locals.el' if whitespace should be removed on save.
+(defvar wal/delete-trailing-whitespace nil
+  "Whether to delete trailing whitespace.")
+
+(defun wal/advise-hack-local-variables (&rest r)
+  "After local variables are available, add some local hooks."
+  (when wal/delete-trailing-whitespace
+    (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)))
+
+(advice-add 'hack-local-variables :after #'wal/advise-hack-local-variables)
+#+end_src
 
 * Key Bindings
 
@@ -1096,7 +1097,7 @@ Let's have a dash of board.
   :defer t
   :delight " pbl")
 
-;; Using my gitlab status messages, only one so far.
+;; Using my GitLab status messages, only one so far.
 (defvar wal/dashboard-footer-messages
   '(":whale2: breaching your favorite stupid framework"
     ":whale: I propel myself forward on nothing but flukes"
@@ -1249,6 +1250,11 @@ Configurations for other included packages.
   :ensure nil
   :general
   (wal/colonel "w" '(whitespace-mode :wk "whitespace")))
+
+(use-package simple
+  :ensure nil
+  :general
+  (wal/major "w" '(delete-trailing-whitespace :wk "delete trailing whitespace")))
 #+END_SRC
 
 ** Editing
@@ -2372,6 +2378,7 @@ This configuration is a bit elaborate.
   (message "Organize! Seize the means of production!")
   ;; Require here to shorten start-up time.
   (wal/disable-tabs)
+  (hack-local-variables)
   ;; Since `9.4' org tries to please `electric-indent'.
   ;; (electric-indent-local-mode -1)
   ;; Disable `drag-stuff-mode'.
@@ -3093,6 +3100,7 @@ Enable =flycheck= and disable tabs.
 (defun wal/elisp-mode ()
   "Hook into `emacs-lisp-mode'."
   (message "So it's just a bunch of lists?")
+  (hack-local-variables)
   (wal/disable-tabs)
   (flycheck-mode 1))
 
