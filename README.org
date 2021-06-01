@@ -1255,6 +1255,10 @@ Configurations for other included packages.
   :ensure nil
   :general
   (wal/major "w" '(delete-trailing-whitespace :wk "delete trailing whitespace")))
+
+(use-package elec-pair
+  :ensure nil
+  :hook (prog-mode . electric-pair-local-mode))
 #+END_SRC
 
 ** Editing
@@ -1394,8 +1398,6 @@ I didn't have smart parens growing up so I need help.
 
 #+BEGIN_SRC emacs-lisp
 (use-package smartparens
-  :diminish smartparens-mode
-  :hook (prog-mode . smartparens-mode)
   :config
   ;; Only require configs that I want.
   (require 'smartparens-python)
@@ -1404,7 +1406,7 @@ I didn't have smart parens growing up so I need help.
     ;; disable ', it's the quote character!
     (sp-local-pair "'" nil :actions nil))
   :general
-  (wal/captain :keymaps 'smartparens-mode-map
+  (wal/captain :keymaps 'prog-mode
     "p" '(:ignore t :wk "smartparens")
     "pr" '(sp-rewrap-sexp :wk "rewrap")
     "pk" '(sp-kill-sexp :wk "kill")
@@ -2386,6 +2388,8 @@ This configuration is a bit elaborate.
 
 (use-package org
   :ensure nil
+  :delight
+  (org-src-mode " osc")
   :hook (org-mode . wal/org-mode)
   :config
   (define-key org-mode-map (kbd "C-,") nil) ; Remove `org-cycle-agenda-files'.
