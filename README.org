@@ -690,21 +690,21 @@ It's also used for certain dispatches:
 Most hyper bindings are quick-access actions:
 
 + =H-d= duplicates current line/region with =crux=
-+ =H-e= to open (and =H-r= to cycle) pop-up
-+ =H-f= searches in (project) files with =ag=
++ =H-e= to open (and =H-r= to cycle) =popper= pop-up
++ =H-f= finds file in project
 + =H-g= runs =magit-status=
-+ =H-i= switches perspectives
++ =H-i= switches =perspective=
 + =H-l= jumps to line with =avy=
-+ =H-<mouse3>= adds another cursor at point
-+ =H-p= switches projects
-+ =H-q= to do a quick calculation
-+ =H-s= searches with =ag=
++ =H-<mouse3>= adds another =multiple-cursor= at point
++ =H-p= switches projects using =projectile=
++ =H-q= to do a =quick-calc=
++ =H-s= searches with =ag= (=H-S= uses =counsel-ag=)
 + =H-<TAB>= expands snippets (in =yas-minor-mode=)
 + =H-t= toggles =vterm=.
 
 It's also used for some dispatches:
 
-+ =H-w= for =ace-window=
++ =H-w= for =ace-window=.
 
 *** Caps to Hyper
 
@@ -753,8 +753,6 @@ They prefix actions by common context.
   :config
   (general-create-definer wal/general
     :prefix wal/general-key)
-  (wal/general "c" '(:ignore t :wk "config"))
-  (wal/general "o" '(:ignore t :wk "other"))
   (general-create-definer wal/colonel
     :prefix wal/colonel-key)
   (general-create-definer wal/major
@@ -799,8 +797,10 @@ Most bindings are declared in the [[*Packages][packages]] section.
   (interactive)
   (switch-to-buffer (find-file-noselect wal/readme-config)))
 
-(wal/general "co" '(wal/open-config :wk "open")
-             "ct" '(wal/tangle-config :wk "tangle"))
+(wal/general
+  "c" '(:ignore t :wk "config")
+  "co" '(wal/open-config :wk "open")
+  "ct" '(wal/tangle-config :wk "tangle"))
 
 ;;; Windows, frames and buffers.
 (wal/colonel "." '(walled-mode :wk "walled"))
@@ -811,6 +811,9 @@ Most bindings are declared in the [[*Packages][packages]] section.
 
 ;; No triple-ESC.
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+
+;; Sink for paraphernalia.
+(wal/general "o" '(:ignore t :wk "other"))
 #+END_SRC
 
 *** Hydra
@@ -1271,6 +1274,11 @@ Let's have a dash of board.
           (wal/directory-files user-emacs-directory))
   "Files that should not be considered recent files.")
 
+(defun wal/advise-dashboard-insert-startupify-lists (fun &rest r)
+  "Advise to ignore certain directories."
+  (let ((recentf-exclude wal/recentf-exclude))
+    (apply fun r)))
+
 (use-package dashboard
   :hook (after-init . dashboard-setup-startup-hook)
   :custom
@@ -1294,9 +1302,7 @@ Let's have a dash of board.
   (dashboard-agenda-time-string-format "%d/%m/%y")
   :config
   (advice-add 'dashboard-insert-startupify-lists
-              :around (lambda (fun &rest r)
-                        (let ((recentf-exclude wal/recentf-exclude))
-                          (apply fun r)))))
+              :around #'wal/advise-dashboard-insert-startupify-lists))
 #+END_SRC
 
 *** use-package-ensure-system-package
@@ -1796,6 +1802,10 @@ Everything that has to do with windows.
   "Call `aw-delete-window' on WINDOW requesting buffer kill."
   (aw-delete-window window t))
 
+(defun wal/advise-aw--switch-buffer (&rest r)
+  "Advise to use `wal/switch-buffer'."
+  (wal/switch-buffer r))
+
 (use-package ace-window
   :delight " ace"
   :custom
@@ -1816,10 +1826,7 @@ Everything that has to do with windows.
                             (?f aw-split-window-fair "fair split")
                             ;; If this has a description, it doesn't work.
                             (?? aw-show-dispatch-help)))
-  ;; Use our custom `switch-buffer' function.
-  (advice-add 'aw--switch-buffer
-              :override (lambda (&rest r) (wal/switch-buffer r))
-              '((name . "aw--switch-buffer")))
+  (advice-add 'aw--switch-buffer :override #'wal/advise-aw--switch-buffer)
   :bind
   ("H-w" . ace-window))
 #+END_SRC
@@ -1856,6 +1863,15 @@ Be a =winner= without the mode.
       (popper-cycle)
     (popper-toggle-latest)))
 
+(defun wal/popper-dead-shell-p ()
+  "Check if the current buffer is a shell pop-up with no process."
+  (interactive)
+  (let ((buf (current-buffer)))
+    (with-current-buffer buf
+      (and (popper-popup-p buf)
+           (derived-mode-p 'shell-mode)
+           (not (comint-check-proc buf))))))
+
 (defun wal/popper-open-all ()
   "Same as `popper-open-all' but interactive."
   (interactive)
@@ -1874,6 +1890,10 @@ Be a =winner= without the mode.
     "er" '(popper-toggle-type :wk "raise or drop")
     "ek" '(popper-kill-latest-popup :wk "kill latest")
     "ea" '(wal/popper-open-all :wk "open all"))
+  (general-define-key
+   :keymaps 'popper-mode-map
+   :predicate '(wal/popper-dead-shell-p)
+   "q" 'kill-buffer-and-window)
   :custom
   ;; Prime candidates for `popper' are those shown in-direction and in-side.
   (popper-reference-buffers '(docker-container-mode
@@ -2153,7 +2173,7 @@ Some nicer candidate view when switching buffers.
   (--each
       '(counsel-projectile-switch-to-buffer
         persp-kill-buffer*
-        persp-add-buffer ; This one doesn't seem to work ..
+        persp-add-buffer ; This one doesn't seem to work ...
         persp-remove-buffer)
     (plist-put all-the-icons-ivy-rich-display-transformers-list it
                '(:columns
@@ -2173,6 +2193,13 @@ Some nicer candidate view when switching buffers.
 (defvar wal/use-prescient t
   "Whether `prescient' is used.")
 
+(defun wal/advise-counsel-load-theme (theme)
+  "Advise to also update `wal/*-emacs-theme'."
+  (if (eq wal/primary-emacs-theme wal/active-theme)
+      (setq wal/primary-emacs-theme (intern theme))
+    (setq wal/secondary-emacs-theme (intern theme)))
+  (setq wal/active-theme (intern theme)))
+
 (use-package counsel
   :after ivy
   :demand
@@ -2185,14 +2212,7 @@ Some nicer candidate view when switching buffers.
   ;; Any theme set by `counsel-load-theme' should also set
   ;; `wal/*-theme' so that calling `wal/light-switch' doesn't
   ;; undo things.
-  (advice-add
-   'counsel-load-theme :filter-return
-   (lambda (theme)
-     (if (eq wal/primary-emacs-theme wal/active-theme)
-         (setq wal/primary-emacs-theme (intern theme))
-       (setq wal/secondary-emacs-theme (intern theme)))
-     (setq wal/active-theme (intern theme)))
-   '((name . "counsel-load-theme")))
+  (advice-add 'counsel-load-theme :filter-return #'wal/advise-counsel-load-theme)
   :general
   (wal/general
     "t" '(counsel-load-theme :wk "load theme")
@@ -2374,7 +2394,9 @@ of a project."
   (counsel-projectile-mode +1)
   :bind
   (:map projectile-mode-map
-   ("H-f" . counsel-projectile-ag)))
+   ("H-b" . counsel-projectile-switch-to-buffer)
+   ("H-f" . counsel-projectile-find-file)
+   ("H-S" . counsel-projectile-ag)))
 #+END_SRC
 
 ** Org
@@ -2394,6 +2416,10 @@ This configuration is a bit elaborate.
   ;; Disable `drag-stuff-mode'.
   (drag-stuff-mode -1))
 
+(defun wal/advise-org-export-dispatch (&rest r)
+  "Advise to require `ox-md' beforehand."
+  (require 'ox-md nil t))
+
 (use-package org
   :ensure nil
   :delight
@@ -2403,9 +2429,7 @@ This configuration is a bit elaborate.
   (define-key org-mode-map (kbd "C-,") nil) ; Remove `org-cycle-agenda-files'.
   (add-to-list 'org-src-lang-modes '("docker" . dockerfile))
   (add-to-list 'org-src-lang-modes '("conf" . conf))
-  (advice-add 'org-export-dispatch :before (lambda()
-                                             (interactive)
-                                             (require 'ox-md nil t)))
+  (advice-add 'org-export-dispatch :before #'wal/advise-org-export-dispatch)
   :custom
   (org-src-tab-acts-natively nil) ; Defaults to `t' nowadays.
   (org-edit-src-content-indentation 0) ; Defaults to `2' nowadays.
@@ -2446,6 +2470,9 @@ This configuration is a bit elaborate.
      ("@dev" . ?d)
      ("@bla" . ?b)
      ("@edu" . ?e)))
+  :bind
+  (:map org-src-mode-map
+    ("C-c C-c" . org-edit-src-exit))
   :general
   (wal/major :keymaps 'org-mode-map
     "e" '(org-edit-src-code :wk "edit source code")
@@ -2478,22 +2505,25 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
 Nice agendas.
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/org-super-agenda-groups
+  '((:name "Schedule"
+           :time-grid t)
+    (:name "Unscheduled"
+           :scheduled nil)
+    (:name "Leftovers"
+           :and (:todo ("IN PROGRESS" "WAITING")
+                       :scheduled past
+                       :not (:tag "@repeated")))
+    (:name "Blocked"
+           :todo ("BLOCKED"))
+    (:discard (:anything t)))
+  "The super agenda groups.")
+
 (use-package org-super-agenda
   :after org-agenda
   :demand
   :custom
-  (org-super-agenda-groups
-   '((:name "Schedule"
-            :time-grid t)
-     (:name "Unscheduled"
-            :scheduled nil)
-     (:name "Leftovers"
-            :and (:todo ("IN PROGRESS" "WAITING")
-                        :scheduled past
-                        :not (:tag "@repeated")))
-     (:name "Blocked"
-            :todo ("BLOCKED"))
-     (:discard (:anything t))))
+  (org-super-agenda-groups wal/org-super-agenda-groups)
   :config
   ;; Not sure why this can't be in config.
   (org-super-agenda-mode)
@@ -2773,15 +2803,15 @@ I like the idea of it but I don't really use it.
 (use-package eshell-syntax-highlighting
   :hook (eshell-mode . eshell-syntax-highlighting-mode))
 
+(defun wal/advise-eshell/clear (&rest r)
+  "Advise to truncate buffer."
+  (let ((eshell-buffer-maximum-lines 0))
+     (eshell-truncate-buffer)))
+
 (use-package eshell
   :ensure nil
   :config
-  ;; Override how clearing the eshell works.
-  (advice-add
-   'eshell/clear :override
-   (lambda nil
-     (let ((eshell-buffer-maximum-lines 0))
-       (eshell-truncate-buffer))))
+  (advice-add 'eshell/clear :override #'wal/advise-eshell/clear)
   (wal/display-buffer-in-side-window "*eshell*")
   :general
   (wal/general "e" '(eshell :wk "eshell"))
@@ -3313,13 +3343,15 @@ This depends on `wal/lsp-client'."
 Built-in syntax checker. Used by =eglot=.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/advise-flymake--mode-line-title (&rest r)
+  "Use flm as a title."
+  "flm")
+
 (use-package flymake
   :ensure nil
   :defer t
   :config
-  (advice-add 'flymake--mode-line-title
-              :override (lambda () "flm")
-              '((name . "flymake--mode-line-title"))))
+  (advice-add 'flymake--mode-line-title :override #'wal/advise-flymake--mode-line-title))
 #+END_SRC
 
 *** flycheck
@@ -3719,7 +3751,15 @@ Postman is passé.
 I use a =.http= file extension for my request examples.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/restclient-mode ()
+  "Hook into `restclient-mode'."
+  (ignore-errors
+    (require 'jq-mode nil t)
+    (require 'restclient-jq nil t) ; I put this in my load-path.
+    (require 'cl nil t)))
+
 (use-package restclient
+  :hook (restclient-mode . wal/restclient-mode)
   :config
   ;; Make it pop up a frame.
   (wal/display-buffer-in-pop-up "\\*HTTP Response\\*")
@@ -3728,6 +3768,10 @@ I use a =.http= file extension for my request examples.
 ;; We use this for hooks.
 (use-package jq-mode
   :after restclient)
+
+(use-package restclient-jq
+  :load-path "site-lisp"
+  :defer t)
 #+END_SRC
 
 ** Writing
