@@ -3777,15 +3777,7 @@ Postman is passé.
 I use a =.http= file extension for my request examples.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/restclient-mode ()
-  "Hook into `restclient-mode'."
-  (ignore-errors
-    (require 'jq-mode nil t)
-    (require 'restclient-jq nil t) ; I put this in my load-path.
-    (require 'cl nil t)))
-
 (use-package restclient
-  :hook (restclient-mode . wal/restclient-mode)
   :config
   ;; Make it pop up a frame.
   (wal/display-buffer-in-pop-up "\\*HTTP Response\\*")
@@ -3793,8 +3785,10 @@ I use a =.http= file extension for my request examples.
 
 ;; We use this for hooks.
 (use-package jq-mode
-  :after restclient)
+  :after restclient
+  :ensure-system-package jq)
 
+;; You will need to clone restclient repo.
 (use-package restclient-jq
   :load-path "site-lisp"
   :defer t)
