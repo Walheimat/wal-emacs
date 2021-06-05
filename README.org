@@ -674,7 +674,7 @@ Anywhere:
 
 User-reserved combinations are used for certain command maps:
 
-+ =C-c b= for =bookmark=, and if the modes are active:
++ =C-c b= for =bookmark= and when the respective mode is active:
 + =C-c f= for =flycheck=
 + =C-c i= for =perspective=
 + =C-c p= for =projectile=
@@ -728,7 +728,7 @@ modifier_map Mod3   { <HYPR> };
 
 ** Leader Keys
 
-The are four multi-purpose =general= leader keys.
+The are five multi-purpose =general= leader keys.
 They prefix actions by common context.
 
 #+BEGIN_SRC emacs-lisp
@@ -774,14 +774,7 @@ Available modes might depend on =major-mode=.
 Leader keys =major= and =captain= prefix mode-specific actions,
 for major and minor modes respectively.
 
-Leader key =lieutenant= prefixes non-mode package actions:
-
-There are also eight package-specific leader keys that
-act like (or bind to) dispatches. They prefix a subset of actions
-I commonly use.
-
-+ =C-c l= for =avy=
-+ =C-c s= for =ag=.
+Leader key =lieutenant= prefixes non-mode package actions.
 
 ** Additional (Un-)Bindings
 
@@ -790,17 +783,16 @@ Most bindings are declared in the [[*Packages][packages]] section.
 #+BEGIN_SRC emacs-lisp
 (defvar wal/readme-config
   (expand-file-name "README.org" wal/emacs-config-default-path)
-  "The path to this config file.")
+  "The path to Walheimat's config.")
 
 (defun wal/open-config ()
-  "Open this very config."
+  "Open Walheimat's config.
+Saving the config will tangle its contents."
   (interactive)
-  (switch-to-buffer (find-file-noselect wal/readme-config)))
+  (switch-to-buffer (find-file-noselect wal/readme-config))
+  (add-hook 'after-save-hook #'wal/tangle-config nil t))
 
-(wal/general
-  "c" '(:ignore t :wk "config")
-  "co" '(wal/open-config :wk "open")
-  "ct" '(wal/tangle-config :wk "tangle"))
+(wal/general "c" '(wal/open-config :wk "open config"))
 
 ;;; Windows, frames and buffers.
 (wal/colonel "." '(walled-mode :wk "walled"))
@@ -811,9 +803,6 @@ Most bindings are declared in the [[*Packages][packages]] section.
 
 ;; No triple-ESC.
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-
-;; Sink for paraphernalia.
-(wal/general "o" '(:ignore t :wk "other"))
 #+END_SRC
 
 *** Hydra
@@ -904,12 +893,11 @@ Make frame transparent and set themes.
 (defvar wal/primary-emacs-theme 'kaolin-valley-dark
   "The quote-unquote default Emacs theme.")
 
-;; Use `setq' in your .emacs to switch.
 (defvar wal/secondary-emacs-theme 'kaolin-valley-light
   "The non-default Emacs theme.")
 
 (defvar wal/active-theme nil
-  "The active theme.")
+  "The active theme between primiary and secondary.")
 
 (defun wal/light-switch (&optional selection)
   "Switch to SELECTION or from light to dark theme and vice-versa."
@@ -953,7 +941,7 @@ To get support for ligatures, install the symbol font from [[https://github.com/
     "JetBrains Mono"
     "Source Code Pro"
     "DejaVu Sans Mono"
-    "Monoid" ;; Be sure to install the no-calt variant!
+    "Monoid" ; Be sure to install the no-calt variant!
     "Liberation Mono")
   "Fixed fonts ordered by preference.")
 
@@ -1067,8 +1055,8 @@ For internal debugging.
 
 #+begin_src emacs-lisp
 (use-package debug
-  :defer t
   :ensure nil
+  :defer t
   :config
   (wal/display-buffer-in-side-window 'debug-mode))
 #+end_src
@@ -1092,15 +1080,15 @@ This requires Emacs to have been compiled with =--with-xml2= flag.
 (use-package eww
   :ensure nil
   :general
-  (wal/general "ob" '(eww :wk "browse with eww")))
+  (wal/general "b" '(eww :wk "eww")))
 #+END_SRC
 
 **** help
 
 #+begin_src emacs-lisp
 (use-package help-mode
-  :defer t
   :ensure nil
+  :defer t
   :config
   (wal/display-buffer-in-direction'help-mode))
 #+end_src
@@ -1162,7 +1150,7 @@ Bind some useful functions.
 (use-package simple
   :ensure nil
   :general
-  (wal/general "op" '(list-processes :wk "list processes"))
+  (wal/general "d" '(list-processes :wk "list processes")) ; FIXME: Find a better prefix
   (wal/major "w" '(delete-trailing-whitespace :wk "delete trailing whitespace"))
   :bind
   ("C-?" . undo-redo))
@@ -1376,10 +1364,11 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
 #+BEGIN_SRC emacs-lisp
 (use-package crux
   :general
-  (wal/general
-    "ci" '(crux-find-user-init-file :wk "init file")
-    "or" '(crux-rename-file-and-buffer :wk "rename file and buffer")
-    "os" '(crux-sudo-edit :wk "sudo edit"))
+  (wal/general "i" '(crux-find-user-init-file :wk "open init"))
+  (wal/lieutenant
+    "x" '(:ignore t :wk "crux")
+    "xr" '(crux-rename-file-and-buffer :wk "rename file and buffer")
+    "xs" '(crux-sudo-edit :wk "sudo edit"))
   :bind
   (("M-o" . crux-other-window-or-switch-buffer)
    ("H-d" . crux-duplicate-current-line-or-region)
@@ -1448,15 +1437,8 @@ I didn't have smart parens growing up so I need help.
 
 #+BEGIN_SRC emacs-lisp
 (use-package smartparens
-  :config
-  ;; Only require configs that I want.
-  (require 'smartparens-python)
-  (add-to-list 'sp-lisp-modes 'lisp-data-mode)
-  (sp-with-modes sp-lisp-modes
-    ;; disable ', it's the quote character!
-    (sp-local-pair "'" nil :actions nil))
   :general
-  (wal/captain :keymaps 'prog-mode
+  (wal/lieutenant
     "p" '(:ignore t :wk "smartparens")
     "pr" '(sp-rewrap-sexp :wk "rewrap")
     "pk" '(sp-kill-sexp :wk "kill")
@@ -1525,7 +1507,6 @@ This is a themes collection I sometimes pick from.
 (use-package kaolin-themes
   :defer t
   :custom
-  ;; (kaolin-ocean-alt-bg t)
   (kaolin-themes-italic-comments t)
   (kaolin-themes-git-gutter-solid t)
   ;; Remove that `modeline' border.
@@ -1635,14 +1616,18 @@ Make dimmed frames a bit dimmer.
 
 This mode allows us to use ligatures from FiraCode.
 You don't need to use FiraCode as your main fixed font
-for this to work.
+for this to work but you should use =ligature= instead.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/use-fira-code-mode ()
   "Determine whether `fira-code-mode' can/should be used.
-Currently I've only encountered problems when using Monoid font
-unless using the non-calt variant."
-  (and (x-list-fonts "Fira Code Symbol")
+This is the case when:
+
+(1) We can't use `ligature'
+(2) The symbol font is installed
+(3) We're not using Monoid font"
+  (and (not (require 'ligature nil t))
+       (x-list-fonts "Fira Code Symbol")
        (not (string-match "Monoid" (face-font 'default)))))
 
 (defun wal/fira-code ()
@@ -1661,6 +1646,32 @@ unless using the non-calt variant."
     (add-hook 'server-after-make-frame-hook 'wal/fira-code t)
   (add-hook 'after-init-hook 'wal/fira-code t))
 #+END_SRC
+
+*** ligatures
+
+This package is not on MELPA so you'll have to put it
+in the load path.
+
+#+begin_src emacs-lisp
+(use-package ligature
+  :load-path "site-lisp"
+  :config
+  ;; FIXME: This is still in progress.
+  ;;        Providing derived modes here doesn't work for me.
+  (ligature-set-ligatures
+   'prog-mode
+   ;; Shared.
+   '("&&" "==" "+=" "-=" "||" "..." "!!" "??" "//"
+     ;; CPP.
+     "::" "->" ">>" "<<" "++" "!="
+     ;; JS.
+     "=>" "!==" "==="
+     ;; Elixir.
+     "|>" "#{"
+     ;; Lisp.
+     ";;"))
+  (global-ligature-mode t))
+#+end_src
 
 *** diff-hl
 
@@ -1803,8 +1814,8 @@ Everything that has to do with windows.
   (aw-delete-window window t))
 
 (defun wal/advise-aw--switch-buffer (&rest r)
-  "Advise to use `wal/switch-buffer'."
-  (wal/switch-buffer r))
+  "Advise to use `wal/ivy-switch-buffer'."
+  (wal/ivy-switch-buffer r))
 
 (use-package ace-window
   :delight " ace"
@@ -1949,16 +1960,19 @@ Just goes to line if line is empty."
   ("H-l" . avy-goto-line)
   :general
   (wal/lieutenant
+    ;; Lines.
     "l" '(:ignore t :wk "avy")
-    "lw" '(avy-copy-line :wk "copy")
+    "lc" '(avy-copy-line :wk "copy")
     "lk" '(avy-kill-whole-line :wk "kill")
     "lm" '(avy-move-line :wk "move")
+    ;; Other go-tos.
     "lg" '(:ignore :wk "go to")
     "lgc" '(avy-goto-char :wk "char")
-    "lgd" '(avy-goto-word-0 :wk "word")
+    "lgw" '(avy-goto-word-0 :wk "word")
     "lgb" '(wal/avy-goto-line-and-char :wk "go to line and char")
+    ;; Region.
     "lr" '(:ignore t :wk "region")
-    "lrw" '(avy-copy-region :wk "copy")
+    "lrc" '(avy-copy-region :wk "copy")
     "lrk" '(avy-kill-region :wk "kill")
     "lrm" '(avy-move-region :wk "move")))
 #+END_SRC
@@ -1989,7 +2003,7 @@ nice despite us using =ivy= for completion everywhere.
   (("M-g g" . consult-goto-line)
    ("M-g M-m" . consult-global-mark))
   :config
-  ;; Advise functions to use selectrum when `ivy' behaves unpredictably.
+  ;; Advise functions to use `selectrum' when `ivy' behaves unpredictably.
   (--each
       '(consult-buffer
         consult-focus-lines
@@ -2004,7 +2018,9 @@ nice despite us using =ivy= for completion everywhere.
   (wal/major "c" '(consult-mode-command :wk "invoke mode command"))
   (wal/major :keymaps 'org-mode-map
     "j" '(consult-outline :wk "jump to heading"))
-  (wal/general "ol" '(consult-focus-lines :wk "focus lines")))
+  (wal/lieutenant
+    "u" '(:ignore t :wk "consult")
+    "uf" '(consult-focus-lines :wk "focus lines")))
 
 (use-package consult-flycheck
   :after (consult flycheck)
@@ -2106,10 +2122,10 @@ Pass R to the switch buffer function."
   (let ((ivy-ignore-buffers
          '((lambda (buffer-or-string)
              (not (wal/commmonly-ignored-buffer-p buffer-or-string))))))
-    (wal/switch-buffer r)))
+    (wal/ivy-switch-buffer r)))
 
-;; Change to ivy-switch-buffer if you don't use perspective.
-(defalias 'wal/switch-buffer 'persp-counsel-switch-buffer)
+;; Change to `ivy-switch-buffer' if you don't use `perspective' and `counsel'.
+(defalias 'wal/ivy-switch-buffer 'persp-counsel-switch-buffer)
 
 ;; Hide `dired', `docker', `ag' and default Emacs buffers when switching.
 (defvar wal/ivy-ignore-buffers
@@ -2138,7 +2154,7 @@ Pass R to the switch buffer function."
   (ivy-mode 1)
   :bind
   (:map ivy-mode-map
-   ("C-x b" . wal/switch-buffer)
+   ("C-x b" . wal/ivy-switch-buffer)
    ("C-x C-b" . wal/ivy-switch-ignored-buffers))) ; Replaces `list-buffers'.
 #+END_SRC
 
@@ -2218,8 +2234,10 @@ Some nicer candidate view when switching buffers.
     "t" '(counsel-load-theme :wk "load theme")
     "h" '(counsel-command-history :wk "show command history")
     "l" '(counsel-find-library :wk "find library")
-    "v" '(counsel-set-variable :wk "set variable")
-    "og" '(counsel-search :wk "duck-duck-go"))
+    "v" '(counsel-set-variable :wk "set variable"))
+  (wal/lieutenant
+    "o" '(:ignore t :wk "counsel")
+    "os" '(counsel-search :wk "search"))
   :bind
   (:map ivy-mode-map
    ("M-g m" . counsel-mark-ring)
@@ -2268,8 +2286,8 @@ Better short-term-memory for =ivy=.
   :if wal/use-prescient
   :after (counsel prescient)
   :custom
-  ;; Default plus `wal/switch-buffer'.
-  (ivy-prescient-sort-commands '(:not swiper swiper-isearch ivy-switch-buffer wal/switch-buffer))
+  ;; Default plus `wal/ivy-switch-buffer'.
+  (ivy-prescient-sort-commands '(:not swiper swiper-isearch ivy-switch-buffer wal/ivy-switch-buffer))
   (ivy-prescient-retain-classic-highlighting t)
   :config
   (ivy-prescient-mode +1))
@@ -2291,8 +2309,7 @@ but we still use it to advise a few =consult= functions.
          (coompleting-read-multiple #'selectrum-completing-read-multiple)
          (read-libary-name #'selectrum-read-libarary-name)
          (completion-styles '(substring partial-completion))
-         ;; Cannot advise `dired-read-dir-and-switches' and
-         ;; `minibuffer-message'.
+         ;; Cannot advise `dired-read-dir-and-switches' and `minibuffer-message'.
          (map (make-sparse-keymap)))
     (set-keymap-parent map minibuffer-local-map)
     (define-key map [remap previous-matching-history-element] 'selectrum-select-from-history)
