@@ -711,8 +711,8 @@ It's also used for some dispatches:
 I re-bound my =<CAPS>= (caps-lock) key to =Hyper_L= to use the
 hyper bindings above.
 
-If you use Xorg Display Server,
-you can do this by editing[fn:8] your =/usr/share/X11/xkb/symbols/pc= file like so:
+If you use Xorg Display Server, the quiet risky[fn:8] way would be
+to edit your =/usr/share/X11/xkb/symbols/pc= file like so:
 
 #+BEGIN_SRC
 ...
@@ -725,6 +725,19 @@ modifier_map Mod3   { Hyper_L, Hyper_R };
 // modifier_map Mod4   { <HYPR> };
 modifier_map Mod3   { <HYPR> };
 #+END_SRC
+
+A safer alternative might be to create an =.xsession= file in
+your home folder containing the following:
+
+#+begin_src sh :tangle no
+xmodmap -e "keysym Caps_Lock = Hyper_L" \
+		-e "remove Mod4 = Hyper_L" \
+		-e "add Mod3 = Hyper_L"
+#+end_src
+
+This assumes that =Hyper_L= was assigned to modifier =Mod4= that's
+already used by =Super_L= and modifier =Mod3= is an empty group.
+I haven't gotten this safer alternative to work for me.
 
 ** Leader Keys
 
@@ -3863,9 +3876,6 @@ and =general-describe-keybindings=.
 
 [fn:8] Be careful! If you make a mistake you could render your
 keyboard unusable.
-
-Alternatively you can run =xmodmap -pke > .Xmodmap= in your =HOME= directory
-and edit your bindings there.
 
 [fn:9] Mostly from MELPA.
 /Note/ that many packages bind keys.
