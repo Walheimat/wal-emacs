@@ -690,15 +690,16 @@ It's also used for certain dispatches:
 Most hyper bindings are quick-access actions:
 
 + =H-d= duplicates current line/region with =crux=
-+ =H-e= to open (and =H-r= to cycle) =popper= pop-up
-+ =H-f= finds file in project
++ =H-e= opens (and =H-r= cycles through) =popper= pop-up(s)
++ =H-f= finds project file using =counsel-projectile=
 + =H-g= runs =magit-status=
 + =H-i= switches =perspective=
-+ =H-l= jumps to line with =avy=
++ =H-k= to start (and =H-j= to end or call) macro
++ =H-l= jumps to line (and =H-o= to word) with =avy=
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-p= switches projects using =projectile=
 + =H-q= to do a =quick-calc=
-+ =H-s= searches with =ag= (=H-S= uses =counsel-ag=)
++ =H-s= searches with =ag=
 + =H-<TAB>= expands snippets (in =yas-minor-mode=)
 + =H-t= toggles =vterm=.
 
@@ -1988,7 +1989,8 @@ Just goes to line if line is empty."
 (use-package avy
   :config
   :bind
-  ("H-l" . avy-goto-line)
+  (("H-l" . avy-goto-line)
+   ("H-o" . avy-goto-word-1))
   :general
   (wal/lieutenant
     ;; Lines.
@@ -1996,11 +1998,6 @@ Just goes to line if line is empty."
     "lc" '(avy-copy-line :wk "copy")
     "lk" '(avy-kill-whole-line :wk "kill")
     "lm" '(avy-move-line :wk "move")
-    ;; Other go-tos.
-    "lg" '(:ignore :wk "go to")
-    "lgc" '(avy-goto-char :wk "char")
-    "lgw" '(avy-goto-word-0 :wk "word")
-    "lgb" '(wal/avy-goto-line-and-char :wk "go to line and char")
     ;; Region.
     "lr" '(:ignore t :wk "region")
     "lrc" '(avy-copy-region :wk "copy")
@@ -2272,7 +2269,6 @@ Some nicer candidate view when switching buffers.
   :bind
   (:map ivy-mode-map
    ("M-g m" . counsel-mark-ring)
-   ("C-x B" . counsel-switch-buffer)
    ("M-x" . counsel-M-x)
    ("<menu>" . counsel-M-x)
    ("C-x C-f" . counsel-find-file)))
@@ -2442,9 +2438,9 @@ of a project."
   (counsel-projectile-mode +1)
   :bind
   (:map projectile-mode-map
-   ("H-b" . counsel-projectile-switch-to-buffer)
    ("H-f" . counsel-projectile-find-file)
-   ("H-S" . counsel-projectile-ag)))
+   :map projectile-command-map
+   ("s a" . counsel-projectile-ag)))
 #+END_SRC
 
 ** Org
