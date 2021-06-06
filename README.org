@@ -6,7 +6,7 @@
 
 * About
 
-** Heads-up
+** Heads-Up
 
 This project is my personal literate Emacs (28.0.50)[fn:1] configuration.
 
@@ -17,7 +17,7 @@ Feel free to consider it a jumping-off-point for your own custom config.
 Just know that nothing in this config should be considered _good practice_,
 it's mostly just how I (think I) like things to be.
 
-** Try-out
+** Try-Out
 
 If you're interested in trying out Emacs using my config,
 here are the necessary steps:
@@ -141,8 +141,7 @@ We'll be getting most (if not all) packages from the prior.
 ** Dependencies
 
 Manage packages with =use-package=.
-Before we can use it,
-we have to install it and a few other packages the hard way.
+Before we can use it, we have to install it and a few other packages the hard way.
 
 #+BEGIN_SRC emacs-lisp
 ;; We need dash for the upcoming loop.
@@ -223,7 +222,6 @@ We want:
 
 Add =site-lisp= directory and sub-directories to load path.
 I put non-MELPA packages here.
-
 If the directory doesn't exist, it will get created.
 
 #+BEGIN_SRC emacs-lisp
@@ -647,7 +645,7 @@ I have some advice for you.
 (defvar wal/delete-trailing-whitespace nil
   "Whether to delete trailing whitespace.")
 
-(defun wal/advise-hack-local-variables (&rest r)
+(defun wal/advise-hack-local-variables (&rest _r)
   "After local variables are available, add some local hooks."
   (when wal/delete-trailing-whitespace
     (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)))
@@ -712,7 +710,7 @@ It's also used for some dispatches:
 I re-bound my =<CAPS>= (caps-lock) key to =Hyper_L= to use the
 hyper bindings above.
 
-If you use Xorg Display Server, the quiet risky[fn:8] way would be
+If you use Xorg Display Server, the risky quite[fn:8] way would be
 to edit your =/usr/share/X11/xkb/symbols/pc= file like so:
 
 #+BEGIN_SRC
@@ -1047,7 +1045,7 @@ Configure annotation usage.
   ("C-c b" . bookmark-map)
   :bind
   (:map bookmark-map
-    ("b" . bookmark-bmenu-list)))
+   ("b" . bookmark-bmenu-list)))
 #+end_src
 
 **** eldoc
@@ -1115,7 +1113,6 @@ This requires Emacs to have been compiled with =--with-xml2= flag.
   :config
   (wal/display-buffer-in-direction'help-mode))
 #+end_src
-
 
 **** hl-line
 
@@ -1693,7 +1690,7 @@ in the load path.
   (ligature-set-ligatures
    'prog-mode
    ;; Shared.
-   '("&&" "==" "+=" "-=" "||" "..." "!!" "??" "//"
+   '("&&" ">=" "<=" "==" "+=" "-=" "||" "..." "!!" "??" "//"
      ;; CPP.
      "::" "->" ">>" "<<" "++" "!="
      ;; JS.
@@ -1701,7 +1698,9 @@ in the load path.
      ;; Elixir.
      "|>" "#{"
      ;; Lisp.
-     ";;"))
+     ";;"
+     ;; Prolog.
+     ":-"))
   (global-ligature-mode t))
 #+end_src
 
@@ -1733,10 +1732,10 @@ Refine a couple of =major-mode= names.
   :config
   (delight 'dired-mode "Dired" :major)
   (delight 'emacs-lisp-mode "Elisp" :major)
-  (delight 'compilation-shell-minor-mode " csh" "compile")
-  (delight 'c++-mode "CPP" :major)
-  (delight 'abbrev-mode " abb" "abbrev")
   (delight 'wdired-mode "DirEd" :major)
+  (delight 'c++-mode "CPP" :major)
+  (delight 'compilation-shell-minor-mode " csh" "compile")
+  (delight 'abbrev-mode " abb" "abbrev")
   ;; Only confuse/delight if allowed.
   (when wal/major-delight
     (delight 'elixir-mode "Homebrew" :major)
@@ -1838,7 +1837,7 @@ Everything that has to do with windows.
 
 *** ace-window
 
-=ace-window= allows for some nifty window swapping.
+Allows for some nifty window swapping.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/aw-delete-window-kill-buffer (window)
@@ -2106,15 +2105,9 @@ Important command is =C-o c= to change search style.
   :defer 3
   :custom
   (ctrlf-auto-recenter t)
-  ;; Not relased yet.
   (ctrlf-go-to-end-of-match nil)
-  :config
-  ;; Prefer fuzzy over literal.
-  ;; Can't defer if this is part of `:custom'.
-  (setq ctrlf-mode-bindings '(("C-s" . ctrlf-forward-fuzzy)
-                              ("C-r" . ctrlf-backward-fuzzy)
-                              ("M-s" . ctrlf-forward-literal)
-                              ("M-r" . ctrlf-backward-literal)))
+  (ctrlf-default-search-style 'fuzzy)
+  (ctrlf-alternate-search-style 'literal)
   (ctrlf-mode +1))
 #+END_SRC
 
@@ -2394,7 +2387,7 @@ Projects in Emacs.
   :delight " pjt"
   :bind
   (:map projectile-mode-map
-    ("H-p" . projectile-switch-project))
+   ("H-p" . projectile-switch-project))
   :custom
   (projectile-completion-system 'ivy)
   (projectile-mode-line-function '(lambda() (format " {%s}" (projectile-project-name))))
@@ -2452,15 +2445,14 @@ This configuration is a bit elaborate.
 (defun wal/org-mode ()
   "Life shouldn't be a drag in `org-mode'."
   (message "Organize! Seize the means of production!")
-  ;; Require here to shorten start-up time.
   (wal/disable-tabs)
   (hack-local-variables)
   ;; Since `9.4' org tries to please `electric-indent'.
   ;; (electric-indent-local-mode -1)
-  ;; Disable `drag-stuff-mode'.
+  ;; Interferes with `org-metadown'.
   (drag-stuff-mode -1))
 
-(defun wal/advise-org-export-dispatch (&rest r)
+(defun wal/advise-org-export-dispatch (&rest _r)
   "Advise to require `ox-md' beforehand."
   (require 'ox-md nil t))
 
@@ -2494,29 +2486,29 @@ This configuration is a bit elaborate.
   (org-todo-keywords
    '((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "BLOCKED (b)" "|" "DONE(d)" "CANCELLED(c)")))
   (org-tag-alist
-   '(;; depth
+   '(;; Depth.
      ("@immersive" . ?i)
      ("@process" . ?p)
-     ;; context
+     ;; Context.
      ("@work" . ?w)
      ("@home" . ?h)
      ("@away" . ?a)
      ("@repeated" . ?r)
-     ;; time
+     ;; Time.
      ("@short" . ?<)
      ("@medium" . ?=)
      ("@long" . ?>)
-     ;; energy
+     ;; Energy.
      ("@easy" . ?1)
      ("@average" . ?2)
      ("@challenge" . ?3)
-     ;; category
+     ;; Category.
      ("@dev" . ?d)
      ("@bla" . ?b)
      ("@edu" . ?e)))
   :bind
   (:map org-src-mode-map
-    ("C-c C-c" . org-edit-src-exit))
+   ("C-c C-c" . org-edit-src-exit))
   :general
   (wal/major :keymaps 'org-mode-map
     "e" '(org-edit-src-code :wk "edit source code")
@@ -2569,7 +2561,6 @@ Nice agendas.
   :custom
   (org-super-agenda-groups wal/org-super-agenda-groups)
   :config
-  ;; Not sure why this can't be in config.
   (org-super-agenda-mode)
   :general
   (wal/major :keymaps 'org-agenda-keymap
@@ -2636,11 +2627,6 @@ Trying to organize my thoughts using Zettelkästen.
 (defvar wal/org-roam-index-file "verzeichnis.org"
   "The name of the index file.")
 
-;; Not sure why we need to do it this way.
-(let ((index-file (expand-file-name wal/org-roam-index-file wal/org-roam-directory)))
-  (unless (file-exists-p index-file)
-    (write-region "* Zettelkasten" nil index-file)))
-
 (use-package org-roam
   :delight " zet"
   :if (executable-find "sqlite3")
@@ -2652,17 +2638,21 @@ Trying to organize my thoughts using Zettelkästen.
   :general
   (wal/lieutenant
     "z" '(:ignore t :wk "roam")
-    "zi" '(org-roam-jump-to-index)
+    "zi" '(org-roam-jump-to-index :wk "index")
     "zf" '(org-roam-find-file :wk "find")
     "zc" '(org-roam-capture :wk "capture"))
   ;; Theoretically these should be `wal/major' but these are minor of major.
   ;; We only add these to `org-mode' after the package was loaded.
-  (wal/captain :keymaps 'org-mode-map
-    "z" '(:ignore t :wk "roam")
-    "zi" '(org-roam-insert :wk "insert other note")
+  (wal/lieutenant :keymaps 'org-mode-map
+    "zn" '(org-roam-insert :wk "insert other note")
     "zr" '(org-roam :wk "roam from here")
     "zg" '(org-roam-graph :wk "write graph"))
   :config
+  ;; Not sure why we need to do it this way.
+  (let ((index-file (expand-file-name wal/org-roam-index-file wal/org-roam-directory)))
+    (unless (file-exists-p index-file)
+      (write-region "* Zettelkasten" nil index-file)))
+  ;; Add some capture templates.
   (let* ((fname (concat wal/org-roam-dailies-directory "%<%Y-%m-%d>")))
     (setq org-roam-dailies-capture-templates
           `(("w" "work" entry
@@ -2692,7 +2682,7 @@ Prettier headlines.
 #+BEGIN_SRC emacs-lisp
 (use-package org-bullets
   :after org
-  :hook (org-mode . (lambda() (org-bullets-mode t))))
+  :hook (org-mode . org-bullets-mode))
 #+END_SRC
 
 **** org-clock
@@ -2762,12 +2752,12 @@ Did you know you can edit =dired= buffers using =C-x C-q=?
   :diminish
   :hook (dired-mode . all-the-icons-dired-mode))
 
-;; Hit =/= to filter in =dired= buffers.
+;; Hit `/' to filter in dired buffers.
 (use-package dired-filter
   :after dired
   :delight " def")
 
-;; Highlighting in =dired= buffers.
+;; Highlighting in dired buffers.
 (use-package diredfl
   :after dired
   :config
@@ -2799,25 +2789,21 @@ We also install =vterm-toggle=.
   "Adjustments for `vterm'."
   (ctrlf-local-mode -1))
 
-(unless (version< emacs-version "27.0")
-  (use-package vterm
-    :hook (vterm-mode . wal/vterm-mode)
-    :delight
-    (vterm-copy-mode " vcp")
-    :custom
-    (vterm-kill-buffer-on-exit t)
-    :config
-    (when (file-exists-p "/bin/fish")
-      (setq vterm-shell "/bin/fish")))
+(use-package vterm
+  :hook (vterm-mode . wal/vterm-mode)
+  :delight
+  (vterm-copy-mode " vcp")
+  :custom
+  (vterm-kill-buffer-on-exit t))
 
-  (use-package vterm-toggle
-    :custom
-    (vterm-toggle-fullscreen-p nil)
-    (vterm-toggle-scope 'project)
-    :config
-    (wal/display-buffer-in-side-window 'vterm-mode)
-    :bind
-    ("H-t" . vterm-toggle)))
+(use-package vterm-toggle
+  :custom
+  (vterm-toggle-fullscreen-p nil)
+  (vterm-toggle-scope 'project)
+  :config
+  (wal/display-buffer-in-side-window 'vterm-mode)
+  :bind
+  ("H-t" . vterm-toggle))
 #+END_SRC
 
 **** =vterm= Key Bindings
@@ -2847,7 +2833,7 @@ I like the idea of it but I don't really use it.
 (use-package eshell-syntax-highlighting
   :hook (eshell-mode . eshell-syntax-highlighting-mode))
 
-(defun wal/advise-eshell/clear (&rest r)
+(defun wal/advise-eshell/clear (&rest _r)
   "Advise to truncate buffer."
   (let ((eshell-buffer-maximum-lines 0))
      (eshell-truncate-buffer)))
@@ -2876,6 +2862,7 @@ Version control has never been this easy before.
 (defun wal/magit-display-buffer-new-frame-status (buffer)
   "Display BUFFER in new frame if it is a status buffer.
 Otherwise use `magit-display-buffer-traditional'.
+
 It probably makes sense to bind `q' to `delete-frame'
 in `magit-status-mode-map' when using this function."
   (if (eq (with-current-buffer buffer major-mode)
@@ -3387,7 +3374,7 @@ This depends on `wal/lsp-client'."
 Built-in syntax checker. Used by =eglot=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-flymake--mode-line-title (&rest r)
+(defun wal/advise-flymake--mode-line-title (&rest _r)
   "Use flm as a title."
   "flm")
 
@@ -3419,7 +3406,7 @@ ESLint configs can be found using a file, not a directory.
 
 #+BEGIN_SRC emacs-lisp
 (defun flycheck-eslint-config-exists-p ()
-  "Whether there is a valid eslint config for the current buffer."
+  "Whether there is a valid ESLint config for the current buffer."
   (let* ((executable (flycheck-find-checker-executable 'javascript-eslint))
          (exitcode (and executable (call-process executable
                                                  nil
@@ -3532,15 +3519,13 @@ Language servers are awesome. Thanks, Microsoft.
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal/lsp-client 'eglot
-  "Which lsp client to use.")
+  "Which LSP client to use.")
 
 (defun wal/lsp ()
-  "Activate lsp client."
+  "Activate LSP client."
   (pcase wal/lsp-client
     ('lsp-mode (lsp-deferred))
-    ('eglot (progn
-              (eglot-ensure)
-              (yas-minor-mode)))
+    ('eglot (eglot-ensure))
     (_ nil)))
 #+END_SRC
 
@@ -3572,7 +3557,7 @@ You'll have to install some language servers yourself[fn:12].
   (lsp-pyls-plugins-jedi-use-pyenv-environment t)
   :config
   (lsp-enable-which-key-integration t)
-  ;; Ignore elixir build and dependency folders.
+  ;; Ignore Elixir build and dependency folders.
   (add-to-list 'lsp-file-watch-ignored "[/\\\\]_build$")
   (add-to-list 'lsp-file-watch-ignored "[/\\\\]deps$"))
 
@@ -3599,7 +3584,6 @@ it a sub-package of it.
   (dap-python-debugger 'debugpy)
   (dap-print-io t)
   (dap-auto-configure-features '(repl))
-  ;; (dap-python-terminal "sudo ")
   :config
   (dap-ui-mode 1)
   (require 'dap-node)
@@ -3674,6 +3658,7 @@ This is the light-weight alternative.
     (_ nil)))
 
 (use-package eglot
+  :hook (eglot-managed-mode . yas-minor-mode)
   :custom
   (eglot-autoshutdown t)
   :general
