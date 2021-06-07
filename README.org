@@ -971,19 +971,22 @@ To get support for ligatures, install the symbol font from [[https://github.com/
   "Variable fonts ordered by preference.")
 
 (defvar wal/fixed-font-height 120
-  "The font height for fixed fonts.")
+  "The font height for fixed fonts.
+The default value is 98.")
 
 (defvar wal/variable-font-height 140
-  "The font height for variable fonts.")
+  "The font height for variable fonts.
+This has no default value.")
 
 (defun wal/fixed-fonts-select (font)
-  "Select fixed FONT."
-  (interactive (list (completing-read "Select font: " wal/fixed-fonts)))
-  (let ((found (find-font (font-spec :name font))))
-    (when found
-      (set-face-attribute 'default nil
-                          :font found
-                          :height wal/fixed-font-height))))
+  "Select fixed (available) FONT.
+If `doom-modeline-mode' is on, refresh font width cache."
+  (interactive
+   (list (completing-read "Select font: " (--filter (find-font (font-spec :name it))
+                                                    wal/fixed-fonts))))
+  (set-face-attribute 'default nil :font font)
+  (when doom-modeline-mode
+    (run-with-idle-timer 0.2 nil #'doom-modeline-refresh-font-width-cache)))
 
 (defun wal/fonts-candidate (fonts)
   "Return the first available font from a list of FONTS."
