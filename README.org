@@ -49,7 +49,7 @@ get you started:
 Or you just execute =emacs --daemon= in a terminal or your shell's config.
 
 In any case, an Emacs daemon will start (on start-up).
-To connect you can use, for example, =emacsclient -c -n=, which I alias to =ec=.
+To connect you can use, for example, =emacsclient -c -n=.
 
 *** Scope
 
@@ -93,7 +93,7 @@ Customize start-up.
 #+BEGIN_SRC emacs-lisp
 ;; Maximize frame.
 (setq frame-resize-pixelwise t)
-(add-to-list 'default-frame-alist '(fullscreen . maximized)) ;; Leads to issues when using a tiling wm.
+(add-to-list 'default-frame-alist '(fullscreen . maximized)) ; Leads to issues when using a tiling wm.
 
 ;; No splash.
 (setq inhibit-startup-message t)
@@ -687,6 +687,7 @@ It's also used for certain dispatches:
 
 Most hyper bindings are quick-access actions:
 
++ =H-a= searches with =ag= and (=H-s= with =counsel-projectile-ag=)
 + =H-d= duplicates current line/region with =crux=
 + =H-e= opens (and =H-r= cycles through) =popper= pop-up(s)
 + =H-f= finds project file using =counsel-projectile=
@@ -697,7 +698,6 @@ Most hyper bindings are quick-access actions:
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-p= switches projects using =projectile=
 + =H-q= to do a =quick-calc=
-+ =H-s= searches with =ag=
 + =H-<TAB>= expands snippets (in =yas-minor-mode=)
 + =H-t= toggles =vterm=.
 
@@ -786,7 +786,17 @@ Available modes might depend on =major-mode=.
 Leader keys =major= and =captain= prefix mode-specific actions,
 for major and minor modes respectively.
 
-Leader key =lieutenant= prefixes non-mode package actions.
+Leader key =lieutenant= prefixes non- or semi-mode package actions.
+The package prefixes are:
+
++ =a= for =ag=
++ =.= for =multiple-cursors=
++ =l= and =r= for =avy= (line and region)
++ =o= for =counsel=
++ =p= for =smartparens=
++ =u= for =consult=
++ =x= for =crux=
++ =z= for =org-roam=.
 
 ** Additional (Un-)Bindings
 
@@ -833,8 +843,7 @@ be (re-)executed in quick succession.
 
 #+BEGIN_SRC emacs-lisp
 ;; Scaling text in buffer.
-(defhydra wal/text-scale (:timeout 2
-                          :hint nil)
+(defhydra wal/text-scale (:timeout 2 :hint nil)
   "
 _i_ncrease or _d_ecrease text size
 "
@@ -846,8 +855,7 @@ _i_ncrease or _d_ecrease text size
   :defer t)
 
 ;; Use `hydra' to resize windows.
-(defhydra wal/resize-window (:timeout 2
-                             :hint nil)
+(defhydra wal/resize-window (:timeout 2 :hint nil)
   "
   ^_p_^
 _b_   _f_ Move window splitter.
@@ -1375,9 +1383,8 @@ Don't you want to edit your buffer in multiple places at once?
   (wal/lieutenant
     "." '(:ignore t :wk "mc")
     ".a" '(mc/mark-all-like-this :wk "all like this")
-    ".r" '(:ignore t :wk "region")
-    ".ra" '(mc/edit-beginnings-of-lines :wk "beginnings")
-    ".re" '(mc/edit-ends-of-lines :wk "end"))
+    ".b" '(mc/edit-beginnings-of-lines :wk "beginnings (region)")
+    ".e" '(mc/edit-ends-of-lines :wk "ends (region)"))
   :bind
   (("H-<mouse-3>" . mc/add-cursor-on-click)
    ("C-." . mc/mark-next-like-this)
@@ -1701,17 +1708,20 @@ in the load path.
   (ligature-set-ligatures
    'prog-mode
    ;; Shared.
-   '("&&" ">=" "<=" "==" "+=" "-=" "||" "..." "!!" "??" "//"
+   '("&&" ">=" "<=" "==" "+=" "-=" "||" "..." "!!" "??" "//" "__"
      ;; CPP.
-     "::" "->" ">>" "<<" "++" "!="
+     "::" "->" ">>" "<<" "++" "!=" "|=" "<<=" ">>="
      ;; JS.
      "=>" "!==" "==="
      ;; Elixir.
-     "|>" "#{"
+     "|>" "#{" "\\\\"
      ;; Lisp.
      ";;"
      ;; Prolog.
-     ":-"))
+     ":-"
+     ;; Other.
+     "<!--"
+     ))
   (global-ligature-mode t))
 #+end_src
 
@@ -2004,15 +2014,15 @@ Just goes to line if line is empty."
   :general
   (wal/lieutenant
     ;; Lines.
-    "l" '(:ignore t :wk "avy")
+    "l" '(:ignore t :wk "avy (line)")
     "lc" '(avy-copy-line :wk "copy")
     "lk" '(avy-kill-whole-line :wk "kill")
     "lm" '(avy-move-line :wk "move")
     ;; Region.
-    "lr" '(:ignore t :wk "region")
-    "lrc" '(avy-copy-region :wk "copy")
-    "lrk" '(avy-kill-region :wk "kill")
-    "lrm" '(avy-move-region :wk "move")))
+    "r" '(:ignore t :wk "avy (region)")
+    "rc" '(avy-copy-region :wk "copy")
+    "rk" '(avy-kill-region :wk "kill")
+    "rm" '(avy-move-region :wk "move")))
 #+END_SRC
 
 *** mwim
@@ -2097,13 +2107,13 @@ to download it automatically, but might fail).
                     "dist"
                     "build"
                     "*.svg"))
-  :bind ("H-s" . ag)
+  :bind ("H-a" . ag)
   :general
   (wal/lieutenant
-    "s" '(:ignore t :wk "ag")
-    "st" '(ag-files :wk "by file-type")
-    "sp" '(ag-project :wk "in project")
-    "sf" '(ag-dired :wk "for file")))
+    "a" '(:ignore t :wk "ag")
+    "at" '(ag-files :wk "by file-type")
+    "ap" '(ag-project :wk "in project")
+    "af" '(ag-dired :wk "for file")))
 #+END_SRC
 
 *** ctrlf
@@ -2443,8 +2453,7 @@ of a project."
   :bind
   (:map projectile-mode-map
    ("H-f" . counsel-projectile-find-file)
-   :map projectile-command-map
-   ("s a" . counsel-projectile-ag)))
+   ("H-s" . counsel-projectile-ag)))
 #+END_SRC
 
 ** Org
@@ -3591,7 +3600,6 @@ it a sub-package of it.
   :delight " dap"
   :custom
   (dap-python-executable "python3")
-  ;; Be sure to install with `pip3'.
   (dap-python-debugger 'debugpy)
   (dap-print-io t)
   (dap-auto-configure-features '(repl))
@@ -3868,7 +3876,7 @@ by running =M-x all-the-icons-install-fonts= and selecting =yes=.
 If the installation process should fail for any reason,
 close Emacs and re-run it.
 
-[fn:5] Somewhere around 150 code blocks.
+[fn:5] Not including where =:tangle no= was set, somewhere around 150 code blocks.
 
 [fn:6] Send me an email, why don't you?
 
