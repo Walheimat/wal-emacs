@@ -694,6 +694,7 @@ Most hyper bindings are quick-access actions:
 + =H-i= switches =perspective=
 + =H-k= to start (and =H-j= to end or call) macro
 + =H-l= jumps to line (and =H-o= to word) with =avy=
++ =H-n= adds a todo with =counsel-projectile-org-capture=
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-p= switches projects using =projectile=
 + =H-q= to do a =quick-calc=
@@ -1635,6 +1636,7 @@ Help me find my cursor!
   :config
   (beacon-mode 1)
   :custom
+  (beacon-blink-when-focused t)
   (beacon-color 0.4)
   (beacon-blink-duration 0.4)
   (beacon-blink-delay 0.2)
@@ -2452,6 +2454,10 @@ of a project."
   :demand
   :custom
   (counsel-projectile-preview-buffers t)
+  (counsel-projectile-org-capture-templates
+   '(("t" "[${name}] Task" entry
+      (file+headline "${root}/tasks.org" "Tasks")
+      "* TODO %?\n%i\n%U -- %a")))
   :config
   ;; Make opening with `dired' the default action.
   (setq counsel-projectile-switch-project-action
@@ -2461,6 +2467,7 @@ of a project."
   :bind
   (:map projectile-mode-map
    ("H-f" . counsel-projectile-find-file)
+   ("H-n" . counsel-projectile-org-capture)
    ("H-s" . counsel-projectile-ag)))
 #+END_SRC
 
