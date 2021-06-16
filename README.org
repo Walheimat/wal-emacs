@@ -2538,6 +2538,8 @@ This configuration is a bit elaborate.
    ("C-c C-c" . org-edit-src-exit))
   :general
   (wal/major :keymaps 'org-mode-map
+    "w" '(org-cut-subtree :wk "cut subtree")
+    "y" '(org-paste-subtree :wk "paste subtree")
     "e" '(org-edit-src-code :wk "edit source code")
     "n" '(org-add-note :wk "add note")
     "f" '(:ignore t :wk "footnotes")
@@ -2904,19 +2906,6 @@ in `magit-status-mode-map' when using this function."
   :bind ("H-g" . magit-status))
 #+END_SRC
 
-**** magit-todos
-
-#+BEGIN_SRC emacs-lisp
-(use-package magit-todos
-  :after magit
-  :custom
-  (magit-todos-branch-list nil)
-  :bind
-  (:map magit-mode-map
-   ("," . ivy-magit-todos)
-   ("." . magit-todos-list)))
-#+END_SRC
-
 *** git-timemachine
 
 If you want to go back in time and point fingers at the progenitors of doom.
@@ -3178,6 +3167,47 @@ Enable =flycheck= and disable tabs.
   :hook (emacs-lisp-mode . highlight-quoted-mode))
 #+END_SRC
 
+*** C
+
+I want to be ready for =jai=.
+
+**** cc-mode
+
+Make sure to install =ccls= and =clang=.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/c++-mode ()
+  "Hook into `cc-mode'."
+  (message "Make tidy! Make clean!")
+  (wal/disable-tabs)
+  (wal/lsp))
+
+(use-package cc-mode
+  :ensure nil
+  :ensure-system-package (ccls clang)
+  :config
+  ;; Eliminates conflicts with `delight'.
+  (advice-add 'c-update-modeline :override #'ignore)
+  :hook (c++-mode . wal/c++-mode))
+#+END_SRC
+
+**** csharp-mode
+
+Unity.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/csharp-mode ()
+  "Hook into `csharp-mode'."
+  (message "Ouch!")
+  (wal/disable-tabs)
+  ;; If you're using `lsp-mode' you can run `lsp-install-server'.
+  (wal/lsp))
+
+(use-package csharp-mode
+  :mode "\\.cs\\'"
+  :hook (csharp-mode . wal/csharp-mode))
+#+END_SRC
+
 *** Web
 
 Does anyone actually like web development?
@@ -3214,44 +3244,6 @@ Sometimes you need YAMLs.
   :defer t)
 #+END_SRC
 
-**** csharp-mode
-
-Unity.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/csharp-mode ()
-  "Hook into `csharp-mode'."
-  (message "Ouch!")
-  (wal/disable-tabs)
-  ;; If you're using `lsp-mode' you can run `lsp-install-server'.
-  (wal/lsp))
-
-(use-package csharp-mode
-  :mode "\\.cs\\'"
-  :hook (csharp-mode . wal/csharp-mode))
-#+END_SRC
-
-**** cc-mode
-
-I want to be ready for =jai=.
-Make sure to install =ccls= and =clang=.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/c++-mode ()
-  "Hook into `cc-mode'."
-  (message "Make tidy! Make clean!")
-  (wal/disable-tabs)
-  (wal/lsp))
-
-(use-package cc-mode
-  :ensure nil
-  :ensure-system-package (ccls clang)
-  :config
-  ;; Eliminates conflicts with `delight'.
-  (advice-add 'c-update-modeline :override #'ignore)
-  :hook (c++-mode . wal/c++-mode))
-#+END_SRC
-
 **** crontab-mode
 
 It's time to deal with this.
@@ -3279,15 +3271,6 @@ Markdown. Sometimes you need it.
 
 #+BEGIN_SRC emacs-lisp
 (use-package markdown-mode
-  :defer t)
-#+END_SRC
-
-**** lua-mode
-
-Why not. It can be /awesome/.
-
-#+BEGIN_SRC emacs-lisp
-(use-package lua-mode
   :defer t)
 #+END_SRC
 
@@ -3321,15 +3304,6 @@ Setup for LSP.
 
 (use-package go-mode
   :hook (go-mode . wal/go-mode))
-#+END_SRC
-
-**** haskell-mode
-
-Don't use Haskell much yet.
-
-#+BEGIN_SRC emacs-lisp
-(use-package haskell-mode
-  :defer t)
 #+END_SRC
 
 **** pug-mode
