@@ -239,6 +239,34 @@ I still use this package, but not its mode.
     "pb" '(sp-backward-sexp :wk "backward")))
 #+end_src
 
+*** vdiff-magit
+
+I find =ediff= quite cumbersome, so I'm giving =vdiff= a try.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(use-package vdiff-magit
+  :after magit
+  :demand
+  :custom
+  (vdiff-diff-algorithm 'git-diff)
+  (vdiff-magit-stage-is-2way t)
+  :config
+  ;; `:bind-keymap' doesn't seem to allow mode predicates.
+  (define-key vdiff-mode-map (kbd "C-c v") vdiff-mode-prefix-map)
+  ;; Add to `magit' dispatch.
+  (transient-suffix-put 'magit-dispatch "e" :description "vdiff (dwim)")
+  (transient-suffix-put 'magit-dispatch "e" :command 'vdiff-magit-dwim)
+  (transient-suffix-put 'magit-dispatch "E" :description "vdiff")
+  (transient-suffix-put 'magit-dispatch "E" :command 'vdiff-magit)
+  :bind
+  (:map vdiff-mode-map
+   ("q" . vdiff-quit)
+   ("h" . vdiff-hydra/body)
+   :map magit-mode-map
+   ("e" . vdiff-magit-dwim)
+   ("E" . vdiff-magit)))
+#+END_SRC
+
 ** Other Configurations
 
 *** Time
