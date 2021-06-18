@@ -290,10 +290,8 @@ Make things shorter and snappier.
       show-paren-delay 0.0
       read-process-output-max wal/one-mb
       sentence-end-double-space nil
-      echo-keystrokes 0.1)
-
-;; Simple y/n is enough.
-(defalias 'yes-or-no-p 'y-or-n-p)
+      echo-keystrokes 0.1
+      use-short-answers t)
 #+END_SRC
 
 ** Indentation
@@ -766,6 +764,15 @@ They prefix actions by common context.
 (defvar wal/lieutenant-key "H-/"
   "Wal's quinary (or lieutenant) leader key.")
 
+(defun wal/general-create-leader-sink (key)
+  "Create a sink prefix for the given KEY symbol."
+  (let* ((symv (symbol-value key))
+         (suff (substring symv -1))
+         (symn (symbol-name key))
+         (wk (upcase (concat (substring symn 4 -4) "!"))))
+         (general-define-key :prefix symv
+                             suff
+                             `(:ignore t :wk ,wk))))
 (use-package general
   :defer t
   :config
@@ -778,7 +785,8 @@ They prefix actions by common context.
   (general-create-definer wal/captain
     :prefix wal/captain-key)
   (general-create-definer wal/lieutenant
-    :prefix wal/lieutenant-key))
+    :prefix wal/lieutenant-key)
+  (wal/general-create-leader-sink 'wal/lieutenant-key))
 #+END_SRC
 
 *** About Leader Keys
@@ -921,6 +929,9 @@ Make frame transparent and set themes.
 [[https://peach-melpa.org/][PeachMelpa]] has more themes.
 
 #+BEGIN_SRC emacs-lisp
+(setq frame-title-format '(multiple-frames "%b"
+                              ("%b@" system-name)))
+
 ;; Transparency.
 (defvar wal/transparency 90
   "The default frame transparency.")
@@ -1064,6 +1075,7 @@ Configure annotation usage.
   :custom
   (bookmark-use-annotations t)
   (bookmark-automatically-show-annotations t)
+  (bookmark-menu-confirm-deletion t)
   :config
   (wal/display-buffer-in-side-window "\\*Bookmark Annotation\\*" 'left)
   :bind-keymap
@@ -1085,7 +1097,8 @@ Package =eglot= uses =eldoc= extensively.
   :custom
   (eldoc-idle-delay 2.0)
   (eldoc-echo-area-use-multiline-p nil)
-  (eldoc-echo-area-prefer-doc-buffer t))
+  (eldoc-echo-area-prefer-doc-buffer t)
+  (eldoc-echo-area-display-truncation-message nil))
 #+end_src
 
 **** calc
@@ -1109,6 +1122,17 @@ For internal debugging.
   :defer t
   :config
   (wal/display-buffer-in-side-window 'debug-mode))
+#+end_src
+
+**** dictionary
+
+Look up words.
+
+#+begin_src emacs-lisp
+(use-package dictionary
+  :defer t
+  :custom
+  (dictionary-server "dict.org"))
 #+end_src
 
 **** elec-pair
@@ -1825,7 +1849,9 @@ Highlight =TODO=, =FIXME= etc. in =prog= modes.
 
 #+BEGIN_SRC emacs-lisp
 (use-package hl-todo
-  :hook (prog-mode . hl-todo-mode))
+  :hook (prog-mode . hl-todo-mode)
+  :general
+  (wal/lieutenant "/t" '(hl-todo-insert :wk "insert todo")))
 #+END_SRC
 
 *** visual-fill-column
@@ -1938,12 +1964,12 @@ Be a =winner= without the mode.
     (popper-toggle-latest)))
 
 (defun wal/popper-dead-shell-p ()
-  "Check if the current buffer is a shell pop-up with no process."
+  "Check if the current buffer is a shell or comint pop-up with no process."
   (interactive)
   (let ((buf (current-buffer)))
     (with-current-buffer buf
       (and (popper-popup-p buf)
-           (derived-mode-p 'shell-mode)
+           (or (derived-mode-p 'shell-mode) (derived-mode-p 'comint-mode))
            (not (comint-check-proc buf))))))
 
 (defun wal/popper-open-all ()
@@ -2994,9 +3020,6 @@ This mode is built-in.
     "sb" '(python-shell-send-buffer :wk "buffer")
     "sf" '(python-shell-send-file :wk "file"))
   :config
-  ;; Use `python3' as default Python command.
-  (setq py-python-command "python3"
-        python-shell-interpreter "python3")
   ;; Treat inferior shell as a pop-up.
   (wal/display-buffer-in-side-window 'inferior-python-mode))
 #+END_SRC
@@ -3360,15 +3383,11 @@ This depends on `wal/lsp-client'."
 Built-in syntax checker. Used by =eglot=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-flymake--mode-line-title (&rest _r)
-  "Use flm as a title."
-  "flm")
-
 (use-package flymake
   :ensure nil
   :defer t
   :config
-  (advice-add 'flymake--mode-line-title :override #'wal/advise-flymake--mode-line-title))
+  (setq flymake-mode-line-title "flm"))
 #+END_SRC
 
 *** flycheck
@@ -3476,11 +3495,10 @@ You can bring up actions (skip, save) with =M-o=.
 
 (use-package flyspell
   :ensure nil
-  :delight " fsp"
   :custom
   (flyspell-issue-message-flag nil)
-  :config
-  (setq ispell-dictionary "american")
+  (flyspell-mode-line-string "fsp")
+  (flyspell-default-dictionary "american")
   :general
   (wal/colonel :keymaps '(text-mode-map org-mode-map)
     "s" '(wal/flyspell-mode :wk "flyspell"))
