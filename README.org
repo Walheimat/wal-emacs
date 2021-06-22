@@ -749,19 +749,19 @@ They prefix actions by common context.
 
 #+BEGIN_SRC emacs-lisp
 ;; American ranks.
-(defvar wal/general-key "H-;"
+(defconst wal/general-key "H-;"
   "Wal's primary (or general) leader key.")
 
-(defvar wal/colonel-key "H-'"
+(defconst wal/colonel-key "H-'"
   "Wal's secondary (or colonel) leader key.")
 
-(defvar wal/major-key "H-,"
+(defconst wal/major-key "H-,"
   "Wal's tertiary (or major) leader key.")
 
-(defvar wal/captain-key "H-."
+(defconst wal/captain-key "H-."
   "Wal's quaternary (or captain) leader key.")
 
-(defvar wal/lieutenant-key "H-/"
+(defconst wal/lieutenant-key "H-/"
   "Wal's quinary (or lieutenant) leader key.")
 
 (defun wal/general-create-leader-sink (key)
@@ -880,6 +880,7 @@ _b_   _f_ Move window splitter.
   ("n" wal/edge-down)
   ("p" wal/edge-up)
   ("o" wal/split-window-the-other-way "split the other way")
+  ("g" balance-windows "balance")
   ("q" nil "cancel"))
 
 (defhydra wal/scroll-other-window (:timeout 1 :hint nil)
@@ -1083,6 +1084,33 @@ Configure annotation usage.
   :bind
   (:map bookmark-map
    ("b" . bookmark-bmenu-list)))
+#+end_src
+
+**** ediff
+
+Use a single frame and split horizontally.
+
+#+begin_src emacs-lisp
+(use-package ediff
+  :ensure nil
+  :defer t
+  :custom
+  (ediff-highlighting-style 'ascii)
+  (ediff-window-setup-function #'ediff-setup-windows-plain) ; Single frame.
+  (ediff-split-window-function #'split-window-horizontally))
+#+end_src
+
+**** smerge
+
+Make the command map accessible.
+
+#+begin_src emacs-lisp
+(use-package smerge-mode
+  :ensure nil
+  :delight " smg"
+  :defer t
+  :custom
+  (smerge-command-prefix (kbd "C-c g")))
 #+end_src
 
 **** eldoc
@@ -2942,7 +2970,9 @@ in `magit-status-mode-map' when using this function."
   :custom
   (magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
   (magit-blame-mode-lighter " mbl")
-  :bind ("H-g" . magit-status))
+  :bind
+  (("H-g" . magit-status)
+   ("C-x C-g" . magit-find-file)))
 #+END_SRC
 
 *** git-timemachine
@@ -3279,6 +3309,23 @@ Sometimes you need YAMLs.
 (use-package yaml-mode
   :defer t)
 #+END_SRC
+
+**** php-mode
+
+The elephant in the room.
+
+#+begin_src emacs-lisp
+(defun wal/php-mode ()
+  "Hook into `php-mode'."
+  (message "It's a stub of an elephant")
+  (hack-local-variables)
+  (wal/disable-tabs)
+  (wal/lsp))
+
+(use-package php-mode
+  :defer t
+  :hook (php-mode . wal/php-mode))
+#+end_src
 
 **** crontab-mode
 
