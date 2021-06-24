@@ -1083,50 +1083,8 @@ Configure annotation usage.
   ("C-c b" . bookmark-map)
   :bind
   (:map bookmark-map
-   ("b" . bookmark-bmenu-list)))
-#+end_src
-
-**** ediff
-
-Use a single frame and split horizontally.
-
-#+begin_src emacs-lisp
-(use-package ediff
-  :ensure nil
-  :defer t
-  :custom
-  (ediff-highlighting-style 'ascii)
-  (ediff-window-setup-function #'ediff-setup-windows-plain) ; Single frame.
-  (ediff-split-window-function #'split-window-horizontally))
-#+end_src
-
-**** smerge
-
-Make the command map accessible.
-
-#+begin_src emacs-lisp
-(use-package smerge-mode
-  :ensure nil
-  :delight " smg"
-  :defer t
-  :custom
-  (smerge-command-prefix (kbd "C-c g")))
-#+end_src
-
-**** eldoc
-
-Package =eglot= uses =eldoc= extensively.
-
-#+begin_src emacs-lisp
-(use-package eldoc
-  :ensure nil
-  :defer t
-  :diminish " eld"
-  :custom
-  (eldoc-idle-delay 2.0)
-  (eldoc-echo-area-use-multiline-p nil)
-  (eldoc-echo-area-prefer-doc-buffer t)
-  (eldoc-echo-area-display-truncation-message nil))
+   ("l" . bookmark-bmenu-list)
+   ("L" . bookmark-load)))
 #+end_src
 
 **** calc
@@ -1161,6 +1119,36 @@ Look up words.
   :defer t
   :custom
   (dictionary-server "dict.org"))
+#+end_src
+
+**** ediff
+
+Use a single frame and split horizontally.
+
+#+begin_src emacs-lisp
+(use-package ediff
+  :ensure nil
+  :defer t
+  :custom
+  (ediff-highlighting-style 'ascii)
+  (ediff-window-setup-function #'ediff-setup-windows-plain) ; Single frame.
+  (ediff-split-window-function #'split-window-horizontally))
+#+end_src
+
+**** eldoc
+
+Package =eglot= uses =eldoc= extensively.
+
+#+begin_src emacs-lisp
+(use-package eldoc
+  :ensure nil
+  :defer t
+  :diminish " eld"
+  :custom
+  (eldoc-idle-delay 2.0)
+  (eldoc-echo-area-use-multiline-p nil)
+  (eldoc-echo-area-prefer-doc-buffer t)
+  (eldoc-echo-area-display-truncation-message nil))
 #+end_src
 
 **** elec-pair
@@ -1255,6 +1243,32 @@ Bind some useful functions.
   (wal/major "w" '(delete-trailing-whitespace :wk "delete trailing whitespace"))
   :bind
   ("C-?" . undo-redo))
+#+end_src
+
+**** smerge
+
+Make the command map accessible.
+
+#+begin_src emacs-lisp
+(use-package smerge-mode
+  :ensure nil
+  :delight " smg"
+  :defer t
+  :custom
+  (smerge-command-prefix (kbd "C-c g")))
+#+end_src
+
+**** time
+
+What time is it?
+
+#+begin_src emacs-lisp
+(use-package time
+  :ensure nil
+  :defer t
+  :custom
+  (display-time-format " %H:%M")
+  (display-time-default-load-average nil))
 #+end_src
 
 **** whitespace-mode
@@ -2346,14 +2360,15 @@ Some nicer candidate view when switching buffers.
   (wal/lieutenant
     "o" '(:ignore t :wk "counsel")
     "os" '(counsel-search :wk "search")
-    "ob" '(counsel-bookmark :wk "bookmark")
     "ol" '(counsel-linux-app :wk "Linux app"))
   :bind
   (:map ivy-mode-map
    ("M-g m" . counsel-mark-ring)
    ("M-x" . counsel-M-x)
    ("<menu>" . counsel-M-x)
-   ("C-x C-f" . counsel-find-file)))
+   ("C-x C-f" . counsel-find-file)
+   :map bookmark-map
+   ("b" . counsel-bookmark)))
 #+END_SRC
 
 *** company
