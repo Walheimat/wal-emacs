@@ -1258,6 +1258,18 @@ Make the command map accessible.
   (smerge-command-prefix (kbd "C-c g")))
 #+end_src
 
+**** so-long
+
+Some files are so long. This is now built-in.
+
+#+begin_src emacs-lisp
+(use-package so-long
+  :ensure nil
+  :defer t
+  :config
+  (global-so-long-mode t))
+#+end_src
+
 **** time
 
 What time is it?
@@ -2186,7 +2198,8 @@ to download it automatically, but might fail).
                     "deps"
                     "dist"
                     "build"
-                    "*.svg"))
+                    "*.svg"
+                    "*.min.js"))
   :bind ("H-a" . ag)
   :general
   (wal/lieutenant
@@ -2312,7 +2325,8 @@ Some nicer candidate view when switching buffers.
       '(counsel-projectile-switch-to-buffer
         persp-kill-buffer*
         persp-add-buffer ; This one doesn't seem to work ...
-        persp-remove-buffer)
+        persp-remove-buffer
+        crux-recentf-find-file)
     (plist-put all-the-icons-ivy-rich-display-transformers-list it
                '(:columns
                  ((all-the-icons-ivy-rich-file-icon)
@@ -2410,8 +2424,6 @@ Better short-term-memory for =ivy=.
   :if wal/use-prescient
   :after (counsel prescient)
   :custom
-  ;; Default plus `wal/ivy-switch-buffer'.
-  (ivy-prescient-sort-commands '(:not swiper swiper-isearch ivy-switch-buffer wal/ivy-switch-buffer))
   (ivy-prescient-retain-classic-highlighting t)
   :config
   (ivy-prescient-mode +1))
@@ -2486,26 +2498,39 @@ This only removes `process-kill-buffer-query-function'."
 Projects in Emacs.
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/projectile-globally-ignored-directories nil
+  "Additional directories to ignore.")
+
+(defvar wal/projectile-globally-ignored-files
+  '("yarn.lock" "package.lock")
+  "Additional files to ignore.")
+
+ (defvar wal/projectile-globally-ignored-file-suffixes
+  '(".min.js")
+  "Additional file suffixes to ignore.")
+
 (use-package projectile
   :defer 0.75
   :delight " pjt"
   :bind
   (:map projectile-mode-map
    ("H-p" . projectile-switch-project))
+  :bind-keymap
+  ("C-c p" . projectile-command-map)
   :custom
   (projectile-completion-system 'ivy)
-  (projectile-mode-line-function '(lambda() (format " {%s}" (projectile-project-name))))
   (projectile-switch-project-action #'projectile-dired)
   (projectile-sort-order 'recentf)
   ;; Allow finding files that are ignored by `.gitignore'.
   (projectile-indexing-method 'hybrid)
   (projectile-enable-caching t)
   :config
-  (add-to-list 'projectile-globally-ignored-directories "*.ccls-cache")
-  (add-to-list 'projectile-globally-ignored-directories "*node_modules")
-  (add-to-list 'projectile-globally-ignored-directories "*build")
-  (add-to-list 'projectile-globally-ignored-directories "*__pycache__")
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+  (--each wal/projectile-globally-ignored-directories
+    (add-to-list 'projectile-globally-ignored-directories it))
+  (--each wal/projectile-globally-ignored-file-suffixes
+    (add-to-list 'projectile-globally-ignored-file-suffixes it))
+  (--each wal/projectile-globally-ignored-files
+    (add-to-list 'projectile-globally-ignored-files it))
   (projectile-mode +1))
 #+END_SRC
 
@@ -2514,13 +2539,46 @@ Projects in Emacs.
 Add =counsel= integration to =projectile=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-counsel-projectile-ag (func &rest r)
-  "Use `counsel-ag' outside of projects.
-I don't like being prompted to switch when I'm outside
-of a project."
+(defun wal/advise-counsel-projectile-ag-around (func &rest r)
+  "Use `counsel-ag' outside of projects instead of prompting to open one first."
   (if (projectile-project-p)
       (apply func r)
     (apply 'counsel-ag r)))
+
+(defun wal/advise-counsel-projectile-ag-override (&optional options)
+  "Override of `counsel-projectile-ag'.
+ The differences being that:
+ (1) we call `counsel-ag' if we're not in a project and
+ (2) we don't call `shell-quote-argument' on the ignored arguments which doesn't seem to work."
+  (interactive)
+  (if (and (eq projectile-require-project-root 'prompt)
+           (not (projectile-project-p)))
+      (counsel-ag options)
+    (let* ((ivy--actions-list (copy-sequence ivy--actions-list))
+           (ignored
+            (mapconcat (lambda (i)
+                         (concat "--ignore " i))
+                       (append
+                        (projectile--globally-ignored-file-suffixes-glob)
+                        (projectile-ignored-files-rel)
+                        (projectile-ignored-directories-rel))
+                       " "))
+           (counsel-ag-base-command
+            (let ((counsel-ag-command counsel-ag-base-command))
+              (counsel--format-ag-command ignored "%s"))))
+      (ivy-add-actions
+       'counsel-ag
+       counsel-projectile-ag-extra-actions)
+      (when (= (prefix-numeric-value current-prefix-arg) 4)
+        (setq current-prefix-arg '(16)))
+      (counsel-ag (eval counsel-projectile-ag-initial-input)
+                  (projectile-project-root)
+                  options
+                  (projectile-prepend-project-name
+                   (concat (car (if (listp counsel-ag-base-command)
+                                    counsel-ag-base-command
+                                  (split-string counsel-ag-base-command)))
+                           ": "))))))
 
 (use-package counsel-projectile
   :after (projectile counsel)
@@ -2535,7 +2593,8 @@ of a project."
   ;; Make opening with `dired' the default action.
   (setq counsel-projectile-switch-project-action
         (-replace-at 0 4 counsel-projectile-switch-project-action))
-  (advice-add 'counsel-projectile-ag :around #'wal/advise-counsel-projectile-ag)
+  ;; (advice-add 'counsel-projectile-ag :around #'wal/advise-counsel-projectile-ag-around)
+  (advice-add 'counsel-projectile-ag :override #'wal/advise-counsel-projectile-ag-override)
   (counsel-projectile-mode +1)
   :bind
   (:map projectile-mode-map
