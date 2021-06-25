@@ -688,7 +688,7 @@ Most hyper bindings are quick-access actions:
 + =H-d= duplicates current line/region with =crux=
 + =H-e= opens (and =H-r= cycles through) =popper= pop-up(s)
 + =H-f= finds project file using =counsel-projectile=
-+ =H-g= runs =magit-status=
++ =H-m= runs =magit-status=
 + =H-i= switches =perspective=
 + =H-k= to start (and =H-j= to end or call) macro
 + =H-l= jumps to line (and =H-o= to word) with =avy=
@@ -764,15 +764,19 @@ They prefix actions by common context.
 (defconst wal/lieutenant-key "H-/"
   "Wal's quinary (or lieutenant) leader key.")
 
-(defun wal/general-create-leader-sink (key)
-  "Create a sink prefix for the given KEY symbol."
-  (let* ((symv (symbol-value key))
-         (suff (substring symv -1))
-         (symn (symbol-name key))
-         (wk (upcase (concat (substring symn 4 -4) "!"))))
-         (general-define-key :prefix symv
-                             suff
-                             `(:ignore t :wk ,wk))))
+(cl-defmacro wal/create-leader-sink (name &key definer prefix)
+  "Macro to create a leader sink.
+NAME is the name of the macro. DEFINER is the definer to create this for
+and PREFIX is its prefix."
+  (let* ((defname (symbol-name definer))
+         (pref (symbol-value prefix))
+         (suf (substring pref -1))
+         (wk (upcase (concat (substring defname 4) "!"))))
+    (progn
+      (general-define-key :prefix pref suf `(:ignore t :wk ,wk))
+      `(defmacro ,name (key &rest args)
+         `(, ',definer ,(concat ,suf key) ,@args)))))
+
 (use-package general
   :defer t
   :config
@@ -786,7 +790,8 @@ They prefix actions by common context.
     :prefix wal/captain-key)
   (general-create-definer wal/lieutenant
     :prefix wal/lieutenant-key)
-  (wal/general-create-leader-sink 'wal/lieutenant-key))
+  (wal/create-leader-sink wal/major-sink :definer wal/major :prefix wal/major-key)
+  (wal/create-leader-sink wal/lieutenant-sink :definer wal/lieutenant :prefix wal/lieutenant-key))
 #+END_SRC
 
 *** About Leader Keys
@@ -806,11 +811,15 @@ The package prefixes are:
 + =a= for =ag=
 + =.= for =multiple-cursors=
 + =l= and =r= for =avy= (line and region)
++ =m= for =magit=
 + =o= for =counsel=
 + =p= for =smartparens=
 + =u= for =consult=
 + =x= for =crux=
 + =z= for =org-roam=.
+
+Leader keys =major= and =lieutenant= have sinks for non-grouped actions
+that relate to major modes and packages respectively.
 
 ** Additional (Un-)Bindings
 
@@ -883,17 +892,18 @@ _b_   _f_ Move window splitter.
   ("g" balance-windows "balance")
   ("q" nil "cancel"))
 
-(defhydra wal/scroll-other-window (:timeout 1 :hint nil)
+(defhydra wal/scroll-other-window (:timeout 4 :hint nil)
   "
 Scroll other window u_p_/dow_n_.
 "
   ("p" scroll-other-window-down)
-  ("n" scroll-other-window))
+  ("n" scroll-other-window)
+  ("q" nil "cancel"))
 
 (general-define-key
-  "H-[" '(wal/text-scale/body :wk "text scale")
-  "H-]" '(wal/resize-window/body :wk "resize window")
-  "H-v" '(wal/scroll-other-window/body :wk "scroll other window"))
+ "H-[" '(wal/text-scale/body :wk "text scale")
+ "H-]" '(wal/resize-window/body :wk "resize window")
+ "H-v" '(wal/scroll-other-window/body :wk "scroll other window"))
 #+END_SRC
 
 *** Additional Mode Controls
@@ -1240,7 +1250,7 @@ Bind some useful functions.
   :ensure nil
   :general
   (wal/general "d" '(list-processes :wk "list processes")) ; FIXME: Find a better prefix
-  (wal/major "w" '(delete-trailing-whitespace :wk "delete trailing whitespace"))
+  (wal/major-sink "w" '(delete-trailing-whitespace :wk "delete trailing whitespace"))
   :bind
   ("C-?" . undo-redo))
 #+end_src
@@ -1733,6 +1743,24 @@ Dim inactive frames.
 Make dimmed frames a bit dimmer.
 
 #+BEGIN_SRC emacs-lisp
+;; Solution from buzztaiki https://github.com/gonewest818/dimmer.el/issues/49
+(defun wal/lsp-ui-doc-frame-p ()
+  "Check if BUFFER is a lsp ui doc frame buffer."
+  (string-match-p "\\` \\*lsp-ui-doc" (buffer-name)))
+
+(defun wal/advise-dimmer-config-change-handler ()
+  "Advise to only force process if no predicate is truthy."
+  (let ((ignore (cl-some (lambda (f) (and (fboundp f) (funcall f)))
+                         dimmer-prevent-dimming-predicates)))
+    (unless ignore
+      (dimmer-process-all t))))
+
+(defun wal/dimmer-configure-lsp-doc ()
+  "Convenience settings for lsp-doc users."
+  (add-to-list
+   'dimmer-prevent-dimming-predicates
+   #'wal/lsp-ui-doc-frame-p))
+
 (use-package dimmer
   :defer 3
   :diminish
@@ -1740,11 +1768,12 @@ Make dimmed frames a bit dimmer.
   (dimmer-fraction 0.3)
   (dimmer-adjustment-mode :foreground)
   :config
+  (advice-add 'dimmer-config-change-handler :override 'wal/advise-dimmer-config-change-handler)
   (dimmer-configure-company-box)
   (dimmer-configure-hydra)
   (dimmer-configure-magit)
   (dimmer-configure-org)
-  (dimmer-configure-which-key)
+  (wal/dimmer-configure-lsp-doc)
   (dimmer-mode t))
 #+END_SRC
 
@@ -1905,7 +1934,7 @@ Highlight =TODO=, =FIXME= etc. in =prog= modes.
 (use-package hl-todo
   :hook (prog-mode . hl-todo-mode)
   :general
-  (wal/lieutenant "/t" '(hl-todo-insert :wk "insert todo")))
+  (wal/lieutenant-sink "t" '(hl-todo-insert :wk "insert todo")))
 #+END_SRC
 
 *** visual-fill-column
@@ -2155,7 +2184,7 @@ nice despite us using =ivy= for completion everywhere.
         consult-outline)
     (advice-add it :around #'wal/advise-selectrum))
   :general
-  (wal/major "c" '(consult-mode-command :wk "invoke mode command"))
+  (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
   (wal/major :keymaps 'org-mode-map
     "j" '(consult-outline :wk "jump to heading"))
   (wal/lieutenant
@@ -2439,14 +2468,14 @@ but we still use it to advise a few =consult= functions.
 (defun wal/advise-selectrum(func &rest r)
   "Call FUNC applying R using `selectrum' for read completion."
   (let ((completing-read-function #'selectrum-completing-read)
-         (read-buffer-function #'selectrum-read-buffer)
-         (read-file-name-function #'selectrum-read-file-name)
-         (completion-in-region-function #'selectrum-completion-in-region)
-         (coompleting-read-multiple #'selectrum-completing-read-multiple)
-         (read-libary-name #'selectrum-read-libarary-name)
-         (completion-styles '(substring partial-completion))
-         ;; Cannot advise `dired-read-dir-and-switches' and `minibuffer-message'.
-         (map (make-sparse-keymap)))
+        (read-buffer-function #'selectrum-read-buffer)
+        (read-file-name-function #'selectrum-read-file-name)
+        (completion-in-region-function #'selectrum-completion-in-region)
+        (coompleting-read-multiple #'selectrum-completing-read-multiple)
+        (read-libary-name #'selectrum-read-libarary-name)
+        (completion-styles '(substring partial-completion))
+        ;; Cannot advise `dired-read-dir-and-switches' and `minibuffer-message'.
+        (map (make-sparse-keymap)))
     (set-keymap-parent map minibuffer-local-map)
     (define-key map [remap previous-matching-history-element] 'selectrum-select-from-history)
     (apply func r)))
@@ -2505,7 +2534,7 @@ Projects in Emacs.
   '("yarn.lock" "package.lock")
   "Additional files to ignore.")
 
- (defvar wal/projectile-globally-ignored-file-suffixes
+(defvar wal/projectile-globally-ignored-file-suffixes
   '(".min.js")
   "Additional file suffixes to ignore.")
 
@@ -3006,7 +3035,7 @@ I like the idea of it but I don't really use it.
 (defun wal/advise-eshell/clear (&rest _r)
   "Advise to truncate buffer."
   (let ((eshell-buffer-maximum-lines 0))
-     (eshell-truncate-buffer)))
+    (eshell-truncate-buffer)))
 
 (use-package eshell
   :ensure nil
@@ -3037,16 +3066,20 @@ It probably makes sense to bind `q' to `delete-frame'
 in `magit-status-mode-map' when using this function."
   (if (eq (with-current-buffer buffer major-mode)
           'magit-status-mode)
-        (display-buffer buffer '(display-buffer-pop-up-frame))
+      (display-buffer buffer '(display-buffer-pop-up-frame))
     (magit-display-buffer-traditional buffer)))
 
 (use-package magit
   :custom
   (magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
   (magit-blame-mode-lighter " mbl")
-  :bind
-  (("H-g" . magit-status)
-   ("C-x C-g" . magit-find-file)))
+  :general
+  (wal/lieutenant
+    "m" '(:ignore t :wk "magit")
+    "mf" '(magit-find-file :wk "find file")
+    "mo" '(magit-find-file-other-window :wk "find file other window")
+    "md" '(magit-diff-range :wk "diff range"))
+  :bind ("H-m" . magit-status))
 #+END_SRC
 
 *** git-timemachine
@@ -3674,6 +3707,7 @@ You'll have to install some language servers yourself[fn:12].
   (lsp-completion-provider :capf)
   (lsp-prefer-capf t)
   (lsp-idle-delay 1.5)
+  (lsp-enalbe-dap-auto-configure nil)
   ;; These have to be defined here.
   (lsp-headerline-breadcrumb-enable nil)
   (lsp-log-io t)
@@ -3689,9 +3723,9 @@ You'll have to install some language servers yourself[fn:12].
 (use-package lsp-ui
   :after lsp-mode
   :custom
-  (lsp-ui-sideline-delay 5)
+  (lsp-ui-sideline-delay 1.5)
   (lsp-ui-doc-position 'top) ; Alternatively `at-point'.
-  (lsp-ui-doc-delay 2))
+  (lsp-ui-doc-delay 0.2))
 #+END_SRC
 
 **** dap-mode
