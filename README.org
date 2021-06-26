@@ -109,8 +109,7 @@ Customize start-up.
 ;; Accept redefinitions.
 (setq ad-redefinition-action 'accept)
 
-(add-hook 'after-init-hook (lambda ()
-                             (load custom-file)))
+(add-hook 'after-init-hook (lambda () (load custom-file)))
 #+END_SRC
 
 ** Package Archives
@@ -374,7 +373,6 @@ This was cribbed from [[https://www.john2x.com/emacs.html][john2x's config]].
 
 (defun wal/persist-scratch ()
   "Persist contents of *scratch* buffer."
-  (interactive)
   (with-current-buffer (get-buffer-create "*scratch*")
     (write-region (point-min) (point-max) wal/scratch-persist-file)))
 
@@ -388,268 +386,6 @@ This was cribbed from [[https://www.john2x.com/emacs.html][john2x's config]].
 (add-hook 'after-init-hook #'wal/rehydrate-scratch)
 (add-hook 'kill-emacs-hook #'wal/persist-scratch)
 #+END_SRC
-
-* Additional Functions
-
-** Directories
-
-Finding files should =mkdir -p= its parents.
-
-#+BEGIN_SRC emacs-lisp
-;; Creating parent dirs.
-(defun wal/create-non-existent-directory ()
-  "Ask whether to create non-existent directory.
-If a file is found in a not (yet) existing directory,
-ask if it should get created."
-  (let ((parent-directory (file-name-directory buffer-file-name)))
-    (when (and (not (file-exists-p parent-directory))
-               (y-or-n-p (format "Create non-existing directory `%s'? " parent-directory)))
-      (make-directory parent-directory t))))
-
-(add-to-list 'find-file-not-found-functions #'wal/create-non-existent-directory)
-
-;; Don't care about `.' and `..'.
-(defun wal/directory-files (directory)
-  "Get all directory files in DIRECTORY except for current and parent directories."
-  (nthcdr 2 (directory-files directory t)))
-#+END_SRC
-
-** Buffers
-
-Ignore some buffers when switching.
-
-#+BEGIN_SRC emacs-lisp
-(defvar wal/commonly-ignored-major-modes
-  '(dired-mode wdired-mode helpful-mode magit-diff-mode vterm-mode)
-  "Major modes whose buffers should be commonly ignored.")
-
-(defun wal/commmonly-ignored-buffer-p (buffer-or-string)
-  "Check if provided BUFFER-OR-STRING is commonly ignored."
-  (let ((maj (with-current-buffer
-                 (get-buffer-create buffer-or-string)
-               major-mode)))
-    (or (member maj wal/commonly-ignored-major-modes)
-        ;; Starred buffers other than scratch and eww buffers.
-        (and (not (string-match "^\\*scratch" buffer-or-string))
-             (not (string-match "^\\*eww\\*\\'" buffer-or-string))
-             (string-match "^\\*[[:ascii:]]+\\*\\'" buffer-or-string)))))
-#+END_SRC
-
-*** Buffer Display
-
-Utility functions to configure displaying buffers of a certain type.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/display-buffer-condition (buffer-or-mode)
-  "Get a display buffer condition for BUFFER-OR-MODE."
-  (pcase buffer-or-mode
-    ((pred stringp) buffer-or-mode)
-    ((pred symbolp) `(lambda (bufname _)
-                       (with-current-buffer bufname
-                         (equal major-mode (intern ,(symbol-name buffer-or-mode))))))
-    (_ nil)))
-
-(defun wal/display-buffer-in-pop-up (buffer &optional in-frame)
-  "Display BUFFER in pop-up window (or IN-FRAME)."
-  (let ((condition (wal/display-buffer-condition buffer))
-        (dispfun (if in-frame
-                     'display-buffer-pop-up-frame
-                   'display-buffer-pop-up-window)))
-    (add-to-list 'display-buffer-alist
-                 `(,condition
-                   (,dispfun)))))
-
-;; The next two functions make sense for `popper' buffers.
-
-(defun wal/display-buffer-in-side-window (buffer &optional side loose)
-  "Display BUFFER in SIDE window.
-This window will be on SIDE (on the bottom by default), dedicated to the buffer
-(unless LOOSE) and visible frames are considered reusable."
-  (let ((condition (wal/display-buffer-condition buffer)))
-    (add-to-list 'display-buffer-alist
-                 `(,condition
-                   (display-buffer-reuse-window display-buffer-in-side-window)
-                   (side . ,(or side 'bottom))
-                   (dedicated . ,(not loose))
-                   (reusable-frames . visible)))))
-
-(defun wal/display-buffer-in-direction (buffer &optional direction)
-  "Display BUFFER (in DIRECTION)."
-  (let ((condition (wal/display-buffer-condition buffer)))
-    (add-to-list 'display-buffer-alist
-                 `(,condition
-                   (display-buffer-reuse-mode-window display-buffer-in-direction)
-                   (direction . ,(or direction 'rightmost))))))
-#+END_SRC
-
-** Windows
-
-I keep messing up, splitting vertically when I meant horizontally.
-This is inspired by [[https://github.com/purcell/emacs.d/blob/master][purcell's config]].
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/split-window-the-other-way ()
-  "Split window the other way.
-This means if horizontally split, split vertically;
-if vertically split, split horizontally."
-  (interactive)
-  (let* ((other-buffer (and (next-window) (window-buffer (next-window))))
-         (win (selected-window))
-         (split-direction (cond ((or (windows-sharing-edge win 'above)
-                                     (windows-sharing-edge win 'below))
-                                 'vert)
-                                ((or (windows-sharing-edge win 'right)
-                                     (windows-sharing-edge win 'left))
-                                 'hori)
-                                (t nil))))
-    (delete-other-windows)
-    (pcase split-direction
-      ('vert (split-window-horizontally))
-      ('hori (split-window-vertically))
-      (_ nil))
-    (when other-buffer
-      (set-window-buffer (next-window) other-buffer))))
-
-(define-minor-mode walled-mode
-  "Dedicate the window."
-  :init-value nil
-  :lighter " wld"
-  (cond
-   (noninteractive
-    (setq walled-mode nil))
-   (walled-mode
-    (walled-mode--enable))
-   (t
-    (walled-mode--disable))))
-
-(defun walled-mode--enable ()
-  "Dedicate the window to buffer."
-  (let ((window (selected-window))
-        (bufname (current-buffer)))
-    (set-window-dedicated-p window bufname)
-    (message "Dedicating window")))
-
-(defun walled-mode--disable ()
-  "Make window no longer dedicated."
-  (let ((window (selected-window)))
-    (set-window-dedicated-p window nil)
-    (message "Window no longer dedicated")))
-
-(defun wal/edge (scale-above scale-below)
-  "Move the window splitter using SCALE-ABOVE and SCALE-BELOW."
-  (interactive)
-  (let* ((win (selected-window))
-         (direction (cond ((windows-sharing-edge win 'above) scale-above)
-                          ((windows-sharing-edge win 'below) scale-below)
-                          (t nil))))
-    (pcase direction
-      ('enlarge (wal/enlarge-window))
-      ('shrink (wal/shrink-window))
-      (_ nil))))
-
-(defun wal/edge-horizontally (scale-left scale-right)
-  "Move the window splitter using SCALE-LEFT and SCALE-RIGHT."
-  (interactive)
-  (let* ((win (selected-window))
-         (direction (cond ((windows-sharing-edge win 'left) scale-left)
-                          ((windows-sharing-edge win 'right) scale-right)
-                          (t nil))))
-    (pcase direction
-      ('enlarge (wal/enlarge-window-horizontally))
-      ('shrink (wal/shrink-window-horizontally))
-      (_ nil))))
-
-(defun wal/edge-left ()
-  "Move the splitter of the selected window left.
-This shrinks or enlarges the window depending on its position."
-  (interactive)
-  (wal/edge-horizontally 'enlarge 'shrink))
-
-(defun wal/edge-right ()
-  "Move the splitter of the selected window right.
-This shrinks or enlarges the window depending on its position."
-  (interactive)
-  (wal/edge-horizontally 'shrink 'enlarge))
-
-(defun wal/edge-up ()
-  "Move the splitter of the selected window up.
-This shrinks or enlarges the window depending on its position."
-  (interactive)
-  (wal/edge 'enlarge 'shrink))
-
-(defun wal/edge-down ()
-  "Move the splitter of the selected window down.
-This shrinks or enlarges the window depending on its position."
-  (interactive)
-  (wal/edge 'shrink 'enlarge))
-
-(defun wal/shrink-window (&optional horizontally)
-  "Shrink the selected window (HORIZONTALLY)."
-  (interactive)
-  (let* ((available (window-min-delta (selected-window) horizontally))
-         (chunk (floor (* available 0.2))))
-    (if horizontally
-        (shrink-window-horizontally chunk)
-      (shrink-window chunk))))
-
-(defun wal/shrink-window-horizontally ()
-  "Shrink the selected window horizontally."
-  (interactive)
-  (wal/shrink-window t))
-
-(defun wal/enlarge-window (&optional horizontally)
-  "Enlarge the selected window (HORIZONTALLY)."
-  (interactive)
-  (let* ((available (window-max-delta (selected-window) horizontally))
-         (chunk (floor (* available 0.2))))
-    (if horizontally
-        (enlarge-window-horizontally chunk)
-      (enlarge-window chunk))))
-
-(defun wal/enlarge-window-horizontally ()
-  "Enlarge the selected window horizontally."
-  (interactive)
-  (wal/enlarge-window t))
-#+END_SRC
-
-** Garbage Collection
-
-Better(?) garbage collection.
-
-#+BEGIN_SRC emacs-lisp
-;; Trick garbage collection.
-(defconst wal/hundred-mb
-  (* 1024 1024 100)
-  "A hundred megabytes.")
-
-(defun wal/minibuffer-setup-hook ()
-  "Increase gc threshold to maximum on minibuffer setup."
-  (setq gc-cons-threshold most-positive-fixnum))
-
-(defun wal/minibuffer-exit-hook ()
-  "Decrease it again on minibuffer exit."
-  (setq gc-cons-threshold wal/hundred-mb))
-
-(add-hook 'minibuffer-setup-hook #'wal/minibuffer-setup-hook)
-(add-hook 'minibuffer-exit-hook #'wal/minibuffer-exit-hook)
-#+END_SRC
-
-** Advice
-
-I have some advice for you.
-
-#+begin_src emacs-lisp
-;; Set to `t' in `.dir-locals.el' if whitespace should be removed on save.
-(defvar wal/delete-trailing-whitespace nil
-  "Whether to delete trailing whitespace.")
-
-(defun wal/advise-hack-local-variables (&rest _r)
-  "After local variables are available, add some local hooks."
-  (when wal/delete-trailing-whitespace
-    (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)))
-
-(advice-add 'hack-local-variables :after #'wal/advise-hack-local-variables)
-#+end_src
 
 * Key Bindings
 
@@ -790,14 +526,19 @@ and PREFIX is its prefix."
     :prefix wal/captain-key)
   (general-create-definer wal/lieutenant
     :prefix wal/lieutenant-key)
-  (wal/create-leader-sink wal/major-sink :definer wal/major :prefix wal/major-key)
-  (wal/create-leader-sink wal/lieutenant-sink :definer wal/lieutenant :prefix wal/lieutenant-key))
+  ;; Create sinks.
+  (wal/create-leader-sink wal/major-sink
+    :definer wal/major
+    :prefix wal/major-key)
+  (wal/create-leader-sink wal/lieutenant-sink
+    :definer wal/lieutenant
+    :prefix wal/lieutenant-key))
 #+END_SRC
 
 *** About Leader Keys
 
-Leader key =general= prefixes Emacs actions
-like loading a theme, finding a library, quitting.
+Leader key =general= prefixes Emacs actions like loading a theme,
+finding a library, quitting as well as opening =eshell= and =eww=.
 
 Leader key =colonel= prefixes mode toggles.
 Available modes might depend on =major-mode=.
@@ -848,9 +589,6 @@ Saving the config will tangle its contents."
 
 (wal/general "c" '(wal/open-config :wk "open config"))
 
-;;; Windows, frames and buffers.
-(wal/colonel "." '(walled-mode :wk "walled"))
-
 ;; Killing Emacs.
 (global-unset-key (kbd "C-x C-c"))
 (wal/general "q" '(save-buffers-kill-terminal :wk "quit Emacs"))
@@ -865,40 +603,40 @@ Provides a context for related commands that can
 be (re-)executed in quick succession.
 
 #+BEGIN_SRC emacs-lisp
-;; Scaling text in buffer.
-(defhydra wal/text-scale (:timeout 2 :hint nil)
-  "
-_i_ncrease or _d_ecrease text size
-"
-  ("i" text-scale-increase)
-  ("d" text-scale-decrease)
-  ("q" nil "cancel"))
-
 (use-package hydra
   :defer t)
 
-;; Use `hydra' to resize windows.
+;; Scaling text in buffer.
+(defhydra wal/text-scale (:timeout 2 :hint nil)
+  "
+_i_ncrease or _d_ecrease text size. Or _q_uit.
+"
+  ("i" text-scale-increase)
+  ("d" text-scale-decrease)
+  ("q" nil))
+
+;; Move window splitter or balance windows.
 (defhydra wal/resize-window (:timeout 2 :hint nil)
   "
   ^_p_^
-_b_   _f_ Move window splitter.
+_b_   _f_ Move window splitter. Ba_l_ance. Or _q_uit.
   ^_n_^
 "
   ("b" wal/edge-left)
   ("f" wal/edge-right)
   ("n" wal/edge-down)
   ("p" wal/edge-up)
-  ("o" wal/split-window-the-other-way "split the other way")
-  ("g" balance-windows "balance")
-  ("q" nil "cancel"))
+  ("o" wal/split-window-the-other-way)
+  ("l" balance-windows)
+  ("q" nil))
 
 (defhydra wal/scroll-other-window (:timeout 4 :hint nil)
   "
-Scroll other window u_p_/dow_n_.
+Scroll other window u_p_/dow_n_. Or _q_uit.
 "
   ("p" scroll-other-window-down)
   ("n" scroll-other-window)
-  ("q" nil "cancel"))
+  ("q" nil))
 
 (general-define-key
  "H-[" '(wal/text-scale/body :wk "text scale")
@@ -934,6 +672,279 @@ switching between =major-mode= and =fundamental-mode=.
   "F" '(wal/fundamental-mode :wk "Fundamental"))
 #+END_SRC
 
+* Additional Functions
+
+** Directories
+
+Finding files should =mkdir -p= its parents.
+
+#+BEGIN_SRC emacs-lisp
+;; Creating parent dirs.
+(defun wal/create-non-existent-directory ()
+  "Ask whether to create non-existent directory.
+If a file is found in a not (yet) existing directory,
+ask if it should get created."
+  (let ((parent-directory (file-name-directory buffer-file-name)))
+    (when (and (not (file-exists-p parent-directory))
+               (y-or-n-p (format "Create non-existing directory `%s'? " parent-directory)))
+      (make-directory parent-directory t))))
+
+(add-to-list 'find-file-not-found-functions #'wal/create-non-existent-directory)
+
+;; Don't care about `.' and `..'.
+(defun wal/directory-files (directory)
+  "Get all directory files in DIRECTORY except for current and parent directories."
+  (nthcdr 2 (directory-files directory t)))
+#+END_SRC
+
+** Buffers
+
+Ignore some buffers when switching.
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/commonly-ignored-major-modes
+  '(dired-mode wdired-mode helpful-mode magit-diff-mode vterm-mode)
+  "Major modes whose buffers should be commonly ignored.")
+
+(defun wal/commmonly-ignored-buffer-p (buffer-or-string)
+  "Check if provided BUFFER-OR-STRING is commonly ignored."
+  (let ((maj (with-current-buffer
+                 (get-buffer-create buffer-or-string)
+               major-mode)))
+    (or (member maj wal/commonly-ignored-major-modes)
+        ;; Starred buffers other than scratch and eww buffers.
+        (and (not (string-match "^\\*scratch" buffer-or-string))
+             (not (string-match "^\\*eww\\*\\'" buffer-or-string))
+             (string-match "^\\*[[:ascii:]]+\\*\\'" buffer-or-string)))))
+#+END_SRC
+
+*** Buffer Display
+
+Utility functions to configure displaying buffers of a certain type.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/display-buffer-condition (buffer-or-mode)
+  "Get a display buffer condition for BUFFER-OR-MODE."
+  (pcase buffer-or-mode
+    ((pred stringp) buffer-or-mode)
+    ((pred symbolp) `(lambda (bufname _)
+                       (with-current-buffer bufname
+                         (equal major-mode (intern ,(symbol-name buffer-or-mode))))))
+    (_ nil)))
+
+(defun wal/display-buffer-in-pop-up (buffer &optional in-frame)
+  "Display BUFFER in pop-up window (or IN-FRAME)."
+  (let ((condition (wal/display-buffer-condition buffer))
+        (dispfun (if in-frame
+                     'display-buffer-pop-up-frame
+                   'display-buffer-pop-up-window)))
+    (add-to-list 'display-buffer-alist
+                 `(,condition
+                   (,dispfun)))))
+
+;; The next two functions make sense for `popper' buffers.
+
+(defun wal/display-buffer-in-side-window (buffer &optional side loose)
+  "Display BUFFER in SIDE window.
+This window will be on SIDE (on the bottom by default), dedicated to the buffer
+(unless LOOSE) and visible frames are considered reusable."
+  (let ((condition (wal/display-buffer-condition buffer)))
+    (add-to-list 'display-buffer-alist
+                 `(,condition
+                   (display-buffer-reuse-window display-buffer-in-side-window)
+                   (side . ,(or side 'bottom))
+                   (dedicated . ,(not loose))
+                   (reusable-frames . visible)))))
+
+(defun wal/display-buffer-in-direction (buffer &optional direction)
+  "Display BUFFER (in DIRECTION)."
+  (let ((condition (wal/display-buffer-condition buffer)))
+    (add-to-list 'display-buffer-alist
+                 `(,condition
+                   (display-buffer-reuse-mode-window display-buffer-in-direction)
+                   (direction . ,(or direction 'rightmost))))))
+#+END_SRC
+
+** Windows
+
+I keep messing up, splitting vertically when I meant horizontally.
+This is inspired by [[https://github.com/purcell/emacs.d/blob/master][purcell's config]].
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/split-window-the-other-way ()
+  "Split window the other way.
+This means if horizontally split, split vertically;
+if vertically split, split horizontally."
+  (interactive)
+  (let* ((other-buffer (and (next-window) (window-buffer (next-window))))
+         (win (selected-window))
+         (split-direction (cond ((or (windows-sharing-edge win 'above)
+                                     (windows-sharing-edge win 'below))
+                                 'vert)
+                                ((or (windows-sharing-edge win 'right)
+                                     (windows-sharing-edge win 'left))
+                                 'hori)
+                                (t nil))))
+    (delete-other-windows)
+    (pcase split-direction
+      ('vert (split-window-horizontally))
+      ('hori (split-window-vertically))
+      (_ nil))
+    (when other-buffer
+      (set-window-buffer (next-window) other-buffer))))
+
+(defun wal/edge (scale-above scale-below)
+  "Move the window splitter using SCALE-ABOVE and SCALE-BELOW."
+  (interactive)
+  (let* ((win (selected-window))
+         (direction (cond ((windows-sharing-edge win 'above) scale-above)
+                          ((windows-sharing-edge win 'below) scale-below)
+                          (t nil))))
+    (pcase direction
+      ('enlarge (wal/enlarge-window))
+      ('shrink (wal/shrink-window))
+      (_ nil))))
+
+(defun wal/edge-horizontally (scale-left scale-right)
+  "Move the window splitter using SCALE-LEFT and SCALE-RIGHT."
+  (interactive)
+  (let* ((win (selected-window))
+         (direction (cond ((windows-sharing-edge win 'left) scale-left)
+                          ((windows-sharing-edge win 'right) scale-right)
+                          (t nil))))
+    (pcase direction
+      ('enlarge (wal/enlarge-window-horizontally))
+      ('shrink (wal/shrink-window-horizontally))
+      (_ nil))))
+
+(defun wal/edge-left ()
+  "Move the splitter of the selected window left.
+This shrinks or enlarges the window depending on its position."
+  (interactive)
+  (wal/edge-horizontally 'enlarge 'shrink))
+
+(defun wal/edge-right ()
+  "Move the splitter of the selected window right.
+This shrinks or enlarges the window depending on its position."
+  (interactive)
+  (wal/edge-horizontally 'shrink 'enlarge))
+
+(defun wal/edge-up ()
+  "Move the splitter of the selected window up.
+This shrinks or enlarges the window depending on its position."
+  (interactive)
+  (wal/edge 'enlarge 'shrink))
+
+(defun wal/edge-down ()
+  "Move the splitter of the selected window down.
+This shrinks or enlarges the window depending on its position."
+  (interactive)
+  (wal/edge 'shrink 'enlarge))
+
+(defun wal/shrink-window (&optional horizontally)
+  "Shrink the selected window (HORIZONTALLY)."
+  (interactive)
+  (let* ((available (window-min-delta (selected-window) horizontally))
+         (chunk (floor (* available 0.2))))
+    (if horizontally
+        (shrink-window-horizontally chunk)
+      (shrink-window chunk))))
+
+(defun wal/shrink-window-horizontally ()
+  "Shrink the selected window horizontally."
+  (interactive)
+  (wal/shrink-window t))
+
+(defun wal/enlarge-window (&optional horizontally)
+  "Enlarge the selected window (HORIZONTALLY)."
+  (interactive)
+  (let* ((available (window-max-delta (selected-window) horizontally))
+         (chunk (floor (* available 0.2))))
+    (if horizontally
+        (enlarge-window-horizontally chunk)
+      (enlarge-window chunk))))
+
+(defun wal/enlarge-window-horizontally ()
+  "Enlarge the selected window horizontally."
+  (interactive)
+  (wal/enlarge-window t))
+#+END_SRC
+
+*** walled-mode
+
+Minor mode to dedicate buffers to windows.
+
+#+begin_src emacs-lisp
+(define-minor-mode walled-mode
+  "Dedicate the window."
+  :init-value nil
+  :lighter " wld"
+  (cond
+   (noninteractive
+    (setq walled-mode nil))
+   (walled-mode
+    (walled-mode--enable))
+   (t
+    (walled-mode--disable))))
+
+(defun walled-mode--enable ()
+  "Dedicate the window to buffer."
+  (let ((window (selected-window))
+        (bufname (current-buffer)))
+    (set-window-dedicated-p window bufname)
+    (message "Dedicating window")))
+
+(defun walled-mode--disable ()
+  "Make window no longer dedicated."
+  (let ((window (selected-window)))
+    (set-window-dedicated-p window nil)
+    (message "Window no longer dedicated")))
+
+(use-package walled-mode
+  :ensure nil
+  :general
+  (wal/colonel "." '(walled-mode :wk "walled")))
+#+end_src
+
+** Garbage Collection
+
+Better(?) garbage collection.
+
+#+BEGIN_SRC emacs-lisp
+;; Trick garbage collection.
+(defconst wal/hundred-mb
+  (* 1024 1024 100)
+  "A hundred megabytes.")
+
+(defun wal/minibuffer-setup-hook ()
+  "Increase gc threshold to maximum on minibuffer setup."
+  (setq gc-cons-threshold most-positive-fixnum))
+
+(defun wal/minibuffer-exit-hook ()
+  "Decrease it again on minibuffer exit."
+  (setq gc-cons-threshold wal/hundred-mb))
+
+(add-hook 'minibuffer-setup-hook #'wal/minibuffer-setup-hook)
+(add-hook 'minibuffer-exit-hook #'wal/minibuffer-exit-hook)
+#+END_SRC
+
+** Advice
+
+I have some advice for you.
+
+#+begin_src emacs-lisp
+;; Set to `t' in `.dir-locals.el' if whitespace should be removed on save.
+(defvar wal/delete-trailing-whitespace nil
+  "Whether to delete trailing whitespace.")
+
+(defun wal/advise-hack-local-variables (&rest _r)
+  "After local variables are available, add some local hooks."
+  (when wal/delete-trailing-whitespace
+    (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)))
+
+(advice-add 'hack-local-variables :after #'wal/advise-hack-local-variables)
+#+end_src
+
 * Look
 
 Make frame transparent and set themes.
@@ -954,33 +965,15 @@ Make frame transparent and set themes.
   (let ((transparency (min (max (or value wal/transparency) 1) 100)))
     (set-frame-parameter (selected-frame) 'alpha transparency)))
 
-;; Two themes and a switch.
-(defvar wal/primary-emacs-theme 'kaolin-valley-dark
-  "The quote-unquote default Emacs theme.")
-
-(defvar wal/secondary-emacs-theme 'kaolin-valley-light
-  "The non-default Emacs theme.")
-
-(defvar wal/active-theme nil
-  "The active theme between primiary and secondary.")
-
-(defun wal/light-switch (&optional selection)
-  "Switch to SELECTION or from light to dark theme and vice-versa."
-  (interactive)
-  (disable-theme wal/active-theme)
-  (cond ((or (equal wal/active-theme wal/primary-emacs-theme) (equal selection 'secondary))
-         (load-theme wal/secondary-emacs-theme t)
-         (setq wal/active-theme wal/secondary-emacs-theme))
-        ((or (equal wal/active-theme wal/secondary-emacs-theme) (equal selection 'primary))
-         (load-theme wal/primary-emacs-theme t)
-         (setq wal/active-theme wal/primary-emacs-theme))))
+(defvar wal/theme nil
+  "The theme.")
 
 ;; Some themes require configuration, so we only load after initialization.
 (defun wal/setup-visuals ()
   "Setup visual frills like theme and transparency."
   (interactive)
-  (load-theme wal/primary-emacs-theme t)
-  (setq wal/active-theme wal/primary-emacs-theme)
+  (when wal/theme
+    (load-theme wal/theme t))
   (wal/transparency))
 
 (if (daemonp)
@@ -2374,13 +2367,6 @@ Some nicer candidate view when switching buffers.
 (defvar wal/use-prescient t
   "Whether `prescient' is used.")
 
-(defun wal/advise-counsel-load-theme (theme)
-  "Advise to also update `wal/*-emacs-theme'."
-  (if (eq wal/primary-emacs-theme wal/active-theme)
-      (setq wal/primary-emacs-theme (intern theme))
-    (setq wal/secondary-emacs-theme (intern theme)))
-  (setq wal/active-theme (intern theme)))
-
 (use-package counsel
   :after ivy
   :demand
@@ -2390,10 +2376,6 @@ Some nicer candidate view when switching buffers.
   ;; Package ivy-prescient sets `ivy-initial-inputs-alist' to nil!
   (unless wal/use-prescient
     (setcdr (assq 'counsel-M-x ivy-initial-inputs-alist) ""))
-  ;; Any theme set by `counsel-load-theme' should also set
-  ;; `wal/*-theme' so that calling `wal/light-switch' doesn't
-  ;; undo things.
-  (advice-add 'counsel-load-theme :filter-return #'wal/advise-counsel-load-theme)
   :general
   (wal/general
     "t" '(counsel-load-theme :wk "load theme")
@@ -3983,8 +3965,12 @@ I use a different (light) theme here.
 
 #+BEGIN_SRC emacs-lisp
 (use-package writeroom-mode
-  :hook ((writeroom-mode-enable . (lambda() (wal/light-switch 'secondary)))
-         (writeroom-mode-disable . (lambda() (wal/light-switch 'primary))))
+  :config
+  (setq writeroom-global-effects (-remove-at 1 writeroom-global-effects)) ; Keep transparency.
+  :custom
+  (writeroom-width 0.618)
+  (writeroom-restore-window-config t)
+  (writeroom-extra-line-spacing 0.1)
   :general
   (wal/colonel "r" '(writeroom-mode :wk "toggle writeroom")))
 #+END_SRC
@@ -4044,11 +4030,6 @@ packages =general= and =hydra=.
 + [[*css-mode][=css-mode=]]
 + [[*cc-mode][=cc-mode=]]
 
-[fn:11] Also, if you're on an older Ubuntu version (like my work PC),
-the =libvterm= package might be too old, but you could
-always try to build from source ...
+[fn:11] If you're on an older distro your =libvterm= package might be too old.
 
 [fn:12] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
-
-[fn:13] This requires =org-roam= to be loaded which only happens
-after dispatch was invoked an the global minor mode is running.

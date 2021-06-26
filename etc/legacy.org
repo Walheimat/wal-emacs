@@ -326,3 +326,41 @@ Check for custom args.
     (setq command-line-args (delete switch command-line-args))
     found-switch))
 #+END_SRC
+
+** Other
+
+*** Theme Light Switch
+
+I rarely ever used this.
+
+#+begin_src emacs-lisp
+;; Two themes and a switch.
+(defvar wal/primary-emacs-theme 'kaolin-valley-dark
+  "The quote-unquote default Emacs theme.")
+
+(defvar wal/secondary-emacs-theme 'kaolin-valley-light
+  "The non-default Emacs theme.")
+
+(defun wal/light-switch (&optional selection)
+  "Switch to SELECTION or from light to dark theme and vice-versa."
+  (interactive)
+  (disable-theme wal/active-theme)
+  (cond ((or (equal wal/active-theme wal/primary-emacs-theme) (equal selection 'secondary))
+         (load-theme wal/secondary-emacs-theme t)
+         (setq wal/active-theme wal/secondary-emacs-theme))
+        ((or (equal wal/active-theme wal/secondary-emacs-theme) (equal selection 'primary))
+         (load-theme wal/primary-emacs-theme t)
+         (setq wal/active-theme wal/primary-emacs-theme))))
+
+(defun wal/advise-counsel-load-theme (theme)
+  "Advise to also update `wal/*-emacs-theme'."
+  (if (eq wal/primary-emacs-theme wal/active-theme)
+      (setq wal/primary-emacs-theme (intern theme))
+    (setq wal/secondary-emacs-theme (intern theme)))
+  (setq wal/active-theme (intern theme)))
+
+;; Any theme set by `counsel-load-theme' should also set
+;; `wal/*-theme' so that calling `wal/light-switch' doesn't
+;; undo things.
+(advice-add 'counsel-load-theme :filter-return #'wal/advise-counsel-load-theme)
+#+end_src

@@ -48,8 +48,7 @@ tangle the blocks without loading the created file."
   ;; Maybe tangle config and then load the file.
   (wal/tangle-config t t))
 
-;; Just an example: changing primary and secondary themes
-;; (setq wal/primary-emacs-theme   'doom-dracula
-;;       wal/secondary-emacs-theme 'doom-opera-light)
+;; Just an example: Setting a theme.
+;; (setq wal/theme 'doom-dracula)
 
 ;;; .emacs ends here
