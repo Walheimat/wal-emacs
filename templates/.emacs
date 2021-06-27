@@ -7,7 +7,7 @@
 
 ;;; Code:
 
-(declare-function org-babel-tangle-file "org-babel-tangle-file")
+(declare-function org-babel-tangle-file "ob-tangle")
 
 (defvar wal/emacs-config-default-path
   (expand-file-name "emacs-config" user-emacs-directory)

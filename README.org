@@ -532,7 +532,10 @@ and PREFIX is its prefix."
     :prefix wal/major-key)
   (wal/create-leader-sink wal/lieutenant-sink
     :definer wal/lieutenant
-    :prefix wal/lieutenant-key))
+    :prefix wal/lieutenant-key)
+  (wal/create-leader-sink wal/colonel-sink
+    :definer wal/colonel
+    :prefix wal/colonel-key))
 #+END_SRC
 
 *** About Leader Keys
@@ -559,8 +562,8 @@ The package prefixes are:
 + =x= for =crux=
 + =z= for =org-roam=.
 
-Leader keys =major= and =lieutenant= have sinks for non-grouped actions
-that relate to major modes and packages respectively.
+Leader keys =colonel=, =major= and =lieutenant= have sinks
+for actions that should always be available.
 
 ** Additional (Un-)Bindings
 
@@ -672,10 +675,9 @@ switching between =major-mode= and =fundamental-mode=.
       (setq wal/before-fundamental-mode m-mode))))
 
 ;; Little EOF joke for ya.
-(wal/colonel
-  "E" '(emacs-lisp-mode :wk "Elisp")
-  "O" '(org-mode :wk "Org")
-  "F" '(wal/fundamental-mode :wk "Fundamental"))
+(wal/colonel-sink "E" '(emacs-lisp-mode :wk "Elisp"))
+(wal/colonel-sink "O" '(org-mode :wk "Org"))
+(wal/colonel-sink "F" '(wal/fundamental-mode :wk "Fundamental"))
 #+END_SRC
 
 * Additional Functions
@@ -1152,7 +1154,7 @@ Package =eglot= uses =eldoc= extensively.
 (use-package eldoc
   :ensure nil
   :defer t
-  :diminish " eld"
+  :delight " eld"
   :custom
   (eldoc-idle-delay 2.0)
   (eldoc-echo-area-use-multiline-p nil)
@@ -1338,8 +1340,8 @@ Show the next possible key presses towards an action.
 #+BEGIN_SRC emacs-lisp
 (use-package which-key
   :defer t
-  :diminish
   :custom
+  (which-key-lighter " wk?")
   (which-key-idle-delay 0.8)
   (which-key-idle-secondary-delay 0.4)
   :config
@@ -1762,7 +1764,7 @@ Make dimmed frames a bit dimmer.
 
 (use-package dimmer
   :defer 3
-  :diminish
+  :delight " dmm"
   :custom
   (dimmer-fraction 0.3)
   (dimmer-adjustment-mode :foreground)
@@ -1891,8 +1893,7 @@ Show indentation.
 
 #+BEGIN_SRC emacs-lisp
 (use-package highlight-indent-guides
-  ;; Don't need to see this.
-  :diminish highlight-indent-guides-mode
+  :delight " hig"
   :custom
   (highlight-indent-guides-method 'character)
   (highlight-indent-guides-responsive 'top)
@@ -1923,7 +1924,7 @@ Show colors in source code and make delimiters stand out.
   :hook (prog-mode . rainbow-delimiters-mode))
 
 (use-package rainbow-mode
-  :diminish
+  :delight " rbm"
   :hook prog-mode)
 #+END_SRC
 
@@ -2320,7 +2321,8 @@ Pass R to the switch buffer function."
   :bind
   (:map ivy-mode-map
    ("C-x b" . wal/ivy-switch-buffer)
-   ("C-x C-b" . wal/ivy-switch-ignored-buffers))) ; Replaces `list-buffers'.
+   ;; Replaces `list-buffers'.
+   ("C-x C-b" . wal/ivy-switch-ignored-buffers)))
 #+END_SRC
 
 **** ivy-avy
