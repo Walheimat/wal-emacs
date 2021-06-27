@@ -571,6 +571,12 @@ Most bindings are declared in the [[*Packages][packages]] section.
   (expand-file-name "README.org" wal/emacs-config-default-path)
   "The path to Walheimat's config.")
 
+(defun wal/get-config-version ()
+  "Get the version of the config using git describe."
+  (interactive)
+  (let ((default-directory wal/emacs-config-default-path))
+    (string-trim (shell-command-to-string "git describe --abbrev=0"))))
+
 (defun wal/tangle-config-prompt ()
   "Prompt user before tangling."
   (interactive)
@@ -1400,7 +1406,7 @@ Let's have a dash of board.
 (use-package dashboard
   :hook (after-init . dashboard-setup-startup-hook)
   :custom
-  (dashboard-banner-logo-title "Walheimat's Emacs Config")
+  (dashboard-banner-logo-title (format "Walheimat's Emacs Config %s" (wal/get-config-version)))
   (dashboard-startup-banner (expand-file-name
                              "assets/logo.png"
                              wal/emacs-config-default-path))
