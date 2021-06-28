@@ -290,7 +290,7 @@ Make things shorter and snappier.
       read-process-output-max wal/one-mb
       sentence-end-double-space nil
       echo-keystrokes 0.1
-      use-short-answers t)
+      use-short-answers t) ; New in version 28. Otherwise you need an alias.
 #+END_SRC
 
 ** Indentation
@@ -527,6 +527,9 @@ and PREFIX is its prefix."
   (general-create-definer wal/lieutenant
     :prefix wal/lieutenant-key)
   ;; Create sinks.
+  (wal/create-leader-sink wal/general-sink
+    :definer wal/general
+    :prefix wal/general-key)
   (wal/create-leader-sink wal/major-sink
     :definer wal/major
     :prefix wal/major-key)
@@ -562,8 +565,8 @@ The package prefixes are:
 + =x= for =crux=
 + =z= for =org-roam=.
 
-Leader keys =colonel=, =major= and =lieutenant= have sinks
-for actions that should always be available.
+All leader keys have sinks for sporadically used actions that should
+still always be available.
 
 ** Additional (Un-)Bindings
 
@@ -604,6 +607,9 @@ Saving the config will tangle its contents."
 
 ;; No triple-ESC.
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+
+;; Create dir locals.
+(wal/general-sink "l" '(add-dir-local-variable :wk "add dir local variable"))
 #+END_SRC
 
 *** Hydra
@@ -1181,7 +1187,8 @@ This requires Emacs to have been compiled with =--with-xml2= flag.
 (use-package eww
   :ensure nil
   :general
-  (wal/general "b" '(eww :wk "eww")))
+  (wal/general "b" '(eww :wk "eww"))
+  (wal/general-sink "b" '(eww-search-words :wk "search words (eww)")))
 #+END_SRC
 
 **** help
@@ -1250,7 +1257,7 @@ Bind some useful functions.
 (use-package simple
   :ensure nil
   :general
-  (wal/general "d" '(list-processes :wk "list processes")) ; FIXME: Find a better prefix
+  (wal/general-sink "p" '(list-processes :wk "list processes"))
   (wal/major-sink "w" '(delete-trailing-whitespace :wk "delete trailing whitespace"))
   :bind
   ("C-?" . undo-redo))
@@ -1301,6 +1308,22 @@ What time is it?
   :ensure nil
   :general
   (wal/colonel "w" '(whitespace-mode :wk "whitespace")))
+#+end_src
+
+**** winner-mode
+
+#+begin_src emacs-lisp
+(use-package winner
+  :ensure nil
+  :custom
+  (winner-dont-bind-my-keys t)
+  :general
+  (wal/captain
+    "w" '(:ignore t :wk "winner")
+    "wu" '(winner-undo :wk "undo")
+    "wr" '(winner-redo :wk "redo"))
+  :config
+  (winner-mode +1))
 #+end_src
 
 **** zone
@@ -1924,8 +1947,8 @@ Show colors in source code and make delimiters stand out.
   :hook (prog-mode . rainbow-delimiters-mode))
 
 (use-package rainbow-mode
-  :delight " rbm"
-  :hook prog-mode)
+  :defer t
+  :delight " rbm")
 #+END_SRC
 
 *** hl-todo
@@ -2038,7 +2061,7 @@ Used to advise `aw-switch-to-window'."
 
 *** popper
 
-Be a =winner= without the mode.
+Accommodate =winner=.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/popper-toggle ()
@@ -2106,7 +2129,6 @@ Be a =winner= without the mode.
                                                  :v-adjust 0.0)
                              " ")))
   :config
-  (winner-mode 1)
   (popper-mode +1))
 #+END_SRC
 
@@ -2872,6 +2894,8 @@ Prettier headlines.
 #+BEGIN_SRC emacs-lisp
 (use-package org-bullets
   :after org
+  :custom
+  (org-bullets-bullet-list '("◆" "◈" "►" "▻" "▸" "▹" "•"))
   :hook (org-mode . org-bullets-mode))
 #+END_SRC
 
@@ -3986,7 +4010,7 @@ I use a different (light) theme here.
 
 * Footnotes
 
-[fn:1] Should also work in =27.1= that I used before.
+[fn:1] Jumped ship from =27.1=. Some minor things might not work there.
 
 [fn:2] If you're feeling adventurous, [[https://git.savannah.gnu.org/cgit/emacs.git/tree/INSTALL][build from source]].
 
