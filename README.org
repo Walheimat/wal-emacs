@@ -77,13 +77,6 @@ Set some personal info[fn:6].
 #+BEGIN_SRC emacs-lisp
 (setq user-full-name "Krister Schuchardt"
       user-mail-address "krister.schuchardt@theventury.com")
-
-;; Warn Mac/Windows users.
-(unless (eq system-type 'gnu/linux)
-  (warn "\
-    Warning: Config only tested on Linux.
-    While I did get in running on Windows 10,
-    it was quite tricky and involved setting unsafe options."))
 #+END_SRC
 
 ** Start-Up
@@ -91,25 +84,29 @@ Set some personal info[fn:6].
 Customize start-up.
 
 #+BEGIN_SRC emacs-lisp
+;; Warn Mac/Windows users.
+(unless (eq system-type 'gnu/linux)
+  (warn "\
+    Warning: Config only tested on Linux.
+    While I did get in running on Windows 10,
+    it was quite tricky and involved setting unsafe options."))
+
 ;; Maximize frame.
 (setq frame-resize-pixelwise t)
 (add-to-list 'default-frame-alist '(fullscreen . maximized)) ; Leads to issues when using a tiling wm.
 
 ;; No splash.
 (setq inhibit-startup-message t)
-(setq initial-major-mode 'fundamental-mode)
+(setq initial-major-mode 'fundamental-mode) ; Avoids loading `prog-mode' derivatives.
 
-;; Use a distinct file for customization.
+;; Use a distinct file for customization and create it if it doesn't exist.
 (setq custom-file (expand-file-name "custom.el" wal/emacs-config-default-path))
-
-;; We'll create that file if it doesn't yet exist.
 (unless (file-exists-p custom-file)
   (write-region "" nil custom-file))
+(add-hook 'after-init-hook (lambda () (load custom-file)))
 
 ;; Accept redefinitions.
 (setq ad-redefinition-action 'accept)
-
-(add-hook 'after-init-hook (lambda () (load custom-file)))
 #+END_SRC
 
 ** Package Archives
@@ -151,15 +148,15 @@ Before we can use it, we have to install it and a few other packages the hard wa
            (package-install 'dash))))
 (require 'dash)
 
+(defconst wal/dependencies '(diminish delight use-package)
+  "Packages to install before using `use-package'.")
+
 (defun wal/install-packages (packages)
   "Install all PACKAGES unless already installed."
   (--each packages
     (when (not (package-installed-p it))
       (package-install it)))
   (delete-other-windows))
-
-(defvar wal/dependencies '(diminish delight use-package)
-  "Packages to install before using `use-package'.")
 
 ;; Try to install. On fail refresh and install again.
 (condition-case nil
@@ -286,11 +283,12 @@ Make things shorter and snappier.
   "One megabyte.")
 
 (setq mouse-yank-at-point t
-      show-paren-delay 0.0
+      show-paren-delay 0.1
       read-process-output-max wal/one-mb
       sentence-end-double-space nil
       echo-keystrokes 0.1
-      use-short-answers t) ; New in version 28. Otherwise you need an alias.
+      ;; New in version 28. Otherwise you need an alias.
+      use-short-answers t)
 #+END_SRC
 
 ** Indentation
@@ -299,19 +297,29 @@ Set up an easy way to switch between tabs
 and spaces for indentation.
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/tab-width 4
-  "A tab width 4 spaces wide.")
+(defvar wal/indent-offset 4
+  "The indent offset in spaces.")
 
-(defvar wal/prefer-tabs t
-  "Whether tabs are used for indentation.")
+(defvar wal/prefer-tabs nil
+  "Whether tabs are preferred for indentation.")
 
 (defvar wal/allow-custom-indent-line-fun t
   "Whether a custom `indent-line-function' can be passed.")
 
-(defun wal/reset-tab-width ()
+(defun wal/reset-to-standard (sym)
+  "Reset the default value of symbol SYM to the standard value."
+  (set-default sym (eval (car (get sym 'standard-value)))))
+
+(defun wal/reset-indent-defaults ()
   "Reset the tab width to the standard."
   (interactive)
-  (setq tab-width (eval (car (get 'tab-width 'standard-value)))))
+  (--each '(python-indent-offset
+            js-indent-level
+            css-indent-offset
+            electric-indent-inhibit
+            tab-width
+            indent-tabs-mode)
+    (wal/reset-to-standard it)))
 
 (defun wal/disable-tabs ()
   "Disable `indent-tabs-mode'."
@@ -339,12 +347,12 @@ and spaces for indentation.
 (defun wal/set-indent-defaults (&optional num)
   "Set indent defaults, optionally to NUM."
   (interactive "nSet tab width to: ")
-  (let ((width (or num wal/tab-width)))
-    (setq-default python-indent-offset width ; Python
-                  js-indent-level width ; Javascript
-                  css-indent-offset width ; CSS and SCSS
+  (let ((offset (or num wal/indent-offset)))
+    (setq-default python-indent-offset offset ; Python
+                  js-indent-level offset ; Javascript
+                  css-indent-offset offset ; CSS and SCSS
+                  tab-width offset
                   electric-indent-inhibit t
-                  tab-width width
                   indent-tabs-mode wal/prefer-tabs)
     (setq backward-delete-char-untabify-method 'hungry)))
 
@@ -399,9 +407,9 @@ There are some non-standard control sequences.
 Anywhere:
 
 + =C->=/=C-<= expands/contracts region
-+ =C-.= marks next point like this allowing
++ =C-.= marks next like this allowing
   + =C-,= to delete last mark and
-  + =C-/= to move it
+  + =C-/= to move it downward
 + =C-?= redoes (as =C-/= undoes).
 
 User-reserved combinations are used for certain command maps:
@@ -431,7 +439,7 @@ Most hyper bindings are quick-access actions:
 + =H-n= adds a todo with =counsel-projectile-org-capture=
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-p= switches projects using =projectile=
-+ =H-q= to do a =quick-calc=
++ =H-q= to do a =quick-calc= (inserted if called with =C-u=)
 + =H-<TAB>= expands snippets (in =yas-minor-mode=)
 + =H-t= toggles =vterm=.
 
@@ -514,31 +522,13 @@ and PREFIX is its prefix."
          `(, ',definer ,(concat ,suf key) ,@args)))))
 
 (use-package general
-  :defer t
+  :demand
   :config
-  (general-create-definer wal/general
-    :prefix wal/general-key)
-  (general-create-definer wal/colonel
-    :prefix wal/colonel-key)
-  (general-create-definer wal/major
-    :prefix wal/major-key)
-  (general-create-definer wal/captain
-    :prefix wal/captain-key)
-  (general-create-definer wal/lieutenant
-    :prefix wal/lieutenant-key)
-  ;; Create sinks.
-  (wal/create-leader-sink wal/general-sink
-    :definer wal/general
-    :prefix wal/general-key)
-  (wal/create-leader-sink wal/major-sink
-    :definer wal/major
-    :prefix wal/major-key)
-  (wal/create-leader-sink wal/lieutenant-sink
-    :definer wal/lieutenant
-    :prefix wal/lieutenant-key)
-  (wal/create-leader-sink wal/colonel-sink
-    :definer wal/colonel
-    :prefix wal/colonel-key))
+  (--each '(wal/general wal/colonel wal/major wal/captain wal/lieutenant)
+    (let ((key (intern (format "%s-key" it)))
+          (sink (intern (format "%s-sink" it))))
+      (eval `(general-create-definer ,it :prefix ,key))
+      (eval `(wal/create-leader-sink ,sink :definer ,it :prefix ,key)))))
 #+END_SRC
 
 *** About Leader Keys
@@ -717,7 +707,7 @@ Ignore some buffers when switching.
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal/commonly-ignored-major-modes
-  '(dired-mode wdired-mode helpful-mode magit-diff-mode vterm-mode)
+  '(dired-mode wdired-mode helpful-mode magit-diff-mode magit-status-mode vterm-mode)
   "Major modes whose buffers should be commonly ignored.")
 
 (defun wal/commmonly-ignored-buffer-p (buffer-or-string)
@@ -929,6 +919,8 @@ Better(?) garbage collection.
 (defconst wal/hundred-mb
   (* 1024 1024 100)
   "A hundred megabytes.")
+
+(setq gc-cons-threshold wal/hundred-mb)
 
 (defun wal/minibuffer-setup-hook ()
   "Increase gc threshold to maximum on minibuffer setup."
@@ -1147,7 +1139,6 @@ Use a single frame and split horizontally.
   :ensure nil
   :defer t
   :custom
-  (ediff-highlighting-style 'ascii)
   (ediff-window-setup-function #'ediff-setup-windows-plain) ; Single frame.
   (ediff-split-window-function #'split-window-horizontally))
 #+end_src
@@ -1245,6 +1236,7 @@ Bind some functions to refresh, install and delete.
   (wal/general "p" '(:ignore t :wk "package")
     "pf" '(package-refresh-contents :wk "refresh")
     "pi" '(package-install :wk "install")
+    "pl" '(list-packages :wk "list")
     "pr" '(package-reinstall :wk "re-install")
     "pd" '(package-delete :wk "delete")))
 #+end_src
@@ -1273,7 +1265,7 @@ Make the command map accessible.
   :delight " smg"
   :defer t
   :custom
-  (smerge-command-prefix (kbd "C-c g")))
+  (smerge-command-prefix (kbd "C-c m")))
 #+end_src
 
 **** so-long
@@ -1438,9 +1430,6 @@ Let's have a dash of board.
   (dashboard-projects-backend 'projectile)
   (dashboard-items '((recents . 5)
                      (projects . 5)
-                     ;; This means all agenda files are opened
-                     ;; which I find annoying.
-                     ;; (agenda    . 5)
                      (bookmarks . 5)))
   (dashboard-center-content t)
   (dashboard-set-file-icons t)
@@ -1527,6 +1516,7 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
   (wal/general "i" '(crux-find-user-init-file :wk "open init"))
   (wal/lieutenant
     "x" '(:ignore t :wk "crux")
+    "xf" '(crux-recentf-find-file :wk "find recent file")
     "xr" '(crux-rename-file-and-buffer :wk "rename file and buffer")
     "xs" '(crux-sudo-edit :wk "sudo edit"))
   :bind
@@ -1552,8 +1542,7 @@ One thing that can be a bit tricky is selecting regions, not anymore.
 *** yasnippet
 
 Use snippets in =prog= mode buffers.
-Because I also use company, =yas-expand= is mapped to =H-<TAB>=,
-if you don't have a hyper key, bind it to a personal binding.
+Because I also use company, =yas-expand= is mapped to =H-<TAB>=.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/yas-expand ()
@@ -1566,7 +1555,7 @@ if you don't have a hyper key, bind it to a personal binding.
 (use-package yasnippet
   :delight " yas"
   :hook
-  ;; During snippet expansion, we don't want `company' to intefere.
+  ;; During snippet expansion, we don't want `company' to interfere.
   ((yas-before-expand-snippet . (lambda ()
                                   (when (derived-mode-p 'prog-mode)
                                     (company-mode -1))))
@@ -1596,16 +1585,10 @@ if you don't have a hyper key, bind it to a personal binding.
 I didn't have smart parens growing up so I need help.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/smartparens-init ()
-  "Require package and call `sp--maybe-init'.
-
-Functions like `sp-rewrap-sexp' fail to initialize pairs
-and advising them doesn't work."
-  (require 'smartparens nil t)
-  (sp--maybe-init))
-
 (use-package smartparens
-  :hook (prog-mode . wal/smartparens-init)
+  :config
+  ;; Functions like `sp-rewrap-sexp' fail to initialize pairs.
+  (sp--maybe-init)
   :general
   (wal/lieutenant :keymaps 'prog-mode-map
     "p" '(:ignore t :wk "smartparens")
@@ -1862,16 +1845,14 @@ in the load path.
      ;; Prolog.
      ":-"
      ;; Other.
-     "<!--"
+     "<!--" "-->"
      ))
   (global-ligature-mode t))
 #+end_src
 
 *** diff-hl
 
-Show diffs in the fringe.
-Show diffs in =dired= buffers as well.
-Refresh after =magit= is done.
+Show diffs in the fringe (also in =dired= buffers).
 
 #+BEGIN_SRC emacs-lisp
 (use-package diff-hl
@@ -2820,6 +2801,7 @@ Use =org-tree-slide= for presentations.
     "p" '(org-tree-slide-mode :wk "presentation"))
   :bind
   (:map org-tree-slide-mode-map
+   ("q" . org-tree-slide-mode) ; To close it again.
    ("n" . org-tree-slide-move-next-tree)
    ("p" . org-tree-slide-move-previous-tree)
    ("v" . wal/tree-slide-toggle-visibility)))
@@ -2837,6 +2819,28 @@ Trying to organize my thoughts using Zettelkästen.
 ;; Has to be created manually for now.
 (defvar wal/org-roam-index-file "verzeichnis.org"
   "The name of the index file.")
+
+(defun wal/org-roam-configure ()
+  "Configure `org-roam'."
+  ;; Not sure why we need to do it this way.
+  (let ((index-file (expand-file-name wal/org-roam-index-file wal/org-roam-directory)))
+    (unless (file-exists-p index-file)
+      (write-region "* Zettelkasten" nil index-file)))
+  ;; Add some capture templates.
+  (let* ((fname (concat wal/org-roam-dailies-directory "%<%Y-%m-%d>")))
+    (setq org-roam-dailies-capture-templates
+          `(("w" "work" entry
+             #'org-roam-capture--get-point
+             "* %?"
+             :file-name ,fname
+             :head "#+title: %<%Y-%m-%d>\n"
+             :olp ("Work notes"))
+            ("j" "journal" entry
+             #'org-roam-capture--get-point
+             "* %?"
+             :file-name ,fname
+             :head "#+title: %<%Y-%m-%d>\n"
+             :olp ("Journal"))))))
 
 (use-package org-roam
   :delight " zet"
@@ -2860,26 +2864,7 @@ Trying to organize my thoughts using Zettelkästen.
     "zr" '(org-roam-buffer-toggle-display :wk "toggle roam display")
     "zg" '(org-roam-graph :wk "write graph"))
   :config
-  ;; Not sure why we need to do it this way.
-  (let ((index-file (expand-file-name wal/org-roam-index-file wal/org-roam-directory)))
-    (unless (file-exists-p index-file)
-      (write-region "* Zettelkasten" nil index-file)))
-  ;; Add some capture templates.
-  (let* ((fname (concat wal/org-roam-dailies-directory "%<%Y-%m-%d>")))
-    (setq org-roam-dailies-capture-templates
-          `(("w" "work" entry
-             #'org-roam-capture--get-point
-             "* %?"
-             :file-name ,fname
-             :head "#+title: %<%Y-%m-%d>\n"
-             :olp ("Work notes"))
-
-            ("j" "journal" entry
-             #'org-roam-capture--get-point
-             "* %?"
-             :file-name ,fname
-             :head "#+title: %<%Y-%m-%d>\n"
-             :olp ("Journal")))))
+  (wal/org-roam-configure)
   (org-roam-mode))
 #+END_SRC
 
@@ -2945,7 +2930,6 @@ Did you know you can edit =dired= buffers using =C-x C-q=?
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired
-  :defer t
   :ensure nil
   :config
   (put 'dired-find-alternate-file 'disabled nil)
@@ -3118,7 +3102,7 @@ Necessary even for =.gitignore= files.
 #+BEGIN_SRC emacs-lisp
 (defun wal/gitignore-mode ()
   "Hook into `gitignore-mode'."
-  (message "I really don't care"))
+  (message "I don't think I know you"))
 
 (use-package gitignore-mode
   :mode ("/\\.npmignore\\'" "/\\.gitignore\\'")
@@ -3183,7 +3167,7 @@ Using virtual envs outside of poetry.
 #+BEGIN_SRC emacs-lisp
 (use-package pyvenv
   :general
-  (wal/major :keymaps '(dired-mode-map python-mode-map)
+  (wal/major :keymaps 'python-mode-map
     "v" '(pyvenv-activate :wk "activate venv")))
 #+END_SRC
 
@@ -3299,7 +3283,6 @@ ESLint plugin for =flymake=.
 (use-package flymake-eslint
   :after eglot
   :demand
-  :hook (eglot-managed-mode . wal/eglot-managed-mode)
   :custom
   (flymake-eslint-defer-binary-check t))
 #+END_SRC
@@ -3379,23 +3362,6 @@ Make sure to install =ccls= and =clang=.
   :hook (c++-mode . wal/c++-mode))
 #+END_SRC
 
-**** csharp-mode
-
-Unity.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/csharp-mode ()
-  "Hook into `csharp-mode'."
-  (message "Ouch!")
-  (wal/disable-tabs)
-  ;; If you're using `lsp-mode' you can run `lsp-install-server'.
-  (wal/lsp))
-
-(use-package csharp-mode
-  :mode "\\.cs\\'"
-  :hook (csharp-mode . wal/csharp-mode))
-#+END_SRC
-
 *** Web
 
 Does anyone actually like web development?
@@ -3445,7 +3411,6 @@ The elephant in the room.
   (wal/lsp))
 
 (use-package php-mode
-  :defer t
   :hook (php-mode . wal/php-mode))
 #+end_src
 
@@ -3456,18 +3421,6 @@ It's time to deal with this.
 #+BEGIN_SRC emacs-lisp
 (use-package crontab-mode
   :defer t)
-#+END_SRC
-
-**** nginx-mode
-
-Make nginx configuration files look pretty.
-
-#+BEGIN_SRC emacs-lisp
-(use-package nginx-mode
-  :defer t
-  :config
-  (add-to-list 'auto-mode-alist
-               '("/nginx/sites-\\(?:available\\|enabled\\)/" . nginx-mode)))
 #+END_SRC
 
 **** markdown-mode
@@ -3539,7 +3492,7 @@ I promise I will learn.
   "Call either `consult-flymake' or `consult-flycheck'.
 This depends on `wal/lsp-client'."
   (interactive)
-  (cond (flycheck-mode (consult-flycheck))
+  (cond ((and (fboundp flycheck-mode) flycheck-mode) (consult-flycheck))
         (flymake-mode (consult-flymake))
         (t nil)))
 
@@ -3593,12 +3546,10 @@ ESLint configs can be found using a file, not a directory.
 
 **** Fix =pylint= False Positives
 
-The =pylint= checker creates false positives for
-relative import mistakes. There is a fix but it doesn't seem
-to be released yet.
-Taken from [[https://github.com/bkhl/flycheck/commit/3f9582d2df42d4f55ee1fc33aae1a56bf1dab421][here]].
+The =pylint= checker creates false positives for relative import mistakes.
+There is a [[https://github.com/bkhl/flycheck/commit/3f9582d2df42d4f55ee1fc33aae1a56bf1dab421][fix]] but it's trapped.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (defun flycheck-pylint-find-project-root (_checker)
   "Find the directory to invoke pylint from.
 
@@ -3644,8 +3595,7 @@ See URL `https://www.pylint.org/'."
 *** flyspell
 
 My spelling is bad.
-Use American English for =flyspell=.
-You can bring up actions (skip, save) with =M-o=.
+Uses American English for =flyspell=.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/flyspell-prog-mode ()
@@ -3668,6 +3618,9 @@ You can bring up actions (skip, save) with =M-o=.
   (flyspell-issue-message-flag nil)
   (flyspell-mode-line-string "fsp")
   (flyspell-default-dictionary "american")
+  :bind
+  (:map flyspell-mode-map
+   ("C-/" . ispell-word))
   :general
   (wal/colonel :keymaps '(text-mode-map org-mode-map)
     "s" '(wal/flyspell-mode :wk "flyspell"))
@@ -3675,15 +3628,6 @@ You can bring up actions (skip, save) with =M-o=.
     "s" '(wal/flyspell-prog-mode :wk "flyspell-prog"))
   (wal/captain :keymaps 'flyspell-mode-map
     "s" '(flyspell-buffer :wk "spell-check buffer")))
-
-(use-package flyspell-correct
-  :after flyspell
-  :bind
-  (:map flyspell-mode-map
-   ("C-/" . flyspell-correct-at-point)))
-
-(use-package flyspell-correct-ivy
-  :after flyspell-correct)
 #+END_SRC
 
 ** LSP
@@ -3708,6 +3652,11 @@ This is the fancy version.
 You'll have to install some language servers yourself[fn:12].
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/lsp-file-watch-ignored
+  '("[/\\\\]_build$"
+    "[/\\\\]deps$")
+  "Additional directories to not monitor.")
+
 (use-package lsp-mode
   :delight " lsp"
   :hook (lsp-mode . flycheck-mode)
@@ -3716,8 +3665,8 @@ You'll have to install some language servers yourself[fn:12].
     "l" '(lsp-mode :wk "lsp"))
   (wal/captain :keymaps 'lsp-mode-map
     "l" '(:ignore t :wk "lsp")
-    "lr" '(lsp-rename :wk "rename symbol")
-    "lf" '(lsp-format-buffer :wk "format buffer"))
+    "lr" '(lsp-rename :wk "rename")
+    "lf" '(lsp-format-buffer :wk "format"))
   :custom
   (lsp-completion-provider :capf)
   (lsp-prefer-capf t)
@@ -3731,15 +3680,14 @@ You'll have to install some language servers yourself[fn:12].
   (lsp-pyls-plugins-jedi-use-pyenv-environment t)
   :config
   (lsp-enable-which-key-integration t)
-  ;; Ignore Elixir build and dependency folders.
-  (add-to-list 'lsp-file-watch-ignored "[/\\\\]_build$")
-  (add-to-list 'lsp-file-watch-ignored "[/\\\\]deps$"))
+  (--each wal/lsp-file-watch-ignored
+    (add-to-list 'lsp-file-watch-ignored it)))
 
 (use-package lsp-ui
   :after lsp-mode
   :custom
   (lsp-ui-sideline-delay 1.5)
-  (lsp-ui-doc-position 'top) ; Alternatively `at-point'.
+  (lsp-ui-doc-position 'top) ; Alternatively, `at-point'.
   (lsp-ui-doc-delay 0.2))
 #+END_SRC
 
@@ -3831,7 +3779,9 @@ This is the light-weight alternative.
     (_ nil)))
 
 (use-package eglot
-  :hook (eglot-managed-mode . yas-minor-mode)
+  :hook
+  ((eglot-managed-mode . wal/eglot-managed-mode)
+   (eglot-managed-mode . yas-minor-mode))
   :custom
   (eglot-autoshutdown t)
   :general
@@ -3955,7 +3905,6 @@ I use a =.http= file extension for my request examples.
 #+BEGIN_SRC emacs-lisp
 (use-package restclient
   :config
-  ;; Make it pop up a frame.
   (wal/display-buffer-in-pop-up "\\*HTTP Response\\*")
   :mode ("\\.http\\'" . restclient-mode))
 
@@ -4001,7 +3950,7 @@ I use a different (light) theme here.
   :config
   (setq writeroom-global-effects (-remove-at 1 writeroom-global-effects)) ; Keep transparency.
   :custom
-  (writeroom-width 0.618)
+  (writeroom-width 0.618) ; Golden ratio.
   (writeroom-restore-window-config t)
   (writeroom-extra-line-spacing 0.1)
   :general

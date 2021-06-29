@@ -36,9 +36,9 @@ tangle the blocks without loading the created file."
 ;;       use-package-verbose t
 ;;       use-package-compute-statistics t)
 
-;; Turns on native-compile, ignoring warnings.
-;; (setq package-native-compile t
-;;       comp-async-report-warnings-errors nil)
+;; Turns on native-compile and log warnings silently.
+(setq package-native-compile t
+      native-comp-async-report-warnings-errors 'silent)
 
 ;; This will tangle source blocks on first load and
 ;; afterwards just load the tangled file `README.el'.
@@ -49,6 +49,10 @@ tangle the blocks without loading the created file."
   (wal/tangle-config t t))
 
 ;; Just an example: Setting a theme.
-;; (setq wal/theme 'doom-dracula)
+(setq wal/theme 'doom-dracula)
 
 ;;; .emacs ends here
+
+;; Local Variables:
+;; byte-compile-warnings: (not free-vars)
+;; End:

@@ -211,7 +211,7 @@ Comment code like in =vim=, evil, evil =vim=.
 
 Undoing un-undoing is weird in Emacs.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (use-package undo-fu
   :bind (("C-/" . undo-fu-only-undo)
          ("C-?" . undo-fu-only-redo)))
@@ -269,7 +269,7 @@ I find =ediff= quite cumbersome, so I'm giving =vdiff= a try.
 
 *** magit-todos
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (use-package magit-todos
   :after magit
   :custom
@@ -298,7 +298,53 @@ Don't use Haskell much yet.
   :defer t)
 #+END_SRC
 
-** Other Configurations
+*** flyspell-correct
+
+The built-in solutions are good enough.
+
+#+begin_src emacs-lisp :tangle no
+(use-package flyspell-correct
+  :after flyspell
+  :bind
+  (:map flyspell-mode-map
+   ("C-/" . flyspell-correct-at-point)))
+
+(use-package flyspell-correct-ivy
+  :after flyspell-correct)
+#+end_src
+
+*** nginx-mode
+
+Make nginx configuration files look pretty.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(use-package nginx-mode
+  :defer t
+  :config
+  (add-to-list 'auto-mode-alist
+               '("/nginx/sites-\\(?:available\\|enabled\\)/" . nginx-mode)))
+#+END_SRC
+
+*** csharp-mode
+
+Unity.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defun wal/csharp-mode ()
+  "Hook into `csharp-mode'."
+  (message "Ouch!")
+  (wal/disable-tabs)
+  ;; If you're using `lsp-mode' you can run `lsp-install-server'.
+  (wal/lsp))
+
+(use-package csharp-mode
+  :mode "\\.cs\\'"
+  :hook (csharp-mode . wal/csharp-mode))
+#+END_SRC
+
+** Other Settings
+
+These are other settings that used to be in my config.
 
 *** Time
 
@@ -315,6 +361,8 @@ Don't show the CPU load if time is shown.
 
 ** Functions
 
+These are functions that used to be in my config.
+
 *** Custom Args
 
 Check for custom args.
@@ -326,8 +374,6 @@ Check for custom args.
     (setq command-line-args (delete switch command-line-args))
     found-switch))
 #+END_SRC
-
-** Other
 
 *** Theme Light Switch
 
