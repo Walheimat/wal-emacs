@@ -279,13 +279,13 @@ Modes that should be on/off no matter what.
 Make things shorter and snappier.
 
 #+BEGIN_SRC emacs-lisp
-(defconst wal/one-mb
-  (* 1024 1024)
-  "One megabyte.")
+(defun wal/bytes-per-mb (num)
+  "Return the value of NUM in bytes."
+  (* 1024 1024 num))
 
 (setq mouse-yank-at-point t
       show-paren-delay 0.1
-      read-process-output-max wal/one-mb
+      read-process-output-max (wal/bytes-per-mb 2)
       sentence-end-double-space nil
       echo-keystrokes 0.1
       ;; New in version 28. Otherwise you need an alias.
@@ -437,12 +437,13 @@ Most hyper bindings are quick-access actions:
 + =H-d= duplicates current line/region with =crux=
 + =H-e= opens (and =H-r= cycles through) =popper= pop-up(s)
 + =H-f= finds project file using =counsel-projectile=
++ =H-g= to use =counsel-mark-ring=
 + =H-i= switches =perspective=
 + =H-k= to start (and =H-j= to end or call) macro
 + =H-l= jumps to line (and =H-o= to word) with =avy=
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-m= runs =magit-status=
-+ =H-n= adds a todo with =counsel-projectile-org-capture=
++ =H-n= to capture (using =counsel-projectile-org-capture=)
 + =H-p= switches projects using =projectile=
 + =H-<TAB>= expands snippets (in =yas-minor-mode=)
 + =H-+= to do a =quick-calc= (inserted if called with =C-u=)
@@ -923,16 +924,20 @@ Minor mode to dedicate buffers to windows.
 Better(?) garbage collection.
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/gc-cons-threshold-in-mb 10
+  "The default `gc-cons-threshold' epxressed in MB.")
+
 (defun wal/minibuffer-setup-hook ()
   "Increase `gc-cons-threshold' to maximum on minibuffer setup."
   (setq gc-cons-threshold most-positive-fixnum))
 
 (defun wal/minibuffer-exit-hook ()
-  "Decrease `gc-cons-threshold' to default on minibuffer exit."
-  (wal/reset-to-standard 'gc-cons-threshold))
+  "Decrease `gc-cons-threshold' on minibuffer exit."
+  (setq gc-cons-threshold (wal/bytes-per-mb wal/gc-cons-threshold-in-mb)))
 
 (add-hook 'minibuffer-setup-hook #'wal/minibuffer-setup-hook)
 (add-hook 'minibuffer-exit-hook #'wal/minibuffer-exit-hook)
+(add-hook 'emacs-startup-hook #'wal/minibuffer-exit-hook)
 #+END_SRC
 
 ** Advice
@@ -1007,7 +1012,7 @@ To get support for ligatures, install the symbol font from [[https://github.com/
     "JetBrains Mono"
     "Source Code Pro"
     "DejaVu Sans Mono"
-    "Monoid" ; Be sure to install the no-calt variant!
+    "Monoid" ; The calt version doesn't work properly!
     "Liberation Mono")
   "Fixed fonts ordered by preference.")
 
@@ -1602,14 +1607,29 @@ derived modes."
 I didn't have smart parens growing up so I need help.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/configure-smartparens ()
+  "Configure `smartparens'."
+  (add-to-list 'sp-lisp-modes 'lisp-data-mode)
+  (sp-with-modes sp-lisp-modes
+    (sp-local-pair "'" nil :actions nil)))
+
+(defun wal/sp-rewrap-sexp ()
+  "Call `sp--maybe-init' before `sp-rewrap-sexp'.
+Advising the function does not work."
+  (interactive)
+  (unless (boundp 'smartparens)
+    (require 'smartparens nil t))
+  (with-current-buffer (current-buffer)
+    (sp--maybe-init))
+  (call-interactively 'sp-rewrap-sexp))
+
 (use-package smartparens
   :config
-  ;; Functions like `sp-rewrap-sexp' fail to initialize pairs.
-  (sp--maybe-init)
+  (wal/configure-smartparens)
   :general
   (wal/lieutenant :keymaps 'prog-mode-map
     "p" '(:ignore t :wk "smartparens")
-    "pr" '(sp-rewrap-sexp :wk "rewrap")
+    "pr" '(wal/sp-rewrap-sexp :wk "rewrap")
     "pk" '(sp-kill-sexp :wk "kill")
     "pf" '(sp-forward-sexp :wk "forward")
     "pb" '(sp-backward-sexp :wk "backward")))
@@ -1623,7 +1643,10 @@ Use the default key bindings.
 (use-package drag-stuff
   :delight " drg"
   :hook (prog-mode . drag-stuff-mode)
+  :general
+  (wal/colonel-sink "d" '(drag-stuff-mode :wk "drag-stuff"))
   :config
+  (setq drag-stuff-modifier 'hyper)
   (drag-stuff-define-keys))
 #+END_SRC
 
@@ -1789,7 +1812,7 @@ Make dimmed frames a bit dimmer.
   :defer 3
   :delight " dmm"
   :custom
-  (dimmer-fraction 0.3)
+  (dimmer-fraction 0.6)
   (dimmer-adjustment-mode :foreground)
   :config
   (advice-add 'dimmer-config-change-handler :override 'wal/advise-dimmer-config-change-handler)
@@ -1849,8 +1872,10 @@ in the load path.
   ;;        Providing derived modes here doesn't work for me.
   (ligature-set-ligatures
    'prog-mode
-   ;; Shared.
-   '("&&" ">=" "<=" "==" "+=" "-=" "||" "..." "!!" "??" "//" "__"
+   '(;; Shared.
+     "&&" ">=" "<=" "==" "+=" "-=" "||" "..." "!!" "??" "__"
+     ;; Comments.
+      "*/" "/*" "//" "/**" "**/"
      ;; CPP.
      "::" "->" ">>" "<<" "++" "!=" "|=" "<<=" ">>="
      ;; JS.
@@ -2423,6 +2448,7 @@ Some nicer candidate view when switching buffers.
   :bind
   (:map ivy-mode-map
    ("M-g m" . counsel-mark-ring)
+   ("H-g" . counsel-mark-ring)
    ("M-x" . counsel-M-x)
    ("<menu>" . counsel-M-x)
    ("C-x C-f" . counsel-find-file)
@@ -2546,7 +2572,7 @@ Projects in Emacs.
   "Additional directories to ignore.")
 
 (defvar wal/projectile-globally-ignored-files
-  '("yarn.lock" "package.lock")
+  '("yarn.lock" "package.lock" "bundle.js")
   "Additional files to ignore.")
 
 (defvar wal/projectile-globally-ignored-file-suffixes
@@ -2630,9 +2656,12 @@ Add =counsel= integration to =projectile=.
   :custom
   (counsel-projectile-preview-buffers t)
   (counsel-projectile-org-capture-templates
-   '(("t" "[${name}] Task" entry
+   '(("t" "[${name}] task" entry
       (file+headline "${root}/tasks.org" "Tasks")
-      "* TODO %?\n%i\n%U -- %a")))
+      "* TODO %?\n%i\n%U -- %a")
+     ("n" "[${name}] note" entry
+      (file+olp+datetree "${root}/notes.org")
+      "* %?")))
   :config
   ;; Make opening with `dired' the default action.
   (setq counsel-projectile-switch-project-action
@@ -2656,12 +2685,10 @@ This configuration is a bit elaborate.
 (defun wal/org-mode ()
   "Life shouldn't be a drag in `org-mode'."
   (message "Organize! Seize the means of production!")
-  (wal/disable-tabs)
-  (hack-local-variables)
   ;; Since `9.4' org tries to please `electric-indent'.
   ;; (electric-indent-local-mode -1)
-  ;; Interferes with `org-metadown'.
-  (drag-stuff-mode -1))
+  (wal/disable-tabs)
+  (hack-local-variables))
 
 (defun wal/advise-org-export-dispatch (&rest _r)
   "Advise to require `ox-md' beforehand."
@@ -2687,6 +2714,10 @@ This configuration is a bit elaborate.
   (org-startup-folded 'overview)
   (org-directory wal/org-directory)
   (org-default-notes-file (concat org-directory "/notes.org"))
+  (org-capture-templates
+   `(("m" "meeting" entry (file+olp+datetree ,(concat org-directory "/meetings.org")) "* %?")
+     ("d" "daily" plain (file+olp+datetree ,(concat org-directory "/dailies.org")) "%i\n%?")))
+  (org-capture-bookmark nil) ;; This leads to endless edit buffers opening since we annotate bookmarks
   (org-agenda-files `(,wal/agenda-tasks-directory))
   (org-startup-with-inline-images t)
   ;; Be sure to add archive tag with `org-toggle-archive-tag'.
@@ -2726,6 +2757,7 @@ This configuration is a bit elaborate.
     "y" '(org-paste-subtree :wk "paste subtree")
     "e" '(org-edit-src-code :wk "edit source code")
     "n" '(org-add-note :wk "add note")
+    "s" '(outline-show-all :wk "show all")
     "f" '(:ignore t :wk "footnotes")
     "ff" '(org-footnote-new :wk "add new")
     "fn" '(org-footnote-normalize :wk "normalize"))
@@ -2792,9 +2824,20 @@ Use =org-tree-slide= for presentations.
       (setq cursor-type nil)
     (setq cursor-type t)))
 
+(defvar wal/tree-slide-visual-fill-column-width 160
+  "The `visual-fill-column-width' for `org-tree-slide' presentations.")
+
+(defun wal/tree-slide-calculate-relative-visual-fill-column-width ()
+  "Calculate a `visual-fill-column-width' relative to text scaling."
+  (/ wal/tree-slide-visual-fill-column-width
+     (if (and (boundp 'text-scale-mode-amount)
+              (> text-scale-mode-amount 0))
+         text-scale-mode-amount
+       1)))
+
 (defun wal/tree-slide-play ()
   "Make presentable."
-  (setq visual-fill-column-width 140
+  (setq visual-fill-column-width (wal/tree-slide-calculate-relative-visual-fill-column-width)
         visual-fill-column-center-text t)
   (beacon-mode -1)
   (visual-fill-column-mode 1))
@@ -3520,8 +3563,8 @@ I promise I will learn.
   "Call either `consult-flymake' or `consult-flycheck'.
 This depends on `wal/lsp-client'."
   (interactive)
-  (cond ((and (fboundp flycheck-mode) flycheck-mode) (consult-flycheck))
-        (flymake-mode (consult-flymake))
+  (cond ((and (boundp 'flymake-mode) flymake-mode) (consult-flymake))
+        ((and (boundp 'flycheck-mode) flycheck-mode) (consult-flycheck))
         (t nil)))
 
 (wal/captain :keymaps '(flymake-mode-map flycheck-mode-map)
@@ -3644,7 +3687,7 @@ Uses American English for =flyspell=.
   :ensure nil
   :custom
   (flyspell-issue-message-flag nil)
-  (flyspell-mode-line-string "fsp")
+  (flyspell-mode-line-string " fsp")
   (flyspell-default-dictionary "american")
   :bind
   (:map flyspell-mode-map
@@ -3714,7 +3757,8 @@ You'll have to install some language servers yourself[fn:12].
 (use-package lsp-ui
   :after lsp-mode
   :custom
-  (lsp-ui-sideline-delay 1.5)
+  (lsp-ui-sideline-enable nil)
+  ;; (lsp-ui-sideline-delay 1.5)
   (lsp-ui-doc-position 'top) ; Alternatively, `at-point'.
   (lsp-ui-doc-delay 0.2))
 #+END_SRC
