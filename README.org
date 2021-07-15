@@ -1261,6 +1261,8 @@ Bind some useful functions.
   (wal/general-sink "p" '(list-processes :wk "list processes"))
   (wal/major-sink "w" '(delete-trailing-whitespace :wk "delete trailing whitespace"))
   :custom
+  (kill-ring-max 120)
+  (save-interprogram-paste-before-kill t)
   (mark-ring-max 32)
   (global-mark-ring-max 32)
   :bind
@@ -1310,8 +1312,6 @@ What time is it?
 #+begin_src emacs-lisp
 (use-package whitespace-mode
   :ensure nil
-  :hook
-  (whitespace-mode . (lambda nil (highlight-indent-guides-mode -1)))
   :general
   (wal/colonel "w" '(whitespace-mode :wk "whitespace")))
 #+end_src
@@ -1407,12 +1407,6 @@ Let's try (to be) =helpful=.
 Let's have a dash of board.
 
 #+BEGIN_SRC emacs-lisp
-;; Dependency.
-(use-package page-break-lines
-  :defer t
-  :custom
-  (page-break-lines-lighter " pbl"))
-
 ;; Using my GitLab status messages, only one so far.
 (defvar wal/dashboard-footer-messages
   '("breaching your favorite stupid framework"
@@ -1450,9 +1444,7 @@ Let's have a dash of board.
   (dashboard-set-file-icons t)
   (dashboard-set-navigator t)
   (dashboard-footer-icon ":whale:")
-  (dashboard-page-separator "\n\n\n")
   (dashboard-footer-messages wal/dashboard-footer-messages)
-  (dashboard-set-init-info t)
   (dashboard-week-agenda nil)
   (dashboard-agenda-time-string-format "%d/%m/%y")
   :config
@@ -2317,6 +2309,8 @@ Jumping is done using =xref-find-definitions= (=M-.=).
   :custom
   (dumb-jump-selector 'ivy)
   (dumb-jump-force-searcher 'ag)
+  :config
+  (setq xref-show-definitions-function #'xref-show-definitions-completing-read)
   :init
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
 #+END_SRC
@@ -2814,35 +2808,35 @@ Nice agendas.
 
 *** org-tree-slide
 
-Use =org-tree-slide= for presentations.
+Slide-shows.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/tree-slide-toggle-visibility ()
-  "Toggle visibility of line and cursor."
+(defun wal/org-tree-slide-toggle-visibility ()
+  "Toggle visibility ofc cursor."
   (interactive)
   (if cursor-type
       (setq cursor-type nil)
     (setq cursor-type t)))
 
-(defvar wal/tree-slide-visual-fill-column-width 160
+(defvar wal/org-tree-slide-visual-fill-column-width 160
   "The `visual-fill-column-width' for `org-tree-slide' presentations.")
 
-(defun wal/tree-slide-calculate-relative-visual-fill-column-width ()
+(defun wal/org-tree-slide-calculate-relative-visual-fill-column-width ()
   "Calculate a `visual-fill-column-width' relative to text scaling."
-  (/ wal/tree-slide-visual-fill-column-width
+  (/ wal/org-tree-slide-visual-fill-column-width
      (if (and (boundp 'text-scale-mode-amount)
               (> text-scale-mode-amount 0))
          text-scale-mode-amount
        1)))
 
-(defun wal/tree-slide-play ()
+(defun wal/org-tree-slide-play ()
   "Make presentable."
-  (setq visual-fill-column-width (wal/tree-slide-calculate-relative-visual-fill-column-width)
+  (setq visual-fill-column-width (wal/org-tree-slide-calculate-relative-visual-fill-column-width)
         visual-fill-column-center-text t)
   (beacon-mode -1)
   (visual-fill-column-mode 1))
 
-(defun wal/tree-slide-stop ()
+(defun wal/org-tree-slide-stop ()
   "We no longer care about presentation."
   (setq visual-fill-column-width nil
         visual-fill-column-center-text nil)
@@ -2858,8 +2852,8 @@ Use =org-tree-slide= for presentations.
   (org-tree-slide-deactivate-message "Take you here, take you there")
   (org-tree-slide-indicator '(:next "   >>>" :previous "<<<" :content "< Here is where time is on our side >"))
   :diminish buffer-face-mode
-  :hook ((org-tree-slide-play . wal/tree-slide-play)
-         (org-tree-slide-stop . wal/tree-slide-stop))
+  :hook ((org-tree-slide-play . wal/org-tree-slide-play)
+         (org-tree-slide-stop . wal/org-tree-slide-stop))
   :general
   (wal/major :keymaps 'org-mode-map
     "p" '(org-tree-slide-mode :wk "presentation"))
@@ -2868,7 +2862,7 @@ Use =org-tree-slide= for presentations.
    ("q" . org-tree-slide-mode) ; To close it again.
    ("n" . org-tree-slide-move-next-tree)
    ("p" . org-tree-slide-move-previous-tree)
-   ("v" . wal/tree-slide-toggle-visibility)))
+   ("v" . wal/org-tree-slide-toggle-visibility)))
 #+END_SRC
 
 *** org-roam
