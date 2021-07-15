@@ -2812,22 +2812,28 @@ Slide-shows.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/org-tree-slide-toggle-visibility ()
-  "Toggle visibility ofc cursor."
+  "Toggle visibility of cursor."
   (interactive)
   (if cursor-type
       (setq cursor-type nil)
     (setq cursor-type t)))
 
-(defvar wal/org-tree-slide-visual-fill-column-width 160
+(defvar wal/org-tree-slide-visual-fill-column-width 180
   "The `visual-fill-column-width' for `org-tree-slide' presentations.")
 
 (defun wal/org-tree-slide-calculate-relative-visual-fill-column-width ()
-  "Calculate a `visual-fill-column-width' relative to text scaling."
-  (/ wal/org-tree-slide-visual-fill-column-width
-     (if (and (boundp 'text-scale-mode-amount)
-              (> text-scale-mode-amount 0))
-         text-scale-mode-amount
-       1)))
+  "Calculate a `visual-fill-column-width' relative to text scaling.
+Scaling tries to accommodate positive and negative scaling."
+  (let* ((factor (if (and (boundp 'text-scale-mode-amount)
+                          (not (zerop text-scale-mode-amount)))
+                     text-scale-mode-amount
+                   1))
+         (func (cond ((> factor 0) '(:operator / :convert ceiling))
+                     (t '(:operator * :convert floor)))))
+    (abs (apply (plist-get func :convert)
+                (list (apply (plist-get func :operator)
+                             (list wal/org-tree-slide-visual-fill-column-width
+                                   (* factor text-scale-mode-step))))))))
 
 (defun wal/org-tree-slide-play ()
   "Make presentable."
@@ -2844,6 +2850,12 @@ Slide-shows.
   (visual-fill-column-mode -1)
   (setq cursor-type t))
 
+(defun wal/org-tree-slide-text-scale ()
+  "Hook into `text-scale-mode-hook' for `org-tree-slide'."
+  (when org-tree-slide-mode
+    (visual-fill-column-mode -1)
+    (wal/org-tree-slide-play)))
+
 (use-package org-tree-slide
   :custom
   (org-tree-slide-never-touch-face t)
@@ -2853,7 +2865,8 @@ Slide-shows.
   (org-tree-slide-indicator '(:next "   >>>" :previous "<<<" :content "< Here is where time is on our side >"))
   :diminish buffer-face-mode
   :hook ((org-tree-slide-play . wal/org-tree-slide-play)
-         (org-tree-slide-stop . wal/org-tree-slide-stop))
+         (org-tree-slide-stop . wal/org-tree-slide-stop)
+         (text-scale-mode . wal/org-tree-slide-text-scale))
   :general
   (wal/major :keymaps 'org-mode-map
     "p" '(org-tree-slide-mode :wk "presentation"))
