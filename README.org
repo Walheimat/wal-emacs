@@ -1038,11 +1038,13 @@ This has no default value.")
 
 (defun wal/select-fixed-font (font)
   "Select fixed (available) FONT.
+This sets both the `default' and `fixed-pitch' fonts.
 If `doom-modeline-mode' is on, refresh font width cache."
   (interactive
    (list (completing-read "Select font: " (--filter (find-font (font-spec :name it))
                                                     wal/fixed-fonts))))
   (set-face-attribute 'default nil :font font)
+  (set-face-attribute 'fixed-pitch nil : font font)
   (when doom-modeline-mode
     (run-with-idle-timer 0.2 nil #'doom-modeline-refresh-font-width-cache)))
 
@@ -1051,8 +1053,14 @@ If `doom-modeline-mode' is on, refresh font width cache."
   (--first (find-font (font-spec :name it)) fonts))
 
 (defun wal/setup-fonts ()
-  "Setup fonts."
+  "Setup fonts.
+This sets `default' and `fixed-pitch' fonts to the first available
+candidate from `wal/fixed-fonts'.
+Does the same for `variable-pitch' using `wal/variable-fonts'."
   (set-face-attribute 'default nil
+                      :font (wal/fonts-candidate wal/fixed-fonts)
+                      :height wal/fixed-font-height)
+  (set-face-attribute 'fixed-pitch nil
                       :font (wal/fonts-candidate wal/fixed-fonts)
                       :height wal/fixed-font-height)
   ;; Variable pitch face.
@@ -2690,6 +2698,10 @@ Org mode is the best thing about Emacs. Check out the [[https://orgmode.org/manu
 This configuration is a bit elaborate.
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/org-fixed-pitch-faces
+  '(org-code org-block org-verbatim org-table)
+  "Faces that should inherit from `shadow' and `fixed-pitch'.")
+
 (defun wal/org-mode ()
   "Life shouldn't be a drag in `org-mode'."
   (message "Organize! Seize the means of production!")
@@ -2702,21 +2714,29 @@ This configuration is a bit elaborate.
   "Advise to require `ox-md' beforehand."
   (require 'ox-md nil t))
 
+(defun wal/configure-org ()
+  "Configure `org'."
+  (define-key org-mode-map (kbd "C-,") nil) ; Remove `org-cycle-agenda-files'.
+  (add-to-list 'org-src-lang-modes '("docker" . dockerfile))
+  (add-to-list 'org-src-lang-modes '("conf" . conf))
+  (advice-add 'org-export-dispatch :before #'wal/advise-org-export-dispatch)
+  ;; Make sure that `variable-pitch-mode' does not extend to certain faces.
+  (--each wal/org-fixed-pitch-faces
+    (set-face-attribute it  nil :inherit '(shadow fixed-pitch))))
+
 (use-package org
   :ensure nil
   :delight
   (org-src-mode " osc")
   :hook (org-mode . wal/org-mode)
   :config
-  (define-key org-mode-map (kbd "C-,") nil) ; Remove `org-cycle-agenda-files'.
-  (add-to-list 'org-src-lang-modes '("docker" . dockerfile))
-  (add-to-list 'org-src-lang-modes '("conf" . conf))
-  (advice-add 'org-export-dispatch :before #'wal/advise-org-export-dispatch)
+  (wal/configure-org)
   :custom
   (org-src-tab-acts-natively nil) ; Defaults to `t' nowadays.
   (org-edit-src-content-indentation 0) ; Defaults to `2' nowadays.
   (org-adapt-indentation nil) ; Defaults to `t' nowadays ...
   (org-ellipsis "↷")
+  (org-hide-emphasis-markers t)
   (org-log-done 'time)
   (org-startup-truncated nil)
   (org-startup-folded 'overview)
@@ -2854,7 +2874,8 @@ Slide-shows.
         visual-fill-column-center-text t
         cursor-type nil)
   (beacon-mode -1)
-  (visual-fill-column-mode 1))
+  (visual-fill-column-mode 1)
+  (variable-pitch-mode t))
 
 (defun wal/org-tree-slide-stop ()
   "We no longer care about presentation."
@@ -2862,7 +2883,9 @@ Slide-shows.
         visual-fill-column-center-text nil
         cursor-type t)
   (beacon-mode 1)
-  (visual-fill-column-mode -1))
+  (visual-fill-column-mode -1)
+  (variable-pitch-mode -1)
+  (outline-show-all))
 
 (defun wal/org-tree-slide-text-scale ()
   "Hook into `text-scale-mode-hook' for `org-tree-slide'."
