@@ -281,19 +281,19 @@ Make things shorter and snappier.
 #+BEGIN_SRC emacs-lisp
 (defun wal/bytes-per-mb (num)
   "Return the value of NUM in bytes."
-  (* 1024 1024 num))
+  (floor (* 1024 1024 num)))
 
 (setq mouse-yank-at-point t
       show-paren-delay 0.1
-      read-process-output-max (wal/bytes-per-mb 2)
+      read-process-output-max (wal/bytes-per-mb 4)
       sentence-end-double-space nil
       echo-keystrokes 0.1
       ;; New in version 28. Otherwise you need an alias.
       use-short-answers t
-      ;; Undo limits.
-      undo-limit (* 160000 2)
-      undo-strong-limit (* 240000 2)
-      undo-outer-limit (* 24000000 2))
+      ;; Undo limits, keeping factor, defaults in side commments.
+      undo-limit (wal/bytes-per-mb 1) ; 160000 bytes.
+      undo-strong-limit (wal/bytes-per-mb 1.5) ; 240000 bytes.
+      undo-outer-limit (wal/bytes-per-mb 150)) ; 24000000 bytes.
 #+END_SRC
 
 ** Indentation
@@ -422,7 +422,8 @@ User-reserved combinations are used for certain command maps:
 + =C-c b= for =bookmark= and when the respective mode is active:
 + =C-c f= for =flycheck=
 + =C-c i= for =perspective=
-+ =C-c p= for =projectile=.
++ =C-c p= for =projectile=
++ =C-c m= for =smerge=.
 
 It's also used for certain dispatches:
 
@@ -446,7 +447,7 @@ Most hyper bindings are quick-access actions:
 + =H-n= to capture (using =counsel-projectile-org-capture=)
 + =H-p= switches projects using =projectile=
 + =H-<TAB>= expands snippets (in =yas-minor-mode=)
-+ =H-+= to do a =quick-calc= (inserted if called with =C-u=)
++ =H-== to do a =quick-calc= (inserted if called with =C-u=)
 + =H-t= toggles =vterm=.
 
 It's also used for some dispatches:
@@ -458,6 +459,16 @@ It's also used for three hydras:
 + =H-]= to resize window
 + =H-[= to scale text
 + =H-v= to scroll other window.
+  
+*** Case-Sensitivity
+
+Some key-bindings have case-sensitive alternatives:
+
++ =C-K= kills lines backwards using =crux=
++ =C-x D= runs =dired= starting at =HOME= directory
++ =C-x K= kills any buffer (ignoring current perspective)
++ =H-F= finds directories using =counsel-projectile=
++ =H-L= jumps to line and char (while =H-O= jumps to word without first char).
 
 *** Caps to Hyper
 
@@ -600,9 +611,6 @@ Saving the config will prompt to tangle its contents."
 ;; Killing Emacs.
 (global-unset-key (kbd "C-x C-c"))
 (wal/general "q" '(save-buffers-kill-terminal :wk "quit Emacs"))
-
-;; No triple-ESC.
-(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
 ;; Create dir locals.
 (wal/general-sink "l" '(add-dir-local-variable :wk "add dir local variable"))
@@ -1111,7 +1119,7 @@ Quick calculations.
 (use-package calc
   :ensure nil
   :bind
-  ("H-+" . quick-calc))
+  ("H-=" . quick-calc))
 #+END_SRC
 
 **** debug
@@ -1134,9 +1142,13 @@ Look up words.
 
 #+begin_src emacs-lisp
 (use-package dictionary
-  :defer t
+  :general
+  (wal/lieutenant-sink
+    "d" '(dictionary-lookup-definition :wk "lookup definition"))
   :custom
-  (dictionary-server "dict.org"))
+  (dictionary-server "dict.org")
+  :config
+  (wal/display-buffer-in-direction "^\\*Dictionary"))
 #+end_src
 
 **** ediff
@@ -1198,7 +1210,7 @@ This requires Emacs to have been compiled with =--with-xml2= flag.
   :ensure nil
   :defer t
   :config
-  (wal/display-buffer-in-direction'help-mode))
+  (wal/display-buffer-in-direction 'help-mode))
 #+end_src
 
 **** hl-line
@@ -1746,17 +1758,6 @@ Busier and prettier =modeline=.
   (doom-modeline-mode 1))
 #+END_SRC
 
-*** mood-line
-
-The light-weight variant.
-
-#+BEGIN_SRC emacs-lisp
-(use-package mood-line
-  :disabled
-  :config
-  (mood-line-mode))
-#+END_SRC
-
 *** beacon
 
 Help me find my cursor!
@@ -1858,6 +1859,7 @@ in the load path.
 
 #+begin_src emacs-lisp
 (use-package ligature
+  :hook (prog-mode . ligature-mode)
   :load-path "site-lisp"
   :config
   ;; FIXME: This is still in progress.
@@ -1880,8 +1882,7 @@ in the load path.
      ":-"
      ;; Other.
      "<!--" "-->"
-     ))
-  (global-ligature-mode t))
+     )))
 #+end_src
 
 *** diff-hl
@@ -2129,7 +2130,8 @@ Accommodate =winner=.
                               inferior-python-mode
                               ;; Help(-like).
                               helpful-mode
-                              help-mode))
+                              help-mode
+                              dictionary-mode))
   (popper-group-function #'popper-group-by-perspective)
   (popper-display-control 'user)
   ;; Remove if you don't use/have `doom-modeline'.
@@ -2174,7 +2176,9 @@ Just goes to line if line is empty."
   (avy-line-insert-style 'below)
   :bind
   (("H-l" . avy-goto-line)
-   ("H-o" . avy-goto-word-1))
+   ("H-L" . wal/avy-goto-line-and-char)
+   ("H-o" . avy-goto-word-1)
+   ("H-O" . avy-goto-word-0))
   :general
   (wal/lieutenant
     ;; Lines.
@@ -2211,6 +2215,8 @@ nice despite us using =ivy= for completion everywhere.
 (use-package consult
   :custom
   (consult-project-root-function #'projectile-project-root)
+  :init
+  (setq xref-show-definitions-function #'consult-xref)
   :bind
   (("M-g g" . consult-goto-line)
    ("M-g M-m" . consult-global-mark))
@@ -2224,6 +2230,8 @@ nice despite us using =ivy= for completion everywhere.
         consult-grep
         consult-minor-mode-menu
         consult-mode-command
+        consult-xref
+        consult-recent-file
         consult-outline)
     (advice-add it :around #'wal/advise-selectrum))
   :general
@@ -2232,7 +2240,8 @@ nice despite us using =ivy= for completion everywhere.
     "j" '(consult-outline :wk "jump to heading"))
   (wal/lieutenant
     "u" '(:ignore t :wk "consult")
-    "uf" '(consult-focus-lines :wk "focus lines")))
+    "uf" '(consult-recent-file :wk "open recent")
+    "ul" '(consult-focus-lines :wk "focus lines")))
 
 (use-package consult-flycheck
   :after (consult flycheck)
@@ -2309,8 +2318,6 @@ Jumping is done using =xref-find-definitions= (=M-.=).
   :custom
   (dumb-jump-selector 'ivy)
   (dumb-jump-force-searcher 'ag)
-  :config
-  (setq xref-show-definitions-function #'xref-show-definitions-completing-read)
   :init
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
 #+END_SRC
@@ -2438,6 +2445,7 @@ Some nicer candidate view when switching buffers.
   (wal/lieutenant
     "o" '(:ignore t :wk "counsel")
     "os" '(counsel-search :wk "search")
+    "ox" '(counsel-find-file-extern :wk "(external) find file")
     "ol" '(counsel-linux-app :wk "Linux app"))
   :bind
   (:map ivy-mode-map
@@ -2650,9 +2658,14 @@ Add =counsel= integration to =projectile=.
   :custom
   (counsel-projectile-preview-buffers t)
   (counsel-projectile-org-capture-templates
-   '(("t" "[${name}] task" entry
-      (file+headline "${root}/tasks.org" "Tasks")
+     ;; Reminders are stored relative to the project root
+   `(("r" "[${name}] reminder" entry
+      (file+headline "${root}/reminders.org" "Reminders")
       "* TODO %?\n%i\n%U -- %a")
+     ;; Tasks are stored in the common task directory
+     ("t" "[${name}] task" entry
+      (file+headline ,(expand-file-name "${name}.org" wal/agenda-tasks-directory) "Tasks")
+      "* TODO %?")
      ("n" "[${name}] note" entry
       (file+olp+datetree "${root}/notes.org")
       "* %?")))
@@ -2666,6 +2679,7 @@ Add =counsel= integration to =projectile=.
   :bind
   (:map projectile-mode-map
    ("H-f" . counsel-projectile-find-file)
+   ("H-F" . counsel-projectile-find-dir)
    ("H-n" . counsel-projectile-org-capture)
    ("H-s" . counsel-projectile-ag)))
 #+END_SRC
@@ -2703,7 +2717,7 @@ This configuration is a bit elaborate.
   (org-edit-src-content-indentation 0) ; Defaults to `2' nowadays.
   (org-adapt-indentation nil) ; Defaults to `t' nowadays ...
   (org-ellipsis "↷")
-  (org-log-done t)
+  (org-log-done 'time)
   (org-startup-truncated nil)
   (org-startup-folded 'overview)
   (org-directory wal/org-directory)
@@ -2716,7 +2730,6 @@ This configuration is a bit elaborate.
   (org-startup-with-inline-images t)
   ;; Be sure to add archive tag with `org-toggle-archive-tag'.
   (org-archive-location "::* Archived")
-  (org-log-done 'time)
   ;; Too many clock entries clutter up a heading.
   (org-log-into-drawer t)
   (org-todo-keywords
@@ -2747,11 +2760,12 @@ This configuration is a bit elaborate.
    ("C-c C-c" . org-edit-src-exit))
   :general
   (wal/major :keymaps 'org-mode-map
-    "w" '(org-cut-subtree :wk "cut subtree")
-    "y" '(org-paste-subtree :wk "paste subtree")
+    "s" '(:ignore t :wk "subtree")
+    "sw" '(org-cut-subtree :wk "cut subtree")
+    "sy" '(org-paste-subtree :wk "paste subtree")
     "e" '(org-edit-src-code :wk "edit source code")
     "n" '(org-add-note :wk "add note")
-    "s" '(outline-show-all :wk "show all")
+    "a" '(outline-show-all :wk "show all")
     "f" '(:ignore t :wk "footnotes")
     "ff" '(org-footnote-new :wk "add new")
     "fn" '(org-footnote-normalize :wk "normalize"))
@@ -2769,8 +2783,11 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
 (use-package org-agenda
   :ensure nil
   :custom
-  ;; We hide all @-tags.
-  (org-agenda-hide-tags-regexp "@")
+  (org-agenda-hide-tags-regexp "^@")
+  (org-agenda-span 'day)
+  (org-agenda-restore-windows-after-quit t)
+  (org-agenda-time-leading-zero t)
+  (org-agenda-start-with-entry-text-mode t)
   :bind
   ("C-c a" . org-agenda))
 #+END_SRC
@@ -2811,6 +2828,18 @@ Nice agendas.
 Slide-shows.
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/org-tree-slide-visual-fill-column-width 160
+  "The base `visual-fill-column-width' for `org-tree-slide' presentations.")
+
+(defun wal/relative-column-width (&optional target-width)
+  "Get the relative column width of TARGET-WIDTH."
+  (let ((width (or target-width 160))
+         (scale (if (and (boundp 'text-scale-mode-amount)
+                         (numberp text-scale-mode-amount))
+                    (expt text-scale-mode-step text-scale-mode-amount)
+                  1)))
+    (ceiling (/ width scale))))
+
 (defun wal/org-tree-slide-toggle-visibility ()
   "Toggle visibility of cursor."
   (interactive)
@@ -2818,42 +2847,26 @@ Slide-shows.
       (setq cursor-type nil)
     (setq cursor-type t)))
 
-(defvar wal/org-tree-slide-visual-fill-column-width 180
-  "The `visual-fill-column-width' for `org-tree-slide' presentations.")
-
-(defun wal/org-tree-slide-calculate-relative-visual-fill-column-width ()
-  "Calculate a `visual-fill-column-width' relative to text scaling.
-Scaling tries to accommodate positive and negative scaling."
-  (let* ((factor (if (and (boundp 'text-scale-mode-amount)
-                          (not (zerop text-scale-mode-amount)))
-                     text-scale-mode-amount
-                   1))
-         (func (cond ((> factor 0) '(:operator / :convert ceiling))
-                     (t '(:operator * :convert floor)))))
-    (abs (apply (plist-get func :convert)
-                (list (apply (plist-get func :operator)
-                             (list wal/org-tree-slide-visual-fill-column-width
-                                   (* factor text-scale-mode-step))))))))
-
 (defun wal/org-tree-slide-play ()
   "Make presentable."
-  (setq visual-fill-column-width (wal/org-tree-slide-calculate-relative-visual-fill-column-width)
-        visual-fill-column-center-text t)
+  (setq visual-fill-column-width (wal/relative-column-width
+                                  wal/org-tree-slide-visual-fill-column-width)
+        visual-fill-column-center-text t
+        cursor-type nil)
   (beacon-mode -1)
   (visual-fill-column-mode 1))
 
 (defun wal/org-tree-slide-stop ()
   "We no longer care about presentation."
   (setq visual-fill-column-width nil
-        visual-fill-column-center-text nil)
+        visual-fill-column-center-text nil
+        cursor-type t)
   (beacon-mode 1)
-  (visual-fill-column-mode -1)
-  (setq cursor-type t))
+  (visual-fill-column-mode -1))
 
 (defun wal/org-tree-slide-text-scale ()
   "Hook into `text-scale-mode-hook' for `org-tree-slide'."
-  (when org-tree-slide-mode
-    (visual-fill-column-mode -1)
+  (when (and (boundp 'org-tree-slide-mode) org-tree-slide-mode)
     (wal/org-tree-slide-play)))
 
 (use-package org-tree-slide
@@ -2875,6 +2888,8 @@ Scaling tries to accommodate positive and negative scaling."
    ("q" . org-tree-slide-mode) ; To close it again.
    ("n" . org-tree-slide-move-next-tree)
    ("p" . org-tree-slide-move-previous-tree)
+   ("i" . text-scale-increase)
+   ("d" . text-scale-decrease)
    ("v" . wal/org-tree-slide-toggle-visibility)))
 #+END_SRC
 
@@ -2887,56 +2902,31 @@ Trying to organize my thoughts using Zettelkästen.
 (defvar wal/org-roam-dailies-directory "tagebuch/"
   "The directory for dailies.")
 
-;; Has to be created manually for now.
-(defvar wal/org-roam-index-file "verzeichnis.org"
-  "The name of the index file.")
-
-(defun wal/org-roam-configure ()
-  "Configure `org-roam'."
-  ;; Not sure why we need to do it this way.
-  (let ((index-file (expand-file-name wal/org-roam-index-file wal/org-roam-directory)))
-    (unless (file-exists-p index-file)
-      (write-region "* Zettelkasten" nil index-file)))
-  ;; Add some capture templates.
-  (let* ((fname (concat wal/org-roam-dailies-directory "%<%Y-%m-%d>")))
-    (setq org-roam-dailies-capture-templates
-          `(("w" "work" entry
-             #'org-roam-capture--get-point
-             "* %?"
-             :file-name ,fname
-             :head "#+title: %<%Y-%m-%d>\n"
-             :olp ("Work notes"))
-            ("j" "journal" entry
-             #'org-roam-capture--get-point
-             "* %?"
-             :file-name ,fname
-             :head "#+title: %<%Y-%m-%d>\n"
-             :olp ("Journal"))))))
-
 (use-package org-roam
-  :delight " zet"
-  :diminish org-roam-backlinks-mode
   :if (executable-find "sqlite3")
+  :commands (org-roam-buffer
+             org-roam-capture
+             org-roam-node-create
+             org-roam-node-find
+             org-roam-node-read)
   :custom
-  (org-roam-directory wal/org-roam-directory)
-  (org-roam-index-file wal/org-roam-index-file)
-  (org-roam-dailies-directory wal/org-roam-dailies-directory)
   (org-roam-completion-system 'ivy)
+  (org-roam-directory wal/org-roam-directory)
+  (org-roam-dailies-directory wal/org-roam-dailies-directory)
   :general
   (wal/lieutenant
     "z" '(:ignore t :wk "roam")
-    "zi" '(org-roam-jump-to-index :wk "index")
-    "zf" '(org-roam-find-file :wk "find")
+    "zf" '(org-roam-node-find :wk "find")
     "zc" '(org-roam-capture :wk "capture"))
-  ;; Theoretically these should be `wal/major' but these are minor of major.
-  ;; We only add these to `org-mode' after the package was loaded.
   (wal/lieutenant :keymaps 'org-mode-map
-    "zn" '(org-roam-insert :wk "insert other note")
-    "zr" '(org-roam-buffer-toggle-display :wk "toggle roam display")
+    "zr" '(org-roam-buffer :wk "roam buffer")
+    "zi" '(org-roam-node-insert :wk "insert node"))
+  (wal/lieutenant :keymaps 'org-roam-mode-map
     "zg" '(org-roam-graph :wk "write graph"))
   :config
-  (wal/org-roam-configure)
-  (org-roam-mode))
+  (org-roam-setup)
+  (wal/lieutenant
+    "zd" '(org-roam-dailies-goto-date :wk "dailies")))
 #+END_SRC
 
 *** Other
@@ -2999,18 +2989,29 @@ override some keybindings.
 
 Did you know you can edit =dired= buffers using =C-x C-q=?
 
+Run =dired= with =C-x d=.
+
 #+BEGIN_SRC emacs-lisp
+(defun wal/dired-from-home (dirname &optional switches)
+  "Run `dired' from HOME directory."
+  (interactive (let ((default-directory "~"))
+                 (require 'dired nil t)
+                 (dired-read-dir-and-switches "")))
+  (pop-to-buffer-same-window (dired-noselect dirname switches)))
+
 (use-package dired
   :ensure nil
   :config
   (put 'dired-find-alternate-file 'disabled nil)
   :custom
   (dired-listing-switches "-lah --group-directories-first")
+  (dired-auto-revert-buffer t)
   :general
   (wal/major :keymaps 'dired-mode-map
     "e" '(dired-create-empty-file :wk "create empty file"))
   :bind
   (("C-x j" . dired-jump-other-window)
+   ("C-x D" . wal/dired-from-home)
    :map dired-mode-map
    ("." . dired-up-directory) ; Overrides `dired-clean-directory'.
    ("," . dired-display-file)))

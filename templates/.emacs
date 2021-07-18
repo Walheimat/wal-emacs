@@ -40,6 +40,9 @@ tangle the blocks without loading the created file."
 (setq package-native-compile t
       native-comp-async-report-warnings-errors 'silent)
 
+;; Disable `org-roam' v2 warning.
+(setq org-roam-2-ack t)
+
 ;; This will tangle source blocks on first load and
 ;; afterwards just load the tangled file `README.el'.
 (let ((gc-cons-threshold most-positive-fixnum)
