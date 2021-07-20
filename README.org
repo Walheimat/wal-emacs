@@ -311,9 +311,13 @@ and spaces for indentation.
 (defvar wal/allow-custom-indent-line-fun t
   "Whether a custom `indent-line-function' can be passed.")
 
-(defun wal/reset-to-standard (sym)
-  "Reset the default value of symbol SYM to the standard value."
-  (set-default sym (eval (car (get sym 'standard-value)))))
+(defun wal/reset-to-standard (sym &optional locally)
+  "Reset symbol SYM (LOCALLY) to the standard value.
+If LOCALLY is t, the local variable is killed and the global
+value is left untouched."
+  (if (and locally (local-variable-p sym))
+      (kill-local-variable sym)
+    (set-default sym (eval (car (get sym 'standard-value))))))
 
 (defun wal/reset-indent-defaults ()
   "Reset the tab width to the standard."
@@ -568,7 +572,7 @@ The package prefixes are:
 + =l= and =r= for =avy= (line and region)
 + =m= for =magit=
 + =o= for =counsel=
-+ =p= for =smartparens=
++ =p= for =smartparens= (a =hydra=)
 + =u= for =consult=
 + =x= for =crux=
 + =z= for =org-roam=.
@@ -622,17 +626,25 @@ Saving the config will prompt to tangle its contents."
 Provides a context for related commands that can
 be (re-)executed in quick succession.
 
+Package =smartparens= also defines a =hydra=.
+
 #+BEGIN_SRC emacs-lisp
 (use-package hydra
   :defer t)
 
+(defun wal/text-scale-reset ()
+  "Reset `text-scale' level to 0."
+  (interactive)
+  (text-scale-set 0))
+
 ;; Scaling text in buffer.
 (defhydra wal/text-scale (:timeout 2 :hint nil)
   "
-_i_ncrease or _d_ecrease text size. Or _q_uit.
+_i_ncrease, _d_ecrease or _r_eset text size. Or _q_uit.
 "
   ("i" text-scale-increase)
   ("d" text-scale-decrease)
+  ("r" wal/text-scale-reset)
   ("q" nil))
 
 ;; Move window splitter or balance windows.
@@ -1584,19 +1596,20 @@ Because I also use company, =yas-expand= is mapped to =H-<TAB>=.
         (org-adapt-indentation nil))
     (yas-expand)))
 
-(defun wal/before-or-after-yas-expand ()
-  "Turn on/off `company-mode' before/after `yas-expand'.
-During snippet expansion `company' can be intrusive.
-This assumes that `company-mode' should be on in all `prog-mode'
-derived modes."
-  (when (derived-mode-p 'prog-mode)
-    (if company-mode
-        (company-mode -1)
-      (company-mode +1))))
+(defun wal/yas-before-expand-snippet ()
+  "Disable `company-idle-delay' before expansion."
+  (when (and (boundp 'company-mode) company-mode)
+    (setq-local company-idle-delay nil)))
+
+(defun wal/yas-after-exit-snippet ()
+  "Reset `company-idle-delay' after exiting snippet."
+  (when (and (boundp 'company-mode) company-mode)
+    (wal/reset-to-standard 'company-idle-delay t)))
 
 (use-package yasnippet
   :delight " yas"
-  :hook ((yas-before-expand-snippet yas-after-exit-snippet) . wal/before-or-after-yas-expand)
+  :hook ((yas-before-expand-snippet . wal/yas-before-expand-snippet)
+         (yas-after-exit-snippet . wal/yas-after-exit-snippet))
   :general
   (wal/colonel "y" '(yas-minor-mode :wk "yasnippet"))
   (wal/captain :keymaps 'yas-minor-mode-map
@@ -1624,7 +1637,21 @@ I didn't have smart parens growing up so I need help.
   "Configure `smartparens'."
   (add-to-list 'sp-lisp-modes 'lisp-data-mode)
   (sp-with-modes sp-lisp-modes
-    (sp-local-pair "'" nil :actions nil)))
+    (sp-local-pair "'" nil :actions nil))
+  ;; Create a `hydra' for pair navigatino/editing.
+  (defhydra wal/smartparens (:hint nil)
+    "
+  ^_p_^
+_b_   _f_ Navigate pairs. Re_w_rap/_s_plice. Or _q_uit.
+  ^_n_^
+"
+    ("b" sp-backward-sexp)
+    ("f" sp-forward-sexp)
+    ("p" sp-backward-up-sexp)
+    ("n" sp-down-sexp)
+    ("w" wal/sp-rewrap-sexp)
+    ("s" sp-splice-sexp)
+    ("q" nil)))
 
 (defun wal/sp-rewrap-sexp ()
   "Call `sp--maybe-init' before `sp-rewrap-sexp'.
@@ -1637,15 +1664,12 @@ Advising the function does not work."
   (call-interactively 'sp-rewrap-sexp))
 
 (use-package smartparens
+  :defer t
   :config
   (wal/configure-smartparens)
   :general
   (wal/lieutenant :keymaps 'prog-mode-map
-    "p" '(:ignore t :wk "smartparens")
-    "pr" '(wal/sp-rewrap-sexp :wk "rewrap")
-    "pk" '(sp-kill-sexp :wk "kill")
-    "pf" '(sp-forward-sexp :wk "forward")
-    "pb" '(sp-backward-sexp :wk "backward")))
+    "p" '(wal/smartparens/body :wk "smartparens")))
 #+END_SRC
 
 *** drag-stuff
@@ -2631,9 +2655,9 @@ Add =counsel= integration to =projectile=.
 
 (defun wal/advise-counsel-projectile-ag-override (&optional options)
   "Override of `counsel-projectile-ag'.
- The differences being that:
- (1) we call `counsel-ag' if we're not in a project and
- (2) we don't call `shell-quote-argument' on the ignored arguments which doesn't seem to work."
+The differences being that:
+  (1) we call `counsel-ag' if we're not in a project and
+  (2) we don't call `shell-quote-argument' on the ignored arguments which doesn't seem to work."
   (interactive)
   (if (and (eq projectile-require-project-root 'prompt)
            (not (projectile-project-p)))
@@ -3103,9 +3127,8 @@ We also install =vterm-toggle=.
   :custom
   (vterm-kill-buffer-on-exit t))
 
-(defun wal/advise-vterm-toggle (&rest r)
-  "Advise `vterm-toggle' to show unless the window
-is a vterm buffer."
+(defun wal/advise-vterm-toggle (&rest _r)
+  "Advise `vterm-toggle' to show unless the window is a vterm buffer."
   (unless (derived-mode-p 'vterm-mode)
     (vterm-toggle-show)))
 
@@ -3305,7 +3328,7 @@ to set your `.dir-locals.el'."
       (when venv
         (when pylsp
           (setq-local lsp-pyls-server-command '("poetry" "run" "pylsp")))
-        (when pylsp
+        (when pyls
           (setq-local lsp-pylsp-server-command '("poetry" "run" "pyls")))
         (poetry-venv-workon)))))
 
