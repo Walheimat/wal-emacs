@@ -435,6 +435,7 @@ It's also used for certain dispatches:
 Most hyper bindings are quick-access actions:
 
 + =H-a= searches with =ag= and (=H-s= with =counsel-projectile-ag=)
++ =H-c= completes at point using =company= (in =company-mode=)
 + =H-d= duplicates current line/region with =crux=
 + =H-e= opens (and =H-r= cycles through) =popper= pop-up(s)
 + =H-f= finds project file using =counsel-projectile=
@@ -2478,7 +2479,10 @@ Code completion in a box.
     "c" '(company-mode :wk "company"))
   :custom
   (company-minimum-prefix-length 2)
-  :hook (prog-mode . company-mode))
+  :hook (prog-mode . company-mode)
+  :bind
+  (:map company-mode-map
+   ("H-c" . company-complete)))
 
 (use-package company-box
   :diminish
@@ -3288,22 +3292,25 @@ Using virtual envs outside of poetry.
 It's like =npm= for Python, it's why it rhymes.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/poetry-pyls ()
-  "Make `poetry' work nicely with `pyls'.
+(defun wal/poetry-lsp ()
+  "Make `poetry' work nicely with `pylsp' and `pyls'.
 If you want to run pyls in poetry using `eglot', be sure
 to set your `.dir-locals.el'."
   (unless (fboundp 'poetry-venv-exist-p)
     (require 'poetry))
   (ignore-errors
     (let* ((venv (poetry-venv-exist-p))
-           (pyls-exe (file-exists-p (expand-file-name "bin/pyls" venv))))
+           (pylsp (file-exists-p (expand-file-name "bin/pylsp" venv)))
+           (pyls (file-exists-p (expand-file-name "bin/pyls" venv))))
       (when venv
-        (when pyls-exe
-          (setq-local lsp-pyls-server-command '("poetry" "run" "pyls")))
+        (when pylsp
+          (setq-local lsp-pyls-server-command '("poetry" "run" "pylsp")))
+        (when pylsp
+          (setq-local lsp-pylsp-server-command '("poetry" "run" "pyls")))
         (poetry-venv-workon)))))
 
 (use-package poetry
-  :hook (python-mode . wal/poetry-pyls)
+  :hook (python-mode . wal/poetry-lsp)
   :config
   (wal/display-buffer-in-side-window "\\*poetry-shell\\*")
   :general
@@ -3787,9 +3794,11 @@ You'll have to install some language servers yourself[fn:12].
   ;; These have to be defined here.
   (lsp-headerline-breadcrumb-enable nil)
   (lsp-log-io t)
-  ;; Enable `pylint'.
+  ;; Enable `pylint' and pyenv for `jedi'.
   (lsp-pyls-plugins-pylint-enabled t)
   (lsp-pyls-plugins-jedi-use-pyenv-environment t)
+  (lsp-pylsp-plugins-pylint-enabled t)
+  (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
   :config
   (lsp-enable-which-key-integration t)
   (--each wal/lsp-file-watch-ignored
@@ -3938,7 +3947,9 @@ using =poetry=.
 ((python-mode
   . ((eglot-workspace-configuration
       . ((pyls . ((plugins (pylint (enabled . t)))
-                  (executable  . "poetry run pyls"))))))))
+                  (executable  . "poetry run pyls")))
+         (pylsp . ((plugins (pylint (enabled . t)))
+                   (executable  "poetry run pylsp"))))))))
 #+END_SRC
 
 ***** =gopls=
