@@ -193,7 +193,7 @@ We want:
 
 ;; Change if necessary.
 (defvar wal/org-directory (expand-file-name "org" "~")
-  "My default directory for org files.")
+  "Default directory for org files.")
 
 ;; I put all of my tasks into a subfolder `tasks' inside the org directory.
 (defvar wal/agenda-tasks-directory
@@ -202,7 +202,7 @@ We want:
 
 (defvar wal/org-roam-directory
   (expand-file-name "zettelkasten" wal/org-directory)
-  "Directory for our note-taking.")
+  "Directory for Zettelkasten note-taking.")
 
 ;; Create all dirs.
 (--each
@@ -516,23 +516,23 @@ They prefix actions by common context.
 #+BEGIN_SRC emacs-lisp
 ;; American ranks.
 (defconst wal/general-key "H-;"
-  "Wal's primary (or general) leader key.")
+  "The primary (or general) leader key.")
 
 (defconst wal/colonel-key "H-'"
-  "Wal's secondary (or colonel) leader key.")
+  "The secondary (or colonel) leader key.")
 
 (defconst wal/major-key "H-,"
-  "Wal's tertiary (or major) leader key.")
+  "The tertiary (or major) leader key.")
 
 (defconst wal/captain-key "H-."
-  "Wal's quaternary (or captain) leader key.")
+  "The quaternary (or captain) leader key.")
 
 (defconst wal/lieutenant-key "H-/"
-  "Wal's quinary (or lieutenant) leader key.")
+  "The quinary (or lieutenant) leader key.")
 
 (cl-defmacro wal/create-leader-sink (name &key definer prefix)
-  "Macro to create a leader sink.
-NAME is the name of the macro. DEFINER is the definer to create this for
+  "Macro to create a leader sink `NAME-sink'.
+NAME is the name of the macro. DEFINER is the definer to create the sink for
 and PREFIX is its prefix."
   (let* ((defname (symbol-name definer))
          (pref (symbol-value prefix))
@@ -603,6 +603,11 @@ Most bindings are declared in the [[*Packages][packages]] section.
         (wal/tangle-config)
       (message "To tangle, call `wal/tangle-config'"))))
 
+(defun wal/open-init ()
+  "Open and switch to the `user-init-file'."
+  (interactive)
+  (switch-to-buffer (find-file-noselect user-init-file)))
+
 (defun wal/open-config ()
   "Open Walheimat's config.
 Saving the config will prompt to tangle its contents."
@@ -612,6 +617,7 @@ Saving the config will prompt to tangle its contents."
   (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t))
 
 (wal/general "c" '(wal/open-config :wk "open config"))
+(wal/general "i" '(wal/open-init :wk "open init"))
 
 ;; Killing Emacs.
 (global-unset-key (kbd "C-x C-c"))
@@ -1557,7 +1563,6 @@ Check the [[*Key Bindings][key bindings section]] for descriptions.
 #+BEGIN_SRC emacs-lisp
 (use-package crux
   :general
-  (wal/general "i" '(crux-find-user-init-file :wk "open init"))
   (wal/lieutenant
     "x" '(:ignore t :wk "crux")
     "xf" '(crux-recentf-find-file :wk "find recent file")
@@ -2874,7 +2879,6 @@ Used for the next package.
   :delight " mpm"
   :custom
   (mixed-pitch-variable-pitch-cursor nil)
-  (mixed-pitch-set-height t)
   (mixed-pitch-fixed-pitch-faces '(org-code
                                    org-block
                                    org-verbatim
