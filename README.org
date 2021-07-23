@@ -93,7 +93,7 @@ Customize start-up.
 
 ;; Maximize frame.
 (setq frame-resize-pixelwise t)
-(add-to-list 'default-frame-alist '(fullscreen . maximized)) ; Leads to issues when using a tiling wm.
+(add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; Leads to issues when using a tiling wm.
 
 ;; No splash.
 (setq inhibit-startup-message t)
@@ -843,7 +843,7 @@ if vertically split, split horizontally."
     (pcase direction
       ('enlarge (wal/enlarge-window))
       ('shrink (wal/shrink-window))
-      (_ nil))))
+      (_ (message "Selected window does not share a vertical edge with another window")))))
 
 (defun wal/edge-horizontally (scale-left scale-right)
   "Move the window splitter using SCALE-LEFT and SCALE-RIGHT."
@@ -855,7 +855,7 @@ if vertically split, split horizontally."
     (pcase direction
       ('enlarge (wal/enlarge-window-horizontally))
       ('shrink (wal/shrink-window-horizontally))
-      (_ nil))))
+      (_ (message "Selected window does not share a horizontal edge with another window")))))
 
 (defun wal/edge-left ()
   "Move the splitter of the selected window left.
@@ -932,13 +932,14 @@ Minor mode to dedicate buffers to windows.
   (let ((window (selected-window))
         (bufname (current-buffer)))
     (set-window-dedicated-p window bufname)
-    (message "Dedicating window")))
+    (message "Dedicating window to %s" bufname)))
 
 (defun walled-mode--disable ()
   "Make window no longer dedicated to its buffer."
-  (let ((window (selected-window)))
+  (let* ((window (selected-window))
+        (bufname (window-dedicated-p window)))
     (set-window-dedicated-p window nil)
-    (message "Window no longer dedicated")))
+    (message "Window no longer dedicated to %s" bufname)))
 
 (use-package walled-mode
   :ensure nil
@@ -1002,8 +1003,11 @@ Make frame transparent and set themes.
   "Set the transparency of the frame window to VALUE.
 1 being (almost) completely transparent, 100 being opaque."
   (interactive "nSet transparency (1-100): ")
-  (let ((transparency (min (max (or value wal/transparency) 1) 100)))
-    (set-frame-parameter (selected-frame) 'alpha transparency)))
+  (let ((transparency (min (max (or value wal/transparency) 1) 100))
+        (default-param (assoc 'alpha default-frame-alist)))
+    (set-frame-parameter (selected-frame) 'alpha transparency)
+    (when default-param
+      (setcdr default-param transparency))))
 
 (defvar wal/theme nil
   "The theme.")
@@ -1020,8 +1024,7 @@ Make frame transparent and set themes.
     (add-hook 'server-after-make-frame-hook 'wal/setup-visuals)
   ;; Function `wal/transparency' hasn't been untangled yet.
   (add-hook 'after-init-hook 'wal/setup-visuals)
-  ;; This means all future frames will have the original transparency
-  ;; not the current one.
+  ;; Add the transparency to the `default-frame-alist' as well.
   (add-to-list 'default-frame-alist `(alpha . ,wal/transparency)))
 #+END_SRC
 
@@ -1047,6 +1050,9 @@ To get support for ligatures, install the symbol font from [[https://github.com/
   '("Roboto" "Ubuntu" "San Francisco" "Arial")
   "Variable fonts ordered by preference.")
 
+(defvar wal/preferred-fonts nil
+  "List of (fixed and variable width) font names that should be preferred.")
+
 (defvar wal/fixed-font-height 120
   "The font height for fixed fonts.
 The default value is 98.")
@@ -1063,13 +1069,20 @@ If `doom-modeline-mode' is on, refresh font width cache."
    (list (completing-read "Select font: " (--filter (find-font (font-spec :name it))
                                                     wal/fixed-fonts))))
   (set-face-attribute 'default nil :font font)
-  (set-face-attribute 'fixed-pitch nil : font font)
-  (when doom-modeline-mode
+  (set-face-attribute 'fixed-pitch nil :font font)
+  (when (and (boundp 'doom-modeline-mode) doom-modeline-mode)
     (run-with-idle-timer 0.2 nil #'doom-modeline-refresh-font-width-cache)))
 
-(defun wal/fonts-candidate (fonts)
-  "Return the first available font from a list of FONTS."
-  (--first (find-font (font-spec :name it)) fonts))
+(defun wal/fonts-candidate (fonts &optional prefer)
+  "Return the first available font from a list of FONTS.
+If PREFER is true,`wal/preferred-fonts' is not nil
+and preferred fonts are available, return the first of those instead."
+  (let* ((available-fonts (--filter (find-font (font-spec :name it)) fonts))
+         (preferred (and prefer (--filter (-contains? wal/preferred-fonts it)
+                                          available-fonts))))
+    (if preferred
+        (car preferred)
+      (car available-fonts))))
 
 (defun wal/setup-fonts ()
   "Setup fonts.
@@ -1077,14 +1090,14 @@ This sets `default' and `fixed-pitch' fonts to the first available
 candidate from `wal/fixed-fonts'.
 Does the same for `variable-pitch' using `wal/variable-fonts'."
   (set-face-attribute 'default nil
-                      :font (wal/fonts-candidate wal/fixed-fonts)
+                      :font (wal/fonts-candidate wal/fixed-fonts t)
                       :height wal/fixed-font-height)
   (set-face-attribute 'fixed-pitch nil
-                      :font (wal/fonts-candidate wal/fixed-fonts)
+                      :font (wal/fonts-candidate wal/fixed-fonts t)
                       :height wal/fixed-font-height)
   ;; Variable pitch face.
   (set-face-attribute 'variable-pitch nil
-                      :font (wal/fonts-candidate wal/variable-fonts)
+                      :font (wal/fonts-candidate wal/variable-fonts t)
                       :height wal/variable-font-height))
 
 ;; Fonts can't be initialized thru daemon.
@@ -1620,7 +1633,7 @@ Because I also use company, =yas-expand= is mapped to =H-<TAB>=.
   (wal/captain :keymaps 'yas-minor-mode-map
     "y" '(:ignore t :wk "yasnippet")
     "yv" '(yas-visit-snippet-file :wk "visit snippet file")
-    "yc" '(yas-new-snippet :wk "create new snippet"))
+    "yn" '(yas-new-snippet :wk "create new snippet"))
   :bind
   (:map yas-minor-mode-map
    ("H-<tab>" . #'wal/yas-expand))
@@ -1775,6 +1788,7 @@ their own sub-package.
 
 #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons
+  :commands (all-the-icons-octicon)
   :defer t)
 #+END_SRC
 
@@ -1866,9 +1880,9 @@ for this to work but you should use =ligature= instead.
   "Determine whether `fira-code-mode' can/should be used.
 This is the case when:
 
-(1) We can't use `ligature'
-(2) The symbol font is installed
-(3) We're not using Monoid font"
+1. We can't use `ligature'
+2. The symbol font is installed
+3. We're not using Monoid font"
   (and (not (require 'ligature nil t))
        (x-list-fonts "Fira Code Symbol")
        (not (string-match "Monoid" (face-font 'default)))))
@@ -2969,7 +2983,7 @@ Trying to organize my thoughts using Zettelkästen.
 
 (use-package org-roam
   :if (executable-find "sqlite3")
-  :commands (org-roam-buffer
+  :commands (org-roam-buffer-display-dedicated
              org-roam-capture
              org-roam-node-create
              org-roam-node-find
@@ -2982,9 +2996,9 @@ Trying to organize my thoughts using Zettelkästen.
   (wal/lieutenant
     "z" '(:ignore t :wk "roam")
     "zf" '(org-roam-node-find :wk "find")
-    "zc" '(org-roam-capture :wk "capture"))
+    "zc" '(org-roam-capture :wk "capture")
+    "zr" '(org-roam-buffer-display-dedicated :wk "roam buffer"))
   (wal/lieutenant :keymaps 'org-mode-map
-    "zr" '(org-roam-buffer :wk "roam buffer")
     "zi" '(org-roam-node-insert :wk "insert node"))
   (wal/lieutenant :keymaps 'org-roam-mode-map
     "zg" '(org-roam-graph :wk "write graph"))
@@ -3058,7 +3072,7 @@ Run =dired= with =C-x d=.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/dired-from-home (dirname &optional switches)
-  "Run `dired' from HOME directory."
+  "Open DIRNAME local to HOME directory using SWITCHES."
   (interactive (let ((default-directory "~"))
                  (require 'dired nil t)
                  (dired-read-dir-and-switches "")))
@@ -3468,6 +3482,8 @@ Use the locally installed =eslint= and =tslint= binaries.
 
 Enable =flycheck= and disable tabs.
 
+Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html][lisp cookbook]] for =slime=.
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/elisp-mode ()
   "Hook into `emacs-lisp-mode'."
@@ -3482,6 +3498,21 @@ Enable =flycheck= and disable tabs.
 
 (use-package highlight-quoted
   :hook (emacs-lisp-mode . highlight-quoted-mode))
+
+(use-package slime
+  :delight " slm"
+  :ensure-system-package sbcl
+  :general
+  (wal/colonel :keymaps 'lisp-mode-map
+    "l" '(slime-mode :wk "slime"))
+  (wal/major :keymaps 'slime-mode-map
+    "r" '(slime :wk "open REPL"))
+  :config
+  (setq inferior-lisp-program "sbcl")
+  (slime-setup '(slime-fancy slime-quicklisp slime-asdf slime-company)))
+
+(use-package slime-company
+  :defer t)
 #+END_SRC
 
 *** C
