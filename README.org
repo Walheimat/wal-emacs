@@ -140,23 +140,16 @@ Manage packages with =use-package=.
 Before we can use it, we have to install it and a few other packages the hard way.
 
 #+BEGIN_SRC emacs-lisp
-;; We need dash for the upcoming loop.
-(unless (package-installed-p 'dash)
-  (condition-case nil
-      (package-install 'dash)
-    (error (package-refresh-contents)
-           (package-install 'dash))))
-(require 'dash)
-
 (defconst wal/dependencies '(diminish delight use-package)
   "Packages to install before using `use-package'.
 Such as package `use-package'.")
 
 (defun wal/install-packages (packages)
   "Install all PACKAGES unless already installed."
-  (--each packages
-    (when (not (package-installed-p it))
-      (package-install it)))
+  (mapc (lambda (it)
+            (when (not (package-installed-p it))
+              (package-install it)))
+          packages)
   (delete-other-windows))
 
 ;; Try to install. On fail refresh and install again.
@@ -205,14 +198,14 @@ We want:
   "Directory for Zettelkasten note-taking.")
 
 ;; Create all dirs.
-(--each
-    `(,wal/org-roam-directory
-      ,wal/agenda-tasks-directory
-      ,wal/org-directory
-      ,wal/site-lisp-directory
-      ,wal/cache-directory)
-  (unless (file-directory-p it)
-    (make-directory it)))
+(mapc (lambda (it)
+        (unless (file-directory-p it)
+          (make-directory it)))
+      `(,wal/org-roam-directory
+        ,wal/agenda-tasks-directory
+        ,wal/org-directory
+        ,wal/site-lisp-directory
+        ,wal/cache-directory))
 #+END_SRC
 
 ** Site-Lisp
@@ -322,13 +315,14 @@ value is left untouched."
 (defun wal/reset-indent-defaults ()
   "Reset the tab width to the standard."
   (interactive)
-  (--each '(python-indent-offset
-            js-indent-level
-            css-indent-offset
-            electric-indent-inhibit
-            tab-width
-            indent-tabs-mode)
-    (wal/reset-to-standard it)))
+  (mapc (lambda (it)
+          (wal/reset-to-standard it))
+        '(python-indent-offset
+          js-indent-level
+          css-indent-offset
+          electric-indent-inhibit
+          tab-width
+          indent-tabs-mode)))
 
 (defun wal/disable-tabs ()
   "Disable `indent-tabs-mode'."
@@ -546,11 +540,12 @@ and PREFIX is its prefix."
 (use-package general
   :demand
   :config
-  (--each '(wal/general wal/colonel wal/major wal/captain wal/lieutenant)
-    (let ((key (intern (format "%s-key" it)))
-          (sink (intern (format "%s-sink" it))))
-      (eval `(general-create-definer ,it :prefix ,key))
-      (eval `(wal/create-leader-sink ,sink :definer ,it :prefix ,key)))))
+  (mapc (lambda (it)
+          (let ((key (intern (format "%s-key" it)))
+                (sink (intern (format "%s-sink" it))))
+            (eval `(general-create-definer ,it :prefix ,key))
+            (eval `(wal/create-leader-sink ,sink :definer ,it :prefix ,key))))
+        '(wal/general wal/colonel wal/major wal/captain wal/lieutenant)))
 #+END_SRC
 
 *** About Leader Keys
@@ -1066,20 +1061,33 @@ This has no default value.")
 This sets both the `default' and `fixed-pitch' fonts.
 If `doom-modeline-mode' is on, refresh font width cache."
   (interactive
-   (list (completing-read "Select font: " (--filter (find-font (font-spec :name it))
-                                                    wal/fixed-fonts))))
+   (list (completing-read "Select font: " (wal/available-fonts wal/fixed-fonts))))
   (set-face-attribute 'default nil :font font)
   (set-face-attribute 'fixed-pitch nil :font font)
   (when (and (boundp 'doom-modeline-mode) doom-modeline-mode)
     (run-with-idle-timer 0.2 nil #'doom-modeline-refresh-font-width-cache)))
 
+(defun wal/available-fonts (fonts)
+  "Filter FONTS down to available fonts."
+  (delete nil
+          (mapcar (lambda (it)
+                    (if (find-font (font-spec :name it))
+                        it))
+                  fonts)))
+
+(defun wal/preferred-fonts (fonts)
+  "Filter FONTS down to preferred fonts."
+  (delete nil
+          (mapcar (lambda (it)
+                    (if (member it wal/preferred-fonts)
+                        it)) fonts)))
+
 (defun wal/fonts-candidate (fonts &optional prefer)
   "Return the first available font from a list of FONTS.
 If PREFER is true,`wal/preferred-fonts' is not nil
 and preferred fonts are available, return the first of those instead."
-  (let* ((available-fonts (--filter (find-font (font-spec :name it)) fonts))
-         (preferred (and prefer (--filter (-contains? wal/preferred-fonts it)
-                                          available-fonts))))
+  (let* ((available-fonts (wal/available-fonts fonts))
+         (preferred (and prefer (wal/preferred-fonts available-fonts))))
     (if preferred
         (car preferred)
       (car available-fonts))))
@@ -2274,18 +2282,18 @@ nice despite us using =ivy= for completion everywhere.
    ("M-g M-m" . consult-global-mark))
   :config
   ;; Advise functions to use `selectrum' when `ivy' behaves unpredictably.
-  (--each
-      '(consult-buffer
-        consult-focus-lines
-        consult-flymake
-        consult-global-mark
-        consult-grep
-        consult-minor-mode-menu
-        consult-mode-command
-        consult-xref
-        consult-recent-file
-        consult-outline)
-    (advice-add it :around #'wal/advise-selectrum))
+  (mapc (lambda (it)
+          (advice-add it :around #'wal/advise-selectrum))
+        '(consult-buffer
+          consult-focus-lines
+          consult-flymake
+          consult-global-mark
+          consult-grep
+          consult-minor-mode-menu
+          consult-mode-command
+          consult-xref
+          consult-recent-file
+          consult-outline))
   :general
   (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
   (wal/major :keymaps 'org-mode-map
@@ -2455,17 +2463,17 @@ Some nicer candidate view when switching buffers.
   :after ivy-rich
   :config
   ;; Prettify some additional functions.
-  (--each
-      '(counsel-projectile-switch-to-buffer
-        persp-kill-buffer*
-        persp-add-buffer ; This one doesn't seem to work ...
-        persp-remove-buffer
-        crux-recentf-find-file)
-    (plist-put all-the-icons-ivy-rich-display-transformers-list it
-               '(:columns
-                 ((all-the-icons-ivy-rich-file-icon)
-                  (ivy-rich-candidate))
-                 :delimiter "\t")))
+  (mapc (lambda (it)
+          (plist-put all-the-icons-ivy-rich-display-transformers-list it
+                     '(:columns
+                       ((all-the-icons-ivy-rich-file-icon)
+                        (ivy-rich-candidate))
+                       :delimiter "\t")))
+        '(counsel-projectile-switch-to-buffer
+          persp-kill-buffer*
+          persp-add-buffer ; This one doesn't seem to work ...
+          persp-remove-buffer
+          crux-recentf-find-file))
   (all-the-icons-ivy-rich-mode 1)
   (add-hook 'after-init-hook #'all-the-icons-ivy-rich-reload))
 #+END_SRC
@@ -2543,7 +2551,7 @@ Better short-term-memory for =ivy=.
   :custom
   (prescient-sort-length-enable nil)
   (prescient-save-file (expand-file-name "prescient-persist" wal/cache-directory))
-  (prescient-filter-method '(literal regexp initialism))
+  (prescient-filter-method '(literal regexp))
   :config
   (prescient-persist-mode +1))
 
@@ -2652,12 +2660,15 @@ Projects in Emacs.
   (projectile-indexing-method 'hybrid)
   (projectile-enable-caching t)
   :config
-  (--each wal/projectile-globally-ignored-directories
-    (add-to-list 'projectile-globally-ignored-directories it))
-  (--each wal/projectile-globally-ignored-file-suffixes
-    (add-to-list 'projectile-globally-ignored-file-suffixes it))
-  (--each wal/projectile-globally-ignored-files
-    (add-to-list 'projectile-globally-ignored-files it))
+  (mapc (lambda (it)
+          (add-to-list 'projectile-globally-ignored-directories it))
+        wal/projectile-globally-ignored-directories)
+  (mapc (lambda (it)
+          (add-to-list 'projectile-globally-ignored-files it))
+        wal/projectile-globally-ignored-files)
+  (mapc (lambda (it)
+          (add-to-list 'projectile-globally-ignored-file-suffixes it))
+        wal/projectile-globally-ignored-file-suffixes)
   (projectile-mode +1))
 #+END_SRC
 
@@ -3859,8 +3870,9 @@ You'll have to install some language servers yourself[fn:12].
   (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
   :config
   (lsp-enable-which-key-integration t)
-  (--each wal/lsp-file-watch-ignored
-    (add-to-list 'lsp-file-watch-ignored it)))
+  (mapc (lambda (it)
+          (add-to-list 'lsp-file-watch-ignored it))
+        wal/lsp-file-watch-ignored))
 
 (use-package lsp-ui
   :after lsp-mode
