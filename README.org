@@ -534,8 +534,11 @@ and PREFIX is its prefix."
          (wk (upcase (concat (substring defname 4) "!"))))
     (progn
       (general-define-key :prefix pref suf `(:ignore t :wk ,wk))
-      `(defmacro ,name (key &rest args)
-         `(, ',definer ,(concat ,suf key) ,@args)))))
+      `(defmacro ,name (&rest args)
+         `(, ',definer ,@,`(mapcar (lambda (it)
+                                    (if (stringp it)
+                                        (concat ,suf it)
+                                      it)) args))))))
 
 (use-package general
   :demand
@@ -590,13 +593,21 @@ Most bindings are declared in the [[*Packages][packages]] section.
   (let ((default-directory wal/emacs-config-default-path))
     (string-trim (shell-command-to-string "git describe --abbrev=0"))))
 
+(defvar wal/tangle-do-prompt t
+  "Whether to prompt user to tangle config.")
+
 (defun wal/tangle-config-prompt ()
-  "Prompt user before tangling."
+  "Prompt user before tangling.
+If the answer is no, there will be no additional prompt."
   (interactive)
   (let ((help-form (message "This will update your README.el. Restart Emacs afterwards.")))
-    (if (y-or-n-p "Config changed, want to tangle? ")
+    (if (and wal/tangle-do-prompt (y-or-n-p "Config changed, want to tangle? "))
         (wal/tangle-config)
-      (message "To tangle, call `wal/tangle-config'"))))
+      (if wal/tangle-do-prompt
+        (progn
+          (setq-local wal/tangle-do-prompt nil)
+          (message "To tangle, call `wal/tangle-config'"))
+        (message "Config changed. To tangle, call `wal/tangle-config'")))))
 
 (defun wal/open-init ()
   "Open and switch to the `user-init-file'."
@@ -611,8 +622,9 @@ Saving the config will prompt to tangle its contents."
   (add-hook 'after-save-hook #'wal/tangle-config-prompt nil t)
   (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t))
 
-(wal/general "c" '(wal/open-config :wk "open config"))
-(wal/general "i" '(wal/open-init :wk "open init"))
+(wal/general
+  "c" '(wal/open-config :wk "open config")
+  "i" '(wal/open-init :wk "open init"))
 
 ;; Killing Emacs.
 (global-unset-key (kbd "C-x C-c"))
@@ -699,9 +711,10 @@ switching between =major-mode= and =fundamental-mode=.
       (setq wal/before-fundamental-mode m-mode))))
 
 ;; Little EOF joke for ya.
-(wal/colonel-sink "E" '(emacs-lisp-mode :wk "Elisp"))
-(wal/colonel-sink "O" '(org-mode :wk "Org"))
-(wal/colonel-sink "F" '(wal/fundamental-mode :wk "Fundamental"))
+(wal/colonel-sink
+ "E" '(emacs-lisp-mode :wk "Elisp")
+ "O" '(org-mode :wk "Org")
+ "F" '(wal/fundamental-mode :wk "Fundamental"))
 #+END_SRC
 
 * Additional Functions
@@ -1634,7 +1647,8 @@ Because I also use company, =yas-expand= is mapped to =H-<TAB>=.
 
 (use-package yasnippet
   :delight " yas"
-  :hook ((yas-before-expand-snippet . wal/yas-before-expand-snippet)
+  :hook ((prog-mode . yas-minor-mode)
+         (yas-before-expand-snippet . wal/yas-before-expand-snippet)
          (yas-after-exit-snippet . wal/yas-after-exit-snippet))
   :general
   (wal/colonel "y" '(yas-minor-mode :wk "yasnippet"))
@@ -2529,7 +2543,7 @@ Code completion in a box.
   (wal/colonel :keymaps '(prog-mode-map dap-ui-repl-mode-map)
     "c" '(company-mode :wk "company"))
   :custom
-  (company-minimum-prefix-length 2)
+  (company-idle-delay 1.0) ;; Individual modes should instead use this.
   :hook (prog-mode . company-mode)
   :bind
   (:map company-mode-map
@@ -2768,11 +2782,18 @@ This configuration is a bit elaborate.
   "Advise to require `ox-md' beforehand."
   (require 'ox-md nil t))
 
+(defvar wal/org-src-lang-modes
+  '(("dockerfile" . dockerfile)
+    ("conf" . conf)
+    ("markdown" . markdown))
+  "Additional mappings to add to `org-src-lang-modes'.")
+
 (defun wal/configure-org ()
   "Configure `org'."
   (define-key org-mode-map (kbd "C-,") nil) ; Remove `org-cycle-agenda-files'.
-  (add-to-list 'org-src-lang-modes '("docker" . dockerfile))
-  (add-to-list 'org-src-lang-modes '("conf" . conf))
+  (mapc (lambda (it)
+          (add-to-list 'org-src-lang-modes it))
+        wal/org-src-lang-modes)
   (advice-add 'org-export-dispatch :before #'wal/advise-org-export-dispatch))
 
 (use-package org
@@ -3539,6 +3560,7 @@ Make sure to install =ccls= and =clang=.
   "Hook into `cc-mode'."
   (message "Make tidy! Make clean!")
   (wal/disable-tabs)
+  (hack-local-variables)
   (wal/lsp))
 
 (use-package cc-mode
@@ -3957,9 +3979,7 @@ This is the light-weight alternative.
     (_ nil)))
 
 (use-package eglot
-  :hook
-  ((eglot-managed-mode . wal/eglot-managed-mode)
-   (eglot-managed-mode . yas-minor-mode))
+  :hook (eglot-managed-mode . wal/eglot-managed-mode)
   :custom
   (eglot-autoshutdown t)
   :general
