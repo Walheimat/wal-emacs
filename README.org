@@ -3349,23 +3349,21 @@ This mode is built-in.
   (wal/display-buffer-in-side-window 'inferior-python-mode))
 #+END_SRC
 
-**** pyvenv
-
-Using virtual envs outside of poetry.
-
-#+BEGIN_SRC emacs-lisp
-(use-package pyvenv
-  :general
-  (wal/major :keymaps 'python-mode-map
-    "v" '(pyvenv-activate :wk "activate venv")))
-#+END_SRC
-
 **** poetry
 
 It's like =npm= for Python, it's why it rhymes.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/poetry-lsp ()
+(defun wal/configure-lsp-server-commands (venv)
+  "Configure server commands for `lsp-mode' using VENV."
+  (let ((pylsp (file-exists-p (expand-file-name "bin/pylsp" venv)))
+        (pyls (file-exists-p (expand-file-name "bin/pyls" venv))))
+    (when pylsp
+      (setq-local lsp-pylsp-server-command '("poetry" "run" "pylsp")))
+    (when pyls
+      (setq-local lsp-pyls-server-command '("poetry" "run" "pyls")))))
+  
+(defun wal/activate-venv ()
   "Make `poetry' work nicely with `pylsp' and `pyls'.
 If you want to run pyls in poetry using `eglot', be sure
 to set your `.dir-locals.el'."
@@ -3373,17 +3371,21 @@ to set your `.dir-locals.el'."
     (require 'poetry))
   (ignore-errors
     (let* ((venv (poetry-venv-exist-p))
-           (pylsp (file-exists-p (expand-file-name "bin/pylsp" venv)))
-           (pyls (file-exists-p (expand-file-name "bin/pyls" venv))))
+           (is-poetry (poetry-ensure-in-project)))
       (when venv
-        (when pylsp
-          (setq-local lsp-pylsp-server-command '("poetry" "run" "pylsp")))
-        (when pyls
-          (setq-local lsp-pyls-server-command '("poetry" "run" "pyls")))
-        (poetry-venv-workon)))))
+        (if is-poetry
+            (progn
+              (wal/configure-lsp-server-commands venv)
+              (poetry-venv-workon))
+          (pyvenv-activate venv))))))
+
+(use-package pyvenv
+  :hook (python-mode . wal/activate-venv)
+  :general
+  (wal/major :keymaps 'python-mode-map
+    "v" '(pyvenv-activate :wk "activate venv")))
 
 (use-package poetry
-  :hook (python-mode . wal/poetry-lsp)
   :config
   (wal/display-buffer-in-side-window "\\*poetry-shell\\*")
   :general
