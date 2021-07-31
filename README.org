@@ -249,7 +249,7 @@ Don't clutter up workspaces.
 
 ** Global Modes
 
-Modes that should be on/off no matter what.
+Any mode that should be on/off no matter what.
 
 #+BEGIN_SRC emacs-lisp
 ;; A bunch of useful modes.
@@ -417,7 +417,7 @@ Anywhere:
 
 User-reserved combinations are used for certain command maps:
 
-+ =C-c b= for =bookmark= and when the respective mode is active:
++ =C-c b= for =bookmark=, and when the respective mode is active:
 + =C-c f= for =flycheck=
 + =C-c i= for =perspective=
 + =C-c p= for =projectile=
@@ -445,7 +445,7 @@ Most hyper bindings are quick-access actions:
 + =H-m= runs =magit-status=
 + =H-n= to capture (using =counsel-projectile-org-capture=)
 + =H-p= switches projects using =projectile=
-+ =H-<TAB>= expands snippets (in =yas-minor-mode=)
++ =H-y= expands snippets (in =yas-minor-mode=)
 + =H-== to do a =quick-calc= (inserted if called with =C-u=)
 + =H-t= toggles =vterm=.
 
@@ -557,7 +557,7 @@ Leader key =general= prefixes Emacs actions like loading a theme,
 finding a library, quitting as well as opening =eshell= and =eww=.
 
 Leader key =colonel= prefixes mode toggles.
-Available modes might depend on =major-mode=.
+Available modes may depend on =major-mode=.
 
 Leader keys =major= and =captain= prefix mode-specific actions,
 for major and minor modes respectively.
@@ -1203,6 +1203,7 @@ Look up words.
 
 #+begin_src emacs-lisp
 (use-package dictionary
+  :ensure nil
   :general
   (wal/lieutenant-sink
     "d" '(dictionary-lookup-definition :wk "lookup definition"))
@@ -1391,6 +1392,8 @@ What time is it?
 
 **** winner-mode
 
+Allows restoring window configurations.
+
 #+begin_src emacs-lisp
 (use-package winner
   :ensure nil
@@ -1407,7 +1410,7 @@ What time is it?
 
 **** zone
 
-Zone out.
+Screen-saver.
 
 Since this eats up a lot of CPU, the timer is disabled by
 default but zoning can always be triggered using =C-z=.
@@ -1658,7 +1661,7 @@ Because I also use company, =yas-expand= is mapped to =H-<TAB>=.
     "yn" '(yas-new-snippet :wk "create new snippet"))
   :bind
   (:map yas-minor-mode-map
-   ("H-<tab>" . #'wal/yas-expand))
+   ("H-y" . #'wal/yas-expand))
   :config
   (define-key yas-minor-mode-map (kbd "<tab>") nil)
   (define-key yas-minor-mode-map (kbd "TAB") nil)
@@ -2382,7 +2385,7 @@ Important command is =C-o c= to change search style.
 
 *** dumb-jump
 
-Jump to definitions (in other files).
+Better definition look-up when no LSP is already doing it.
 Configure it for =ivy= and =ag=.
 Jumping is done using =xref-find-definitions= (=M-.=).
 
@@ -2751,8 +2754,7 @@ The differences being that:
       "* %?")))
   :config
   ;; Make opening with `dired' the default action.
-  (setq counsel-projectile-switch-project-action
-        (-replace-at 0 4 counsel-projectile-switch-project-action))
+  (setf (nth 0 counsel-projectile-switch-project-action) 4)
   ;; (advice-add 'counsel-projectile-ag :around #'wal/advise-counsel-projectile-ag-around)
   (advice-add 'counsel-projectile-ag :override #'wal/advise-counsel-projectile-ag-override)
   (counsel-projectile-mode +1)
@@ -2766,7 +2768,7 @@ The differences being that:
 
 ** Org
 
-Org mode is the best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]].
+The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]].
 This configuration is a bit elaborate.
 
 #+BEGIN_SRC emacs-lisp
@@ -2933,7 +2935,7 @@ Used for the next package.
 
 *** org-tree-slide
 
-Slide-shows.
+Presentations.
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal/org-tree-slide-visual-fill-column-width 160
@@ -3042,7 +3044,7 @@ Trying to organize my thoughts using Zettelkästen.
 
 *** Other
 
-Other configurations and packages.
+Configurations of sub-packages.
 
 **** org-bullets
 
@@ -3058,7 +3060,7 @@ Prettier headlines.
 
 **** org-clock
 
-Clock in, clock out.
+You know the drill. Clock in, clock out.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-clock
@@ -3162,8 +3164,7 @@ I am convinced that we are in a terminal process.
 
 *** vterm
 
-=vterm= can[fn:11] be an alternative to included shells.
-We also install =vterm-toggle=.
+Better[fn:11] than =vterm= included shells.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/vterm-mode ()
@@ -3725,7 +3726,7 @@ Built-in syntax checker. Used by =eglot=.
 
 **** Finding ESLint
 
-ESLint configs can be found using a file, not a directory.
+Configs can be found using a file, not a directory.
 
 #+BEGIN_SRC emacs-lisp
 (defun flycheck-eslint-config-exists-p ()
@@ -3808,6 +3809,11 @@ Uses American English for =flyspell=.
       (flyspell-mode -1)
     (flyspell-mode 1)))
 
+(use-package ispell
+  :defer t
+  :custom
+  (ispell-silently-savep t))
+
 (use-package flyspell
   :ensure nil
   :custom
@@ -3816,14 +3822,17 @@ Uses American English for =flyspell=.
   (flyspell-default-dictionary "american")
   :bind
   (:map flyspell-mode-map
-   ("C-/" . ispell-word))
+   ("C-." . ispell-word)) ;; Replaces `flyspell-auto-correct-word'.
+                          ;; But still available via `C-M-i'.
   :general
   (wal/colonel :keymaps '(text-mode-map org-mode-map)
     "s" '(wal/flyspell-mode :wk "flyspell"))
   (wal/colonel :keymaps 'prog-mode-map
     "s" '(wal/flyspell-prog-mode :wk "flyspell-prog"))
   (wal/captain :keymaps 'flyspell-mode-map
-    "s" '(flyspell-buffer :wk "spell-check buffer")))
+    "s" '(:ignore t :wk "flyspell")
+    "sb" '(flyspell-buffer :wk "buffer")
+    "sr" '(flyspell-region :wk "region")))
 #+END_SRC
 
 ** LSP
@@ -4150,7 +4159,7 @@ I use a different (light) theme here.
 #+BEGIN_SRC emacs-lisp
 (use-package writeroom-mode
   :config
-  (setq writeroom-global-effects (-remove-at 1 writeroom-global-effects)) ; Keep transparency.
+  (setq writeroom-global-effects (remove 'writeroom-set-alpha writeroom-global-effects)) ; Keep transparency. 
   :custom
   (writeroom-width 0.618) ; Golden ratio.
   (writeroom-restore-window-config t)
