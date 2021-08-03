@@ -59,16 +59,21 @@ called =wal= to avoid potential interference.
 Enough preambling, let's configure some Emacs.
 The init script will evaluate _everything_[fn:5] that follows.
 
-* Settings
+* Pre-Export
 
-** Speed
-
-You want speed?
-Then bind lexically!
+You want speed? Then bind lexically!
 
 #+BEGIN_SRC emacs-lisp
-;;; README.el -*- lexical-binding: t; -*-
+;;; README.el --- Walheimat's literate Emacs configuration. -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;;
+;; This file is an export of `README.org'.
+
+;;; Code:
 #+END_SRC
+
+* Settings
 
 ** Personal
 
@@ -325,13 +330,13 @@ value is left untouched."
           indent-tabs-mode)))
 
 (defun wal/disable-tabs ()
-  "Disable `indent-tabs-mode'."
+  "Unset tab and set variable `indent-tabs-mode' to nil."
   (interactive)
   (local-unset-key (kbd "TAB"))
   (setq indent-tabs-mode nil))
 
 (defun wal/enable-tabs ()
-  "Use TAB key and turn on `indent-tabs-mode'."
+  "Set tab and set variable `indent-tabs-mode' to t."
   (interactive)
   (local-set-key (kbd "TAB") 'tab-to-tab-stop)
   (setq indent-tabs-mode t))
@@ -536,9 +541,9 @@ and PREFIX is its prefix."
       (general-define-key :prefix pref suf `(:ignore t :wk ,wk))
       `(defmacro ,name (&rest args)
          `(, ',definer ,@,`(mapcar (lambda (it)
-                                    (if (stringp it)
-                                        (concat ,suf it)
-                                      it)) args))))))
+                                     (if (stringp it)
+                                         (concat ,suf it)
+                                       it)) args))))))
 
 (use-package general
   :demand
@@ -604,9 +609,9 @@ If the answer is no, there will be no additional prompt."
     (if (and wal/tangle-do-prompt (y-or-n-p "Config changed, want to tangle? "))
         (wal/tangle-config)
       (if wal/tangle-do-prompt
-        (progn
-          (setq-local wal/tangle-do-prompt nil)
-          (message "To tangle, call `wal/tangle-config'"))
+          (progn
+            (setq-local wal/tangle-do-prompt nil)
+            (message "To tangle, call `wal/tangle-config'"))
         (message "Config changed. To tangle, call `wal/tangle-config'")))))
 
 (defun wal/open-init ()
@@ -642,6 +647,13 @@ be (re-)executed in quick succession.
 Package =smartparens= also defines a =hydra=.
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/ascii-whale "}< ,.__)"
+  "A small ASCII whale.")
+
+(defun wal/ascii-whale-hydra-offset ()
+  "Get a string offset for the `wal/asii-whale'."
+  (make-string (length wal/ascii-whale) ? ))
+
 (use-package hydra
   :defer t)
 
@@ -651,9 +663,9 @@ Package =smartparens= also defines a =hydra=.
   (text-scale-set 0))
 
 ;; Scaling text in buffer.
-(defhydra wal/text-scale (:timeout 2 :hint nil)
+(defhydra wal/text-scale (:hint nil)
   "
-_i_ncrease, _d_ecrease or _r_eset text size. Or _q_uit.
+%s`wal/ascii-whale _i_ncrease, _d_ecrease or _r_eset text size. Or _q_uit.
 "
   ("i" text-scale-increase)
   ("d" text-scale-decrease)
@@ -661,11 +673,11 @@ _i_ncrease, _d_ecrease or _r_eset text size. Or _q_uit.
   ("q" nil))
 
 ;; Move window splitter or balance windows.
-(defhydra wal/resize-window (:timeout 2 :hint nil)
+(defhydra wal/resize-window (:hint nil)
   "
-  ^_p_^
-_b_   _f_ Move window splitter. Ba_l_ance. Or _q_uit.
-  ^_n_^
+%s(wal/ascii-whale-hydra-offset)   ^_p_^
+%s`wal/ascii-whale _b_   _f_ window splitter. Ba_l_ance. Or _q_uit.
+%s(wal/ascii-whale-hydra-offset)   ^_n_^
 "
   ("b" wal/edge-left)
   ("f" wal/edge-right)
@@ -677,7 +689,7 @@ _b_   _f_ Move window splitter. Ba_l_ance. Or _q_uit.
 
 (defhydra wal/scroll-other-window (:timeout 4 :hint nil)
   "
-Scroll other window u_p_/dow_n_. Or _q_uit.
+%s`wal/ascii-whale Scroll other window u_p_/dow_n_. Or _q_uit.
 "
   ("p" scroll-other-window-down)
   ("n" scroll-other-window)
@@ -774,7 +786,7 @@ Utility functions to configure displaying buffers of a certain type.
     ((pred stringp) buffer-or-mode)
     ((pred symbolp) `(lambda (bufname _)
                        (with-current-buffer bufname
-                         (equal major-mode (intern ,(symbol-name buffer-or-mode))))))
+                         (equal major-mode ',buffer-or-mode))))
     (_ nil)))
 
 (defun wal/display-buffer-in-pop-up (buffer &optional in-frame)
@@ -1001,7 +1013,7 @@ Make frame transparent and set themes.
 #+BEGIN_SRC emacs-lisp
 ;; Mix of old and new.
 (setq frame-title-format '(multiple-frames "%b"
-                              ("%b@" system-name)))
+                                           ("%b@" system-name)))
 
 ;; Transparency.
 (defvar wal/transparency 90
@@ -1140,8 +1152,11 @@ Does the same for `variable-pitch' using `wal/variable-fonts'."
 
 What follows is a list of packages[fn:9] that make Emacs even more awesome.
 
-If you wish to know more about any of them,
-check out the [[file:etc/packages.org][list of repositories]] or the [[https://github.com/emacs-tw/awesome-emacs][awesome-emacs]] project.
+If you wish to know more about any of them
+call =describe-package= (bound to =C-h P=) and type in the package name.
+
+If you're looking for additional packages, check out the [[https://github.com/emacs-tw/awesome-emacs][awesome-emacs]] project
+for inspiration.
 
 ** Emacs
 
@@ -1164,8 +1179,7 @@ Configure annotation usage.
   (bookmark-menu-confirm-deletion t)
   :config
   (wal/display-buffer-in-side-window "\\*Bookmark Annotation\\*" 'left)
-  :bind-keymap
-  ("C-c b" . bookmark-map)
+  :bind-keymap ("C-c b" . bookmark-map)
   :bind
   (:map bookmark-map
    ("l" . bookmark-bmenu-list)
@@ -1489,7 +1503,8 @@ Let's have a dash of board.
     "I propel myself forward on nothing but flukes"
     "devout and up the spout"
     "krill, filter feeders and hit sulphur bottom"
-    "the founder of retiring gentlemen")
+    "the founder of retiring gentlemen"
+    "the loud keyboard will vanquish the muscular mouse")
   "The footer messages I can stand to see.")
 
 ;; Ignore all files that were loaded on start-up.
@@ -1501,7 +1516,7 @@ Let's have a dash of board.
   "Files that should not be considered recent files.")
 
 (defun wal/advise-dashboard-insert-startupify-lists (fun &rest r)
-  "Advise to ignore certain directories."
+  "Advise FUN to ignore certain directories, applying R."
   (let ((recentf-exclude wal/recentf-exclude))
     (apply fun r)))
 
@@ -1650,9 +1665,10 @@ Because I also use company, =yas-expand= is mapped to =H-<TAB>=.
 
 (use-package yasnippet
   :delight " yas"
-  :hook ((prog-mode . yas-minor-mode)
-         (yas-before-expand-snippet . wal/yas-before-expand-snippet)
-         (yas-after-exit-snippet . wal/yas-after-exit-snippet))
+  :hook
+  ((prog-mode . yas-minor-mode)
+   (yas-before-expand-snippet . wal/yas-before-expand-snippet)
+   (yas-after-exit-snippet . wal/yas-after-exit-snippet))
   :general
   (wal/colonel "y" '(yas-minor-mode :wk "yasnippet"))
   (wal/captain :keymaps 'yas-minor-mode-map
@@ -1684,9 +1700,9 @@ I didn't have smart parens growing up so I need help.
   ;; Create a `hydra' for pair navigatino/editing.
   (defhydra wal/smartparens (:hint nil)
     "
-  ^_p_^
-_b_   _f_ Navigate pairs. Re_w_rap/_s_plice. Or _q_uit.
-  ^_n_^
+%s(wal/ascii-whale-hydra-offset)   ^_p_^
+%s`wal/ascii-whale _b_   _f_ Navigate pairs. Re_w_rap/_s_plice. Or _q_uit.
+%s(wal/ascii-whale-hydra-offset)   ^_n_^
 "
     ("b" sp-backward-sexp)
     ("f" sp-forward-sexp)
@@ -1940,26 +1956,22 @@ in the load path.
   :load-path "site-lisp"
   :config
   ;; FIXME: This is still in progress.
-  ;;        Providing derived modes here doesn't work for me.
-  (ligature-set-ligatures
-   'prog-mode
-   '(;; Shared.
-     "&&" ">=" "<=" "==" "+=" "-=" "||" "..." "!!" "??" "__"
-     ;; Comments.
-      "*/" "/*" "//" "/**" "**/"
-     ;; CPP.
-     "::" "->" ">>" "<<" "++" "!=" "|=" "<<=" ">>="
-     ;; JS.
-     "=>" "!==" "==="
-     ;; Elixir.
-     "|>" "#{" "\\\\"
-     ;; Lisp.
-     ";;"
-     ;; Prolog.
-     ":-"
-     ;; Other.
-     "<!--" "-->"
-     )))
+  (ligature-set-ligatures 'prog-mode
+                          '(">=" "<="  "+=" "-="
+                            "||" "..." "??" "__"
+                            "*/" "/*" "//" "/**"
+                            "**/"))
+  (ligature-set-ligatures 'lisp-data-mode '(";;"))
+  (ligature-set-ligatures 'c++-mode
+                          '("::" "->" ">>" "<<"
+                            "++" "!=" "|=" "<<="
+                            ">>=" "=="))
+  (ligature-set-ligatures 'js2-mode
+                          '("=>" "!==" "===" "!!"
+                            "&&"))
+  (ligature-set-ligatures 'elixir-mode '("|>" "#{" "\\\\"))
+  (ligature-set-ligatures 'prolog-mode '(":-"))
+  (ligature-set-ligatures 'html-mode '("<!--" "-->")))
 #+end_src
 
 *** diff-hl
@@ -1971,8 +1983,9 @@ Show diffs in the fringe (also in =dired= buffers).
   :defer 2.5
   :config
   (global-diff-hl-mode)
-  :hook ((magit-post-refresh . diff-hl-magit-post-refresh)
-         (dired-mode . diff-hl-dired-mode)))
+  :hook
+  ((magit-post-refresh . diff-hl-magit-post-refresh)
+   (dired-mode . diff-hl-dired-mode)))
 #+END_SRC
 
 *** delight
@@ -2101,7 +2114,7 @@ Allows for some nifty window swapping.
   (aw-delete-window window t))
 
 (defun wal/advise-aw--switch-buffer (&rest r)
-  "Advise to use `wal/ivy-switch-buffer'."
+  "Call `wal/ivy-switch-buffer' with R instead."
   (wal/ivy-switch-buffer r))
 
 (use-package ace-window
@@ -2588,8 +2601,8 @@ Sunken cost thinking prevents a switch for now
 but we still use it to advise a few =consult= functions.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-selectrum(func &rest r)
-  "Call FUNC applying R using `selectrum' for read completion."
+(defun wal/advise-selectrum(fun &rest r)
+  "Call FUN using `selectrum' for read completion, applying R."
   (let ((completing-read-function #'selectrum-completing-read)
         (read-buffer-function #'selectrum-read-buffer)
         (read-file-name-function #'selectrum-read-file-name)
@@ -2601,7 +2614,7 @@ but we still use it to advise a few =consult= functions.
         (map (make-sparse-keymap)))
     (set-keymap-parent map minibuffer-local-map)
     (define-key map [remap previous-matching-history-element] 'selectrum-select-from-history)
-    (apply func r)))
+    (apply fun r)))
 
 (use-package selectrum
   :defer t)
@@ -2620,12 +2633,12 @@ Have some perspective, man.
   "walheimat"
   "The name of my default perspective.")
 
-(defun wal/advise-persp-kill (func &rest r)
-  "Advises `persp-kill' to kill processes without querying.
+(defun wal/advise-persp-kill (fun &rest r)
+  "Advises FUN to kill processes without querying, applying R.
 This only removes `process-kill-buffer-query-function'."
   (let ((kill-buffer-query-functions (delq 'process-kill-buffer-query-function
                                            kill-buffer-query-functions)))
-    (apply func r)))
+    (apply fun r)))
 
 (use-package perspective
   :defer 0.25
@@ -2694,14 +2707,15 @@ Projects in Emacs.
 Add =counsel= integration to =projectile=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-counsel-projectile-ag-around (func &rest r)
-  "Use `counsel-ag' outside of projects instead of prompting to open one first."
+(defun wal/advise-counsel-projectile-ag-around (fun &rest r)
+  "Call `counsel-ag' not FUN with R outside of projects.
+This eliminates getting prompted to open one first"
   (if (projectile-project-p)
-      (apply func r)
+      (apply fun r)
     (apply 'counsel-ag r)))
 
 (defun wal/advise-counsel-projectile-ag-override (&optional options)
-  "Override of `counsel-projectile-ag'.
+  "Override of `counsel-projectile-ag' with same OPTIONS.
 The differences being that:
   (1) we call `counsel-ag' if we're not in a project and
   (2) we don't call `shell-quote-argument' on the ignored arguments which doesn't seem to work."
@@ -2990,9 +3004,10 @@ Presentations.
   (org-tree-slide-deactivate-message "Take you here, take you there")
   (org-tree-slide-indicator '(:next "   >>>" :previous "<<<" :content "< Here is where time is on our side >"))
   :diminish buffer-face-mode
-  :hook ((org-tree-slide-play . wal/org-tree-slide-play)
-         (org-tree-slide-stop . wal/org-tree-slide-stop)
-         (text-scale-mode . wal/org-tree-slide-text-scale))
+  :hook
+  ((org-tree-slide-play . wal/org-tree-slide-play)
+   (org-tree-slide-stop . wal/org-tree-slide-stop)
+   (text-scale-mode . wal/org-tree-slide-text-scale))
   :general
   (wal/major :keymaps 'org-mode-map
     "p" '(org-tree-slide-mode :wk "presentation"))
@@ -3017,11 +3032,12 @@ Trying to organize my thoughts using Zettelkästen.
 
 (use-package org-roam
   :if (executable-find "sqlite3")
-  :commands (org-roam-buffer-display-dedicated
-             org-roam-capture
-             org-roam-node-create
-             org-roam-node-find
-             org-roam-node-read)
+  :commands
+  (org-roam-buffer-display-dedicated
+   org-roam-capture
+   org-roam-node-create
+   org-roam-node-find
+   org-roam-node-read)
   :custom
   (org-roam-completion-system 'ivy)
   (org-roam-directory wal/org-roam-directory)
@@ -3106,7 +3122,8 @@ Run =dired= with =C-x d=.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/dired-from-home (dirname &optional switches)
-  "Open DIRNAME local to HOME directory using SWITCHES."
+  "Open DIRNAME local to HOME directory.
+Uses the same optional SWITCHES."
   (interactive (let ((default-directory "~"))
                  (require 'dired nil t)
                  (dired-read-dir-and-switches "")))
@@ -3268,7 +3285,8 @@ in `magit-status-mode-map' when using this function."
     "mf" '(magit-find-file :wk "find file")
     "mo" '(magit-find-file-other-window :wk "find file other window")
     "md" '(magit-diff-range :wk "diff range"))
-  :bind ("H-m" . magit-status))
+  :bind
+  ("H-m" . magit-status))
 #+END_SRC
 
 *** git-timemachine
@@ -3897,7 +3915,7 @@ You'll have to install some language servers yourself[fn:12].
   (lsp-ui-sideline-enable nil)
   ;; (lsp-ui-sideline-delay 1.5)
   (lsp-ui-doc-position 'top) ; Alternatively, `at-point'.
-  (lsp-ui-doc-delay 0.2))
+  (lsp-ui-doc-delay 0.4))
 #+END_SRC
 
 **** dap-mode
@@ -4166,6 +4184,19 @@ I use a different (light) theme here.
   (writeroom-extra-line-spacing 0.1)
   :general
   (wal/colonel "r" '(writeroom-mode :wk "toggle writeroom")))
+#+END_SRC
+
+* Post-Export
+
+We're not gonna byte compile this file.
+And make the exported file happy.
+
+#+BEGIN_SRC emacs-lisp
+;; Local Variables:
+;; no-byte-compile: t
+;; End:
+
+;;; README.el ends here
 #+END_SRC
 
 * Footnotes
