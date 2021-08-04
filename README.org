@@ -2798,29 +2798,17 @@ This configuration is a bit elaborate.
   "Advise to require `ox-md' beforehand."
   (require 'ox-md nil t))
 
-(defvar wal/org-src-lang-modes
-  '(("dockerfile" . dockerfile)
-    ("conf" . conf)
-    ("markdown" . markdown))
-  "Additional mappings to add to `org-src-lang-modes'.")
-
 (defun wal/configure-org ()
   "Configure `org'."
   (define-key org-mode-map (kbd "C-,") nil) ; Remove `org-cycle-agenda-files'.
-  (mapc (lambda (it)
-          (add-to-list 'org-src-lang-modes it))
-        wal/org-src-lang-modes)
   (advice-add 'org-export-dispatch :before #'wal/advise-org-export-dispatch))
 
 (use-package org
   :ensure nil
-  :delight
-  (org-src-mode " osc")
   :hook (org-mode . wal/org-mode)
   :config
   (wal/configure-org)
   :custom
-  (org-src-tab-acts-natively nil) ; Defaults to `t' nowadays.
   (org-edit-src-content-indentation 0) ; Defaults to `2' nowadays.
   (org-adapt-indentation nil) ; Defaults to `t' nowadays ...
   (org-ellipsis "↷")
@@ -2863,9 +2851,6 @@ This configuration is a bit elaborate.
      ("@dev" . ?d)
      ("@bla" . ?b)
      ("@edu" . ?e)))
-  :bind
-  (:map org-src-mode-map
-   ("C-c C-c" . org-edit-src-exit))
   :general
   (wal/major :keymaps 'org-mode-map
     "s" '(:ignore t :wk "subtree")
@@ -3061,6 +3046,37 @@ Trying to organize my thoughts using Zettelkästen.
 *** Other
 
 Configurations of sub-packages.
+
+**** org-src
+
+Editing source blocks.
+
+#+begin_src emacs-lisp
+(defvar wal/org-src-lang-modes
+  '(("dockerfile" . dockerfile)
+    ("conf" . conf)
+    ("markdown" . markdown))
+  "Additional mappings to add to `org-src-lang-modes'.")
+
+(defun wal/org-src-mode ()
+  "Hook into `org-src-mode'."
+  (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
+
+(use-package org-src
+  :delight " osc"
+  :hook (org-src-mode . wal/org-src-mode)
+  :after org
+  :ensure nil
+  :custom
+  (org-src-tab-acts-natively nil) ; Defaults to `t' nowadays.
+  :config
+  (mapc (lambda (it)
+          (add-to-list 'org-src-lang-modes it))
+        wal/org-src-lang-modes)
+  :bind
+  (:map org-src-mode-map
+   ("C-c C-c" . org-edit-src-exit)))
+#+end_src
 
 **** org-bullets
 
