@@ -344,13 +344,12 @@ value is left untouched."
 (defun wal/maybe-enable-tabs (&optional tab-indent-fun mode-fun)
   "Maybe enable tabs using TAB-INDENT-FUN and MODE-FUN to do so."
   (if wal/prefer-tabs
-      (progn
-        (wal/enable-tabs)
-        (when (and wal/allow-custom-indent-line-fun tab-indent-fun)
-          (setq-local indent-line-function tab-indent-fun))
-        (when mode-fun
-          (funcall mode-fun)))
-    (wal/disable-tabs)))
+      (wal/enable-tabs)
+    (wal/disable-tabs))
+  (when (and wal/allow-custom-indent-line-fun tab-indent-fun)
+    (setq-local indent-line-function tab-indent-fun))
+  (when mode-fun
+    (funcall mode-fun)))
 
 (defun wal/set-indent-defaults (&optional num)
   "Set indent defaults, optionally to NUM."
@@ -1504,7 +1503,7 @@ Let's have a dash of board.
     "devout and up the spout"
     "krill, filter feeders and hit sulphur bottom"
     "the founder of retiring gentlemen"
-    "the loud keyboard will vanquish the muscular mouse")
+    "the loud keyboard shall vanquish the muscular mouse")
   "The footer messages I can stand to see.")
 
 ;; Ignore all files that were loaded on start-up.
@@ -1867,7 +1866,9 @@ Help me find my cursor!
   (beacon-blink-delay 0.2)
   (beacon-size 60)
   (beacon-blink-when-point-moves-vertically 2)
-  (beacon-blink-when-point-moves-horizontally 8))
+  (beacon-blink-when-point-moves-horizontally 8)
+  (beacon-dont-blink-commands
+   (append beacon-dont-blink-commands '(tab-to-tab-stop))))
 #+END_SRC
 
 *** dimmer
@@ -2559,7 +2560,7 @@ Code completion in a box.
   (wal/colonel :keymaps '(prog-mode-map dap-ui-repl-mode-map)
     "c" '(company-mode :wk "company"))
   :custom
-  (company-idle-delay 1.0) ;; Individual modes should instead use this.
+  (company-idle-delay 0.4) ;; Bigger/smaller delays should be set by modes.
   :hook (prog-mode . company-mode)
   :bind
   (:map company-mode-map
@@ -2809,7 +2810,6 @@ This configuration is a bit elaborate.
   :config
   (wal/configure-org)
   :custom
-  (org-edit-src-content-indentation 0) ; Defaults to `2' nowadays.
   (org-adapt-indentation nil) ; Defaults to `t' nowadays ...
   (org-ellipsis "↷")
   (org-hide-emphasis-markers t)
@@ -2860,7 +2860,7 @@ This configuration is a bit elaborate.
     "n" '(org-add-note :wk "add note")
     "a" '(outline-show-all :wk "show all")
     "f" '(:ignore t :wk "footnotes")
-    "ff" '(org-footnote-new :wk "add new")
+    "fc" '(org-footnote-new :wk "create")
     "fn" '(org-footnote-normalize :wk "normalize"))
   (wal/colonel :keymaps 'org-mode-map
     "i" '(org-indent-mode :wk "org-indent")))
@@ -2880,7 +2880,6 @@ This is mostly based on [[https://github.com/mwfogleman/.emacs.d/blob/master/mic
   (org-agenda-span 'day)
   (org-agenda-restore-windows-after-quit t)
   (org-agenda-time-leading-zero t)
-  (org-agenda-start-with-entry-text-mode t)
   :bind
   ("C-c a" . org-agenda))
 #+END_SRC
@@ -3063,12 +3062,13 @@ Editing source blocks.
   (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
 
 (use-package org-src
+  :ensure nil
+  :after org
   :delight " osc"
   :hook (org-src-mode . wal/org-src-mode)
-  :after org
-  :ensure nil
   :custom
   (org-src-tab-acts-natively nil) ; Defaults to `t' nowadays.
+  (org-edit-src-content-indentation 0) ; Defaults to `2' nowadays.
   :config
   (mapc (lambda (it)
           (add-to-list 'org-src-lang-modes it))
