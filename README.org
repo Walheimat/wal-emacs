@@ -496,11 +496,11 @@ modifier_map Mod3   { <HYPR> };
 A safer alternative might be to create an =.xsession= file in
 your home folder containing the following:
 
-#+begin_src sh :tangle no
+#+BEGIN_SRC sh :tangle no
 xmodmap -e "keysym Caps_Lock = Hyper_L" \
 		-e "remove Mod4 = Hyper_L" \
 		-e "add Mod3 = Hyper_L"
-#+end_src
+#+END_SRC
 
 This assumes that =Hyper_L= was assigned to modifier =Mod4= that's
 already used by =Super_L= and modifier =Mod3= is an empty group.
@@ -646,8 +646,8 @@ be (re-)executed in quick succession.
 Package =smartparens= also defines a =hydra=.
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/ascii-whale "}< ,.__)"
-  "A small ASCII whale.")
+(defvar wal/ascii-whale #("}< ,.__)" 0 8 (face mode-line-emphasis))
+  "A small, highlighted ASCII whale.")
 
 (defun wal/ascii-whale-hydra-offset ()
   "Get a string offset for the `wal/asii-whale'."
@@ -933,7 +933,7 @@ This shrinks or enlarges the window depending on its position."
 
 Minor mode to dedicate buffers to windows.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (define-minor-mode walled-mode
   "Dedicate the window."
   :init-value nil
@@ -964,7 +964,7 @@ Minor mode to dedicate buffers to windows.
   :ensure nil
   :general
   (wal/colonel "." '(walled-mode :wk "walled")))
-#+end_src
+#+END_SRC
 
 ** Garbage Collection
 
@@ -991,7 +991,7 @@ Better(?) garbage collection.
 
 I have some advice for you.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;; Set to `t' in `.dir-locals.el' if whitespace should be removed on save.
 (defvar wal/delete-trailing-whitespace nil
   "Whether to delete trailing whitespace.")
@@ -1002,7 +1002,7 @@ I have some advice for you.
     (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)))
 
 (advice-add 'hack-local-variables :after #'wal/advise-hack-local-variables)
-#+end_src
+#+END_SRC
 
 * Look
 
@@ -1169,7 +1169,7 @@ Minor configurations for built-in packages[fn:10].
 
 Configure annotation usage.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package bookmark
   :ensure nil
   :custom
@@ -1183,7 +1183,7 @@ Configure annotation usage.
   (:map bookmark-map
    ("l" . bookmark-bmenu-list)
    ("L" . bookmark-load)))
-#+end_src
+#+END_SRC
 
 **** calc
 
@@ -1200,7 +1200,7 @@ Quick calculations.
 
 For internal debugging.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package debug
   :ensure nil
   :defer t
@@ -1208,13 +1208,13 @@ For internal debugging.
   (debugger-bury-or-kill 'kill)
   :config
   (wal/display-buffer-in-side-window 'debug-mode))
-#+end_src
+#+END_SRC
 
 **** dictionary
 
 Look up words.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package dictionary
   :ensure nil
   :general
@@ -1224,26 +1224,26 @@ Look up words.
   (dictionary-server "dict.org")
   :config
   (wal/display-buffer-in-direction "^\\*Dictionary"))
-#+end_src
+#+END_SRC
 
 **** ediff
 
 Use a single frame and split horizontally.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package ediff
   :ensure nil
   :defer t
   :custom
   (ediff-window-setup-function #'ediff-setup-windows-plain) ; Single frame.
   (ediff-split-window-function #'split-window-horizontally))
-#+end_src
+#+END_SRC
 
 **** eldoc
 
 Package =eglot= uses =eldoc= extensively.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package eldoc
   :ensure nil
   :defer t
@@ -1253,17 +1253,17 @@ Package =eglot= uses =eldoc= extensively.
   (eldoc-echo-area-use-multiline-p nil)
   (eldoc-echo-area-prefer-doc-buffer t)
   (eldoc-echo-area-display-truncation-message nil))
-#+end_src
+#+END_SRC
 
 **** elec-pair
 
 Less intrusive pairing mode than =smartparens=.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package elec-pair
   :ensure nil
   :hook (prog-mode . electric-pair-local-mode))
-#+end_src
+#+END_SRC
 
 **** eww
 
@@ -1280,19 +1280,19 @@ This requires Emacs to have been compiled with =--with-xml2= flag.
 
 **** help
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package help-mode
   :ensure nil
   :defer t
   :config
   (wal/display-buffer-in-direction 'help-mode))
-#+end_src
+#+END_SRC
 
 **** hl-line
 
 Some modes can use some =hl-line-mode=.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package hl-line
   :ensure nil
   :hook
@@ -1300,32 +1300,32 @@ Some modes can use some =hl-line-mode=.
     tabulated-list-mode
     dired-mode
     dashboard-mode) . hl-line-mode))
-#+end_src
+#+END_SRC
 
 **** kmacro
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package kmacro
   :ensure nil
   :bind
   ("H-k" . kmacro-start-macro-or-insert-counter)
   ("H-j" . kmacro-end-or-call-macro))
-#+end_src
+#+END_SRC
 
 **** linum
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package linum
   :ensure nil
   :general
   (wal/colonel "n" '(linum-mode :wk "linum")))
-#+end_src
+#+END_SRC
 
 **** package
 
 Bind some functions to refresh, install and delete.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package package
   :ensure nil
   :general
@@ -1335,13 +1335,25 @@ Bind some functions to refresh, install and delete.
     "pl" '(list-packages :wk "list")
     "pr" '(package-reinstall :wk "re-install")
     "pd" '(package-delete :wk "delete")))
-#+end_src
+#+END_SRC
+
+**** shortdoc
+
+New in Emacs 28.1.
+
+#+BEGIN_SRC emacs-lisp
+(use-package shortdoc
+  :ensure nil
+  :defer t
+  :config
+  (wal/display-buffer-in-direction 'shortdoc-mode))
+#+END_SRC
 
 **** simple
 
 Bind some useful functions.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package simple
   :ensure nil
   :general
@@ -1354,60 +1366,60 @@ Bind some useful functions.
   (global-mark-ring-max 32)
   :bind
   ("C-?" . undo-redo))
-#+end_src
+#+END_SRC
 
 **** smerge
 
 Make the command map accessible.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package smerge-mode
   :ensure nil
   :delight " smg"
   :defer t
   :custom
   (smerge-command-prefix (kbd "C-c m")))
-#+end_src
+#+END_SRC
 
 **** so-long
 
 Some files are so long. This is now built-in.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package so-long
   :ensure nil
   :defer 5
   :config
   (global-so-long-mode t))
-#+end_src
+#+END_SRC
 
 **** time
 
 What time is it?
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package time
   :ensure nil
   :defer t
   :custom
   (display-time-format " %H:%M")
   (display-time-default-load-average nil))
-#+end_src
+#+END_SRC
 
 **** whitespace-mode
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package whitespace-mode
   :ensure nil
   :general
   (wal/colonel "w" '(whitespace-mode :wk "whitespace")))
-#+end_src
+#+END_SRC
 
 **** winner-mode
 
 Allows restoring window configurations.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package winner
   :ensure nil
   :custom
@@ -1419,7 +1431,7 @@ Allows restoring window configurations.
     "wr" '(winner-redo :wk "redo"))
   :config
   (winner-mode +1))
-#+end_src
+#+END_SRC
 
 **** zone
 
@@ -1903,13 +1915,13 @@ Make dimmed frames a bit dimmer.
   :delight " dmm"
   :custom
   (dimmer-fraction 0.6)
-  (dimmer-adjustment-mode :foreground)
   :config
   (advice-add 'dimmer-config-change-handler :override 'wal/advise-dimmer-config-change-handler)
   (dimmer-configure-company-box)
   (dimmer-configure-hydra)
   (dimmer-configure-magit)
   (dimmer-configure-org)
+  (dimmer-configure-which-key)
   (wal/dimmer-configure-lsp-doc)
   (dimmer-mode t))
 #+END_SRC
@@ -1954,7 +1966,7 @@ This is the case when:
 This package is not on MELPA so you'll have to put it
 in the load path.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package ligature
   :hook (prog-mode . ligature-mode)
   :load-path "site-lisp"
@@ -1976,7 +1988,7 @@ in the load path.
   (ligature-set-ligatures 'elixir-mode '("|>" "#{" "\\\\"))
   (ligature-set-ligatures 'prolog-mode '(":-"))
   (ligature-set-ligatures 'html-mode '("<!--" "-->")))
-#+end_src
+#+END_SRC
 
 *** diff-hl
 
@@ -2225,7 +2237,8 @@ Accommodate =winner=.
                               ;; Help(-like).
                               helpful-mode
                               help-mode
-                              dictionary-mode))
+                              dictionary-mode
+                              shortdoc-mode))
   (popper-group-function #'popper-group-by-perspective)
   (popper-display-control 'user)
   ;; Remove if you don't use/have `doom-modeline'.
@@ -2648,7 +2661,7 @@ This only removes `process-kill-buffer-query-function'."
   :defer 0.25
   :hook (kill-emacs . persp-state-save)
   :custom
-  (persp-modestring-dividers '("(" ")" "/"))
+  (persp-modestring-dividers '(" (" ")" "/")) ;; Add space for `doom-modeline'.
   (persp-initial-frame-name wal/default-perspective)
   (persp-state-default-file (expand-file-name "persp-persist" wal/cache-directory))
   (persp-mode-prefix-key (kbd "C-c i"))
@@ -2922,7 +2935,7 @@ Nice agendas.
 
 Used for the next package.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (use-package mixed-pitch
   :defer t
   :delight " mpm"
@@ -2932,7 +2945,7 @@ Used for the next package.
                                    org-block
                                    org-verbatim
                                    org-table)))
-#+end_src
+#+END_SRC
 
 *** org-tree-slide
 
@@ -3053,7 +3066,7 @@ Configurations of sub-packages.
 
 Editing source blocks.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defvar wal/org-src-lang-modes
   '(("dockerfile" . dockerfile)
     ("conf" . conf)
@@ -3079,7 +3092,7 @@ Editing source blocks.
   :bind
   (:map org-src-mode-map
    ("C-c C-c" . org-edit-src-exit)))
-#+end_src
+#+END_SRC
 
 **** org-bullets
 
@@ -3155,6 +3168,7 @@ Uses the same optional SWITCHES."
   :custom
   (dired-listing-switches "-lah --group-directories-first")
   (dired-auto-revert-buffer t)
+  (dired-kill-when-opening-new-dired-buffer t) ;; New in Emacs 28.1.
   :general
   (wal/major :keymaps 'dired-mode-map
     "e" '(dired-create-empty-file :wk "create empty file"))
@@ -3509,7 +3523,7 @@ Pretty much like =js2=.
 
 ***** flymake-eslint
 
-ESLint plugin for =flymake=.
+Plugin for =flymake=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package flymake-eslint
