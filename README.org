@@ -49,7 +49,7 @@ get you started:
 Or you just execute =emacs --daemon= in a terminal or your shell's config.
 
 In any case, an Emacs daemon will start (on start-up).
-To connect you can use, for example, =emacsclient -c -n=.
+To connect you can use, for example, =emacsclient -c -n=[fn:5].
 
 *** Scope
 
@@ -57,7 +57,7 @@ I've tried to keep custom functions and variables in a scope
 called =wal= to avoid potential interference.
 
 Enough preambling, let's configure some Emacs.
-The init script will evaluate _everything_[fn:5] that follows.
+The init script will evaluate _everything_[fn:6] that follows.
 
 * Pre-Export
 
@@ -77,7 +77,7 @@ You want speed? Then bind lexically!
 
 ** Personal
 
-Set some personal info[fn:6].
+Set some personal info[fn:7].
 
 #+BEGIN_SRC emacs-lisp
 (setq user-full-name "Krister Schuchardt"
@@ -116,8 +116,8 @@ Customize start-up.
 
 ** Package Archives
 
-Add MELPA and org-mode to our package archives.
-We'll be getting most (if not all) packages from the prior.
+Add MELPA to the package archives.
+Most (if not all) packages will be installed from there.
 
 #+BEGIN_SRC emacs-lisp
 (require 'package)
@@ -139,18 +139,18 @@ We'll be getting most (if not all) packages from the prior.
 (package-initialize)
 #+END_SRC
 
-** Dependencies
+** Core Packages
 
-Manage packages with =use-package=.
-Before we can use it, we have to install it and a few other packages the hard way.
+Packages are configured with the =use-package= macro.
 
 #+BEGIN_SRC emacs-lisp
-(defconst wal/dependencies '(diminish delight use-package)
+(defconst wal/core-packages '(diminish delight use-package)
   "Packages to install before using `use-package'.
 Such as package `use-package'.")
 
 (defun wal/install-packages (packages)
-  "Install all PACKAGES unless already installed."
+  "Install all PACKAGES unless already installed.
+Concludes by calling `delete-other-windows'."
   (mapc (lambda (it)
             (when (not (package-installed-p it))
               (package-install it)))
@@ -159,10 +159,10 @@ Such as package `use-package'.")
 
 ;; Try to install. On fail refresh and install again.
 (condition-case nil
-    (wal/install-packages wal/dependencies)
+    (wal/install-packages wal/core-packages)
   (error
    (package-refresh-contents)
-   (wal/install-packages wal/dependencies)))
+   (wal/install-packages wal/core-packages)))
 
 ;; Ensure all packages by default.
 (require 'use-package-ensure)
@@ -185,6 +185,7 @@ We want:
   (expand-file-name ".cache" user-emacs-directory)
   "The cache directory.")
 
+;; Cf. next section.
 (defvar wal/site-lisp-directory
   (expand-file-name "site-lisp" user-emacs-directory)
   "Directory of site Lisp packages.")
@@ -206,18 +207,17 @@ We want:
 (mapc (lambda (it)
         (unless (file-directory-p it)
           (make-directory it)))
-      `(,wal/org-roam-directory
-        ,wal/agenda-tasks-directory
-        ,wal/org-directory
+      `(,wal/cache-directory
         ,wal/site-lisp-directory
-        ,wal/cache-directory))
+        ,wal/agenda-tasks-directory
+        ,wal/org-roam-directory
+        ,wal/org-directory))
 #+END_SRC
 
 ** Site-Lisp
 
 Add =site-lisp= directory and sub-directories to load path.
 I put non-MELPA packages here.
-If the directory doesn't exist, it will get created.
 
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'load-path wal/site-lisp-directory)
@@ -278,7 +278,9 @@ Make things shorter and snappier.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/bytes-per-mb (num)
-  "Return the value of NUM in bytes."
+  "Return the integer value of NUM megabytes in bytes.
+This function may be used to set variables that expect
+bytes."
   (floor (* 1024 1024 num)))
 
 (setq mouse-yank-at-point t
@@ -310,15 +312,17 @@ and spaces for indentation.
   "Whether a custom `indent-line-function' can be passed.")
 
 (defun wal/reset-to-standard (sym &optional locally)
-  "Reset symbol SYM (LOCALLY) to the standard value.
-If LOCALLY is t, the local variable is killed and the global
+  "Reset symbol SYM to its standard value.
+If LOCALLY is t, the local variable is killed while its global
 value is left untouched."
   (if (and locally (local-variable-p sym))
       (kill-local-variable sym)
     (set-default sym (eval (car (get sym 'standard-value))))))
 
 (defun wal/reset-indent-defaults ()
-  "Reset the tab width to the standard."
+  "Reset indent defaults.
+Resets all variables that were initially set
+by `wal/set-indent-defaults'."
   (interactive)
   (mapc (lambda (it)
           (wal/reset-to-standard it))
@@ -330,19 +334,24 @@ value is left untouched."
           indent-tabs-mode)))
 
 (defun wal/disable-tabs ()
-  "Unset tab and set variable `indent-tabs-mode' to nil."
+  "Disable tabs.
+Unsets tab key and sets variable `indent-tabs-mode' to nil."
   (interactive)
   (local-unset-key (kbd "TAB"))
   (setq indent-tabs-mode nil))
 
 (defun wal/enable-tabs ()
-  "Set tab and set variable `indent-tabs-mode' to t."
+  "Enable tabs.
+Sets tab key to `tab-to-tab-stop' and variable
+`indent-tabs-mode' to t."
   (interactive)
   (local-set-key (kbd "TAB") 'tab-to-tab-stop)
   (setq indent-tabs-mode t))
 
 (defun wal/maybe-enable-tabs (&optional tab-indent-fun mode-fun)
-  "Maybe enable tabs using TAB-INDENT-FUN and MODE-FUN to do so."
+  "Maybe enable tabs.
+Optionally set `indent-line-function' (if allowed) to TAB-INDENT-FUN
+and call MODE-FUN after changes."
   (if wal/prefer-tabs
       (wal/enable-tabs)
     (wal/disable-tabs))
@@ -352,11 +361,13 @@ value is left untouched."
     (funcall mode-fun)))
 
 (defun wal/set-indent-defaults (&optional num)
-  "Set indent defaults, optionally to NUM."
+  "Set indent defaults.
+All offsets are set to `wal/indent-offset' or
+optionally to NUM."
   (interactive "nSet tab width to: ")
   (let ((offset (or num wal/indent-offset)))
     (setq-default python-indent-offset offset ; Python
-                  js-indent-level offset ; Javascript
+                  js-indent-level offset ; JavaScript
                   css-indent-offset offset ; CSS and SCSS
                   tab-width offset
                   electric-indent-inhibit t
@@ -387,12 +398,15 @@ This was cribbed from [[https://www.john2x.com/emacs.html][john2x's config]].
   "The file to persist the *scratch* buffer's content in.")
 
 (defun wal/persist-scratch ()
-  "Persist contents of *scratch* buffer."
+  "Persist contents of *scratch* buffer.
+The contents are stored in `wal/scratch-persist-file'."
   (with-current-buffer (get-buffer-create "*scratch*")
     (write-region (point-min) (point-max) wal/scratch-persist-file)))
 
 (defun wal/rehydrate-scratch ()
-  "Re-hydrate scratch buffer (if persisted)."
+  "Re-hydrate scratch buffer (if persisted).
+This overrides the scratch buffer with the content
+stored in `wal/scratch-persist-file'."
   (if (file-exists-p wal/scratch-persist-file)
       (with-current-buffer (get-buffer "*scratch*")
         (delete-region (point-min) (point-max))
@@ -404,7 +418,7 @@ This was cribbed from [[https://www.john2x.com/emacs.html][john2x's config]].
 
 * Key Bindings
 
-I use many[fn:7] custom keybindings.
+I use many[fn:8] custom keybindings.
 
 ** Prefix Keys
 
@@ -478,7 +492,7 @@ Some key-bindings have case-sensitive alternatives:
 I re-bound my =<CAPS>= (caps-lock) key to =Hyper_L= to use the
 hyper bindings above.
 
-If you use Xorg Display Server, the risky quite[fn:8] way would be
+If you use Xorg Display Server, the risky quite[fn:9] way would be
 to edit your =/usr/share/X11/xkb/symbols/pc= file like so:
 
 #+BEGIN_SRC
@@ -601,7 +615,7 @@ Most bindings are declared in the [[*Packages][packages]] section.
   "Whether to prompt user to tangle config.")
 
 (defun wal/tangle-config-prompt ()
-  "Prompt user before tangling.
+  "Prompt the user to tangle the config.
 If the answer is no, there will be no additional prompt."
   (interactive)
   (let ((help-form (message "This will update your README.el. Restart Emacs afterwards.")))
@@ -620,7 +634,8 @@ If the answer is no, there will be no additional prompt."
 
 (defun wal/open-config ()
   "Open Walheimat's config.
-Saving the config will prompt to tangle its contents."
+Saving the config after opening it with this function
+will prompt the user to tangle its contents."
   (interactive)
   (switch-to-buffer (find-file-noselect wal/readme-config))
   (add-hook 'after-save-hook #'wal/tangle-config-prompt nil t)
@@ -650,16 +665,15 @@ Package =smartparens= also defines a =hydra=.
   "A small, highlighted ASCII whale.")
 
 (defun wal/ascii-whale-hydra-offset ()
-  "Get a string offset for the `wal/asii-whale'."
+  "Get a string offset for the `wal/ascii-whale'."
   (make-string (length wal/ascii-whale) ? ))
-
-(use-package hydra
-  :defer t)
 
 (defun wal/text-scale-reset ()
   "Reset `text-scale' level to 0."
   (interactive)
   (text-scale-set 0))
+
+(use-package hydra)
 
 ;; Scaling text in buffer.
 (defhydra wal/text-scale (:hint nil)
@@ -763,7 +777,10 @@ Ignore some buffers when switching.
   "Major modes whose buffers should be commonly ignored.")
 
 (defun wal/commmonly-ignored-buffer-p (buffer-or-string)
-  "Check if provided BUFFER-OR-STRING is commonly ignored."
+  "Check if provided BUFFER-OR-STRING is commonly ignored.
+Commonly ignored buffers are those belonging to major modes
+in `wal/commonly-ignored-major-modes' as well as starred
+buffers other than scratch and eww buffers."
   (let ((maj (with-current-buffer
                  (get-buffer-create buffer-or-string)
                major-mode)))
@@ -789,7 +806,8 @@ Utility functions to configure displaying buffers of a certain type.
     (_ nil)))
 
 (defun wal/display-buffer-in-pop-up (buffer &optional in-frame)
-  "Display BUFFER in pop-up window (or IN-FRAME)."
+  "Display BUFFER in a pop-up.
+The pop-up is a window unless IN-FRAME is t."
   (let ((condition (wal/display-buffer-condition buffer))
         (dispfun (if in-frame
                      'display-buffer-pop-up-frame
@@ -816,7 +834,8 @@ and visible frames are considered reusable."
                    (window-parameters . ((no-other-window . ,no-other)))))))
 
 (defun wal/display-buffer-in-direction (buffer &optional direction)
-  "Display BUFFER (in DIRECTION)."
+  "Display BUFFER in direction.
+The direction is right-most or DIRECTION."
   (let ((condition (wal/display-buffer-condition buffer)))
     (add-to-list 'display-buffer-alist
                  `(,condition
@@ -987,9 +1006,9 @@ Better(?) garbage collection.
 (add-hook 'emacs-startup-hook #'wal/minibuffer-exit-hook)
 #+END_SRC
 
-** Advice
+** Files
 
-I have some advice for you.
+Handling of files.
 
 #+BEGIN_SRC emacs-lisp
 ;; Set to `t' in `.dir-locals.el' if whitespace should be removed on save.
@@ -997,7 +1016,9 @@ I have some advice for you.
   "Whether to delete trailing whitespace.")
 
 (defun wal/advise-hack-local-variables (&rest _r)
-  "After local variables are available, add some local hooks."
+  "Advise to conditionally add before save hook.
+When `wal/delete-trailing-whitespace' is t, trailing
+whitespace is deleted."
   (when wal/delete-trailing-whitespace
     (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)))
 
@@ -1019,7 +1040,7 @@ Make frame transparent and set themes.
   "The default frame transparency.")
 
 (defun wal/transparency (&optional value)
-  "Set the transparency of the frame window to VALUE.
+  "Set the transparency of the frame to VALUE.
 1 being (almost) completely transparent, 100 being opaque."
   (interactive "nSet transparency (1-100): ")
   (let ((transparency (min (max (or value wal/transparency) 1) 100))
@@ -1083,7 +1104,7 @@ This has no default value.")
 (defun wal/select-fixed-font (font)
   "Select fixed (available) FONT.
 This sets both the `default' and `fixed-pitch' fonts.
-If `doom-modeline-mode' is on, refresh font width cache."
+If variable `doom-modeline-mode' is t, refresh font width cache."
   (interactive
    (list (completing-read "Select font: " (wal/available-fonts wal/fixed-fonts))))
   (set-face-attribute 'default nil :font font)
@@ -1108,7 +1129,7 @@ If `doom-modeline-mode' is on, refresh font width cache."
 
 (defun wal/fonts-candidate (fonts &optional prefer)
   "Return the first available font from a list of FONTS.
-If PREFER is true,`wal/preferred-fonts' is not nil
+If PREFER is true, variable `wal/preferred-fonts' is not nil
 and preferred fonts are available, return the first of those instead."
   (let* ((available-fonts (wal/available-fonts fonts))
          (preferred (and prefer (wal/preferred-fonts available-fonts))))
@@ -1140,7 +1161,8 @@ Does the same for `variable-pitch' using `wal/variable-fonts'."
 ;; I want my comments slanted and my keywords bold.
 ;; The FiraCode font does not support this.
 (defun wal/font-lock ()
-  "Slanted and enchanted."
+  "Set comment face to italic and keyword face to bold."
+  ;; Slanted and enchanted.
   (set-face-attribute 'font-lock-comment-face nil :slant 'italic :weight 'normal)
   (set-face-attribute 'font-lock-keyword-face nil :weight 'bold))
 
@@ -1149,7 +1171,7 @@ Does the same for `variable-pitch' using `wal/variable-fonts'."
 
 * Packages
 
-What follows is a list of packages[fn:9] that make Emacs even more awesome.
+What follows is a list of packages[fn:10] that make Emacs even more awesome.
 
 If you wish to know more about any of them
 call =describe-package= (bound to =C-h P=) and type in the package name.
@@ -1163,7 +1185,7 @@ Everything that has to do with Emacs-y stuff.
 
 *** Built-In
 
-Minor configurations for built-in packages[fn:10].
+Minor configurations for built-in packages[fn:11].
 
 **** bookmark
 
@@ -1658,7 +1680,9 @@ Because I also use company, =yas-expand= is mapped to =H-<TAB>=.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/yas-expand ()
-  "Fix `yas-expand' within `org-mode'."
+  "Call `yas-expand' in a `org-mode'-safe way.
+Makes sure that indentation varialbes don't produce
+unexepected results."
   (interactive)
   (let ((org-src-tab-acts-natively nil)
         (org-adapt-indentation nil))
@@ -1894,7 +1918,7 @@ Make dimmed frames a bit dimmer.
 #+BEGIN_SRC emacs-lisp
 ;; Solution from buzztaiki https://github.com/gonewest818/dimmer.el/issues/49
 (defun wal/lsp-ui-doc-frame-p ()
-  "Check if BUFFER is a lsp ui doc frame buffer."
+  "Check if buffer is a lsp-ui-doc frame buffer."
   (string-match-p "\\` \\*lsp-ui-doc" (buffer-name)))
 
 (defun wal/advise-dimmer-config-change-handler ()
@@ -2400,9 +2424,16 @@ to download it automatically, but might fail).
 *** ctrlf
 
 Replacement for =isearch=.
-Important command is =C-o c= to change search style.
+Important command is =C-o s= to change search style.
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/ctrlf-cancel-commands
+  '(ace-window
+    other-window
+    crux-other-window-or-switch-buffer)
+  "Commands that are remapped to `ctrlf-cancel'.
+Commands that unfocus the ctrlf minibuffer should quit it.")
+
 (use-package ctrlf
   :defer 3
   :custom
@@ -2410,6 +2441,12 @@ Important command is =C-o c= to change search style.
   (ctrlf-show-match-count-at-eol nil)
   (ctrlf-default-search-style 'fuzzy)
   (ctrlf-alternate-search-style 'literal)
+  :config
+  (mapc (lambda (it)
+          (add-to-list
+           'ctrlf-minibuffer-bindings
+           `([remap ,it] . ctrlf-cancel)))
+        wal/ctrlf-cancel-commands)
   (ctrlf-mode +1))
 #+END_SRC
 
@@ -2455,15 +2492,7 @@ Pass R to the switch buffer function."
   '(wal/commmonly-ignored-buffer-p
     "\\` "
     "\\`\\*tramp/")
-  "The buffers I don't want to see unless I have to.")
-
-;; Toggle custom ignore on or off.
-(defun wal/query-ivy-ignore ()
-  "Query if custom ivy buffer ignore list should be used."
-  (interactive)
-  (if (y-or-n-p "Use custom ivy buffer ignore? ")
-      (setq ivy-ignore-buffers wal/ivy-ignore-buffers)
-    (setq ivy-ignore-buffers '("\\` " "\\`\\*tramp/"))))
+  "Buffers that are commonly ignored when switching.")
 
 (use-package ivy
   :defer 1.5
@@ -2804,7 +2833,7 @@ This configuration is a bit elaborate.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/org-mode ()
-  "Life shouldn't be a drag in `org-mode'."
+  "Hook into `org-mode'."
   (message "Organize! Seize the means of production!")
   ;; Since `9.4' org tries to please `electric-indent'.
   ;; (electric-indent-local-mode -1)
@@ -2812,13 +2841,18 @@ This configuration is a bit elaborate.
   (hack-local-variables))
 
 (defun wal/advise-org-export-dispatch (&rest _r)
-  "Advise to require `ox-md' beforehand."
+  "Advise to require `ox-md' export dispatch."
   (require 'ox-md nil t))
 
 (defun wal/configure-org ()
   "Configure `org'."
   (define-key org-mode-map (kbd "C-,") nil) ; Remove `org-cycle-agenda-files'.
   (advice-add 'org-export-dispatch :before #'wal/advise-org-export-dispatch))
+
+(defun wal/org-content (level)
+  "Interactively call `org-content' with LEVEL."
+  (interactive "nShow content up to level: ")
+  (org-content level))
 
 (use-package org
   :ensure nil
@@ -2830,8 +2864,6 @@ This configuration is a bit elaborate.
   (org-ellipsis "↷")
   (org-hide-emphasis-markers t)
   (org-log-done 'time)
-  (org-startup-truncated nil)
-  (org-startup-folded 'overview)
   (org-directory wal/org-directory)
   (org-default-notes-file (concat org-directory "/notes.org"))
   (org-capture-templates
@@ -2845,7 +2877,7 @@ This configuration is a bit elaborate.
   ;; Too many clock entries clutter up a heading.
   (org-log-into-drawer t)
   (org-todo-keywords
-   '((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "BLOCKED (b)" "|" "DONE(d)" "CANCELLED(c)")))
+   '((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "BLOCKED (b)" "|" "DONE(d)" "CANCELED(c)")))
   (org-tag-alist
    '(;; Depth.
      ("@immersive" . ?i)
@@ -2874,7 +2906,8 @@ This configuration is a bit elaborate.
     "sy" '(org-paste-subtree :wk "paste subtree")
     "e" '(org-edit-src-code :wk "edit source code")
     "n" '(org-add-note :wk "add note")
-    "a" '(outline-show-all :wk "show all")
+    "a" '(org-show-all :wk "show all")
+    "l" '(wal/org-content :wk "show level")
     "f" '(:ignore t :wk "footnotes")
     "fc" '(org-footnote-new :wk "create")
     "fn" '(org-footnote-normalize :wk "normalize"))
@@ -2972,7 +3005,7 @@ Presentations.
     (setq cursor-type t)))
 
 (defun wal/org-tree-slide-play ()
-  "Make presentable."
+  "Hook into `org-tree-slide-play'."
   (setq visual-fill-column-width (wal/relative-column-width
                                   wal/org-tree-slide-visual-fill-column-width)
         visual-fill-column-center-text t
@@ -2982,7 +3015,7 @@ Presentations.
   (mixed-pitch-mode +1))
 
 (defun wal/org-tree-slide-stop ()
-  "We no longer care about presentation."
+  "Hook into `org-tree-slide-stop'."
   (setq visual-fill-column-width nil
         visual-fill-column-center-text nil
         cursor-type t)
@@ -3074,7 +3107,7 @@ Editing source blocks.
   "Additional mappings to add to `org-src-lang-modes'.")
 
 (defun wal/org-src-mode ()
-  "Hook into `org-src-mode'."
+  "Hook into function `org-src-mode'."
   (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
 
 (use-package org-src
@@ -3214,7 +3247,7 @@ I am convinced that we are in a terminal process.
 
 *** vterm
 
-Better[fn:11] than =vterm= included shells.
+Better[fn:12] than =vterm= included shells.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/vterm-mode ()
@@ -3226,7 +3259,9 @@ Better[fn:11] than =vterm= included shells.
   :delight
   (vterm-copy-mode " vcp")
   :custom
-  (vterm-kill-buffer-on-exit t))
+  (vterm-kill-buffer-on-exit t)
+  :config
+  (wal/display-buffer-in-side-window (concat "\\" vterm-buffer-name) nil nil t))
 
 (defun wal/advise-vterm-toggle (&rest _r)
   "Advise `vterm-toggle' to show unless the window is a vterm buffer."
@@ -3238,7 +3273,6 @@ Better[fn:11] than =vterm= included shells.
   (vterm-toggle-fullscreen-p nil)
   (vterm-toggle-scope 'project)
   :config
-  (wal/display-buffer-in-side-window 'vterm-mode nil nil t)
   (advice-add 'vterm-toggle :before-until #'wal/advise-vterm-toggle)
   :bind
   ("H-t" . vterm-toggle))
@@ -3416,9 +3450,8 @@ It's like =npm= for Python, it's why it rhymes.
       (setq-local lsp-pyls-server-command '("poetry" "run" "pyls")))))
 
 (defun wal/activate-venv ()
-  "Make `poetry' work nicely with `pylsp' and `pyls'.
-If you want to run pyls in poetry using `eglot', be sure
-to set your `.dir-locals.el'."
+  "Activate venv using poetry.
+This also works if the project isn't a poetry project."
   (unless (fboundp 'poetry-venv-exist-p)
     (require 'poetry))
   (ignore-errors
@@ -3544,9 +3577,7 @@ Prettify your ugly JavaScript.
     "p" '(prettier-prettify :wk "run prettier")))
 #+END_SRC
 
-***** Loading Local ESLint/TSLint
-
-Use the locally installed =eslint= and =tslint= binaries.
+***** Additional Functions
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/find-local-node-binary (local-binary)
@@ -3574,8 +3605,8 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
 (defun wal/elisp-mode ()
   "Hook into `emacs-lisp-mode'."
   (message "So it's just a bunch of lists?")
-  (hack-local-variables)
   (wal/disable-tabs)
+  (hack-local-variables)
   (flycheck-mode 1))
 
 (use-package emacs-lisp
@@ -3584,7 +3615,11 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
 
 (use-package highlight-quoted
   :hook (emacs-lisp-mode . highlight-quoted-mode))
+#+END_SRC
 
+**** slime
+
+#+BEGIN_SRC emacs-lisp
 (use-package slime
   :delight " slm"
   :ensure-system-package sbcl
@@ -3689,7 +3724,8 @@ Enable tabs and =flycheck=.
   "Hook into `json-mode'."
   (message "JSON ...? JSON?! JSON!!")
   (rainbow-delimiters-mode)
-  (wal/disable-tabs)
+  (hack-local-variables)
+  (wal/maybe-enable-tabs)
   (flycheck-mode 1))
 
 (use-package json-mode
@@ -3745,7 +3781,8 @@ This depends on `wal/lsp-client'."
         (t nil)))
 
 (wal/captain :keymaps '(flymake-mode-map flycheck-mode-map)
-  "f" '(wal/fly-check :wk "fly-check"))
+  "f" '(:ignore t :wk "fly-check")
+  "fs" '(wal/fly-check :wk "search"))
 #+END_SRC
 
 *** flymake
@@ -3757,7 +3794,11 @@ Built-in syntax checker. Used by =eglot=.
   :ensure nil
   :defer t
   :config
-  (setq flymake-mode-line-title "flm"))
+  (setq flymake-mode-line-title "flm")
+  :general
+  (wal/captain :keymaps 'flymake-mode-map
+    "fn" '(flymake-goto-next-error :wk "next")
+    "fp" '(flymake-goto-prev-error :wk "prev")))
 #+END_SRC
 
 *** flycheck
@@ -3781,7 +3822,7 @@ Configs can be found using a file, not a directory.
 
 #+BEGIN_SRC emacs-lisp
 (defun flycheck-eslint-config-exists-p ()
-  "Whether there is a valid ESLint config for the current buffer."
+  "Check if there is a valid ESLint config for the current buffer."
   (let* ((executable (flycheck-find-checker-executable 'javascript-eslint))
          (exitcode (and executable (call-process executable
                                                  nil
@@ -3905,7 +3946,7 @@ Language servers are awesome. Thanks, Microsoft.
 *** lsp-mode
 
 This is the fancy version.
-You'll have to install some language servers yourself[fn:12].
+You'll have to install some language servers yourself[fn:13].
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal/lsp-file-watch-ignored
@@ -4258,23 +4299,25 @@ by running =M-x all-the-icons-install-fonts= and selecting =yes=.
 If the installation process should fail for any reason,
 close Emacs and re-run it.
 
-[fn:5] Not including where =:tangle no= was set, somewhere around 150 code blocks.
+[fn:5] Which means that a frame is created and control immediately returned
 
-[fn:6] Send me an email, why don't you?
+[fn:6] Not including where =:tangle no= was set, somewhere around 150 code blocks.
 
-[fn:7] To get a full overview you'll have to call =describe-personal-keybindings=
+[fn:7] Send me an email, why don't you?
+
+[fn:8] To get a full overview you'll have to call =describe-personal-keybindings=
 and =general-describe-keybindings=.
 
-[fn:8] Be careful! If you make a mistake you could render your
+[fn:9] Be careful! If you make a mistake you could render your
 keyboard unusable.
 
-[fn:9] Mostly from MELPA.
+[fn:10] Mostly from MELPA.
 /Note/ that many packages bind keys.
 Check the [[*Key Bindings][key bindings section]] if you need a list of the important ones,
 in that section you also find package configurations for key-binding-related
 packages =general= and =hydra=.
 
-[fn:10] The following packages (and their related or sub-packages) have their own sections:
+[fn:11] The following packages (and their related or sub-packages) have their own sections:
 
 + [[*Org][=org-mode=]] (including org sub-packages)
 + [[*Agendas][=org-agenda=]]
@@ -4287,6 +4330,6 @@ packages =general= and =hydra=.
 + [[*css-mode][=css-mode=]]
 + [[*cc-mode][=cc-mode=]]
 
-[fn:11] If you're on an older distro your =libvterm= package might be too old.
+[fn:12] If you're on an older distro your =libvterm= package might be too old.
 
-[fn:12] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+[fn:13] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
