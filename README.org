@@ -1411,6 +1411,8 @@ Some files are so long. This is now built-in.
 (use-package so-long
   :ensure nil
   :defer 5
+  :custom
+  (so-long-action 'so-long-minor-mode)
   :config
   (global-so-long-mode t))
 #+END_SRC
@@ -1431,8 +1433,13 @@ What time is it?
 **** whitespace-mode
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/whitespace-mode ()
+  "Hook into command `whitespace-mode'."
+  (highlight-indent-guides-mode -1))
+
 (use-package whitespace-mode
   :ensure nil
+  :hook (whitespace-mode . wal/whitespace-mode)
   :general
   (wal/colonel "w" '(whitespace-mode :wk "whitespace")))
 #+END_SRC
@@ -3193,6 +3200,11 @@ Uses the same optional SWITCHES."
                  (dired-read-dir-and-switches "")))
   (pop-to-buffer-same-window (dired-noselect dirname switches)))
 
+(defun wal/image-dired ()
+ "Run `image-dired' in the `default-directory'."
+ (interactive)
+ (image-dired (expand-file-name default-directory)))
+
 (use-package dired
   :ensure nil
   :config
@@ -3203,7 +3215,8 @@ Uses the same optional SWITCHES."
   (dired-kill-when-opening-new-dired-buffer t) ;; New in Emacs 28.1.
   :general
   (wal/major :keymaps 'dired-mode-map
-    "e" '(dired-create-empty-file :wk "create empty file"))
+    "e" '(dired-create-empty-file :wk "create empty file")
+    "i" '(wal/image-dired :wk "show images"))
   :bind
   (("C-x j" . dired-jump-other-window)
    ("C-x D" . wal/dired-from-home)
@@ -3246,7 +3259,7 @@ I am convinced that we are in a terminal process.
 
 *** vterm
 
-Better[fn:12] than =vterm= included shells.
+Better[fn:12] than included shells.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/vterm-mode ()
@@ -3693,8 +3706,15 @@ Mostly mode configs.
 Sometimes you need YAMLs.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/yaml-mode ()
+  "Hook into command `yaml-mode'."
+  (message "JSON?! ... Ah, thank God it's you, YAML!")
+  (drag-stuff-mode +1)
+  (hack-local-variables)
+  (wal/maybe-enable-tabs))
+
 (use-package yaml-mode
-  :defer t)
+  :hook (yaml-mode . wal/yaml-mode))
 #+END_SRC
 
 **** crontab-mode
