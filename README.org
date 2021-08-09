@@ -458,7 +458,7 @@ Most hyper bindings are quick-access actions:
 + =H-g= to use =counsel-mark-ring=
 + =H-i= switches =perspective=
 + =H-k= to start (and =H-j= to end or call) macro
-+ =H-l= jumps to line (and =H-o= to word) with =avy=
++ =H-l= jumps to line (and =H-o= to char in line) with =avy=
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-m= runs =magit-status=
 + =H-n= to capture (using =counsel-projectile-org-capture=)
@@ -485,7 +485,7 @@ Some key-bindings have case-sensitive alternatives:
 + =C-x D= runs =dired= starting at =HOME= directory
 + =C-x K= kills any buffer (ignoring current perspective)
 + =H-F= finds directories using =counsel-projectile=
-+ =H-L= jumps to line and char (while =H-O= jumps to word without first char).
++ =H-L= jumps to line and char (while =H-O= jumps to word).
 
 *** Caps to Hyper
 
@@ -2315,20 +2315,22 @@ Just goes to line if line is empty."
   :bind
   (("H-l" . avy-goto-line)
    ("H-L" . wal/avy-goto-line-and-char)
-   ("H-o" . avy-goto-word-1)
-   ("H-O" . avy-goto-word-0))
+   ("H-o" . avy-goto-char-in-line)
+   ("H-O" . avy-goto-word-1))
   :general
   (wal/lieutenant
     ;; Lines.
     "l" '(:ignore t :wk "avy (line)")
     "lc" '(avy-copy-line :wk "copy")
-    "lk" '(avy-kill-whole-line :wk "kill")
+    "ld" '(avy-kill-whole-line :wk "delete")
     "lm" '(avy-move-line :wk "move")
+    "lw" '(avy-kill-ring-save-whole-line :wk "kill")
     ;; Region.
     "r" '(:ignore t :wk "avy (region)")
     "rc" '(avy-copy-region :wk "copy")
-    "rk" '(avy-kill-region :wk "kill")
-    "rm" '(avy-move-region :wk "move")))
+    "rd" '(avy-kill-region :wk "delete")
+    "rm" '(avy-move-region :wk "move")
+    "rw" '(avy-kill-ring-save-region :wk "kill")))
 #+END_SRC
 
 *** mwim
