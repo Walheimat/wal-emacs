@@ -2872,10 +2872,6 @@ This configuration is a bit elaborate.
   (org-log-done 'time)
   (org-directory wal/org-directory)
   (org-default-notes-file (concat org-directory "/notes.org"))
-  (org-capture-templates
-   `(("m" "meeting" entry (file+olp+datetree ,(concat org-directory "/meetings.org")) "* %?")
-     ("d" "daily" plain (file+olp+datetree ,(concat org-directory "/dailies.org")) "%i\n%?")))
-  (org-capture-bookmark nil) ;; This leads to endless edit buffers opening since we annotate bookmarks
   (org-agenda-files `(,wal/agenda-tasks-directory))
   (org-startup-with-inline-images t)
   ;; Be sure to add archive tag with `org-toggle-archive-tag'.
@@ -2970,7 +2966,11 @@ Nice agendas.
     "w" '(org-agenda-write :wk "write")))
 #+END_SRC
 
-*** mixed-pitch
+*** Presentations
+
+Packages I use to prettify presentations.
+
+**** mixed-pitch
 
 Used for the next package.
 
@@ -2986,7 +2986,7 @@ Used for the next package.
                                    org-table)))
 #+END_SRC
 
-*** org-tree-slide
+**** org-tree-slide
 
 Presentations.
 
@@ -3060,7 +3060,7 @@ Presentations.
    ("v" . wal/org-tree-slide-toggle-visibility)))
 #+END_SRC
 
-*** org-roam
+*** Zettelkasten
 
 Trying to organize my thoughts using Zettelkästen.
 /Note/ that you will need to install =sqlite3= and =graphviz= manually.
@@ -3097,11 +3097,32 @@ Trying to organize my thoughts using Zettelkästen.
     "zd" '(org-roam-dailies-goto-date :wk "dailies")))
 #+END_SRC
 
-*** Other
+*** Other Packages
 
 Configurations of sub-packages.
 
-**** org-src
+**** Internal
+
+***** org-capture
+
+Capturing is mainly done using =counsel-projectile=
+but there are some global templates.
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-capture
+  :ensure nil
+  :after org
+  :defer t
+  :delight " cap"
+  :custom
+  (org-capture-templates
+   `(("m" "meeting" entry (file+olp+datetree ,(concat org-directory "/meetings.org")) "* %?")
+     ("d" "daily" plain (file+olp+datetree ,(concat org-directory "/dailies.org")) "%i\n%?")))
+  ;; This leads to endless edit buffers opening since we annotate bookmarks
+  (org-capture-bookmark nil))
+#+END_SRC
+
+***** org-src
 
 Editing source blocks.
 
@@ -3133,19 +3154,7 @@ Editing source blocks.
    ("C-c C-c" . org-edit-src-exit)))
 #+END_SRC
 
-**** org-bullets
-
-Prettier headlines.
-
-#+BEGIN_SRC emacs-lisp
-(use-package org-bullets
-  :after org
-  :custom
-  (org-bullets-bullet-list '("◆" "◈" "►" "▻" "▸" "▹" "•"))
-  :hook (org-mode . org-bullets-mode))
-#+END_SRC
-
-**** org-clock
+***** org-clock
 
 You know the drill. Clock in, clock out.
 
@@ -3164,7 +3173,7 @@ You know the drill. Clock in, clock out.
   (org-clock-into-drawer t))
 #+END_SRC
 
-**** org-keys
+***** org-keys
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-keys
@@ -3180,6 +3189,20 @@ You know the drill. Clock in, clock out.
      ("o" org-clock-out)
      ("a" org-archive-subtree)
      ("r" org-clock-report))))
+#+END_SRC
+
+**** External
+
+***** org-bullets
+
+Prettier headlines.
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-bullets
+  :after org
+  :custom
+  (org-bullets-bullet-list '("◆" "◈" "►" "▻" "▸" "▹" "•"))
+  :hook (org-mode . org-bullets-mode))
 #+END_SRC
 
 ** Dired
