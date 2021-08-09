@@ -152,9 +152,9 @@ Such as package `use-package'.")
   "Install all PACKAGES unless already installed.
 Concludes by calling `delete-other-windows'."
   (mapc (lambda (it)
-            (when (not (package-installed-p it))
-              (package-install it)))
-          packages)
+          (when (not (package-installed-p it))
+            (package-install it)))
+        packages)
   (delete-other-windows))
 
 ;; Try to install. On fail refresh and install again.
@@ -975,7 +975,7 @@ Minor mode to dedicate buffers to windows.
 (defun walled-mode--disable ()
   "Make window no longer dedicated to its buffer."
   (let* ((window (selected-window))
-        (bufname (window-dedicated-p window)))
+         (bufname (window-dedicated-p window)))
     (set-window-dedicated-p window nil)
     (message "Window no longer dedicated to %s" bufname)))
 
@@ -1737,8 +1737,9 @@ I didn't have smart parens growing up so I need help.
 (defun wal/configure-smartparens ()
   "Configure `smartparens'."
   (add-to-list 'sp-lisp-modes 'lisp-data-mode)
-  (sp-with-modes sp-lisp-modes
-    (sp-local-pair "'" nil :actions nil))
+  (sp-with-modes
+   sp-lisp-modes
+   (sp-local-pair "'" nil :actions nil))
   ;; Create a `hydra' for pair navigatino/editing.
   (defhydra wal/smartparens (:hint nil)
     "
@@ -2806,7 +2807,7 @@ The differences being that:
   :custom
   (counsel-projectile-preview-buffers t)
   (counsel-projectile-org-capture-templates
-     ;; Reminders are stored relative to the project root
+   ;; Reminders are stored relative to the project root
    `(("r" "[${name}] reminder" entry
       (file+headline "${root}/reminders.org" "Reminders")
       "* TODO %?\n%i\n%U -- %a")
@@ -2996,10 +2997,10 @@ Presentations.
 (defun wal/relative-column-width (&optional target-width)
   "Get the relative column width of TARGET-WIDTH."
   (let ((width (or target-width 160))
-         (scale (if (and (boundp 'text-scale-mode-amount)
-                         (numberp text-scale-mode-amount))
-                    (expt text-scale-mode-step text-scale-mode-amount)
-                  1)))
+        (scale (if (and (boundp 'text-scale-mode-amount)
+                        (numberp text-scale-mode-amount))
+                   (expt text-scale-mode-step text-scale-mode-amount)
+                 1)))
     (ceiling (/ width scale))))
 
 (defun wal/org-tree-slide-toggle-visibility ()
@@ -3217,15 +3218,15 @@ Run =dired= with =C-x d=.
 (defun wal/dired-from-home (dirname &optional switches)
   "Open DIRNAME local to HOME directory.
 Uses the same optional SWITCHES."
+  (require 'dired nil t)
   (interactive (let ((default-directory "~"))
-                 (require 'dired nil t)
                  (dired-read-dir-and-switches "")))
   (pop-to-buffer-same-window (dired-noselect dirname switches)))
 
 (defun wal/image-dired ()
- "Run `image-dired' in the `default-directory'."
- (interactive)
- (image-dired (expand-file-name default-directory)))
+  "Run `image-dired' in the `default-directory'."
+  (interactive)
+  (image-dired (expand-file-name default-directory)))
 
 (use-package dired
   :ensure nil
