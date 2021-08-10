@@ -2148,27 +2148,6 @@ download a set that supports your emojis.
   (wal/colonel "e" '(emojify-mode :wk "emojify")))
 #+END_SRC
 
-*** scroll-on-jump
-
-Scroll on certain jump commands.
-
-#+BEGIN_SRC emacs-lisp
-(defvar wal/smooth-scroll-commands
-  '(scroll-up-command
-    scroll-down-command
-    recenter-top-bottom)
-  "Commands that should use smooth scrolling.
-This does not include commands `scroll-other-window' and
-`scroll-other-window-down' as it doesn't seem to work.")
-
-(use-package scroll-on-jump
-  :defer 5
-  :config
-  (mapc (lambda (it)
-          (eval `(scroll-on-jump-with-scroll-advice-add ,it)))
-        wal/smooth-scroll-commands))
-#+END_SRC
-
 ** Windows
 
 Everything that has to do with windows.
@@ -3009,6 +2988,33 @@ Used for the next package.
                                    org-table)))
 #+END_SRC
 
+**** scroll-on-jump
+
+Scroll on certain jump commands.
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/smooth-scroll-commands
+  '(scroll-up-command
+    scroll-down-command
+    recenter-top-bottom)
+  "Commands that should use smooth scrolling.")
+
+(defun wal/advise-scroll-on-jump ()
+  "Advise functions to scroll on jump."
+  (mapc (lambda (it)
+          (eval `(scroll-on-jump-with-scroll-advice-add ,it)))
+        wal/smooth-scroll-commands))
+
+(defun wal/unadvise-scroll-on-jump ()
+  "Remove advice from functions to scroll on jump."
+  (mapc (lambda (it)
+          (eval `(scroll-on-jump-with-scroll-advice-remove ,it)))
+        wal/smooth-scroll-commands))
+
+(use-package scroll-on-jump
+  :after org-tree-slide)
+#+END_SRC
+
 **** org-tree-slide
 
 Presentations.
@@ -3041,7 +3047,8 @@ Presentations.
         cursor-type nil)
   (beacon-mode -1)
   (visual-fill-column-mode 1)
-  (mixed-pitch-mode +1))
+  (mixed-pitch-mode +1)
+  (wal/advise-scroll-on-jump))
 
 (defun wal/org-tree-slide-stop ()
   "Hook into `org-tree-slide-stop'."
@@ -3051,7 +3058,8 @@ Presentations.
   (beacon-mode 1)
   (visual-fill-column-mode -1)
   (outline-show-all)
-  (mixed-pitch-mode -1))
+  (mixed-pitch-mode -1)
+  (wal/unadvise-scroll-on-jump))
 
 (defun wal/org-tree-slide-text-scale ()
   "Hook into `text-scale-mode-hook' for `org-tree-slide'."
