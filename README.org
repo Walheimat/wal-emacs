@@ -1932,6 +1932,15 @@ Busier and prettier =modeline=.
 /Note/ that this package requires you to install =all-the-icons= fonts[fn:4].
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/advise-doom-modeline-update-vcs-text (&rest _r)
+  "Advise function to remove branch prefixes."
+  (when doom-modeline--vcs-text
+    (setq doom-modeline--vcs-text
+          (replace-regexp-in-string
+           "\\(feature\\|\\(hot\\)?fix\\|improvement\\)\\/"
+           ""
+           doom-modeline--vcs-text))))
+
 (use-package doom-modeline
   :defer 0.5
   :custom
@@ -1939,9 +1948,13 @@ Busier and prettier =modeline=.
   (doom-modeline-minor-modes t)
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-icon t)
-  (doom-modeline-vcs-max-length 20)
+  (doom-modeline-vcs-max-length 25)
+  (doom-modeline-lsp nil)
+  (doom-modeline-persp-name nil)
   :config
-  (doom-modeline-mode 1))
+  (doom-modeline-mode 1)
+  (advice-add 'doom-modeline-update-vcs-text :after #'wal/advise-doom-modeline-update-vcs-text)
+  (add-hook 'magit-post-refresh-hook #'doom-modeline-update-vcs-text))
 #+END_SRC
 
 *** doom-themes
