@@ -563,7 +563,9 @@ and PREFIX is its prefix."
   :config
   (mapc (lambda (it)
           (let ((key (intern (format "%s-key" it)))
-                (sink (intern (format "%s-sink" it))))
+                (sink (intern (format "%s-sink" it)))
+                (name (substring (symbol-name it) 4)))
+            (eval `(which-key-add-key-based-replacements ,key ,name))
             (eval `(general-create-definer ,it :prefix ,key))
             (eval `(wal/create-leader-sink ,sink :definer ,it :prefix ,key))))
         '(wal/general wal/colonel wal/major wal/captain wal/lieutenant)))
@@ -1387,7 +1389,7 @@ Let's try (to be) =helpful=.
   :config
   (wal/display-buffer-in-direction 'helpful-mode)
   :general
-  (wal/major :keymaps '(emacs-lisp-mode-map org-mode-map)
+  (wal/major :keymaps '(emacs-lisp-mode-map org-mode-map) :major-modes t
     "h"  '(helpful-at-point :wk "at point"))
   :bind
   (([remap describe-command] . helpful-command)
@@ -1981,53 +1983,6 @@ download a set that supports your emojis.
   (wal/colonel "e" '(emojify-mode :wk "emojify")))
 #+END_SRC
 
-**** scroll-on-jump
-
-Scroll on certain jump commands.
-
-#+BEGIN_SRC emacs-lisp
-(use-package scroll-on-jump
-  :defer t)
-
-(defvar smooth-scroll-mode--commands
-  '(scroll-up-command
-    scroll-down-command
-    recenter-top-bottom)
-  "Commands that should use smooth scrolling.")
-
-(define-minor-mode smooth-scroll-mode
-  "Use smooth scrolling."
-  :init-value nil
-  :global t
-  :lighter " scr"
-  (cond
-   (noninteractive
-    (setq smooth-scroll-mode nil))
-   (smooth-scroll-mode
-    (smooth-scroll-mode--enable))
-   (t
-    (smooth-scroll-mode--disable))))
-
-(defun smooth-scroll-mode--enable ()
-  "Enable smooth scrolling."
-  (mapc (lambda (it)
-          (eval `(scroll-on-jump-with-scroll-advice-add ,it)))
-        smooth-scroll-mode--commands))
-
-(defun smooth-scroll-mode--disable ()
-  "Disable smooth-scrolling."
-  (mapc (lambda (it)
-          (eval `(scroll-on-jump-with-scroll-advice-remove ,it)))
-        smooth-scroll-mode--commands))
-
-(use-package smooth-scroll-mode
-  :ensure nil
-  :config
-  (require 'scroll-on-jump)
-  :general
-  (wal/colonel "," '(smooth-scroll-mode :wk "smooth-scroll")))
-#+END_SRC
-
 *** fira-code-mode
 
 This mode allows us to use ligatures from FiraCode.
@@ -2212,6 +2167,78 @@ Show colors in source code and make delimiters stand out.
   :defer t
   :delight " rbm")
 #+END_SRC
+
+*** scroll-on-jump
+
+Scroll on certain jump commands.
+
+#+BEGIN_SRC emacs-lisp
+(use-package scroll-on-jump
+  :defer t)
+
+(defvar smooth-scroll-mode--commands
+  '(scroll-up-command
+    scroll-down-command
+    recenter-top-bottom)
+  "Commands that should use smooth scrolling.")
+
+(define-minor-mode smooth-scroll-mode
+  "Use smooth scrolling."
+  :init-value nil
+  :lighter " scr"
+  (cond
+   (noninteractive
+    (setq smooth-scroll-mode nil))
+   (smooth-scroll-mode
+    (smooth-scroll-mode--enable))
+   (t
+    (smooth-scroll-mode--disable))))
+
+(defun smooth-scroll-mode--enable ()
+  "Enable smooth scrolling."
+  (mapc (lambda (it)
+          (eval `(scroll-on-jump-with-scroll-advice-add ,it)))
+        smooth-scroll-mode--commands))
+
+(defun smooth-scroll-mode--disable ()
+  "Disable smooth-scrolling."
+  (mapc (lambda (it)
+          (eval `(scroll-on-jump-with-scroll-advice-remove ,it)))
+        smooth-scroll-mode--commands))
+
+(use-package smooth-scroll-mode
+  :ensure nil
+  :config
+  (require 'scroll-on-jump)
+  :general
+  (wal/colonel "," '(smooth-scroll-mode :wk "smooth-scroll")))
+#+END_SRC
+
+*** tree-sitter
+
+Alternative syntax highlighting.
+
+#+begin_src emacs-lisp
+(defvar wal/tree-sitter-mode-maps
+  '(js2-mode-map python-mode-map c++-mode-map)
+  "Mode maps that get `tree-sitter-hl-mode' bound.")
+
+(defun wal/tree-sitter-mode ()
+  "(De-)Activate mode and highlighting."
+  (interactive)
+  (if (and (boundp 'tree-sitter-mode) tree-sitter-mode)
+      (tree-sitter-mode -1)
+    (tree-sitter-hl-mode)))
+
+(use-package tree-sitter
+  :delight " trs"
+  :general
+  (wal/captain :keymaps wal/tree-sitter-mode-maps
+    "t" '(wal/tree-sitter-mode :wk "treesitter")))
+
+(use-package tree-sitter-langs
+  :after tree-sitter)
+#+end_src
 
 *** visual-fill-column
 
@@ -2438,7 +2465,7 @@ nice despite us using =ivy= for completion everywhere.
           consult-outline))
   :general
   (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
-  (wal/major :keymaps 'org-mode-map
+  (wal/major :keymaps 'org-mode-map :major-modes t
     "j" '(consult-outline :wk "jump to heading"))
   (wal/lieutenant
     "u" '(:ignore t :wk "consult")
@@ -2948,6 +2975,7 @@ This configuration is a bit elaborate.
   (org-ellipsis "↷")
   (org-hide-emphasis-markers t)
   (org-log-done 'time)
+  (org-startup-folded 'overview)
   (org-directory wal/org-directory)
   (org-default-notes-file (concat org-directory "/notes.org"))
   (org-agenda-files `(,wal/agenda-tasks-directory))
@@ -2980,13 +3008,14 @@ This configuration is a bit elaborate.
      ("@bla" . ?b)
      ("@edu" . ?e)))
   :general
-  (wal/major :keymaps 'org-mode-map
+  (wal/major :keymaps 'org-mode-map :major-modes t
     "s" '(:ignore t :wk "subtree")
     "sw" '(org-cut-subtree :wk "cut subtree")
     "sy" '(org-paste-subtree :wk "paste subtree")
     "e" '(org-edit-src-code :wk "edit source code")
     "n" '(org-add-note :wk "add note")
     "a" '(org-show-all :wk "show all")
+    "g" '(org-goto :wk "go to")
     "l" '(wal/org-content :wk "show level")
     "f" '(:ignore t :wk "footnotes")
     "fc" '(org-footnote-new :wk "create")
@@ -3177,7 +3206,7 @@ Nice agendas.
   :config
   (org-super-agenda-mode)
   :general
-  (wal/major :keymaps 'org-agenda-keymap
+  (wal/major :keymaps 'org-agenda-keymap :major-modes t
     "w" '(org-agenda-write :wk "write")))
 #+END_SRC
 
@@ -3243,7 +3272,7 @@ Presentations.
    (org-tree-slide-stop . wal/org-tree-slide-stop)
    (text-scale-mode . wal/org-tree-slide-text-scale))
   :general
-  (wal/major :keymaps 'org-mode-map
+  (wal/major :keymaps 'org-mode-map :major-modes t
     "p" '(org-tree-slide-mode :wk "presentation"))
   :bind
   (:map org-tree-slide-mode-map
@@ -3287,7 +3316,7 @@ Uses the same optional SWITCHES."
   (dired-auto-revert-buffer t)
   (dired-kill-when-opening-new-dired-buffer t) ;; New in Emacs 28.1.
   :general
-  (wal/major :keymaps 'dired-mode-map
+  (wal/major :keymaps 'dired-mode-map :major-modes t
     "e" '(dired-create-empty-file :wk "create empty file")
     "i" '(wal/image-dired :wk "show images"))
   :bind
@@ -3486,17 +3515,21 @@ Make sure to install =ccls= and/or =clang=.
   "Hook into `cc-mode'."
   (message "Make tidy! Make clean!")
   (wal/disable-tabs)
-  (setq-local company-idle-delay 0.1)
   (hack-local-variables)
   (wal/lsp))
 
 (use-package cc-mode
   :ensure nil
   :ensure-system-package (ccls clang)
+  :hook (c++-mode . wal/c++-mode)
   :config
   ;; Eliminates conflicts with `delight'.
   (advice-add 'c-update-modeline :override #'ignore)
-  :hook (c++-mode . wal/c++-mode))
+  :general
+  (wal/major :keymaps 'c++-mode-map :major-modes t
+    "s" '(:ignore t :wk "style")
+    "ss" '(c-set-style :wk "set")
+    "sg" '(c-guess-install :wk "guess")))
 #+END_SRC
 
 *** Elixir
@@ -3514,7 +3547,7 @@ We don't use tabs here.
 (use-package elixir-mode
   :hook (elixir-mode . wal/elixir-mode)
   :general
-  (wal/major :keymaps 'elixir-mode-map
+  (wal/major :keymaps 'elixir-mode-map :major-modes t
     "f" '(elixir-format :wk "format with mode")))
 #+END_SRC
 
@@ -3622,7 +3655,7 @@ Prettify your ugly JavaScript.
 #+BEGIN_SRC emacs-lisp
 (use-package prettier
   :general
-  (wal/major :keymaps '(js2-mode-map typescript-mode-map)
+  (wal/major :keymaps '(js2-mode-map typescript-mode-map) :major-modes t
     "p" '(prettier-prettify :wk "run prettier")))
 #+END_SRC
 
@@ -3696,7 +3729,7 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
   :general
   (wal/colonel :keymaps 'lisp-mode-map
     "l" '(slime-mode :wk "slime"))
-  (wal/major :keymaps 'slime-mode-map
+  (wal/major :keymaps 'slime-mode-map :major-modes t
     "r" '(slime :wk "open REPL"))
   :config
   (setq inferior-lisp-program "sbcl")
@@ -3750,7 +3783,7 @@ This mode is built-in.
   :ensure nil
   :hook (python-mode . wal/python-mode)
   :general
-  (wal/major :keymaps 'python-mode-map
+  (wal/major :keymaps 'python-mode-map :major-modes t
     "i" '(run-python :wk "inferior shell")
     "s" '(:ignore t :wk "send")
     "sr" '(python-shell-send-region :wk "region")
@@ -3793,14 +3826,14 @@ This also works if the project isn't a poetry project."
 (use-package pyvenv
   :hook (python-mode . wal/activate-venv)
   :general
-  (wal/major :keymaps 'python-mode-map
+  (wal/major :keymaps 'python-mode-map :major-modes t
     "v" '(pyvenv-activate :wk "activate venv")))
 
 (use-package poetry
   :config
   (wal/display-buffer-in-side-window "\\*poetry-shell\\*")
   :general
-  (wal/major :keymaps 'python-mode-map
+  (wal/major :keymaps 'python-mode-map :major-modes t
     "p" '(poetry :wk "poetry")))
 #+END_SRC
 
@@ -3840,7 +3873,7 @@ We want quicker =company= suggestions when in CSS modes.
   (setq-local company-idle-delay 0.1)
   (hack-local-variables)
   (wal/maybe-enable-tabs)
-  (flycheck-mode 1))
+  (flycheck-mode +1))
 
 (use-package css-mode
   :ensure nil
@@ -3862,7 +3895,7 @@ Please let me know when I screwed up.
 I promise I will learn.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/fly-check ()
+(defun wal/consult-fly ()
   "Call either `consult-flymake' or `consult-flycheck'.
 This depends on `wal/lsp-client'."
   (interactive)
@@ -3872,7 +3905,7 @@ This depends on `wal/lsp-client'."
 
 (wal/captain :keymaps '(flymake-mode-map flycheck-mode-map)
   "f" '(:ignore t :wk "fly-check")
-  "fs" '(wal/fly-check :wk "search"))
+  "fu" '(wal/consult-fly :wk "consult"))
 #+END_SRC
 
 *** flycheck
