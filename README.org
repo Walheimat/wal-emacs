@@ -738,7 +738,7 @@ switching between =major-mode= and =fundamental-mode=.
       (setq wal/before-fundamental-mode m-mode))))
 
 ;; Little EOF joke for ya.
-(wal/colonel-sink
+(wal/colonel
  "E" '(emacs-lisp-mode :wk "Elisp")
  "O" '(org-mode :wk "Org")
  "F" '(wal/fundamental-mode :wk "Fundamental"))
@@ -1832,6 +1832,7 @@ Help me find my cursor!
 (defun wal/configure-beacon ()
   "Configure `beacon' package."
   (add-to-list 'beacon-dont-blink-commands 'tab-to-tab-stop)
+  (add-to-list 'beacon-dont-blink-major-modes 'vterm-mode)
   (beacon-mode 1))
 
 (use-package beacon
@@ -1953,7 +1954,6 @@ Busier and prettier =modeline=.
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-icon t)
   (doom-modeline-vcs-max-length 25)
-  (doom-modeline-lsp nil)
   (doom-modeline-persp-name nil)
   :config
   (doom-modeline-mode 1)
@@ -2124,13 +2124,12 @@ Sometimes the list of minor modes overcrowds the modeline.
   :defer 4
   :custom
   (minions-direct '(tree-sitter-mode
-                    lsp-mode
                     dap-mode
-                    eglot-mode
                     smerge-mode
                     git-timemachine-mode
                     vterm-copy-mode
-                    typo-mode))
+                    typo-mode
+                    flyspell-mode))
   :config
   (minions-mode +1)
   :general
@@ -3652,6 +3651,8 @@ Plugin for =flymake=.
   ;; Remove `js2-jump-to-definition' binding which
   ;; rarely works and gets in the way of `dumb-jump-go'.
   (define-key js2-mode-map (kbd "M-.") nil)
+  (with-eval-after-load 'dap-mode
+    (require 'dap-node))
   :hook (js2-mode . wal/js2-mode))
 #+END_SRC
 
@@ -3738,7 +3739,10 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
 
 (use-package emacs-lisp
   :ensure nil
-  :hook (emacs-lisp-mode . wal/elisp-mode))
+  :hook (emacs-lisp-mode . wal/elisp-mode)
+  :general
+  (wal/major :keymaps 'emacs-lisp-mode-map :major-modes t
+    "p" '(check-parens :wk "check parens")))
 
 (use-package highlight-quoted
   :hook (emacs-lisp-mode . highlight-quoted-mode))
@@ -3815,7 +3819,9 @@ This mode is built-in.
     "sf" '(python-shell-send-file :wk "file"))
   :config
   ;; Treat inferior shell as a pop-up.
-  (wal/display-buffer-in-side-window 'inferior-python-mode))
+  (wal/display-buffer-in-side-window 'inferior-python-mode)
+  (with-eval-after-load 'dap-mode
+    (require 'dap-python)))
 #+END_SRC
 
 **** poetry
@@ -4080,15 +4086,37 @@ Uses American English for =flyspell=.
 Language servers are awesome. Thanks, Microsoft.
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/lsp-client 'eglot
+(defvar wal/lsp-client 'lsp-mode
   "Which LSP client to use.")
 
-(defun wal/lsp ()
-  "Activate LSP client."
+(defun wal/lsp (&optional disable)
+  "Activate LSP client.
+If called with `universal-argument', DISABLE.
+This also (re-)sets values for `company'."
+  (interactive "P")
   (pcase wal/lsp-client
-    ('lsp-mode (lsp-deferred))
-    ('eglot (eglot-ensure))
-    (_ nil)))
+    ('lsp-mode (if disable
+                   (progn
+                     (lsp-shutdown-workspace)
+                     (lsp-mode -1))
+                 (lsp-deferred)))
+    ;; FIXME: Still need to find a way to properly
+    ;;        disable `eglot' so it can also be re-enabled.
+    ('eglot (if disable
+                (call-interactively 'eglot-shutdown)
+              (if (eglot-managed-p)
+                  (call-interactively 'eglot-reconnect)
+                (eglot-ensure))))
+    (_ nil))
+  (if disable
+      (progn
+        (wal/reset-to-standard 'company-idle-dealy t)
+        (wal/reset-to-standard 'company-backends t))
+    (setq-local company-backends '(company-capf company-yasnippet)
+                company-idle-delay 0)))
+
+(wal/colonel :keymaps 'prog-mode-map :major-modes t
+    "l" '(wal/lsp :wk "lsp"))
 #+END_SRC
 
 *** eglot
@@ -4199,16 +4227,12 @@ You'll have to install some language servers yourself[fn:14].
   :delight " lsp"
   :hook (lsp-mode . flycheck-mode)
   :general
-  (wal/colonel :keymaps 'prog-mode-map :major-modes t
-    "l" '(lsp-mode :wk "lsp"))
   (wal/captain :keymaps 'lsp-mode-map
     "l" '(:ignore t :wk "lsp")
     "lr" '(lsp-rename :wk "rename")
     "lf" '(lsp-format-buffer :wk "format"))
   :custom
   (lsp-completion-provider :capf)
-  (lsp-prefer-capf t)
-  (lsp-idle-delay 1.5)
   (lsp-enable-dap-auto-configure nil)
   ;; These have to be defined here.
   (lsp-headerline-breadcrumb-enable nil)
@@ -4252,8 +4276,6 @@ it a sub-package of it.
   :config
   (dap-ui-mode 1)
   (dap-auto-configure-mode)
-  (require 'dap-node)
-  (require 'dap-python)
   (wal/display-buffer-in-side-window 'dap-ui-repl-mode)
   :general
   (wal/colonel :keymaps 'prog-mode-map :major-modes t
