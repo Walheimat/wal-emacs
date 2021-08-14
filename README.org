@@ -630,14 +630,14 @@ If the answer is no, there will be no additional prompt."
             (message "To tangle, call `wal/tangle-config'"))
         (message "Config changed. To tangle, call `wal/tangle-config'")))))
 
-(defun wal/open-init ()
-  "Open and switch to the `user-init-file'."
+(defun wal/find-init ()
+  "Find and switch to the `user-init-file'."
   (interactive)
   (switch-to-buffer (find-file-noselect user-init-file)))
 
-(defun wal/open-config ()
-  "Open Walheimat's config.
-Saving the config after opening it with this function
+(defun wal/find-config ()
+  "Find Walheimat's config.
+Saving the config after finding it with this function
 will prompt the user to tangle its contents."
   (interactive)
   (switch-to-buffer (find-file-noselect wal/readme-config))
@@ -645,8 +645,8 @@ will prompt the user to tangle its contents."
   (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t))
 
 (wal/general
-  "c" '(wal/open-config :wk "open config")
-  "i" '(wal/open-init :wk "open init"))
+  "c" '(wal/find-config :wk "find config")
+  "i" '(wal/find-init :wk "find init"))
 
 ;; Killing Emacs.
 (global-unset-key (kbd "C-x C-c"))
@@ -1544,9 +1544,12 @@ Let's use =crux= for some editing magic.
   :general
   (wal/lieutenant
     "x" '(:ignore t :wk "crux")
+    "xd" '(crux-delete-buffer-and-file :wk "delete buffer and file")
     "xf" '(crux-recentf-find-file :wk "find recent file")
     "xr" '(crux-rename-file-and-buffer :wk "rename file and buffer")
     "xs" '(crux-sudo-edit :wk "sudo edit"))
+  (wal/general-sink
+    "i" '(crux-find-shell-init-file :wk "find shell config"))
   :bind
   (("M-o" . crux-other-window-or-switch-buffer)
    ("H-d" . crux-duplicate-current-line-or-region)
@@ -2141,7 +2144,6 @@ Everything that has to do with windows.
 (use-package ace-window
   :delight " ace"
   :custom
-  (aw-fair-aspect-ratio 4)
   (aw-dispatch-always t)
   (aw-keys '(?j ?k ?l ?\; ?u ?i ?o ?p))
   (aw-ignored-buffers '(vterm-mode))
@@ -2155,7 +2157,7 @@ Everything that has to do with windows.
                             (?m aw-move-window "move")
                             (?b aw-switch-buffer-in-window "switch focused")
                             (?o aw-switch-buffer-other-window "switch unfocused")
-                            (?f aw-split-window-fair "fair split")
+                            (?c aw-copy-window "copy")
                             ;; If this has a description, it doesn't work.
                             (?? aw-show-dispatch-help)))
   (advice-add 'aw--switch-buffer :override #'wal/advise-aw--switch-buffer)
@@ -2416,8 +2418,6 @@ Provide code completion.
   :general
   (wal/colonel :keymaps '(prog-mode-map dap-ui-repl-mode-map) :major-modes t
     "c" '(company-mode :wk "company"))
-  :custom
-  (company-idle-delay 0.4) ;; Bigger/smaller delays should be set by modes.
   :hook (prog-mode . company-mode)
   :bind
   (:map company-mode-map
@@ -2597,7 +2597,7 @@ Better short-term-memory for =ivy=.
     "og" '(consult-outline :wk "go to"))
   (wal/lieutenant
     "u" '(:ignore t :wk "consult")
-    "uf" '(consult-recent-file :wk "open recent")
+    "uf" '(consult-recent-file :wk "find recent")
     "ul" '(consult-focus-lines :wk "focus lines")))
 
 (use-package consult-flycheck
@@ -3146,7 +3146,7 @@ Run =dired= with =C-x d=.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/dired-from-home (dirname &optional switches)
-  "Open DIRNAME local to HOME directory.
+  "Find DIRNAME local to HOME directory.
 Uses the same optional SWITCHES."
   (require 'dired nil t)
   (interactive (let ((default-directory "~"))
@@ -3861,7 +3861,7 @@ Language servers are awesome. Thanks, Microsoft.
 (defun wal/lsp ()
   "Activate LSP client."
   (setq-local company-backends '(company-capf company-yasnippet)
-                company-idle-delay 0)
+              company-idle-delay 0)
   (pcase wal/lsp-client
     ('lsp-mode (lsp-deferred))
     ('eglot (eglot-ensure))
