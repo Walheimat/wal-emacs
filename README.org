@@ -140,7 +140,8 @@ Most (if not all) packages will be installed from there.
 
 ** Core Packages
 
-Packages are configured with the =use-package= macro.
+Before =use-package= macro can be used to configure other packages
+it and some other packages need to be installed the hard way.
 
 #+BEGIN_SRC emacs-lisp
 (defconst wal/core-packages '(diminish
@@ -2126,7 +2127,7 @@ default but zoning can always be triggered using =C-z=.
 
 Everything that has to do with windows.
 
-Allows for some nifty window swapping.
+=ace= interacting with (multiple) windows.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/aw-delete-window-kill-buffer (window)
@@ -3041,7 +3042,7 @@ Trying to organize my thoughts using Zettelkästen.
 
 *** Presentations
 
-Presentations.
+Turn any =org-mode= buffer into a presentation.
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal/org-tree-slide-visual-fill-column-width 160
@@ -3113,7 +3114,7 @@ Presentations.
    ("v" . wal/org-tree-slide-toggle-visibility)))
 #+END_SRC
 
-Allows using variable and fixed fonts in the same buffer.
+Allow using variable and fixed fonts in the same buffer.
 
 #+BEGIN_SRC emacs-lisp
 (use-package mixed-pitch
@@ -3127,7 +3128,7 @@ Allows using variable and fixed fonts in the same buffer.
                                    org-table)))
 #+END_SRC
 
-Allows padding and centering text.
+Allow padding and centering text.
 
 #+BEGIN_SRC emacs-lisp
 (use-package visual-fill-column
@@ -3156,7 +3157,7 @@ Uses the same optional SWITCHES."
   "Run `image-dired' in the `default-directory'."
   (interactive)
   (image-dired (expand-file-name default-directory)))
-
+  
 (use-package dired
   :ensure nil
   :config
@@ -3175,24 +3176,39 @@ Uses the same optional SWITCHES."
    :map dired-mode-map
    ("." . dired-up-directory) ; Overrides `dired-clean-directory'.
    ("," . dired-display-file)))
+#+END_SRC
 
-;; Use it for dired.
+Show icons.
+
+#+BEGIN_SRC emacs-lisp
 (use-package all-the-icons-dired
   :after all-the-icons
   :diminish
   :hook (dired-mode . all-the-icons-dired-mode))
+#+END_SRC
 
+Allow filtering
+
+#+BEGIN_SRC emacs-lisp
 ;; Hit `/' to filter in dired buffers.
 (use-package dired-filter
   :after dired
   :delight " drf")
+#+END_SRC
 
+Better highlighting.
+
+#+BEGIN_SRC emacs-lisp
 ;; Highlighting in dired buffers.
 (use-package diredfl
   :after dired
   :config
   (diredfl-global-mode))
+#+END_SRC
 
+Edit files in =dired=.
+
+#+BEGIN_SRC emacs-lisp
 (use-package wdired
   :ensure nil
   :custom
@@ -3202,7 +3218,7 @@ Uses the same optional SWITCHES."
    ("C-c C-k" . wdired-abort-changes)))
 #+END_SRC
 
-Execute io actions asynchronously.
+Execute IO actions asynchronously.
 
 #+BEGIN_SRC emacs-lisp
 (use-package async
@@ -3460,7 +3476,7 @@ Can we have =deno= instead of =node=?
   :hook (js2-mode . wal/js2-mode))
 #+END_SRC
 
-Allows accessing a project's =node_modules=.
+Allow accessing a project's =node_modules=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package add-node-modules-path
@@ -3971,7 +3987,7 @@ Configure or register language servers that aren't as straight forward.
 =eglot= prefers using a =.dir-locals.el= file to configure
 a language server.
 
-***** Elixir
+***** =elixir-ls=
 
 #+BEGIN_SRC emacs-lisp
 ;;; Elixir:
@@ -4009,9 +4025,7 @@ Taken from the official documentation.
                     (matcher . "CaseSensitive"))))))))
 #+END_SRC
 
-***** prolog
-
-Using =swipl=.
+***** =swipl=
 
 #+BEGIN_SRC emacs-lisp
 (with-eval-after-load 'lsp-mode
@@ -4207,7 +4221,7 @@ close Emacs and re-run it.
 
 [fn:5] Which means that a frame is created and control immediately returned
 
-[fn:6] Not including where =:tangle no= was set, somewhere around 150 code blocks.
+[fn:6] Not including where =:tangle no= was set, 158 code blocks on my last count.
 
 [fn:7] Send me an email, why don't you?
 
