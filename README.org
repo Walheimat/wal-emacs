@@ -3858,31 +3858,14 @@ Language servers are awesome. Thanks, Microsoft.
 (defvar wal/lsp-client 'lsp-mode
   "Which LSP client to use.")
 
-(defun wal/lsp (&optional disable)
-  "Activate LSP client.
-If called with `universal-argument', DISABLE.
-This also (re-)sets values for `company'."
-  (interactive "P")
+(defun wal/lsp ()
+  "Activate LSP client."
+  (setq-local company-backends '(company-capf company-yasnippet)
+                company-idle-delay 0)
   (pcase wal/lsp-client
-    ('lsp-mode (if disable
-                   (progn
-                     (lsp-shutdown-workspace)
-                     (lsp-mode -1))
-                 (lsp-deferred)))
-    ;; FIXME: Still need to find a way to properly
-    ;;        disable `eglot' so it can also be re-enabled.
-    ('eglot (if disable
-                (call-interactively 'eglot-shutdown)
-              (if (eglot-managed-p)
-                  (call-interactively 'eglot-reconnect)
-                (eglot-ensure))))
-    (_ nil))
-  (if disable
-      (progn
-        (wal/reset-to-standard 'company-idle-dealy t)
-        (wal/reset-to-standard 'company-backends t))
-    (setq-local company-backends '(company-capf company-yasnippet)
-                company-idle-delay 0)))
+    ('lsp-mode (lsp-deferred))
+    ('eglot (eglot-ensure))
+    (_ nil)))
 
 (wal/colonel :keymaps 'prog-mode-map :major-modes t
     "l" '(wal/lsp :wk "lsp"))
