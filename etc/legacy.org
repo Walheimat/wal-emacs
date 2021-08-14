@@ -447,3 +447,52 @@ I rarely ever used this.
 ;; undo things.
 (advice-add 'counsel-load-theme :filter-return #'wal/advise-counsel-load-theme)
 #+end_src
+
+*** Fix =pylint= False Positives
+
+The =pylint= checker creates false positives for relative import mistakes.
+There is a [[https://github.com/bkhl/flycheck/commit/3f9582d2df42d4f55ee1fc33aae1a56bf1dab421][fix]] but it's trapped.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defun flycheck-pylint-find-project-root (_checker)
+  "Find the directory to invoke pylint from.
+
+The algorithm is the same as used by epylint: find the first
+directory that doesn't have a __init__.py file."
+  (locate-dominating-file
+   (if buffer-file-name
+       (file-name-directory buffer-file-name)
+     default-directory)
+   (lambda (dir)
+     (not (file-exists-p (expand-file-name "__init__.py" dir))))))
+
+(flycheck-define-checker python-pylint
+  "A Python syntax and style checker using Pylint.
+
+This syntax checker requires Pylint 1.0 or newer.
+
+See URL `https://www.pylint.org/'."
+  :command ("python3"
+            (eval (flycheck-python-module-args 'python-pylint "pylint"))
+            "--reports=n"
+            "--output-format=json"
+            (config-file "--rcfile=" flycheck-pylintrc concat)
+            source-inplace)
+  :error-parser flycheck-parse-pylint
+  :enabled (lambda ()
+             (or (not (flycheck-python-needs-module-p 'python-pylint))
+                 (flycheck-python-find-module 'python-pylint "pylint")))
+  :verify (lambda (_) (flycheck-python-verify-module 'python-pylint "pylint"))
+  :error-explainer (lambda (err)
+                     (-when-let (id (flycheck-error-id err))
+                       (apply
+                        #'flycheck-call-checker-process-for-output
+                        'python-pylint nil t
+                        (append
+                         (flycheck-python-module-args 'python-pylint "pylint")
+                         (list (format "--help-msg=%s" id))))))
+  :working-directory flycheck-pylint-find-project-root
+  :modes python-mode
+  :next-checkers ((warning . python-mypy)))
+#+END_SRC
+
