@@ -277,6 +277,7 @@ Any mode that should be on/off no matter what.
 ** Reasonable Sizes
 
 Make things shorter and snappier.
+These settings don't belong to packages.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/bytes-per-mb (num)
@@ -285,10 +286,7 @@ This function may be used to set variables that expect
 bytes."
   (floor (* 1024 1024 num)))
 
-(setq mouse-yank-at-point t
-      show-paren-delay 0.1
-      read-process-output-max (wal/bytes-per-mb 4)
-      sentence-end-double-space nil
+(setq read-process-output-max (wal/bytes-per-mb 4)
       echo-keystrokes 0.1
       ;; New in version 28. Otherwise you need an alias.
       use-short-answers t
@@ -1204,7 +1202,7 @@ Bind some functions to refresh, install and delete packages
     "pd" '(package-delete :wk "delete")))
 #+END_SRC
 
-Bind some useful functions and up some values.
+Package-based settings.
 
 #+BEGIN_SRC emacs-lisp
 (use-package simple
@@ -1219,6 +1217,16 @@ Bind some useful functions and up some values.
   (global-mark-ring-max 32)
   :bind
   ("C-?" . undo-redo))
+
+(use-package mouse
+  :ensure nil
+  :custom
+  (mouse-yank-at-point t))
+
+(use-package text-mode
+  :ensure nil
+  :custom
+  (sentence-end-double-space nil))
 #+END_SRC
 
 Less intrusive pairing mode than =smartparens=.
@@ -1227,6 +1235,11 @@ Less intrusive pairing mode than =smartparens=.
 (use-package elec-pair
   :ensure nil
   :hook (prog-mode . electric-pair-local-mode))
+
+(use-package paren
+  :ensure nil
+  :custom
+  (show-paren-delay 0.1))
 #+END_SRC
 
 Configure annotation usage.
