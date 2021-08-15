@@ -19,12 +19,12 @@
   (expand-file-name "wal" wal/emacs-config-default-path)
   "The path to the tangled Lisp files.")
 
-(defun wal/find-and-create-package-directory ()
-  "Find (and create) package directory.
-Returns the path to the directory."
-  (unless (file-directory-p wal/emacs-config-package-path)
-    (make-directory wal/emacs-config-package-path))
-  wal/emacs-config-package-path)
+(defun wal/find-or-create-package-directory ()
+  "Find (or create) package directory.
+Returns the path to the directory or nil (if created)."
+  (if (file-directory-p wal/emacs-config-package-path)
+      wal/emacs-config-package-path
+    (make-directory wal/emacs-config-package-path)))
 
 (defun wal/directory-files (directory)
   "Get all directory files in DIRECTORY except for current and parent directories."
@@ -37,16 +37,16 @@ The default `init.el' will call this to only tangle
 src blocks if that hasn't already happened.
 
 If called interactively by the user, this will just
-tangle the blocks without loading the created file."
+tangle the blocks without loading the created files."
   (interactive)
   (let ((source-file (expand-file-name "README.org" wal/emacs-config-default-path))
-        (target-dir (wal/find-and-create-package-directory)))
-    (unless (and maybe target-dir)
+        (found-target-dir (wal/find-or-create-package-directory)))
+    (unless (and maybe found-target-dir)
       (require 'org)
       (require 'ob-tangle)
       (org-babel-tangle-file source-file))
     (when load
-      (load-file (expand-file-name "wal.el" target-dir)))))
+      (load-file (expand-file-name "wal.el" (wal/find-or-create-package-directory))))))
 
 ;; Uncomment to test start-up time.
 ;; (setq use-package-minimum-reported-time 0.05
