@@ -677,9 +677,11 @@ Package =smartparens= also defines a =hydra=.
 (defvar wal/ascii-whale #("}< ,.__)" 0 8 (face mode-line-emphasis))
   "A small, highlighted ASCII whale.")
 
-(defun wal/ascii-whale-hydra-offset ()
-  "Get a string offset for the `wal/ascii-whale'."
-  (make-string (length wal/ascii-whale) ? ))
+(defun wal/ascii-whale-hydra-offset (&optional padding)
+  "Get a string offset for the `wal/ascii-whale'.
+Additional left PADDING can be passed."
+  (let ((padd (or padding 0)))
+    (make-string (+ padd (length wal/ascii-whale)) ? )))
 
 (defun wal/text-scale-reset ()
   "Reset `text-scale' level to 0."
@@ -691,35 +693,36 @@ Package =smartparens= also defines a =hydra=.
 ;; Scaling text in buffer.
 (defhydra wal/text-scale (:hint nil)
   "
-%s`wal/ascii-whale _i_ncrease, _d_ecrease or _r_eset text size. Or _q_uit.
+%s`wal/ascii-whale Text size: _i_ncrease or _d_ecrease.
 "
   ("i" text-scale-increase)
   ("d" text-scale-decrease)
-  ("r" wal/text-scale-reset)
-  ("q" nil))
+  ("r" wal/text-scale-reset "reset")
+  ("q" nil "quit"))
 
 ;; Move window splitter or balance windows.
 (defhydra wal/resize-window (:hint nil)
   "
-%s(wal/ascii-whale-hydra-offset)   ^_p_^
-%s`wal/ascii-whale _b_   _f_ window splitter. Ba_l_ance. Or _q_uit.
-%s(wal/ascii-whale-hydra-offset)   ^_n_^
+%s(wal/ascii-whale-hydra-offset 25)^_p_^
+%s`wal/ascii-whale Move window splitter: _b_   _f_.
+%s(wal/ascii-whale-hydra-offset 25)^_n_^
 "
   ("b" wal/edge-left)
   ("f" wal/edge-right)
   ("n" wal/edge-down)
   ("p" wal/edge-up)
-  ("o" wal/split-window-the-other-way)
-  ("l" balance-windows)
-  ("q" nil))
+  ("o" wal/split-window-the-other-way "re-split")
+  ("l" balance-windows "balance")
+  ("g" golden-ratio "golden")
+  ("q" nil "quit"))
 
 (defhydra wal/scroll-other-window (:timeout 4 :hint nil)
   "
-%s`wal/ascii-whale Scroll other window u_p_/dow_n_. Or _q_uit.
+%s`wal/ascii-whale Scroll other window: u_p_/dow_n_.
 "
   ("p" scroll-other-window-down)
   ("n" scroll-other-window)
-  ("q" nil))
+  ("q" nil "quit"))
 
 (general-define-key
  "H-[" '(wal/text-scale/body :wk "text scale")
@@ -1591,9 +1594,9 @@ I didn't have smart parens growing up so I need help.
   ;; Create a `hydra' for pair navigatino/editing.
   (defhydra wal/smartparens (:hint nil)
     "
-%s(wal/ascii-whale-hydra-offset)   ^_p_^
-%s`wal/ascii-whale _b_   _f_ Navigate pairs. Re_w_rap/_s_plice. Or _q_uit.
-%s(wal/ascii-whale-hydra-offset)   ^_n_^
+%s(wal/ascii-whale-hydra-offset 7)^_p_^
+%s`wal/ascii-whale Use _b_   _f_ to navigate pairs. You can also re_w_rap and _s_plice.
+%s(wal/ascii-whale-hydra-offset 7)^_n_^
 "
     ("b" sp-backward-sexp)
     ("f" sp-forward-sexp)
@@ -1601,7 +1604,7 @@ I didn't have smart parens growing up so I need help.
     ("n" sp-down-sexp)
     ("w" wal/sp-rewrap-sexp)
     ("s" sp-splice-sexp)
-    ("q" nil)))
+    ("q" nil "quit")))
 
 (defun wal/sp-rewrap-sexp ()
   "Call `sp--maybe-init' before `sp-rewrap-sexp'.
@@ -1634,7 +1637,8 @@ Let's use =crux= for some editing magic.
     "xr" '(crux-rename-file-and-buffer :wk "rename file and buffer")
     "xs" '(crux-sudo-edit :wk "sudo edit"))
   (wal/general-sink
-    "i" '(crux-find-shell-init-file :wk "find shell config"))
+    "i" '(crux-find-shell-init-file :wk "find shell init")
+    "c" '(crux-find-user-custom-file :wk "find custom file"))
   :bind
   (("M-o" . crux-other-window-or-switch-buffer)
    ("H-d" . crux-duplicate-current-line-or-region)
@@ -2300,8 +2304,7 @@ Used to advise `aw-switch-to-window'."
   ;; Make sure to run golden ratio after `aw-switch-to-window'.
   (advice-add 'aw-switch-to-window :after #'wal/aw-switch-maybe-golden-ratio)
   :general
-  (wal/colonel "g" '(golden-ratio-mode :wk "golden-ratio"))
-  (wal/lieutenant-sink "g" '(golden-ratio :wk "golden-ratio")))
+  (wal/colonel "g" '(golden-ratio-mode :wk "golden-ratio")))
 #+END_SRC
 
 Treat certain buffers and their windows as pop-ups.
