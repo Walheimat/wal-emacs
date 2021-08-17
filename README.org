@@ -4179,6 +4179,10 @@ You'll have to install some language servers yourself[fn:15].
     "[/\\\\]deps$")
   "Additional directories to not monitor.")
 
+(defun wal/advise-lsp-to-prevent-multi-root (&rest _r)
+  "Prevent adding workspace roots from other projects."
+  (eval '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))
+
 (use-package lsp-mode
   :delight " lsp"
   :hook (lsp-mode . flycheck-mode)
@@ -4199,6 +4203,8 @@ You'll have to install some language servers yourself[fn:15].
   (lsp-pylsp-plugins-pylint-enabled t)
   (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
   :config
+  ;; Prevent multi-root workspaces.
+  (advice-add 'lsp :before 'wal/advise-lsp-to-prevent-multi-root)
   (lsp-enable-which-key-integration t)
   (mapc (lambda (it)
           (add-to-list 'lsp-file-watch-ignored it))
