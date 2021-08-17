@@ -2131,27 +2131,33 @@ Package =ligature= is not yet on MELPA so you'll have to put it
 in the load path.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-visuals.el
+(defvar wal/common-ligatures
+  '(">=" "<="  "+=" "-="
+    "||" "..." "??" "__"
+    "*/" "/*" "//" "/**"
+    "**/")
+  "A list of ligatures common to all programming modes.")
+
+(defun wal/merge-ligatures (mode-ligatures)
+  "Merge common ligatures with MODE-LIGATURES."
+  (append mode-ligatures wal/common-ligatures))
+
 (use-package ligature
   :hook (prog-mode . ligature-mode)
   :load-path "site-lisp"
   :config
-  ;; FIXME: This is still in progress.
-  (ligature-set-ligatures 'prog-mode
-                          '(">=" "<="  "+=" "-="
-                            "||" "..." "??" "__"
-                            "*/" "/*" "//" "/**"
-                            "**/"))
-  (ligature-set-ligatures 'lisp-data-mode '(";;"))
-  (ligature-set-ligatures 'c++-mode
-                          '("::" "->" ">>" "<<"
-                            "++" "!=" "|=" "<<="
-                            ">>=" "=="))
-  (ligature-set-ligatures 'js2-mode
-                          '("=>" "!==" "===" "!!"
-                            "&&"))
-  (ligature-set-ligatures 'elixir-mode '("|>" "#{" "\\\\"))
-  (ligature-set-ligatures 'prolog-mode '(":-"))
-  (ligature-set-ligatures 'html-mode '("<!--" "-->")))
+  (ligature-set-ligatures 'lisp-data-mode (wal/merge-ligatures '(";;")))
+  (ligature-set-ligatures 'c++-mode (wal/merge-ligatures
+                                     '("::" "->" ">>" "<<"
+                                       "++" "!=" "|=" "<<="
+                                       ">>=" "==")))
+  (ligature-set-ligatures 'js2-mode (wal/merge-ligatures
+                                     '("=>" "!==" "===" "!!"
+                                       "&&")))
+  (ligature-set-ligatures 'elixir-mode (wal/merge-ligatures
+                                        '("|>" "#{" "\\\\")))
+  (ligature-set-ligatures 'prolog-mode (wal/merge-ligatures '(":-")))
+  (ligature-set-ligatures 'html-mode (wal/merge-ligatures '("<!--" "-->"))))
 #+END_SRC
 
 Alternatively, enable FiraCode ligatures for /all/ fonts.
