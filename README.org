@@ -1860,7 +1860,7 @@ Highlight =TODO=, =FIXME= etc. in =prog= modes.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-visuals.el
 (use-package hl-todo
-  :hook (prog-mode . hl-todo-mode)
+  :hook ((prog-mode yaml-mode) . hl-todo-mode)
   :general
   (wal/lieutenant-sink "t" '(hl-todo-insert :wk "insert todo")))
 #+END_SRC
@@ -2151,6 +2151,8 @@ in the load path.
                                      '("::" "->" ">>" "<<"
                                        "++" "!=" "|=" "<<="
                                        ">>=" "==")))
+  (ligature-set-ligatures 'python-mode (wal/merge-ligatures
+                                        '("->" "!=" "==")))
   (ligature-set-ligatures 'js2-mode (wal/merge-ligatures
                                      '("=>" "!==" "===" "!!"
                                        "&&")))
@@ -2519,6 +2521,7 @@ This package /requires/ the =ag= binary which you can get from [[https://github.
                     "dist"
                     "build"
                     "*.svg"
+                    ".log"
                     "*.min.js"))
   :bind ("H-a" . ag)
   :general
@@ -3600,7 +3603,7 @@ If you want to go back in time and point fingers at the progenitors of doom.
 (use-package git-timemachine
   :delight " gtm"
   :general
-  (wal/colonel :keymaps 'prog-mode-map :major-modes t
+  (wal/colonel :keymaps '(prog-mode-map yaml-mode-map) :major-modes t
     "m" '(git-timemachine-toggle :wk "git-timemachine")))
 #+END_SRC
 
