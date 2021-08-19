@@ -7,35 +7,40 @@
 
 ** Heads-Up
 
-This project is my personal literate Emacs (28.0.50)[fn:1] configuration.
+This project is my personal literate Emacs (28.0.50)[fn:1]
+configuration.
 
-If you're a complete beginner,
-you will find [[https://github.com/emacs-tw/awesome-emacs#starter-kit][more user-friendly and less tailor-made configs]] out there.
+If you're a complete beginner, you will find [[https://github.com/emacs-tw/awesome-emacs#starter-kit][more user-friendly and
+less tailor-made configs]] out there.
 
-Feel free to consider it a jumping-off-point for your own custom config.
-Just know that nothing in this config should be considered /good practice/,
-it's mostly just how I (think I) like things to be.
+Feel free to consider it a jumping-off-point for your own custom
+config. Just know that nothing in this config should be considered
+/good practice/, it's mostly just how I (think I) like things to be.
 
 ** Try-Out
 
-If you're interested in trying out Emacs using my config,
-here are the necessary steps:
+If you're interested in trying out Emacs using my config, here are the
+necessary steps:
 
 + Install Emacs if you haven't[fn:2]
 + =git clone= this repository into your =user-emacs-directory=[fn:3]
-+ copy the init file included in this repo by running =cp ~/.emacs.d/emacs-config/templates/.emacs ~=
-+ close and re-run Emacs which should (download and) install all[fn:4] packages.
++ copy the init file included in this repo by running =cp
+  ~/.emacs.d/emacs-config/templates/.emacs ~=
++ close and re-run Emacs which should (download and) install all[fn:4]
+  packages.
 
-If you do not wish to =clone= this repo in your =user-emacs-directory= or use the default name,
-you will need to adapt the variable =wal/emacs-config-default-path= in the example init file you just copied.
+If you do not wish to =clone= this repo in your =user-emacs-directory= or
+use the default name, you will need to adapt the variable
+=wal/emacs-config-default-path= in the example init file you just
+copied.
 
 ** Peculiarities
 
 *** Daemon Mode
 
-This config is /daemon-ready/, i.e. if you start Emacs with the =--daemon= flag,
-the config will make sure that any customization that requires a frame
-will only be loaded once a frame was created.
+This config is /daemon-ready/, i.e. if you start Emacs with the =--daemon=
+flag, the config will make sure that any customization that requires a
+frame will only be loaded once a frame was created.
 
 A =systemd= service config can be found in the =/templates= directory to
 get you started:
@@ -45,18 +50,19 @@ get you started:
 + adapt that =emacs.service= file to point to the correct path
 + run =systemctl --user enable emacs=.
 
-Or you just execute =emacs --daemon= in a terminal or your shell's config.
+Or you just execute =emacs --daemon= in a terminal or your shell's
+config.
 
-In any case, an Emacs daemon will start (on start-up).
-To connect you can use, for example, =emacsclient -c -n=[fn:5].
+In any case, an Emacs daemon will start (on start-up). To connect you
+can use, for example, =emacsclient -c -n=[fn:5].
 
 *** Package-Like Scope
 
-I've tried to keep custom functions and variables in a scope
-called =wal= to avoid potential interference.
+I've tried to keep custom functions and variables in a scope called
+=wal= to avoid potential interference.
 
-Enough preambling, let's configure some Emacs.
-The init script will evaluate /everything/[fn:6] that follows.
+Enough preambling, let's configure some Emacs. The init script will
+evaluate /everything/[fn:6] that follows.
 
 * Settings
 
@@ -108,8 +114,8 @@ Customize start-up.
 
 ** Package Archives
 
-Add MELPA to the package archives.
-Most (if not all) packages will be installed from there.
+Add MELPA to the package archives. Most (if not all) packages will be
+installed from there.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-settings.el
 (require 'package)
@@ -133,8 +139,8 @@ Most (if not all) packages will be installed from there.
 
 ** Core Packages
 
-Before =use-package= macro can be used to configure other packages
-it and some other packages need to be installed the hard way.
+Before =use-package= macro can be used to configure other packages it
+and some other packages need to be installed the hard way.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-settings.el
 (defconst wal/core-packages '(diminish
@@ -167,10 +173,9 @@ Concludes by calling `delete-other-windows'."
 
 ** Directories
 
-Make sure that custom directories exist.
-We want:
+Make sure that custom directories exist. We want:
 
-+ A cache directory to store bookmarks, perspectives, prescience et al.
++ A cache directory to store bookmarks, perspectives etc.
 + a directory for site lisp
 + a default directory for org files
 + a default directory for agenda tasks
@@ -212,8 +217,8 @@ We want:
 
 ** Site-Lisp
 
-Add =site-lisp= directory and sub-directories to load path.
-I put non-MELPA packages here.
+Add =site-lisp= directory and sub-directories to load path. I put
+non-MELPA packages here.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-settings.el
 (add-to-list 'load-path wal/site-lisp-directory)
@@ -270,8 +275,8 @@ Any mode that should be on/off no matter what.
 
 ** Reasonable Sizes
 
-Make things shorter and snappier.
-These settings don't belong to packages.
+Make things shorter and snappier. These settings don't belong to
+packages.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-settings.el
 (defun wal/bytes-per-mb (num)
@@ -292,8 +297,7 @@ bytes."
 
 ** Indentation
 
-Set up an easy way to switch between tabs
-and spaces for indentation.
+Set up an easy way to switch between tabs and spaces for indentation.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-settings.el
 (defvar wal/indent-offset 4
@@ -373,15 +377,14 @@ optionally to NUM."
 
 *** Dir Local Indentation
 
-Sometimes you have to play using other people's rules.
-You can run =add-dir-local-variable= to do so.
-Check out the =.dir-locals.el= template found in the =/templates= folder
-for an example using spaces.
+Sometimes you have to play using other people's rules. You can run
+=add-dir-local-variable= to do so. Check out the =.dir-locals.el= template
+found in the =/templates= folder for an example using spaces.
 
 ** Persistent =*scratch*=
 
-Let's keep the scratch contents.
-This was cribbed from [[https://www.john2x.com/emacs.html][john2x's config]].
+Let's keep the scratch contents. This was cribbed from [[https://www.john2x.com/emacs.html][john2x's
+config]].
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-settings.el
 ;; Empty scratch message.
@@ -426,8 +429,7 @@ I use many[fn:8] custom keybindings.
 
 *** Control
 
-There are some non-standard control sequences.
-Anywhere:
+There are some non-standard control sequences. Anywhere:
 
 + =C->=/=C-<= expands/contracts region
 + =C-.= marks next like this allowing
@@ -481,11 +483,11 @@ It's also used for three hydras:
 
 **** Caps to Hyper
 
-I re-bound my =<CAPS>= (caps-lock) key to =Hyper_L= to use the
-hyper bindings above.
+I re-bound my =<CAPS>= (caps-lock) key to =Hyper_L= to use the hyper
+bindings above.
 
-If you use Xorg Display Server, the risky quite[fn:9] way would be
-to edit your =/usr/share/X11/xkb/symbols/pc= file like so:
+If you use Xorg Display Server, the risky quite[fn:9] way would be to
+edit your =/usr/share/X11/xkb/symbols/pc= file like so:
 
 #+BEGIN_SRC
 ...
@@ -499,8 +501,8 @@ modifier_map Mod3   { Hyper_L, Hyper_R };
 modifier_map Mod3   { <HYPR> };
 #+END_SRC
 
-A safer alternative might be to create an =.xsession= file in
-your home folder containing the following:
+A safer alternative might be to create an =.xsession= file in your home
+folder containing the following:
 
 #+BEGIN_SRC sh :tangle no
 xmodmap -e "keysym Caps_Lock = Hyper_L" \
@@ -508,9 +510,9 @@ xmodmap -e "keysym Caps_Lock = Hyper_L" \
 		-e "add Mod3 = Hyper_L"
 #+END_SRC
 
-This assumes that =Hyper_L= was assigned to modifier =Mod4= that's
-already used by =Super_L= and modifier =Mod3= is an empty group.
-I haven't gotten this safer alternative to work for me.
+This assumes that =Hyper_L= was assigned to modifier =Mod4= that's already
+used by =Super_L= and modifier =Mod3= is an empty group. I haven't gotten
+this safer alternative to work for me.
 
 *** Case-Sensitivity
 
@@ -525,8 +527,8 @@ Some key-bindings have case-sensitive alternatives:
 
 ** Leader Keys
 
-The are five multi-purpose =general= leader keys.
-They prefix actions by common context.
+The are five multi-purpose =general= leader keys. They prefix actions by
+common context.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-key-bindings.el
 ;;; wal-key-bindings.el --- Key bindings. -*- lexical-binding: t; -*-
@@ -587,14 +589,14 @@ and PREFIX is its prefix."
 Leader key =general= prefixes Emacs actions like loading a theme,
 finding a library, quitting as well as opening =eshell= and =eww=.
 
-Leader key =colonel= prefixes mode toggles.
-Available modes may depend on =major-mode=.
+Leader key =colonel= prefixes mode toggles. Available modes may depend
+on =major-mode=.
 
-Leader keys =major= and =captain= prefix mode-specific actions,
-for major and minor modes respectively.
+Leader keys =major= and =captain= prefix mode-specific actions, for major
+and minor modes respectively.
 
-Leader key =lieutenant= prefixes non- or semi-mode package actions.
-The package prefixes are:
+Leader key =lieutenant= prefixes non- or semi-mode package actions. The
+package prefixes are:
 
 + =a= for =ag=
 + =.= for =multiple-cursors=
@@ -669,8 +671,8 @@ will prompt the user to tangle its contents."
 
 *** Hydra
 
-Provides a context for related commands that can
-be (re-)executed in quick succession.
+Provides a context for related commands that can be (re-)executed in
+quick succession.
 
 Package =smartparens= also defines a =hydra=.
 
@@ -733,8 +735,8 @@ Additional left PADDING can be passed."
 
 *** Additional Mode Controls
 
-Turning on/off certain major modes
-switching between =major-mode= and =fundamental-mode=.
+Turning on/off certain major modes switching between =major-mode= and
+=fundamental-mode=.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-key-bindings.el
 (defvar wal/before-fundamental-mode nil
@@ -1063,8 +1065,7 @@ whitespace is deleted."
 
 * Look
 
-Make frame transparent and set themes.
-[[https://peach-melpa.org/][PeachMelpa]] has more themes.
+Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] has more themes.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-look.el
 ;;; wal-look.el --- Look. -*- lexical-binding: t; -*-
@@ -1122,8 +1123,8 @@ Make frame transparent and set themes.
 
 * Fonts
 
-Set fonts (with preference).
-To get support for ligatures, install the symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
+Set fonts (with preference). To get support for ligatures, install the
+symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-fonts.el
 ;;; wal-fonts.el --- Fonts. -*- lexical-binding: t; -*-
@@ -1239,20 +1240,21 @@ Does the same for `variable-pitch' using `wal/variable-fonts'."
 
 * Packages
 
-What follows is a list of packages[fn:10] that make Emacs even more awesome.
+What follows is a list of packages[fn:10] that make Emacs even more
+awesome.
 
-If you wish to know more about any of them
-call =describe-package= (bound to =C-h P=) and type in the package name.
+If you wish to know more about any of them call =describe-package=
+(bound to =C-h P=) and type in the package name.
 
-If you're looking for additional packages, check out the [[https://github.com/emacs-tw/awesome-emacs][awesome-emacs]] project
-for inspiration.
+If you're looking for additional packages, check out the [[https://github.com/emacs-tw/awesome-emacs][awesome-emacs]]
+project for inspiration.
 
 ** Emacs
 
 Everything that has to do with Emacs-y stuff.
 
-This is a combination of minor configurations for built-in packages[fn:11]
-and some external ones.
+This is a combination of minor configurations for built-in
+packages[fn:11] and some external ones.
 
 Bind some functions to refresh, install and delete packages
 
@@ -1650,8 +1652,8 @@ Let's use =crux= for some editing magic.
    ("C-S-o" . crux-smart-open-line-above)))
 #+END_SRC
 
-I know you're hiding that sweet, sweet whitespace
-in that basket, Little Red Riding Hood!
+I know you're hiding that sweet, sweet whitespace in that basket,
+Little Red Riding Hood!
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-edit.el
 (use-package hungry-delete
@@ -1690,8 +1692,7 @@ Sometimes you do want to see the line numbers.
   (wal/colonel-sink "l" '(linum-mode :wk "linum")))
 #+END_SRC
 
-Some files are so long and Emacs will want to throw up.
-Prevent that.
+Some files are so long and Emacs will want to throw up. Prevent that.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-edit.el
 (use-package so-long
@@ -1777,8 +1778,8 @@ Let's have a dash of board.
 
 *** Themes
 
-The nicest theme packages out there  is =doom-themes=.
-It supports many, many packages' =face= variants.
+The nicest theme packages out there is =doom-themes=. It supports many,
+many packages' =face= variants.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-visuals.el
 (use-package doom-themes
@@ -1787,8 +1788,8 @@ It supports many, many packages' =face= variants.
   (doom-themes-org-config))
 #+END_SRC
 
-=kaolin-themes= is another collection of beautiful themes,
-but it doesn't color every =face=.
+=kaolin-themes= is another collection of beautiful themes, but it
+doesn't color every =face=.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-visuals.el
 (use-package kaolin-themes
@@ -1807,7 +1808,8 @@ but it doesn't color every =face=.
   (kaolin-treemacs-theme))
 #+END_SRC
 
-=modus-themes= is another themes collection with super configurable themes.
+=modus-themes= is another themes collection with super configurable
+themes.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-visuals.el
 (use-package modus-themes
@@ -2048,11 +2050,11 @@ Scroll pixel-wise on certain jump commands.
 *** Modeline
 
 Minor modes are white-listed, hidden, delighted and diminished.
-Meaning that, if not white-listed, they are not shown,
-if they are shown, they are delighted unless they were diminished.
+Meaning that, if not white-listed, they are not shown, if they are
+shown, they are delighted unless they were diminished.
 
-Busier and prettier =modeline=.
-/Note/ that this package requires you to install =all-the-icons= fonts[fn:4].
+Busier and prettier =modeline=. /Note/ that this package requires you to
+install =all-the-icons= fonts[fn:4].
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-visuals.el
 (defun wal/advise-doom-modeline-update-vcs-text (&rest _r)
@@ -2140,8 +2142,8 @@ Make the bell visual.
 
 *** Ligatures
 
-Package =ligature= is not yet on MELPA so you'll have to put it
-in the load path.
+Package =ligature= is not yet on MELPA so you'll have to put it in the
+load path.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-visuals.el
 (defvar wal/common-ligatures
@@ -2207,9 +2209,8 @@ This is the case when:
 
 *** Icons
 
-You need to install the icons yourself[fn:4].
-Packages =dired= and =ivy-rich= use and configure
-their own sub-package.
+You need to install the icons yourself[fn:4]. Packages =dired= and
+=ivy-rich= use and configure their own sub-package.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-visuals.el
 (use-package all-the-icons
@@ -2228,8 +2229,8 @@ Display emojis[fn:12].
 
 *** Screen-Saver
 
-Since this eats up a lot of CPU, the timer is disabled by
-default but zoning can always be triggered using =C-z=.
+Since this eats up a lot of CPU, the timer is disabled by default but
+zoning can always be triggered using =C-z=.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-visuals.el
 (defvar wal/zone-when-idle nil
@@ -2430,7 +2431,8 @@ Allow restoring window configurations.
 
 Moving around should be fun.
 
-Jump to (visible) lines and chars is fun if you are too lazy to use your mouse.
+Jump to (visible) lines and chars is fun if you are too lazy to use
+your mouse.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-movement.el
 ;;; wal-movement.el --- Movement. -*- lexical-binding: t; -*-
@@ -2503,7 +2505,8 @@ I mostly search.
 
 Highlight search results using the *Silver Searcher*.
 
-This package /requires/ the =ag= binary which you can get from [[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:13].
+This package /requires/ the =ag= binary which you can get from
+[[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:13].
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-find.el
 ;;; wal-find.el --- Finding things. -*- lexical-binding: t; -*-
@@ -2544,8 +2547,7 @@ This package /requires/ the =ag= binary which you can get from [[https://github.
     "af" '(ag-dired :wk "for file")))
 #+END_SRC
 
-Replace =isearch=.
-Important command is =C-o s= to change search style.
+Replace =isearch=. Important command is =C-o s= to change search style.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-find.el
 (defvar wal/ctrlf-cancel-commands
@@ -2571,8 +2573,8 @@ Commands that unfocus the ctrlf minibuffer should quit it.")
   (ctrlf-mode +1))
 #+END_SRC
 
-Look up definitions when no LSP is already doing it.
-Jumping is done using =xref-find-definitions= (=M-.=).
+Look up definitions when no LSP is already doing it. Jumping is done
+using =xref-find-definitions= (=M-.=).
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-find.el
 (use-package dumb-jump
@@ -2998,8 +3000,8 @@ The differences being that:
 
 ** Org
 
-The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]].
-This configuration is a bit elaborate.
+The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]]. This configuration
+is a bit elaborate.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-org.el
 ;;; wal-org.el --- Org. -*- lexical-binding: t; -*-
@@ -3101,8 +3103,8 @@ Prettier headlines.
   :hook (org-mode . org-bullets-mode))
 #+END_SRC
 
-Capturing is mainly done using =counsel-projectile=
-but there are some global templates.
+Capturing is mainly done using =counsel-projectile= but there are some
+global templates.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-org.el
 (use-package org-capture
@@ -3228,8 +3230,8 @@ Allow for better grouping.
 
 *** Zettelkasten
 
-Trying to organize my thoughts using Zettelkästen.
-/Note/ that you will need to install =sqlite3= and =graphviz= manually.
+Trying to organize my thoughts using Zettelkästen. /Note/ that you will
+need to install =sqlite3= and =graphviz= manually.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-org.el
 (defvar wal/org-roam-dailies-directory "tagebuch/"
@@ -3483,8 +3485,7 @@ I am convinced that we are in a terminal process.
 — E. P. Thompson
 #+END_QUOTE
 
-Set up =eshell=.
-I like the idea of it but I don't really use it.
+Set up =eshell=. I like the idea of it but I don't really use it.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-terminal.el
 ;;; wal-terminal.el --- Terminal. -*- lexical-binding: t; -*-
@@ -3794,8 +3795,7 @@ Prettify your ugly JavaScript.
     "p" '(prettier-prettify :wk "run prettier")))
 #+END_SRC
 
-Improved editing for JSX files.
-Extends =js2=.
+Improved editing for JSX files. Extends =js2=.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-lang.el
 (defun wal/rjsx-mode ()
@@ -4031,8 +4031,7 @@ Support for =pug= templates.
 
 ** Fixing Things
 
-Please let me know when I screwed up.
-I promise I will learn.
+Please let me know when I screwed up. I promise I will learn.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-fix.el
 ;;; wal-fix.el --- Fixing things. -*- lexical-binding: t; -*-
@@ -4108,8 +4107,7 @@ ESLint plugin for =flymake=.
   (flymake-eslint-defer-binary-check t))
 #+END_SRC
 
-My spelling is bad.
-Uses American English for =flyspell=.
+My spelling is bad. Uses American English for =flyspell=.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-fix.el
 (defun wal/flyspell-prog-mode ()
@@ -4190,8 +4188,8 @@ Language servers are awesome. Thanks, Microsoft.
     "l" '(wal/lsp :wk "lsp"))
 #+END_SRC
 
-=lsp-mode= is the fancy version.
-You'll have to install some language servers yourself[fn:15].
+=lsp-mode= is the fancy version. You'll have to install some language
+servers yourself[fn:15].
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-lsp.el
 (defvar wal/lsp-file-watch-ignored
@@ -4293,10 +4291,11 @@ Debugging using VSCode's DAP (in =lsp-mode=)
 
 *** Server Configurations
 
-Configure or register language servers that aren't as straight forward.
+Configure or register language servers that aren't as straight
+forward.
 
-=eglot= prefers using a =.dir-locals.el= file to configure
-a language server.
+=eglot= prefers using a =.dir-locals.el= file to configure a language
+server.
 
 **** =elixir-ls=
 :PROPERTIES:
@@ -4319,8 +4318,7 @@ a language server.
 :UNNUMBERED: t
 :END:
 
-This one assumes you want to enable =pylint= and you're
-using =poetry=.
+This one assumes you want to enable =pylint= and you're using =poetry=.
 
 #+BEGIN_SRC emacs-lisp :tangle no
 ((python-mode
@@ -4378,8 +4376,8 @@ Taken from the official documentation.
 
 *** Debug Templates
 
-Put these templates in a file in your project root,
-and evaluate them there using =C-x C-e=.
+Put these templates in a file in your project root, and evaluate them
+there using =C-x C-e=.
 
 **** Node.js
 :PROPERTIES:
@@ -4388,8 +4386,8 @@ and evaluate them there using =C-x C-e=.
 
 This for attaching to a remote host (Docker container) using =nodemon=.
 
-For TypeScript compile your =src= with =--sourceMap= or set =sourceMap=
-to =true= in your =tsconfig.json=.
+For TypeScript compile your =src= with =--sourceMap= or set =sourceMap= to
+=true= in your =tsconfig.json=.
 
 #+BEGIN_SRC emacs-lisp :tangle no
 (when (require 'dap-mode nil 'noerror)
@@ -4431,8 +4429,8 @@ Attach to running process.
 
 ** DevOps
 
-Put it into a container and throw it in the
-garbage that is the Internet.
+Put it into a container and throw it in the garbage that is the
+Internet.
 
 What goes =docker-compose= up, goes =docker-compose= down.
 
@@ -4481,8 +4479,8 @@ Make =Dockerfiles= look nice.
 
 I browse, I request.
 
-Postman is passé.
-I use a =.http= file extension for my request examples.
+Postman is passé. I use a =.http= file extension for my request
+examples.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-web.el
 ;;; wal-web.el --- The Internet. -*- lexical-binding: t; -*-
@@ -4523,10 +4521,9 @@ I use a =.http= file extension for my request examples.
 
 Sometimes you have to sit down and write something.
 
-Access complex punctuation.
-To me this doesn't necessarily make sense for all =text-mode=
-modes (like =org-mode=), so instead it needs to be triggered
-explicitly.
+Access complex punctuation. To me this doesn't necessarily make sense
+for all =text-mode= modes (like =org-mode=), so instead it needs to be
+triggered explicitly.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-writing.el
 ;;; wal-writing.el --- Writing. -*- lexical-binding: t; -*-
@@ -4544,8 +4541,7 @@ explicitly.
     "t" '(typo-mode :wk "typo")))
 #+END_SRC
 
-Create a room of one's own.
-I use a different (light) theme here.
+Create a room of one's own. I use a different (light) theme here.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-writing.el
 (use-package writeroom-mode
@@ -4632,36 +4628,37 @@ A window should pop up telling you the path.
 Finally run =git clone git@gitlab.com:Walheimat/emacs-config.git ~/.emacs.d=
 (replace =~/.emacs.d= with your actual path if it differs).
 
-[fn:4] This includes this very config which will be exported as
-a package collection.
+[fn:4] This includes this very config which will be exported as a
+package collection.
 
-This config uses the =all-the-icons= package
-whose icons need to be downloaded manually
-by running =M-x all-the-icons-install-fonts= and selecting =yes=.
+This config uses the =all-the-icons= package whose icons need to be
+downloaded manually by running =M-x all-the-icons-install-fonts= and
+selecting =yes=.
 
-If the installation process should fail for any reason,
-close Emacs and re-run it.
+If the installation process should fail for any reason, close Emacs
+and re-run it.
 
-[fn:5] Which means that a frame is created and control immediately returned
+[fn:5] Which means that a frame is created and control immediately
+returned
 
-[fn:6] Not including where =:tangle no= was set, 157 code blocks on my last count.
+[fn:6] Not including where =:tangle no= was set, 157 code blocks on my
+last count.
 
 [fn:7] Send me an email, why don't you?
 
-[fn:8] To get a full overview you'll have to call =describe-personal-keybindings=
-and =general-describe-keybindings=.
+[fn:8] To get a full overview you'll have to call
+=describe-personal-keybindings= and =general-describe-keybindings=.
 
 [fn:9] Be careful! If you make a mistake you could render your
 keyboard unusable.
 
-[fn:10] Mostly from MELPA.
-/Note/ that many packages bind keys.
-Check the [[*Key Bindings][key bindings section]] if you need a list of the important ones,
-in that section you also find package configurations for key-binding-related
-packages =general= and =hydra=.
+[fn:10] Mostly from MELPA. /Note/ that many packages bind keys. Check
+the [[*Key Bindings][key bindings section]] if you need a list of the important ones, in
+that section you also find package configurations for
+key-binding-related packages =general= and =hydra=.
 
-[fn:11] The following packages (and their related or sub-packages)
-are found in other sections
+[fn:11] The following packages (and their related or sub-packages) are
+found in other sections
 
 - =org-mode= and =org-agenda= in [[*Org][Org]]
 - =flymake= and =flyspell= in [[*Fixing Things][Fixing Things]]
@@ -4669,11 +4666,12 @@ are found in other sections
 - =eshell= in [[*Terminal][Terminal]]
 - =python=, =emacs-lisp=, =cc-mode= and =css-mode= in [[*Languages][Langauges]]
 
-[fn:12] You might have to call =emojify-download-emoji= to
-download a set that supports your emojis.
+[fn:12] You might have to call =emojify-download-emoji= to download a
+set that supports your emojis.
 
 [fn:13]  We will try to download it automatically, but might fail.
 
-[fn:14] If you're on an older distro your =libvterm= package might be too old.
+[fn:14] If you're on an older distro your =libvterm= package might be
+too old.
 
 [fn:15] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
