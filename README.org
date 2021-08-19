@@ -598,6 +598,7 @@ The package prefixes are:
 
 + =a= for =ag=
 + =.= for =multiple-cursors=
++ =h= for =hungry-delete=
 + =l= and =r= for =avy= (line and region)
 + =m= for =magit=
 + =o= for =counsel=
@@ -1621,7 +1622,7 @@ Advising the function does not work."
   :config
   (wal/configure-smartparens)
   :general
-  (wal/lieutenant :keymaps 'prog-mode-map :major-modes t
+  (wal/lieutenant :keymaps 'prog-mode-map
     "p" '(wal/smartparens/body :wk "smartparens")))
 #+END_SRC
 
@@ -1658,8 +1659,12 @@ in that basket, Little Red Riding Hood!
   :custom
   (hungry-delete-join-reluctantly t)
   :general
-  (wal/colonel :keymaps 'prog-mode-map :major-modes t
-    "h" '(hungry-delete-mode :wk "hungry delete")))
+  (wal/colonel :keymaps 'prog-mode-map
+    "h" '(hungry-delete-mode :wk "hungry-delete"))
+  (wal/lieutenant :keymaps 'prog-mode-map
+    "h" '(:ignore t :wk "hungry-delete")
+    "hf" '(hungry-delete-forward :wk "forward")
+    "hb" '(hungry-delete-backward :wk "backward")))
 #+END_SRC
 
 Sometimes I need to see whitespace chars.
@@ -1845,8 +1850,8 @@ Show indentation.
   (highlight-indent-guides-responsive 'top)
   :hook ((prog-mode yaml-mode) . highlight-indent-guides-mode)
   :general
-  (wal/colonel :keymaps '(prog-mode-map yaml-mode-map) :major-modes t
-    "i" '(highlight-indent-guides-mode :wk "highlight indent")))
+  (wal/colonel :keymaps '(prog-mode-map yaml-mode-map)
+    "i" '(highlight-indent-guides-mode :wk "h-indent")))
 #+END_SRC
 
 Make numbers stand out.
@@ -1930,9 +1935,17 @@ Show the next possible key presses towards a command.
 Help me find my cursor!
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-visuals.el
+(defvar wal/beacon-dont-blink-commands '(tab-to-tab-stop
+                                         mouse-drag-region
+                                         mouse-set-region
+                                         mouse-set-point)
+  "List of additional commands that should not trigger a blink.")
+
 (defun wal/configure-beacon ()
   "Configure `beacon' package."
-  (add-to-list 'beacon-dont-blink-commands 'tab-to-tab-stop)
+  (mapc (lambda (it)
+          (add-to-list 'beacon-dont-blink-commands it))
+        wal/beacon-dont-blink-commands)
   (add-to-list 'beacon-dont-blink-major-modes 'vterm-mode)
   (beacon-mode 1))
 
@@ -4052,7 +4065,7 @@ This depends on `wal/lsp-client'."
   :custom
   (flycheck-keymap-prefix (kbd "C-c f"))
   :general
-  (wal/colonel :keymaps 'prog-mode-map :major-modes t
+  (wal/colonel :keymaps 'prog-mode-map
     "f" '(flycheck-mode :wk "flycheck")))
 #+END_SRC
 
@@ -4132,7 +4145,7 @@ Uses American English for =flyspell=.
   :general
   (wal/colonel :keymaps '(text-mode-map org-mode-map) :major-modes t
     "s" '(wal/flyspell-mode :wk "flyspell"))
-  (wal/colonel :keymaps 'prog-mode-map :major-modes t
+  (wal/colonel :keymaps 'prog-mode-map
     "s" '(wal/flyspell-prog-mode :wk "flyspell-prog"))
   (wal/captain :keymaps 'flyspell-mode-map
     "s" '(:ignore t :wk "flyspell")
@@ -4173,7 +4186,7 @@ Language servers are awesome. Thanks, Microsoft.
     ('eglot (eglot-ensure))
     (_ nil)))
 
-(wal/colonel :keymaps 'prog-mode-map :major-modes t
+(wal/colonel :keymaps 'prog-mode-map
     "l" '(wal/lsp :wk "lsp"))
 #+END_SRC
 
@@ -4246,7 +4259,7 @@ Debugging using VSCode's DAP (in =lsp-mode=)
   (dap-auto-configure-mode)
   (wal/display-buffer-in-side-window 'dap-ui-repl-mode)
   :general
-  (wal/colonel :keymaps 'prog-mode-map :major-modes t
+  (wal/colonel :keymaps 'prog-mode-map
     "d" '(dap-mode :wk "dap"))
   (wal/captain :keymaps 'dap-mode-map
     "d" '(dap-hydra :wk "dap")))
