@@ -61,6 +61,9 @@ without loading the package."
 ;; Disable `org-roam' v2 warning.
 (setq org-roam-2-ack t)
 
+;; If you don't have a hyper key, uncomment the next line.
+;; (setq wal/use-hyper-prefix nil)
+
 ;; This will tangle all source blocks on first load and
 ;; afterwards load the package.
 (let ((gc-cons-threshold most-positive-fixnum)

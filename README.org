@@ -452,7 +452,7 @@ It's also used for certain dispatches:
 
 *** Hyper
 
-Most hyper bindings are quick-access actions:
+Most hyper[fn:9] bindings are quick-access actions:
 
 + =H-a= searches with =ag=
 + =H-c= completes at point using =company= (in =company-mode=)
@@ -486,7 +486,7 @@ It's also used for three hydras:
 I re-bound my =<CAPS>= (caps-lock) key to =Hyper_L= to use the hyper
 bindings above.
 
-If you use Xorg Display Server, the risky quite[fn:9] way would be to
+If you use Xorg Display Server, the risky quite[fn:10] way would be to
 edit your =/usr/share/X11/xkb/symbols/pc= file like so:
 
 #+BEGIN_SRC
@@ -539,20 +539,32 @@ common context.
 
 ;;; Code:
 
+(defvar wal/use-hyper-prefix t
+  "Whether the hyper modifier should be used to prefix leader keys.")
+
+(defun wal/prefix-user-key (user-key)
+  "Prefix USER-KEY.
+The default prefix is the hyper key unless Emacs is not
+running in GUI mode or `wal/use-hyper-prefix' is nil."
+  (let ((prefix (if (and wal/use-hyper-prefix (display-graphic-p))
+                    "H-"
+                  "C-c w ")))
+    (concat prefix user-key)))
+
 ;; American ranks.
-(defconst wal/general-key "H-;"
+(defconst wal/general-key ";"
   "The primary (or general) leader key.")
 
-(defconst wal/colonel-key "H-'"
+(defconst wal/colonel-key "'"
   "The secondary (or colonel) leader key.")
 
-(defconst wal/major-key "H-,"
+(defconst wal/major-key ","
   "The tertiary (or major) leader key.")
 
-(defconst wal/captain-key "H-."
+(defconst wal/captain-key "."
   "The quaternary (or captain) leader key.")
 
-(defconst wal/lieutenant-key "H-/"
+(defconst wal/lieutenant-key "/"
   "The quinary (or lieutenant) leader key.")
 
 (cl-defmacro wal/create-leader-sink (name &key definer prefix)
@@ -560,11 +572,10 @@ common context.
 NAME is the name of the macro. DEFINER is the definer to create the sink for
 and PREFIX is its prefix."
   (let* ((defname (symbol-name definer))
-         (pref (symbol-value prefix))
-         (suf (substring pref -1))
+         (suf (substring prefix -1))
          (wk (upcase (concat (substring defname 4) "!"))))
     (progn
-      (general-define-key :prefix pref suf `(:ignore t :wk ,wk))
+      (general-define-key :prefix prefix suf `(:ignore t :wk ,wk))
       `(defmacro ,name (&rest args)
          `(, ',definer ,@,`(mapcar (lambda (it)
                                      (if (stringp it)
@@ -575,9 +586,10 @@ and PREFIX is its prefix."
   :demand
   :config
   (mapc (lambda (it)
-          (let ((key (intern (format "%s-key" it)))
-                (sink (intern (format "%s-sink" it)))
-                (name (substring (symbol-name it) 4)))
+          (let* ((key-sym (intern (format "%s-key" it)))
+                 (key (wal/prefix-user-key (symbol-value key-sym)))
+                 (sink (intern (format "%s-sink" it)))
+                 (name (substring (symbol-name it) 4)))
             (eval `(which-key-add-key-based-replacements ,key ,name))
             (eval `(general-create-definer ,it :prefix ,key))
             (eval `(wal/create-leader-sink ,sink :definer ,it :prefix ,key))))
@@ -728,9 +740,9 @@ Additional left PADDING can be passed."
   ("q" nil "quit"))
 
 (general-define-key
- "H-[" '(wal/text-scale/body :wk "text scale")
- "H-]" '(wal/resize-window/body :wk "resize window")
- "H-v" '(wal/scroll-other-window/body :wk "scroll other window"))
+ (wal/prefix-user-key "[") '(wal/text-scale/body :wk "text scale")
+ (wal/prefix-user-key "]") '(wal/resize-window/body :wk "resize window")
+ (wal/prefix-user-key "v") '(wal/scroll-other-window/body :wk "scroll other window"))
 #+END_SRC
 
 *** Additional Mode Controls
@@ -759,6 +771,63 @@ Turning on/off certain major modes switching between =major-mode= and
  "E" '(emacs-lisp-mode :wk "Elisp")
  "O" '(org-mode :wk "Org")
  "F" '(wal/fundamental-mode :wk "Fundamental"))
+#+END_SRC
+
+*** Extend =use-package=
+
+We'll add keyword =:wal-bind= to =use-package= in order to create bindings
+prefixed by =wal/prefix-user-key=.
+
+#+BEGIN_SRC emacs-lisp :tangle ./wal/wal-key-bindings.el
+(defun wal/insert-use-package-keyword (keyword preceding)
+  "Insert KEYWORD after PRECEDING keyword into `use-package-keywords'."
+  (let* ((kw use-package-keywords)
+         (remainder (nthcdr (cl-position preceding kw) kw)))
+    (setcdr remainder (cons keyword (cdr remainder)))))
+
+(defun use-package-normalize/:wal-bind (name keyword args)
+  (let ((arg args)
+        args*)
+    (while arg
+      (let ((x (car arg)))
+        (cond
+         ((and (consp x)
+               (or (stringp (car x))
+                   (vectorp (car x)))
+               (or (use-package-recognize-function (cdr x) t #'stringp)))
+          ;; This is where we deviate from the `:bind' normalizer.
+          (setq args* (nconc args* (list (cons (wal/prefix-user-key (car x)) (cdr x)))))
+          (setq arg (cdr arg)))
+         ((or (and (eq x :map) (symbolp (cadr arg)))
+              (and (eq x :prefix) (stringp (cadr arg)))
+              (and (eq x :prefix-map) (symbolp (cadr arg)))
+              (and (eq x :prefix-docstring) (stringp (cadr arg)))
+              (eq x :filter)
+              (and (eq x :menu-name) (stringp (cadr arg)))
+              (and (eq x :package) (symbolp (cadr arg))))
+          (setq args* (nconc args* (list x (cadr arg))))
+          (setq arg (cddr arg)))
+         ((listp x)
+          (setq args*
+                (nconc args* (use-package-normalize/:wal-bind name keyword x)))
+          (setq arg (cdr arg)))
+         (t
+          (use-package-error
+           (concat (symbol-name name)
+                   " wants arguments acceptable to the `bind-keys' macro,"
+                   " or a list of such values"))))))
+    args*))
+
+(defun use-package-handler/:wal-bind (name _keyword args rest state &optional bind-macro)
+  (use-package-concat
+   (use-package-process-keywords name rest state)
+   `(,@(mapcar
+        #'(lambda (xs)
+            `(,(if bind-macro bind-macro 'bind-keys)
+              :package ,name ,@(use-package-normalize-commands xs)))
+        (use-package-split-list-at-keys :break args)))))
+
+(wal/insert-use-package-keyword :wal-bind :bind)
 
 (provide 'wal-key-bindings)
 
@@ -1240,7 +1309,7 @@ Does the same for `variable-pitch' using `wal/variable-fonts'."
 
 * Packages
 
-What follows is a list of packages[fn:10] that make Emacs even more
+What follows is a list of packages[fn:11] that make Emacs even more
 awesome.
 
 If you wish to know more about any of them call =describe-package=
@@ -1254,7 +1323,7 @@ project for inspiration.
 Everything that has to do with Emacs-y stuff.
 
 This is a combination of minor configurations for built-in
-packages[fn:11] and some external ones.
+packages[fn:12] and some external ones.
 
 Bind some functions to refresh, install and delete packages
 
@@ -1366,8 +1435,8 @@ Quick calculations.
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-emacs.el
 (use-package calc
   :ensure nil
-  :bind
-  ("H-=" . quick-calc))
+  :wal-bind
+  (("=" . quick-calc)))
 #+END_SRC
 
 Sometimes I restart for fun.
@@ -1400,9 +1469,9 @@ Use better commands for macros.
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-emacs.el
 (use-package kmacro
   :ensure nil
-  :bind
-  ("H-k" . kmacro-start-macro-or-insert-counter)
-  ("H-j" . kmacro-end-or-call-macro))
+  :wal-bind
+  (("k" . kmacro-start-macro-or-insert-counter)
+   ("j" . kmacro-end-or-call-macro)))
 #+END_SRC
 
 What time is it?
@@ -1508,9 +1577,10 @@ Don't you want to edit your buffer in multiple places at once?
     ".a" '(mc/mark-all-like-this :wk "all like this")
     ".b" '(mc/edit-beginnings-of-lines :wk "beginnings (region)")
     ".e" '(mc/edit-ends-of-lines :wk "ends (region)"))
+  :wal-bind
+  (("<mouse-3>" . mc/add-cursor-on-click))
   :bind
-  (("H-<mouse-3>" . mc/add-cursor-on-click)
-   ("C-." . mc/mark-next-like-this)
+  (("C-." . mc/mark-next-like-this)
    :map mc/keymap
    ("C-g" . mc/keyboard-quit) ; We keep this from the default map.
    ("C-," . mc/unmark-next-like-this)
@@ -1560,9 +1630,9 @@ unexpected results."
     "y" '(:ignore t :wk "yasnippet")
     "yv" '(yas-visit-snippet-file :wk "visit snippet file")
     "yn" '(yas-new-snippet :wk "create new snippet"))
-  :bind
+  :wal-bind
   (:map yas-minor-mode-map
-   ("H-y" . #'wal/yas-expand))
+   ("y" . #'wal/yas-expand))
   :config
   (define-key yas-minor-mode-map (kbd "<tab>") nil)
   (define-key yas-minor-mode-map (kbd "TAB") nil)
@@ -1642,10 +1712,11 @@ Let's use =crux= for some editing magic.
   (wal/general-sink
     "i" '(crux-find-shell-init-file :wk "find shell init")
     "c" '(crux-find-user-custom-file :wk "find custom file"))
+  :wal-bind
+  (("d" . crux-duplicate-current-line-or-region)
+   ("D" . crux-duplicate-and-comment-current-line-or-region))
   :bind
   (("M-o" . crux-other-window-or-switch-buffer)
-   ("H-d" . crux-duplicate-current-line-or-region)
-   ("H-D" . crux-duplicate-and-comment-current-line-or-region)
    ("C-S-k" . crux-kill-line-backwards)
    ("C-k" . crux-smart-kill-line)
    ("C-o" . crux-smart-open-line)
@@ -2218,7 +2289,7 @@ You need to install the icons yourself[fn:4]. Packages =dired= and
   :defer t)
 #+END_SRC
 
-Display emojis[fn:12].
+Display emojis[fn:13].
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-visuals.el
 (use-package emojify
@@ -2306,8 +2377,8 @@ Everything that has to do with windows.
                             ;; If this has a description, it doesn't work.
                             (?? aw-show-dispatch-help)))
   (advice-add 'aw--switch-buffer :override #'wal/advise-aw--switch-buffer)
-  :bind
-  ("H-w" . ace-window))
+  :wal-bind
+  ("w" . ace-window))
 #+END_SRC
 
 Use the golden ratio.
@@ -2355,10 +2426,10 @@ Treat certain buffers and their windows as pop-ups.
 (use-package popper
   :after perspective
   :defer 1
-  :bind
+  :wal-bind
   (:map popper-mode-map
-   ("H-e" . popper-toggle-latest)
-   ("H-r" . popper-cycle))
+   ("e" . popper-toggle-latest)
+   ("r" . popper-cycle))
   :general
   (wal/captain :keymaps 'popper-mode-map
     "e" '(:ignore t :wk "popper")
@@ -2461,11 +2532,11 @@ Just goes to line if line is empty."
                        pdf-view-mode
                        shell-mode
                        vterm-mode))
-  :bind
-  (("H-l" . avy-goto-line)
-   ("H-L" . wal/avy-goto-line-and-char)
-   ("H-o" . avy-goto-char-in-line)
-   ("H-O" . avy-goto-word-1))
+  :wal-bind
+  (("l" . avy-goto-line)
+   ("L" . wal/avy-goto-line-and-char)
+   ("o" . avy-goto-char-in-line)
+   ("O" . avy-goto-word-1))
   :general
   (wal/lieutenant
     ;; Lines.
@@ -2506,7 +2577,7 @@ I mostly search.
 Highlight search results using the *Silver Searcher*.
 
 This package /requires/ the =ag= binary which you can get from
-[[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:13].
+[[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:14].
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-find.el
 ;;; wal-find.el --- Finding things. -*- lexical-binding: t; -*-
@@ -2538,7 +2609,7 @@ This package /requires/ the =ag= binary which you can get from
                     "*.svg"
                     ".log"
                     "*.min.js"))
-  :bind ("H-a" . ag)
+  :wal-bind ("a" . ag)
   :general
   (wal/lieutenant
     "a" '(:ignore t :wk "ag")
@@ -2613,9 +2684,9 @@ Provide code completion.
   (wal/colonel :keymaps '(prog-mode-map dap-ui-repl-mode-map) :major-modes t
     "c" '(company-mode :wk "company"))
   :hook (prog-mode . company-mode)
-  :bind
+  :wal-bind
   (:map company-mode-map
-   ("H-c" . company-complete)))
+   ("c" . company-complete)))
 
 (use-package company-box
   :diminish
@@ -2665,9 +2736,9 @@ Use =avy= inside =ivy=.
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-complete.el
 (use-package ivy-avy
   :after ivy
-  :bind
+  :wal-bind
   (:map ivy-minibuffer-map
-   ("H-l" . ivy-avy)))
+   ("l" . ivy-avy)))
 #+END_SRC
 
 Some nicer candidate view when switching buffers.
@@ -2726,10 +2797,11 @@ Some nicer candidate view when switching buffers.
     "os" '(counsel-search :wk "search")
     "ox" '(counsel-find-file-extern :wk "(external) find file")
     "ol" '(counsel-linux-app :wk "Linux app"))
+  :wal-bind
+  ("g" . counsel-mark-ring)
   :bind
   (:map ivy-mode-map
    ("M-g m" . counsel-mark-ring)
-   ("H-g" . counsel-mark-ring)
    ("M-x" . counsel-M-x)
    ("<menu>" . counsel-M-x)
    ("C-x C-f" . counsel-find-file)
@@ -2864,9 +2936,11 @@ This only removes `process-kill-buffer-query-function'."
   :config
   (advice-add 'persp-kill :around #'wal/advise-persp-kill)
   (persp-mode)
+  :wal-bind
+  (:map persp-mode-map
+   ("i" . persp-switch))
   :bind
   (:map persp-mode-map
-   ("H-i" . persp-switch)
    ("C-x k" . persp-kill-buffer*)
    ("C-x K" . all-the-icons-ivy-rich-kill-buffer)))
 #+END_SRC
@@ -2888,9 +2962,9 @@ More robust project management.
 (use-package projectile
   :defer 0.75
   :delight " pjt"
-  :bind
+  :wal-bind
   (:map projectile-mode-map
-   ("H-p" . projectile-switch-project))
+   ("p" . projectile-switch-project))
   :bind-keymap
   ("C-c p" . projectile-command-map)
   :custom
@@ -2981,12 +3055,13 @@ The differences being that:
   ;; (advice-add 'counsel-projectile-ag :around #'wal/advise-counsel-projectile-ag-around)
   (advice-add 'counsel-projectile-ag :override #'wal/advise-counsel-projectile-ag-override)
   (counsel-projectile-mode +1)
-  :bind
+  :wal-bind
   (:map projectile-mode-map
-   ("H-f" . counsel-projectile-find-file)
-   ("H-F" . counsel-projectile-find-dir)
-   ("H-n" . counsel-projectile-org-capture)
-   :map projectile-command-map
+   ("f" . counsel-projectile-find-file)
+   ("F" . counsel-projectile-find-dir)
+   ("n" . counsel-projectile-org-capture))
+  :bind
+  (:map projectile-command-map
    ("ss" . counsel-projectile-ag)))
 
 (provide 'wal-workspace)
@@ -3525,7 +3600,7 @@ Set up =eshell=. I like the idea of it but I don't really use it.
    ([remap eshell-pcomplete] . completion-at-point)))
 #+END_SRC
 
-=vterm= is better[fn:14] than included shells.
+=vterm= is better[fn:15] than included shells.
 
 Some common shell commands require an additional =C-c=:
 
@@ -3559,8 +3634,8 @@ Some common shell commands require an additional =C-c=:
   (vterm-toggle-scope 'project)
   :config
   (advice-add 'vterm-toggle :before-until #'wal/advise-vterm-toggle)
-  :bind
-  ("H-t" . vterm-toggle))
+  :wal-bind
+  ("t" . vterm-toggle))
 
 (provide 'wal-terminal)
 
@@ -3605,8 +3680,8 @@ in `magit-status-mode-map' when using this function."
     "mf" '(magit-find-file :wk "find file")
     "mo" '(magit-find-file-other-window :wk "find file other window")
     "md" '(magit-diff-range :wk "diff range"))
-  :bind
-  ("H-m" . magit-status))
+  :wal-bind
+  ("m" . magit-status))
 #+END_SRC
 
 If you want to go back in time and point fingers at the progenitors of doom.
@@ -4189,7 +4264,7 @@ Language servers are awesome. Thanks, Microsoft.
 #+END_SRC
 
 =lsp-mode= is the fancy version. You'll have to install some language
-servers yourself[fn:15].
+servers yourself[fn:16].
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-lsp.el
 (defvar wal/lsp-file-watch-ignored
@@ -4649,15 +4724,19 @@ last count.
 [fn:8] To get a full overview you'll have to call
 =describe-personal-keybindings= and =general-describe-keybindings=.
 
-[fn:9] Be careful! If you make a mistake you could render your
+[fn:9] If hyper can't be used (or shouldn't be used if Emacs is run in
+=no-window-system=), it is replaced by =C-c w <key>= for both leader keys
+and other bindings.
+
+[fn:10] Be careful! If you make a mistake you could render your
 keyboard unusable.
 
-[fn:10] Mostly from MELPA. /Note/ that many packages bind keys. Check
+[fn:11] Mostly from MELPA. /Note/ that many packages bind keys. Check
 the [[*Key Bindings][key bindings section]] if you need a list of the important ones, in
 that section you also find package configurations for
 key-binding-related packages =general= and =hydra=.
 
-[fn:11] The following packages (and their related or sub-packages) are
+[fn:12] The following packages (and their related or sub-packages) are
 found in other sections
 
 - =org-mode= and =org-agenda= in [[*Org][Org]]
@@ -4666,12 +4745,12 @@ found in other sections
 - =eshell= in [[*Terminal][Terminal]]
 - =python=, =emacs-lisp=, =cc-mode= and =css-mode= in [[*Languages][Langauges]]
 
-[fn:12] You might have to call =emojify-download-emoji= to download a
+[fn:13] You might have to call =emojify-download-emoji= to download a
 set that supports your emojis.
 
-[fn:13]  We will try to download it automatically, but might fail.
+[fn:14]  We will try to download it automatically, but might fail.
 
-[fn:14] If you're on an older distro your =libvterm= package might be
+[fn:15] If you're on an older distro your =libvterm= package might be
 too old.
 
-[fn:15] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+[fn:16] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
