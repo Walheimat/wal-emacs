@@ -689,6 +689,9 @@ quick succession.
 Package =smartparens= also defines a =hydra=.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-key-bindings.el
+(defvar wal/ascii-whale--raw "}< ,.__)"
+  "A small ASCII whale.")
+
 (defvar wal/ascii-whale #("}< ,.__)" 0 8 (face mode-line-emphasis))
   "A small, highlighted ASCII whale.")
 
@@ -1268,28 +1271,27 @@ and preferred fonts are available, return the first of those instead."
       (car available-fonts))))
 
 (defun wal/setup-fonts ()
-  "Setup fonts.
+  "Setup fonts for GUI Emacs.
 This sets `default' and `fixed-pitch' fonts to the first available
 candidate from `wal/fixed-fonts'.
 Does the same for `variable-pitch' using `wal/variable-fonts'."
-  (set-face-attribute 'default nil
-                      :font (wal/fonts-candidate wal/fixed-fonts t)
-                      :height wal/fixed-font-height)
-  (set-face-attribute 'fixed-pitch nil
-                      :font (wal/fonts-candidate wal/fixed-fonts t)
-                      :height wal/fixed-font-height)
-  ;; Variable pitch face.
-  (set-face-attribute 'variable-pitch nil
-                      :font (wal/fonts-candidate wal/variable-fonts t)
-                      :height wal/variable-font-height))
+  (when (display-graphic-p)
+    (set-face-attribute 'default nil
+                        :font (wal/fonts-candidate wal/fixed-fonts t)
+                        :height wal/fixed-font-height)
+    (set-face-attribute 'fixed-pitch nil
+                        :font (wal/fonts-candidate wal/fixed-fonts t)
+                        :height wal/fixed-font-height)
+    ;; Variable pitch face.
+    (set-face-attribute 'variable-pitch nil
+                        :font (wal/fonts-candidate wal/variable-fonts t)
+                        :height wal/variable-font-height)))
 
-;; Fonts can't be initialized thru daemon.
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-fonts)
   (add-hook 'after-init-hook 'wal/setup-fonts))
 
 ;; I want my comments slanted and my keywords bold.
-;; The FiraCode font does not support this.
 (defun wal/font-lock ()
   "Set comment face to italic and keyword face to bold."
   ;; Slanted and enchanted.
@@ -1824,13 +1826,26 @@ Let's have a dash of board.
   (let ((recentf-exclude wal/recentf-exclude))
     (apply fun r)))
 
+(defvar wal/startup-banner
+  (let ((ext (if (display-graphic-p)
+                 ".png"
+               ".txt")))
+    (expand-file-name
+     (concat "assets/logo" ext)
+     wal/emacs-config-default-path))
+  "The start-up banner (transformed Emacs logo).")
+
+(defvar wal/footer-icon
+  (if (display-graphic-p)
+      ":whale:"
+    wal/ascii-whale--raw)
+  "The footer icon.")
+
 (use-package dashboard
   :hook (after-init . dashboard-setup-startup-hook)
   :custom
   (dashboard-banner-logo-title (format "Walheimat's Emacs Config %s" (wal/get-config-version)))
-  (dashboard-startup-banner (expand-file-name
-                             "assets/logo.png"
-                             wal/emacs-config-default-path))
+  (dashboard-startup-banner wal/startup-banner)
   (dashboard-projects-backend 'projectile)
   (dashboard-items '((recents . 5)
                      (projects . 5)
@@ -1838,7 +1853,7 @@ Let's have a dash of board.
   (dashboard-center-content t)
   (dashboard-set-file-icons t)
   (dashboard-set-navigator t)
-  (dashboard-footer-icon ":whale:")
+  (dashboard-footer-icon wal/footer-icon)
   (dashboard-footer-messages wal/dashboard-footer-messages)
   (dashboard-week-agenda nil)
   (dashboard-agenda-time-string-format "%d/%m/%y")
