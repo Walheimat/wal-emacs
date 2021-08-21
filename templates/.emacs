@@ -72,9 +72,6 @@ without loading the package."
   ;; Maybe tangle config and then load the package.
   (wal/tangle-config t t))
 
-;; Customization should start here:
-;; (setq wal/theme 'doom-dracula)
-
 ;;; .emacs ends here
 
 ;; Local Variables:

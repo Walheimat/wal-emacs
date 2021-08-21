@@ -34,6 +34,9 @@ use the default name, you will need to adapt the variable
 =wal/emacs-config-default-path= in the example init file you just
 copied.
 
+You can then use =customize-group= to change settings for various
+aspects of the config.
+
 ** Peculiarities
 
 *** Daemon Mode
@@ -76,6 +79,11 @@ Set some personal info[fn:7].
 ;;; Commentary:
 ;;
 ;; The global settings. This file is an export of `README.org'.
+
+(defgroup wal-settings nil
+  "Change core settings."
+  :group 'wal
+  :tag "Settings")
 
 ;;; Code:
 (setq user-full-name "Krister Schuchardt"
@@ -182,27 +190,37 @@ Make sure that custom directories exist. We want:
 + a default directory for notes.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-settings.el
-(defvar wal/cache-directory
+(defcustom wal/cache-directory
   (expand-file-name ".cache" user-emacs-directory)
-  "The cache directory.")
+  "The cache directory."
+  :type 'string
+  :group 'wal-settings)
 
 ;; Cf. next section.
-(defvar wal/site-lisp-directory
+(defcustom wal/site-lisp-directory
   (expand-file-name "site-lisp" user-emacs-directory)
-  "Directory of site Lisp packages.")
+  "Directory of site Lisp packages."
+  :type 'string
+  :group 'wal-settings)
 
 ;; Change if necessary.
-(defvar wal/org-directory (expand-file-name "org" "~")
-  "Default directory for org files.")
+(defcustom wal/org-directory (expand-file-name "org" "~")
+  "Default directory for org files."
+  :type 'string
+  :group 'wal-settings)
 
 ;; I put all of my tasks into a subfolder `tasks' inside the org directory.
-(defvar wal/agenda-tasks-directory
+(defcustom wal/agenda-tasks-directory
   (expand-file-name "tasks" wal/org-directory)
-  "One-size-fits-all directory for agenda tasks.")
+  "One-size-fits-all directory for agenda tasks."
+  :type 'string
+  :group 'wal-settings)
 
-(defvar wal/org-roam-directory
+(defcustom wal/org-roam-directory
   (expand-file-name "zettelkasten" wal/org-directory)
-  "Directory for Zettelkasten note-taking.")
+  "Directory for Zettelkasten note-taking."
+  :type 'string
+  :group 'wal-settings)
 
 ;; Create all dirs.
 (mapc (lambda (it)
@@ -300,14 +318,20 @@ bytes."
 Set up an easy way to switch between tabs and spaces for indentation.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-settings.el
-(defvar wal/indent-offset 4
-  "The indent offset in spaces.")
+(defcustom wal/indent-offset 4
+  "The indent offset in spaces."
+  :type 'integer
+  :group 'wal-settings)
 
-(defvar wal/prefer-tabs nil
-  "Whether tabs are preferred for indentation.")
+(defcustom wal/prefer-tabs nil
+  "Whether tabs are preferred for indentation."
+  :type 'boolean
+  :group 'wal-settings)
 
-(defvar wal/allow-custom-indent-line-fun t
-  "Whether a custom `indent-line-function' can be passed.")
+(defcustom wal/allow-custom-indent-line-fun t
+  "Whether a custom `indent-line-function' can be passed."
+  :type 'boolean
+  :group 'wal-settings)
 
 (defun wal/reset-to-standard (sym &optional locally)
   "Reset symbol SYM to its standard value.
@@ -372,7 +396,7 @@ optionally to NUM."
                   indent-tabs-mode wal/prefer-tabs)
     (setq backward-delete-char-untabify-method 'hungry)))
 
-(add-hook 'after-init-hook 'wal/set-indent-defaults)
+(add-hook 'emacs-startup-hook 'wal/set-indent-defaults)
 #+END_SRC
 
 *** Dir Local Indentation
@@ -390,9 +414,11 @@ config]].
 ;; Empty scratch message.
 (setq initial-scratch-message "")
 
-(defvar wal/scratch-persist-file
+(defcustom wal/scratch-persist-file
   (expand-file-name "scratch-persist" wal/cache-directory)
-  "The file to persist the *scratch* buffer's content in.")
+  "The file to persist the *scratch* buffer's content in."
+  :type 'string
+  :group 'wal-settings)
 
 (defun wal/persist-scratch ()
   "Persist contents of *scratch* buffer.
@@ -409,7 +435,7 @@ stored in `wal/scratch-persist-file'."
         (delete-region (point-min) (point-max))
         (insert-file-contents wal/scratch-persist-file))))
 
-(add-hook 'after-init-hook #'wal/rehydrate-scratch)
+(add-hook 'emacs-startup-hook #'wal/rehydrate-scratch)
 (add-hook 'kill-emacs-hook #'wal/persist-scratch)
 
 (provide 'wal-settings)
@@ -539,6 +565,8 @@ common context.
 
 ;;; Code:
 
+;; FIXME: This variable needs to be set in the init file before the
+;;        config is loaded because `general' needs to be demanded.
 (defvar wal/use-hyper-prefix t
   "Whether the hyper modifier should be used to prefix leader keys.")
 
@@ -629,7 +657,7 @@ still always be available.
 Most bindings are declared in the [[*Packages][packages]] section.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-key-bindings.el
-(defvar wal/readme-config
+(defconst wal/readme-config
   (expand-file-name "README.org" wal/emacs-config-default-path)
   "The path to Walheimat's config.")
 
@@ -689,7 +717,7 @@ quick succession.
 Package =smartparens= also defines a =hydra=.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-key-bindings.el
-(defvar wal/ascii-whale #("}< ,.__)" 0 8 (face mode-line-emphasis))
+(defconst wal/ascii-whale #("}< ,.__)" 0 8 (face mode-line-emphasis))
   "A small, highlighted ASCII whale.")
 
 (defun wal/ascii-whale-hydra-offset (&optional padding)
@@ -853,6 +881,11 @@ Finding files should =mkdir -p= its parents.
 
 ;;; Code:
 
+(defgroup wal-func nil
+  "Change values used in additional functions."
+  :group 'wal
+  :tag "Functions")
+
 ;; Creating parent dirs.
 (defun wal/create-non-existent-directory ()
   "Ask whether to create non-existent directory.
@@ -871,9 +904,11 @@ ask if it should get created."
 Ignore some buffers when switching.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-func.el
-(defvar wal/commonly-ignored-major-modes
+(defcustom wal/commonly-ignored-major-modes
   '(dired-mode wdired-mode helpful-mode magit-diff-mode magit-status-mode vterm-mode)
-  "Major modes whose buffers should be commonly ignored.")
+  "Major modes whose buffers should be commonly ignored."
+  :type '(repeat symbol)
+  :group 'wal-func)
 
 (defun wal/commmonly-ignored-buffer-p (buffer-or-string)
   "Check if provided BUFFER-OR-STRING is commonly ignored.
@@ -1089,8 +1124,10 @@ Minor mode to dedicate buffers to windows.
 Better(?) garbage collection.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-func.el
-(defvar wal/gc-cons-threshold-in-mb 10
-  "The default `gc-cons-threshold' epxressed in MB.")
+(defcustom wal/gc-cons-threshold-in-mb 10
+  "The default `gc-cons-threshold' epxressed in MB."
+  :type 'integer
+  :group 'wal-func)
 
 (defun wal/minibuffer-setup-hook ()
   "Increase `gc-cons-threshold' to maximum on minibuffer setup."
@@ -1110,9 +1147,10 @@ Better(?) garbage collection.
 Handling of files.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-func.el
-;; Set to `t' in `.dir-locals.el' if whitespace should be removed on save.
-(defvar wal/delete-trailing-whitespace nil
-  "Whether to delete trailing whitespace.")
+(defcustom wal/delete-trailing-whitespace nil
+  "Whether to delete trailing whitespace."
+  :type 'boolean
+  :group 'wal-func)
 
 (defun wal/advise-hack-local-variables (&rest _r)
   "Advise to conditionally add before save hook.
@@ -1145,13 +1183,19 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 
 ;;; Code:
 
+(defgroup wal-look nil
+  "Change the look."
+  :group 'wal
+  :tag "Look")
+
 ;; Mix of old and new.
 (setq frame-title-format '(multiple-frames "%b"
                                            ("%b@" system-name)))
 
-;; Transparency.
-(defvar wal/transparency 90
-  "The default frame transparency.")
+(defcustom wal/transparency 90
+  "The default frame transparency."
+  :type 'integer
+  :group 'wal-look)
 
 (defun wal/transparency (&optional value)
   "Set the transparency of the frame to VALUE.
@@ -1163,8 +1207,10 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
     (when default-param
       (setcdr default-param transparency))))
 
-(defvar wal/theme nil
-  "The theme.")
+(defcustom wal/theme nil
+  "The theme."
+  :type '(choice symbol (const nil))
+  :group 'wal-look)
 
 ;; Some themes require configuration, so we only load after initialization.
 (defun wal/setup-visuals ()
@@ -1177,7 +1223,7 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-visuals)
   ;; Function `wal/transparency' hasn't been untangled yet.
-  (add-hook 'after-init-hook 'wal/setup-visuals)
+  (add-hook 'emacs-startup-hook 'wal/setup-visuals)
   ;; Add the transparency to the `default-frame-alist' as well.
   (add-to-list 'default-frame-alist `(alpha . ,wal/transparency)))
 
@@ -1204,7 +1250,12 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
 
 ;;; Code:
 
-(defvar wal/fixed-fonts
+(defgroup wal-fonts nil
+  "Change fonts and font sizes."
+  :group 'wal
+  :tag "Fonts")
+
+(defcustom wal/fixed-fonts
   '("Iosevka"
     "Input Mono"
     "mononoki"
@@ -1214,22 +1265,32 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
     "DejaVu Sans Mono"
     "Monoid" ; The calt version doesn't work properly!
     "Liberation Mono")
-  "Fixed fonts ordered by preference.")
+  "Fixed fonts ordered by preference."
+  :type '(repeat string)
+  :group 'wal-fonts)
 
-(defvar wal/variable-fonts
+(defcustom wal/variable-fonts
   '("Roboto" "Ubuntu" "San Francisco" "Arial")
-  "Variable fonts ordered by preference.")
+  "Variable fonts ordered by preference."
+  :type '(repeat string)
+  :group 'wal-fonts)
 
-(defvar wal/preferred-fonts nil
-  "List of (fixed and variable width) font names that should be preferred.")
+(defcustom wal/preferred-fonts nil
+  "List of (fixed and variable width) font names that should be preferred."
+  :type '(choice (repeat string) (const nil))
+  :group 'wal-fonts)
 
-(defvar wal/fixed-font-height 120
+(defcustom wal/fixed-font-height 120
   "The font height for fixed fonts.
-The default value is 98.")
+The default value is 98."
+  :type 'integer
+  :group 'wal-fonts)
 
-(defvar wal/variable-font-height 140
+(defcustom wal/variable-font-height 140
   "The font height for variable fonts.
-This has no default value.")
+This has no default value."
+  :type 'integer
+  :group 'wal-fonts)
 
 (defun wal/select-fixed-font (font)
   "Select fixed (available) FONT.
@@ -1286,7 +1347,7 @@ Does the same for `variable-pitch' using `wal/variable-fonts'."
 
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-fonts)
-  (add-hook 'after-init-hook 'wal/setup-fonts))
+  (add-hook 'emacs-startup-hook 'wal/setup-fonts))
 
 ;; I want my comments slanted and my keywords bold.
 (defun wal/font-lock ()
@@ -1801,42 +1862,55 @@ Let's have a dash of board.
 
 (declare-function wal/directory-files ".emacs")
 
-(defvar wal/dashboard-footer-messages
+(defgroup wal-visuals nil
+  "Change settings used for visual packages."
+  :group 'wal
+  :tag "Visuals")
+
+(defcustom wal/dashboard-footer-messages
   '("breaching your favorite stupid framework"
     "I propel myself forward on nothing but flukes"
     "devout and up the spout"
     "krill, filter feeders and hit sulphur bottom"
     "the founder of retiring gentlemen"
     "the loud keyboard shall vanquish the muscular mouse")
-  "The footer messages I can stand to see.")
+  "The footer messages I can stand to see."
+  :type '(repeat string)
+  :group 'wal-visuals)
 
 ;; Ignore all files that were loaded on start-up.
-(defvar wal/recentf-exclude
+(defcustom wal/recentf-exclude
   (append (wal/directory-files wal/agenda-tasks-directory)
           (wal/directory-files wal/org-roam-directory)
           (wal/directory-files wal/cache-directory)
           (wal/directory-files user-emacs-directory))
-  "Files that should not be considered recent files.")
+  "Files that should not be considered recent files."
+  :type '(repeat string)
+  :group 'wal-visuals)
 
 (defun wal/advise-dashboard-insert-startupify-lists (fun &rest r)
   "Advise FUN to ignore certain directories, applying R."
   (let ((recentf-exclude wal/recentf-exclude))
     (apply fun r)))
 
-(defvar wal/startup-banner
+(defcustom wal/startup-banner
   (let ((ext (if (display-graphic-p)
                  ".png"
                ".txt")))
     (expand-file-name
      (concat "assets/logo" ext)
      wal/emacs-config-default-path))
-  "The start-up banner (transformed Emacs logo).")
+  "The start-up banner (transformed Emacs logo)."
+  :type 'string
+  :group 'wal-visuals)
 
-(defvar wal/footer-icon
+(defcustom wal/footer-icon
   (if (display-graphic-p)
       ":whale:"
     wal/ascii-whale)
-  "The footer icon.")
+  "The footer icon."
+  :type 'file
+  :group 'wal-visuals)
 
 (use-package dashboard
   :hook (after-init . dashboard-setup-startup-hook)
@@ -1969,9 +2043,11 @@ Show colors in source code and make delimiters stand out.
 Provide alternative syntax highlighting.
 
 #+begin_src emacs-lisp :tangle ./wal/wal-visuals.el
-(defvar wal/tree-sitter-mode-maps
+(defcustom wal/tree-sitter-mode-maps
   '(js2-mode-map python-mode-map c++-mode-map)
-  "Mode maps that get `tree-sitter-hl-mode' bound.")
+  "Mode maps that get `tree-sitter-hl-mode' bound."
+  :type '(repeat symbol)
+  :group 'wal-visuals)
 
 (defun wal/tree-sitter-mode ()
   "(De-)Activate mode and highlighting."
@@ -2020,11 +2096,13 @@ Show the next possible key presses towards a command.
 Help me find my cursor!
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-visuals.el
-(defvar wal/beacon-dont-blink-commands '(tab-to-tab-stop
-                                         mouse-drag-region
-                                         mouse-set-region
-                                         mouse-set-point)
-  "List of additional commands that should not trigger a blink.")
+(defcustom wal/beacon-dont-blink-commands '(tab-to-tab-stop
+                                            mouse-drag-region
+                                            mouse-set-region
+                                            mouse-set-point)
+  "List of additional commands that should not trigger a blink."
+  :type '(repeat symbol)
+  :group 'wal-visuals)
 
 (defun wal/configure-beacon ()
   "Configure `beacon' package."
@@ -2091,11 +2169,13 @@ Scroll pixel-wise on certain jump commands.
 (use-package scroll-on-jump
   :defer t)
 
-(defvar smooth-scroll-mode--commands
+(defcustom smooth-scroll-mode--commands
   '(scroll-up-command
     scroll-down-command
     recenter-top-bottom)
-  "Commands that should use smooth scrolling.")
+  "Commands that should use smooth scrolling."
+  :type '(repeat symbol)
+  :group 'wal-visuals)
 
 (define-minor-mode smooth-scroll-mode
   "Use smooth scrolling."
@@ -2167,8 +2247,10 @@ install =all-the-icons= fonts[fn:4].
 Refine a couple of major and minor mode names.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-visuals.el
-(defvar wal/major-delight t
-  "Whether some major modes are delighted beyond reason.")
+(defcustom wal/major-delight t
+  "Whether some major modes are delighted beyond reason."
+  :type 'boolean
+  :group 'wal-visuals)
 
 (use-package delight
   :defer t
@@ -2229,12 +2311,14 @@ Package =ligature= is not yet on MELPA so you'll have to put it in the
 load path.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-visuals.el
-(defvar wal/common-ligatures
+(defcustom wal/common-ligatures
   '(">=" "<="  "+=" "-="
     "||" "..." "??" "*/"
     "/*" "//" "/**" "**/"
     "&&" "==")
-  "A list of ligatures common to all programming modes.")
+  "A list of ligatures common to all programming modes."
+  :type '(repeat string)
+  :group 'wal-visuals)
 
 (defun wal/advise-ligature-set-ligatures (fun &rest args)
   "Advise FUN to append common ligatures.
@@ -2290,7 +2374,7 @@ This is the case when:
 ;; We guard against font-related actions.
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/fira-code t)
-  (add-hook 'after-init-hook 'wal/fira-code t))
+  (add-hook 'emacs-startup-hook 'wal/fira-code t))
 #+END_SRC
 
 *** Icons
@@ -2319,11 +2403,15 @@ Since this eats up a lot of CPU, the timer is disabled by default but
 zoning can always be triggered using =C-z=.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-visuals.el
-(defvar wal/zone-when-idle nil
-  "Determine whether to zone out when idling.")
+(defcustom wal/zone-when-idle nil
+  "Determine whether to zone out when idling."
+  :type 'boolean
+  :group 'wal-visuals)
 
-(defvar wal/zone-timer (* 5 60)
-  "The time in seconds when we will zone out.")
+(defcustom wal/zone-timer (* 5 60)
+  "The time in seconds when we will zone out."
+  :type 'integer
+  :group 'wal-visuals)
 
 (use-package zone
   :ensure nil
@@ -2603,6 +2691,11 @@ This package /requires/ the =ag= binary which you can get from
 
 ;;; Code:
 
+(defgroup wal-find nil
+  "Change settings of search packages."
+  :group 'wal
+  :tag "Finding things")
+
 (use-package ag
   :config
   (wal/display-buffer-in-pop-up "^\\*ag")
@@ -2636,12 +2729,14 @@ This package /requires/ the =ag= binary which you can get from
 Replace =isearch=. Important command is =C-o s= to change search style.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-find.el
-(defvar wal/ctrlf-cancel-commands
+(defcustom wal/ctrlf-cancel-commands
   '(ace-window
     other-window
     crux-other-window-or-switch-buffer)
   "Commands that are remapped to `ctrlf-cancel'.
-Commands that unfocus the ctrlf minibuffer should quit it.")
+Commands that unfocus the ctrlf minibuffer should quit it."
+  :type '(repeat symbol)
+  :group 'wal-find)
 
 (use-package ctrlf
   :defer 3
@@ -2693,6 +2788,11 @@ Provide code completion.
 
 ;;; Code:
 
+(defgroup wal-complete nil
+  "Change settings used for completion packages."
+  :group 'wal
+  :tag "Completion")
+
 (use-package company
   :delight " cmp"
   :general
@@ -2724,11 +2824,13 @@ Pass R to the switch buffer function."
 (defalias 'wal/ivy-switch-buffer 'persp-counsel-switch-buffer)
 
 ;; Hide `dired', `docker', `ag' and default Emacs buffers when switching.
-(defvar wal/ivy-ignore-buffers
+(defcustom wal/ivy-ignore-buffers
   '(wal/commmonly-ignored-buffer-p
     "\\` "
     "\\`\\*tramp/")
-  "Buffers that are commonly ignored when switching.")
+  "Buffers that are commonly ignored when switching."
+  :type '(restricted-sexp :match-alternatives (stringp symbolp))
+  :group 'wal-complete)
 
 (use-package ivy
   :defer 1
@@ -2781,16 +2883,17 @@ Some nicer candidate view when switching buffers.
           persp-add-buffer ; This one doesn't seem to work ...
           persp-remove-buffer
           crux-recentf-find-file))
-  (all-the-icons-ivy-rich-mode 1)
-  (add-hook 'after-init-hook #'all-the-icons-ivy-rich-reload))
+  (all-the-icons-ivy-rich-mode 1))
 #+END_SRC
 
 =counsel= me this, Counselor: =ivy= is not enough!
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-complete.el
 ;; `prescient' is defined later, so we have to define it here.
-(defvar wal/use-prescient t
-  "Whether `prescient' is used.")
+(defcustom wal/use-prescient t
+  "Whether `prescient' is used."
+  :type 'boolean
+  :group 'wal-complete)
 
 (use-package counsel
   :after ivy
@@ -2929,9 +3032,16 @@ Have some perspective, man.
 
 ;;; Code:
 
-(defvar wal/default-perspective
+(defgroup wal-workspace nil
+  "Change settings used for workspace packages."
+  :group 'wal
+  :tag "Workspace")
+
+(defcustom wal/default-perspective
   "walheimat"
-  "The name of my default perspective.")
+  "The name of my default perspective."
+  :type 'string
+  :group 'wal-workspace)
 
 (defun wal/advise-persp-kill (fun &rest r)
   "Advises FUN to kill processes without querying, applying R.
@@ -2963,16 +3073,22 @@ This only removes `process-kill-buffer-query-function'."
 More robust project management.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-workspace.el
-(defvar wal/projectile-globally-ignored-directories '("node_modules" "build")
-  "Additional directories to ignore.")
+(defcustom wal/projectile-globally-ignored-directories '("node_modules" "build")
+  "Additional directories to ignore."
+  :type '(repeat string)
+  :group 'wal-workspace)
 
-(defvar wal/projectile-globally-ignored-files
+(defcustom wal/projectile-globally-ignored-files
   '("yarn.lock" "package.lock" "bundle.js")
-  "Additional files to ignore.")
+  "Additional files to ignore."
+  :type '(repeat string)
+  :group 'wal-workspace)
 
-(defvar wal/projectile-globally-ignored-file-suffixes
+(defcustom wal/projectile-globally-ignored-file-suffixes
   '(".min.js")
-  "Additional file suffixes to ignore.")
+  "Additional file suffixes to ignore."
+  :type '(repeat string)
+  :group 'wal-workspace)
 
 (use-package projectile
   :defer 0.75
@@ -3101,6 +3217,11 @@ is a bit elaborate.
 ;; Provide org packages/configurations. This file is an export of `README.org'.
 
 ;;; Code:
+
+(defgroup wal-org nil
+  "Change settings used for org packages."
+  :group 'wal
+  :tag "Org")
 
 (defun wal/org-mode ()
   "Hook into `org-mode'."
@@ -3248,11 +3369,16 @@ Add some user speed commands.
 Editing source blocks.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-org.el
-(defvar wal/org-src-lang-modes
+(defcustom wal/org-src-lang-modes
   '(("dockerfile" . dockerfile)
     ("conf" . conf)
     ("markdown" . markdown))
-  "Additional mappings to add to `org-src-lang-modes'.")
+  "Additional mappings to add to `org-src-lang-modes'."
+  :type '(repeat
+	      (cons
+	       (string "Language name")
+	       (symbol "Major mode")))
+  :group 'wal-org)
 
 (defun wal/org-src-mode ()
   "Hook into function `org-src-mode'."
@@ -3292,7 +3418,7 @@ Editing source blocks.
 Allow for better grouping.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-org.el
-(defvar wal/org-super-agenda-groups
+(defcustom wal/org-super-agenda-groups
   '((:name "Schedule"
            :time-grid t)
     (:name "Unscheduled"
@@ -3304,7 +3430,9 @@ Allow for better grouping.
     (:name "Blocked"
            :todo ("BLOCKED"))
     (:discard (:anything t)))
-  "The super agenda groups.")
+  "The super agenda groups."
+  :type '(repeat plist)
+  :group 'wal-org)
 
 (use-package org-super-agenda
   :after org-agenda
@@ -3324,8 +3452,10 @@ Trying to organize my thoughts using Zettelkästen. /Note/ that you will
 need to install =sqlite3= and =graphviz= manually.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-org.el
-(defvar wal/org-roam-dailies-directory "tagebuch/"
-  "The directory for dailies.")
+(defcustom wal/org-roam-dailies-directory "tagebuch/"
+  "The directory for dailies."
+  :type 'string
+  :group 'wal-org)
 
 (use-package org-roam
   :if (executable-find "sqlite3")
@@ -3360,8 +3490,10 @@ need to install =sqlite3= and =graphviz= manually.
 Turn any =org-mode= buffer into a presentation.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-org.el
-(defvar wal/org-tree-slide-visual-fill-column-width 160
-  "The base `visual-fill-column-width' for `org-tree-slide' presentations.")
+(defcustom wal/org-tree-slide-visual-fill-column-width 160
+  "The base `visual-fill-column-width' for `org-tree-slide' presentations."
+  :type 'integer
+  :group 'wal-org)
 
 (defun wal/relative-column-width (&optional target-width)
   "Get the relative column width of TARGET-WIDTH."
@@ -4276,8 +4408,16 @@ Language servers are awesome. Thanks, Microsoft.
 
 ;;; Code:
 
-(defvar wal/lsp-client 'lsp-mode
-  "Which LSP client to use.")
+(defgroup wal-lsp nil
+  "Change settings for LSP packages."
+  :group 'wal
+  :tag "LSP")
+
+(defcustom wal/lsp-client 'lsp-mode
+  "Which LSP client to use."
+  :type '(choice (const lsp-mode)
+                 (const eglot))
+  :group 'wal-lsp)
 
 (defun wal/lsp ()
   "Activate LSP client."
@@ -4296,10 +4436,12 @@ Language servers are awesome. Thanks, Microsoft.
 servers yourself[fn:16].
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-lsp.el
-(defvar wal/lsp-file-watch-ignored
+(defcustom wal/lsp-file-watch-ignored
   '("[/\\\\]_build$"
     "[/\\\\]deps$")
-  "Additional directories to not monitor.")
+  "Additional directories to not monitor."
+  :type '(repeat regexp)
+  :group 'wal-lsp)
 
 (defun wal/advise-lsp-to-prevent-multi-root (&rest _r)
   "Prevent adding workspace roots from other projects."
@@ -4407,14 +4549,19 @@ server.
 :END:
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-lsp.el
-;;; Elixir:
-(defvar elixir-ls-release-location
+(defcustom elixir-ls-release-location
   (expand-file-name "ls/elixir" user-emacs-directory)
-  "Location of the Elixir language server.")
+  "Location of the Elixir language server."
+  :type 'file
+  :group 'wal-lsp)
 
 ;; Add executable to path.
-(when (file-exists-p (expand-file-name "language_server.sh" elixir-ls-release-location))
-  (add-to-list 'exec-path elixir-ls-release-location))
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (when (file-exists-p (expand-file-name
+                                  "language_server.sh"
+                                  elixir-ls-release-location))))
+          (add-to-list 'exec-path elixir-ls-release-location))
 #+END_SRC
 
 **** =pylint=
@@ -4679,6 +4826,10 @@ The root package of the configuration.
 ;; Require all sub-packages. This file is an export of `README.org'.
 
 ;;; Code:
+
+(defgroup wal nil
+  "Walheimat's configuration."
+  :prefix "wal/")
 
 (add-to-list 'load-path wal/emacs-config-package-path)
 
