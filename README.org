@@ -3979,8 +3979,22 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
 Sometimes things that don't do things need to look nice.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-lang.el
+(defun wal/markdown-view ()
+  "Toggle between different markdown views."
+  (interactive)
+  (cond
+   ((eq major-mode 'markdown-mode)
+    (markdown-view-mode))
+   ((eq major-mode 'markdown-view-mode)
+    (markdown-mode))
+   (t
+    (error "Can't change view outside of markdown modes"))))
+
 (use-package markdown-mode
-  :defer t)
+  :defer t
+  :general
+  (wal/major :keymaps 'markdown-mode-map :major-modes t
+    "v" '(wal/markdown-view :wk "view")))
 #+END_SRC
 
 Sometimes things that do as well.
