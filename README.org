@@ -56,13 +56,13 @@ get you started:
 Or you just execute =emacs --daemon= in a terminal or your shell's
 config.
 
-In any case, an Emacs daemon will start (on start-up). To connect you
+In any case, an Emacs daemon will start (on start-up). To connect, you
 can use, for example, =emacsclient -c -n=[fn:5].
 
 *** Package-Like Scope
 
-I've tried to keep custom functions and variables in a scope called
-=wal= to avoid potential interference.
+Custom functions and variables use the =wal/= scope and belong to their
+respective section's package.
 
 Enough preambling, let's configure some Emacs. The init script will
 evaluate /everything/[fn:6] that follows.
@@ -98,9 +98,9 @@ Customize start-up.
 ;; Warn Mac/Windows users.
 (unless (eq system-type 'gnu/linux)
   (warn "\
-    Warning: Config only tested on Linux.
-    While I did get in running on Windows 10,
-    it was quite tricky and involved setting unsafe options."))
+    Warning: Config only tested on Linux. While I did get in
+    running on Windows 10, it was quite tricky and involved
+    setting unsafe options."))
 
 ;; Maximize frame.
 (setq frame-resize-pixelwise t)
@@ -114,7 +114,13 @@ Customize start-up.
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (unless (file-exists-p custom-file)
   (write-region "" nil custom-file))
-(add-hook 'after-init-hook (lambda () (load custom-file)))
+
+;; If the `custom-file' isn't loaded right away customizing variables
+;; like `wal/use-hyper-prefix' will have no effect but it might
+;; (needlessly) increase start-up time.
+(if wal/load-custom-file-immediately
+    (load custom-file)
+  (add-hook 'after-init-hook (lambda () (load custom-file))))
 
 ;; Accept redefinitions.
 (setq ad-redefinition-action 'accept)
@@ -299,8 +305,8 @@ packages.
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-settings.el
 (defun wal/bytes-per-mb (num)
   "Return the integer value of NUM megabytes in bytes.
-This function may be used to set variables that expect
-bytes."
+
+This function may be used to set variables that expect bytes."
   (floor (* 1024 1024 num)))
 
 (setq read-process-output-max (wal/bytes-per-mb 4)
@@ -343,8 +349,8 @@ value is left untouched."
 
 (defun wal/reset-indent-defaults ()
   "Reset indent defaults.
-Resets all variables that were initially set
-by `wal/set-indent-defaults'."
+Resets all variables that were initially set by
+`wal/set-indent-defaults'."
   (interactive)
   (mapc (lambda (it)
           (wal/reset-to-standard it))
@@ -364,16 +370,16 @@ Unsets tab key and sets variable `indent-tabs-mode' to nil."
 
 (defun wal/enable-tabs ()
   "Enable tabs.
-Sets tab key to `tab-to-tab-stop' and variable
-`indent-tabs-mode' to t."
+Sets tab key to `tab-to-tab-stop' and variable `indent-tabs-mode'
+to t."
   (interactive)
   (local-set-key (kbd "TAB") 'tab-to-tab-stop)
   (setq indent-tabs-mode t))
 
 (defun wal/maybe-enable-tabs (&optional tab-indent-fun mode-fun)
   "Maybe enable tabs.
-Optionally set `indent-line-function' (if allowed) to TAB-INDENT-FUN
-and call MODE-FUN after changes."
+Optionally set `indent-line-function' (if allowed) to
+TAB-INDENT-FUN and call MODE-FUN after changes."
   (if wal/prefer-tabs
       (wal/enable-tabs)
     (wal/disable-tabs))
@@ -384,8 +390,7 @@ and call MODE-FUN after changes."
 
 (defun wal/set-indent-defaults (&optional num)
   "Set indent defaults.
-All offsets are set to `wal/indent-offset' or
-optionally to NUM."
+All offsets are set to `wal/indent-offset' or optionally to NUM."
   (interactive "nSet tab width to: ")
   (let ((offset (or num wal/indent-offset)))
     (setq-default python-indent-offset offset ; Python
@@ -428,8 +433,8 @@ The contents are stored in `wal/scratch-persist-file'."
 
 (defun wal/rehydrate-scratch ()
   "Re-hydrate scratch buffer (if persisted).
-This overrides the scratch buffer with the content
-stored in `wal/scratch-persist-file'."
+This overrides the scratch buffer with the content stored in
+`wal/scratch-persist-file'."
   (if (file-exists-p wal/scratch-persist-file)
       (with-current-buffer (get-buffer "*scratch*")
         (delete-region (point-min) (point-max))
@@ -565,40 +570,59 @@ common context.
 
 ;;; Code:
 
-;; FIXME: This variable needs to be set in the init file before the
-;;        config is loaded because `general' needs to be demanded.
-(defvar wal/use-hyper-prefix t
-  "Whether the hyper modifier should be used to prefix leader keys.")
+(defgroup wal-key-bindings nil
+  "Change key bindings settings."
+  :group 'wal
+  :tag "Key bindings")
+
+(defcustom wal/use-hyper-prefix t
+  "Whether the hyper modifier should be used to prefix leader keys.
+
+Changing this value will only take effect after a re-load. Unless
+`wal/load-custom-file-immediately' is set to t setting this to
+nil will have no effect."
+  :type 'boolean
+  :group 'wal-key-bindings)
 
 (defun wal/prefix-user-key (user-key)
   "Prefix USER-KEY.
-The default prefix is the hyper key unless Emacs is not
-running in GUI mode or `wal/use-hyper-prefix' is nil."
+The default prefix is the hyper key unless Emacs is not running
+in GUI mode or `wal/use-hyper-prefix' is nil."
   (let ((prefix (if (and wal/use-hyper-prefix (display-graphic-p))
                     "H-"
                   "C-c w ")))
     (concat prefix user-key)))
 
 ;; American ranks.
-(defconst wal/general-key ";"
-  "The primary (or general) leader key.")
+(defcustom wal/general-key ";"
+  "The primary (or general) leader key."
+  :type 'string
+  :group 'wal-key-bindings)
 
-(defconst wal/colonel-key "'"
-  "The secondary (or colonel) leader key.")
+(defcustom wal/colonel-key "'"
+  "The secondary (or colonel) leader key."
+  :type 'string
+  :group 'wal-key-bindings)
 
-(defconst wal/major-key ","
-  "The tertiary (or major) leader key.")
+(defcustom wal/major-key ","
+  "The tertiary (or major) leader key."
+  :type 'string
+  :group 'wal-key-bindings)
 
-(defconst wal/captain-key "."
-  "The quaternary (or captain) leader key.")
+(defcustom wal/captain-key "."
+  "The quaternary (or captain) leader key."
+  :type 'string
+  :group 'wal-key-bindings)
 
-(defconst wal/lieutenant-key "/"
-  "The quinary (or lieutenant) leader key.")
+(defcustom wal/lieutenant-key "/"
+  "The quinary (or lieutenant) leader key."
+  :type 'string
+  :group 'wal-key-bindings)
 
 (cl-defmacro wal/create-leader-sink (name &key definer prefix)
   "Macro to create a leader sink `NAME-sink'.
-NAME is the name of the macro. DEFINER is the definer to create the sink for
-and PREFIX is its prefix."
+NAME is the name of the macro. DEFINER is the definer to create
+the sink for and PREFIX is its prefix."
   (let* ((defname (symbol-name definer))
          (suf (substring prefix -1))
          (wk (upcase (concat (substring defname 4) "!"))))
@@ -690,8 +714,8 @@ If the answer is no, there will be no additional prompt."
 
 (defun wal/find-config ()
   "Find Walheimat's config.
-Saving the config after finding it with this function
-will prompt the user to tangle its contents."
+Saving the config after finding it with this function will prompt
+the user to tangle its contents."
   (interactive)
   (switch-to-buffer (find-file-noselect wal/readme-config))
   (add-hook 'after-save-hook #'wal/tangle-config-prompt nil t)
@@ -889,8 +913,8 @@ Finding files should =mkdir -p= its parents.
 ;; Creating parent dirs.
 (defun wal/create-non-existent-directory ()
   "Ask whether to create non-existent directory.
-If a file is found in a not (yet) existing directory,
-ask if it should get created."
+If a file is found in a not (yet) existing directory, ask if it
+should get created."
   (let ((parent-directory (file-name-directory buffer-file-name)))
     (when (and (not (file-exists-p parent-directory))
                (y-or-n-p (format "Create non-existing directory `%s'? " parent-directory)))
@@ -912,9 +936,10 @@ Ignore some buffers when switching.
 
 (defun wal/commmonly-ignored-buffer-p (buffer-or-string)
   "Check if provided BUFFER-OR-STRING is commonly ignored.
-Commonly ignored buffers are those belonging to major modes
-in `wal/commonly-ignored-major-modes' as well as starred
-buffers other than scratch and eww buffers."
+
+Commonly ignored buffers are those belonging to major modes in
+`wal/commonly-ignored-major-modes' as well as starred buffers
+other than scratch and eww buffers."
   (let ((maj (with-current-buffer
                  (get-buffer-create buffer-or-string)
                major-mode)))
@@ -954,10 +979,10 @@ The pop-up is a window unless IN-FRAME is t."
 
 (defun wal/display-buffer-in-side-window (buffer &optional side loose no-other)
   "Display BUFFER in SIDE window.
-This window will be on SIDE (on the bottom by default),
-dedicated to the buffer (unless LOOSE),
-available to `other-window' (unless NO-OTHER)
-and visible frames are considered reusable."
+
+This window will be on SIDE (on the bottom by default), dedicated
+to the buffer (unless LOOSE), available to `other-window' (unless
+NO-OTHER) and visible frames are considered reusable."
   (let ((condition (wal/display-buffer-condition buffer)))
     (add-to-list 'display-buffer-alist
                  `(,condition
@@ -985,8 +1010,8 @@ This is inspired by [[https://github.com/purcell/emacs.d/blob/master][purcell's 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-func.el
 (defun wal/split-window-the-other-way ()
   "Split window the other way.
-This means if horizontally split, split vertically;
-if vertically split, split horizontally."
+This means if horizontally split, split vertically; if vertically
+split, split horizontally."
   (interactive)
   (let* ((other-buffer (and (next-window) (window-buffer (next-window))))
          (win (selected-window))
@@ -1154,8 +1179,9 @@ Handling of files.
 
 (defun wal/advise-hack-local-variables (&rest _r)
   "Advise to conditionally add before save hook.
-When `wal/delete-trailing-whitespace' is t, trailing
-whitespace is deleted."
+
+When `wal/delete-trailing-whitespace' is t, trailing whitespace
+is deleted."
   (when wal/delete-trailing-whitespace
     (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)))
 
@@ -1294,8 +1320,9 @@ This has no default value."
 
 (defun wal/select-fixed-font (font)
   "Select fixed (available) FONT.
-This sets both the `default' and `fixed-pitch' fonts.
-If variable `doom-modeline-mode' is t, refresh font width cache."
+
+This sets both the `default' and `fixed-pitch' fonts. If variable
+`doom-modeline-mode' is t, refresh font width cache."
   (interactive
    (list (completing-read "Select font: " (wal/available-fonts wal/fixed-fonts))))
   (set-face-attribute 'default nil :font font)
@@ -1320,8 +1347,9 @@ If variable `doom-modeline-mode' is t, refresh font width cache."
 
 (defun wal/fonts-candidate (fonts &optional prefer)
   "Return the first available font from a list of FONTS.
-If PREFER is true, variable `wal/preferred-fonts' is not nil
-and preferred fonts are available, return the first of those instead."
+If PREFER is true, variable `wal/preferred-fonts' is not nil and
+preferred fonts are available, return the first of those
+instead."
   (let* ((available-fonts (wal/available-fonts fonts))
          (preferred (and prefer (wal/preferred-fonts available-fonts))))
     (if preferred
@@ -1330,9 +1358,10 @@ and preferred fonts are available, return the first of those instead."
 
 (defun wal/setup-fonts ()
   "Setup fonts for GUI Emacs.
-This sets `default' and `fixed-pitch' fonts to the first available
-candidate from `wal/fixed-fonts'.
-Does the same for `variable-pitch' using `wal/variable-fonts'."
+
+This sets `default' and `fixed-pitch' fonts to the first
+available candidate from `wal/fixed-fonts'. Does the same for
+`variable-pitch' using `wal/variable-fonts'."
   (when (display-graphic-p)
     (set-face-attribute 'default nil
                         :font (wal/fonts-candidate wal/fixed-fonts t)
@@ -1661,8 +1690,9 @@ Use snippets in =prog= mode buffers.
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-edit.el
 (defun wal/yas-expand ()
   "Call `yas-expand' in a `org-mode'-safe way.
-Makes sure that indentation variables don't produce
-unexpected results."
+
+Makes sure that indentation variables don't produce unexpected
+results."
   (interactive)
   (let ((org-src-tab-acts-natively nil)
         (org-adapt-indentation nil))
@@ -1741,6 +1771,7 @@ I didn't have smart parens growing up so I need help.
 
 (defun wal/sp-rewrap-sexp ()
   "Call `sp--maybe-init' before `sp-rewrap-sexp'.
+
 Advising the function does not work."
   (interactive)
   (unless (boundp 'smartparens)
@@ -1873,19 +1904,17 @@ Let's have a dash of board.
     "devout and up the spout"
     "krill, filter feeders and hit sulphur bottom"
     "the founder of retiring gentlemen"
-    "the loud keyboard shall vanquish the muscular mouse")
-  "The footer messages I can stand to see."
+    "the loud keyboard shall vanquish the muscular mouse"
+    "answering all C-calls in sweeping, overflowing song")
+  "The dashboard footer messages.
+
+A collection of GitLab status messages."
   :type '(repeat string)
   :group 'wal-visuals)
 
-;; Ignore all files that were loaded on start-up.
-(defcustom wal/recentf-exclude
-  (append (wal/directory-files wal/agenda-tasks-directory)
-          (wal/directory-files wal/org-roam-directory)
-          (wal/directory-files wal/cache-directory)
-          (wal/directory-files user-emacs-directory))
-  "Files that should not be considered recent files."
-  :type '(repeat string)
+(defcustom wal/recentf-exclude '("bookmarks\\'")
+  "Files the dashboard should not consider recent files."
+  :type '(repeat regexp)
   :group 'wal-visuals)
 
 (defun wal/advise-dashboard-insert-startupify-lists (fun &rest r)
@@ -1908,7 +1937,7 @@ Let's have a dash of board.
   (if (display-graphic-p)
       ":whale:"
     wal/ascii-whale)
-  "The footer icon."
+  "The path to the footer icon."
   :type 'file
   :group 'wal-visuals)
 
@@ -1928,7 +1957,7 @@ Let's have a dash of board.
   (dashboard-footer-messages wal/dashboard-footer-messages)
   (dashboard-week-agenda nil)
   (dashboard-agenda-time-string-format "%d/%m/%y")
-  :config
+  :init
   (advice-add 'dashboard-insert-startupify-lists
               :around #'wal/advise-dashboard-insert-startupify-lists))
 #+END_SRC
@@ -2351,6 +2380,7 @@ Alternatively, enable FiraCode ligatures for /all/ fonts.
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-visuals.el
 (defun wal/use-fira-code-mode ()
   "Determine whether `fira-code-mode' can/should be used.
+
 This is the case when:
 
 1. We can't use `ligature'
@@ -2734,6 +2764,7 @@ Replace =isearch=. Important command is =C-o s= to change search style.
     other-window
     crux-other-window-or-switch-buffer)
   "Commands that are remapped to `ctrlf-cancel'.
+
 Commands that unfocus the ctrlf minibuffer should quit it."
   :type '(repeat symbol)
   :group 'wal-find)
@@ -2796,7 +2827,7 @@ Provide code completion.
 (use-package company
   :delight " cmp"
   :general
-  (wal/colonel :keymaps '(prog-mode-map dap-ui-repl-mode-map) :major-modes t
+  (wal/colonel :keymaps '(prog-mode-map dap-ui-repl-mode-map)
     "c" '(company-mode :wk "company"))
   :hook (prog-mode . company-mode)
   :wal-bind
@@ -3045,6 +3076,7 @@ Have some perspective, man.
 
 (defun wal/advise-persp-kill (fun &rest r)
   "Advises FUN to kill processes without querying, applying R.
+
 This only removes `process-kill-buffer-query-function'."
   (let ((kill-buffer-query-functions (delq 'process-kill-buffer-query-function
                                            kill-buffer-query-functions)))
@@ -3123,16 +3155,19 @@ Add =counsel= integration to =projectile=.
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-workspace.el
 (defun wal/advise-counsel-projectile-ag-around (fun &rest r)
   "Call `counsel-ag' not FUN with R outside of projects.
-This eliminates getting prompted to open one first"
+
+This eliminates getting prompted to open one first."
   (if (projectile-project-p)
       (apply fun r)
     (apply 'counsel-ag r)))
 
 (defun wal/advise-counsel-projectile-ag-override (&optional options)
   "Override of `counsel-projectile-ag' with same OPTIONS.
+
 The differences being that:
   (1) we call `counsel-ag' if we're not in a project and
-  (2) we don't call `shell-quote-argument' on the ignored arguments which doesn't seem to work."
+  (2) we don't call `shell-quote-argument' on the ignored
+  arguments which doesn't seem to work."
   (interactive)
   (if (and (eq projectile-require-project-root 'prompt)
            (not (projectile-project-p)))
@@ -3810,8 +3845,8 @@ I'm becoming an old =git=.
   "Display BUFFER in new frame if it is a status buffer.
 Otherwise use `magit-display-buffer-traditional'.
 
-It probably makes sense to bind `q' to `delete-frame'
-in `magit-status-mode-map' when using this function."
+It probably makes sense to bind `q' to `delete-frame' in
+`magit-status-mode-map' when using this function."
   (if (eq (with-current-buffer buffer major-mode)
           'magit-status-mode)
       (display-buffer buffer '(display-buffer-pop-up-frame))
@@ -3837,7 +3872,7 @@ If you want to go back in time and point fingers at the progenitors of doom.
 (use-package git-timemachine
   :delight " gtm"
   :general
-  (wal/colonel :keymaps '(prog-mode-map yaml-mode-map) :major-modes t
+  (wal/colonel :keymaps '(prog-mode-map yaml-mode-map)
     "m" '(git-timemachine-toggle :wk "git-timemachine")))
 #+END_SRC
 
@@ -4186,6 +4221,7 @@ Use snake when you can't =make=.
 
 (defun wal/activate-venv ()
   "Activate venv using poetry.
+
 This also works if the project isn't a poetry project."
   (unless (fboundp 'poetry-venv-exist-p)
     (require 'poetry))
@@ -4280,6 +4316,7 @@ Please let me know when I screwed up. I promise I will learn.
 
 (defun wal/consult-fly ()
   "Call either `consult-flymake' or `consult-flycheck'.
+
 This depends on `wal/lsp-client'."
   (interactive)
   (cond ((and (boundp 'flymake-mode) flymake-mode) (consult-flymake))
@@ -4816,7 +4853,8 @@ Create a room of one's own. I use a different (light) theme here.
 
 * Config Package
 
-The root package of the configuration.
+The root package of the configuration which is basically just a giant
+=require=.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal.el
 ;;; wal.el --- Walheimat's literate Emacs configuration. -*- lexical-binding: t; -*-
@@ -4896,8 +4934,12 @@ and re-run it.
 [fn:5] Which means that a frame is created and control immediately
 returned
 
-[fn:6] Not including where =:tangle no= was set, 157 code blocks on my
-last count.
+[fn:6] Not including where =:tangle no= was set, 158 (on my last count)
+code blocks will be tangled. /Note/ they will not necessarily be
+evaluated in the same order they appear in this file.
+
+The order of evaluation is determined by the =wal.el= file
+from [[*Config Package][this section]].
 
 [fn:7] Send me an email, why don't you?
 
