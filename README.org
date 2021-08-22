@@ -74,7 +74,7 @@ evaluate /everything/[fn:6] that follows.
 Set some personal info[fn:7].
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-settings.el
-;;; wal-settings.el --- Settings. -*- lexical-binding: t; -*-
+;;; wal-settings.el --- Settings.
 
 ;;; Commentary:
 ;;
@@ -445,8 +445,6 @@ This overrides the scratch buffer with the content stored in
 
 (provide 'wal-settings)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-settings.el ends here
@@ -562,13 +560,23 @@ The are five multi-purpose =general= leader keys. They prefix actions by
 common context.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-key-bindings.el
-;;; wal-key-bindings.el --- Key bindings. -*- lexical-binding: t; -*-
+;;; wal-key-bindings.el --- Key bindings.
 
 ;;; Commentary:
 ;;
 ;; Key bindings package. This file is an export of `README.org'.
 
 ;;; Code:
+
+(declare-function wal/tangle-config ".emacs")
+(declare-function wal/general "wal-key-bindings")
+(declare-function wal/general-sink "wal-key-bindings")
+(declare-function wal/colonel "wal-key-bindings")
+(declare-function wal/edge-left "wal-func")
+(declare-function wal/edge-right "wal-func")
+(declare-function wal/edge-down "wal-func")
+(declare-function wal/edge-up "wal-func")
+(declare-function wal/split-windows-the-other-way "wal-func")
 
 (defgroup wal-key-bindings nil
   "Change key bindings settings."
@@ -838,6 +846,12 @@ prefixed by =wal/prefix-user-key=.
     (setcdr remainder (cons keyword (cdr remainder)))))
 
 (defun use-package-normalize/:wal-bind (name keyword args)
+  "This normalizer is a copy of the normalizer for `:bind'.
+
+There are two exceptions:
+
+1. It prefixes the key strings with `wal/prefix-user-key'.
+2. On recursion it calls this normalizer."
   (let ((arg args)
         args*)
     (while arg
@@ -871,6 +885,9 @@ prefixed by =wal/prefix-user-key=.
     args*))
 
 (defun use-package-handler/:wal-bind (name _keyword args rest state &optional bind-macro)
+  "Handler for keyword `:wal-bind'.
+
+It's a copy of the handler for `:bind'."
   (use-package-concat
    (use-package-process-keywords name rest state)
    `(,@(mapcar
@@ -883,8 +900,6 @@ prefixed by =wal/prefix-user-key=.
 
 (provide 'wal-key-bindings)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-key-bindings.el ends here
@@ -897,13 +912,15 @@ prefixed by =wal/prefix-user-key=.
 Finding files should =mkdir -p= its parents.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-func.el
-;;; wal-func.el --- Additional functions. -*- lexical-binding: t; -*-
+;;; wal-func.el --- Additional functions.
 
 ;;; Commentary:
 ;;
 ;; Additional functions package. This file is an export of `README.org'.
 
 ;;; Code:
+
+(declare-function wal/bytes-per-mb "wal-settings")
 
 (defgroup wal-func nil
   "Change values used in additional functions."
@@ -1189,8 +1206,6 @@ is deleted."
 
 (provide 'wal-func)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-func.el ends here
@@ -1201,7 +1216,7 @@ is deleted."
 Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] has more themes.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-look.el
-;;; wal-look.el --- Look. -*- lexical-binding: t; -*-
+;;; wal-look.el --- Look.
 
 ;;; Commentary:
 ;;
@@ -1255,8 +1270,6 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 
 (provide 'wal-look)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-look.el ends here
@@ -1268,13 +1281,15 @@ Set fonts (with preference). To get support for ligatures, install the
 symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-fonts.el
-;;; wal-fonts.el --- Fonts. -*- lexical-binding: t; -*-
+;;; wal-fonts.el --- Fonts.
 
 ;;; Commentary:
 ;;
 ;; Provide font setup and configuration. This file is an export of `README.org'.
 
 ;;; Code:
+
+(declare-function doom-modeline-refresh-font-width-cache "doom-modeline")
 
 (defgroup wal-fonts nil
   "Change fonts and font sizes."
@@ -1389,8 +1404,6 @@ available candidate from `wal/fixed-fonts'. Does the same for
 
 (provide 'wal-fonts)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-fonts.el ends here
@@ -1417,13 +1430,16 @@ packages[fn:12] and some external ones.
 Bind some functions to refresh, install and delete packages
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-emacs.el
-;;; wal-emacs.el --- Emacs. -*- lexical-binding: t; -*-
+;;; wal-emacs.el --- Emacs.
 
 ;;; Commentary:
 ;;
 ;; Provide Emacs settings/configurations. This file is an export of `README.org'.
 
 ;;; Code:
+
+(declare-function wal/display-buffer-in-side-window "wal-func")
+(declare-function wal/display-buffer-in-direction "wal-func")
 
 (use-package package
   :ensure nil
@@ -1632,8 +1648,6 @@ For internal debugging.
 
 (provide 'wal-emacs)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-emacs.el ends here
@@ -1646,13 +1660,16 @@ It's fun to edit things /quickly/.
 Don't you want to edit your buffer in multiple places at once?
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-edit.el
-;;; wal-edit.el --- Editing. -*- lexical-binding: t; -*-
+;;; wal-edit.el --- Editing.
 
 ;;; Commentary:
 ;;
 ;; Provide editing packages. This file is an export of `README.org'.
 
 ;;; Code:
+
+(declare-function yas-expand "yasnippet")
+(declare-function wal/reset-to-standard "wal-settings")
 
 (use-package multiple-cursors
   :init
@@ -1867,8 +1884,6 @@ Some files are so long and Emacs will want to throw up. Prevent that.
 
 (provide 'wal-edit)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-edit.el ends here
@@ -1883,7 +1898,7 @@ I like nice-looking things.
 Let's have a dash of board.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-visuals.el
-;;; wal-visuals.el --- Visuals. -*- lexical-binding: t; -*-
+;;; wal-visuals.el --- Visuals.
 
 ;;; Commentary:
 ;;
@@ -1891,6 +1906,7 @@ Let's have a dash of board.
 
 ;;; Code:
 
+(declare-function ligature-set-ligatures "ligature")
 (declare-function wal/directory-files ".emacs")
 
 (defgroup wal-visuals nil
@@ -2460,8 +2476,6 @@ zoning can always be triggered using =C-z=.
 
 (provide 'wal-visuals)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-visuals.el ends here
@@ -2474,13 +2488,21 @@ Everything that has to do with windows.
 =ace= interacting with (multiple) windows.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-windows.el
-;;; wal-windows.el --- Windows. -*- lexical-binding: t; -*-
+;;; wal-windows.el --- Windows.
 
 ;;; Commentary:
 ;;
 ;; Provide window packages. This file is an export of `README.org'.
 
 ;;; Code:
+
+(declare-function aw-delete-window "ace-window")
+(declare-function comint-check-proc "comint")
+(declare-function popper-cycle "popper")
+(declare-function popper-open-all "popper")
+(declare-function popper-popup-p "popper")
+(declare-function popper-toggle-latest "popper")
+(declare-function wal/ivy-switch-buffer "wal-complete")
 
 (defun wal/aw-delete-window-kill-buffer (window)
   "Call `aw-delete-window' on WINDOW requesting buffer kill."
@@ -2624,8 +2646,6 @@ Allow restoring window configurations.
 
 (provide 'wal-windows)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-windows.el ends here
@@ -2639,7 +2659,7 @@ Jump to (visible) lines and chars is fun if you are too lazy to use
 your mouse.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-movement.el
-;;; wal-movement.el --- Movement. -*- lexical-binding: t; -*-
+;;; wal-movement.el --- Movement.
 
 ;;; Commentary:
 ;;
@@ -2696,8 +2716,6 @@ Move where I want. Useful for comments.
 
 (provide 'wal-movement)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-movement.el ends here
@@ -2713,7 +2731,7 @@ This package /requires/ the =ag= binary which you can get from
 [[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:14].
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-find.el
-;;; wal-find.el --- Finding things. -*- lexical-binding: t; -*-
+;;; wal-find.el --- Finding things.
 
 ;;; Commentary:
 ;;
@@ -2799,8 +2817,6 @@ using =xref-find-definitions= (=M-.=).
 
 (provide 'wal-find)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-find.el ends here
@@ -2811,7 +2827,7 @@ using =xref-find-definitions= (=M-.=).
 Provide code completion.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-complete.el
-;;; wal-complete.el --- Completion. -*- lexical-binding: t; -*-
+;;; wal-complete.el --- Completion.
 
 ;;; Commentary:
 ;;
@@ -3030,7 +3046,7 @@ Use =selectrum= for =consult=.
         (read-file-name-function #'selectrum-read-file-name)
         (completion-in-region-function #'selectrum-completion-in-region)
         (coompleting-read-multiple #'selectrum-completing-read-multiple)
-        (read-libary-name #'selectrum-read-libarary-name)
+        (read-libary-name #'selectrum-read-library-name)
         (completion-styles '(substring partial-completion))
         ;; Cannot advise `dired-read-dir-and-switches' and `minibuffer-message'.
         (map (make-sparse-keymap)))
@@ -3043,8 +3059,6 @@ Use =selectrum= for =consult=.
 
 (provide 'wal-complete)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-complete.el ends here
@@ -3055,13 +3069,15 @@ Use =selectrum= for =consult=.
 Have some perspective, man.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-workspace.el
-;;; wal-workspace.el --- Workspace. -*- lexical-binding: t; -*-
+;;; wal-workspace.el --- Workspace.
 
 ;;; Commentary:
 ;;
 ;; Provide workspace packages. This file is an export of `README.org'.
 
 ;;; Code:
+
+(declare-function projectile-project-p "projectile")
 
 (defgroup wal-workspace nil
   "Change settings used for workspace packages."
@@ -3161,43 +3177,6 @@ This eliminates getting prompted to open one first."
       (apply fun r)
     (apply 'counsel-ag r)))
 
-(defun wal/advise-counsel-projectile-ag-override (&optional options)
-  "Override of `counsel-projectile-ag' with same OPTIONS.
-
-The differences being that:
-  (1) we call `counsel-ag' if we're not in a project and
-  (2) we don't call `shell-quote-argument' on the ignored
-  arguments which doesn't seem to work."
-  (interactive)
-  (if (and (eq projectile-require-project-root 'prompt)
-           (not (projectile-project-p)))
-      (counsel-ag options)
-    (let* ((ivy--actions-list (copy-sequence ivy--actions-list))
-           (ignored
-            (mapconcat (lambda (i)
-                         (concat "--ignore " i))
-                       (append
-                        (projectile--globally-ignored-file-suffixes-glob)
-                        (projectile-ignored-files-rel)
-                        (projectile-ignored-directories-rel))
-                       " "))
-           (counsel-ag-base-command
-            (let ((counsel-ag-command counsel-ag-base-command))
-              (counsel--format-ag-command ignored "%s"))))
-      (ivy-add-actions
-       'counsel-ag
-       counsel-projectile-ag-extra-actions)
-      (when (= (prefix-numeric-value current-prefix-arg) 4)
-        (setq current-prefix-arg '(16)))
-      (counsel-ag (eval counsel-projectile-ag-initial-input)
-                  (projectile-project-root)
-                  options
-                  (projectile-prepend-project-name
-                   (concat (car (if (listp counsel-ag-base-command)
-                                    counsel-ag-base-command
-                                  (split-string counsel-ag-base-command)))
-                           ": "))))))
-
 (use-package counsel-projectile
   :after (projectile counsel)
   :demand
@@ -3218,8 +3197,7 @@ The differences being that:
   :config
   ;; Make opening with `dired' the default action.
   (setf (nth 0 counsel-projectile-switch-project-action) 4)
-  ;; (advice-add 'counsel-projectile-ag :around #'wal/advise-counsel-projectile-ag-around)
-  (advice-add 'counsel-projectile-ag :override #'wal/advise-counsel-projectile-ag-override)
+  (advice-add 'counsel-projectile-ag :around #'wal/advise-counsel-projectile-ag-around)
   (counsel-projectile-mode +1)
   :wal-bind
   (:map projectile-mode-map
@@ -3232,8 +3210,6 @@ The differences being that:
 
 (provide 'wal-workspace)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-workspace.el ends here
@@ -3245,13 +3221,15 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 is a bit elaborate.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-org.el
-;;; wal-org.el --- Org. -*- lexical-binding: t; -*-
+;;; wal-org.el --- Org.
 
 ;;; Commentary:
 ;;
 ;; Provide org packages/configurations. This file is an export of `README.org'.
 
 ;;; Code:
+
+(declare-function wal/disable-tabs "wal-settings")
 
 (defgroup wal-org nil
   "Change settings used for org packages."
@@ -3618,8 +3596,6 @@ Allow padding and centering text.
 
 (provide 'wal-org)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-org.el ends here
@@ -3635,7 +3611,7 @@ Did you know you can edit =dired= buffers using =C-x C-q=?
 Run =dired= with =C-x d=.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-dired.el
-;;; wal-dired.el --- Dired. -*- lexical-binding: t; -*-
+;;; wal-dired.el --- Dired.
 
 ;;; Commentary:
 ;;
@@ -3643,10 +3619,11 @@ Run =dired= with =C-x d=.
 
 ;;; Code:
 
+(declare-function dired-read-dir-and-switches "dired")
+
 (defun wal/dired-from-home (dirname &optional switches)
   "Find DIRNAME local to HOME directory.
 Uses the same optional SWITCHES."
-  (require 'dired nil t)
   (interactive (let ((default-directory "~"))
                  (dired-read-dir-and-switches "")))
   (pop-to-buffer-same-window (dired-noselect dirname switches)))
@@ -3728,8 +3705,6 @@ Execute IO actions asynchronously.
 
 (provide 'wal-dired)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-dired.el ends here
@@ -3745,13 +3720,16 @@ I am convinced that we are in a terminal process.
 Set up =eshell=. I like the idea of it but I don't really use it.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-terminal.el
-;;; wal-terminal.el --- Terminal. -*- lexical-binding: t; -*-
+;;; wal-terminal.el --- Terminal.
 
 ;;; Commentary:
 ;;
 ;; Provide terminal packages. This file is an export of `README.org'.
 
 ;;; Code:
+
+(declare-function vterm-toggle-show "vterm-toggle")
+(declare-function wal/display-buffer-in-side-window "wal-func")
 
 (use-package esh-autosuggest
   :hook (eshell-mode . esh-autosuggest-mode))
@@ -3821,8 +3799,6 @@ Some common shell commands require an additional =C-c=:
 
 (provide 'wal-terminal)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-terminal.el ends here
@@ -3833,13 +3809,15 @@ Some common shell commands require an additional =C-c=:
 I'm becoming an old =git=.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-vc.el
-;;; wal-vc.el --- Version control. -*- lexical-binding: t; -*-
+;;; wal-vc.el --- Version control.
 
 ;;; Commentary:
 ;;
 ;; Provide version control packages. This file is an export of `README.org'.
 
 ;;; Code:
+
+(declare-function magit-display-buffer-traditional "magit-mode")
 
 (defun wal/magit-display-buffer-new-frame-status (buffer)
   "Display BUFFER in new frame if it is a status buffer.
@@ -3911,8 +3889,6 @@ Use a single frame and split horizontally when diffing.
 
 (provide 'wal-vc)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-vc.el ends here
@@ -3929,13 +3905,19 @@ I want to be ready for =jai=.
 =eglot= will use =ccls=, =lsp-mode= will use =clangd=.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-lang.el
-;;; wal-lang.el --- Languages. -*- lexical-binding: t; -*-
+;;; wal-lang.el --- Languages.
 
 ;;; Commentary:
 ;;
 ;; Provide Emacs settings/configurations. This file is an export of `README.org'.
 
 ;;; Code:
+
+(declare-function poetry-ensure-in-project "poetry")
+(declare-function poetry-venv-exist-p "poetry")
+(declare-function wal/disable-tabs "wal-settings")
+(declare-function wal/lsp "wal-lsp")
+(declare-function wal/maybe-enable-tabs "wal-settings")
 
 (defun wal/c++-mode ()
   "Hook into `cc-mode'."
@@ -4294,8 +4276,6 @@ Support for =pug= templates.
 
 (provide 'wal-lang)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-lang.el ends here
@@ -4306,13 +4286,16 @@ Support for =pug= templates.
 Please let me know when I screwed up. I promise I will learn.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-fix.el
-;;; wal-fix.el --- Fixing things. -*- lexical-binding: t; -*-
+;;; wal-fix.el --- Fixing things.
 
 ;;; Commentary:
 ;;
 ;; Provide fixing packages. This file is an export of `README.org'.
 
 ;;; Code:
+
+(declare-function flycheck-find-checker-executable "flycheck")
+(declare-function wal/captain "wal-key-bindings")
 
 (defun wal/consult-fly ()
   "Call either `consult-flymake' or `consult-flycheck'.
@@ -4425,8 +4408,6 @@ My spelling is bad. Uses American English for =flyspell=.
 
 (provide 'wal-fix)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-fix.el ends here
@@ -4437,13 +4418,16 @@ My spelling is bad. Uses American English for =flyspell=.
 Language servers are awesome. Thanks, Microsoft.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-lsp.el
-;;; wal-lsp.el --- LSP. -*- lexical-binding: t; -*-
+;;; wal-lsp.el --- LSP.
 
 ;;; Commentary:
 ;;
 ;; Provide LSP packages. This file is an export of `README.org'.
 
 ;;; Code:
+
+(declare-function eglot-managed-p "eglot")
+(declare-function wal/colonel "wal-key-bindings")
 
 (defgroup wal-lsp nil
   "Change settings for LSP packages."
@@ -4597,8 +4581,8 @@ server.
           (lambda ()
             (when (file-exists-p (expand-file-name
                                   "language_server.sh"
-                                  elixir-ls-release-location))))
-          (add-to-list 'exec-path elixir-ls-release-location))
+                                  elixir-ls-release-location))
+              (add-to-list 'exec-path elixir-ls-release-location))))
 #+END_SRC
 
 **** =pylint=
@@ -4655,8 +4639,6 @@ Taken from the official documentation.
 
 (provide 'wal-lsp)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-lsp.el ends here
@@ -4723,13 +4705,16 @@ Internet.
 What goes =docker-compose= up, goes =docker-compose= down.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-devops.el
-;;; wal-devops.el --- DevOps. -*- lexical-binding: t; -*-
+;;; wal-devops.el --- DevOps.
 
 ;;; Commentary:
 ;;
 ;; Provide DevOps packages. This file is an export of `README.org'.
 
 ;;; Code:
+
+(declare-function wal/display-buffer-in-side-window "wal-func")
+(declare-function wal/display-buffer-in-direction "wal-func")
 
 (use-package docker
   :defer 2 ; This package does not get autoloaded correctly.
@@ -4756,8 +4741,6 @@ Make =Dockerfiles= look nice.
 
 (provide 'wal-devops)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-devops.el ends here
@@ -4771,13 +4754,15 @@ Postman is passé. I use a =.http= file extension for my request
 examples.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-web.el
-;;; wal-web.el --- The Internet. -*- lexical-binding: t; -*-
+;;; wal-web.el --- The Internet.
 
 ;;; Commentary:
 ;;
 ;; Provide web packages. This file is an export of `README.org'.
 
 ;;; Code:
+
+(declare-function wal/display-buffer-in-pop-up "wal-func")
 
 (use-package restclient
   :config
@@ -4798,8 +4783,6 @@ examples.
 
 (provide 'wal-web)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-web.el ends here
@@ -4814,7 +4797,7 @@ for all =text-mode= modes (like =org-mode=), so instead it needs to be
 triggered explicitly.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal-writing.el
-;;; wal-writing.el --- Writing. -*- lexical-binding: t; -*-
+;;; wal-writing.el --- Writing.
 
 ;;; Commentary:
 ;;
@@ -4844,8 +4827,6 @@ Create a room of one's own. I use a different (light) theme here.
 
 (provide 'wal-writing)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal-writing.el ends here
@@ -4857,7 +4838,7 @@ The root package of the configuration which is basically just a giant
 =require=.
 
 #+BEGIN_SRC emacs-lisp :tangle ./wal/wal.el
-;;; wal.el --- Walheimat's literate Emacs configuration. -*- lexical-binding: t; -*-
+;;; wal.el --- Walheimat's literate Emacs configuration.
 
 ;;; Commentary:
 ;;
@@ -4867,6 +4848,7 @@ The root package of the configuration which is basically just a giant
 
 (defgroup wal nil
   "Walheimat's configuration."
+  :group 'wal
   :prefix "wal/")
 
 (add-to-list 'load-path wal/emacs-config-package-path)
@@ -4895,8 +4877,6 @@ The root package of the configuration which is basically just a giant
 (require 'wal-web)
 (require 'wal-writing)
 
-;; Local Variables:
-;; no-byte-compile: t
 ;; End:
 
 ;;; wal.el ends here
