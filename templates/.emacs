@@ -63,7 +63,7 @@ This is currently only necessary if you wish to set
       native-comp-async-report-warnings-errors 'silent)
 
 ;; Disable `org-roam' v2 warning.
-(setq org-roam-2-ack t)
+(setq org-roam-v2-ack t)
 
 ;; Maybe tangle, load.
 (let ((gc-cons-threshold most-positive-fixnum)
