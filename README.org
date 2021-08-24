@@ -265,9 +265,6 @@ non-MELPA packages here.
 Don't clutter up workspaces.
 
 #+BEGIN_SRC emacs-lisp
-;; Save places and do so in a file.
-(setq save-place-file (expand-file-name ".places" user-emacs-directory))
-
 ;; Store backups in backups folder.
 (setq backup-directory-alist
       `(("." . ,(expand-file-name (concat user-emacs-directory "backups")))))
@@ -290,7 +287,6 @@ Any mode that should be on/off no matter what.
 (global-auto-revert-mode 1)
 (global-prettify-symbols-mode 1)
 (save-place-mode 1)
-(global-font-lock-mode 1)
 (delete-selection-mode 1)
 (column-number-mode 1)
 
@@ -855,7 +851,7 @@ prefixed by =wal/prefix-user-key=.
 (defun use-package-normalize/:wal-bind (name keyword args)
   "This normalizer is a copy of the normalizer for `:bind'.
 
-There are two exceptions:
+There are two differences:
 
 1. It prefixes the key strings with `wal/prefix-user-key'.
 2. On recursion it calls this normalizer."
@@ -892,9 +888,7 @@ There are two exceptions:
     args*))
 
 (defun use-package-handler/:wal-bind (name _keyword args rest state &optional bind-macro)
-  "Handler for keyword `:wal-bind'.
-
-It's a copy of the handler for `:bind'."
+  "This handler is a copy of the handler for `:bind'."
   (use-package-concat
    (use-package-process-keywords name rest state)
    `(,@(mapcar
@@ -1650,6 +1644,21 @@ There's also =short-doc= now.
   :defer t
   :config
   (wal/display-buffer-in-direction 'shortdoc-mode))
+#+END_SRC
+
+You can customize this now!
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/customize-wal ()
+  "Customize `wal' group."
+  (interactive)
+  (customize-group 'wal t))
+
+(use-package cus-edit
+  :ensure nil
+  :general
+  (wal/general
+    "u" '(wal/customize-wal :wk "customize config")))
 #+END_SRC
 
 For internal debugging.
@@ -4018,7 +4027,7 @@ Setup for LSP.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/go-mode ()
-  "Hookp into `go-mode'."
+  "Hook into `go-mode'."
   (message "What does Sonic say?")
   (wal/disable-tabs)
   (hack-local-variables)
@@ -4544,6 +4553,8 @@ servers yourself[fn:16].
   (lsp-pyls-plugins-jedi-use-pyenv-environment t)
   (lsp-pylsp-plugins-pylint-enabled t)
   (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
+  ;; ESLint
+  (lsp-eslint-run "onSave")
   :config
   ;; Prevent multi-root workspaces.
   (advice-add 'lsp :before 'wal/advise-lsp-to-prevent-multi-root)
@@ -4914,7 +4925,7 @@ The root package of the configuration which is basically just a giant
 
 (defgroup wal nil
   "Walheimat's configuration."
-  :group 'wal
+  :group 'convenience
   :prefix "wal/")
 
 (add-to-list 'load-path wal/emacs-config-package-path)
@@ -4981,7 +4992,7 @@ and re-run it.
 [fn:5] Which means that a frame is created and control immediately
 returned
 
-[fn:6] Not including where =:tangle no= was set, 158 (on my last count)
+[fn:6] Not including where =:tangle no= was set, 159 (on my last count)
 code blocks will be tangled. /Note/ they will not necessarily be
 evaluated in the same order they appear in this file.
 
