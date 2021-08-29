@@ -58,13 +58,6 @@ loading the package."
 This is currently only necessary if you wish to set
 `wal/use-hyper-prefix' to nil.")
 
-;; Turns on native-compile and log warnings silently.
-(setq package-native-compile t
-      native-comp-async-report-warnings-errors 'silent)
-
-;; Disable `org-roam' v2 warning.
-(setq org-roam-v2-ack t)
-
 ;; Maybe tangle, load.
 (let ((gc-cons-threshold most-positive-fixnum)
 	  (gc-cons-percentage 0.8)

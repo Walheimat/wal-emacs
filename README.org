@@ -500,7 +500,7 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-g= to use =counsel-mark-ring=
 + =H-i= switches =perspective=
 + =H-k= to start (and =H-j= to end or call) macro
-+ =H-l= jumps to line (and =H-o= to char in line) with =avy=
++ =H-l= jumps to line (and =H-o= to word in line) with =avy=
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-n= to capture (using =counsel-projectile-org-capture=)
 + =H-p= switches projects using =projectile=
@@ -560,7 +560,7 @@ Some key-bindings have case-sensitive alternatives:
 + =C-x D= runs =dired= starting at =HOME= directory
 + =C-x K= kills any buffer (ignoring current perspective)
 + =H-F= finds directories using =counsel-projectile=
-+ =H-L= jumps to line and char (while =H-O= jumps to word)
++ =H-L= jumps to beginning of line (while =H-O= jumps to char in line)
 + =H-D= duplicates and comments line or region.
 
 ** Leader Keys
@@ -841,9 +841,9 @@ Turning on/off certain major modes switching between =major-mode= and
 
 ;; Little EOF joke for ya.
 (wal/colonel
- "E" '(lisp-interaction-mode :wk "Elisp")
- "O" '(org-mode :wk "Org")
- "F" '(wal/fundamental-mode :wk "Fundamental"))
+  "E" '(lisp-interaction-mode :wk "Elisp")
+  "O" '(org-mode :wk "Org")
+  "F" '(wal/fundamental-mode :wk "Fundamental"))
 #+END_SRC
 
 *** Extend =use-package=
@@ -1168,7 +1168,7 @@ Minor mode to dedicate buffers to windows.
     (message "Window no longer dedicated to %s" bufname)))
 
 (use-package walled-mode
-:ensure nil
+  :ensure nil
   :general
   (wal/colonel-sink "." '(walled-mode :wk "walled")))
 #+END_SRC
@@ -1191,7 +1191,7 @@ Better(?) garbage collection.
   "Decrease `gc-cons-threshold' on minibuffer exit."
   (setq gc-cons-threshold (wal/bytes-per-mb wal/gc-cons-threshold-in-mb)))
 
-  (add-hook 'minibuffer-setup-hook #'wal/minibuffer-setup-hook)
+(add-hook 'minibuffer-setup-hook #'wal/minibuffer-setup-hook)
 (add-hook 'minibuffer-exit-hook #'wal/minibuffer-exit-hook)
 (add-hook 'emacs-startup-hook #'wal/minibuffer-exit-hook)
 #+END_SRC
@@ -1272,18 +1272,16 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
   (interactive)
   (when wal/theme
     (load-theme wal/theme t))
-  (wal/transparency))
-
-(if (daemonp)
-    (add-hook 'server-after-make-frame-hook 'wal/setup-visuals)
-  ;; Function `wal/transparency' hasn't been untangled yet.
-  (add-hook 'emacs-startup-hook 'wal/setup-visuals)
+  (wal/transparency)
   ;; Add the transparency to the `default-frame-alist' as well.
   (add-to-list 'default-frame-alist `(alpha . ,wal/transparency)))
 
+(if (daemonp)
+    (add-hook 'server-after-make-frame-hook 'wal/setup-visuals)
+  (add-hook 'emacs-startup-hook 'wal/setup-visuals))
+
 (provide 'wal-look)
 
-;; End:
 ;;; wal-look.el ends here
 #+END_SRC
 
@@ -1317,6 +1315,7 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
     "mononoki"
     "Fira Code"
     "JetBrains Mono"
+    "Hasklig"
     "Source Code Pro"
     "DejaVu Sans Mono"
     "Monoid" ; The calt version doesn't work properly!
@@ -1452,6 +1451,8 @@ First, bind some functions to refresh, install and delete packages.
 
 (use-package package
   :ensure nil
+  :custom
+  (package-native-compile t)
   :general
   (wal/general "p" '(:ignore t :wk "package")
     "pf" '(package-refresh-contents :wk "refresh")
@@ -1459,6 +1460,11 @@ First, bind some functions to refresh, install and delete packages.
     "pl" '(list-packages :wk "list")
     "pr" '(package-reinstall :wk "re-install")
     "pd" '(package-delete :wk "delete")))
+
+(use-package comp
+  :ensure nil
+  :custom
+  (native-comp-async-report-warnings-errors 'silent))
 #+END_SRC
 
 Package-based settings.
@@ -1689,7 +1695,7 @@ Don't you want to edit your buffer in multiple places at once?
 
 ;;; Commentary:
 ;;
-;; Provide editing packages. This file is an export of `README.org'.
+;; Provide editing packages.
 
 ;;; Code:
 
@@ -1783,7 +1789,8 @@ Drag lines and regions around.
   :general
   (wal/colonel-sink "d" '(drag-stuff-mode :wk "drag-stuff"))
   :config
-  (setq drag-stuff-modifier 'hyper)
+  (when wal/use-hyper-prefix
+    (setq drag-stuff-modifier 'hyper))
   (drag-stuff-define-keys))
 #+END_SRC
 
@@ -1912,6 +1919,7 @@ Some files are so long and Emacs will want to throw up. Prevent that.
 ;; Local Variables:
 ;; byte-compile-warnings: (not free-vars unresolved)
 ;; End:
+
 ;;; wal-edit.el ends here
 #+END_SRC
 
@@ -1987,6 +1995,7 @@ A collection of GitLab status messages."
   :group 'wal-visuals)
 
 (use-package dashboard
+  :if (not (daemonp))
   :hook (after-init . dashboard-setup-startup-hook)
   :custom
   (dashboard-banner-logo-title (format "Walheimat's Emacs Config %s" (wal/get-config-version)))
@@ -2357,11 +2366,11 @@ Sometimes the list of minor modes overcrowds the modeline.
   :defer 4
   :custom
   (minions-direct '(tree-sitter-mode
-                    dap-mode
                     smerge-mode
                     git-timemachine-mode
                     vterm-copy-mode
                     typo-mode
+                    auto-fill-function
                     flyspell-mode))
   :config
   (minions-mode +1)
@@ -2725,10 +2734,10 @@ your mouse.
                        shell-mode
                        vterm-mode))
   :wal-bind
-  (("l" . avy-goto-line)
-   ("L" . wal/avy-goto-line-and-char)
-   ("o" . avy-goto-char-in-line)
-   ("O" . avy-goto-word-1))
+  (("l" . avy-goto-end-of-line)
+   ("L" . avy-goto-line)
+   ("o" . wal/avy-goto-word-in-line)
+   ("O" . avy-goto-char-in-line))
   :general
   (wal/lieutenant
     ;; Lines.
@@ -3306,7 +3315,8 @@ is a bit elaborate.
 
 (defun wal/advise-org-export-dispatch (&rest _r)
   "Advise to require `ox-md' before export dispatch."
-  (require 'ox-md nil t))
+  (unless (featurep 'ox-md)
+    (require 'ox-md nil t)))
 
 (defun wal/configure-org ()
   "Configure `org'."
@@ -3532,6 +3542,9 @@ need to install =sqlite3= and =graphviz= manually.
 
 (use-package org-roam
   :if (executable-find "sqlite3")
+  :init
+  ;; Disable `org-roam' v2 warning.
+  (setq org-roam-v2-ack t)
   :commands
   (org-roam-buffer-display-dedicated
    org-roam-capture
@@ -4277,8 +4290,8 @@ Use snake when you can't =make=.
   "Activate venv using poetry.
 
 This also works if the project isn't a poetry project."
-  (unless (fboundp 'poetry-venv-exist-p)
-    (require 'poetry))
+  (unless (featurep 'poetry)
+    (require 'poetry nil t))
   (ignore-errors
     (let* ((venv (poetry-venv-exist-p))
            (is-poetry (poetry-ensure-in-project)))
@@ -4459,10 +4472,7 @@ My spelling is bad. Uses American English for =flyspell=.
    ("C-." . ispell-word)) ;; Replaces `flyspell-auto-correct-word'.
                           ;; But still available via `C-M-i'.
   :general
-  (wal/colonel :keymaps '(text-mode-map org-mode-map) :major-modes t
-    "s" '(wal/flyspell-mode :wk "flyspell"))
-  (wal/colonel :keymaps 'prog-mode-map
-    "s" '(wal/flyspell-prog-mode :wk "flyspell-prog"))
+  (wal/colonel "s" '(wal/flyspell :wk "flyspell"))
   (wal/captain :keymaps 'flyspell-mode-map
     "s" '(:ignore t :wk "flyspell")
     "sb" '(flyspell-buffer :wk "buffer")
@@ -4520,9 +4530,7 @@ Language servers are awesome. Thanks, Microsoft.
 servers yourself[fn:16].
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/lsp-file-watch-ignored
-  '("[/\\\\]_build$"
-    "[/\\\\]deps$")
+(defcustom wal/lsp-file-watch-ignored nil
   "Additional directories to not monitor."
   :type '(repeat regexp)
   :group 'wal-lsp)
@@ -4540,8 +4548,6 @@ servers yourself[fn:16].
     "lr" '(lsp-rename :wk "rename")
     "lf" '(lsp-format-buffer :wk "format"))
   :custom
-  (lsp-completion-provider :capf)
-  (lsp-enable-dap-auto-configure nil)
   ;; These have to be defined here.
   (lsp-headerline-breadcrumb-enable nil)
   (lsp-log-io t)
@@ -4589,10 +4595,8 @@ Debugging using VSCode's DAP (in =lsp-mode=)
   (dap-auto-configure-mode)
   (wal/display-buffer-in-side-window 'dap-ui-repl-mode)
   :general
-  (wal/colonel :keymaps 'prog-mode-map
-    "d" '(dap-mode :wk "dap"))
   (wal/captain :keymaps 'dap-mode-map
-    "d" '(dap-hydra :wk "dap")))
+    "d" '(dap-hydra :wk "dap (hydra)")))
 #+END_SRC
 
 =eglot= is the light-weight alternative.
@@ -4795,6 +4799,8 @@ What goes =docker-compose= up, goes =docker-compose= down.
   (wal/display-buffer-in-direction "^\\*docker-compose")
   :custom
   (docker-container-default-sort-key '("Names"))
+  (docker-image-default-sort-key '("Created" . t))
+  (docker-volume-default-sort-key '("Name"))
   :bind
   (("C-c d" . docker)))
 #+END_SRC
