@@ -231,15 +231,18 @@ Make sure that custom directories exist. We want:
   :type 'string
   :group 'wal-settings)
 
-;; Create all dirs.
-(mapc (lambda (it)
-        (unless (file-directory-p it)
-          (make-directory it)))
-      `(,wal/cache-directory
-        ,wal/site-lisp-directory
-        ,wal/org-directory
-        ,wal/agenda-tasks-directory
-        ,wal/org-roam-directory))
+(defun wal/maybe-create-directories ()
+  "Create directories if they don't exist."
+  (mapc (lambda (it)
+          (unless (file-directory-p it)
+            (make-directory it)))
+        `(,wal/cache-directory
+          ,wal/site-lisp-directory
+          ,wal/org-directory
+          ,wal/agenda-tasks-directory
+          ,wal/org-roam-directory)))
+
+(add-hook 'emacs-startup-hook #'wal/maybe-create-directories)
 #+END_SRC
 
 ** Site-Lisp
@@ -342,8 +345,10 @@ Set up an easy way to switch between tabs and spaces for indentation.
   "Reset symbol SYM to its standard value.
 If LOCALLY is t, the local variable is killed while its global
 value is left untouched."
-  (if (and locally (local-variable-p sym))
-      (kill-local-variable sym)
+  (if locally
+      (if (local-variable-p sym)
+          (kill-local-variable sym)
+        (user-error "'%s' has no local binding" sym))
     (set-default sym (eval (car (get sym 'standard-value))))))
 
 (defun wal/reset-indent-defaults ()
@@ -434,10 +439,10 @@ The contents are stored in `wal/scratch-persist-file'."
   "Re-hydrate scratch buffer (if persisted).
 This overrides the scratch buffer with the content stored in
 `wal/scratch-persist-file'."
-  (if (file-exists-p wal/scratch-persist-file)
-      (with-current-buffer (get-buffer "*scratch*")
-        (delete-region (point-min) (point-max))
-        (insert-file-contents wal/scratch-persist-file))))
+  (when (file-exists-p wal/scratch-persist-file)
+    (with-current-buffer (get-buffer "*scratch*")
+      (delete-region (point-min) (point-max))
+      (insert-file-contents wal/scratch-persist-file))))
 
 (add-hook 'emacs-startup-hook #'wal/rehydrate-scratch)
 (add-hook 'kill-emacs-hook #'wal/persist-scratch)
@@ -600,7 +605,8 @@ nil will have no effect."
   "Prefix USER-KEY.
 The default prefix is the hyper key unless Emacs is not running
 in GUI mode or `wal/use-hyper-prefix' is nil."
-  (let ((prefix (if (and wal/use-hyper-prefix (display-graphic-p))
+  (let ((prefix (if (and wal/use-hyper-prefix
+                         (or (daemonp) (display-graphic-p)))
                     "H-"
                   "C-c w ")))
     (concat prefix user-key)))
@@ -729,9 +735,12 @@ If the answer is no, there will be no additional prompt."
 Saving the config after finding it with this function will prompt
 the user to tangle its contents."
   (interactive)
-  (switch-to-buffer (find-file-noselect wal/readme-config))
-  (add-hook 'after-save-hook #'wal/tangle-config-prompt nil t)
-  (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t))
+  (let ((buf (find-file-noselect wal/readme-config)))
+    (with-current-buffer buf
+      (auto-fill-mode)
+      (add-hook 'after-save-hook #'wal/tangle-config-prompt nil t)
+      (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t))
+    (switch-to-buffer buf)))
 
 (wal/general
   "c" '(wal/find-config :wk "find config")
@@ -888,23 +897,20 @@ There are two differences:
                    " or a list of such values"))))))
     args*))
 
-(defun use-package-handler/:wal-bind (name _keyword args rest state &optional bind-macro)
-  "This handler is a copy of the handler for `:bind'."
-  (use-package-concat
-   (use-package-process-keywords name rest state)
-   `(,@(mapcar
-        #'(lambda (xs)
-            `(,(if bind-macro bind-macro 'bind-keys)
-              :package ,name ,@(use-package-normalize-commands xs)))
-        (use-package-split-list-at-keys :break args)))))
+;; We can use the exact same handler as `:bind'.
+(defalias 'use-package-handler/:wal-bind 'use-package-handler/:bind)
 
-(wal/insert-use-package-keyword :wal-bind :bind)
+;; Make sure that functions are autoloaded.
+(defalias 'use-package-autoloads/:wal-bind 'use-package-autoloads-mode)
+
+(wal/insert-use-package-keyword :wal-bind :bind-keymap*)
 
 (provide 'wal-key-bindings)
 
 ;; Local Variables:
 ;; byte-compile-warnings: (not free-vars noruntime)
 ;; End:
+
 ;;; wal-key-bindings.el ends here
 #+END_SRC
 
@@ -1356,18 +1362,11 @@ This sets both the `default' and `fixed-pitch' fonts. If variable
 
 (defun wal/available-fonts (fonts)
   "Filter FONTS down to available fonts."
-  (delete nil
-          (mapcar (lambda (it)
-                    (if (find-font (font-spec :name it))
-                        it))
-                  fonts)))
+  (seq-filter (lambda (it) (find-font (font-spec :name it))) fonts))
 
 (defun wal/preferred-fonts (fonts)
   "Filter FONTS down to preferred fonts."
-  (delete nil
-          (mapcar (lambda (it)
-                    (if (member it wal/preferred-fonts)
-                        it)) fonts)))
+  (seq-filter (lambda (it) (member it wal/preferred-fonts)) fonts))
 
 (defun wal/fonts-candidate (fonts &optional prefer)
   "Return the first available font from a list of FONTS.
@@ -1386,7 +1385,7 @@ instead."
 This sets `default' and `fixed-pitch' fonts to the first
 available candidate from `wal/fixed-fonts'. Does the same for
 `variable-pitch' using `wal/variable-fonts'."
-  (when (display-graphic-p)
+  (when (or (daemonp) (display-graphic-p))
     (set-face-attribute 'default nil
                         :font (wal/fonts-candidate wal/fixed-fonts t)
                         :height wal/fixed-font-height)
@@ -2700,19 +2699,22 @@ your mouse.
 
 ;;; Commentary:
 ;;
-;; Provide movement packages. This file is an export of `README.org'.
+;; Provide movement packages.
 
 ;;; Code:
 
-(defun wal/avy-goto-line-and-char ()
-  "Go to line and then to char in line.
-Just goes to line if line is empty."
+(declare-function avy-with "avy")
+(declare-function avy-jump "avy")
+
+(defun wal/avy-goto-word-in-line ()
+  "Jump to currently visible word in the current line."
   (interactive)
-  (avy-goto-line)
-  (let ((line-length (save-excursion (end-of-line) (current-column))))
-    (unless (zerop line-length)
-      (let ((char (read-char "char: " t)))
-        (avy-goto-char-in-line char)))))
+  (unless (featurep 'avy)
+    (require 'avy nil t))
+  (avy-with avy-goto-word-0
+    (avy-jump avy-goto-word-0-regexp
+              :beg (line-beginning-position)
+              :end (line-end-position))))
 
 (use-package avy
   :custom
@@ -4437,25 +4439,14 @@ ESLint plugin for =flymake=.
 My spelling is bad. Uses American English for =flyspell=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/flyspell-prog-mode ()
-  "Toggle function `flyspell-prog-mode' properly."
+(defun wal/flyspell ()
+  "(De-)Activate the appropriate `flyspell' mode."
   (interactive)
   (if flyspell-mode
       (flyspell-mode -1)
-    (flyspell-prog-mode)))
-
-(defun wal/flyspell-mode ()
-  "Toggle function `flyspell-mode' properly."
-  (interactive)
-  (if flyspell-mode
-      (flyspell-mode -1)
-    (flyspell-mode 1)))
-
-(use-package ispell
-  :ensure nil
-  :defer t
-  :custom
-  (ispell-silently-savep t))
+    (if (derived-mode-p 'prog-mode)
+        (flyspell-prog-mode)
+      (flyspell-mode))))
 
 (use-package flyspell
   :ensure nil
@@ -4932,35 +4923,42 @@ The root package of the configuration which is basically just a giant
   :group 'convenience
   :prefix "wal/")
 
+(defconst wal/sub-packages
+  '(wal-settings wal-key-bindings
+    wal-func
+    wal-look
+    wal-fonts
+    wal-emacs
+    wal-edit
+    wal-visuals
+    wal-windows
+    wal-movement
+    wal-find
+    wal-complete
+    wal-workspace
+    wal-org
+    wal-dired
+    wal-terminal
+    wal-vc
+    wal-lang
+    wal-fix
+    wal-lsp
+    wal-devops
+    wal-web
+    wal-writing)
+  "List of sub-packages that will be loaded.
+
+The order determines the load order as well.")
+
 (add-to-list 'load-path wal/emacs-config-package-path)
 
-(load "wal-settings" t t)
-(load "wal-key-bindings" t t)
-(load "wal-func" t t)
-(load "wal-look" t t)
-(load "wal-fonts" t t)
-(load "wal-emacs" t t)
-(load "wal-edit" t t)
-(load "wal-visuals" t t)
-(load "wal-windows" t t)
-(load "wal-movement" t t)
-(load "wal-find" t t)
-(load "wal-complete" t t)
-(load "wal-workspace" t t)
-(load "wal-org" t t)
-(load "wal-dired" t t)
-(load "wal-terminal" t t)
-(load "wal-vc" t t)
-(load "wal-lang" t t)
-(load "wal-fix" t t)
-(load "wal-lsp" t t)
-(load "wal-devops" t t)
-(load "wal-web" t t)
-(load "wal-writing" t t)
+(dolist (it wal/sub-packages)
+  (require it nil t))
 
 ;; Local Variables:
 ;; byte-compile-warnings: (not free-vars)
 ;; End:
+
 ;;; wal.el ends here
 #+END_SRC
 
