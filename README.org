@@ -492,7 +492,7 @@ It's also used for certain dispatches:
 
 Most hyper[fn:9] bindings are quick-access actions:
 
-+ =H-a= searches with =ag=
++ =H-a= searches with =ag= in project
 + =H-c= completes at point using =company= (in =company-mode=)
 + =H-d= duplicates current line/region with =crux=
 + =H-e= opens (and =H-r= cycles through) =popper= pop-up(s)
@@ -559,9 +559,10 @@ Some key-bindings have case-sensitive alternatives:
 + =C-K= kills lines backwards using =crux=
 + =C-x D= runs =dired= starting at =HOME= directory
 + =C-x K= kills any buffer (ignoring current perspective)
++ =H-A= prompts for directory before searching with =ag=
++ =H-D= duplicates and comments line or region
 + =H-F= finds directories using =counsel-projectile=
-+ =H-L= jumps to beginning of line (while =H-O= jumps to char in line)
-+ =H-D= duplicates and comments line or region.
++ =H-L= jumps to beginning of line (while =H-O= jumps to char in line).
 
 ** Leader Keys
 
@@ -1909,7 +1910,7 @@ Some files are so long and Emacs will want to throw up. Prevent that.
 #+BEGIN_SRC emacs-lisp
 (use-package so-long
   :ensure nil ; Part of Emacs 28!
-  :defer 5
+  :defer 4
   :custom
   (so-long-action 'so-long-minor-mode)
   :config
@@ -2075,7 +2076,7 @@ Show diffs in the fringe (also in =dired= buffers).
 
 #+BEGIN_SRC emacs-lisp
 (use-package diff-hl
-  :defer 2.5
+  :defer 2
   :config
   (global-diff-hl-mode)
   :hook
@@ -2197,7 +2198,7 @@ Help me find my cursor!
   (beacon-mode 1))
 
 (use-package beacon
-  :defer 3.25
+  :defer 3
   :config
   (wal/configure-beacon)
   :custom
@@ -2314,7 +2315,7 @@ install =all-the-icons= fonts[fn:4].
            doom-modeline--vcs-text))))
 
 (use-package doom-modeline
-  :defer 0.5
+  :defer 1
   :custom
   (doom-modeline-project-detection 'projectile)
   (doom-modeline-minor-modes t)
@@ -2364,7 +2365,7 @@ Sometimes the list of minor modes overcrowds the modeline.
 
 #+BEGIN_SRC emacs-lisp
 (use-package minions
-  :defer 4
+  :defer 3
   :custom
   (minions-direct '(tree-sitter-mode
                     smerge-mode
@@ -2372,7 +2373,8 @@ Sometimes the list of minor modes overcrowds the modeline.
                     vterm-copy-mode
                     typo-mode
                     auto-fill-function
-                    flyspell-mode))
+                    flyspell-mode
+                    org-tree-slide-mode))
   :config
   (minions-mode +1)
   :general
@@ -2383,7 +2385,7 @@ Make the bell visual.
 
 #+BEGIN_SRC emacs-lisp
 (use-package mode-line-bell
-  :defer 3.5
+  :defer 3
   :custom
   (mode-line-bell-flash-time 0.1)
   :config
@@ -2678,7 +2680,7 @@ Allow restoring window configurations.
 (use-package winner
   :ensure nil
   :after popper
-  :defer 1
+  :demand
   :custom
   (winner-dont-bind-my-keys t)
   :general
@@ -2719,14 +2721,13 @@ your mouse.
 (defun wal/avy-goto-word-in-line ()
   "Jump to currently visible word in the current line."
   (interactive)
-  (unless (featurep 'avy)
-    (require 'avy nil t))
   (avy-with avy-goto-word-0
     (avy-jump avy-goto-word-0-regexp
               :beg (line-beginning-position)
               :end (line-end-position))))
 
 (use-package avy
+  :commands (avy-with)
   :custom
   (avy-background t)
   (avy-ignored-modes '(image-mode
@@ -2789,12 +2790,24 @@ This package /requires/ the =ag= binary which you can get from
 
 ;;; Code:
 
+(declare-function ag/project-root "ag")
+(declare-function ag/read-from-minibuffer "ag")
+(declare-function ag/search "ag")
+
 (defgroup wal-find nil
   "Change settings of search packages."
   :group 'wal
   :tag "Finding things")
 
+
+(defun wal/ag-ignored (string)
+  "Search project for STRING including VCS ignored files."
+  (interactive (list (ag/read-from-minibuffer "Search string")))
+  (let ((ag-arguments (append ag-arguments '("--skip-vcs-ignores"))))
+    (ag/search string (ag/project-root default-directory))))
+
 (use-package ag
+  :commands (ag/read-from-minibuffer)
   :config
   (wal/display-buffer-in-pop-up "^\\*ag")
   :ensure-system-package ag
@@ -2815,13 +2828,17 @@ This package /requires/ the =ag= binary which you can get from
                     "*.svg"
                     ".log"
                     "*.min.js"))
-  :wal-bind ("a" . ag)
+  (ag-project-root-function #'projectile-acquire-root)
+  :wal-bind
+  (("a" . ag-project)
+   ("A" . ag))
   :general
   (wal/lieutenant
     "a" '(:ignore t :wk "ag")
     "at" '(ag-files :wk "by file-type")
     "ap" '(ag-project :wk "in project")
-    "af" '(ag-dired :wk "for file")))
+    "af" '(ag-dired :wk "for file")
+    "ai" '(wal/ag-ignored :wk "ignored (in project)")))
 #+END_SRC
 
 Replace =isearch=. Important command is =C-o s= to change search style.
@@ -2838,7 +2855,7 @@ Commands that unfocus the ctrlf minibuffer should quit it."
   :group 'wal-find)
 
 (use-package ctrlf
-  :defer 3
+  :defer 2
   :custom
   (ctrlf-auto-recenter t)
   (ctrlf-show-match-count-at-eol nil)
@@ -2868,7 +2885,7 @@ using =xref-find-definitions= (=M-.=).
 (provide 'wal-find)
 
 ;; Local Variables:
-;; byte-compile-warnings: (not noruntime)
+;; byte-compile-warnings: (not free-vars noruntime)
 ;; End:
 
 ;;; wal-find.el ends here
@@ -2945,9 +2962,7 @@ Pass R to the switch buffer function."
   (ivy-mode 1)
   :bind
   (:map ivy-mode-map
-   ("C-x b" . wal/ivy-switch-buffer)
-   ;; Replaces `list-buffers'.
-   ("C-x C-b" . wal/ivy-switch-ignored-buffers)))
+   ("C-x B" . wal/ivy-switch-ignored-buffers)))
 #+END_SRC
 
 Use =avy= inside =ivy=.
@@ -3183,6 +3198,8 @@ This only removes `process-kill-buffer-query-function'."
   (:map persp-mode-map
    ("C-x k" . persp-kill-buffer*)
    ("C-x K" . all-the-icons-ivy-rich-kill-buffer)
+   ;; Replaces `list-buffers'.
+   ("C-x C-b" . persp-buffer-menu)
    :map perspective-map
    ("x" . wal/switch-to-scratch-buffer)))
 #+END_SRC
@@ -3208,7 +3225,7 @@ More robust project management.
   :group 'wal-workspace)
 
 (use-package projectile
-  :defer 0.75
+  :defer 1
   :delight " pjt"
   :wal-bind
   (:map projectile-mode-map
@@ -4291,8 +4308,6 @@ Use snake when you can't =make=.
   "Activate venv using poetry.
 
 This also works if the project isn't a poetry project."
-  (unless (featurep 'poetry)
-    (require 'poetry nil t))
   (ignore-errors
     (let* ((venv (poetry-venv-exist-p))
            (is-poetry (poetry-ensure-in-project)))
@@ -4310,6 +4325,7 @@ This also works if the project isn't a poetry project."
     "v" '(pyvenv-activate :wk "activate venv")))
 
 (use-package poetry
+  :commands (poetry-venv-exist-p)
   :config
   (wal/display-buffer-in-side-window "\\*poetry-shell\\*")
   :general
@@ -4792,7 +4808,6 @@ What goes =docker-compose= up, goes =docker-compose= down.
 (declare-function wal/display-buffer-in-direction "wal-func")
 
 (use-package docker
-  :defer 2 ; This package does not get autoloaded correctly.
   :config
   (wal/display-buffer-in-side-window "\\*docker-containers\\*" 'top)
   (wal/display-buffer-in-side-window "^\\* docker shell")
