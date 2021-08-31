@@ -184,8 +184,9 @@ Concludes by calling `delete-other-windows'."
    (wal/install-packages wal/core-packages)))
 
 ;; Ensure all packages by default.
-(require 'use-package-ensure)
-(setq use-package-always-ensure t)
+(use-package use-package-ensure
+  :custom
+  (use-package-always-ensure t))
 #+END_SRC
 
 ** Directories
@@ -2679,17 +2680,21 @@ Allow restoring window configurations.
 #+BEGIN_SRC emacs-lisp
 (use-package winner
   :ensure nil
-  :after popper
-  :demand
+  :defer 3
   :custom
   (winner-dont-bind-my-keys t)
+  :config
+  (defhydra wal/winner (:hint nil)
+    "
+%s`wal/ascii-whale Window layout: _u_ndo or _r_edo.
+"
+    ("u" winner-undo)
+    ("r" winner-redo)
+    ("q" nil "quit"))
+  (winner-mode +1)
   :general
   (wal/captain
-    "w" '(:ignore t :wk "winner")
-    "wu" '(winner-undo :wk "undo")
-    "wr" '(winner-redo :wk "redo"))
-  :config
-  (winner-mode +1))
+    "w" '(wal/winner/body :wk "winner")))
 
 (provide 'wal-windows)
 
@@ -2765,6 +2770,10 @@ Move where I want. Useful for comments.
    ("C-e" . mwim-end)))
 
 (provide 'wal-movement)
+
+;; Local Variables:
+;; byte-compile-warnings: (not free-vars)
+;; End:
 
 ;;; wal-movement.el ends here
 #+END_SRC
@@ -4096,11 +4105,13 @@ Can we have =deno= instead of =node=?
 
 (use-package js2-mode
   :mode "\\.js\\'"
+  :custom
+  (js2-show-parse-errors nil)
+  (js2-highlight-level 3)
+  (js2-mode-show-strict-warnings nil)
+  (js2-include-node-externs t)
   :config
-  (setq-default js2-show-parse-errors nil
-                js2-strict-missing-semi-warning nil)
-  ;; Remove `js2-jump-to-definition' binding which
-  ;; rarely works and gets in the way of `dumb-jump-go'.
+  ;; Don't override `xref-find-definitions'.
   (define-key js2-mode-map (kbd "M-.") nil)
   (with-eval-after-load 'dap-mode
     (require 'dap-node))
@@ -4947,7 +4958,8 @@ The root package of the configuration which is basically just a giant
   :prefix "wal/")
 
 (defconst wal/sub-packages
-  '(wal-settings wal-key-bindings
+  '(wal-settings
+    wal-key-bindings
     wal-func
     wal-look
     wal-fonts
