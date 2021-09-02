@@ -1312,12 +1312,12 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
   :tag "Fonts")
 
 (defcustom wal/fixed-fonts
-  '("Iosevka"
+  '("Fira Code"
+    "Iosevka"
     "Input Mono"
-    "mononoki"
-    "Fira Code"
     "JetBrains Mono"
     "Hasklig"
+    "mononoki"
     "Source Code Pro"
     "DejaVu Sans Mono"
     "Monoid" ; The calt version doesn't work properly!
@@ -1849,7 +1849,6 @@ Let's use =crux= for some editing magic.
   (wal/lieutenant
     "x" '(:ignore t :wk "crux")
     "xd" '(crux-delete-buffer-and-file :wk "delete buffer and file")
-    "xf" '(crux-recentf-find-file :wk "find recent file")
     "xr" '(crux-rename-file-and-buffer :wk "rename file and buffer")
     "xs" '(crux-sudo-edit :wk "sudo edit"))
   (wal/general-sink
@@ -2963,6 +2962,7 @@ Pass R to the switch buffer function."
 (use-package ivy
   :defer 1
   :custom
+  (ivy-height 5)
   (ivy-ignore-buffers wal/ivy-ignore-buffers)
   (ivy-count-format "%d/%d ")
   (ivy-wrap t)
@@ -2995,21 +2995,17 @@ Some nicer candidate view when switching buffers.
   (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
   (ivy-rich-mode 1))
 
+(defun wal/configure-rich-transformers ()
+  "Configure (additional) transformers in the list.
+
+This function is called before `all-the-icons-ivy-rich' is activated."
+  (let ((tl all-the-icons-ivy-rich-display-transformers-list))
+    (plist-put tl 'persp-kill-buffer* (plist-get tl 'persp-kill-buffer))))
+
 (use-package all-the-icons-ivy-rich
   :after ivy-rich
   :config
-  ;; Prettify some additional functions.
-  (mapc (lambda (it)
-          (plist-put all-the-icons-ivy-rich-display-transformers-list it
-                     '(:columns
-                       ((all-the-icons-ivy-rich-file-icon)
-                        (ivy-rich-candidate))
-                       :delimiter "\t")))
-        '(counsel-projectile-switch-to-buffer
-          persp-kill-buffer*
-          persp-add-buffer ; This one doesn't seem to work ...
-          persp-remove-buffer
-          crux-recentf-find-file))
+  (wal/configure-rich-transformers)
   (all-the-icons-ivy-rich-mode 1))
 #+END_SRC
 
@@ -3041,7 +3037,8 @@ Some nicer candidate view when switching buffers.
     "o" '(:ignore t :wk "counsel")
     "os" '(counsel-search :wk "search")
     "ox" '(counsel-find-file-extern :wk "(external) find file")
-    "ol" '(counsel-linux-app :wk "Linux app"))
+    "ol" '(counsel-linux-app :wk "Linux app")
+    "or" '(counsel-recentf :wk "find recent"))
   :wal-bind
   ("g" . counsel-mark-ring)
   :bind
@@ -3140,7 +3137,7 @@ Use =selectrum= for =consult=.
 (provide 'wal-complete)
 
 ;; Local Variables:
-;; byte-compile-warnings: (not noruntime)
+;; byte-compile-warnings: (not noruntime free-vars)
 ;; End:
 
 ;;; wal-complete.el ends here
