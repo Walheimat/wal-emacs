@@ -312,7 +312,7 @@ packages.
 This function may be used to set variables that expect bytes."
   (floor (* 1024 1024 num)))
 
-(setq read-process-output-max (wal/bytes-per-mb 4)
+(setq read-process-output-max (wal/bytes-per-mb 5)
       echo-keystrokes 0.1
       ;; New in version 28. Otherwise you need an alias.
       use-short-answers t
@@ -1180,7 +1180,7 @@ Minor mode to dedicate buffers to windows.
 Better(?) garbage collection.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/gc-cons-threshold-in-mb 50
+(defcustom wal/gc-cons-threshold-in-mb 100
   "The default `gc-cons-threshold' epxressed in MB."
   :type 'integer
   :group 'wal-func)
@@ -4559,7 +4559,7 @@ Language servers are awesome. Thanks, Microsoft.
 servers yourself[fn:16].
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/lsp-file-watch-ignored nil
+(defcustom wal/lsp-file-watch-ignored-directories '("[/\\\\]build\\'")
   "Additional directories to not monitor."
   :type '(repeat regexp)
   :group 'wal-lsp)
@@ -4570,16 +4570,14 @@ servers yourself[fn:16].
 
 (use-package lsp-mode
   :delight " lsp"
-  :hook (lsp-mode . flycheck-mode)
   :general
   (wal/captain :keymaps 'lsp-mode-map
     "l" '(:ignore t :wk "lsp")
     "lr" '(lsp-rename :wk "rename")
     "lf" '(lsp-format-buffer :wk "format"))
   :custom
-  ;; These have to be defined here.
   (lsp-headerline-breadcrumb-enable nil)
-  ;; (lsp-log-io t)
+  (lsp-modeline-code-actions-enable nil)
   ;; Enable `pylint' and pyenv for `jedi'.
   (lsp-pyls-plugins-pylint-enabled t)
   (lsp-pyls-plugins-jedi-use-pyenv-environment t)
@@ -4587,13 +4585,20 @@ servers yourself[fn:16].
   (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
   ;; TypeScript/JavaScript
   (lsp-clients-typescript-log-verbosity "off")
+  ;; Performance, uncomment
+  (lsp-log-io nil) ; This is the default.
+  ;; (lsp-enable-file-watchers nil)
+  ;; (lsp-enable-symbol-highlighting nil)
+  ;; (lsp-enable-links nil)
+  ;; (lsp-enable-folding nil)
+  ;; (lsp-enable-text-document-color nil)
   :config
   ;; Prevent multi-root workspaces.
   (advice-add 'lsp :before 'wal/advise-lsp-to-prevent-multi-root)
   (lsp-enable-which-key-integration t)
   (mapc (lambda (it)
-          (add-to-list 'lsp-file-watch-ignored it))
-        wal/lsp-file-watch-ignored))
+          (add-to-list 'lsp-file-watch-ignored-directories it))
+        wal/lsp-file-watch-ignored-directories))
 
 (use-package lsp-ui
   :after lsp-mode
