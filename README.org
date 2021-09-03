@@ -494,6 +494,7 @@ It's also used for certain dispatches:
 Most hyper[fn:9] bindings are quick-access actions:
 
 + =H-a= searches with =ag= in project
++ =H-b= switches buffers in project using =counsel-projectile=
 + =H-c= completes at point using =company= (in =company-mode=)
 + =H-d= duplicates current line/region with =crux=
 + =H-e= opens (and =H-r= cycles through) =popper= pop-up(s)
@@ -580,14 +581,14 @@ common context.
 ;;; Code:
 
 (declare-function wal/tangle-config ".emacs")
-(declare-function wal/general "wal-key-bindings")
-(declare-function wal/general-sink "wal-key-bindings")
-(declare-function wal/colonel "wal-key-bindings")
-(declare-function wal/edge-left "wal-func")
-(declare-function wal/edge-right "wal-func")
-(declare-function wal/edge-down "wal-func")
-(declare-function wal/edge-up "wal-func")
-(declare-function wal/split-window-the-other-way "wal-func")
+(declare-function wal/general "wal-key-bindings.el")
+(declare-function wal/general-sink "wal-key-bindings.el")
+(declare-function wal/colonel "wal-key-bindings.el")
+(declare-function wal/edge-left "wal-func.el")
+(declare-function wal/edge-right "wal-func.el")
+(declare-function wal/edge-down "wal-func.el")
+(declare-function wal/edge-up "wal-func.el")
+(declare-function wal/split-window-the-other-way "wal-func.el")
 
 (defgroup wal-key-bindings nil
   "Change key bindings settings."
@@ -934,7 +935,7 @@ Finding files should =mkdir -p= its parents.
 
 ;;; Code:
 
-(declare-function wal/bytes-per-mb "wal-settings")
+(declare-function wal/bytes-per-mb "wal-settings.el")
 
 (defgroup wal-func nil
   "Change values used in additional functions."
@@ -1008,12 +1009,13 @@ The pop-up is a window unless IN-FRAME is t."
 
 ;; The next two functions make sense for `popper' buffers.
 
-(defun wal/display-buffer-in-side-window (buffer &optional side loose no-other)
+(defun wal/display-buffer-in-side-window (buffer &optional side loose no-other height)
   "Display BUFFER in SIDE window.
 
 This window will be on SIDE (on the bottom by default), dedicated
 to the buffer (unless LOOSE), available to `other-window' (unless
-NO-OTHER) and visible frames are considered reusable."
+NO-OTHER) 20 (or HEIGHT) lines high and visible frames are
+considered reusable."
   (let ((condition (wal/display-buffer-condition buffer)))
     (add-to-list 'display-buffer-alist
                  `(,condition
@@ -1021,6 +1023,7 @@ NO-OTHER) and visible frames are considered reusable."
                    (side . ,(or side 'bottom))
                    (dedicated . ,(not loose))
                    (reusable-frames . visible)
+                   (window-height . (or height 10))
                    (window-parameters . ((no-other-window . ,no-other)))))))
 
 (defun wal/display-buffer-in-direction (buffer &optional direction)
@@ -1304,7 +1307,7 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
 
 ;;; Code:
 
-(declare-function doom-modeline-refresh-font-width-cache "doom-modeline")
+(declare-function doom-modeline-refresh-font-width-cache "doom-modeline.el")
 
 (defgroup wal-fonts nil
   "Change fonts and font sizes."
@@ -1448,8 +1451,8 @@ First, bind some functions to refresh, install and delete packages.
 
 ;;; Code:
 
-(declare-function wal/display-buffer-in-side-window "wal-func")
-(declare-function wal/display-buffer-in-direction "wal-func")
+(declare-function wal/display-buffer-in-side-window "wal-func.el")
+(declare-function wal/display-buffer-in-direction "wal-func.el")
 
 (use-package package
   :ensure nil
@@ -1702,8 +1705,8 @@ Don't you want to edit your buffer in multiple places at once?
 
 ;;; Code:
 
-(declare-function yas-expand "yasnippet")
-(declare-function wal/reset-to-standard "wal-settings")
+(declare-function yas-expand "yasnippet.el")
+(declare-function wal/reset-to-standard "wal-settings.el")
 
 (use-package multiple-cursors
   :init
@@ -1945,7 +1948,7 @@ Let's have a dash of board.
 
 ;;; Code:
 
-(declare-function ligature-set-ligatures "ligature")
+(declare-function ligature-set-ligatures "ligature.el")
 (declare-function wal/directory-files ".emacs")
 
 (defgroup wal-visuals nil
@@ -2543,13 +2546,13 @@ Everything that has to do with windows.
 
 ;;; Code:
 
-(declare-function aw-delete-window "ace-window")
-(declare-function comint-check-proc "comint")
-(declare-function popper-cycle "popper")
-(declare-function popper-open-all "popper")
-(declare-function popper-popup-p "popper")
-(declare-function popper-toggle-latest "popper")
-(declare-function wal/ivy-switch-buffer "wal-complete")
+(declare-function aw-delete-window "ace-window.el")
+(declare-function comint-check-proc "comint.el")
+(declare-function popper-cycle "popper.el")
+(declare-function popper-open-all "popper.el")
+(declare-function popper-popup-p "popper.el")
+(declare-function popper-toggle-latest "popper.el")
+(declare-function wal/ivy-switch-buffer "wal-complete.el")
 
 (defun wal/aw-delete-window-kill-buffer (window)
   "Call `aw-delete-window' on WINDOW requesting buffer kill."
@@ -2719,8 +2722,8 @@ your mouse.
 
 ;;; Code:
 
-(declare-function avy-with "avy")
-(declare-function avy-jump "avy")
+(declare-function avy-with "avy.el")
+(declare-function avy-jump "avy.el")
 
 (defun wal/avy-goto-word-in-line ()
   "Jump to currently visible word in the current line."
@@ -2798,9 +2801,9 @@ This package /requires/ the =ag= binary which you can get from
 
 ;;; Code:
 
-(declare-function ag/project-root "ag")
-(declare-function ag/read-from-minibuffer "ag")
-(declare-function ag/search "ag")
+(declare-function ag/project-root "ag.el")
+(declare-function ag/read-from-minibuffer "ag.el")
+(declare-function ag/search "ag.el")
 
 (defgroup wal-find nil
   "Change settings of search packages."
@@ -2962,7 +2965,7 @@ Pass R to the switch buffer function."
 (use-package ivy
   :defer 1
   :custom
-  (ivy-height 5)
+  (ivy-height 6)
   (ivy-ignore-buffers wal/ivy-ignore-buffers)
   (ivy-count-format "%d/%d ")
   (ivy-wrap t)
@@ -3159,8 +3162,8 @@ Have some perspective, man.
 
 ;;; Code:
 
-(declare-function projectile-project-p "projectile")
-(declare-function persp-scratch-buffer "perspective")
+(declare-function projectile-project-p "projectile.el")
+(declare-function persp-scratch-buffer "perspective.el")
 
 (defgroup wal-workspace nil
   "Change settings used for workspace packages."
@@ -3274,7 +3277,7 @@ This eliminates getting prompted to open one first."
   :after (projectile counsel)
   :demand
   :custom
-  (counsel-projectile-preview-buffers t)
+  ;; (counsel-projectile-preview-buffers t)
   (counsel-projectile-org-capture-templates
    ;; Reminders are stored relative to the project root
    `(("r" "[${name}] reminder" entry
@@ -3296,7 +3299,8 @@ This eliminates getting prompted to open one first."
   (:map projectile-mode-map
    ("f" . counsel-projectile-find-file)
    ("F" . counsel-projectile-find-dir)
-   ("n" . counsel-projectile-org-capture))
+   ("n" . counsel-projectile-org-capture)
+   ("b" . counsel-projectile-switch-to-buffer))
   :bind
   (:map projectile-command-map
    ("ss" . counsel-projectile-ag)))
@@ -3323,7 +3327,7 @@ is a bit elaborate.
 
 ;;; Code:
 
-(declare-function wal/disable-tabs "wal-settings")
+(declare-function wal/disable-tabs "wal-settings.el")
 
 (defgroup wal-org nil
   "Change settings used for org packages."
@@ -3722,7 +3726,7 @@ Run =dired= with =C-x d=.
 
 ;;; Code:
 
-(declare-function dired-read-dir-and-switches "dired")
+(declare-function dired-read-dir-and-switches "dired.el")
 
 (defun wal/dired-from-home (dirname &optional switches)
   "Find DIRNAME local to HOME directory.
@@ -3832,8 +3836,8 @@ Set up =eshell=. I like the idea of it but I don't really use it.
 
 ;;; Code:
 
-(declare-function vterm-toggle-show "vterm-toggle")
-(declare-function wal/display-buffer-in-side-window "wal-func")
+(declare-function vterm-toggle-show "vterm-toggle.el")
+(declare-function wal/display-buffer-in-side-window "wal-func.el")
 
 (use-package esh-autosuggest
   :hook (eshell-mode . esh-autosuggest-mode))
@@ -3885,7 +3889,7 @@ Some common shell commands require an additional =C-c=:
   :custom
   (vterm-kill-buffer-on-exit t)
   :config
-  (wal/display-buffer-in-side-window (concat "\\" vterm-buffer-name) nil nil t))
+  (wal/display-buffer-in-side-window (concat "\\" vterm-buffer-name) nil nil t 20))
 
 (defun wal/advise-vterm-toggle (&rest _r)
   "Advise `vterm-toggle' to show unless the window is a vterm buffer."
@@ -3926,7 +3930,7 @@ I'm becoming an old =git=.
 
 ;;; Code:
 
-(declare-function magit-display-buffer-traditional "magit-mode")
+(declare-function magit-display-buffer-traditional "magit-mode.el")
 
 (defun wal/magit-display-buffer-new-frame-status (buffer)
   "Display BUFFER in new frame if it is a status buffer.
@@ -4023,11 +4027,11 @@ I want to be ready for =jai=.
 
 ;;; Code:
 
-(declare-function poetry-ensure-in-project "poetry")
-(declare-function poetry-venv-exist-p "poetry")
-(declare-function wal/disable-tabs "wal-settings")
-(declare-function wal/lsp "wal-lsp")
-(declare-function wal/maybe-enable-tabs "wal-settings")
+(declare-function poetry-ensure-in-project "poetry.el")
+(declare-function poetry-venv-exist-p "poetry.el")
+(declare-function wal/disable-tabs "wal-settings.el")
+(declare-function wal/lsp "wal-lsp.el")
+(declare-function wal/maybe-enable-tabs "wal-settings.el")
 
 (defun wal/c++-mode ()
   "Hook into `cc-mode'."
@@ -4406,8 +4410,8 @@ Please let me know when I screwed up. I promise I will learn.
 
 ;;; Code:
 
-(declare-function flycheck-find-checker-executable "flycheck")
-(declare-function wal/captain "wal-key-bindings")
+(declare-function flycheck-find-checker-executable "flycheck.el")
+(declare-function wal/captain "wal-key-bindings.el")
 
 (defun wal/consult-fly ()
   "Call either `consult-flymake' or `consult-flycheck'.
@@ -4419,8 +4423,7 @@ This depends on `wal/lsp-client'."
         (t nil)))
 
 (wal/captain :keymaps '(flymake-mode-map flycheck-mode-map)
-  "f" '(:ignore t :wk "fly-check")
-  "fu" '(wal/consult-fly :wk "consult"))
+  "f" '(wal/consult-fly :wk "fly-check"))
 #+END_SRC
 
 =flycheck= is for all of our linting/code quality needs.
@@ -4460,7 +4463,8 @@ Built-in syntax checker. Used by =eglot=.
   :config
   (setq flymake-mode-line-title "flm")
   :general
-  (wal/captain :keymaps 'flymake-mode-map
+  (wal/captain-sink :keymaps 'flymake-mode-map
+    "f" '(:ignore t :wk "flymake")
     "fn" '(flymake-goto-next-error :wk "next")
     "fp" '(flymake-goto-prev-error :wk "prev")))
 #+END_SRC
@@ -4525,8 +4529,8 @@ Language servers are awesome. Thanks, Microsoft.
 
 ;;; Code:
 
-(declare-function eglot-managed-p "eglot")
-(declare-function wal/colonel "wal-key-bindings")
+(declare-function eglot-managed-p "eglot.el")
+(declare-function wal/colonel "wal-key-bindings.el")
 
 (defgroup wal-lsp nil
   "Change settings for LSP packages."
@@ -4818,8 +4822,8 @@ What goes =docker-compose= up, goes =docker-compose= down.
 
 ;;; Code:
 
-(declare-function wal/display-buffer-in-side-window "wal-func")
-(declare-function wal/display-buffer-in-direction "wal-func")
+(declare-function wal/display-buffer-in-side-window "wal-func.el")
+(declare-function wal/display-buffer-in-direction "wal-func.el")
 
 (use-package docker
   :config
@@ -4868,7 +4872,7 @@ examples.
 
 ;;; Code:
 
-(declare-function wal/display-buffer-in-pop-up "wal-func")
+(declare-function wal/display-buffer-in-pop-up "wal-func.el")
 
 (use-package restclient
   :config
