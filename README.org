@@ -655,9 +655,10 @@ the sink for and PREFIX is its prefix."
                                          (concat ,suf it)
                                        it)) args))))))
 
-(use-package general
-  :demand
-  :config
+(defun wal/configure-general ()
+  "Configure package `general'.
+
+This creates all leader keys and sinks."
   (mapc (lambda (it)
           (let* ((key-sym (intern (format "%s-key" it)))
                  (key (wal/prefix-user-key (symbol-value key-sym)))
@@ -667,6 +668,11 @@ the sink for and PREFIX is its prefix."
             (eval `(general-create-definer ,it :prefix ,key))
             (eval `(wal/create-leader-sink ,sink :definer ,it :prefix ,key))))
         '(wal/general wal/colonel wal/major wal/captain wal/lieutenant)))
+
+(use-package general
+  :demand
+  :config
+  (wal/configure-general))
 #+END_SRC
 
 *** About Leader Keys
@@ -2576,8 +2582,8 @@ Everything that has to do with windows.
                             (?w delete-other-windows "delete other")
                             (?s aw-swap-window "swap")
                             (?m aw-move-window "move")
-                            (?b aw-switch-buffer-in-window "switch focused")
-                            (?o aw-switch-buffer-other-window "switch unfocused")
+                            (?b aw-switch-buffer-in-window "switch (and focus)")
+                            (?o aw-switch-buffer-other-window "switch (no focus)")
                             (?c aw-copy-window "copy")
                             ;; If this has a description, it doesn't work.
                             (?? aw-show-dispatch-help)))
@@ -2838,7 +2844,8 @@ This package /requires/ the =ag= binary which you can get from
                     "build"
                     "*.svg"
                     ".log"
-                    "*.min.js"))
+                    "*.min.js"
+                    "*.js.map"))
   (ag-project-root-function #'projectile-acquire-root)
   :wal-bind
   (("a" . ag-project)
@@ -2865,6 +2872,16 @@ Commands that unfocus the ctrlf minibuffer should quit it."
   :type '(repeat symbol)
   :group 'wal-find)
 
+(defun wal/configure-ctrlf ()
+  "Configure package `ctrlf'.
+
+This adds additional bindings."
+  (mapc (lambda (it)
+          (add-to-list
+           'ctrlf-minibuffer-bindings
+           `([remap ,it] . ctrlf-cancel)))
+        wal/ctrlf-cancel-commands))
+
 (use-package ctrlf
   :defer 2
   :custom
@@ -2873,11 +2890,7 @@ Commands that unfocus the ctrlf minibuffer should quit it."
   (ctrlf-default-search-style 'fuzzy)
   (ctrlf-alternate-search-style 'regexp)
   :config
-  (mapc (lambda (it)
-          (add-to-list
-           'ctrlf-minibuffer-bindings
-           `([remap ,it] . ctrlf-cancel)))
-        wal/ctrlf-cancel-commands)
+  (wal/configure-ctrlf)
   (ctrlf-mode +1))
 #+END_SRC
 
@@ -3079,16 +3092,11 @@ Better short-term-memory for =ivy=.
 =consult= provides even more useful replacements and extensions.
 
 #+BEGIN_SRC emacs-lisp
-(use-package consult
-  :custom
-  (consult-project-root-function #'projectile-project-root)
-  :init
-  (setq xref-show-definitions-function #'consult-xref)
-  :bind
-  (("M-g g" . consult-goto-line)
-   ("M-g M-m" . consult-global-mark))
-  :config
-  ;; Advise functions to use `selectrum' when `ivy' behaves unpredictably.
+(defun wal/configure-consult ()
+  "Configurep package `consult'.
+
+This advises all functions that don't work well with `ivy' to use
+`selectrum' instead."
   (mapc (lambda (it)
           (advice-add it :around #'wal/advise-selectrum))
         '(consult-buffer
@@ -3100,7 +3108,19 @@ Better short-term-memory for =ivy=.
           consult-mode-command
           consult-xref
           consult-recent-file
-          consult-outline))
+          consult-outline)))
+
+(use-package consult
+  :custom
+  (consult-project-root-function #'projectile-project-root)
+  :init
+  (setq xref-show-definitions-function #'consult-xref)
+  :bind
+  (("M-g g" . consult-goto-line)
+   ("M-g M-m" . consult-global-mark))
+  :config
+  ;; Advise functions to use `selectrum' when `ivy' behaves unpredictably.
+  (wal/configure-consult)
   :general
   (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
   (wal/major :keymaps 'org-mode-map :major-modes t
@@ -3234,6 +3254,20 @@ More robust project management.
   :type '(repeat string)
   :group 'wal-workspace)
 
+(defun wal/configure-projectile ()
+  "Configure package `projectile'.
+
+This extends all ignore lists' default values."
+  (mapc (lambda (it)
+          (add-to-list 'projectile-globally-ignored-directories it))
+        wal/projectile-globally-ignored-directories)
+  (mapc (lambda (it)
+          (add-to-list 'projectile-globally-ignored-files it))
+        wal/projectile-globally-ignored-files)
+  (mapc (lambda (it)
+          (add-to-list 'projectile-globally-ignored-file-suffixes it))
+        wal/projectile-globally-ignored-file-suffixes))
+
 (use-package projectile
   :defer 1
   :delight " pjt"
@@ -3250,15 +3284,7 @@ More robust project management.
   (projectile-indexing-method 'hybrid)
   (projectile-enable-caching t)
   :config
-  (mapc (lambda (it)
-          (add-to-list 'projectile-globally-ignored-directories it))
-        wal/projectile-globally-ignored-directories)
-  (mapc (lambda (it)
-          (add-to-list 'projectile-globally-ignored-files it))
-        wal/projectile-globally-ignored-files)
-  (mapc (lambda (it)
-          (add-to-list 'projectile-globally-ignored-file-suffixes it))
-        wal/projectile-globally-ignored-file-suffixes)
+  (wal/configure-projectile)
   (projectile-mode +1))
 #+END_SRC
 
@@ -3306,6 +3332,10 @@ This eliminates getting prompted to open one first."
    ("ss" . counsel-projectile-ag)))
 
 (provide 'wal-workspace)
+
+;; Local Variables:
+;; byte-compile-warnings: (not free-vars)
+;; End:
 
 ;;; wal-workspace.el ends here
 #+END_SRC
@@ -3496,6 +3526,15 @@ Editing source blocks.
   "Hook into function `org-src-mode'."
   (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
 
+
+(defun wal/configure-org-src ()
+  "Configure package `org-src'.
+
+This sets additional modes."
+  (mapc (lambda (it)
+          (add-to-list 'org-src-lang-modes it))
+        wal/org-src-lang-modes))
+
 (use-package org-src
   :ensure nil
   :after org
@@ -3505,9 +3544,7 @@ Editing source blocks.
   (org-src-tab-acts-natively nil) ; Defaults to t nowadays.
   (org-edit-src-content-indentation 0) ; Defaults to 2 nowadays.
   :config
-  (mapc (lambda (it)
-          (add-to-list 'org-src-lang-modes it))
-        wal/org-src-lang-modes)
+  (wal/configure-org-src)
   :bind
   (:map org-src-mode-map
    ("C-c C-c" . org-edit-src-exit)))
@@ -3947,6 +3984,7 @@ It probably makes sense to bind `q' to `delete-frame' in
   :custom
   (magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
   (magit-blame-mode-lighter " mbl")
+  (magit-bury-buffer-function 'magit-restore-window-configuration)
   :general
   (wal/lieutenant
     "m" '(:ignore t :wk "magit")
@@ -4569,6 +4607,13 @@ servers yourself[fn:16].
   "Prevent adding workspace roots from other projects."
   (eval '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))
 
+(defun wal/configure-lsp-mode ()
+  "Configure package `lsp-mode'.
+This adds additional ignored directories."
+  (mapc (lambda (it)
+          (add-to-list 'lsp-file-watch-ignored-directories it))
+        wal/lsp-file-watch-ignored-directories))
+
 (use-package lsp-mode
   :delight " lsp"
   :general
@@ -4597,9 +4642,7 @@ servers yourself[fn:16].
   ;; Prevent multi-root workspaces.
   (advice-add 'lsp :before 'wal/advise-lsp-to-prevent-multi-root)
   (lsp-enable-which-key-integration t)
-  (mapc (lambda (it)
-          (add-to-list 'lsp-file-watch-ignored-directories it))
-        wal/lsp-file-watch-ignored-directories))
+  (wal/configure-lsp-mode))
 
 (use-package lsp-ui
   :after lsp-mode
@@ -4744,7 +4787,7 @@ Taken from the official documentation.
 (provide 'wal-lsp)
 
 ;; Local Variables:
-;; byte-compile-warnings: (not unresolved)
+;; byte-compile-warnings: (not unresolved free-vars)
 ;; End:
 
 ;;; wal-lsp.el ends here
