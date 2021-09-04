@@ -64,8 +64,9 @@ This is currently only necessary if you wish to set
       (file-name-handler-alist nil))
   (wal/tangle-config t t))
 
-;;; .emacs ends here
 
 ;; Local Variables:
 ;; byte-compile-warnings: (not free-vars)
 ;; End:
+
+;;; init.el ends here
