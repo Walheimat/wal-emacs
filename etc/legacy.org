@@ -498,7 +498,7 @@ See URL `https://www.pylint.org/'."
 
 *** Go to line and char with =avy=
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (defun wal/avy-goto-line-and-char ()
   "Go to line and then to char in line.
 Just goes to line if line is empty."
@@ -508,4 +508,19 @@ Just goes to line if line is empty."
     (unless (zerop line-length)
       (let ((char (read-char "char: " t)))
         (avy-goto-char-in-line char)))))
+#+END_SRC
+
+*** Display =magit-status= buffers in new frame
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defun wal/magit-display-buffer-new-frame-status (buffer)
+  "Display BUFFER in new frame if it is a status buffer.
+Otherwise use `magit-display-buffer-traditional'.
+
+It probably makes sense to bind `q' to `delete-frame' in
+`magit-status-mode-map' when using this function."
+  (if (eq (with-current-buffer buffer major-mode)
+          'magit-status-mode)
+      (display-buffer buffer '(display-buffer-pop-up-frame))
+    (magit-display-buffer-traditional buffer)))
 #+END_SRC

@@ -1045,7 +1045,7 @@ considered reusable."
                    (side . ,(or side 'bottom))
                    (dedicated . ,(not loose))
                    (reusable-frames . visible)
-                   (window-height . (or height 10))
+                   (window-height . ,(or height 10))
                    (window-parameters . ((no-other-window . ,no-other)))))))
 
 (defun wal/display-buffer-in-direction (buffer &optional direction)
@@ -1330,6 +1330,7 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
 ;;; Code:
 
 (declare-function doom-modeline-refresh-font-width-cache "doom-modeline.el")
+(declare-function wal/general-sink "wal-key-bindings.el")
 
 (defgroup wal-fonts nil
   "Change fonts and font sizes."
@@ -1337,11 +1338,11 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
   :tag "Fonts")
 
 (defcustom wal/fixed-fonts
-  '("Fira Code"
+  '("JetBrains Mono"
     "Iosevka"
-    "Input Mono"
-    "JetBrains Mono"
+    "Fira Code"
     "Hasklig"
+    "Input Mono"
     "mononoki"
     "Source Code Pro"
     "DejaVu Sans Mono"
@@ -1352,7 +1353,14 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
   :group 'wal-fonts)
 
 (defcustom wal/variable-fonts
-  '("Roboto" "Ubuntu" "San Francisco" "Arial")
+  '("Roboto"
+    "Ubuntu"
+    "Liberation Serif"
+    "DeJa Vu Sans"
+    "Lato"
+    "Quicksand"
+    "San Francisco"
+    "Arial")
   "Variable fonts ordered by preference."
   :type '(repeat string)
   :group 'wal-fonts)
@@ -1385,6 +1393,17 @@ This sets both the `default' and `fixed-pitch' fonts. If variable
   (set-face-attribute 'fixed-pitch nil :font font)
   (when (and (boundp 'doom-modeline-mode) doom-modeline-mode)
     (run-with-idle-timer 0.2 nil #'doom-modeline-refresh-font-width-cache)))
+
+(defun wal/select-variable-font (font)
+  "Select variable (available) FONT."
+  (interactive
+   (list (completing-read "Select font: " (wal/available-fonts wal/variable-fonts))))
+  (set-face-attribute 'variable-pitch nil :font font))
+
+(wal/general-sink
+ "f" '(:ignore t :wk "select font")
+ "ff" '(wal/select-fixed-font :wk "fixed")
+ "fv" '(wal/select-variable-font :wk "variable"))
 
 (defun wal/available-fonts (fonts)
   "Filter FONTS down to available fonts."
@@ -1999,6 +2018,12 @@ A collection of GitLab status messages."
   (let ((recentf-exclude wal/recentf-exclude))
     (apply fun r)))
 
+(defun wal/show-dashboard ()
+  "Show the dashboar."
+  (interactive)
+  (switch-to-buffer dashboard-buffer-name)
+  (delete-other-windows))
+
 (defcustom wal/startup-banner
   (let ((ext (if (display-graphic-p)
                  ".png"
@@ -2037,6 +2062,9 @@ A collection of GitLab status messages."
   (dashboard-footer-messages wal/dashboard-footer-messages)
   (dashboard-week-agenda nil)
   (dashboard-agenda-time-string-format "%d/%m/%y")
+  :general
+  (wal/general-sink "d"
+    '(wal/show-dashboard :wk "show dashboard"))
   :hook (after-init . dashboard-setup-startup-hook))
 #+END_SRC
 
@@ -3122,7 +3150,6 @@ This advises all functions that don't work well with `ivy' to use
   (("M-g g" . consult-goto-line)
    ("M-g M-m" . consult-global-mark))
   :config
-  ;; Advise functions to use `selectrum' when `ivy' behaves unpredictably.
   (wal/configure-consult)
   :custom
   (consult-project-root-function #'projectile-project-root)
@@ -3132,7 +3159,6 @@ This advises all functions that don't work well with `ivy' to use
     "og" '(consult-outline :wk "go to"))
   (wal/lieutenant
     "u" '(:ignore t :wk "consult")
-    "uf" '(consult-recent-file :wk "find recent")
     "ul" '(consult-focus-lines :wk "focus lines")))
 
 (use-package consult-flycheck
@@ -3235,7 +3261,7 @@ This only removes `process-kill-buffer-query-function'."
   (:map persp-mode-map
    ("i" . persp-switch))
   :hook (kill-emacs . persp-state-save)
-  :demand)
+  :defer 1)
 #+END_SRC
 
 More robust project management.
@@ -3918,12 +3944,12 @@ Some common shell commands require an additional =C-c=:
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/vterm-mode ()
-  "Adjustments for `vterm'."
+  "Hook into `vterm-mode'."
   (ctrlf-local-mode -1))
 
 (use-package vterm
   :config
-  (wal/display-buffer-in-side-window (concat "\\" vterm-buffer-name) nil nil t 20)
+  (wal/display-buffer-in-side-window (concat "\\" vterm-buffer-name) nil nil t 15)
   :custom
   (vterm-kill-buffer-on-exit t)
   :hook (vterm-mode . wal/vterm-mode)
@@ -3970,17 +3996,6 @@ I'm becoming an old =git=.
 ;;; Code:
 
 (declare-function magit-display-buffer-traditional "magit-mode.el")
-
-(defun wal/magit-display-buffer-new-frame-status (buffer)
-  "Display BUFFER in new frame if it is a status buffer.
-Otherwise use `magit-display-buffer-traditional'.
-
-It probably makes sense to bind `q' to `delete-frame' in
-`magit-status-mode-map' when using this function."
-  (if (eq (with-current-buffer buffer major-mode)
-          'magit-status-mode)
-      (display-buffer buffer '(display-buffer-pop-up-frame))
-    (magit-display-buffer-traditional buffer)))
 
 (use-package magit
   :custom
@@ -4674,7 +4689,7 @@ Debugging using VSCode's DAP (in =lsp-mode=)
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/eglot-managed-mode ()
-  "Hook into `eglot-managed-mode-hook'."
+  "Hook into `eglot-managed-mode'."
   (pcase major-mode
     ((or 'js2-mode 'rjsx-mode)
      (if (eglot-managed-p)

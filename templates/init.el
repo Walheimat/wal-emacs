@@ -1,4 +1,4 @@
-;;; .emacs --- Walheimat's init file
+;;; init.el --- Walheimat's init file
 
 ;;; Commentary:
 
@@ -63,10 +63,5 @@ This is currently only necessary if you wish to set
 	  (gc-cons-percentage 0.8)
       (file-name-handler-alist nil))
   (wal/tangle-config t t))
-
-
-;; Local Variables:
-;; byte-compile-warnings: (not free-vars)
-;; End:
 
 ;;; init.el ends here
