@@ -3279,7 +3279,7 @@ More robust project management.
   :group 'wal-workspace)
 
 (defcustom wal/projectile-globally-ignored-file-suffixes
-  '(".min.js")
+  '(".min.js" ".js.map")
   "Additional file suffixes to ignore."
   :type '(repeat string)
   :group 'wal-workspace)
@@ -3588,7 +3588,11 @@ This sets additional modes."
   (org-agenda-restore-windows-after-quit t)
   (org-agenda-time-leading-zero t)
   :bind
-  ("C-c a" . org-agenda)
+  (("C-c a" . org-agenda)
+   :map org-agenda-mode-map
+   ;; Swap.
+   ([remap org-agenda-switch-to] . org-agenda-goto)
+   ([remap org-agenda-goto] . org-agenda-switch-to))
   :ensure nil)
 #+END_SRC
 
@@ -5020,7 +5024,7 @@ The root package of the configuration which is basically just a giant
     wal-func
     wal-look
     wal-fonts
-    ;; All following packages are non-essential.
+    ;; The following packages are optional.
     wal-emacs
     wal-edit
     wal-visuals

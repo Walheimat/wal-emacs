@@ -2,13 +2,15 @@
 
 ;;; Commentary:
 
-;; This init file is servers as the controller to Walheimat's literate
+;; This init file serves as the controller to Walheimat's literate
 ;; configuration.
 ;;
-;;It will tangle its source blocks to create package and subsequently
+;;It will tangle that file's source blocks to create and subsequently
 ;;load package `wal'.
 ;;
-;; Copy this file to your HOME directory.
+;; Either copy this file to any location Emacs will load from (cf.
+;; 49.4 The Emacs Initialization File in the manual) or load the
+;; included setup file to do this for you.
 
 ;;; Code:
 
@@ -16,7 +18,7 @@
 
 (defvar wal/emacs-config-default-path
   (expand-file-name "emacs-config" user-emacs-directory)
-  "The default path to Walheimat's Emacs org config.")
+  "The default path to Walheimat's literate configuration.")
 
 (defvar wal/emacs-config-package-path
   (expand-file-name "wal" wal/emacs-config-default-path)
@@ -35,7 +37,7 @@ Returns the path to the directory or nil (if created)."
   (nthcdr 2 (directory-files directory t)))
 
 (defun wal/tangle-config (&optional maybe load)
-  "(MAYBE) tangle the config (and LOAD it).
+  "(MAYBE) tangle the configuration (and LOAD it).
 
 The init file will call this function to tangle source blocks
 only if that hasn't already happened and then load the package.

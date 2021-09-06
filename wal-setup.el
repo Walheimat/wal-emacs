@@ -1,8 +1,9 @@
-;; wal-setup.el --- Package to install this config.
+;; wal-setup.el --- Install the init file.
 
 ;;; Commentary:
 
-;; Load this file using `load-file' to invoke the script.
+;; Load this file using `load-file'. You will subsequently be asked
+;; whether you wish to copy or link the init template.
 
 ;;; Code:
 
@@ -12,7 +13,7 @@
   "The name of the results buffer.")
 
 (defun wal/setup--append-results-message (mes)
-  "Macro to append MES to the results buffer.
+  "Append MES to the results buffer.
 
 Unless this is the first message, a newline is prepended."
   (with-current-buffer (get-buffer-create wal/setup--results-buffer-name)
@@ -28,7 +29,7 @@ Unless this is the first message, a newline is prepended."
 
 
 (defun wal/setup--show-results-buffer ()
-  "Show results buffer."
+  "Show the results buffer."
   (with-current-buffer (get-buffer-create wal/setup--results-buffer-name)
     (wal/setup--results-mode)
     (display-buffer (current-buffer))))
@@ -36,11 +37,11 @@ Unless this is the first message, a newline is prepended."
 ;;; Checks
 
 (defun wal/setup--init-file-exists-p ()
-  "Check if init file already exists."
+  "Check if an init file already exists."
   (file-exists-p (expand-file-name "init.el" user-emacs-directory)))
 
 (defun wal/setup--dot-emacs-file-exists-p ()
-  "Check if .emacs file already exists."
+  "Check if a .emacs file already exists."
   (file-exists-p (expand-file-name ".emacs" "~")))
 
 ;;; Shell
