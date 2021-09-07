@@ -1194,10 +1194,7 @@ Minor mode to dedicate buffers to windows.
     (set-window-dedicated-p window nil)
     (message "Window no longer dedicated to %s" bufname)))
 
-(use-package walled-mode
-  :general
-  (wal/colonel-sink "." '(walled-mode :wk "walled"))
-  :ensure nil)
+(wal/colonel-sink "." '(walled-mode :wk "walled"))
 #+END_SRC
 
 ** Garbage Collection
@@ -1930,7 +1927,7 @@ Sometimes I need to see whitespace chars.
   "Hook into command `whitespace-mode'."
   (highlight-indent-guides-mode -1))
 
-(use-package whitespace-mode
+(use-package whitespace
   :general
   (wal/colonel "w" '(whitespace-mode :wk "whitespace"))
   :hook (whitespace-mode . wal/whitespace-mode)
@@ -2048,8 +2045,9 @@ A collection of GitLab status messages."
   :init
   (advice-add 'dashboard-insert-startupify-lists
               :around #'wal/advise-dashboard-insert-startupify-lists)
+  :config
+  (setq dashboard-banner-logo-title (wal/describe-config-version))
   :custom
-  (dashboard-banner-logo-title (wal/describe-config-version))
   (dashboard-startup-banner wal/startup-banner)
   (dashboard-projects-backend 'projectile)
   (dashboard-items '((recents . 5)
@@ -2331,12 +2329,7 @@ Scroll pixel-wise on certain jump commands.
           (eval `(scroll-on-jump-with-scroll-advice-remove ,it)))
         smooth-scroll-mode--commands))
 
-(use-package smooth-scroll-mode
-  :config
-  (require 'scroll-on-jump)
-  :general
-  (wal/colonel-sink "," '(smooth-scroll-mode :wk "smooth-scroll"))
-  :ensure nil)
+(wal/colonel-sink "," '(smooth-scroll-mode :wk "smooth-scroll"))
 #+END_SRC
 
 *** Modeline
@@ -3643,7 +3636,7 @@ need to install =sqlite3= and =graphviz= manually.
   :init
   (setq org-roam-v2-ack t)
   :config
-  (org-roam-setup)
+  (org-roam-db-autosync-enable)
   (wal/lieutenant
     "zd" '(org-roam-dailies-goto-date :wk "dailies"))
   :custom
@@ -4265,7 +4258,7 @@ The philosopher's choice.
   (hack-local-variables)
   (flycheck-mode 1))
 
-(use-package emacs-lisp
+(use-package elisp-mode
   :general
   (wal/major :keymaps 'emacs-lisp-mode-map :major-modes t
     "p" '(check-parens :wk "check parens"))
@@ -5051,6 +5044,8 @@ The order determines the load order as well.")
 
 (dolist (it wal/sub-packages)
   (require it nil t))
+
+(provide 'wal)
 
 ;; Local Variables:
 ;; byte-compile-warnings: (not free-vars)
