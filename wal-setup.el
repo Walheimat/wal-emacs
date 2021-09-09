@@ -103,7 +103,7 @@ The copy is created in the `user-emacs-directory'."
 (defun wal/setup-commit-hooks ()
   "Set up commit hooks."
   (interactive)
-  (unless (or (executable-find "npm") (executable-find "npx"))
+  (unless (and (executable-find "npm") (executable-find "npx"))
     (user-error "Binaries 'npm' and 'npx' need to be in path"))
   (wal/setup--erase-results-buffer)
   (wal/setup--append-results-message "Setting up commit hooks")
