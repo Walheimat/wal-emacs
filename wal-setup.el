@@ -2,8 +2,9 @@
 
 ;;; Commentary:
 
-;; Load this file using `load-file'. You will subsequently be asked
-;; whether you wish to copy or link the init template.
+;; Load this file using `load-file' then call `wal/setup-init-file' to
+;; set up the init file `wal-setup-commit-hooks' to set up commit
+;; hooks.
 
 ;;; Code:
 
@@ -11,6 +12,12 @@
 
 (defvar wal/setup--results-buffer-name "*wal-results*"
   "The name of the results buffer.")
+
+(defvar wal/setup--npm-output-buffer (get-buffer-create "*wal-results: npm*")
+  "Output buffer for npm.")
+
+(defvar wal/setup--npx-output-buffer (get-buffer-create "*wal-results: npx*")
+  "Output buffer for npx.")
 
 (defun wal/setup--append-results-message (mes)
   "Append MES to the results buffer.
@@ -73,7 +80,8 @@ The copy is created in the `user-emacs-directory'."
   "Major mode to show setup results.")
 
 (defun wal/setup-init-file ()
-  "Setup the init file."
+  "Set up the init file."
+  (interactive)
   (when (or (wal/setup--init-file-exists-p) (wal/setup--dot-emacs-file-exists-p))
     (user-error "Remove existing init file first"))
   (wal/setup--erase-results-buffer)
@@ -92,6 +100,26 @@ The copy is created in the `user-emacs-directory'."
   (wal/setup--append-results-message "Setup finished, reload Emacs")
   (wal/setup--show-results-buffer))
 
-(wal/setup-init-file)
+(defun wal/setup-commit-hooks ()
+  "Set up commit hooks."
+  (interactive)
+  (unless (or (executable-find "npm") (executable-find "npx"))
+    (user-error "Binaries 'npm' and 'npx' need to be in path"))
+  (wal/setup--erase-results-buffer)
+  (wal/setup--append-results-message "Setting up commit hooks")
+  (let ((default-directory wal/emacs-config-default-path)
+        (output-buffer (get-buffer-create wal/setup--results-buffer-name)))
+    (wal/setup--append-results-message "Installing packages")
+    (shell-command "npm install" wal/setup--npm-output-buffer)
+    (wal/setup--append-results-message "Installing hooks")
+    (shell-command "npx husky install" wal/setup--npx-output-buffer))
+  (wal/setup--append-results-message "Commit hooks are set up")
+  (wal/setup--show-results-buffer))
+
+(provide 'wal-setup)
+
+;; Local Variables:
+;; byte-compile-warnings: (not free-vars)
+;; End:
 
 ;;; wal-setup.el ends here
