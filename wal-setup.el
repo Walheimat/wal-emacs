@@ -8,7 +8,7 @@
 
 ;;; Code:
 
-;;; Buffer
+;;; Buffers
 
 (defvar wal/setup--results-buffer-name "*wal-results*"
   "The name of the results buffer.")
@@ -34,7 +34,6 @@ Unless this is the first message, a newline is prepended."
   (with-current-buffer (get-buffer-create wal/setup--results-buffer-name)
     (erase-buffer)))
 
-
 (defun wal/setup--show-results-buffer ()
   "Show the results buffer."
   (with-current-buffer (get-buffer-create wal/setup--results-buffer-name)
@@ -50,6 +49,10 @@ Unless this is the first message, a newline is prepended."
 (defun wal/setup--dot-emacs-file-exists-p ()
   "Check if a .emacs file already exists."
   (file-exists-p (expand-file-name ".emacs" "~")))
+
+(defun wal/setup--executables-exist-p ()
+  "Check if npm and npx are in path."
+  (and (executable-find "npm") (executable-find "npx")))
 
 ;;; Shell
 
@@ -79,6 +82,8 @@ The copy is created in the `user-emacs-directory'."
 (define-derived-mode wal/setup--results-mode text-mode "Wal Results"
   "Major mode to show setup results.")
 
+;; Set-up functions
+
 (defun wal/setup-init-file ()
   "Set up the init file."
   (interactive)
@@ -103,7 +108,7 @@ The copy is created in the `user-emacs-directory'."
 (defun wal/setup-commit-hooks ()
   "Set up commit hooks."
   (interactive)
-  (unless (and (executable-find "npm") (executable-find "npx"))
+  (unless (wal/setup--executables-exist-p)
     (user-error "Binaries 'npm' and 'npx' need to be in path"))
   (wal/setup--erase-results-buffer)
   (wal/setup--append-results-message "Setting up commit hooks")
