@@ -1787,16 +1787,6 @@ results."
         (org-adapt-indentation nil))
     (yas-expand)))
 
-(defun wal/yas-before-expand-snippet ()
-  "Disable `company-idle-delay' before expansion."
-  (when (and (boundp 'company-mode) company-mode)
-    (setq-local company-idle-delay nil)))
-
-(defun wal/yas-after-exit-snippet ()
-  "Reset `company-idle-delay' after exiting snippet."
-  (when (and (boundp 'company-mode) company-mode)
-    (wal/reset-to-standard 'company-idle-delay t)))
-
 (use-package yasnippet
   :config
   (define-key yas-minor-mode-map (kbd "<tab>") nil)
@@ -1811,10 +1801,7 @@ results."
     "y" '(:ignore t :wk "yasnippet")
     "yv" '(yas-visit-snippet-file :wk "visit snippet file")
     "yn" '(yas-new-snippet :wk "create new snippet"))
-  :hook
-  ((prog-mode . yas-minor-mode)
-   (yas-before-expand-snippet . wal/yas-before-expand-snippet)
-   (yas-after-exit-snippet . wal/yas-after-exit-snippet))
+  :hook (prog-mode . yas-minor-mode)
   :delight " yas")
 
 (use-package yasnippet-snippets
@@ -4595,10 +4582,11 @@ Language servers are awesome. Thanks, Microsoft.
 
 (defun wal/lsp ()
   "Activate LSP client."
-  (setq-local company-backends '(company-capf company-yasnippet)
-              company-idle-delay 0)
+  (setq-local company-idle-delay 0.0)
   (pcase wal/lsp-client
-    ('lsp-mode (lsp-deferred))
+    ('lsp-mode (progn
+                 (setq-local company-backends '(company-capf company-yasnippet))
+                 (lsp-deferred)))
     ('eglot (eglot-ensure))
     (_ nil)))
 
