@@ -1,7 +1,5 @@
 #!/bin/bash
 
-DIR="${0%/*}"
-
 echo -e "\e[1;34m}< ,.__)\e[0m \e[1m[commit hooks setup]\e[0m"
 
 function install_npm_dependencies() {
