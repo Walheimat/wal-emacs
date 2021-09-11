@@ -82,6 +82,8 @@ Set some personal info[fn:7].
 ;;
 ;; The global settings.
 
+(defvar wal/load-custom-file-immediately)
+
 (defgroup wal-settings nil
   "Change core settings."
   :group 'wal
@@ -450,10 +452,6 @@ This overrides the scratch buffer with the content stored in
 
 (provide 'wal-settings)
 
-;; Local Variables:
-;; byte-compile-warnings: (not free-vars)
-;; End:
-
 ;;; wal-settings.el ends here
 #+END_SRC
 
@@ -589,6 +587,8 @@ common context.
 (declare-function wal/edge-down "wal-func.el")
 (declare-function wal/edge-up "wal-func.el")
 (declare-function wal/split-window-the-other-way "wal-func.el")
+
+(defvar wal/emacs-config-default-path)
 
 (defgroup wal-key-bindings nil
   "Change key bindings settings."
@@ -803,39 +803,40 @@ Additional left PADDING can be passed."
 (use-package hydra
   :demand)
 
-;; Scaling text in buffer.
-(defhydra wal/text-scale (:hint nil)
-  "
+(with-no-warnings
+  ;; Scaling text in buffer.
+  (defhydra wal/text-scale (:hint nil)
+    "
 %s`wal/ascii-whale Text size: _i_ncrease or _d_ecrease.
 "
-  ("i" text-scale-increase)
-  ("d" text-scale-decrease)
-  ("r" wal/text-scale-reset "reset")
-  ("q" nil "quit"))
+    ("i" text-scale-increase)
+    ("d" text-scale-decrease)
+    ("r" wal/text-scale-reset "reset")
+    ("q" nil "quit"))
 
-;; Move window splitter or balance windows.
-(defhydra wal/resize-window (:hint nil)
-  "
+  ;; Move window splitter or balance windows.
+  (defhydra wal/resize-window (:hint nil)
+    "
 %s(wal/ascii-whale-hydra-offset 25)^_p_^
 %s`wal/ascii-whale Move window splitter: _b_   _f_.
 %s(wal/ascii-whale-hydra-offset 25)^_n_^
 "
-  ("b" wal/edge-left)
-  ("f" wal/edge-right)
-  ("n" wal/edge-down)
-  ("p" wal/edge-up)
-  ("o" wal/split-window-the-other-way "re-split")
-  ("l" balance-windows "balance")
-  ("g" golden-ratio "golden")
-  ("q" nil "quit"))
+    ("b" wal/edge-left)
+    ("f" wal/edge-right)
+    ("n" wal/edge-down)
+    ("p" wal/edge-up)
+    ("o" wal/split-window-the-other-way "re-split")
+    ("l" balance-windows "balance")
+    ("g" golden-ratio "golden")
+    ("q" nil "quit"))
 
-(defhydra wal/scroll-other-window (:timeout 4 :hint nil)
-  "
+  (defhydra wal/scroll-other-window (:timeout 4 :hint nil)
+    "
 %s`wal/ascii-whale Scroll other window: u_p_/dow_n_.
 "
-  ("p" scroll-other-window-down)
-  ("n" scroll-other-window)
-  ("q" nil "quit"))
+    ("p" scroll-other-window-down)
+    ("n" scroll-other-window)
+    ("q" nil "quit")))
 
 (general-define-key
  (wal/prefix-user-key "[") '(wal/text-scale/body :wk "text scale")
@@ -932,10 +933,6 @@ There are two differences:
 
 (provide 'wal-key-bindings)
 
-;; Local Variables:
-;; byte-compile-warnings: (not free-vars noruntime)
-;; End:
-
 ;;; wal-key-bindings.el ends here
 #+END_SRC
 
@@ -958,6 +955,7 @@ Finding files should =mkdir -p= its parents.
 ;;; Code:
 
 (declare-function wal/bytes-per-mb "wal-settings.el")
+(declare-function wal/colonel-sink "wal-key-bindings.el")
 
 (defgroup wal-func nil
   "Change values used in additional functions."
@@ -1738,8 +1736,18 @@ Don't you want to edit your buffer in multiple places at once?
 
 ;;; Code:
 
+(declare-function sp-backward-sexp "smartparens.el")
+(declare-function sp-backward-up-sexp "smartparens.el")
+(declare-function sp-down-sexp "smartparens.el")
+(declare-function sp-forward-sexp "smartparens.el")
+(declare-function sp-local-pair "smartparens.el")
+(declare-function sp-splice-sexp "smartparens.el")
+(declare-function sp-with-modes "smartparens.el")
+(declare-function sp--maybe-init "smartparens.el")
 (declare-function yas-expand "yasnippet.el")
 (declare-function wal/reset-to-standard "wal-settings.el")
+
+(defvar sp-lisp-modes)
 
 (use-package multiple-cursors
   :init
@@ -1943,10 +1951,6 @@ Some files are so long and Emacs will want to throw up. Prevent that.
 
 (provide 'wal-edit)
 
-;; Local Variables:
-;; byte-compile-warnings: (not free-vars unresolved)
-;; End:
-
 ;;; wal-edit.el ends here
 #+END_SRC
 
@@ -1971,7 +1975,14 @@ Let's have a dash of board.
 ;;; Code:
 
 (declare-function ligature-set-ligatures "ligature.el")
+(declare-function wal/colonel-sink "wal-key-bindings.el")
 (declare-function wal/directory-files ".emacs")
+
+(defvar beacon-dont-blink-commands)
+(defvar beacon-dont-blink-major-modes)
+(defvar dashboard-buffer-name)
+(defvar dimmer-prevent-dimming-predicates)
+(defvar doom-modeline--vcs-text)
 
 (defgroup wal-visuals nil
   "Change settings used for visual packages."
@@ -2254,7 +2265,8 @@ Dim inactive frames.
   (let ((ignore (cl-some (lambda (f) (and (fboundp f) (funcall f)))
                          dimmer-prevent-dimming-predicates)))
     (unless ignore
-      (dimmer-process-all t))))
+      (when (fboundp 'dimmer-process-all)
+        (dimmer-process-all t)))))
 
 (defun wal/dimmer-configure-lsp-doc ()
   "Convenience settings for lsp-doc users."
@@ -2342,7 +2354,8 @@ install =all-the-icons= fonts[fn:4].
   :config
   (doom-modeline-mode 1)
   (advice-add 'doom-modeline-update-vcs-text :after #'wal/advise-doom-modeline-update-vcs-text)
-  (add-hook 'magit-post-refresh-hook #'doom-modeline-update-vcs-text)
+  (when (fboundp 'doom-modeline-update-vcs-text)
+    (add-hook 'magit-post-refresh-hook #'doom-modeline-update-vcs-text))
   :custom
   (doom-modeline-project-detection 'projectile)
   (doom-modeline-minor-modes t)
@@ -2529,17 +2542,13 @@ zoning can always be triggered using =C-z=.
                        zone-pgm-rat-race
                        zone-pgm-whack-chars
                        ])
-  (when wal/zone-when-idle
+  (when (and (fboundp 'zone-when-idle) wal/zone-when-idle)
     (zone-when-idle wal/zone-timer))
   :bind
   ("C-z" . zone) ; Replaces `suspend-frame'.
   :ensure nil)
 
 (provide 'wal-visuals)
-
-;; Local Variables:
-;; byte-compile-warnings: (not free-vars unresolved)
-;; End:
 
 ;;; wal-visuals.el ends here
 #+END_SRC
@@ -2741,6 +2750,9 @@ your mouse.
 (declare-function avy-with "avy.el")
 (declare-function avy-jump "avy.el")
 
+(defvar avy-goto-word-0)
+(defvar avy-goto-word-0-regexp)
+
 (defun wal/avy-goto-word-in-line ()
   "Jump to currently visible word in the current line."
   (interactive)
@@ -2789,10 +2801,6 @@ Move where I want. Useful for comments.
 
 (provide 'wal-movement)
 
-;; Local Variables:
-;; byte-compile-warnings: (not free-vars)
-;; End:
-
 ;;; wal-movement.el ends here
 #+END_SRC
 
@@ -2830,6 +2838,7 @@ This package /requires/ the =ag= binary which you can get from
 (defun wal/ag-ignored (string)
   "Search project for STRING including VCS ignored files."
   (interactive (list (ag/read-from-minibuffer "Search string")))
+  (defvar ag-arguments)
   (let ((ag-arguments (append ag-arguments '("--skip-vcs-ignores"))))
     (ag/search string (ag/project-root default-directory))))
 
@@ -2886,6 +2895,7 @@ Commands that unfocus the ctrlf minibuffer should quit it."
   "Configure package `ctrlf'.
 
 This adds additional bindings."
+  (defvar ctrlf-minibuffer-bindings)
   (mapc (lambda (it)
           (add-to-list
            'ctrlf-minibuffer-bindings
@@ -2895,7 +2905,8 @@ This adds additional bindings."
 (use-package ctrlf
   :config
   (wal/configure-ctrlf)
-  (ctrlf-mode +1)
+  (when (fboundp 'ctrlf-mode)
+    (ctrlf-mode +1))
   :custom
   (ctrlf-auto-recenter t)
   (ctrlf-show-match-count-at-eol nil)
@@ -2916,10 +2927,6 @@ using =xref-find-definitions= (=M-.=).
   (dumb-jump-force-searcher 'ag))
 
 (provide 'wal-find)
-
-;; Local Variables:
-;; byte-compile-warnings: (not free-vars noruntime)
-;; End:
 
 ;;; wal-find.el ends here
 #+END_SRC
@@ -3016,7 +3023,8 @@ Some nicer candidate view when switching buffers.
 #+BEGIN_SRC emacs-lisp
 (use-package ivy-rich
   :config
-  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
+  (when (fboundp 'ivy-format-function-line)
+    (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line))
   (ivy-rich-mode 1)
   :demand
   :after ivy)
@@ -3025,6 +3033,7 @@ Some nicer candidate view when switching buffers.
   "Configure (additional) transformers in the list.
 
 This function is called before `all-the-icons-ivy-rich' is activated."
+  (defvar all-the-icons-ivy-rich-display-transformers-list)
   (let ((tl all-the-icons-ivy-rich-display-transformers-list))
     (plist-put tl 'persp-kill-buffer* (plist-get tl 'persp-kill-buffer))))
 
@@ -3084,7 +3093,8 @@ Better short-term-memory for =ivy=.
 (use-package prescient
   :if wal/use-prescient
   :config
-  (prescient-persist-mode +1)
+  (when (fboundp 'prescient-persist-mode)
+    (prescient-persist-mode +1))
   :custom
   (prescient-sort-length-enable nil)
   (prescient-save-file (expand-file-name "prescient-persist" wal/cache-directory))
@@ -3170,10 +3180,6 @@ Use =selectrum= for =consult=.
 
 (provide 'wal-complete)
 
-;; Local Variables:
-;; byte-compile-warnings: (not noruntime free-vars)
-;; End:
-
 ;;; wal-complete.el ends here
 #+END_SRC
 
@@ -3195,6 +3201,10 @@ Have some perspective, man.
 
 (declare-function projectile-project-p "projectile.el")
 (declare-function persp-scratch-buffer "perspective.el")
+
+(defvar projectile-globally-ignored-directories)
+(defvar projectile-globally-ignored-files)
+(defvar projectile-globally-ignored-file-suffixes)
 
 (defgroup wal-workspace nil
   "Change settings used for workspace packages."
@@ -3343,10 +3353,6 @@ This eliminates getting prompted to open one first."
 
 (provide 'wal-workspace)
 
-;; Local Variables:
-;; byte-compile-warnings: (not free-vars)
-;; End:
-
 ;;; wal-workspace.el ends here
 #+END_SRC
 
@@ -3368,6 +3374,11 @@ is a bit elaborate.
 ;;; Code:
 
 (declare-function wal/disable-tabs "wal-settings.el")
+
+(defvar org-mode-map)
+(defvar text-scale-mode-step)
+(defvar visual-fill-column-width)
+(defvar visual-fill-column-center-text)
 
 (defgroup wal-org nil
   "Change settings used for org packages."
@@ -3395,7 +3406,8 @@ is a bit elaborate.
 (defun wal/org-content (level)
   "Interactively call `org-content' with LEVEL."
   (interactive "nShow content up to level: ")
-  (org-content level))
+  (when (fboundp 'org-content)
+    (org-content level)))
 
 (use-package org
   :config
@@ -3691,7 +3703,8 @@ Turn any =org-mode= buffer into a presentation.
         cursor-type t)
   (beacon-mode 1)
   (visual-fill-column-mode -1)
-  (outline-show-all)
+  (when (fboundp 'outline-show-all)
+    (outline-show-all))
   (mixed-pitch-mode -1))
 
 (defun wal/org-tree-slide-text-scale ()
@@ -3743,10 +3756,6 @@ Allow padding and centering text.
 (use-package visual-fill-column)
 
 (provide 'wal-org)
-
-;; Local Variables:
-;; byte-compile-warnings: (not free-vars unresolved)
-;; End:
 
 ;;; wal-org.el ends here
 #+END_SRC
@@ -3887,6 +3896,9 @@ Set up =eshell=. I like the idea of it but I don't really use it.
 (declare-function vterm-toggle-show "vterm-toggle.el")
 (declare-function wal/display-buffer-in-side-window "wal-func.el")
 
+(defvar eshell-highlight-prompt)
+(defvar eshell-prompt-function)
+
 (use-package esh-autosuggest
   :hook (eshell-mode . esh-autosuggest-mode))
 
@@ -3903,7 +3915,8 @@ Set up =eshell=. I like the idea of it but I don't really use it.
 (defun wal/advise-eshell/clear (&rest _r)
   "Advise to truncate buffer."
   (let ((eshell-buffer-maximum-lines 0))
-    (eshell-truncate-buffer)))
+    (when (fboundp 'eshell-truncate-buffer)
+      (eshell-truncate-buffer))))
 
 (use-package eshell
   :config
@@ -3963,10 +3976,6 @@ Some common shell commands require an additional =C-c=:
   ("t" . vterm-toggle))
 
 (provide 'wal-terminal)
-
-;; Local Variables:
-;; byte-compile-warnings: (not free-vars noruntime)
-;; End:
 
 ;;; wal-terminal.el ends here
 #+END_SRC
@@ -4569,6 +4578,8 @@ Language servers are awesome. Thanks, Microsoft.
 (declare-function eglot-managed-p "eglot.el")
 (declare-function wal/colonel "wal-key-bindings.el")
 
+(defvar lsp-file-watch-ignored-directories)
+
 (defgroup wal-lsp nil
   "Change settings for LSP packages."
   :group 'wal
@@ -4772,24 +4783,21 @@ Taken from the official documentation.
 
 #+BEGIN_SRC emacs-lisp
 (with-eval-after-load 'lsp-mode
-  (lsp-register-client
-   (make-lsp-client
-    :new-connection
-    (lsp-stdio-connection (list "swipl"
-                                "-g" "use_module(library(lsp_server))."
-                                "-g" "lsp_server:main"
-                                "-t" "halt"
-                                "--" "stdio"))
-    :major-modes '(prolog-mode)
-    :priority 1
-    :multi-root t
-    :server-id 'prolog-ls)))
+  (with-suppressed-warnings
+      (lsp-register-client
+       (make-lsp-client
+        :new-connection
+        (lsp-stdio-connection (list "swipl"
+                                    "-g" "use_module(library(lsp_server))."
+                                    "-g" "lsp_server:main"
+                                    "-t" "halt"
+                                    "--" "stdio"))
+        :major-modes '(prolog-mode)
+        :priority 1
+        :multi-root t
+        :server-id 'prolog-ls))))
 
 (provide 'wal-lsp)
-
-;; Local Variables:
-;; byte-compile-warnings: (not unresolved free-vars)
-;; End:
 
 ;;; wal-lsp.el ends here
 #+END_SRC
@@ -5036,16 +5044,13 @@ The root package of the configuration which is basically just a giant
 
 The order determines the load order as well.")
 
-(add-to-list 'load-path wal/emacs-config-package-path)
+(when (boundp 'wal/emacs-config-package-path)
+  (add-to-list 'load-path wal/emacs-config-package-path))
 
 (dolist (it wal/sub-packages)
   (require it nil t))
 
 (provide 'wal)
-
-;; Local Variables:
-;; byte-compile-warnings: (not free-vars)
-;; End:
 
 ;;; wal.el ends here
 #+END_SRC
