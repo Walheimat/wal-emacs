@@ -492,27 +492,24 @@ It's also used for certain dispatches:
 
 Most hyper[fn:9] bindings are quick-access actions:
 
-+ =H-a= searches with =ag= in project
-+ =H-b= switches buffers in project using =counsel-projectile=
-+ =H-c= completes at point using =company= (in =company-mode=)
-+ =H-d= duplicates current line/region with =crux=
-+ =H-e= opens (and =H-r= cycles through) =popper= pop-up(s)
-+ =H-f= finds project file using =counsel-projectile=
-+ =H-g= to use =counsel-mark-ring=
++ =H-7= opens (and =H-8= cycles through) =popper= pop-up(s)
++ =H--= duplicates current line/region with =crux=
 + =H-i= switches =perspective=
-+ =H-k= to start (and =H-j= to end or call) macro
++ =H-j= finds project file using =counsel-projectile=
++ =H-k= searches with =ag= in project
 + =H-l= jumps to line (and =H-o= to word in line) with =avy=
 + =H-<mouse3>= adds another =multiple-cursor= at point
-+ =H-n= to capture (using =counsel-projectile-org-capture=)
 + =H-p= switches projects using =projectile=
-+ =H-y= expands snippets (in =yas-minor-mode=)
++ =H-<return>= completes at point using =company= (in =company-mode=)
++ =H-SPC= switches to buffer using =counsel-projectile=
 + =H-== to do a =quick-calc= (inserted if called with =C-u=)
-+ =H-t= toggles =vterm=.
++ =H-\= toggles =vterm=.
++ =H-y= expands snippets (in =yas-minor-mode=)
 
 It's also used for some dispatches:
 
++ =H-h= for =ace-window=.
 + =H-m= runs =magit-status=
-+ =H-w= for =ace-window=.
 
 It's also used for three hydras:
 
@@ -523,7 +520,8 @@ It's also used for three hydras:
 **** Caps to Hyper
 
 I re-bound my =<CAPS>= (caps-lock) key to =Hyper_L= to use the hyper
-bindings above.
+bindings above. Therefore, all following keys should be right hand
+keys.
 
 If you use Xorg Display Server, the risky quite[fn:10] way would be to
 edit your =/usr/share/X11/xkb/symbols/pc= file like so:
@@ -560,10 +558,6 @@ Some key-bindings have case-sensitive alternatives:
 + =C-K= kills lines backwards using =crux=
 + =C-x D= runs =dired= starting at =HOME= directory
 + =C-x K= kills any buffer (ignoring current perspective)
-+ =H-A= prompts for directory before searching with =ag=
-+ =H-D= duplicates and comments line or region
-+ =H-F= finds directories using =counsel-projectile=
-+ =H-L= jumps to beginning of line (while =H-O= jumps to char in line).
 
 ** Leader Keys
 
@@ -688,6 +682,17 @@ on =major-mode=.
 
 Leader keys =major= and =captain= prefix mode-specific actions, for major
 and minor modes respectively.
+
+The =captain= prefixes, assuming the respective mode is on, are:
+
++ =d= for =dap-mode=
++ =f= for =flycheck= or =flymake=
++ =l= for =lsp-mode= or =eglot=
++ =p= for =popper=
++ =s= for =flyspell=
++ =t= for =treesitter=
++ =w= for =winner=
++ =y= for =yasnippet=
 
 Leader key =lieutenant= prefixes non- or semi-mode package actions. The
 package prefixes are:
@@ -1630,8 +1635,9 @@ Use better commands for macros.
 
 #+BEGIN_SRC emacs-lisp
 (use-package kmacro
-  :wal-bind
-  (("k" . kmacro-start-macro-or-insert-counter)
+  :bind
+  (:map kmacro-keymap
+   ("k" . kmacro-start-macro-or-insert-counter)
    ("j" . kmacro-end-or-call-macro))
   :ensure nil)
 #+END_SRC
@@ -1886,8 +1892,7 @@ Let's use =crux= for some editing magic.
    ("C-o" . crux-smart-open-line)
    ("C-S-o" . crux-smart-open-line-above))
   :wal-bind
-  (("d" . crux-duplicate-current-line-or-region)
-   ("D" . crux-duplicate-and-comment-current-line-or-region))
+  (("-" . crux-duplicate-current-line-or-region))
   :general
   (wal/lieutenant
     "x" '(:ignore t :wk "crux")
@@ -2608,7 +2613,7 @@ Everything that has to do with windows.
   (aw-keys '(?j ?k ?l ?\; ?u ?i ?o ?p))
   (aw-ignored-buffers '(vterm-mode))
   :wal-bind
-  ("w" . ace-window)
+  ("h" . ace-window)
   :delight " ace")
 #+END_SRC
 
@@ -2687,14 +2692,14 @@ Treat certain buffers and their windows as pop-ups.
                              " ")))
   :wal-bind
   (:map popper-mode-map
-   ("e" . popper-toggle-latest)
-   ("r" . popper-cycle))
+   ("7" . popper-toggle-latest)
+   ("8" . popper-cycle))
   :general
   (wal/captain :keymaps 'popper-mode-map
-    "e" '(:ignore t :wk "popper")
-    "er" '(popper-toggle-type :wk "raise or drop")
-    "ek" '(popper-kill-latest-popup :wk "kill latest")
-    "ea" '(wal/popper-open-all :wk "open all"))
+    "p" '(:ignore t :wk "popper")
+    "pr" '(popper-toggle-type :wk "raise or drop")
+    "pk" '(popper-kill-latest-popup :wk "kill latest")
+    "pa" '(wal/popper-open-all :wk "open all"))
   (general-define-key
    :keymaps 'popper-mode-map
    :predicate '(wal/popper-dead-shell-p)
@@ -2772,9 +2777,7 @@ your mouse.
                        vterm-mode))
   :wal-bind
   (("l" . avy-goto-end-of-line)
-   ("L" . avy-goto-line)
-   ("o" . wal/avy-goto-word-in-line)
-   ("O" . avy-goto-char-in-line))
+   ("o" . wal/avy-goto-word-in-line))
   :general
   (wal/lieutenant
     ;; Lines.
@@ -2866,8 +2869,7 @@ This package /requires/ the =ag= binary which you can get from
                     "*.js.map"))
   (ag-project-root-function #'projectile-acquire-root)
   :wal-bind
-  (("a" . ag-project)
-   ("A" . ag))
+  (("k" . ag))
   :general
   (wal/lieutenant
     "a" '(:ignore t :wk "ag")
@@ -2956,7 +2958,7 @@ Provide code completion.
 (use-package company
   :wal-bind
   (:map company-mode-map
-   ("c" . company-complete))
+   ("<return>" . company-complete))
   :general
   (wal/colonel :keymaps '(prog-mode-map dap-ui-repl-mode-map)
     "c" '(company-mode :wk "company"))
@@ -3070,8 +3072,6 @@ This function is called before `all-the-icons-ivy-rich' is activated."
    ("C-x C-f" . counsel-find-file)
    :map bookmark-map
    ("b" . counsel-bookmark))
-  :wal-bind
-  ("g" . counsel-mark-ring)
   :general
   (wal/general
     "t" '(counsel-load-theme :wk "load theme")
@@ -3342,13 +3342,14 @@ This eliminates getting prompted to open one first."
       "* %?")))
   :bind
   (:map projectile-command-map
-   ("ss" . counsel-projectile-ag))
+   ("ss" . counsel-projectile-ag)
+   ("n" . counsel-projectile-org-capture)
+   ("b" . counsel-projectile-switch-to-buffer)
+   ("d" . counsel-projectile-find-dir))
   :wal-bind
   (:map projectile-mode-map
-   ("f" . counsel-projectile-find-file)
-   ("F" . counsel-projectile-find-dir)
-   ("n" . counsel-projectile-org-capture)
-   ("b" . counsel-projectile-switch-to-buffer))
+   ("j" . counsel-projectile-find-file)
+   ("SPC" . counsel-projectile-switch-to-buffer))
   :demand
   :after (projectile counsel))
 
@@ -3778,7 +3779,7 @@ Run =dired= with =C-x d=.
 
 ;;; Commentary:
 ;;
-;; Provide dired packages.
+;; Provide Dired packages.
 
 ;;; Code:
 
@@ -3974,7 +3975,7 @@ Some common shell commands require an additional =C-c=:
   (vterm-toggle-fullscreen-p nil)
   (vterm-toggle-scope 'project)
   :wal-bind
-  ("t" . vterm-toggle))
+  ("\\" . vterm-toggle))
 
 (provide 'wal-terminal)
 

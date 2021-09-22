@@ -1,18 +1,21 @@
 #!/bin/bash
 
-echo -e "\e[1;34m}< ,.__)\e[0m \e[1m[commit hooks setup]\e[0m"
+source "./variables.sh"
 
 function install_npm_dependencies() {
-    echo -e "\n\e[1m[npm]\e[0m"
+    echo -e "\n${bold}[npm]${reset}"
     (cd ..; npm install 2>&1)
 }
 
 function install_husky() {
-    echo -e "\n\e[1m[husky]\e[0m\n"
+    echo -e "\n${bold}[husky]${reset}\n"
     (cd ..; npx husky install 2>&1)
 }
+
+
+echo -e "${blue}${whale}${reset} ${bold}[commit hooks setup]${reset}"
 
 install_npm_dependencies
 install_husky
 
-echo -e "\n\e[1;32m}< ,.__)\e[0m commit setup complete"
+echo -e "${green}${whale}${reset} commit setup complete"

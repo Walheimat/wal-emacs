@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source "./variables.sh"
+
 DIR="${0%/*}"
 
 function no_init_file_exists() {
@@ -7,7 +9,7 @@ function no_init_file_exists() {
     local method=$2
 
     if [[ -e "$userdir/init.el" || -e "$HOME/.emacs" ]]; then
-        echo -e "\e[1;31m}< ,.__)\e[0m found existing init file, can't $method"
+        echo -e "${red}${whale}${reset} found existing init file, can't $method"
         return 1;
     fi
 
@@ -15,7 +17,7 @@ function no_init_file_exists() {
 }
 
 function on_complete() {
-    echo -e "\n\e[1;32m}< ,.__)\e[0m init file setup complete, you can restart Emacs"
+    echo -e "\n${green}${whale}${reset} init file setup complete, you can restart Emacs"
 }
 
 function link_init_file() {
@@ -38,7 +40,7 @@ function copy_init_file() {
     fi
 }
 
-echo -e "\e[1;34m}< ,.__)\e[0m \e[1m[init file setup]\e[0m"
+echo -e "${blue}${whale}${reset} ${bold}[init file setup]${reset}"
 
 func=$1
 
@@ -50,6 +52,6 @@ case $func in
         copy_init_file "${@:2}"
         ;;
     *)
-        echo -e "\e[1;31m}< ,.__)\e[0m call with 'link' or 'copy'"
+        echo -e "${red}${whale}${reset} call with 'link' or 'copy'"
         ;;
 esac
