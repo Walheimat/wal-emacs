@@ -2903,12 +2903,9 @@ Commands that unfocus the ctrlf minibuffer should quit it."
   "Configure package `ctrlf'.
 
 This adds additional bindings."
-  (defvar ctrlf-minibuffer-bindings)
-  (mapc (lambda (it)
-          (add-to-list
-           'ctrlf-minibuffer-bindings
-           `([remap ,it] . ctrlf-cancel)))
-        wal/ctrlf-cancel-commands))
+  (eval
+   `(bind-keys :map ctrlf-minibuffer-mode-map
+      ,@(mapcar (lambda (it) (cons `[remap ,it] 'ctrlf-cancel)) wal/ctrlf-cancel-commands))))
 
 (use-package ctrlf
   :config
