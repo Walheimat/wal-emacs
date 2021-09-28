@@ -1877,6 +1877,40 @@ Advising the function does not work."
 Let's use =crux= for some editing magic.
 
 #+BEGIN_SRC emacs-lisp
+;; FIXME: Adding these as recent commit broke these.
+
+(defun wal/crux-duplicate-current-line-or-region (arg)
+  "Duplicates the current line or region ARG times.
+If there's no region, the current line will be duplicated.  However, if
+there's a region, all lines that region covers will be duplicated."
+  (interactive "p")
+  (pcase-let* ((origin (point))
+               (`(,beg . ,end) (crux-get-positions-of-line-or-region))
+               (region (buffer-substring-no-properties beg end)))
+    (dotimes (_i arg)
+      (goto-char end)
+      (newline)
+      (insert region)
+      (setq end (point)))
+    (goto-char (+ origin (* (length region) arg) arg))))
+
+(defun wal/crux-duplicate-and-comment-current-line-or-region (arg)
+  "Duplicates and comments the current line or region ARG times.
+If there's no region, the current line will be duplicated.  However, if
+there's a region, all lines that region covers will be duplicated."
+  (interactive "p")
+  (pcase-let* ((origin (point))
+               (`(,beg . ,end) (crux-get-positions-of-line-or-region))
+               (region (buffer-substring-no-properties beg end)))
+    (comment-or-uncomment-region beg end)
+    (setq end (line-end-position))
+    (dotimes (_ arg)
+      (goto-char end)
+      (newline)
+      (insert region)
+      (setq end (point)))
+    (goto-char (+ origin (* (length region) arg) arg))))
+
 (use-package crux
   :bind
   (("C-x o" . crux-other-window-or-switch-buffer) ;; Overrides `other-window'.
@@ -1885,8 +1919,8 @@ Let's use =crux= for some editing magic.
    ("C-o" . crux-smart-open-line)
    ("M-o" . crux-smart-open-line-above))
   :wal-bind
-  (("9" . crux-duplicate-current-line-or-region)
-   ("0" . crux-duplicate-and-comment-current-line-or-region)
+  (("9" . wal/crux-duplicate-current-line-or-region)
+   ("0" . wal/crux-duplicate-and-comment-current-line-or-region)
    ("n" . crux-other-window-or-switch-buffer))
   :general
   (wal/lieutenant
@@ -1896,7 +1930,8 @@ Let's use =crux= for some editing magic.
     "xs" '(crux-sudo-edit :wk "sudo edit"))
   (wal/general-sink
     "i" '(crux-find-shell-init-file :wk "find shell init")
-    "c" '(crux-find-user-custom-file :wk "find custom file")))
+    "c" '(crux-find-user-custom-file :wk "find custom file"))
+  :commands (crux-get-positions-of-line-or-region))
 #+END_SRC
 
 I know you're hiding that sweet, sweet whitespace in that basket,
