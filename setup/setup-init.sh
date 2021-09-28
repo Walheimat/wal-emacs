@@ -24,7 +24,7 @@ function link_init_file() {
     local userdir="${1:-$HOME}"
 
     if no_init_file_exists "$userdir" "link"; then
-        echo -e "\n(soft-) linking init file to ${userdir@Q}"
+        echo -e "\n(symbolically) linking init file to ${userdir@Q}"
         ln -s "$(cd ..; pwd)/templates/init.el" "$userdir/init.el"
         on_complete
     fi
