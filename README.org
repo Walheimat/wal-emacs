@@ -498,7 +498,6 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-j= finds project file using =counsel-projectile=
 + =H-k= searches with =ag= in project
 + =H-l= jumps to line (and =H-o= to word in line) with =avy=
-+ =H-n= jumps to =dired=
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-p= switches projects using =projectile=
 + =H-<return>= completes at point using =company= (in =company-mode=)
@@ -545,14 +544,6 @@ xmodmap -e "keysym Caps_Lock = Hyper_L" \
 This assumes that =Hyper_L= was assigned to modifier =Mod4= that's already
 used by =Super_L= and modifier =Mod3= is an empty group. I haven't gotten
 this safer alternative to work for me.
-
-*** Case-Sensitivity
-
-Some key-bindings have case-sensitive alternatives:
-
-+ =C-K= kills lines backwards using =crux=
-+ =C-x D= runs =dired= starting at =HOME= directory
-+ =C-x K= kills any buffer (ignoring current perspective)
 
 ** Leader Keys
 
@@ -1887,11 +1878,11 @@ Let's use =crux= for some editing magic.
 #+BEGIN_SRC emacs-lisp
 (use-package crux
   :bind
-  (("M-o" . crux-other-window-or-switch-buffer)
-   ("C-S-k" . crux-kill-line-backwards)
+  (("C-x o" . crux-other-window-or-switch-buffer) ;; Overrides `other-window'.
    ("C-k" . crux-smart-kill-line)
+   ("M-k" . crux-kill-line-backwards) ; Overrides `kill-sentence'.
    ("C-o" . crux-smart-open-line)
-   ("C-S-o" . crux-smart-open-line-above))
+   ("M-o" . crux-smart-open-line-above))
   :wal-bind
   (("-" . crux-duplicate-current-line-or-region))
   :general
@@ -1920,6 +1911,16 @@ Little Red Riding Hood!
     "hf" '(hungry-delete-forward :wk "forward")
     "hb" '(hungry-delete-backward :wk "backward"))
   :delight " hun")
+#+END_SRC
+
+Comment and uncomment with less of a dance.
+
+#+BEGIN_SRC emacs-lisp
+(use-package newcomment
+  :ensure nil
+  :bind
+  ([remap comment-set-column] . comment-line)
+  ([remap comment-line] . comment-set-column))
 #+END_SRC
 
 Sometimes I need to see whitespace chars.
@@ -3008,7 +3009,7 @@ Pass R to the switch buffer function."
   :bind
   (:map ivy-mode-map
    ("C-x b" . wal/ivy-switch-buffer)
-   ("C-x B" . wal/ivy-switch-ignored-buffers))
+   ("C-x x b" . wal/ivy-switch-ignored-buffers))
   :defer 1)
 #+END_SRC
 
@@ -3245,7 +3246,7 @@ This only removes `process-kill-buffer-query-function'."
   :bind
   (:map persp-mode-map
    ("C-x k" . persp-kill-buffer*)
-   ("C-x K" . all-the-icons-ivy-rich-kill-buffer)
+   ("C-x x k" . all-the-icons-ivy-rich-kill-buffer)
    ;; Replaces `list-buffers'.
    ("C-x C-b" . persp-buffer-menu)
    :map perspective-map
@@ -3807,13 +3808,12 @@ Uses the same optional SWITCHES."
   (dired-auto-revert-buffer t)
   (dired-kill-when-opening-new-dired-buffer t) ;; New in Emacs 28.1.
   :bind
-  (("C-x j" . dired-jump-other-window)
-   ("C-x D" . wal/dired-from-home)
+  (("C-x x d" . wal/dired-from-home)
+   ("C-x j" . dired-jump)
+   ("C-x x j" . dired-jump-other-window)
    :map dired-mode-map
    ("." . dired-up-directory) ; Overrides `dired-clean-directory'.
    ("," . dired-display-file))
-  :wal-bind
-  (("n" . dired-jump))
   :general
   (wal/major :keymaps 'dired-mode-map :major-modes t
     "e" '(dired-create-empty-file :wk "create empty file")
