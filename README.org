@@ -498,14 +498,14 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-j= finds project file using =counsel-projectile=
 + =H-k= searches with =ag= in project
 + =H-l= jumps to line (and =H-o= to word in line) with =avy=
-+ =H-n= switches windows using =crux=
 + =H-<mouse3>= adds another =multiple-cursor= at point
++ =H-n= switches to buffer using =counsel-projectile=
 + =H-p= switches projects using =projectile=
 + =H-<return>= completes at point using =company= (in =company-mode=)
-+ =H-SPC= switches to buffer using =counsel-projectile=
++ =H-SPC= to switch windows (or buffers) with crux
 + =H-== to do a =quick-calc= (inserted if called with =C-u=)
-+ =H-\= toggles =vterm=.
-+ =H-y= expands snippets (in =yas-minor-mode=)
++ =H-\= toggles =vterm=
++ =H-y= expands snippets (in =yas-minor-mode=).
 
 It's also used for some dispatches:
 
@@ -1923,15 +1923,14 @@ there's a region, all lines that region covers will be duplicated."
 
 (use-package crux
   :bind
-  (("C-x o" . crux-other-window-or-switch-buffer) ;; Overrides `other-window'.
-   ("C-k" . crux-smart-kill-line)
+  (("C-k" . crux-smart-kill-line)
    ("M-k" . crux-kill-line-backwards) ; Overrides `kill-sentence'.
    ("C-o" . crux-smart-open-line)
    ("M-o" . crux-smart-open-line-above))
   :wal-bind
   (("9" . wal/crux-duplicate-current-line-or-region)
    ("0" . wal/crux-duplicate-and-comment-current-line-or-region)
-   ("n" . crux-other-window-or-switch-buffer))
+   ("SPC" . crux-other-window-or-switch-buffer))
   :general
   (wal/lieutenant
     "x" '(:ignore t :wk "crux")
@@ -3401,7 +3400,7 @@ This eliminates getting prompted to open one first."
   :wal-bind
   (:map projectile-mode-map
    ("j" . counsel-projectile-find-file)
-   ("SPC" . counsel-projectile-switch-to-buffer))
+   ("n" . counsel-projectile-switch-to-buffer))
   :demand
   :after (projectile counsel))
 
@@ -5140,7 +5139,7 @@ If the installation process should fail for any reason, close Emacs
 and re-run it.
 
 [fn:5] Which means that a frame is created and control immediately
-returned
+returned.
 
 [fn:6] Not including where =:tangle no= was set, 159 (on my last count)
 code blocks will be tangled. /Note/ they will not necessarily be
@@ -5178,7 +5177,7 @@ found in other sections
 [fn:13] You might have to call =emojify-download-emoji= to download a
 set that supports your emojis.
 
-[fn:14]  We will try to download it automatically, but might fail.
+[fn:14] We will try to download it automatically, but might fail.
 
 [fn:15] If you're on an older distro your =libvterm= package might be
 too old.
