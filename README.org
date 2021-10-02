@@ -7,7 +7,7 @@
 
 ** Heads-Up
 
-This project is my personal literate Emacs (28.0.50)[fn:1]
+This project is my personal literate Emacs (29.0.50)[fn:1]
 configuration.
 
 If you're a complete beginner, you will find [[https://github.com/emacs-tw/awesome-emacs#starter-kit][more user-friendly and
@@ -340,11 +340,6 @@ Set up an easy way to switch between tabs and spaces for indentation.
   :type 'boolean
   :group 'wal-settings)
 
-(defcustom wal/allow-custom-indent-line-fun t
-  "Whether a custom `indent-line-function' can be passed."
-  :type 'boolean
-  :group 'wal-settings)
-
 (defun wal/reset-to-standard (sym &optional locally)
   "Reset symbol SYM to its standard value.
 If LOCALLY is t, the local variable is killed while its global
@@ -391,7 +386,7 @@ TAB-INDENT-FUN and call MODE-FUN after changes."
   (if wal/prefer-tabs
       (wal/enable-tabs)
     (wal/disable-tabs))
-  (when (and wal/allow-custom-indent-line-fun tab-indent-fun)
+  (when tab-indent-fun
     (setq-local indent-line-function tab-indent-fun))
   (when mode-fun
     (funcall mode-fun)))
@@ -494,23 +489,22 @@ Most hyper[fn:9] bindings are quick-access actions:
 
 + =H-7= opens (and =H-8= cycles through) =popper= pop-up(s)
 + =H--= duplicates current line/region with =crux=
++ =H-h= finds project file using =counsel-projectile=
 + =H-i= switches =perspective=
-+ =H-j= finds project file using =counsel-projectile=
-+ =H-k= searches with =ag= in project
-+ =H-l= jumps to line (and =H-o= to word in line) with =avy=
++ =H-j= switches to buffer using =counsel-projectile=
++ =H-l= jumps to line (and =H-k= to word in line) with =avy=
 + =H-<mouse3>= adds another =multiple-cursor= at point
-+ =H-n= switches to buffer using =counsel-projectile=
++ =H-n= searches with =ag= in project
 + =H-p= switches projects using =projectile=
 + =H-<return>= completes at point using =company= (in =company-mode=)
-+ =H-SPC= to switch windows (or buffers) with crux
 + =H-== to do a =quick-calc= (inserted if called with =C-u=)
 + =H-\= toggles =vterm=
 + =H-y= expands snippets (in =yas-minor-mode=).
 
 It's also used for some dispatches:
 
-+ =H-h= for =ace-window=.
 + =H-m= runs =magit-status=
++ =H-u= for =ace-window=.
 
 **** Caps to Hyper
 
@@ -1930,7 +1924,7 @@ there's a region, all lines that region covers will be duplicated."
   :wal-bind
   (("9" . wal/crux-duplicate-current-line-or-region)
    ("0" . wal/crux-duplicate-and-comment-current-line-or-region)
-   ("SPC" . crux-other-window-or-switch-buffer))
+   ("o" . crux-other-window-or-switch-buffer))
   :general
   (wal/lieutenant
     "x" '(:ignore t :wk "crux")
@@ -2660,7 +2654,7 @@ Everything that has to do with windows.
   (aw-keys '(?j ?k ?l ?\; ?u ?i ?o ?p))
   (aw-ignored-buffers '(vterm-mode))
   :wal-bind
-  ("h" . ace-window)
+  ("u" . ace-window)
   :delight " ace")
 #+END_SRC
 
@@ -2831,7 +2825,7 @@ your mouse.
                        vterm-mode))
   :wal-bind
   (("l" . avy-goto-end-of-line)
-   ("o" . wal/avy-goto-word-in-line))
+   ("k" . wal/avy-goto-word-in-line))
   :general
   (wal/lieutenant
     ;; Lines.
@@ -2923,7 +2917,7 @@ This package /requires/ the =ag= binary which you can get from
                     "*.js.map"))
   (ag-project-root-function #'projectile-acquire-root)
   :wal-bind
-  (("k" . ag))
+  (("n" . ag))
   :general
   (wal/lieutenant
     "a" '(:ignore t :wk "ag")
@@ -3399,8 +3393,8 @@ This eliminates getting prompted to open one first."
    ("d" . counsel-projectile-find-dir))
   :wal-bind
   (:map projectile-mode-map
-   ("j" . counsel-projectile-find-file)
-   ("n" . counsel-projectile-switch-to-buffer))
+   ("h" . counsel-projectile-find-file)
+   ("j" . counsel-projectile-switch-to-buffer))
   :demand
   :after (projectile counsel))
 
@@ -5142,7 +5136,7 @@ and re-run it.
 [fn:5] Which means that a frame is created and control immediately
 returned.
 
-[fn:6] Not including where =:tangle no= was set, 159 (on my last count)
+[fn:6] Not including where =:tangle no= was set, 162 (on my last count)
 code blocks will be tangled. /Note/ they will not necessarily be
 evaluated in the same order they appear in this file.
 
