@@ -58,7 +58,8 @@ loading the package."
   "Whether to load the custom file immediately.
 
 This is currently only necessary if you wish set
-`wal/use-hyper-prefix' or `wal/completion-provider'.")
+`wal/use-hyper-prefix', `wal/completion-provider' and
+`wal/use-perspectives'.")
 
 ;; Maybe tangle, load.
 (let ((gc-cons-threshold most-positive-fixnum)
