@@ -489,8 +489,9 @@ Most hyper[fn:9] bindings are quick-access actions:
 
 + =H-7= opens (and =H-8= cycles through) =popper= pop-up(s)
 + =H--= duplicates current line/region with =crux=
-+ =H-h= finds file using =projectile=
-+ =H-j= switches buffer using =consult=
++ =H-h= finds file using =projectile= (or =counsel-projectile=)
++ =H-i= switches perspective (when using =perspective=)
++ =H-j= switches buffer using =consult= (or =counsel=)
 + =H-l= jumps to line (and =H-k= to word in line) with =avy=
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-n= searches with =ag= in project
@@ -1225,7 +1226,7 @@ Better(?) garbage collection.
 Handling of files.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/delete-trailing-whitespace nil
+(defcustom wal/delete-trailing-whitespace t
   "Whether to delete trailing whitespace."
   :type 'boolean
   :group 'wal-func)
@@ -2724,6 +2725,10 @@ Treat certain buffers and their windows as pop-ups.
 
 (use-package popper
   :config
+  (defvar wal/use-perspectives)
+  (if wal/use-perspectives
+      (setq popper-group-function #'popper-group-by-perspective)
+    (setq popper-group-function #'popper-group-by-projectile))
   (popper-mode +1)
   :custom
   ;; Prime candidates for `popper' are those shown in-direction and in-side.
@@ -2743,7 +2748,6 @@ Treat certain buffers and their windows as pop-ups.
                               help-mode
                               dictionary-mode
                               shortdoc-mode))
-  (popper-group-function #'popper-group-by-projectile)
   (popper-display-control 'user)
   ;; Remove if you don't use/have `doom-modeline'.
   (popper-mode-line '(:eval (concat
@@ -2992,6 +2996,11 @@ using =xref-find-definitions= (=M-.=).
 (use-package dumb-jump
   :init
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
+  :config
+  (defvar wal/completion-provider)
+  (if (eq wal/completion-provider 'ivy)
+      (setq dumb-jump-selector 'ivy)
+    (setq dumb-jump-selector 'completing-read))
   :custom
   (dumb-jump-force-searcher 'ag))
 
@@ -3058,13 +3067,26 @@ Provide global option narrowing using the =vertico= family of products.
 (use-package vertico
   :if (eq wal/completion-provider 'vertico)
   :config
-  (if (fboundp 'vertico-sort-alpha)
-      (setq vertico-sort-function #'vertico-sort-alpha))
+  (setq enable-recursive-minibuffers t
+        read-extended-command-predicate #'command-completion-default-include-p)
+  (savehist-mode)
   (vertico-mode)
   :custom
   (vertico-count 5)
   (vertico-cycle t)
   :defer 1)
+
+(use-package vertico-directory
+  :if (eq wal/completion-provider 'vertico)
+  :bind
+  (:map vertico-map
+   ("RET" . vertico-directory-enter)
+   ("DEL" . vertico-directory-delete-char)
+   ("M-DEL" . vertico-directory-delete-word))
+  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy)
+  :demand t
+  :after vertico
+  :load-path "site-lisp")
 
 (use-package marginalia
   :if (eq wal/completion-provider 'vertico)
@@ -3079,8 +3101,8 @@ Provide global option narrowing using the =vertico= family of products.
   :bind
   (:map minibuffer-local-map
    ("M-a" . marginalia-cycle))
-  :after vertico
-  :demand t)
+  :demand t
+  :after vertico)
 
 (use-package orderless
   :if (eq wal/completion-provider 'vertico)
@@ -3096,14 +3118,17 @@ Provide global option narrowing using the =vertico= family of products.
   (wal/display-buffer-ethereally "\\`\\*Embark Collect \\(Live\\|Completions\\)\\*")
   :custom
   (embark-mixed-indicator-delay 2.0)
-  :wal-bind
-  (("[" . embark-act))
+  :bind
+  (:map minibuffer-local-map
+   ("M-o" . embark-act))
   :after vertico)
 
 (use-package consult
   :if (eq wal/completion-provider 'vertico)
   :init
   (setq xref-show-definitions-function #'consult-xref)
+  :custom
+  (consult-project-root-function #'projectile-project-root)
   :bind
   (("M-g g" . consult-goto-line)
    ("M-g m" . consult-mark)
@@ -3112,8 +3137,6 @@ Provide global option narrowing using the =vertico= family of products.
    ("b" . consult-bookmark))
   :wal-bind
   (("j" . consult-buffer))
-  :custom
-  (consult-project-root-function #'projectile-project-root)
   :general
   (wal/general "t" '(consult-theme :wk "theme"))
   (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
@@ -3131,14 +3154,14 @@ Provide global option narrowing using the =vertico= family of products.
 
 (use-package consult-flycheck
   :if (eq wal/completion-provider 'vertico)
-  :demand
+  :demand t
   :after (consult flycheck))
 
 (use-package embark-consult
   :if (eq wal/completion-provider 'vertico)
   :hook (embark-collect-mode . consult-preview-at-point-mode)
-  :after (embark consult)
-  :demand)
+  :demand t
+  :after (embark consult))
 #+END_SRC
 
 Alternatively do so using =ivy=.
@@ -3376,6 +3399,7 @@ Keep order.
 ;;; Code:
 
 (declare-function projectile-project-p "projectile.el")
+(declare-function persp-scratch-buffer "perspective.el")
 
 (defvar projectile-globally-ignored-directories)
 (defvar projectile-globally-ignored-files)
