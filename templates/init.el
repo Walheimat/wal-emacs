@@ -57,8 +57,8 @@ loading the package."
 (defvar wal/load-custom-file-immediately nil
   "Whether to load the custom file immediately.
 
-This is currently only necessary if you wish to set
-`wal/use-hyper-prefix' to nil.")
+This is currently only necessary if you wish set
+`wal/use-hyper-prefix' or `wal/completion-provider'.")
 
 ;; Maybe tangle, load.
 (let ((gc-cons-threshold most-positive-fixnum)
