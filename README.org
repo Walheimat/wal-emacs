@@ -196,7 +196,7 @@ Concludes by calling `delete-other-windows'."
 
 Make sure that custom directories exist. We want:
 
-+ A cache directory to store bookmarks, perspectives etc.
++ A cache directory to store bookmarks etc.
 + a directory for site lisp
 + a default directory for org files
 + a default directory for agenda tasks
@@ -474,9 +474,9 @@ User-reserved combinations are used for certain command maps:
 
 + =C-c b= for =bookmark=, and when the respective mode is active:
 + =C-c f= for =flycheck=
-+ =C-c i= for =perspective=
-+ =C-c p= for =projectile=
-+ =C-c m= for =smerge=.
++ =C-c k= for =kmacro=
++ =C-c m= for =smerge=
++ =C-c p= for =projectile=.
 
 It's also used for certain dispatches:
 
@@ -489,9 +489,8 @@ Most hyper[fn:9] bindings are quick-access actions:
 
 + =H-7= opens (and =H-8= cycles through) =popper= pop-up(s)
 + =H--= duplicates current line/region with =crux=
-+ =H-h= finds project file using =counsel-projectile=
-+ =H-i= switches =perspective=
-+ =H-j= switches to buffer using =counsel-projectile=
++ =H-h= finds file using =projectile=
++ =H-j= switches buffer using =consult=
 + =H-l= jumps to line (and =H-k= to word in line) with =avy=
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-n= searches with =ag= in project
@@ -683,7 +682,6 @@ package prefixes are:
 + =h= for =hungry-delete=
 + =l= and =r= for =avy= (line and region)
 + =m= for =magit=
-+ =o= for =counsel=
 + =p= for =smartparens= (a =hydra=)
 + =u= for =consult=
 + =x= for =crux=
@@ -1047,6 +1045,17 @@ The direction is right-most or DIRECTION."
                  `(,condition
                    (display-buffer-reuse-mode-window display-buffer-in-direction)
                    (direction . ,(or direction 'rightmost))))))
+
+(defun wal/display-buffer-ethereally (buffer)
+  "Display BUFFER ethereally.
+
+This means there is no display function is used and the mode line
+is removed."
+  (let ((condition (wal/display-buffer-condition buffer)))
+    (add-to-list 'display-buffer-alist
+                 `(,condition
+                   nil
+                   (window-parameters (mode-line-format . none))))))
 #+END_SRC
 
 ** Windows
@@ -1527,6 +1536,11 @@ Package-based settings.
   :custom
   (sentence-end-double-space nil)
   :ensure nil)
+
+(use-package find-func
+  :general
+  (wal/general "l" '(find-library :wk "find library"))
+  :ensure nil)
 #+END_SRC
 
 Less intrusive pairing mode than =smartparens=.
@@ -1550,7 +1564,6 @@ Configure annotation usage.
   (wal/display-buffer-in-side-window "\\*Bookmark Annotation\\*" 'left)
   :custom
   (bookmark-use-annotations t)
-  (bookmark-automatically-show-annotations t)
   (bookmark-menu-confirm-deletion t)
   :bind-keymap ("C-c b" . bookmark-map)
   :bind
@@ -1622,6 +1635,8 @@ Use better commands for macros.
 
 #+BEGIN_SRC emacs-lisp
 (use-package kmacro
+  :bind-keymap
+  ("C-c k" . kmacro-keymap)
   :bind
   (:map kmacro-keymap
    ("k" . kmacro-start-macro-or-insert-counter)
@@ -1656,21 +1671,14 @@ Let's try to be even more =helpful=.
 (use-package helpful
   :config
   (wal/display-buffer-in-direction 'helpful-mode)
-  :custom
-  (counsel-describe-function-function #'helpful-callable)
-  (counsel-describe-variable-function #'helpful-variable)
-  (counsel-describe-symbol-function #'helpful-symbol)
   :bind
   (([remap describe-command] . helpful-command)
+   ([remap describe-function] . helpful-function)
    ([remap describe-key] . helpful-key)
-   ([remap describe-function] . counsel-describe-function)
-   ([remap describe-variable] . counsel-describe-variable)
-   ([remap describe-symbol] . counsel-describe-symbol)
-   ([remap describe-face] . counsel-describe-face))
+   ([remap describe-variable] . helpful-variable))
   :general
   (wal/major :keymaps 'emacs-lisp-mode-map :major-modes t
-    "h"  '(helpful-at-point :wk "at point"))
-  :after counsel)
+    "h"  '(helpful-at-point :wk "at point")))
 #+END_SRC
 
 Don't disable commands.
@@ -2412,7 +2420,6 @@ install =all-the-icons= fonts[fn:4].
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-icon t)
   (doom-modeline-vcs-max-length 25)
-  (doom-modeline-persp-name nil)
   :defer 1)
 #+END_SRC
 
@@ -2550,8 +2557,8 @@ This is the case when:
 
 *** Icons
 
-You need to install the icons yourself[fn:4]. Packages =dired= and
-=ivy-rich= use and configure their own sub-package.
+You need to install the icons yourself[fn:4]. Packages =dired=
+configures its own sub-package.
 
 #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons
@@ -2627,15 +2634,14 @@ Everything that has to do with windows.
 (declare-function popper-open-all "popper.el")
 (declare-function popper-popup-p "popper.el")
 (declare-function popper-toggle-latest "popper.el")
-(declare-function wal/ivy-switch-buffer "wal-complete.el")
 
 (defun wal/aw-delete-window-kill-buffer (window)
   "Call `aw-delete-window' on WINDOW requesting buffer kill."
   (aw-delete-window window t))
 
-(defun wal/advise-aw--switch-buffer (&rest r)
-  "Call `wal/ivy-switch-buffer' with R instead."
-  (wal/ivy-switch-buffer r))
+(defun wal/advise-aw--switch-buffer (&rest _r)
+  "Advise `aw--switch-buffer' to use `consult-buffer'."
+  (call-interactively 'consult-buffer))
 
 (use-package ace-window
   :config
@@ -2646,6 +2652,7 @@ Everything that has to do with windows.
                             (?o delete-other-windows "delete other")
                             (?m aw-move-window "move")
                             (?c aw-copy-window "copy")
+                            (?b aw-switch-buffer-in-window "buffer")
                             ;; If this has a description, it doesn't work.
                             (?? aw-show-dispatch-help)))
   (advice-add 'aw--switch-buffer :override #'wal/advise-aw--switch-buffer)
@@ -2721,7 +2728,7 @@ Treat certain buffers and their windows as pop-ups.
                               help-mode
                               dictionary-mode
                               shortdoc-mode))
-  (popper-group-function #'popper-group-by-perspective)
+  (popper-group-function #'popper-group-by-projectile)
   (popper-display-control 'user)
   ;; Remove if you don't use/have `doom-modeline'.
   (popper-mode-line '(:eval (concat
@@ -2746,7 +2753,7 @@ Treat certain buffers and their windows as pop-ups.
    :predicate '(wal/popper-dead-shell-p)
    "q" 'kill-buffer-and-window)
   :defer 1
-  :after perspective)
+  :after projectile)
 #+END_SRC
 
 Allow restoring window configurations.
@@ -2971,7 +2978,6 @@ using =xref-find-definitions= (=M-.=).
   :init
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
   :custom
-  (dumb-jump-selector 'ivy)
   (dumb-jump-force-searcher 'ag))
 
 (provide 'wal-find)
@@ -2995,11 +3001,27 @@ Provide code completion.
 
 ;;; Code:
 
+(declare-function projectile-project-p "projectile.el")
+
 (defgroup wal-complete nil
   "Change settings used for completion packages."
   :group 'wal
   :tag "Completion")
 
+(defcustom wal/completion-provider 'vertico
+  "Which completion system to user.
+
+Changing this value will only take effect after a re-load. Unless
+`wal/load-custom-file-immediately' is set to t, setting this to a
+value other than the default will have no effect."
+  :type '(choice (const vertico)
+                 (const ivy))
+  :group 'wal-complete)
+#+END_SRC
+
+In-line completion.
+
+#+BEGIN_SRC emacs-lisp
 (use-package company
   :wal-bind
   (:map company-mode-map
@@ -3015,7 +3037,96 @@ Provide code completion.
   :diminish)
 #+END_SRC
 
-Provide global option narrowing.
+Provide global option narrowing using the =vertico= family of products.
+
+#+BEGIN_SRC emacs-lisp
+(use-package vertico
+  :if (eq wal/completion-provider 'vertico)
+  :config
+  (if (fboundp 'vertico-sort-alpha)
+      (setq vertico-sort-function #'vertico-sort-alpha))
+  (vertico-mode)
+  :custom
+  (vertico-count 5)
+  (vertico-cycle t)
+  :defer 1)
+
+(use-package marginalia
+  :if (eq wal/completion-provider 'vertico)
+  :config
+  (marginalia-mode)
+  :custom
+  (marginalia-command-categories
+    '((imenu . imenu)
+      (projectile-switch-to-buffer . buffer)
+      (projectile-find-file . project-file)
+      (projectile-find-file-other-window . project-file)))
+  :bind
+  (:map minibuffer-local-map
+   ("M-a" . marginalia-cycle))
+  :after vertico
+  :demand t)
+
+(use-package orderless
+  :if (eq wal/completion-provider 'vertico)
+  :config
+  (setq completion-styles '(orderless)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion))))
+  :after vertico
+  :demand)
+
+(use-package embark
+  :config
+  (wal/display-buffer-ethereally "\\`\\*Embark Collect \\(Live\\|Completions\\)\\*")
+  :custom
+  (embark-mixed-indicator-delay 2.0)
+  :wal-bind
+  (("[" . embark-act))
+  :after vertico)
+
+(use-package consult
+  :if (eq wal/completion-provider 'vertico)
+  :init
+  (setq xref-show-definitions-function #'consult-xref)
+  :bind
+  (("M-g g" . consult-goto-line)
+   ("M-g m" . consult-mark)
+   ("M-g M-m" . consult-global-mark)
+   :map bookmark-map
+   ("b" . consult-bookmark))
+  :wal-bind
+  (("j" . consult-buffer))
+  :custom
+  (consult-project-root-function #'projectile-project-root)
+  :general
+  (wal/general "t" '(consult-theme :wk "theme"))
+  (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
+  (wal/major :keymaps 'org-mode-map :major-modes t
+    "h" '(consult-org-heading :wk "heading"))
+  (wal/major :keymaps 'outline-mode-map :major-modes t
+    "g" '(consult-outline :wk "go to outline"))
+  (wal/lieutenant
+    "u" '(:ignore t :wk "consult")
+    "ug" '(consult-grep :wk "grep")
+    "uf" '(consult-focus-lines :wk "focus lines")
+    "ul" '(consult-line :wk "search lines")
+    "um" '(consult-kmacro :wk "macro"))
+  :after vertico)
+
+(use-package consult-flycheck
+  :if (eq wal/completion-provider 'vertico)
+  :demand
+  :after (consult flycheck))
+
+(use-package embark-consult
+  :if (eq wal/completion-provider 'vertico)
+  :hook (embark-collect-mode . consult-preview-at-point-mode)
+  :after (embark consult)
+  :demand)
+#+END_SRC
+
+Alternatively do so using =ivy=.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/ivy-switch-ignored-buffers (&rest r)
@@ -3040,6 +3151,7 @@ Pass R to the switch buffer function."
   :group 'wal-complete)
 
 (use-package ivy
+  :if (eq wal/completion-provider 'ivy)
   :config
   (setq enable-recursive-minibuffers t)
   (ivy-mode 1)
@@ -3059,6 +3171,7 @@ Use =avy= inside =ivy=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package ivy-avy
+  :if (eq wal/completion-provider 'ivy)
   :wal-bind
   (:map ivy-minibuffer-map
    ("l" . ivy-avy))
@@ -3070,6 +3183,7 @@ Some nicer candidate view when switching buffers.
 
 #+BEGIN_SRC emacs-lisp
 (use-package ivy-rich
+  :if (eq wal/completion-provider 'ivy)
   :config
   (when (fboundp 'ivy-format-function-line)
     (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line))
@@ -3086,6 +3200,7 @@ This function is called before `all-the-icons-ivy-rich' is activated."
     (plist-put tl 'persp-kill-buffer* (plist-get tl 'persp-kill-buffer))))
 
 (use-package all-the-icons-ivy-rich
+  :if (eq wal/completion-provider 'ivy)
   :config
   (wal/configure-rich-transformers)
   (all-the-icons-ivy-rich-mode 1)
@@ -3103,6 +3218,7 @@ This function is called before `all-the-icons-ivy-rich' is activated."
   :group 'wal-complete)
 
 (use-package counsel
+  :if (eq wal/completion-provider 'ivy)
   :config
   ;; Package ivy-prescient sets `ivy-initial-inputs-alist' to nil!
   (unless wal/use-prescient
@@ -3137,7 +3253,7 @@ Better short-term-memory for =ivy=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package prescient
-  :if wal/use-prescient
+  :if (and wal/use-prescient (eq wal/completion-provider 'ivy))
   :config
   (when (fboundp 'prescient-persist-mode)
     (prescient-persist-mode +1))
@@ -3149,59 +3265,13 @@ Better short-term-memory for =ivy=.
   :after counsel)
 
 (use-package ivy-prescient
-  :if wal/use-prescient
+  :if (and wal/use-prescient (eq wal/completion-provider 'ivy))
   :config
   (ivy-prescient-mode +1)
   :custom
   (ivy-prescient-retain-classic-highlighting t)
   :demand
   :after prescient)
-#+END_SRC
-
-=consult= provides even more useful replacements and extensions.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/configure-consult ()
-  "Configurep package `consult'.
-
-This advises all functions that don't work well with `ivy' to use
-`selectrum' instead."
-  (mapc (lambda (it)
-          (advice-add it :around #'wal/advise-selectrum))
-        '(consult-buffer
-          consult-focus-lines
-          consult-flymake
-          consult-global-mark
-          consult-grep
-          consult-minor-mode-menu
-          consult-mode-command
-          consult-xref
-          consult-recent-file
-          consult-outline)))
-
-(use-package consult
-  :init
-  (setq xref-show-definitions-function #'consult-xref)
-  :bind
-  (("M-g g" . consult-goto-line)
-   ("M-g M-m" . consult-global-mark))
-  :config
-  (wal/configure-consult)
-  :custom
-  (consult-project-root-function #'projectile-project-root)
-  :general
-  (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
-  (wal/major :keymaps 'org-mode-map :major-modes t
-    "og" '(consult-outline :wk "go to"))
-  (wal/lieutenant
-    "u" '(:ignore t :wk "consult")
-    "ul" '(consult-focus-lines :wk "focus lines")))
-
-(use-package consult-flycheck
-  :config
-  (advice-add 'consult-flycheck :around #'wal/advise-selectrum)
-  :demand
-  :after (consult flycheck))
 #+END_SRC
 
 Use =selectrum= for =consult=.
@@ -3223,6 +3293,52 @@ Use =selectrum= for =consult=.
     (apply fun r)))
 
 (use-package selectrum)
+#+END_SRC
+
+Add =counsel= integration to =projectile=.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/advise-counsel-projectile-ag-around (fun &rest r)
+  "Call `counsel-ag' not FUN with R outside of projects.
+
+This eliminates getting prompted to open one first."
+  (if (projectile-project-p)
+      (apply fun r)
+    (apply 'counsel-ag r)))
+
+(use-package counsel-projectile
+  :if (eq wal/completion-provider 'ivy)
+  :config
+  ;; Make opening with `dired' the default action.
+  (setf (nth 0 counsel-projectile-switch-project-action) 4)
+  (advice-add 'counsel-projectile-ag :around #'wal/advise-counsel-projectile-ag-around)
+  (counsel-projectile-mode +1)
+  :custom
+  ;; (counsel-projectile-preview-buffers t)
+  (counsel-projectile-org-capture-templates
+   ;; Reminders are stored relative to the project root
+   `(("r" "[${name}] reminder" entry
+      (file+headline "${root}/reminders.org" "Reminders")
+      "* TODO %?\n%i\n%U -- %a")
+     ;; Tasks are stored in the common task directory
+     ("t" "[${name}] task" entry
+      (file+headline ,(expand-file-name "${name}.org" wal/agenda-tasks-directory) "Tasks")
+      "* TODO %?")
+     ("n" "[${name}] note" entry
+      (file+olp+datetree "${root}/notes.org")
+      "* %?")))
+  :bind
+  (:map projectile-command-map
+   ("ss" . counsel-projectile-ag)
+   ("n" . counsel-projectile-org-capture)
+   ("b" . counsel-projectile-switch-to-buffer)
+   ("d" . counsel-projectile-find-dir))
+  :wal-bind
+  (:map projectile-mode-map
+   ("h" . counsel-projectile-find-file)
+   ("j" . counsel-projectile-switch-to-buffer))
+  :demand
+  :after (projectile counsel))
 
 (provide 'wal-complete)
 
@@ -3234,7 +3350,7 @@ Use =selectrum= for =consult=.
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-workspace.el" wal/emacs-config-package-path)
 :END:
 
-Have some perspective, man.
+Keep order.
 
 #+BEGIN_SRC emacs-lisp
 ;;; wal-workspace.el --- Workspace.
@@ -3246,7 +3362,6 @@ Have some perspective, man.
 ;;; Code:
 
 (declare-function projectile-project-p "projectile.el")
-(declare-function persp-scratch-buffer "perspective.el")
 
 (defvar projectile-globally-ignored-directories)
 (defvar projectile-globally-ignored-files)
@@ -3256,6 +3371,16 @@ Have some perspective, man.
   "Change settings used for workspace packages."
   :group 'wal
   :tag "Workspace")
+
+#+END_SRC
+
+Perspectives.
+
+#+BEGIN_SRC emacs-lisp
+(defcustom wal/use-perspectives nil
+  "Whether to use perspectives."
+  :type 'boolean
+  :group 'wal-workspace)
 
 (defcustom wal/default-perspective
   "walheimat"
@@ -3277,6 +3402,7 @@ This only removes `process-kill-buffer-query-function'."
   (switch-to-buffer (get-buffer-create (persp-scratch-buffer))))
 
 (use-package perspective
+  :if wal/use-perspectives
   :config
   (advice-add 'persp-kill :around #'wal/advise-persp-kill)
   (persp-mode)
@@ -3287,8 +3413,8 @@ This only removes `process-kill-buffer-query-function'."
   (persp-mode-prefix-key (kbd "C-c i"))
   :bind
   (:map persp-mode-map
+   ("C-x b" . persp-switch-to-buffer*)
    ("C-x k" . persp-kill-buffer*)
-   ("C-x x k" . all-the-icons-ivy-rich-kill-buffer)
    ;; Replaces `list-buffers'.
    ("C-x C-b" . persp-buffer-menu)
    :map perspective-map
@@ -3339,7 +3465,6 @@ This extends all ignore lists' default values."
   (wal/configure-projectile)
   (projectile-mode +1)
   :custom
-  (projectile-completion-system 'ivy)
   (projectile-switch-project-action #'projectile-dired)
   (projectile-sort-order 'recentf)
   ;; Allow finding files that are ignored by `.gitignore'.
@@ -3349,54 +3474,10 @@ This extends all ignore lists' default values."
   ("C-c p" . projectile-command-map)
   :wal-bind
   (:map projectile-mode-map
-   ("p" . projectile-switch-project))
+   ("p" . projectile-switch-project)
+   ("h" . projectile-find-file))
   :defer 1
   :delight " pjt")
-#+END_SRC
-
-Add =counsel= integration to =projectile=.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/advise-counsel-projectile-ag-around (fun &rest r)
-  "Call `counsel-ag' not FUN with R outside of projects.
-
-This eliminates getting prompted to open one first."
-  (if (projectile-project-p)
-      (apply fun r)
-    (apply 'counsel-ag r)))
-
-(use-package counsel-projectile
-  :config
-  ;; Make opening with `dired' the default action.
-  (setf (nth 0 counsel-projectile-switch-project-action) 4)
-  (advice-add 'counsel-projectile-ag :around #'wal/advise-counsel-projectile-ag-around)
-  (counsel-projectile-mode +1)
-  :custom
-  ;; (counsel-projectile-preview-buffers t)
-  (counsel-projectile-org-capture-templates
-   ;; Reminders are stored relative to the project root
-   `(("r" "[${name}] reminder" entry
-      (file+headline "${root}/reminders.org" "Reminders")
-      "* TODO %?\n%i\n%U -- %a")
-     ;; Tasks are stored in the common task directory
-     ("t" "[${name}] task" entry
-      (file+headline ,(expand-file-name "${name}.org" wal/agenda-tasks-directory) "Tasks")
-      "* TODO %?")
-     ("n" "[${name}] note" entry
-      (file+olp+datetree "${root}/notes.org")
-      "* %?")))
-  :bind
-  (:map projectile-command-map
-   ("ss" . counsel-projectile-ag)
-   ("n" . counsel-projectile-org-capture)
-   ("b" . counsel-projectile-switch-to-buffer)
-   ("d" . counsel-projectile-find-dir))
-  :wal-bind
-  (:map projectile-mode-map
-   ("h" . counsel-projectile-find-file)
-   ("j" . counsel-projectile-switch-to-buffer))
-  :demand
-  :after (projectile counsel))
 
 (provide 'wal-workspace)
 
@@ -3524,8 +3605,7 @@ Prettier headlines.
   :hook (org-mode . org-bullets-mode))
 #+END_SRC
 
-Capturing is mainly done using =counsel-projectile= but there are some
-global templates.
+Capture templates.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-capture
@@ -3686,7 +3766,6 @@ need to install =sqlite3= and =graphviz= manually.
   (wal/lieutenant
     "zd" '(org-roam-dailies-goto-date :wk "dailies"))
   :custom
-  (org-roam-completion-system 'ivy)
   (org-roam-directory wal/org-roam-directory)
   (org-roam-dailies-directory wal/org-roam-dailies-directory)
   :general
@@ -4513,7 +4592,7 @@ Please let me know when I screwed up. I promise I will learn.
 (defun wal/consult-fly ()
   "Call either `consult-flymake' or `consult-flycheck'.
 
-This depends on `wal/lsp-client'."
+This depends on `wal/lsp-provider'."
   (interactive)
   (cond ((and (boundp 'flymake-mode) flymake-mode) (consult-flymake))
         ((and (boundp 'flycheck-mode) flycheck-mode) (consult-flycheck))
@@ -4634,7 +4713,7 @@ Language servers are awesome. Thanks, Microsoft.
   :group 'wal
   :tag "LSP")
 
-(defcustom wal/lsp-client 'lsp-mode
+(defcustom wal/lsp-provider 'lsp-mode
   "Which LSP client to use."
   :type '(choice (const lsp-mode)
                  (const eglot))
@@ -4643,7 +4722,7 @@ Language servers are awesome. Thanks, Microsoft.
 (defun wal/lsp ()
   "Activate LSP client."
   (setq-local company-idle-delay 0.0)
-  (pcase wal/lsp-client
+  (pcase wal/lsp-provider
     ('lsp-mode (progn
                  (setq-local company-backends '(company-capf company-yasnippet))
                  (lsp-deferred)))
@@ -5136,7 +5215,7 @@ and re-run it.
 [fn:5] Which means that a frame is created and control immediately
 returned.
 
-[fn:6] Not including where =:tangle no= was set, 162 (on my last count)
+[fn:6] Not including where =:tangle no= was set, 164 (on my last count)
 code blocks will be tangled. /Note/ they will not necessarily be
 evaluated in the same order they appear in this file.
 
