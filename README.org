@@ -2639,12 +2639,18 @@ Everything that has to do with windows.
   "Call `aw-delete-window' on WINDOW requesting buffer kill."
   (aw-delete-window window t))
 
-(defun wal/advise-aw--switch-buffer (&rest _r)
+(defun wal/advise-aw--switch-buffer-consult (&rest _r)
   "Advise `aw--switch-buffer' to use `consult-buffer'."
   (call-interactively 'consult-buffer))
 
-(use-package ace-window
-  :config
+(defun wal/advise-aw--switch-buffer-ivy (&rest _r)
+  "Advise `aw--switch-buffer' to use `ivy-switch-buffer'."
+  (call-interactively 'wal/ivy-switch-buffer))
+
+(defun wal/configure-ace-window ()
+  "Configure package `ace-window'."
+  (defvar wal/completion-provider)
+  (defvar aw-dispatch-alist)
   (setq aw-dispatch-alist '((?h aw-split-window-horz "horizontal split")
                             (?v aw-split-window-vert "vertical split")
                             (?d aw-delete-window "delete")
@@ -2655,7 +2661,16 @@ Everything that has to do with windows.
                             (?b aw-switch-buffer-in-window "buffer")
                             ;; If this has a description, it doesn't work.
                             (?? aw-show-dispatch-help)))
-  (advice-add 'aw--switch-buffer :override #'wal/advise-aw--switch-buffer)
+  (cond
+   ((eq wal/completion-provider 'vertico)
+    (advice-add 'aw--switch-buffer :override #'wal/advise-aw--switch-buffer-consult))
+   ((eq wal/completion-provider 'ivy)
+    (advice-add 'aw--switch-buffer :override #'wal/advise-aw--switch-buffer-ivy))
+   (t nil)))
+
+(use-package ace-window
+  :config
+  (wal/configure-ace-window)
   :custom
   (aw-dispatch-always t)
   (aw-keys '(?j ?k ?l ?\; ?u ?i ?o ?p))
@@ -3138,8 +3153,7 @@ Pass R to the switch buffer function."
              (not (wal/commmonly-ignored-buffer-p buffer-or-string))))))
     (wal/ivy-switch-buffer r)))
 
-;; Change to `ivy-switch-buffer' if you don't use `perspective' and `counsel'.
-(defalias 'wal/ivy-switch-buffer 'persp-counsel-switch-buffer)
+(defalias 'wal/ivy-switch-buffer #'ivy-switch-buffer)
 
 ;; Hide `dired', `docker', `ag' and default Emacs buffers when switching.
 (defcustom wal/ivy-ignore-buffers
@@ -3405,6 +3419,7 @@ This only removes `process-kill-buffer-query-function'."
   :if wal/use-perspectives
   :config
   (advice-add 'persp-kill :around #'wal/advise-persp-kill)
+  (defalias 'wal/ivy-switch-buffer #'persp-counsel-switch-buffer)
   (persp-mode)
   :custom
   (persp-modestring-dividers '(" (" ")" "/")) ; Add space for `doom-modeline'.
