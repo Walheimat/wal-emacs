@@ -3123,10 +3123,25 @@ Provide global option narrowing using the =vertico= family of products.
    ("M-o" . embark-act))
   :after vertico)
 
+(defcustom wal/consult-buffer-filter
+  '("\\`\\*Async-native-compile-log\\*\\'"
+    "\\`\\*Messages\\*\\'")
+  "Additional buffers to filter."
+  :type '(repeat string)
+  :group 'wal-complete)
+
+(defun wal/configure-consult ()
+  "Configure package `consult'."
+  (defvar consult-buffer-filter)
+  (defvar xref-show-definitions-function)
+  (setq xref-show-definitions-function #'consult-xref)
+  (mapc (lambda (it) (add-to-list 'consult-buffer-filter it))
+        wal/consult-buffer-filter))
+
 (use-package consult
   :if (eq wal/completion-provider 'vertico)
-  :init
-  (setq xref-show-definitions-function #'consult-xref)
+  :config
+  (wal/configure-consult)
   :custom
   (consult-project-root-function #'projectile-project-root)
   :bind
