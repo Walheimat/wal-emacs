@@ -3014,7 +3014,7 @@ using =xref-find-definitions= (=M-.=).
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-complete.el" wal/emacs-config-package-path)
 :END:
 
-Provide code completion.
+Complete commands and code.
 
 #+BEGIN_SRC emacs-lisp
 ;;; wal-complete.el --- Completion.
@@ -3026,6 +3026,7 @@ Provide code completion.
 ;;; Code:
 
 (declare-function projectile-project-p "projectile.el")
+(declare-function wal/display-buffer-ethereally "wal-func.el")
 
 (defgroup wal-complete nil
   "Change settings used for completion packages."
@@ -3087,7 +3088,12 @@ Provide global option narrowing using the =vertico= family of products.
   :demand t
   :after vertico
   :load-path "site-lisp")
+#+END_SRC
 
+Contextual information during completion, partial completion and
+completion actions.
+
+#+BEGIN_SRC emacs-lisp
 (use-package marginalia
   :if (eq wal/completion-provider 'vertico)
   :config
@@ -3122,10 +3128,13 @@ Provide global option narrowing using the =vertico= family of products.
   (:map minibuffer-local-map
    ("M-o" . embark-act))
   :after vertico)
+#+END_SRC
 
+Heavy lifting with =consult=.
+
+#+BEGIN_SRC emacs-lisp
 (defcustom wal/consult-buffer-filter
-  '("\\`\\*Async-native-compile-log\\*\\'"
-    "\\`\\*Messages\\*\\'")
+  '("\\`\\*[[:ascii:]]+\\*\\'")
   "Additional buffers to filter."
   :type '(repeat string)
   :group 'wal-complete)
@@ -3164,7 +3173,9 @@ Provide global option narrowing using the =vertico= family of products.
     "ug" '(consult-grep :wk "grep")
     "uf" '(consult-focus-lines :wk "focus lines")
     "ul" '(consult-line :wk "search lines")
-    "um" '(consult-kmacro :wk "macro"))
+    "um" '(consult-kmacro :wk "macro")
+    "ur" '(consult-recent-file :wk "recent")
+    "ux" '(consult-file-externally :wk "open externally"))
   :after vertico)
 
 (use-package consult-flycheck
@@ -5271,7 +5282,7 @@ and re-run it.
 [fn:5] Which means that a frame is created and control immediately
 returned.
 
-[fn:6] Not including where =:tangle no= was set, 164 (on my last count)
+[fn:6] Not including where =:tangle no= was set, 166 (on my last count)
 code blocks will be tangled. /Note/ they will not necessarily be
 evaluated in the same order they appear in this file.
 
