@@ -494,7 +494,7 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-j= switches buffer using =consult= (or =counsel=)
 + =H-l= jumps to line (and =H-k= to word in line) with =avy=
 + =H-<mouse3>= adds another =multiple-cursor= at point
-+ =H-n= searches with =ag= in project
++ =H-n= searches with =ripgrep= (a =transient=) or =ag= (a =hydra=)
 + =H-p= switches projects using =projectile=
 + =H-<return>= completes at point using =company= (in =company-mode=)
 + =H-== to do a =quick-calc= (inserted if called with =C-u=)
@@ -580,17 +580,6 @@ nil will have no effect."
   :type 'boolean
   :group 'wal-key-bindings)
 
-(defun wal/prefix-user-key (user-key)
-  "Prefix USER-KEY.
-
-The default prefix is the hyper key unless Emacs is not running
-in GUI mode or `wal/use-hyper-prefix' is nil."
-  (let ((prefix (if (and wal/use-hyper-prefix
-                         (or (daemonp) (display-graphic-p)))
-                    "H-"
-                  "C-c w ")))
-    (concat prefix user-key)))
-
 ;; American ranks.
 (defcustom wal/general-key ";"
   "The primary (or general) leader key."
@@ -632,6 +621,17 @@ the sink for and PREFIX is its prefix."
                                      (if (stringp it)
                                          (concat ,suf it)
                                        it)) args))))))
+
+(defun wal/prefix-user-key (user-key)
+  "Prefix USER-KEY.
+
+The default prefix is the hyper key unless Emacs is not running
+in GUI mode or `wal/use-hyper-prefix' is nil."
+  (let ((prefix (if (and wal/use-hyper-prefix
+                         (or (daemonp) (display-graphic-p)))
+                    "H-"
+                  "C-c w ")))
+    (concat prefix user-key)))
 
 (defun wal/configure-general ()
   "Configure package `general'.
@@ -678,7 +678,6 @@ The =captain= prefixes, assuming the respective mode is on, are:
 Leader key =lieutenant= prefixes non- or semi-mode package actions. The
 package prefixes are:
 
-+ =a= for =ag=
 + =.= for =multiple-cursors=
 + =h= for =hungry-delete=
 + =l= and =r= for =avy= (line and region)
@@ -696,6 +695,9 @@ still always be available.
 Most bindings are declared in the [[*Packages][packages]] section.
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/tangle-do-prompt t
+  "Whether to prompt user to tangle config.")
+
 (defconst wal/readme-config
   (expand-file-name "README.org" wal/emacs-config-default-path)
   "The path to Walheimat's config.")
@@ -718,9 +720,6 @@ This returns the tag and its annotation as propertized strings."
     (cond
      (noninteractive out)
      (t (message out)))))
-
-(defvar wal/tangle-do-prompt t
-  "Whether to prompt user to tangle config.")
 
 (defun wal/tangle-config-prompt ()
   "Prompt the user to tangle the config.
@@ -1239,7 +1238,9 @@ is deleted."
   (when wal/delete-trailing-whitespace
     (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)))
 
-(advice-add 'hack-local-variables :after #'wal/advise-hack-local-variables)
+(advice-add
+ 'hack-local-variables
+ :after #'wal/advise-hack-local-variables)
 
 (provide 'wal-func)
 
@@ -1267,13 +1268,14 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
   :group 'wal
   :tag "Look")
 
-;; Mix of old and new.
-(setq frame-title-format '(multiple-frames "%b"
-                                           ("%b@" system-name)))
-
 (defcustom wal/transparency 90
   "The default frame transparency."
   :type 'integer
+  :group 'wal-look)
+
+(defcustom wal/theme nil
+  "The theme."
+  :type '(choice symbol (const nil))
   :group 'wal-look)
 
 (defun wal/transparency (&optional value)
@@ -1285,11 +1287,6 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
     (set-frame-parameter (selected-frame) 'alpha transparency)
     (when default-param
       (setcdr default-param transparency))))
-
-(defcustom wal/theme nil
-  "The theme."
-  :type '(choice symbol (const nil))
-  :group 'wal-look)
 
 ;; Some themes require configuration, so we only load after initialization.
 (defun wal/setup-visuals ()
@@ -1304,6 +1301,10 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-visuals)
   (add-hook 'emacs-startup-hook 'wal/setup-visuals))
+
+;; Mix of old and new.
+(setq frame-title-format '(multiple-frames "%b"
+                                           ("%b@" system-name)))
 
 (provide 'wal-look)
 
@@ -1398,11 +1399,6 @@ This sets both the `default' and `fixed-pitch' fonts. If variable
    (list (completing-read "Select font: " (wal/available-fonts wal/variable-fonts))))
   (set-face-attribute 'variable-pitch nil :font font))
 
-(wal/general-sink
- "f" '(:ignore t :wk "select font")
- "ff" '(wal/select-fixed-font :wk "fixed")
- "fv" '(wal/select-variable-font :wk "variable"))
-
 (defun wal/available-fonts (fonts)
   "Filter FONTS down to available fonts."
   (seq-filter (lambda (it) (find-font (font-spec :name it))) fonts))
@@ -1440,16 +1436,21 @@ available candidate from `wal/fixed-fonts'. Does the same for
                         :font (wal/fonts-candidate wal/variable-fonts t)
                         :height wal/variable-font-height)))
 
-(if (daemonp)
-    (add-hook 'server-after-make-frame-hook 'wal/setup-fonts)
-  (add-hook 'emacs-startup-hook 'wal/setup-fonts))
-
 ;; I want my comments slanted and my keywords bold.
 (defun wal/font-lock ()
   "Set comment face to italic and keyword face to bold."
   ;; Slanted and enchanted.
   (set-face-attribute 'font-lock-comment-face nil :slant 'italic :weight 'normal)
   (set-face-attribute 'font-lock-keyword-face nil :weight 'bold))
+
+(wal/general-sink
+ "f" '(:ignore t :wk "select font")
+ "ff" '(wal/select-fixed-font :wk "fixed")
+ "fv" '(wal/select-variable-font :wk "variable"))
+
+(if (daemonp)
+    (add-hook 'server-after-make-frame-hook 'wal/setup-fonts)
+  (add-hook 'emacs-startup-hook 'wal/setup-fonts))
 
 (add-hook 'font-lock-mode-hook 'wal/font-lock)
 
@@ -2067,17 +2068,6 @@ A collection of GitLab status messages."
   :type '(repeat regexp)
   :group 'wal-visuals)
 
-(defun wal/advise-dashboard-insert-startupify-lists (fun &rest r)
-  "Advise FUN to ignore certain directories, applying R."
-  (let ((recentf-exclude wal/recentf-exclude))
-    (apply fun r)))
-
-(defun wal/show-dashboard ()
-  "Show the dashboar."
-  (interactive)
-  (switch-to-buffer dashboard-buffer-name)
-  (delete-other-windows))
-
 (defcustom wal/startup-banner
   (let ((ext (if (display-graphic-p)
                  ".png"
@@ -2097,11 +2087,23 @@ A collection of GitLab status messages."
   :type 'file
   :group 'wal-visuals)
 
+(defun wal/advise-dashboard-insert-startupify-lists (fun &rest r)
+  "Advise FUN to ignore certain directories, applying R."
+  (let ((recentf-exclude wal/recentf-exclude))
+    (apply fun r)))
+
+(defun wal/show-dashboard ()
+  "Show the dashboar."
+  (interactive)
+  (switch-to-buffer dashboard-buffer-name)
+  (delete-other-windows))
+
 (use-package dashboard
   :if (not (daemonp))
   :init
-  (advice-add 'dashboard-insert-startupify-lists
-              :around #'wal/advise-dashboard-insert-startupify-lists)
+  (advice-add
+   'dashboard-insert-startupify-lists
+   :around #'wal/advise-dashboard-insert-startupify-lists)
   :config
   (setq dashboard-banner-logo-title (wal/describe-config-version))
   :custom
@@ -2335,7 +2337,9 @@ Dim inactive frames.
 
 (use-package dimmer
   :config
-  (advice-add 'dimmer-config-change-handler :override 'wal/advise-dimmer-config-change-handler)
+  (advice-add
+   'dimmer-config-change-handler
+   :override 'wal/advise-dimmer-config-change-handler)
   (dimmer-configure-company-box)
   (dimmer-configure-hydra)
   (dimmer-configure-magit)
@@ -2344,7 +2348,7 @@ Dim inactive frames.
   (wal/dimmer-configure-lsp-doc)
   (dimmer-mode t)
   :custom
-  (dimmer-fraction 0.6)
+  (dimmer-fraction 0.3)
   :defer 3
   :delight " dmm")
 #+END_SRC
@@ -2352,8 +2356,6 @@ Dim inactive frames.
 Scroll pixel-wise on certain jump commands.
 
 #+BEGIN_SRC emacs-lisp
-(use-package scroll-on-jump)
-
 (defcustom smooth-scroll-mode--commands
   '(scroll-up-command
     scroll-down-command
@@ -2361,6 +2363,18 @@ Scroll pixel-wise on certain jump commands.
   "Commands that should use smooth scrolling."
   :type '(repeat symbol)
   :group 'wal-visuals)
+
+(defun smooth-scroll-mode--enable ()
+  "Enable smooth scrolling."
+  (mapc (lambda (it)
+          (eval `(scroll-on-jump-with-scroll-advice-add ,it)))
+        smooth-scroll-mode--commands))
+
+(defun smooth-scroll-mode--disable ()
+  "Disable smooth-scrolling."
+  (mapc (lambda (it)
+          (eval `(scroll-on-jump-with-scroll-advice-remove ,it)))
+        smooth-scroll-mode--commands))
 
 (define-minor-mode smooth-scroll-mode
   "Use smooth scrolling."
@@ -2375,17 +2389,7 @@ Scroll pixel-wise on certain jump commands.
    (t
     (smooth-scroll-mode--disable))))
 
-(defun smooth-scroll-mode--enable ()
-  "Enable smooth scrolling."
-  (mapc (lambda (it)
-          (eval `(scroll-on-jump-with-scroll-advice-add ,it)))
-        smooth-scroll-mode--commands))
-
-(defun smooth-scroll-mode--disable ()
-  "Disable smooth-scrolling."
-  (mapc (lambda (it)
-          (eval `(scroll-on-jump-with-scroll-advice-remove ,it)))
-        smooth-scroll-mode--commands))
+(use-package scroll-on-jump)
 
 (wal/colonel-sink "," '(smooth-scroll-mode :wk "smooth-scroll"))
 #+END_SRC
@@ -2412,7 +2416,9 @@ install =all-the-icons= fonts[fn:4].
 (use-package doom-modeline
   :config
   (doom-modeline-mode 1)
-  (advice-add 'doom-modeline-update-vcs-text :after #'wal/advise-doom-modeline-update-vcs-text)
+  (advice-add
+   'doom-modeline-update-vcs-text
+   :after #'wal/advise-doom-modeline-update-vcs-text)
   (when (fboundp 'doom-modeline-update-vcs-text)
     (add-hook 'magit-post-refresh-hook #'doom-modeline-update-vcs-text))
   :custom
@@ -2509,7 +2515,9 @@ ARGS is a list containing modes and additional ligatures."
 
 (use-package ligature
   :config
-  (advice-add 'ligature-set-ligatures :around #'wal/advise-ligature-set-ligatures)
+  (advice-add
+   'ligature-set-ligatures
+   :around #'wal/advise-ligature-set-ligatures)
   (ligature-set-ligatures 'lisp-data-mode '(";;"))
   (ligature-set-ligatures 'c++-mode '("::" "->" ">>" "<<"
                                       "++" "!=" "|=" "<<="
@@ -2636,6 +2644,11 @@ Everything that has to do with windows.
 (declare-function popper-popup-p "popper.el")
 (declare-function popper-toggle-latest "popper.el")
 
+(defgroup wal-windows nil
+ "Change window settings."
+ :group 'wal
+ :tag "Windows")
+
 (defun wal/aw-delete-window-kill-buffer (window)
   "Call `aw-delete-window' on WINDOW requesting buffer kill."
   (aw-delete-window window t))
@@ -2664,9 +2677,13 @@ Everything that has to do with windows.
                             (?? aw-show-dispatch-help)))
   (cond
    ((eq wal/completion-provider 'vertico)
-    (advice-add 'aw--switch-buffer :override #'wal/advise-aw--switch-buffer-consult))
+    (advice-add
+     'aw--switch-buffer
+     :override #'wal/advise-aw--switch-buffer-consult))
    ((eq wal/completion-provider 'ivy)
-    (advice-add 'aw--switch-buffer :override #'wal/advise-aw--switch-buffer-ivy))
+    (advice-add
+     'aw--switch-buffer
+     :override #'wal/advise-aw--switch-buffer-ivy))
    (t nil)))
 
 (use-package ace-window
@@ -2693,7 +2710,9 @@ Used to advise `aw-switch-to-window'."
 (use-package golden-ratio
   :config
   ;; Make sure to run golden ratio after `aw-switch-to-window'.
-  (advice-add 'aw-switch-to-window :after #'wal/aw-switch-maybe-golden-ratio)
+  (advice-add
+   'aw-switch-to-window
+   :after #'wal/aw-switch-maybe-golden-ratio)
   :general
   (wal/colonel "g" '(golden-ratio-mode :wk "golden-ratio"))
   :delight " gol")
@@ -2702,6 +2721,44 @@ Used to advise `aw-switch-to-window'."
 Treat certain buffers and their windows as pop-ups.
 
 #+BEGIN_SRC emacs-lisp
+(defcustom wal/popper-reference-buffers
+  '(docker-container-mode
+    debugger-mode
+    "\\*Bookmark Annotation\\*"
+    "\\*org-roam\\*"
+    ;; Shell(-like).
+    "*eshell*"
+    "\\*poetry-shell\\*"
+    "^\\*docker-compose"
+    "^\\* docker"
+    dap-ui-repl-mode
+    inferior-python-mode
+    ;; Help(-like).
+    helpful-mode
+    help-mode
+    dictionary-mode
+    shortdoc-mode
+    ;; Search(-like).
+    "*rg*"
+    "*ag*")
+  "Replaces `popper-reference-buffers'."
+  :type '(restricted-sexp
+          :match-alternatives
+          (stringp symbolp functionp consp))
+  :group 'wal-windows)
+
+(defcustom wal/popper-mode-line
+  '(:eval (concat
+           " "
+           (doom-modeline-icon 'faicon "fort-awesome" nil nil
+                               :face 'all-the-icons-dsilver
+                               :height 0.9
+                               :v-adjust 0.0)
+           " "))
+  "Replaces `popper-mode-line'."
+  :type 'sexp
+  :group 'wal-windows)
+
 (defun wal/popper-toggle ()
   "Toggle latest or cycle when focusing pop-up."
   (interactive)
@@ -2725,38 +2782,12 @@ Treat certain buffers and their windows as pop-ups.
 
 (use-package popper
   :config
-  (defvar wal/use-perspectives)
-  (if wal/use-perspectives
-      (setq popper-group-function #'popper-group-by-perspective)
-    (setq popper-group-function #'popper-group-by-projectile))
   (popper-mode +1)
   :custom
-  ;; Prime candidates for `popper' are those shown in-direction and in-side.
-  (popper-reference-buffers '(docker-container-mode
-                              debugger-mode
-                              "\\*Bookmark Annotation\\*"
-                              "\\*org-roam\\*"
-                              ;; Shell(-like).
-                              "*eshell*"
-                              "\\*poetry-shell\\*"
-                              "^\\*docker-compose"
-                              "^\\* docker"
-                              dap-ui-repl-mode
-                              inferior-python-mode
-                              ;; Help(-like).
-                              helpful-mode
-                              help-mode
-                              dictionary-mode
-                              shortdoc-mode))
+  (popper-reference-buffers wal/popper-reference-buffers)
   (popper-display-control 'user)
   ;; Remove if you don't use/have `doom-modeline'.
-  (popper-mode-line '(:eval (concat
-                             " "
-                             (doom-modeline-icon 'faicon "fort-awesome" nil nil
-                                                 :face 'all-the-icons-dsilver
-                                                 :height 0.9
-                                                 :v-adjust 0.0)
-                             " ")))
+  (popper-mode-line wal/popper-mode-line)
   :wal-bind
   (:map popper-mode-map
    ("7" . popper-toggle-latest)
@@ -2889,11 +2920,6 @@ Move where I want. Useful for comments.
 
 I mostly search.
 
-Highlight search results using the *Silver Searcher*.
-
-This package /requires/ the =ag= binary which you can get from
-[[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:14].
-
 #+BEGIN_SRC emacs-lisp
 ;;; wal-find.el --- Finding things.
 
@@ -2906,12 +2932,29 @@ This package /requires/ the =ag= binary which you can get from
 (declare-function ag/project-root "ag.el")
 (declare-function ag/read-from-minibuffer "ag.el")
 (declare-function ag/search "ag.el")
+(declare-function wal/display-buffer-in-pop-up "wal-func.el")
 
 (defgroup wal-find nil
   "Change settings of search packages."
   :group 'wal
   :tag "Finding things")
+#+END_SRC
 
+Highlight search results using the *Silver Searcher* or =ripgrep=.
+
+Both require installation of their respective binary. You can get the
+=ag= binary from [[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:14], the =ripgrep= one from [[https://github.com/BurntSushi/ripgrep][here]].
+
+#+BEGIN_SRC emacs-lisp
+(defcustom wal/find-provider 'rg
+  "The finder to use.
+
+Changing this value will only take effect after a re-load. Unless
+`wal/load-custom-file-immediately' is set to t, setting this to a
+value other than the default will have no effect."
+  :type '(choice (const rg)
+                 (const ag))
+  :group 'wal-find)
 
 (defun wal/ag-ignored (string)
   "Search project for STRING including VCS ignored files."
@@ -2920,9 +2963,22 @@ This package /requires/ the =ag= binary which you can get from
   (let ((ag-arguments (append ag-arguments '("--skip-vcs-ignores"))))
     (ag/search string (ag/project-root default-directory))))
 
-(use-package ag
-  :config
+(defun wal/configure-ag ()
+  "Configure package `ag'."
   (wal/display-buffer-in-pop-up "^\\*ag")
+  (defhydra wal/ag (:hint nil)
+    "
+%s`wal/ascii-whale Silver-search: _n_ormal, in _p_roject, by _f_ile type.'
+"
+    ("n" ag)
+    ("p" ag-project)
+    ("f" ag-files)
+    ("i" wal/ag-ignored)))
+
+(use-package ag
+  :if (eq wal/find-provider 'ag)
+  :config
+  (wal/configure-ag)
   :custom
   (ag-highlight-search t)
   (ag-reuse-buffers t)
@@ -2943,16 +2999,17 @@ This package /requires/ the =ag= binary which you can get from
                     "*.js.map"))
   (ag-project-root-function #'projectile-acquire-root)
   :wal-bind
-  (("n" . ag))
-  :general
-  (wal/lieutenant
-    "a" '(:ignore t :wk "ag")
-    "at" '(ag-files :wk "by file-type")
-    "ap" '(ag-project :wk "in project")
-    "af" '(ag-dired :wk "for file")
-    "ai" '(wal/ag-ignored :wk "ignored (in project)"))
+  (("n" . wal/ag/body))
   :commands (ag/read-from-minibuffer)
   :ensure-system-package ag)
+
+(use-package rg
+  :if (eq wal/find-provider 'rg)
+  :config
+  (wal/display-buffer-in-pop-up "\\`\\*rg\\*\\'")
+  :wal-bind
+  (("n" . rg-menu))
+  :ensure-system-package rg)
 #+END_SRC
 
 Replace =isearch=. Important command is =C-o s= to change search style.
@@ -3025,6 +3082,8 @@ Complete commands and code.
 
 ;;; Code:
 
+(declare-function consult--buffer-state "consult.el")
+(declare-function persp-current-buffer-names "perspective.el")
 (declare-function projectile-project-p "projectile.el")
 (declare-function wal/display-buffer-ethereally "wal-func.el")
 
@@ -3103,7 +3162,9 @@ completion actions.
     '((imenu . imenu)
       (projectile-switch-to-buffer . buffer)
       (projectile-find-file . project-file)
-      (projectile-find-file-other-window . project-file)))
+      (projectile-find-file-other-window . project-file)
+      (persp-switch-to-buffer . buffer)
+      (persp-kill-buffer* . buffer)))
   :bind
   (:map minibuffer-local-map
    ("M-a" . marginalia-cycle))
@@ -3139,15 +3200,39 @@ Heavy lifting with =consult=.
   :type '(repeat string)
   :group 'wal-complete)
 
+(defvar wal/consult-source-perspective
+  `(:name "Perspective Buffer"
+    :narrow ?i
+    :category buffer
+    :face consult-buffer
+    :history buffer-name-history
+    :state ,#'consult--buffer-state
+    :enabled ,(lambda () persp-mode)
+    :items
+    ,(lambda ()
+       (persp-current-buffer-names)))
+  "Perspective buffer candidate source for `consult-buffer'.")
+
+(defun wal/consult-ripgrep-ignored ()
+  "Search ignored files."
+  (interactive)
+  (let ((consult-ripgrep-args
+         "rg --null --line-buffered --color=never --max-columns=1000 --path-separator /\
+   --smart-case --no-heading --line-number --no-ignore ."))
+    (call-interactively 'consult-ripgrep)))
+
+
 (defun wal/configure-consult ()
   "Configure package `consult'."
   (defvar consult-buffer-filter)
+  (defvar consult-buffer-sources)
   (defvar xref-show-definitions-function)
   (setq xref-show-definitions-function #'consult-xref)
+  (add-to-list 'consult-buffer-sources 'wal/consult-source-perspective)
   (mapc (lambda (it) (add-to-list 'consult-buffer-filter it))
         wal/consult-buffer-filter))
 
-(use-package consult
+ (use-package consult
   :if (eq wal/completion-provider 'vertico)
   :config
   (wal/configure-consult)
@@ -3170,12 +3255,15 @@ Heavy lifting with =consult=.
     "g" '(consult-outline :wk "go to outline"))
   (wal/lieutenant
     "u" '(:ignore t :wk "consult")
-    "ug" '(consult-grep :wk "grep")
-    "uf" '(consult-focus-lines :wk "focus lines")
-    "ul" '(consult-line :wk "search lines")
-    "um" '(consult-kmacro :wk "macro")
     "ur" '(consult-recent-file :wk "recent")
-    "ux" '(consult-file-externally :wk "open externally"))
+    "um" '(consult-kmacro :wk "macro")
+    "us" '(:ignore t :wk "search")
+    "usg" '(consult-grep :wk "grep")
+    "usr" '(consult-ripgrep :wk "ripgrep")
+    "usi" '(wal/consult-ripgrep-ignored :wk "ignored rg")
+    "ul" '(:ignore t :wk "lines")
+    "ulf" '(consult-focus-lines :wk "focus")
+    "uls" '(consult-line :wk "search"))
   :after vertico)
 
 (use-package consult-flycheck
@@ -3193,6 +3281,15 @@ Heavy lifting with =consult=.
 Alternatively do so using =ivy=.
 
 #+BEGIN_SRC emacs-lisp
+;; Hide `dired', `docker', `ag' and default Emacs buffers when switching.
+(defcustom wal/ivy-ignore-buffers
+  '(wal/commmonly-ignored-buffer-p
+    "\\` "
+    "\\`\\*tramp/")
+  "Buffers that are commonly ignored when switching."
+  :type '(restricted-sexp :match-alternatives (stringp symbolp))
+  :group 'wal-complete)
+
 (defun wal/ivy-switch-ignored-buffers (&rest r)
   "Show only commonly ignored buffers.
 Pass R to the switch buffer function."
@@ -3203,15 +3300,6 @@ Pass R to the switch buffer function."
     (wal/ivy-switch-buffer r)))
 
 (defalias 'wal/ivy-switch-buffer #'ivy-switch-buffer)
-
-;; Hide `dired', `docker', `ag' and default Emacs buffers when switching.
-(defcustom wal/ivy-ignore-buffers
-  '(wal/commmonly-ignored-buffer-p
-    "\\` "
-    "\\`\\*tramp/")
-  "Buffers that are commonly ignored when switching."
-  :type '(restricted-sexp :match-alternatives (stringp symbolp))
-  :group 'wal-complete)
 
 (use-package ivy
   :if (eq wal/completion-provider 'ivy)
@@ -3245,6 +3333,14 @@ Use =avy= inside =ivy=.
 Some nicer candidate view when switching buffers.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/configure-rich-transformers ()
+  "Configure (additional) transformers in the list.
+
+This function is called before `all-the-icons-ivy-rich' is activated."
+  (defvar all-the-icons-ivy-rich-display-transformers-list)
+  (let ((tl all-the-icons-ivy-rich-display-transformers-list))
+    (plist-put tl 'persp-kill-buffer* (plist-get tl 'persp-kill-buffer))))
+
 (use-package ivy-rich
   :if (eq wal/completion-provider 'ivy)
   :config
@@ -3253,14 +3349,6 @@ Some nicer candidate view when switching buffers.
   (ivy-rich-mode 1)
   :demand
   :after ivy)
-
-(defun wal/configure-rich-transformers ()
-  "Configure (additional) transformers in the list.
-
-This function is called before `all-the-icons-ivy-rich' is activated."
-  (defvar all-the-icons-ivy-rich-display-transformers-list)
-  (let ((tl all-the-icons-ivy-rich-display-transformers-list))
-    (plist-put tl 'persp-kill-buffer* (plist-get tl 'persp-kill-buffer))))
 
 (use-package all-the-icons-ivy-rich
   :if (eq wal/completion-provider 'ivy)
@@ -3374,7 +3462,9 @@ This eliminates getting prompted to open one first."
   :config
   ;; Make opening with `dired' the default action.
   (setf (nth 0 counsel-projectile-switch-project-action) 4)
-  (advice-add 'counsel-projectile-ag :around #'wal/advise-counsel-projectile-ag-around)
+  (advice-add
+   'counsel-projectile-ag
+   :around #'wal/advise-counsel-projectile-ag-around)
   (counsel-projectile-mode +1)
   :custom
   ;; (counsel-projectile-preview-buffers t)
@@ -3424,8 +3514,9 @@ Keep order.
 
 ;;; Code:
 
-(declare-function projectile-project-p "projectile.el")
 (declare-function persp-scratch-buffer "perspective.el")
+(declare-function persp-switch-to-buffer "perspective.el")
+(declare-function projectile-project-p "projectile.el")
 
 (defvar projectile-globally-ignored-directories)
 (defvar projectile-globally-ignored-files)
@@ -3435,13 +3526,12 @@ Keep order.
   "Change settings used for workspace packages."
   :group 'wal
   :tag "Workspace")
-
 #+END_SRC
 
 Perspectives.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/use-perspectives nil
+(defcustom wal/use-perspectives t
   "Whether to use perspectives.
 
 This requires `wal/load-custom-file-immediately' to be true."
@@ -3467,11 +3557,20 @@ This only removes `process-kill-buffer-query-function'."
   (interactive)
   (switch-to-buffer (get-buffer-create (persp-scratch-buffer))))
 
+(defun wal/consult-persp-switch-to-buffer (buffer &optional norecord)
+  "Switch to BUFFER.
+
+Allow `consult--buffer-display' to be set to use
+`persp-switch-to-buffer'."
+  (persp-switch-to-buffer buffer))
+
 (use-package perspective
   :if wal/use-perspectives
   :config
   (advice-add 'persp-kill :around #'wal/advise-persp-kill)
-  (defalias 'wal/ivy-switch-buffer #'persp-counsel-switch-buffer)
+  (if (eq wal/completion-provider 'ivy)
+      (defalias 'wal/ivy-switch-buffer #'persp-counsel-switch-buffer)
+    (setq consult--buffer-display #'wal/consult-persp-switch-to-buffer))
   (persp-mode)
   :custom
   (persp-modestring-dividers '(" (" ")" "/")) ; Add space for `doom-modeline'.
@@ -3480,12 +3579,11 @@ This only removes `process-kill-buffer-query-function'."
   (persp-mode-prefix-key (kbd "C-c i"))
   :bind
   (:map persp-mode-map
-   ("C-x b" . persp-switch-to-buffer*)
-   ("C-x k" . persp-kill-buffer*)
-   ;; Replaces `list-buffers'.
+   ("C-x b" . persp-switch-to-buffer)
    ("C-x C-b" . persp-buffer-menu)
    :map perspective-map
-   ("x" . wal/switch-to-scratch-buffer))
+   ("x" . wal/switch-to-scratch-buffer)
+   ("C-k" . persp-kill-buffer*))
   :wal-bind
   (:map persp-mode-map
    ("i" . persp-switch))
@@ -3596,7 +3694,9 @@ is a bit elaborate.
 (defun wal/configure-org ()
   "Configure `org'."
   (define-key org-mode-map (kbd "C-,") nil) ; Remove `org-cycle-agenda-files'.
-  (advice-add 'org-export-dispatch :before #'wal/advise-org-export-dispatch))
+  (advice-add
+   'org-export-dispatch
+   :before #'wal/advise-org-export-dispatch))
 
 (defun wal/org-content (level)
   "Interactively call `org-content' with LEVEL."
@@ -3998,7 +4098,6 @@ Uses the same optional SWITCHES."
   :bind
   (("C-x x d" . wal/dired-from-home)
    ("C-x j" . dired-jump)
-   ("C-x x j" . dired-jump-other-window)
    :map dired-mode-map
    ("." . dired-up-directory) ; Overrides `dired-clean-directory'.
    ("," . dired-display-file))
@@ -4093,6 +4192,12 @@ Set up =eshell=. I like the idea of it but I don't really use it.
 (defvar eshell-highlight-prompt)
 (defvar eshell-prompt-function)
 
+(defun wal/advise-eshell/clear (&rest _r)
+  "Advise to truncate buffer."
+  (let ((eshell-buffer-maximum-lines 0))
+    (when (fboundp 'eshell-truncate-buffer)
+      (eshell-truncate-buffer))))
+
 (use-package esh-autosuggest
   :hook (eshell-mode . esh-autosuggest-mode))
 
@@ -4105,12 +4210,6 @@ Set up =eshell=. I like the idea of it but I don't really use it.
 
 (use-package eshell-syntax-highlighting
   :hook (eshell-mode . eshell-syntax-highlighting-mode))
-
-(defun wal/advise-eshell/clear (&rest _r)
-  "Advise to truncate buffer."
-  (let ((eshell-buffer-maximum-lines 0))
-    (when (fboundp 'eshell-truncate-buffer)
-      (eshell-truncate-buffer))))
 
 (use-package eshell
   :config
@@ -4146,6 +4245,11 @@ Some common shell commands require an additional =C-c=:
   "Hook into `vterm-mode'."
   (ctrlf-local-mode -1))
 
+(defun wal/advise-vterm-toggle (&rest _r)
+  "Advise `vterm-toggle' to show unless the window is a vterm buffer."
+  (unless (derived-mode-p 'vterm-mode)
+    (vterm-toggle-show)))
+
 (use-package vterm
   :config
   (wal/display-buffer-in-side-window (concat "\\" vterm-buffer-name) nil nil t 15)
@@ -4154,11 +4258,6 @@ Some common shell commands require an additional =C-c=:
   :hook (vterm-mode . wal/vterm-mode)
   :delight
   (vterm-copy-mode " vcp"))
-
-(defun wal/advise-vterm-toggle (&rest _r)
-  "Advise `vterm-toggle' to show unless the window is a vterm buffer."
-  (unless (derived-mode-p 'vterm-mode)
-    (vterm-toggle-show)))
 
 (use-package vterm-toggle
   :config
@@ -5282,7 +5381,7 @@ and re-run it.
 [fn:5] Which means that a frame is created and control immediately
 returned.
 
-[fn:6] Not including where =:tangle no= was set, 166 (on my last count)
+[fn:6] Not including where =:tangle no= was set, 167 (on my last count)
 code blocks will be tangled. /Note/ they will not necessarily be
 evaluated in the same order they appear in this file.
 
