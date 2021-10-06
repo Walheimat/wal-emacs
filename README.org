@@ -1526,7 +1526,7 @@ Package-based settings.
   :general
   (wal/general-sink "p" '(list-processes :wk "list processes"))
   (wal/major-sink "w" '(delete-trailing-whitespace :wk "delete trailing whitespace"))
-  (wal/lieutenant-sink "f" '(auto-fill-mode :wk "auto-fill"))
+  (wal/colonel-sink "f" '(auto-fill-mode :wk "auto-fill"))
   :ensure nil)
 
 (use-package mouse
@@ -3667,6 +3667,7 @@ is a bit elaborate.
 ;;; Code:
 
 (declare-function wal/disable-tabs "wal-settings.el")
+(declare-function projectile-project-root "projectile.el")
 
 (defvar org-mode-map)
 (defvar text-scale-mode-step)
@@ -3775,14 +3776,31 @@ Prettier headlines.
 Capture templates.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/org-capture-find-project-tasks ()
+  "Find a project's tasks file.
+
+If the project root cannot be determined, use
+`wal/org-directory'. as destination."
+  (expand-file-name "tasks.org" (or (projectile-project-root) org-directory)))
+
 (use-package org-capture
   :custom
   (org-capture-templates
-   `(("m" "meeting" entry (file+olp+datetree ,(concat org-directory "/meetings.org")) "* %?")
-     ("d" "daily" plain (file+olp+datetree ,(concat org-directory "/dailies.org")) "%i\n%?")))
+   `(("m" "meeting" entry
+      (file+olp+datetree ,(concat org-directory "/meetings.org"))
+      "* %?")
+     ("d" "daily" plain
+      (file+olp+datetree ,(concat org-directory "/dailies.org"))
+      "%i\n%?")
+     ("p" "project task" entry
+      (file+headline wal/org-capture-find-project-tasks "Tasks")
+      "* TODO %?\n\n%F\n\n%i"
+      :empty-lines-before 1)))
   ;; This leads to endless edit buffers opening since we annotate bookmarks
   (org-capture-bookmark nil)
-  :after org
+  :general
+  (wal/lieutenant-sink
+    "c" '(org-capture :wk "capture"))
   :ensure nil
   :delight " cap")
 #+END_SRC

@@ -12,7 +12,6 @@ function install_husky() {
     (cd ..; npx husky install 2>&1)
 }
 
-
 echo -e "${blue}${whale}${reset} ${bold}[commit hooks setup]${reset}"
 
 install_npm_dependencies
