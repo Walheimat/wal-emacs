@@ -4437,6 +4437,32 @@ We don't use tabs here.
   :hook (elixir-mode . wal/elixir-mode))
 #+END_SRC
 
+*** Flutter
+
+Yes, you need to install *Android Studio* for some reason.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/dart-mode()
+  "Hook into `dart-mode'."
+  (message "Bull's eye!")
+  (wal/disable-tabs)
+  (hack-local-variables)
+  (wal/lsp))
+
+(use-package dart-mode
+  :hook (dart-mode . wal/dart-mode))
+
+(defun wal/find-dart-flutter-sdk-dir ()
+ "Find the Dart Flutter SDK directory."
+  (when-let* ((sdk-dir (string-trim (shell-command-to-string "flutter sdk-path"))))
+    sdk-dir))
+
+(use-package lsp-dart
+  :if (eq wal/lsp-provider 'lsp-mode)
+  :custom
+  (lsp-dart-flutter-sdk-dir (wal/find-dart-flutter-sdk-dir)))
+#+END_SRC
+
 *** Go
 
 Setup for LSP.
