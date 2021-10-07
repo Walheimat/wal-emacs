@@ -1547,8 +1547,8 @@ Package-based settings.
   ("C-?" . undo-redo)
   :general
   (wal/general-sink "p" '(list-processes :wk "list processes"))
-  (wal/major-sink "w" '(delete-trailing-whitespace :wk "delete trailing whitespace"))
   (wal/colonel-sink "f" '(auto-fill-mode :wk "auto-fill"))
+  (wal/major-sink "w" '(delete-trailing-whitespace :wk "delete trailing whitespace"))
   :ensure nil)
 
 (use-package mouse
@@ -1962,14 +1962,14 @@ there's a region, all lines that region covers will be duplicated."
    ("0" . wal/crux-duplicate-and-comment-current-line-or-region)
    ("o" . crux-other-window-or-switch-buffer))
   :general
+  (wal/general-sink
+    "i" '(crux-find-shell-init-file :wk "find shell init")
+    "c" '(crux-find-user-custom-file :wk "find custom file"))
   (wal/lieutenant
     "x" '(:ignore t :wk "crux")
     "xd" '(crux-delete-buffer-and-file :wk "delete buffer and file")
     "xr" '(crux-rename-file-and-buffer :wk "rename file and buffer")
     "xs" '(crux-sudo-edit :wk "sudo edit"))
-  (wal/general-sink
-    "i" '(crux-find-shell-init-file :wk "find shell init")
-    "c" '(crux-find-user-custom-file :wk "find custom file"))
   :commands (crux-get-positions-of-line-or-region))
 #+END_SRC
 
@@ -1988,16 +1988,6 @@ Little Red Riding Hood!
     "hf" '(hungry-delete-forward :wk "forward")
     "hb" '(hungry-delete-backward :wk "backward"))
   :delight " hun")
-#+END_SRC
-
-Comment and uncomment with less of a dance.
-
-#+BEGIN_SRC emacs-lisp
-(use-package newcomment
-  :bind
-  ([remap comment-set-column] . comment-line)
-  ([remap comment-line] . comment-set-column)
-  :ensure nil)
 #+END_SRC
 
 Sometimes I need to see whitespace chars.
@@ -3290,11 +3280,9 @@ Heavy lifting with =consult=.
   (("j" . consult-buffer))
   :general
   (wal/general "t" '(consult-theme :wk "theme"))
-  (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
   (wal/major :keymaps 'org-mode-map :major-modes t
     "h" '(consult-org-heading :wk "heading"))
-  (wal/major :keymaps 'outline-mode-map :major-modes t
-    "g" '(consult-outline :wk "go to outline"))
+  (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
   (wal/lieutenant
     "u" '(:ignore t :wk "consult")
     "ur" '(consult-recent-file :wk "recent")
@@ -3795,20 +3783,20 @@ Configure =org= itself.
      ("@bla" . ?b)
      ("@edu" . ?e)))
   :general
+  (wal/colonel :keymaps 'org-mode-map :major-modes t
+    "i" '(org-indent-mode :wk "org-indent"))
   (wal/major :keymaps 'org-mode-map :major-modes t
     "s" '(:ignore t :wk "subtree")
     "sw" '(org-cut-subtree :wk "cut subtree")
     "sy" '(org-paste-subtree :wk "paste subtree")
-    "o" '(:ignore t :wk "overview")
-    "oa" '(org-show-all :wk "show all")
-    "ol" '(wal/org-content :wk "show level")
+    "v" '(:ignore t :wk "visibility")
+    "va" '(org-show-all :wk "show all")
+    "vl" '(wal/org-content :wk "show level")
     "f" '(:ignore t :wk "footnotes")
     "fc" '(org-footnote-new :wk "create")
     "fn" '(org-footnote-normalize :wk "normalize")
     "e" '(org-edit-src-code :wk "edit source code")
     "n" '(org-add-note :wk "add note"))
-  (wal/colonel :keymaps 'org-mode-map :major-modes t
-    "i" '(org-indent-mode :wk "org-indent"))
   :hook (org-mode . wal/org-mode)
   :ensure nil)
 #+END_SRC
@@ -4888,7 +4876,7 @@ This depends on `wal/lsp-provider'."
   :custom
   (flycheck-keymap-prefix (kbd "C-c f"))
   :general
-  (wal/colonel :keymaps 'prog-mode-map
+  (wal/colonel :keymaps '(prog-mode-map yaml-mode-map)
     "f" '(flycheck-mode :wk "flycheck"))
   :delight " fly")
 #+END_SRC
