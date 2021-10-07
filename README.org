@@ -72,10 +72,6 @@ evaluate /everything/[fn:6] that follows.
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-settings.el" wal/emacs-config-package-path)
 :END:
 
-** Personal
-
-Set some personal info[fn:7].
-
 #+BEGIN_SRC emacs-lisp
 ;;; wal-settings.el --- Settings.
 
@@ -83,14 +79,21 @@ Set some personal info[fn:7].
 ;;
 ;; The global settings.
 
+;;; Code:
+
 (defvar wal/load-custom-file-immediately)
 
 (defgroup wal-settings nil
   "Change core settings."
   :group 'wal
   :tag "Settings")
+#+END_SRC
 
-;;; Code:
+** Personal
+
+Set some personal info[fn:7].
+
+#+BEGIN_SRC emacs-lisp
 (setq user-full-name "Krister Schuchardt"
       user-mail-address "krister.schuchardt@theventury.com")
 #+END_SRC
@@ -366,17 +369,16 @@ Resets all variables that were initially set by
 
 (defun wal/disable-tabs ()
   "Disable tabs.
-Unsets tab key and sets variable `indent-tabs-mode' to nil."
+
+Sets variable `indent-tabs-mode' to nil."
   (interactive)
-  (local-unset-key (kbd "TAB"))
   (setq indent-tabs-mode nil))
 
 (defun wal/enable-tabs ()
   "Enable tabs.
-Sets tab key to `tab-to-tab-stop' and variable `indent-tabs-mode'
-to t."
+
+Sets tab variable `indent-tabs-mode' to t."
   (interactive)
-  (local-set-key (kbd "TAB") 'tab-to-tab-stop)
   (setq indent-tabs-mode t))
 
 (defun wal/maybe-enable-tabs (&optional tab-indent-fun mode-fun)
@@ -445,7 +447,9 @@ This overrides the scratch buffer with the content stored in
 
 (add-hook 'emacs-startup-hook #'wal/rehydrate-scratch)
 (add-hook 'kill-emacs-hook #'wal/persist-scratch)
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-settings)
 
 ;;; wal-settings.el ends here
@@ -457,6 +461,33 @@ This overrides the scratch buffer with the content stored in
 :END:
 
 I use many[fn:8] custom keybindings.
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-key-bindings.el --- Key bindings.
+
+;;; Commentary:
+;;
+;; Key bindings package.
+
+;;; Code:
+
+(declare-function wal/tangle-config "init.el")
+(declare-function wal/general "wal-key-bindings.el")
+(declare-function wal/general-sink "wal-key-bindings.el")
+(declare-function wal/colonel "wal-key-bindings.el")
+(declare-function wal/edge-left "wal-func.el")
+(declare-function wal/edge-right "wal-func.el")
+(declare-function wal/edge-down "wal-func.el")
+(declare-function wal/edge-up "wal-func.el")
+(declare-function wal/split-window-the-other-way "wal-func.el")
+
+(defvar wal/emacs-config-default-path)
+
+(defgroup wal-key-bindings nil
+  "Change key bindings settings."
+  :group 'wal
+  :tag "Key bindings")
+#+END_SRC
 
 ** Prefix Keys
 
@@ -546,31 +577,6 @@ The are five multi-purpose =general= leader keys. They prefix actions by
 common context.
 
 #+BEGIN_SRC emacs-lisp
-;;; wal-key-bindings.el --- Key bindings.
-
-;;; Commentary:
-;;
-;; Key bindings package.
-
-;;; Code:
-
-(declare-function wal/tangle-config "init.el")
-(declare-function wal/general "wal-key-bindings.el")
-(declare-function wal/general-sink "wal-key-bindings.el")
-(declare-function wal/colonel "wal-key-bindings.el")
-(declare-function wal/edge-left "wal-func.el")
-(declare-function wal/edge-right "wal-func.el")
-(declare-function wal/edge-down "wal-func.el")
-(declare-function wal/edge-up "wal-func.el")
-(declare-function wal/split-window-the-other-way "wal-func.el")
-
-(defvar wal/emacs-config-default-path)
-
-(defgroup wal-key-bindings nil
-  "Change key bindings settings."
-  :group 'wal
-  :tag "Key bindings")
-
 (defcustom wal/use-hyper-prefix t
   "Whether the hyper modifier should be used to prefix user keys.
 
@@ -921,7 +927,9 @@ There are two differences:
 (defalias 'use-package-autoloads/:wal-bind 'use-package-autoloads-mode)
 
 (wal/insert-use-package-keyword :wal-bind :bind-keymap*)
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-key-bindings)
 
 ;;; wal-key-bindings.el ends here
@@ -931,10 +939,6 @@ There are two differences:
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-func.el" wal/emacs-config-package-path)
 :END:
-
-** Directories
-
-Finding files should =mkdir -p= its parents.
 
 #+BEGIN_SRC emacs-lisp
 ;;; wal-func.el --- Additional functions.
@@ -952,7 +956,13 @@ Finding files should =mkdir -p= its parents.
   "Change values used in additional functions."
   :group 'wal
   :tag "Functions")
+#+END_SRC
 
+** Directories
+
+Finding files should =mkdir -p= its parents.
+
+#+BEGIN_SRC emacs-lisp
 ;; Creating parent dirs.
 (defun wal/create-non-existent-directory ()
   "Ask whether to create non-existent directory.
@@ -1241,7 +1251,9 @@ is deleted."
 (advice-add
  'hack-local-variables
  :after #'wal/advise-hack-local-variables)
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-func)
 
 ;;; wal-func.el ends here
@@ -1251,8 +1263,6 @@ is deleted."
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-look.el" wal/emacs-config-package-path)
 :END:
-
-Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] has more themes.
 
 #+BEGIN_SRC emacs-lisp
 ;;; wal-look.el --- Look.
@@ -1267,7 +1277,11 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
   "Change the look."
   :group 'wal
   :tag "Look")
+#+END_SRC
 
+Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] has more themes.
+
+#+BEGIN_SRC emacs-lisp
 (defcustom wal/transparency 90
   "The default frame transparency."
   :type 'integer
@@ -1305,7 +1319,9 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 ;; Mix of old and new.
 (setq frame-title-format '(multiple-frames "%b"
                                            ("%b@" system-name)))
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-look)
 
 ;;; wal-look.el ends here
@@ -1315,9 +1331,6 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-fonts.el" wal/emacs-config-package-path)
 :END:
-
-Set fonts (with preference). To get support for ligatures, install the
-symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
 
 #+BEGIN_SRC emacs-lisp
 ;;; wal-fonts.el --- Fonts.
@@ -1335,7 +1348,12 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
   "Change fonts and font sizes."
   :group 'wal
   :tag "Fonts")
+#+END_SRC
 
+Set fonts (with preference). To get support for ligatures, install the
+symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
+
+#+BEGIN_SRC emacs-lisp
 (defcustom wal/fixed-fonts
   '("JetBrains Mono"
     "Iosevka"
@@ -1453,7 +1471,9 @@ available candidate from `wal/fixed-fonts'. Does the same for
   (add-hook 'emacs-startup-hook 'wal/setup-fonts))
 
 (add-hook 'font-lock-mode-hook 'wal/font-lock)
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-fonts)
 
 ;;; wal-fonts.el ends here
@@ -1480,8 +1500,6 @@ Everything that has to do with Emacs-y stuff.
 This is a combination of minor configurations for built-in
 packages[fn:12] and some external ones.
 
-First, bind some functions to refresh, install and delete packages.
-
 #+BEGIN_SRC emacs-lisp
 ;;; wal-emacs.el --- Emacs.
 
@@ -1493,7 +1511,11 @@ First, bind some functions to refresh, install and delete packages.
 
 (declare-function wal/display-buffer-in-side-window "wal-func.el")
 (declare-function wal/display-buffer-in-direction "wal-func.el")
+#+END_SRC
 
+First, bind some functions to refresh, install and delete packages.
+
+#+BEGIN_SRC emacs-lisp
 (use-package package
   :custom
   (package-native-compile t)
@@ -1725,7 +1747,9 @@ For internal debugging.
   :custom
   (debugger-bury-or-kill 'kill)
   :ensure nil)
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-emacs)
 
 ;;; wal-emacs.el ends here
@@ -1737,8 +1761,6 @@ For internal debugging.
 :END:
 
 It's fun to edit things /quickly/.
-
-Don't you want to edit your buffer in multiple places at once?
 
 #+BEGIN_SRC emacs-lisp
 ;;; wal-edit.el --- Editing.
@@ -1762,7 +1784,11 @@ Don't you want to edit your buffer in multiple places at once?
 (declare-function wal/reset-to-standard "wal-settings.el")
 
 (defvar sp-lisp-modes)
+#+END_SRC
 
+Don't you want to edit your buffer in multiple places at once?
+
+#+BEGIN_SRC emacs-lisp
 (use-package multiple-cursors
   :init
   ;; Since the map is `nil', using `:bind' would fail.
@@ -2007,7 +2033,9 @@ Some files are so long and Emacs will want to throw up. Prevent that.
   (so-long-action 'so-long-minor-mode)
   :defer 4
   :ensure nil)
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-edit)
 
 ;;; wal-edit.el ends here
@@ -2019,10 +2047,6 @@ Some files are so long and Emacs will want to throw up. Prevent that.
 :END:
 
 I like nice-looking things.
-
-*** Dashboard
-
-Let's have a dash of board.
 
 #+BEGIN_SRC emacs-lisp
 ;;; wal-visuals.el --- Visuals.
@@ -2047,7 +2071,13 @@ Let's have a dash of board.
   "Change settings used for visual packages."
   :group 'wal
   :tag "Visuals")
+#+END_SRC
 
+*** Dashboard
+
+Let's have a dash of board.
+
+#+BEGIN_SRC emacs-lisp
 (defcustom wal/dashboard-footer-messages
   '("breaching your favorite stupid framework"
     "I propel myself forward on nothing but flukes"
@@ -2613,7 +2643,9 @@ zoning can always be triggered using =C-z=.
   :bind
   ("C-z" . zone) ; Replaces `suspend-frame'.
   :ensure nil)
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-visuals)
 
 ;;; wal-visuals.el ends here
@@ -2625,8 +2657,6 @@ zoning can always be triggered using =C-z=.
 :END:
 
 Everything that has to do with windows.
-
-=ace= interacting with (multiple) windows.
 
 #+BEGIN_SRC emacs-lisp
 ;;; wal-windows.el --- Windows.
@@ -2648,7 +2678,11 @@ Everything that has to do with windows.
  "Change window settings."
  :group 'wal
  :tag "Windows")
+#+END_SRC
 
+=ace= interacting with (multiple) windows.
+
+#+BEGIN_SRC emacs-lisp
 (defun wal/aw-delete-window-kill-buffer (window)
   "Call `aw-delete-window' on WINDOW requesting buffer kill."
   (aw-delete-window window t))
@@ -2826,7 +2860,9 @@ Allow restoring window configurations.
     "w" '(wal/winner/body :wk "winner"))
   :defer 3
   :ensure nil)
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-windows)
 
 ;;; wal-windows.el ends here
@@ -2838,9 +2874,6 @@ Allow restoring window configurations.
 :END:
 
 Moving around should be fun.
-
-Jump to (visible) lines and chars is fun if you are too lazy to use
-your mouse.
 
 #+BEGIN_SRC emacs-lisp
 ;;; wal-movement.el --- Movement.
@@ -2856,7 +2889,12 @@ your mouse.
 
 (defvar avy-goto-word-0)
 (defvar avy-goto-word-0-regexp)
+#+END_SRC
 
+Jump to (visible) lines and chars is fun if you are too lazy to use
+your mouse.
+
+#+BEGIN_SRC emacs-lisp
 (defun wal/avy-goto-word-in-line ()
   "Jump to currently visible word in the current line."
   (interactive)
@@ -2907,7 +2945,9 @@ Move where I want. Useful for comments.
   :bind
   (("C-a" . mwim-beginning)
    ("C-e" . mwim-end)))
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-movement)
 
 ;;; wal-movement.el ends here
@@ -3060,7 +3100,9 @@ using =xref-find-definitions= (=M-.=).
     (setq dumb-jump-selector 'completing-read))
   :custom
   (dumb-jump-force-searcher 'ag))
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-find)
 
 ;;; wal-find.el ends here
@@ -3492,7 +3534,9 @@ This eliminates getting prompted to open one first."
    ("j" . counsel-projectile-switch-to-buffer))
   :demand
   :after (projectile counsel))
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-complete)
 
 ;;; wal-complete.el ends here
@@ -3557,7 +3601,7 @@ This only removes `process-kill-buffer-query-function'."
   (interactive)
   (switch-to-buffer (get-buffer-create (persp-scratch-buffer))))
 
-(defun wal/consult-persp-switch-to-buffer (buffer &optional norecord)
+(defun wal/consult-persp-switch-to-buffer (buffer &optional _norecord)
   "Switch to BUFFER.
 
 Allow `consult--buffer-display' to be set to use
@@ -3643,7 +3687,9 @@ This extends all ignore lists' default values."
    ("h" . projectile-find-file))
   :defer 1
   :delight " pjt")
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-workspace)
 
 ;;; wal-workspace.el ends here
@@ -3654,8 +3700,7 @@ This extends all ignore lists' default values."
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-org.el" wal/emacs-config-package-path)
 :END:
 
-The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]]. This configuration
-is a bit elaborate.
+The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]].
 
 #+BEGIN_SRC emacs-lisp
 ;;; wal-org.el --- Org.
@@ -3678,7 +3723,11 @@ is a bit elaborate.
   "Change settings used for org packages."
   :group 'wal
   :tag "Org")
+#+END_SRC
 
+Configure =org= itself.
+
+#+BEGIN_SRC emacs-lisp
 (defun wal/org-mode ()
   "Hook into `org-mode'."
   (message "Organize! Seize the means of production!")
@@ -4065,7 +4114,9 @@ Allow padding and centering text.
 
 #+BEGIN_SRC emacs-lisp
 (use-package visual-fill-column)
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-org)
 
 ;;; wal-org.el ends here
@@ -4075,13 +4126,6 @@ Allow padding and centering text.
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-dired.el" wal/emacs-config-package-path)
 :END:
-
-Group directories first in =dired=,
-override some keybindings.
-
-Did you know you can edit =dired= buffers using =C-x C-q=?
-
-Run =dired= with =C-x d=.
 
 #+BEGIN_SRC emacs-lisp
 ;;; wal-dired.el --- Dired.
@@ -4093,6 +4137,15 @@ Run =dired= with =C-x d=.
 ;;; Code:
 
 (declare-function dired-read-dir-and-switches "dired.el")
+#+END_SRC
+
+Group directories first in =dired=, override some keybindings.
+
+Did you know you can edit =dired= buffers using =C-x C-q=?
+
+Run =dired= with =C-x d=.
+
+#+BEGIN_SRC emacs-lisp
 
 (defun wal/dired-from-home (dirname &optional switches)
   "Find DIRNAME local to HOME directory.
@@ -4177,7 +4230,9 @@ Execute IO actions asynchronously.
   :defer 4
   :after dired
   :diminish 'dired-async-mode)
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-dired)
 
 ;;; wal-dired.el ends here
@@ -4193,8 +4248,6 @@ I am convinced that we are in a terminal process.
 — E. P. Thompson
 #+END_QUOTE
 
-Set up =eshell=. I like the idea of it but I don't really use it.
-
 #+BEGIN_SRC emacs-lisp
 ;;; wal-terminal.el --- Terminal.
 
@@ -4209,7 +4262,11 @@ Set up =eshell=. I like the idea of it but I don't really use it.
 
 (defvar eshell-highlight-prompt)
 (defvar eshell-prompt-function)
+#+END_SRC
 
+Set up =eshell=. I like the idea of it but I don't really use it.
+
+#+BEGIN_SRC emacs-lisp
 (defun wal/advise-eshell/clear (&rest _r)
   "Advise to truncate buffer."
   (let ((eshell-buffer-maximum-lines 0))
@@ -4285,7 +4342,9 @@ Some common shell commands require an additional =C-c=:
   (vterm-toggle-scope 'project)
   :wal-bind
   ("\\" . vterm-toggle))
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-terminal)
 
 ;;; wal-terminal.el ends here
@@ -4296,7 +4355,7 @@ Some common shell commands require an additional =C-c=:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-vc.el" wal/emacs-config-package-path)
 :END:
 
-I'm becoming an old =git=.
+I'm becoming an old git.
 
 #+BEGIN_SRC emacs-lisp
 ;;; wal-vc.el --- Version control.
@@ -4308,7 +4367,11 @@ I'm becoming an old =git=.
 ;;; Code:
 
 (declare-function magit-display-buffer-traditional "magit-mode.el")
+#+END_SRC
 
+Forget remembering =git= commands, use =transient=.
+
+#+BEGIN_SRC emacs-lisp
 (use-package magit
   :custom
   (magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
@@ -4364,7 +4427,9 @@ Use a single frame and split horizontally when diffing.
   (ediff-window-setup-function #'ediff-setup-windows-plain) ; Single frame.
   (ediff-split-window-function #'split-window-horizontally)
   :ensure nil)
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-vc)
 
 ;;; wal-vc.el ends here
@@ -4376,12 +4441,6 @@ Use a single frame and split horizontally when diffing.
 :END:
 
 Let's greet the world.
-
-*** C
-
-I want to be ready for =jai=.
-
-=eglot= will use =ccls=, =lsp-mode= will use =clangd=.
 
 #+BEGIN_SRC emacs-lisp
 ;;; wal-lang.el --- Languages.
@@ -4397,7 +4456,15 @@ I want to be ready for =jai=.
 (declare-function wal/disable-tabs "wal-settings.el")
 (declare-function wal/lsp "wal-lsp.el")
 (declare-function wal/maybe-enable-tabs "wal-settings.el")
+#+END_SRC
 
+*** C
+
+I want to be ready for =jai=.
+
+=eglot= will use =ccls=, =lsp-mode= will use =clangd=.
+
+#+BEGIN_SRC emacs-lisp
 (defun wal/c++-mode ()
   "Hook into `cc-mode'."
   (message "Make tidy! Make clean!")
@@ -4453,8 +4520,9 @@ Yes, you need to install *Android Studio* for some reason.
   :hook (dart-mode . wal/dart-mode))
 
 (defun wal/find-dart-flutter-sdk-dir ()
- "Find the Dart Flutter SDK directory."
-  (when-let* ((sdk-dir (string-trim (shell-command-to-string "flutter sdk-path"))))
+  "Find the Dart Flutter SDK directory."
+  (when-let* ((flutter-bin (executable-find "flutter"))
+              (sdk-dir (string-trim (shell-command-to-string "flutter sdk-path"))))
     sdk-dir))
 
 (use-package lsp-dart
@@ -4773,7 +4841,9 @@ Support for =pug= templates.
 
 #+BEGIN_SRC emacs-lisp
 (use-package pug-mode)
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-lang)
 
 ;;; wal-lang.el ends here
@@ -4890,7 +4960,9 @@ My spelling is bad. Uses American English for =flyspell=.
     "sb" '(flyspell-buffer :wk "buffer")
     "sr" '(flyspell-region :wk "region"))
   :ensure nil)
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-fix)
 
 ;;; wal-fix.el ends here
@@ -5133,7 +5205,9 @@ Taken from the official documentation.
         :priority 1
         :multi-root t
         :server-id 'prolog-ls))))
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-lsp)
 
 ;;; wal-lsp.el ends here
@@ -5200,8 +5274,6 @@ Attach to running process.
 Put it into a container and throw it in the garbage that is the
 Internet.
 
-What goes =docker-compose= up, goes =docker-compose= down.
-
 #+BEGIN_SRC emacs-lisp
 ;;; wal-devops.el --- DevOps.
 
@@ -5213,7 +5285,11 @@ What goes =docker-compose= up, goes =docker-compose= down.
 
 (declare-function wal/display-buffer-in-side-window "wal-func.el")
 (declare-function wal/display-buffer-in-direction "wal-func.el")
+#+END_SRC
 
+What goes =docker-compose= up, goes =docker-compose= down.
+
+#+BEGIN_SRC emacs-lisp
 (use-package docker
   :config
   (wal/display-buffer-in-side-window "\\*docker-containers\\*" 'top)
@@ -5237,7 +5313,9 @@ Make =Dockerfiles= look nice.
 
 (use-package dockerfile-mode
   :hook (dockerfile-mode . wal/dockerfile-mode))
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-devops)
 
 ;;; wal-devops.el ends here
@@ -5249,9 +5327,6 @@ Make =Dockerfiles= look nice.
 :END:
 I browse, I request.
 
-Postman is passé. I use a =.http= file extension for my request
-examples.
-
 #+BEGIN_SRC emacs-lisp
 ;;; wal-web.el --- The Internet.
 
@@ -5262,7 +5337,12 @@ examples.
 ;;; Code:
 
 (declare-function wal/display-buffer-in-pop-up "wal-func.el")
+#+END_SRC
 
+Postman is passé. I use a =.http= file extension for my request
+examples.
+
+#+BEGIN_SRC emacs-lisp
 (use-package restclient
   :mode ("\\.http\\'" . restclient-mode)
   :config
@@ -5279,7 +5359,9 @@ examples.
   :config
   (require 'cl nil t)
   :load-path "site-lisp")
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-web)
 
 ;;; wal-web.el ends here
@@ -5292,10 +5374,6 @@ examples.
 
 Sometimes you have to sit down and write something.
 
-Access complex punctuation. To me this doesn't necessarily make sense
-for all =text-mode= modes (like =org-mode=), so instead it needs to be
-triggered explicitly.
-
 #+BEGIN_SRC emacs-lisp
 ;;; wal-writing.el --- Writing.
 
@@ -5304,7 +5382,13 @@ triggered explicitly.
 ;; Provide writing packages.
 
 ;;; Code:
+#+END_SRC
 
+Access complex punctuation. To me this doesn't necessarily make sense
+for all =text-mode= modes (like =org-mode=), so instead it needs to be
+triggered explicitly.
+
+#+BEGIN_SRC emacs-lisp
 (use-package typo
   :general
   (wal/colonel :keymaps '(text-mode-map org-mode-map) :major-modes t
@@ -5324,7 +5408,9 @@ Create a room of one's own. I use a different (light) theme here.
   (writeroom-extra-line-spacing 0.1)
   :general
   (wal/colonel "r" '(writeroom-mode :wk "writeroom")))
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-writing)
 
 ;;; wal-writing.el ends here
@@ -5424,12 +5510,11 @@ and re-run it.
 [fn:5] Which means that a frame is created and control immediately
 returned.
 
-[fn:6] Not including where =:tangle no= was set, 167 (on my last count)
-code blocks will be tangled. /Note/ they will not necessarily be
-evaluated in the same order they appear in this file.
+[fn:6] Not including where =:tangle no= was set.
 
-The order of evaluation is determined by the =wal.el= file
-from [[*Config Package][this section]].
+/Note/ they will not necessarily be evaluated in the same order they
+appear in this file. The order of evaluation is determined by the
+=wal.el= file from [[*Config Package][this section]].
 
 [fn:7] Send me an email, why don't you?
 
