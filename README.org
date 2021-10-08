@@ -2664,6 +2664,9 @@ Everything that has to do with windows.
 (declare-function popper-popup-p "popper.el")
 (declare-function popper-toggle-latest "popper.el")
 
+(defvar wal/completion-provider)
+(defvar aw-dispatch-alist)
+
 (defgroup wal-windows nil
  "Change window settings."
  :group 'wal
@@ -2687,8 +2690,6 @@ Everything that has to do with windows.
 
 (defun wal/configure-ace-window ()
   "Configure package `ace-window'."
-  (defvar wal/completion-provider)
-  (defvar aw-dispatch-alist)
   (setq aw-dispatch-alist '((?h aw-split-window-horz "horizontal split")
                             (?v aw-split-window-vert "vertical split")
                             (?d aw-delete-window "delete")
@@ -2964,6 +2965,9 @@ I mostly search.
 (declare-function ag/search "ag.el")
 (declare-function wal/display-buffer-in-pop-up "wal-func.el")
 
+(defvar ag-arguments)
+(defvar wal/completion-provider)
+
 (defgroup wal-find nil
   "Change settings of search packages."
   :group 'wal
@@ -2989,7 +2993,6 @@ value other than the default will have no effect."
 (defun wal/ag-ignored (string)
   "Search project for STRING including VCS ignored files."
   (interactive (list (ag/read-from-minibuffer "Search string")))
-  (defvar ag-arguments)
   (let ((ag-arguments (append ag-arguments '("--skip-vcs-ignores"))))
     (ag/search string (ag/project-root default-directory))))
 
@@ -3084,7 +3087,6 @@ using =xref-find-definitions= (=M-.=).
   :init
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
   :config
-  (defvar wal/completion-provider)
   (if (eq wal/completion-provider 'ivy)
       (setq dumb-jump-selector 'ivy)
     (setq dumb-jump-selector 'completing-read))
@@ -3118,6 +3120,11 @@ Complete commands and code.
 (declare-function persp-current-buffer-names "perspective.el")
 (declare-function projectile-project-p "projectile.el")
 (declare-function wal/display-buffer-ethereally "wal-func.el")
+
+(defvar all-the-icons-ivy-rich-display-transformers-list)
+(defvar consult-buffer-filter)
+(defvar consult-buffer-sources)
+(defvar xref-show-definitions-function)
 
 (defgroup wal-complete nil
   "Change settings used for completion packages."
@@ -3256,9 +3263,6 @@ Heavy lifting with =consult=.
 
 (defun wal/configure-consult ()
   "Configure package `consult'."
-  (defvar consult-buffer-filter)
-  (defvar consult-buffer-sources)
-  (defvar xref-show-definitions-function)
   (setq xref-show-definitions-function #'consult-xref)
   (add-to-list 'consult-buffer-sources 'wal/consult-source-perspective 'append)
   (mapc (lambda (it) (add-to-list 'consult-buffer-filter it))
@@ -3367,7 +3371,6 @@ Some nicer candidate view when switching buffers.
   "Configure (additional) transformers in the list.
 
 This function is called before `all-the-icons-ivy-rich' is activated."
-  (defvar all-the-icons-ivy-rich-display-transformers-list)
   (let ((tl all-the-icons-ivy-rich-display-transformers-list))
     (plist-put tl 'persp-kill-buffer* (plist-get tl 'persp-kill-buffer))))
 
