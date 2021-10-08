@@ -3260,7 +3260,7 @@ Heavy lifting with =consult=.
   (defvar consult-buffer-sources)
   (defvar xref-show-definitions-function)
   (setq xref-show-definitions-function #'consult-xref)
-  (add-to-list 'consult-buffer-sources 'wal/consult-source-perspective)
+  (add-to-list 'consult-buffer-sources 'wal/consult-source-perspective 'append)
   (mapc (lambda (it) (add-to-list 'consult-buffer-filter it))
         wal/consult-buffer-filter))
 
@@ -3546,13 +3546,18 @@ Keep order.
 
 ;;; Code:
 
+(declare-function consult-customize "consult.el")
+(declare-function persp-buffer-in-other-p "perspective.el")
 (declare-function persp-scratch-buffer "perspective.el")
+(declare-function persp-switch "perspective.el")
 (declare-function persp-switch-to-buffer "perspective.el")
 (declare-function projectile-project-p "projectile.el")
 
+(defvar consult--source-buffer)
 (defvar projectile-globally-ignored-directories)
 (defvar projectile-globally-ignored-files)
 (defvar projectile-globally-ignored-file-suffixes)
+(defvar wal/completion-provider)
 
 (defgroup wal-workspace nil
   "Change settings used for workspace packages."
@@ -3589,21 +3594,36 @@ This only removes `process-kill-buffer-query-function'."
   (interactive)
   (switch-to-buffer (get-buffer-create (persp-scratch-buffer))))
 
-(defun wal/consult-persp-switch-to-buffer (buffer &optional _norecord)
-  "Switch to BUFFER.
+(defun wal/consult-persp-switch (buffer-or-name)
+  "Switch perspectives before switching to BUFFER-OR-NAME.
 
-Allow `consult--buffer-display' to be set to use
-`persp-switch-to-buffer'."
-  (persp-switch-to-buffer buffer))
+This function is a copy of `persp-switch-to-buffer' but always
+checks if the buffer belongs to another perspective since
+`consult' will have already switched in preview."
+  (let ((buffer (window-normalize-buffer-to-switch-to buffer-or-name)))
+    (let ((other-persp (persp-buffer-in-other-p buffer)))
+      (when (eq (car-safe other-persp) (selected-frame))
+        (persp-switch (cdr other-persp)))
+      (switch-to-buffer buffer))))
+
+(defun wal/configure-perspective ()
+  "Configure package `perspective'.
+
+This mainly makes sure that switching buffers using any
+completion provider also switches perspectives."
+  (advice-add 'persp-kill :around #'wal/advise-persp-kill)
+  (if (eq wal/completion-provider 'ivy)
+      (defalias 'wal/ivy-switch-buffer #'persp-counsel-switch-buffer)
+    (with-eval-after-load 'consult
+      (consult-customize
+       consult--source-buffer
+       :action #'wal/consult-persp-switch)))
+  (persp-mode))
 
 (use-package perspective
   :if wal/use-perspectives
   :config
-  (advice-add 'persp-kill :around #'wal/advise-persp-kill)
-  (if (eq wal/completion-provider 'ivy)
-      (defalias 'wal/ivy-switch-buffer #'persp-counsel-switch-buffer)
-    (setq consult--buffer-display #'wal/consult-persp-switch-to-buffer))
-  (persp-mode)
+  (wal/configure-perspective)
   :custom
   (persp-modestring-dividers '(" (" ")" "/")) ; Add space for `doom-modeline'.
   (persp-initial-frame-name wal/default-perspective)
@@ -3620,7 +3640,7 @@ Allow `consult--buffer-display' to be set to use
   (:map persp-mode-map
    ("i" . persp-switch))
   :hook (kill-emacs . persp-state-save)
-  :defer 1)
+  :demand)
 #+END_SRC
 
 More robust project management.
