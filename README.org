@@ -3116,13 +3116,16 @@ Complete commands and code.
 
 ;;; Code:
 
+(declare-function consult-customize "consult.el")
 (declare-function consult--buffer-state "consult.el")
+(declare-function consult--source-file "consult.el")
 (declare-function persp-current-buffer-names "perspective.el")
 (declare-function projectile-project-p "projectile.el")
 (declare-function wal/display-buffer-ethereally "wal-func.el")
 
 (defvar all-the-icons-ivy-rich-display-transformers-list)
 (defvar consult-buffer-filter)
+(defvar consult--source-file)
 (defvar consult-buffer-sources)
 (defvar xref-show-definitions-function)
 
@@ -3260,13 +3263,15 @@ Heavy lifting with =consult=.
    --smart-case --no-heading --line-number --no-ignore ."))
     (call-interactively 'consult-ripgrep)))
 
-
 (defun wal/configure-consult ()
   "Configure package `consult'."
   (setq xref-show-definitions-function #'consult-xref)
   (add-to-list 'consult-buffer-sources 'wal/consult-source-perspective 'append)
   (mapc (lambda (it) (add-to-list 'consult-buffer-filter it))
-        wal/consult-buffer-filter))
+        wal/consult-buffer-filter)
+  (consult-customize
+   consult--source-file
+   :preview-key (kbd "M-,")))
 
  (use-package consult
   :if (eq wal/completion-provider 'vertico)
