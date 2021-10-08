@@ -3117,16 +3117,12 @@ Complete commands and code.
 ;;; Code:
 
 (declare-function consult-customize "consult.el")
-(declare-function consult--buffer-state "consult.el")
-(declare-function consult--source-file "consult.el")
-(declare-function persp-current-buffer-names "perspective.el")
 (declare-function projectile-project-p "projectile.el")
 (declare-function wal/display-buffer-ethereally "wal-func.el")
 
 (defvar all-the-icons-ivy-rich-display-transformers-list)
 (defvar consult-buffer-filter)
 (defvar consult--source-file)
-(defvar consult-buffer-sources)
 (defvar xref-show-definitions-function)
 
 (defgroup wal-complete nil
@@ -3242,19 +3238,6 @@ Heavy lifting with =consult=.
   :type '(repeat string)
   :group 'wal-complete)
 
-(defvar wal/consult-source-perspective
-  `(:name "Perspective Buffer"
-    :narrow ?i
-    :category buffer
-    :face consult-buffer
-    :history buffer-name-history
-    :state ,#'consult--buffer-state
-    :enabled ,(lambda () persp-mode)
-    :items
-    ,(lambda ()
-       (persp-current-buffer-names)))
-  "Perspective buffer candidate source for `consult-buffer'.")
-
 (defun wal/consult-ripgrep-ignored ()
   "Search ignored files."
   (interactive)
@@ -3266,7 +3249,6 @@ Heavy lifting with =consult=.
 (defun wal/configure-consult ()
   "Configure package `consult'."
   (setq xref-show-definitions-function #'consult-xref)
-  (add-to-list 'consult-buffer-sources 'wal/consult-source-perspective 'append)
   (mapc (lambda (it) (add-to-list 'consult-buffer-filter it))
         wal/consult-buffer-filter)
   (consult-customize
@@ -3555,12 +3537,16 @@ Keep order.
 ;;; Code:
 
 (declare-function consult-customize "consult.el")
+(declare-function consult--buffer-query "consult.el")
+(declare-function consult--buffer-state "consult.el")
 (declare-function persp-buffer-in-other-p "perspective.el")
+(declare-function persp-current-buffer-names "perspective.el")
 (declare-function persp-scratch-buffer "perspective.el")
 (declare-function persp-switch "perspective.el")
 (declare-function persp-switch-to-buffer "perspective.el")
 (declare-function projectile-project-p "projectile.el")
 
+(defvar consult-buffer-sources)
 (defvar consult--source-buffer)
 (defvar projectile-globally-ignored-directories)
 (defvar projectile-globally-ignored-files)
@@ -3614,6 +3600,28 @@ checks if the buffer belongs to another perspective since
         (persp-switch (cdr other-persp)))
       (switch-to-buffer buffer))))
 
+(defvar wal/consult-source-perspective
+  `(:name "Perspective Buffer"
+    :default t
+    :narrow ?i
+    :category buffer
+    :face consult-buffer
+    :history buffer-name-history
+    :state ,#'consult--buffer-state
+    :enabled ,(lambda () persp-mode)
+    :items
+    ,(lambda ()
+       (persp-current-buffer-names)))
+  "Perspective buffer candidate source for `consult-buffer'.")
+
+(defun wal/consult-buffer-query-outside-persp ()
+  "Query for buffers outside of the current perspective.
+
+This is used for the default buffer source when using perspectives."
+  (let ((persp-bufs (persp-current-buffer-names)))
+    (seq-filter (lambda (it) (not (memq it persp-bufs)))
+                (consult--buffer-query :sort 'visibility :as #'buffer-name))))
+
 (defun wal/configure-perspective ()
   "Configure package `perspective'.
 
@@ -3623,9 +3631,14 @@ completion provider also switches perspectives."
   (if (eq wal/completion-provider 'ivy)
       (defalias 'wal/ivy-switch-buffer #'persp-counsel-switch-buffer)
     (with-eval-after-load 'consult
+      (add-to-list 'consult-buffer-sources 'wal/consult-source-perspective)
       (consult-customize
        consult--source-buffer
-       :action #'wal/consult-persp-switch)))
+       :default nil
+       :name "Other Buffer"
+       :action #'wal/consult-persp-switch
+       :items #'wal/consult-buffer-query-outside-persp
+       :preview-key nil))) ; Otherwise previews add buffers to perspective!
   (persp-mode))
 
 (use-package perspective
