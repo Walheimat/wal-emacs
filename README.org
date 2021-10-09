@@ -62,8 +62,11 @@ can use, for example, =emacsclient -c -n=[fn:5].
 *** Package-Like Scope
 
 Custom functions and variables use the =wal/= scope and belong to their
-respective section's package. Each package has a *Header* and a *Footer*
-that contains declarations for the package.
+respective section's package.
+
+With a few exceptions, each package has a *Header* and a *Footer* that
+contains declarations for the package, as well as either a *Packages*
+section or several sections grouping packages.
 
 Enough preambling, let's configure some Emacs. The init script will
 evaluate /everything/[fn:6] that follows.
@@ -709,7 +712,7 @@ still always be available.
 
 ** Additional (Un-)Bindings
 
-Most bindings are declared in the [[*Package Configurations][packages]] section.
+Most bindings are declared in individual packages.
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal/tangle-do-prompt t
@@ -1343,6 +1346,9 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-fonts.el" wal/emacs-config-package-path)
 :END:
 
+Set fonts (with preference). To get support for ligatures, install the
+symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
+
 #+BEGIN_SRC emacs-lisp
 ;;; wal-fonts.el --- Fonts.
 
@@ -1359,12 +1365,7 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
   "Change fonts and font sizes."
   :group 'wal
   :tag "Fonts")
-#+END_SRC
 
-Set fonts (with preference). To get support for ligatures, install the
-symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
-
-#+BEGIN_SRC emacs-lisp
 (defcustom wal/fixed-fonts
   '("JetBrains Mono"
     "Iosevka"
@@ -1482,36 +1483,23 @@ available candidate from `wal/fixed-fonts'. Does the same for
   (add-hook 'emacs-startup-hook 'wal/setup-fonts))
 
 (add-hook 'font-lock-mode-hook 'wal/font-lock)
-#+END_SRC
 
-#+BEGIN_SRC emacs-lisp
 (provide 'wal-fonts)
 
 ;;; wal-fonts.el ends here
 #+END_SRC
 
-* Package Configurations
-
-What follows is a list of packages[fn:11] that make Emacs even more
-awesome.
-
-If you wish to know more about any of them call =describe-package=
-(bound to =C-h P=) and type in the package name.
-
-If you're looking for additional packages, check out the [[https://github.com/emacs-tw/awesome-emacs][awesome-emacs]]
-project for inspiration.
-
-** Emacs
+* Emacs
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-emacs.el" wal/emacs-config-package-path)
 :END:
 
 Everything that has to do with Emacs-y stuff.
 
-This is a combination of configurations for built-in packages[fn:12]
+This is a combination of configurations for built-in packages[fn:11]
 and some external ones.
 
-*** Header
+** Header
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -1529,7 +1517,7 @@ and some external ones.
 (declare-function wal/display-buffer-in-direction "wal-func.el")
 #+END_SRC
 
-*** Improved Editing
+** Improved Editing
 
 Up the kill count.
 
@@ -1615,7 +1603,7 @@ Mouse yanks at point, no double spaces in sentences.
   :ensure nil)
 #+END_SRC
 
-*** Dealing With Packages
+** Dealing With Packages
 
 Bind some functions to refresh, install and delete packages.
 
@@ -1642,7 +1630,7 @@ Silent native compilation.
   :ensure nil)
 #+END_SRC
 
-*** Dealing With Emacs
+** Dealing With Emacs
 
 Allow restoring window configurations when Emacs decided they should
 be gone.
@@ -1667,7 +1655,10 @@ be gone.
   :ensure nil)
 #+END_SRC
 
-**** async
+*** async
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Execute IO actions asynchronously.
 
@@ -1680,7 +1671,7 @@ Execute IO actions asynchronously.
   :diminish 'dired-async-mode)
 #+END_SRC
 
-*** Help
+** Help
 
 Emacs is mostly about looking up its documentation.
 
@@ -1729,7 +1720,10 @@ Find libraries.
   :ensure nil)
 #+END_SRC
 
-**** helpful
+*** helpful
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Let's try to be even more =helpful=.
 
@@ -1747,7 +1741,7 @@ Let's try to be even more =helpful=.
     "h"  '(helpful-at-point :wk "at point")))
 #+END_SRC
 
-*** Look-Up
+** Look-Up
 
 Leave a bookmark why don't you.
 
@@ -1800,7 +1794,7 @@ Look up words in a word book.
   :ensure nil)
 #+END_SRC
 
-*** Additional Info Display
+** Additional Info Display
 
 Contextual information. Packages =eglot= and =lsp-mode= use =eldoc=
 extensively.
@@ -1847,7 +1841,7 @@ What time is it?
   :ensure nil)
 #+END_SRC
 
-*** Other
+** Other
 
 Sometimes I restart for fun.
 
@@ -1875,7 +1869,7 @@ You can customize this now!
   :ensure nil)
 #+END_SRC
 
-*** Footer
+** Footer
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -1886,14 +1880,14 @@ You can customize this now!
 ;;; wal-emacs.el ends here
 #+END_SRC
 
-** Editing
+* Editing
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-edit.el" wal/emacs-config-package-path)
 :END:
 
 It's fun to edit things /quickly/.
 
-*** Header
+** Header
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -1922,7 +1916,10 @@ It's fun to edit things /quickly/.
 (defvar sp-lisp-modes)
 #+END_SRC
 
-*** multiple-cursors
+** multiple-cursors
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Don't you want to edit your buffer in multiple places at once?
 
@@ -1951,7 +1948,10 @@ Don't you want to edit your buffer in multiple places at once?
     ".e" '(mc/edit-ends-of-lines :wk "ends (region)")))
 #+END_SRC
 
-*** expand-region
+** expand-region
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 One thing that can be a bit tricky is selecting regions, not anymore.
 
@@ -1962,7 +1962,10 @@ One thing that can be a bit tricky is selecting regions, not anymore.
    ("C-<" . er/contract-region)))
 #+END_SRC
 
-*** yasnippet
+** yasnippet
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Use snippets in =prog= mode buffers.
 
@@ -1999,7 +2002,10 @@ results."
   :after yasnippet)
 #+END_SRC
 
-*** drag-stuff
+** drag-stuff
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Drag lines and regions around.
 
@@ -2015,7 +2021,10 @@ Drag lines and regions around.
   :delight " drg")
 #+END_SRC
 
-*** smart-parens
+** smart-parens
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 I didn't have smart parens growing up so I need help.
 
@@ -2060,7 +2069,10 @@ Advising the function does not work."
     "p" '(wal/smartparens/body :wk "smartparens")))
 #+END_SRC
 
-*** crux
+** crux
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Let's use =crux= for some editing magic.
 
@@ -2121,7 +2133,10 @@ there's a region, all lines that region covers will be duplicated."
   :commands (crux-get-positions-of-line-or-region))
 #+END_SRC
 
-*** hungry-delete
+** hungry-delete
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 I know you're hiding that sweet, sweet whitespace in that basket,
 Little Red Riding Hood!
@@ -2140,7 +2155,7 @@ Little Red Riding Hood!
   :delight " hun")
 #+END_SRC
 
-*** Footer
+** Footer
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -2151,14 +2166,14 @@ Little Red Riding Hood!
 ;;; wal-edit.el ends here
 #+END_SRC
 
-** Visuals
+* Visuals
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-visuals.el" wal/emacs-config-package-path)
 :END:
 
 I like nice-looking things.
 
-*** Header
+** Header
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -2188,9 +2203,12 @@ I like nice-looking things.
   :tag "Visuals")
 #+END_SRC
 
-*** Dashboard
+** Dashboard
 
-**** dashboard
+*** dashboard
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Let's have a dash of board.
 
@@ -2272,12 +2290,15 @@ A collection of GitLab status messages."
   :hook (after-init . dashboard-setup-startup-hook))
 #+END_SRC
 
-*** Themes
+** Themes
 
 The nicest theme packages out there. It supports many, many packages'
 =face= variants.
 
-**** doom-themes
+*** doom-themes
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 #+BEGIN_SRC emacs-lisp
 (use-package doom-themes
@@ -2285,7 +2306,10 @@ The nicest theme packages out there. It supports many, many packages'
   (doom-themes-org-config))
 #+END_SRC
 
-**** kaolin-themes
+*** kaolin-themes
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Another collection of beautiful themes, but it doesn't color every
 =face=.
@@ -2306,7 +2330,10 @@ Another collection of beautiful themes, but it doesn't color every
   (kaolin-themes-distinct-company-scrollbar t))
 #+END_SRC
 
-**** modus-themes
+*** modus-themes
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Another themes collection with super configurable themes.
 
@@ -2319,7 +2346,10 @@ Another themes collection with super configurable themes.
   :ensure nil)
 #+END_SRC
 
-**** humanoid-themes
+*** humanoid-themes
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Lastly there's this.
 
@@ -2327,9 +2357,12 @@ Lastly there's this.
 (use-package humanoid-themes)
 #+END_SRC
 
-*** Highlighting
+** Highlighting
 
-**** diff-hl
+*** diff-hl
+:PROPERTIES:
+:UNNUMBERED:
+:END:
 
 Show diffs in the fringe (also in =dired= buffers).
 
@@ -2343,7 +2376,10 @@ Show diffs in the fringe (also in =dired= buffers).
   :defer 2)
 #+END_SRC
 
-**** highlight-indent-guides
+*** highlight-indent-guides
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Show indentation.
 
@@ -2359,7 +2395,10 @@ Show indentation.
   :delight " hig")
 #+END_SRC
 
-**** highlight-numbers
+*** highlight-numbers
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Make numbers stand out.
 
@@ -2368,7 +2407,10 @@ Make numbers stand out.
   :hook (prog-mode . highlight-numbers-mode))
 #+END_SRC
 
-**** hl-todo
+*** hl-todo
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Highlight =TODO=, =FIXME= etc. in =prog= modes.
 
@@ -2379,7 +2421,10 @@ Highlight =TODO=, =FIXME= etc. in =prog= modes.
   :hook ((prog-mode yaml-mode) . hl-todo-mode))
 #+END_SRC
 
-**** rainbow-delimiters
+*** rainbow-delimiters
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Show colors in source code and make delimiters stand out.
 
@@ -2388,7 +2433,10 @@ Show colors in source code and make delimiters stand out.
   :hook (prog-mode . rainbow-delimiters-mode))
 #+END_SRC
 
-**** rainbow-mode
+*** rainbow-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Show colors colorfully.
 
@@ -2397,7 +2445,10 @@ Show colors colorfully.
   :delight " rbm")
 #+END_SRC
 
-**** tree-sitter
+*** tree-sitter
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Provide alternative syntax highlighting.
 
@@ -2426,9 +2477,12 @@ Provide alternative syntax highlighting.
   :after tree-sitter)
 #+end_src
 
-*** Where Am I?
+** Where Am I?
 
-**** which-key
+*** which-key
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Show the next possible key presses towards a command.
 
@@ -2442,7 +2496,10 @@ Show the next possible key presses towards a command.
   (which-key-idle-secondary-delay 0.4))
 #+END_SRC
 
-**** beacon
+*** beacon
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Help me find my cursor!
 
@@ -2477,7 +2534,10 @@ Help me find my cursor!
   :defer 3)
 #+END_SRC
 
-**** dimmer
+*** dimmer
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Dim inactive frames.
 
@@ -2519,7 +2579,10 @@ Dim inactive frames.
   :delight " dmm")
 #+END_SRC
 
-**** scroll-on-jump
+*** scroll-on-jump
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Scroll pixel-wise on certain jump commands.
 
@@ -2562,13 +2625,16 @@ Scroll pixel-wise on certain jump commands.
 (wal/colonel-sink "," '(smooth-scroll-mode :wk "smooth-scroll"))
 #+END_SRC
 
-*** Modeline
+** Modeline
 
 Minor modes are white-listed, hidden, delighted and diminished.
 Meaning that, if not white-listed, they are not shown, if they are
 shown, they are delighted unless they were diminished.
 
-**** doom-modeline
+*** doom-modeline
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Busier and prettier =modeline=. /Note/ that this package requires you to
 install =all-the-icons= fonts[fn:4].
@@ -2600,7 +2666,10 @@ install =all-the-icons= fonts[fn:4].
   :defer 1)
 #+END_SRC
 
-**** delight
+*** delight
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Refine a couple of major and minor mode names.
 
@@ -2632,7 +2701,10 @@ Refine a couple of major and minor mode names.
 (use-package diminish)
 #+END_SRC
 
-**** minions
+*** minions
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Sometimes the list of minor modes overcrowds the modeline.
 
@@ -2654,7 +2726,10 @@ Sometimes the list of minor modes overcrowds the modeline.
   :defer 3)
 #+END_SRC
 
-**** mode-line-bell
+*** mode-line-bell
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Make the bell visual.
 
@@ -2667,12 +2742,15 @@ Make the bell visual.
   :defer 3)
 #+END_SRC
 
-*** Ligatures
+** Ligatures
 
 Package =ligature= is not yet on MELPA so you'll have to put it in the
 load path.
 
-**** ligature
+*** ligature
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/common-ligatures
@@ -2712,7 +2790,10 @@ ARGS is a list containing modes and additional ligatures."
   :load-path "site-lisp")
 #+END_SRC
 
-**** fira-code-mode
+*** fira-code-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Alternatively, enable FiraCode ligatures for /all/ fonts.
 
@@ -2744,9 +2825,12 @@ This is the case when:
   (add-hook 'emacs-startup-hook 'wal/fira-code t))
 #+END_SRC
 
-*** Icons
+** Icons
 
-**** all-the-icons
+*** all-the-icons
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 You need to install the icons yourself[fn:4].
 
@@ -2767,9 +2851,12 @@ You need to install the icons yourself[fn:4].
   :after (all-the-cions ivy-rich))
 #+END_SRC
 
-**** emojify
+*** emojify
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
-Display emojis[fn:13].
+Display emojis[fn:12].
 
 #+BEGIN_SRC emacs-lisp
 (use-package emojify
@@ -2778,9 +2865,12 @@ Display emojis[fn:13].
   :hook (dashboard-mode . emojify-mode))
 #+END_SRC
 
-*** Screen-Saver
+** Screen-Saver
 
-**** zone
+*** zone
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Since this eats up a lot of CPU, the timer is disabled by default but
 zoning can always be triggered using =C-z=.
@@ -2812,7 +2902,12 @@ zoning can always be triggered using =C-z=.
   :ensure nil)
 #+END_SRC
 
-*** Other
+** Other
+
+*** mixed-pitch
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Allow using variable and fixed fonts in the same buffer.
 
@@ -2833,7 +2928,7 @@ Allow padding and centering text.
 (use-package visual-fill-column)
 #+END_SRC
 
-*** Footer
+** Footer
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -2844,14 +2939,14 @@ Allow padding and centering text.
 ;;; wal-visuals.el ends here
 #+END_SRC
 
-** Windows
+* Windows
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-windows.el" wal/emacs-config-package-path)
 :END:
 
 Everything that has to do with windows.
 
-*** Header
+** Header
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -2881,7 +2976,10 @@ Everything that has to do with windows.
  :tag "Windows")
 #+END_SRC
 
-*** ace
+** ace
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Ace interacting with (multiple) windows.
 
@@ -2933,7 +3031,10 @@ Ace interacting with (multiple) windows.
   :delight " ace")
 #+END_SRC
 
-*** golden-ratio
+** golden-ratio
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Use the golden ratio.
 
@@ -2955,7 +3056,10 @@ Used to advise `aw-switch-to-window'."
   :delight " gol")
 #+END_SRC
 
-*** popper
+** popper
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Treat certain buffers and their windows as pop-ups.
 
@@ -3045,7 +3149,7 @@ Treat certain buffers and their windows as pop-ups.
   :after projectile)
 #+END_SRC
 
-*** Footer
+** Footer
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -3056,14 +3160,14 @@ Treat certain buffers and their windows as pop-ups.
 ;;; wal-windows.el ends here
 #+END_SRC
 
-** Movement
+* Movement
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-movement.el" wal/emacs-config-package-path)
 :END:
 
 Moving around should be fun.
 
-*** Header
+** Header
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -3083,6 +3187,8 @@ Moving around should be fun.
 (defvar avy-goto-word-0)
 (defvar avy-goto-word-0-regexp)
 #+END_SRC
+
+** Packages
 
 *** avy
 
@@ -3152,7 +3258,7 @@ Move where I want. Useful for comments.
    ("C-e" . mwim-end)))
 #+END_SRC
 
-*** Footer
+** Footer
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -3163,7 +3269,7 @@ Move where I want. Useful for comments.
 ;;; wal-movement.el ends here
 #+END_SRC
 
-** Finding Things
+* Finding Things
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-find.el" wal/emacs-config-package-path)
 :END:
@@ -3173,7 +3279,7 @@ I mostly search.
 Searches are done using either =ripgrep= or the *Silver Searcher*.
 Both require installation of their respective binary.
 
-*** Header
+** Header
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -3211,7 +3317,12 @@ value other than the default will have no effect."
   :group 'wal-find)
 #+END_SRC
 
+** Packages
+
 *** rg
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][here]].
 
@@ -3226,8 +3337,11 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 #+END_SRC
 
 *** ag
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
- And the =ag= one from [[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:14].
+ And the =ag= one from [[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:13].
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/ag-ignored (string)
@@ -3278,6 +3392,9 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 #+END_SRC
 
 *** ctrlf
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Replace =isearch=. Important command is =C-o s= to change search style.
 
@@ -3314,6 +3431,9 @@ This adds additional bindings."
 #+END_SRC
 
 *** dumb-jump
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Look up definitions when no LSP is already doing it. Jumping is done
 using =xref-find-definitions= (=M-.=).
@@ -3330,7 +3450,7 @@ using =xref-find-definitions= (=M-.=).
   (dumb-jump-force-searcher 'ag))
 #+END_SRC
 
-*** Footer
+** Footer
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -3341,14 +3461,14 @@ using =xref-find-definitions= (=M-.=).
 ;;; wal-find.el ends here
 #+END_SRC
 
-** Completion
+* Completion
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-complete.el" wal/emacs-config-package-path)
 :END:
 
 Complete commands and code.
 
-*** Header
+** Header
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -3387,9 +3507,12 @@ value other than the default will have no effect."
   :group 'wal-complete)
 #+END_SRC
 
-*** Inline Completion
+** Inline Completion
 
-**** company
+*** company
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 In-line completion.
 
@@ -3409,9 +3532,12 @@ In-line completion.
   :diminish)
 #+END_SRC
 
-*** Minibuffer A
+** Minibuffer A
 
-**** vertico
+*** vertico
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Provide global option narrowing using the =vertico= family of products.
 
@@ -3441,7 +3567,10 @@ Provide global option narrowing using the =vertico= family of products.
   :load-path "site-lisp")
 #+END_SRC
 
-**** orderless
+*** orderless
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Fuzzy matches.
 
@@ -3456,7 +3585,10 @@ Fuzzy matches.
   :demand)
 #+END_SRC
 
-**** marginalia
+*** marginalia
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Contextual information during completion, partial completion and
 completion actions.
@@ -3481,7 +3613,10 @@ completion actions.
   :after vertico)
 #+END_SRC
 
-**** embark
+*** embark
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Do something else with minibuffer candidate.
 
@@ -3503,7 +3638,10 @@ Do something else with minibuffer candidate.
   :after (embark consult))
 #+END_SRC
 
-**** consult
+*** consult
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Heavy lifting with =consult=.
 
@@ -3569,11 +3707,14 @@ Heavy lifting with =consult=.
   :after (consult flycheck))
 #+END_SRC
 
-*** Minibuffer B
+** Minibuffer B
 
 Alternatively do so using =ivy=.
 
-**** ivy
+*** ivy
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 #+BEGIN_SRC emacs-lisp
 ;; Hide `dired', `docker', `ag' and default Emacs buffers when switching.
@@ -3613,7 +3754,10 @@ Pass R to the switch buffer function."
   :defer 1)
 #+END_SRC
 
-**** ivy-rich
+*** ivy-rich
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Some nicer candidate view when switching buffers.
 
@@ -3634,7 +3778,10 @@ This function is called before `all-the-icons-ivy-rich' is activated."
   :after ivy)
 #+END_SRC
 
-**** prescient
+*** prescient
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Better short-term-memory for =ivy=.
 
@@ -3667,9 +3814,12 @@ Better short-term-memory for =ivy=.
   :after prescient)
 #+END_SRC
 
-**** counsel
+*** counsel
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
-Cousnel me this, Counselor: =ivy= is not enough!
+Counsel me this, Counselor: =ivy= is not enough!
 
 #+BEGIN_SRC emacs-lisp
 (use-package counsel
@@ -3703,7 +3853,10 @@ Cousnel me this, Counselor: =ivy= is not enough!
   :after ivy)
 #+END_SRC
 
-**** counsel-projectile
+*** counsel-projectile
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Add =counsel= integration to =projectile=.
 
@@ -3752,7 +3905,7 @@ This eliminates getting prompted to open one first."
   :after (projectile counsel))
 #+END_SRC
 
-*** Footer
+** Footer
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -3763,14 +3916,14 @@ This eliminates getting prompted to open one first."
 ;;; wal-complete.el ends here
 #+END_SRC
 
-** Workspace
+* Workspace
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-workspace.el" wal/emacs-config-package-path)
 :END:
 
 Keep order.
 
-*** Header
+** Header
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -3805,7 +3958,12 @@ Keep order.
   :tag "Workspace")
 #+END_SRC
 
+** Packages
+
 *** perspective
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Group buffers in workspaces.
 
@@ -3876,6 +4034,9 @@ completion provider also switches perspectives."
 #+END_SRC
 
 *** projectile
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 More robust project management.
 
@@ -3931,7 +4092,7 @@ This extends all ignore lists' default values."
   :delight " pjt")
 #+END_SRC
 
-*** Footer
+** Footer
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -3942,14 +4103,14 @@ This extends all ignore lists' default values."
 ;;; wal-workspace.el ends here
 #+END_SRC
 
-** Org
+* Org
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-org.el" wal/emacs-config-package-path)
 :END:
 
 The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]].
 
-*** Header
+** Header
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -3977,7 +4138,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   :tag "Org")
 #+END_SRC
 
-*** The Mode Itself
+** The Mode Itself
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/org-mode ()
@@ -4065,7 +4226,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   :ensure nil)
 #+END_SRC
 
-*** Agendas
+** Agendas
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-agenda
@@ -4083,7 +4244,10 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   :ensure nil)
 #+END_SRC
 
-**** org-super-agenda
+*** org-super-agenda
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Allow for better grouping.
 
@@ -4116,7 +4280,7 @@ Allow for better grouping.
   :after org-agenda)
 #+END_SRC
 
-*** Capturing
+** Capturing
 
 Capture templates.
 
@@ -4150,11 +4314,14 @@ If the project root cannot be determined, use
   :delight " cap")
 #+END_SRC
 
-*** Zettelkasten
+** Zettelkasten
 
 Trying to organize my thoughts using Zettelkästen.
 
-**** org-roam
+*** org-roam
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
  /Note/ that you will need to install =sqlite3= and =graphviz= manually.
 
@@ -4193,9 +4360,12 @@ Trying to organize my thoughts using Zettelkästen.
    org-roam-node-read))
 #+END_SRC
 
-*** Presentations
+** Presentations
 
-**** org-tree-slide
+*** org-tree-slide
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Turn any =org-mode= buffer into a presentation.
 
@@ -4272,7 +4442,7 @@ Turn any =org-mode= buffer into a presentation.
   :diminish buffer-face-mode)
 #+END_SRC
 
-*** Source Blocks
+** Source Blocks
 
 Editing source blocks.
 
@@ -4316,7 +4486,7 @@ This sets additional modes."
   :delight " osc")
 #+END_SRC
 
-*** Other
+** Other
 
 You know the drill. Clock in, clock out.
 
@@ -4353,7 +4523,10 @@ Add some user speed commands.
   :ensure nil)
 #+END_SRC
 
-**** org-bullets
+*** org-bullets
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Prettier headlines.
 
@@ -4364,7 +4537,7 @@ Prettier headlines.
   :hook (org-mode . org-bullets-mode))
 #+END_SRC
 
-*** Footer
+** Footer
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -4375,12 +4548,12 @@ Prettier headlines.
 ;;; wal-org.el ends here
 #+END_SRC
 
-** Dired
+* Dired
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-dired.el" wal/emacs-config-package-path)
 :END:
 
-Run =dired= [fn:15]with =C-x d=. You don't need no treeviews.
+Run =dired= [fn:14]with =C-x d=. You don't need no tree views.
 
 #+BEGIN_SRC emacs-lisp
 ;;; wal-dired.el --- Dired.
@@ -4450,7 +4623,7 @@ Uses the same optional SWITCHES."
 ;;; wal-dired.el ends here
 #+END_SRC
 
-** Terminal
+* Terminal
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-terminal.el" wal/emacs-config-package-path)
 :END:
@@ -4460,7 +4633,7 @@ I am convinced that we are in a terminal process.
 — E. P. Thompson
 #+END_QUOTE
 
-*** Header
+** Header
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -4481,9 +4654,14 @@ I am convinced that we are in a terminal process.
 (defvar eshell-prompt-function)
 #+END_SRC
 
-*** vterm
+** Packages
 
-=vterm= is better[fn:16] than included shells.
+*** vterm
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+=vterm= is better[fn:15] than included shells.
 
 Some common shell commands require an additional =C-c=:
 
@@ -4522,6 +4700,9 @@ Some common shell commands require an additional =C-c=:
 #+END_SRC
 
 *** eshell
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Set up =eshell=. I like the idea of it but I don't really use it.
 
@@ -4557,7 +4738,7 @@ Set up =eshell=. I like the idea of it but I don't really use it.
   :ensure nil)
 #+END_SRC
 
-*** Footer
+** Footer
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -4568,14 +4749,14 @@ Set up =eshell=. I like the idea of it but I don't really use it.
 ;;; wal-terminal.el ends here
 #+END_SRC
 
-** Version Control
+* Version Control
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-vc.el" wal/emacs-config-package-path)
 :END:
 
 I'm becoming an old git.
 
-*** Header
+** Header
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -4592,7 +4773,12 @@ I'm becoming an old git.
 (declare-function magit-display-buffer-traditional "magit-mode.el")
 #+END_SRC
 
+** Packages
+
 *** magit
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Forget remembering =git= commands, use =transient=.
 
@@ -4613,6 +4799,9 @@ Forget remembering =git= commands, use =transient=.
 #+END_SRC
 
 *** git-timemachine
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 If you want to go back in time and point fingers at the progenitors of doom.
 
@@ -4625,6 +4814,9 @@ If you want to go back in time and point fingers at the progenitors of doom.
 #+END_SRC
 
 *** gitignore-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Syntax highlighting.
 
@@ -4639,6 +4831,9 @@ Syntax highlighting.
 #+END_SRC
 
 *** smerge-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 When resolving conflicts, using =ours= and =theirs= should be easy.
 
@@ -4651,6 +4846,9 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
 #+END_SRC
 
 *** ediff
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Use a single frame and split horizontally when diffing.
 
@@ -4662,7 +4860,7 @@ Use a single frame and split horizontally when diffing.
   :ensure nil)
 #+END_SRC
 
-*** Footer
+** Footer
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -4673,14 +4871,14 @@ Use a single frame and split horizontally when diffing.
 ;;; wal-vc.el ends here
 #+END_SRC
 
-** Languages
+* Languages
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-lang.el" wal/emacs-config-package-path)
 :END:
 
 Let's greet the world.
 
-*** Header
+** Header
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -4701,7 +4899,7 @@ Let's greet the world.
 (declare-function wal/maybe-enable-tabs "wal-settings.el")
 #+END_SRC
 
-*** Elixir
+** Elixir
 
 We don't use tabs here.
 
@@ -4720,7 +4918,7 @@ We don't use tabs here.
   :hook (elixir-mode . wal/elixir-mode))
 #+END_SRC
 
-*** C
+** C
 
 I want to be ready for =jai=.
 
@@ -4747,7 +4945,7 @@ I want to be ready for =jai=.
   :ensure nil)
 #+END_SRC
 
-*** Python
+** Python
 
 Use snake when you can't =make=.
 
@@ -4776,7 +4974,7 @@ Use snake when you can't =make=.
   :ensure nil)
 #+END_SRC
 
-**** Virtual Envs
+*** Virtual Envs
 
 It takes more than one environment to make sense of Python code.
 
@@ -4805,7 +5003,10 @@ This also works if the project isn't a poetry project."
           (pyvenv-activate venv))))))
 #+END_SRC
 
-***** pyvenv
+**** pyvenv
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Activating =virtualenv= inside of Emacs.
 
@@ -4817,7 +5018,10 @@ Activating =virtualenv= inside of Emacs.
   :hook (python-mode . wal/activate-venv))
 #+END_SRC
 
-***** poetry
+**** poetry
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 =poetry= is like =npm= for Python, it's why it rhymes.
 
@@ -4831,7 +5035,7 @@ Activating =virtualenv= inside of Emacs.
   :commands (poetry-venv-exist-p))
 #+END_SRC
 
-*** Lisp
+** Lisp
 
 The philosopher's choice.
 
@@ -4854,7 +5058,10 @@ The philosopher's choice.
   :hook (emacs-lisp-mode . highlight-quoted-mode))
 #+END_SRC
 
-**** slime
+*** slime
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html][lisp cookbook]] for =slime=.
 
@@ -4874,11 +5081,23 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
 (use-package slime-company)
 #+END_SRC
 
-*** JavaScript
+** JavaScript
 
 Can we have =deno= instead of =node=?
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/find-local-node-binary (local-binary)
+  "Find LOCAL-BINARY in project's node_modules."
+  (let* ((root (locate-dominating-file
+                (or (buffer-file-name) default-directory)
+                "node_modules"))
+         (bin
+          (and root
+               (expand-file-name (concat "node_modules/.bin/" local-binary)
+                                 root))))
+    (when (and bin (file-executable-p bin))
+      bin)))
+
 (defun wal/js2-mode ()
   "Hook into `js2-mode'."
   (message "NaN !== NaN")
@@ -4905,42 +5124,9 @@ Can we have =deno= instead of =node=?
   (:map js2-mode-map
    ("<backtab>" . js2-indent-bounce)) ; `js2-bounce-indent-p' also binds <TAB>
   :hook (js2-mode . wal/js2-mode))
-#+END_SRC
 
-Allow accessing a project's =node_modules=.
+;; Improved editing for JSX files. Extends =js2=.
 
-#+BEGIN_SRC emacs-lisp
-(use-package add-node-modules-path
-  :defer t)
-#+END_SRC
-
-The only way to store strings.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/json-mode ()
-  "Hook into `json-mode'."
-  (message "JSON ...? JSON?! JSON!!")
-  (rainbow-delimiters-mode)
-  (hack-local-variables)
-  (wal/maybe-enable-tabs)
-  (flycheck-mode 1))
-
-(use-package json-mode
-  :hook (json-mode . wal/json-mode))
-#+END_SRC
-
-Prettify your ugly JavaScript.
-
-#+BEGIN_SRC emacs-lisp
-(use-package prettier
-  :general
-  (wal/major :keymaps '(js2-mode-map typescript-mode-map) :major-modes t
-    "p" '(prettier-prettify :wk "run prettier")))
-#+END_SRC
-
-Improved editing for JSX files. Extends =js2=.
-
-#+BEGIN_SRC emacs-lisp
 (defun wal/rjsx-mode ()
   "Hook into `rjsx-mode'."
   (message "Extend those ugly JavaScripts of yours!")
@@ -4949,11 +5135,9 @@ Improved editing for JSX files. Extends =js2=.
 (use-package rjsx-mode
   :mode "\\.jsx\\'"
   :hook (rjsx-mode . wal/rjsx-mode))
-#+END_SRC
 
-TypeScript.
+;; Please use TypeScript.
 
-#+BEGIN_SRC emacs-lisp
 (defun wal/typescript-mode ()
   "Hook into `typescript-mode'."
   (message "This is any, that is any, everything is any!")
@@ -4967,25 +5151,48 @@ TypeScript.
 (use-package typescript-mode
   :mode "\\.ts\\'"
   :hook (typescript-mode . wal/typescript-mode))
+
+;; The only way to store strings, JSON.
+
+(defun wal/json-mode ()
+  "Hook into `json-mode'."
+  (message "JSON ...? JSON?! JSON!!")
+  (rainbow-delimiters-mode)
+  (hack-local-variables)
+  (wal/maybe-enable-tabs)
+  (flycheck-mode 1))
+
+(use-package json-mode
+  :hook (json-mode . wal/json-mode))
 #+END_SRC
 
-Help out =flycheck=.
+*** add-node-modules-path
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Allow accessing a project's =node_modules=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/find-local-node-binary (local-binary)
-  "Find LOCAL-BINARY in project's node_modules."
-  (let* ((root (locate-dominating-file
-                (or (buffer-file-name) default-directory)
-                "node_modules"))
-         (bin
-          (and root
-               (expand-file-name (concat "node_modules/.bin/" local-binary)
-                                 root))))
-    (when (and bin (file-executable-p bin))
-      bin)))
+(use-package add-node-modules-path
+  :defer t)
 #+END_SRC
 
-*** Go
+*** prettier
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Prettify your ugly JavaScript.
+
+#+BEGIN_SRC emacs-lisp
+(use-package prettier
+  :general
+  (wal/major :keymaps '(js2-mode-map typescript-mode-map) :major-modes t
+    "p" '(prettier-prettify :wk "run prettier")))
+#+END_SRC
+
+** Go
 
 Setup for LSP.
 
@@ -5001,7 +5208,12 @@ Setup for LSP.
   :hook (go-mode . wal/go-mode))
 #+END_SRC
 
-*** Scripting
+** Scripting
+
+*** crontab-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Sometimes you have to deal with things at their time.
 
@@ -5009,17 +5221,25 @@ Sometimes you have to deal with things at their time.
 (use-package crontab-mode)
 #+END_SRC
 
+*** fish-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
 Support =fish= functions.
 
 #+BEGIN_SRC emacs-lisp
 (use-package fish-mode)
 #+END_SRC
 
-*** Markup
+** Markup
 
 Sometimes things that don't do things need to look nice.
 
-**** markdown-mode
+*** markdown-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/markdown-view ()
@@ -5039,7 +5259,10 @@ Sometimes things that don't do things need to look nice.
     "v" '(wal/markdown-view :wk "view")))
 #+END_SRC
 
-**** yaml-mode
+*** yaml-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Sometimes things that do as well.
 
@@ -5056,7 +5279,7 @@ Sometimes things that do as well.
   :hook (yaml-mode . wal/yaml-mode))
 #+END_SRC
 
-*** Flutter
+** Flutter
 
 Yes, you need to install *Android Studio* for some reason.
 
@@ -5076,13 +5299,9 @@ Yes, you need to install *Android Studio* for some reason.
   (when-let* ((flutter-bin (executable-find "flutter"))
               (sdk-dir (string-trim (shell-command-to-string "flutter sdk-path"))))
     sdk-dir))
-
-(use-package lsp-dart
-  :custom
-  (lsp-dart-flutter-sdk-dir (wal/find-dart-flutter-sdk-dir)))
 #+END_SRC
 
-*** Web
+** Web
 
 Does anyone actually like web development?
 
@@ -5103,13 +5322,18 @@ We want quicker =company= suggestions when in CSS modes.
   :ensure nil)
 #+END_SRC
 
+*** pug-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
 Support for =pug= templates.
 
 #+BEGIN_SRC emacs-lisp
 (use-package pug-mode)
 #+END_SRC
 
-*** Footer
+** Footer
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -5120,14 +5344,14 @@ Support for =pug= templates.
 ;;; wal-lang.el ends here
 #+END_SRC
 
-** Fixing Things
+* Fixing Things
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-fix.el" wal/emacs-config-package-path)
 :END:
 
 Please let me know when I screwed up. I promise I will learn.
 
-*** Header
+** Header
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -5157,7 +5381,12 @@ This depends on `wal/lsp-provider'."
   "f" '(wal/consult-fly :wk "fly-check"))
 #+END_SRC
 
+** Packages
+
 *** flycheck
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 =flycheck= is for all of our linting/code quality needs.
 
@@ -5188,6 +5417,9 @@ Configs can be found using a file, not a directory.
 #+END_SRC
 
 *** flymake
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Built-in syntax checker. Used by =eglot=.
 
@@ -5210,6 +5442,9 @@ Built-in syntax checker. Used by =eglot=.
 #+END_SRC
 
 *** flyspell
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 My spelling is bad. Uses American English for =flyspell=.
 
@@ -5241,7 +5476,7 @@ My spelling is bad. Uses American English for =flyspell=.
   :ensure nil)
 #+END_SRC
 
-*** Footer
+** Footer
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -5252,14 +5487,14 @@ My spelling is bad. Uses American English for =flyspell=.
 ;;; wal-fix.el ends here
 #+END_SRC
 
-** LSP
+* LSP
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-lsp.el" wal/emacs-config-package-path)
 :END:
 
 Language servers are awesome. Thanks, Microsoft.
 
-*** Header
+** Header
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -5303,12 +5538,15 @@ Language servers are awesome. Thanks, Microsoft.
     "l" '(wal/lsp :wk "lsp"))
 #+END_SRC
 
-*** Option A
+** Option A
 
-**** lsp-mode
+*** lsp-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 =lsp-mode= is the fancy version. You'll have to install some language
-servers yourself[fn:17].
+servers yourself[fn:16].
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/lsp-file-watch-ignored-directories '("[/\\\\]build\\'")
@@ -5368,9 +5606,16 @@ This adds additional ignored directories."
   (lsp-ui-doc-max-height 25)
   (lsp-ui-doc-text-scale-level -1)
   :after lsp-mode)
+
+(use-package lsp-dart
+  :custom
+  (lsp-dart-flutter-sdk-dir (wal/find-dart-flutter-sdk-dir)))
 #+END_SRC
 
-**** dap-mode
+*** dap-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Debugging using VSCode's DAP (in =lsp-mode=)
 
@@ -5395,12 +5640,12 @@ Debugging using VSCode's DAP (in =lsp-mode=)
   :delight " dap")
 #+END_SRC
 
-**** Debug Templates
+*** Debug Templates
 
 Put these templates in a file in your project root, and evaluate them
 there using =C-x C-e=.
 
-***** Node.js
+**** Node.js
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -5429,7 +5674,7 @@ For TypeScript compile your =src= with =--sourceMap= or set =sourceMap= to
              :port 9229)))))
 #+END_SRC
 
-***** Python
+**** Python
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -5448,9 +5693,12 @@ Attach to running process.
            :pathMappings (vector mapping)))))
 #+END_SRC
 
-*** Option B
+** Option B
 
-**** eglot
+*** eglot
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 =eglot= is the light-weight alternative.
 
@@ -5478,7 +5726,7 @@ Attach to running process.
   :hook (eglot-managed-mode . wal/eglot-managed-mode))
 #+END_SRC
 
-*** Server Configurations
+** Server Configurations
 
 Configure or register language servers that aren't as straight
 forward.
@@ -5486,7 +5734,7 @@ forward.
 =eglot= prefers using a =.dir-locals.el= file to configure a language
 server.
 
-**** =elixir-ls=
+*** =elixir-ls=
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -5507,7 +5755,7 @@ server.
               (add-to-list 'exec-path elixir-ls-release-location))))
 #+END_SRC
 
-**** =pylint=
+*** =pylint=
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -5523,7 +5771,7 @@ This one assumes you want to enable =pylint= and you're using =poetry=.
                    (executable  "poetry run pylsp"))))))))
 #+END_SRC
 
-**** =gopls=
+*** =gopls=
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -5537,7 +5785,7 @@ Taken from the official documentation.
                     (matcher . "CaseSensitive"))))))))
 #+END_SRC
 
-**** =swipl=
+*** =swipl=
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -5561,7 +5809,7 @@ Taken from the official documentation.
         :server-id 'prolog-ls))))
 #+END_SRC
 
-*** Footer
+** Footer
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -5572,7 +5820,7 @@ Taken from the official documentation.
 ;;; wal-lsp.el ends here
 #+END_SRC
 
-** DevOps
+* DevOps
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-devops.el" wal/emacs-config-package-path)
 :END:
@@ -5580,7 +5828,7 @@ Taken from the official documentation.
 Put it into a container and throw it in the garbage that is the
 Internet.
 
-*** Header
+** Header
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -5598,7 +5846,12 @@ Internet.
 (declare-function wal/display-buffer-in-direction "wal-func.el")
 #+END_SRC
 
+** Packages
+
 *** docker
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 What goes =docker-compose= up, goes =docker-compose= down.
 
@@ -5618,6 +5871,9 @@ What goes =docker-compose= up, goes =docker-compose= down.
 #+END_SRC
 
 *** dockerfile-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Make =Dockerfiles= look nice.
 
@@ -5630,7 +5886,7 @@ Make =Dockerfiles= look nice.
   :hook (dockerfile-mode . wal/dockerfile-mode))
 #+END_SRC
 
-*** Footer
+** Footer
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -5641,14 +5897,14 @@ Make =Dockerfiles= look nice.
 ;;; wal-devops.el ends here
 #+END_SRC
 
-** The Internet
+* The Internet
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-web.el" wal/emacs-config-package-path)
 :END:
 
 I browse, I request.
 
-*** Header
+** Header
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -5665,7 +5921,12 @@ I browse, I request.
 (declare-function wal/display-buffer-in-pop-up "wal-func.el")
 #+END_SRC
 
+** Packages
+
 *** restclient
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Postman is passé. I use a =.http= file extension for my request
 examples.
@@ -5689,7 +5950,7 @@ examples.
   :load-path "site-lisp")
 #+END_SRC
 
-*** Footer
+** Footer
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -5700,14 +5961,14 @@ examples.
 ;;; wal-web.el ends here
 #+END_SRC
 
-** Writing
+* Writing
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-writing.el" wal/emacs-config-package-path)
 :END:
 
 Sometimes you have to sit down and write something.
 
-*** Header
+** Header
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -5722,7 +5983,12 @@ Sometimes you have to sit down and write something.
 ;;; Code:
 #+END_SRC
 
+** Packages
+
 *** typo
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Access complex punctuation. To me this doesn't necessarily make sense
 for all =text-mode= modes (like =org-mode=), so instead it needs to be
@@ -5737,6 +6003,9 @@ triggered explicitly.
 #+END_SRC
 
 *** writeroom
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Create a room of one's own. I use a different (light) theme here.
 
@@ -5752,7 +6021,7 @@ Create a room of one's own. I use a different (light) theme here.
   (wal/colonel "r" '(writeroom-mode :wk "writeroom")))
 #+END_SRC
 
-*** Footer
+** Footer
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
@@ -5875,12 +6144,7 @@ and other bindings.
 [fn:10] Be careful! If you make a mistake you could render your
 keyboard unusable.
 
-[fn:11] Mostly from MELPA. /Note/ that many packages bind keys. Check
-the [[*Key Bindings][key bindings section]] if you need a list of the important ones, in
-that section you also find package configurations for
-key-binding-related packages =general= and =hydra=.
-
-[fn:12] The following packages (and their related or sub-packages) are
+[fn:11] The following packages (and their related or sub-packages) are
 found in other sections
 
 - =org-mode= and =org-agenda= in [[*Org][Org]]
@@ -5889,14 +6153,19 @@ found in other sections
 - =eshell= in [[*Terminal][Terminal]]
 - =python=, =emacs-lisp=, =cc-mode= and =css-mode= in [[*Languages][Langauges]]
 
-[fn:13] You might have to call =emojify-download-emoji= to download a
+[fn:12] You might have to call =emojify-download-emoji= to download a
 set that supports your emojis.
 
-[fn:14] We will try to download it automatically, but might fail.
+[fn:13] We will try to download it automatically, but might fail.
 
-[fn:15] Did you know you can edit =dired= buffers using =C-x C-q=?
+[fn:14] Did you know you can edit =dired= buffers using =C-x C-q=?
 
-[fn:16] If you're on an older distro your =libvterm= package might be
+[fn:15] If you're on an older distro your =libvterm= package might be
 too old.
 
-[fn:17] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+[fn:16] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+
+[fn:17] Mostly from MELPA. /Note/ that many packages bind keys. Check
+the [[*Key Bindings][key bindings section]] if you need a list of the important ones, in
+that section you also find package configurations for
+key-binding-related packages =general= and =hydra=.
