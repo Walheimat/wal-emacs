@@ -698,7 +698,7 @@ still always be available.
 
 ** Additional (Un-)Bindings
 
-Most bindings are declared in the [[*Packages][packages]] section.
+Most bindings are declared in the [[*Package Configurations][packages]] section.
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal/tangle-do-prompt t
@@ -1479,7 +1479,7 @@ available candidate from `wal/fixed-fonts'. Does the same for
 ;;; wal-fonts.el ends here
 #+END_SRC
 
-* Packages
+* Package Configurations
 
 What follows is a list of packages[fn:11] that make Emacs even more
 awesome.
@@ -1497,8 +1497,8 @@ project for inspiration.
 
 Everything that has to do with Emacs-y stuff.
 
-This is a combination of minor configurations for built-in
-packages[fn:12] and some external ones.
+This is a combination of configurations for built-in packages[fn:12]
+and some external ones.
 
 #+BEGIN_SRC emacs-lisp
 ;;; wal-emacs.el --- Emacs.
@@ -1513,28 +1513,9 @@ packages[fn:12] and some external ones.
 (declare-function wal/display-buffer-in-direction "wal-func.el")
 #+END_SRC
 
-First, bind some functions to refresh, install and delete packages.
+*** Improved Editing
 
-#+BEGIN_SRC emacs-lisp
-(use-package package
-  :custom
-  (package-native-compile t)
-  :general
-  (wal/general "p" '(:ignore t :wk "package")
-    "pf" '(package-refresh-contents :wk "refresh")
-    "pi" '(package-install :wk "install")
-    "pl" '(list-packages :wk "list")
-    "pr" '(package-reinstall :wk "re-install")
-    "pd" '(package-delete :wk "delete"))
-  :ensure nil)
-
-(use-package comp
-  :custom
-  (native-comp-async-report-warnings-errors 'silent)
-  :ensure nil)
-#+END_SRC
-
-Package-based settings.
+Up the kill count.
 
 #+BEGIN_SRC emacs-lisp
 (use-package simple
@@ -1549,21 +1530,6 @@ Package-based settings.
   (wal/general-sink "p" '(list-processes :wk "list processes"))
   (wal/colonel-sink "f" '(auto-fill-mode :wk "auto-fill"))
   (wal/major-sink "w" '(delete-trailing-whitespace :wk "delete trailing whitespace"))
-  :ensure nil)
-
-(use-package mouse
-  :custom
-  (mouse-yank-at-point t)
-  :ensure nil)
-
-(use-package text-mode
-  :custom
-  (sentence-end-double-space nil)
-  :ensure nil)
-
-(use-package find-func
-  :general
-  (wal/general "l" '(find-library :wk "find library"))
   :ensure nil)
 #+END_SRC
 
@@ -1580,78 +1546,17 @@ Less intrusive pairing mode than =smartparens=.
   :ensure nil)
 #+END_SRC
 
-Configure annotation usage.
+Sometimes I need to see whitespace chars.
 
 #+BEGIN_SRC emacs-lisp
-(use-package bookmark
-  :config
-  (wal/display-buffer-in-side-window "\\*Bookmark Annotation\\*" 'left)
-  :custom
-  (bookmark-use-annotations t)
-  (bookmark-menu-confirm-deletion t)
-  :bind-keymap ("C-c b" . bookmark-map)
-  :bind
-  (:map bookmark-map
-   ("l" . bookmark-bmenu-list)
-   ("L" . bookmark-load))
-  :ensure nil)
-#+END_SRC
+(defun wal/whitespace-mode ()
+  "Hook into command `whitespace-mode'."
+  (highlight-indent-guides-mode -1))
 
-Browse web in Emacs.
-This requires Emacs to have been compiled with =--with-xml2= flag.
-
-#+BEGIN_SRC emacs-lisp
-(use-package eww
+(use-package whitespace
   :general
-  (wal/general "b" '(eww :wk "eww"))
-  (wal/general-sink "b" '(eww-search-words :wk "search words (eww)"))
-  :ensure nil)
-#+END_SRC
-
-Packages =eglot= and =lsp-mode= use =eldoc= extensively.
-
-#+BEGIN_SRC emacs-lisp
-(use-package eldoc
-  :custom
-  (eldoc-idle-delay 2.0)
-  (eldoc-echo-area-use-multiline-p nil)
-  (eldoc-echo-area-prefer-doc-buffer t)
-  (eldoc-echo-area-display-truncation-message nil)
-  :ensure nil
-  :delight " eld")
-#+END_SRC
-
-Quick calculations.
-
-#+BEGIN_SRC emacs-lisp
-(use-package calc
-  :wal-bind
-  (("=" . quick-calc))
-  :ensure nil)
-#+END_SRC
-
-Sometimes I restart for fun.p
-
-#+BEGIN_SRC emacs-lisp
-(use-package restart-emacs
-  :if (not (daemonp))
-  :custom
-  (restart-emacs-restore-frames nil)
-  :general
-  (wal/general "r" '(restart-emacs :wk "restart Emacs")))
-#+END_SRC
-
-Look up words.
-
-#+BEGIN_SRC emacs-lisp
-(use-package dictionary
-  :config
-  (wal/display-buffer-in-direction "^\\*Dictionary")
-  :custom
-  (dictionary-server "dict.org")
-  :general
-  (wal/lieutenant-sink
-    "d" '(dictionary-lookup-definition :wk "lookup definition"))
+  (wal/colonel "w" '(whitespace-mode :wk "whitespace"))
+  :hook (whitespace-mode . wal/whitespace-mode)
   :ensure nil)
 #+END_SRC
 
@@ -1668,14 +1573,95 @@ Use better commands for macros.
   :ensure nil)
 #+END_SRC
 
-What time is it?
+Some files are so long and Emacs will want to throw up.
 
 #+BEGIN_SRC emacs-lisp
-(use-package time
+(use-package so-long
+  :config
+  (global-so-long-mode t)
   :custom
-  (display-time-format " %H:%M")
-  (display-time-default-load-average nil)
+  (so-long-action 'so-long-minor-mode)
+  :defer 4
   :ensure nil)
+#+END_SRC
+
+Mouse yanks at point, no double spaces in sentences.
+
+#+BEGIN_SRC emacs-lisp
+(use-package mouse
+  :custom
+  (mouse-yank-at-point t)
+  :ensure nil)
+
+(use-package text-mode
+  :custom
+  (sentence-end-double-space nil)
+  :ensure nil)
+#+END_SRC
+
+*** Dealing With Packages
+
+Bind some functions to refresh, install and delete packages.
+
+#+BEGIN_SRC emacs-lisp
+(use-package package
+  :custom
+  (package-native-compile t)
+  :general
+  (wal/general "p" '(:ignore t :wk "package")
+    "pf" '(package-refresh-contents :wk "refresh")
+    "pi" '(package-install :wk "install")
+    "pl" '(list-packages :wk "list")
+    "pr" '(package-reinstall :wk "re-install")
+    "pd" '(package-delete :wk "delete"))
+  :ensure nil)
+#+END_SRC
+
+Silent native compilation.
+
+#+BEGIN_SRC emacs-lisp
+(use-package comp
+  :custom
+  (native-comp-async-report-warnings-errors 'silent)
+  :ensure nil)
+#+END_SRC
+
+*** Dealing With Emacs
+
+Allow restoring window configurations when Emacs decided they should
+be gone.
+
+#+BEGIN_SRC emacs-lisp
+(use-package winner
+  :config
+  (defhydra wal/winner (:hint nil)
+    "
+%s`wal/ascii-whale Window layout: _u_ndo or _r_edo.
+"
+    ("u" winner-undo)
+    ("r" winner-redo)
+    ("q" nil "quit"))
+  (winner-mode +1)
+  :custom
+  (winner-dont-bind-my-keys t)
+  :general
+  (wal/captain
+    "w" '(wal/winner/body :wk "winner"))
+  :defer 3
+  :ensure nil)
+#+END_SRC
+
+**** async
+
+Execute IO actions asynchronously.
+
+#+BEGIN_SRC emacs-lisp
+(use-package async
+  :config
+  (dired-async-mode 1)
+  :defer 4
+  :after dired
+  :diminish 'dired-async-mode)
 #+END_SRC
 
 *** Help
@@ -1688,6 +1674,46 @@ Emacs is mostly about looking up its documentation.
   (wal/display-buffer-in-direction 'help-mode)
   :ensure nil)
 #+END_SRC
+
+There's also =short-doc= now.
+
+#+BEGIN_SRC emacs-lisp
+(use-package shortdoc
+  :config
+  (wal/display-buffer-in-direction 'shortdoc-mode)
+  :ensure nil)
+#+END_SRC
+
+For internal debugging.
+
+#+BEGIN_SRC emacs-lisp
+(use-package debug
+  :config
+  (wal/display-buffer-in-side-window 'debug-mode)
+  :custom
+  (debugger-bury-or-kill 'kill)
+  :ensure nil)
+#+END_SRC
+
+Don't disable commands.
+
+#+BEGIN_SRC emacs-lisp
+(use-package novice
+  :init
+  (setq disabled-command-function nil)
+  :ensure nil)
+#+END_SRC
+
+Find libraries.
+
+#+BEGIN_SRC emacs-lisp
+(use-package find-func
+  :general
+  (wal/general "l" '(find-library :wk "find library"))
+  :ensure nil)
+#+END_SRC
+
+**** helpful
 
 Let's try to be even more =helpful=.
 
@@ -1705,22 +1731,117 @@ Let's try to be even more =helpful=.
     "h"  '(helpful-at-point :wk "at point")))
 #+END_SRC
 
-Don't disable commands.
+*** Look-Up
+
+Leave a bookmark why don't you.
 
 #+BEGIN_SRC emacs-lisp
-(use-package novice
-  :init
-  (setq disabled-command-function nil)
+(use-package bookmark
+  :config
+  (wal/display-buffer-in-side-window "\\*Bookmark Annotation\\*" 'left)
+  :custom
+  (bookmark-use-annotations t)
+  (bookmark-menu-confirm-deletion t)
+  :bind-keymap ("C-c b" . bookmark-map)
+  :bind
+  (:map bookmark-map
+   ("l" . bookmark-bmenu-list)
+   ("L" . bookmark-load))
   :ensure nil)
 #+END_SRC
 
-There's also =short-doc= now.
+Quick calculations.
 
 #+BEGIN_SRC emacs-lisp
-(use-package shortdoc
-  :config
-  (wal/display-buffer-in-direction 'shortdoc-mode)
+(use-package calc
+  :wal-bind
+  (("=" . quick-calc))
   :ensure nil)
+#+END_SRC
+
+Browse web in Emacs. This requires Emacs to have been compiled with
+=--with-xml2= flag.
+
+#+BEGIN_SRC emacs-lisp
+(use-package eww
+  :general
+  (wal/general "b" '(eww :wk "eww"))
+  (wal/general-sink "b" '(eww-search-words :wk "search words (eww)"))
+  :ensure nil)
+#+END_SRC
+
+Look up words in a word book.
+
+#+BEGIN_SRC emacs-lisp
+(use-package dictionary
+  :config
+  (wal/display-buffer-in-direction "^\\*Dictionary")
+  :custom
+  (dictionary-server "dict.org")
+  :general
+  (wal/lieutenant-sink
+    "d" '(dictionary-lookup-definition :wk "lookup definition"))
+  :ensure nil)
+#+END_SRC
+
+*** Additional Info Display
+
+Contextual information. Packages =eglot= and =lsp-mode= use =eldoc=
+extensively.
+
+#+BEGIN_SRC emacs-lisp
+(use-package eldoc
+  :custom
+  (eldoc-idle-delay 2.0)
+  (eldoc-echo-area-use-multiline-p nil)
+  (eldoc-echo-area-prefer-doc-buffer t)
+  (eldoc-echo-area-display-truncation-message nil)
+  :ensure nil
+  :delight " eld")
+#+END_SRC
+
+Sometimes you do want to see the line numbers.
+
+#+BEGIN_SRC emacs-lisp
+(use-package linum
+  :general
+  (wal/colonel-sink "l" '(linum-mode :wk "linum"))
+  :ensure nil)
+#+END_SRC
+
+Highlighting the current line.
+
+#+BEGIN_SRC emacs-lisp
+(use-package hl-line
+  :hook
+  ((tablist-minor-mode
+    tabulated-list-mode
+    dired-mode
+    dashboard-mode) . hl-line-mode)
+  :ensure nil)
+#+END_SRC
+
+What time is it?
+
+#+BEGIN_SRC emacs-lisp
+(use-package time
+  :custom
+  (display-time-format " %H:%M")
+  (display-time-default-load-average nil)
+  :ensure nil)
+#+END_SRC
+
+*** Other
+
+Sometimes I restart for fun.
+
+#+BEGIN_SRC emacs-lisp
+(use-package restart-emacs
+  :if (not (daemonp))
+  :custom
+  (restart-emacs-restore-frames nil)
+  :general
+  (wal/general "r" '(restart-emacs :wk "restart Emacs")))
 #+END_SRC
 
 You can customize this now!
@@ -1735,17 +1856,6 @@ You can customize this now!
   :general
   (wal/general
     "u" '(wal/customize-wal :wk "customize config"))
-  :ensure nil)
-#+END_SRC
-
-For internal debugging.
-
-#+BEGIN_SRC emacs-lisp
-(use-package debug
-  :config
-  (wal/display-buffer-in-side-window 'debug-mode)
-  :custom
-  (debugger-bury-or-kill 'kill)
   :ensure nil)
 #+END_SRC
 
@@ -1786,6 +1896,8 @@ It's fun to edit things /quickly/.
 (defvar sp-lisp-modes)
 #+END_SRC
 
+*** multiple-cursors
+
 Don't you want to edit your buffer in multiple places at once?
 
 #+BEGIN_SRC emacs-lisp
@@ -1813,6 +1925,8 @@ Don't you want to edit your buffer in multiple places at once?
     ".e" '(mc/edit-ends-of-lines :wk "ends (region)")))
 #+END_SRC
 
+*** expand-region
+
 One thing that can be a bit tricky is selecting regions, not anymore.
 
 #+BEGIN_SRC emacs-lisp
@@ -1821,6 +1935,8 @@ One thing that can be a bit tricky is selecting regions, not anymore.
   (("C->" . er/expand-region)
    ("C-<" . er/contract-region)))
 #+END_SRC
+
+*** yasnippet
 
 Use snippets in =prog= mode buffers.
 
@@ -1857,6 +1973,8 @@ results."
   :after yasnippet)
 #+END_SRC
 
+*** drag-stuff
+
 Drag lines and regions around.
 
 #+BEGIN_SRC emacs-lisp
@@ -1870,6 +1988,8 @@ Drag lines and regions around.
   :hook (prog-mode . drag-stuff-mode)
   :delight " drg")
 #+END_SRC
+
+*** smart-parens
 
 I didn't have smart parens growing up so I need help.
 
@@ -1913,6 +2033,8 @@ Advising the function does not work."
   (wal/lieutenant :keymaps 'prog-mode-map
     "p" '(wal/smartparens/body :wk "smartparens")))
 #+END_SRC
+
+*** crux
 
 Let's use =crux= for some editing magic.
 
@@ -1973,6 +2095,8 @@ there's a region, all lines that region covers will be duplicated."
   :commands (crux-get-positions-of-line-or-region))
 #+END_SRC
 
+*** hungry-delete
+
 I know you're hiding that sweet, sweet whitespace in that basket,
 Little Red Riding Hood!
 
@@ -1988,41 +2112,6 @@ Little Red Riding Hood!
     "hf" '(hungry-delete-forward :wk "forward")
     "hb" '(hungry-delete-backward :wk "backward"))
   :delight " hun")
-#+END_SRC
-
-Sometimes I need to see whitespace chars.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/whitespace-mode ()
-  "Hook into command `whitespace-mode'."
-  (highlight-indent-guides-mode -1))
-
-(use-package whitespace
-  :general
-  (wal/colonel "w" '(whitespace-mode :wk "whitespace"))
-  :hook (whitespace-mode . wal/whitespace-mode)
-  :ensure nil)
-#+END_SRC
-
-Sometimes you do want to see the line numbers.
-
-#+BEGIN_SRC emacs-lisp
-(use-package linum
-  :general
-  (wal/colonel-sink "l" '(linum-mode :wk "linum"))
-  :ensure nil)
-#+END_SRC
-
-Some files are so long and Emacs will want to throw up. Prevent that.
-
-#+BEGIN_SRC emacs-lisp
-(use-package so-long
-  :config
-  (global-so-long-mode t)
-  :custom
-  (so-long-action 'so-long-minor-mode)
-  :defer 4
-  :ensure nil)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -2064,6 +2153,8 @@ I like nice-looking things.
 #+END_SRC
 
 *** Dashboard
+
+**** dashboard
 
 Let's have a dash of board.
 
@@ -2147,8 +2238,10 @@ A collection of GitLab status messages."
 
 *** Themes
 
-The nicest theme packages out there is =doom-themes=. It supports many,
-many packages' =face= variants.
+The nicest theme packages out there. It supports many, many packages'
+=face= variants.
+
+**** doom-themes
 
 #+BEGIN_SRC emacs-lisp
 (use-package doom-themes
@@ -2156,8 +2249,10 @@ many packages' =face= variants.
   (doom-themes-org-config))
 #+END_SRC
 
-=kaolin-themes= is another collection of beautiful themes, but it
-doesn't color every =face=.
+**** kaolin-themes
+
+Another collection of beautiful themes, but it doesn't color every
+=face=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package kaolin-themes
@@ -2175,8 +2270,9 @@ doesn't color every =face=.
   (kaolin-themes-distinct-company-scrollbar t))
 #+END_SRC
 
-=modus-themes= is another themes collection with super configurable
-themes.
+**** modus-themes
+
+Another themes collection with super configurable themes.
 
 #+BEGIN_SRC emacs-lisp
 (use-package modus-themes
@@ -2187,13 +2283,17 @@ themes.
   :ensure nil)
 #+END_SRC
 
-Lastly there's =humanoid-themes=
+**** humanoid-themes
+
+Lastly there's this.
 
 #+BEGIN_SRC emacs-lisp
 (use-package humanoid-themes)
 #+END_SRC
 
 *** Highlighting
+
+**** diff-hl
 
 Show diffs in the fringe (also in =dired= buffers).
 
@@ -2206,6 +2306,8 @@ Show diffs in the fringe (also in =dired= buffers).
    (dired-mode . diff-hl-dired-mode))
   :defer 2)
 #+END_SRC
+
+**** highlight-indent-guides
 
 Show indentation.
 
@@ -2221,12 +2323,16 @@ Show indentation.
   :delight " hig")
 #+END_SRC
 
+**** highlight-numbers
+
 Make numbers stand out.
 
 #+BEGIN_SRC emacs-lisp
 (use-package highlight-numbers
   :hook (prog-mode . highlight-numbers-mode))
 #+END_SRC
+
+**** hl-todo
 
 Highlight =TODO=, =FIXME= etc. in =prog= modes.
 
@@ -2237,15 +2343,25 @@ Highlight =TODO=, =FIXME= etc. in =prog= modes.
   :hook ((prog-mode yaml-mode) . hl-todo-mode))
 #+END_SRC
 
+**** rainbow-delimiters
+
 Show colors in source code and make delimiters stand out.
 
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
+#+END_SRC
 
+**** rainbow-mode
+
+Show colors colorfully.
+
+#+BEGIN_SRC emacs-lisp
 (use-package rainbow-mode
   :delight " rbm")
 #+END_SRC
+
+**** tree-sitter
 
 Provide alternative syntax highlighting.
 
@@ -2274,19 +2390,9 @@ Provide alternative syntax highlighting.
   :after tree-sitter)
 #+end_src
 
-Some modes can use some =hl-line-mode=.
-
-#+BEGIN_SRC emacs-lisp
-(use-package hl-line
-  :hook
-  ((tablist-minor-mode
-    tabulated-list-mode
-    dired-mode
-    dashboard-mode) . hl-line-mode)
-  :ensure nil)
-#+END_SRC
-
 *** Where Am I?
+
+**** which-key
 
 Show the next possible key presses towards a command.
 
@@ -2299,6 +2405,8 @@ Show the next possible key presses towards a command.
   (which-key-idle-delay 0.8)
   (which-key-idle-secondary-delay 0.4))
 #+END_SRC
+
+**** beacon
 
 Help me find my cursor!
 
@@ -2332,6 +2440,8 @@ Help me find my cursor!
   (beacon-blink-when-point-moves-horizontally 8)
   :defer 3)
 #+END_SRC
+
+**** dimmer
 
 Dim inactive frames.
 
@@ -2372,6 +2482,8 @@ Dim inactive frames.
   :defer 3
   :delight " dmm")
 #+END_SRC
+
+**** scroll-on-jump
 
 Scroll pixel-wise on certain jump commands.
 
@@ -2420,6 +2532,8 @@ Minor modes are white-listed, hidden, delighted and diminished.
 Meaning that, if not white-listed, they are not shown, if they are
 shown, they are delighted unless they were diminished.
 
+**** doom-modeline
+
 Busier and prettier =modeline=. /Note/ that this package requires you to
 install =all-the-icons= fonts[fn:4].
 
@@ -2449,6 +2563,8 @@ install =all-the-icons= fonts[fn:4].
   (doom-modeline-vcs-max-length 25)
   :defer 1)
 #+END_SRC
+
+**** delight
 
 Refine a couple of major and minor mode names.
 
@@ -2480,6 +2596,8 @@ Refine a couple of major and minor mode names.
 (use-package diminish)
 #+END_SRC
 
+**** minions
+
 Sometimes the list of minor modes overcrowds the modeline.
 
 #+BEGIN_SRC emacs-lisp
@@ -2500,6 +2618,8 @@ Sometimes the list of minor modes overcrowds the modeline.
   :defer 3)
 #+END_SRC
 
+**** mode-line-bell
+
 Make the bell visual.
 
 #+BEGIN_SRC emacs-lisp
@@ -2515,6 +2635,8 @@ Make the bell visual.
 
 Package =ligature= is not yet on MELPA so you'll have to put it in the
 load path.
+
+**** ligature
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/common-ligatures
@@ -2554,6 +2676,8 @@ ARGS is a list containing modes and additional ligatures."
   :load-path "site-lisp")
 #+END_SRC
 
+**** fira-code-mode
+
 Alternatively, enable FiraCode ligatures for /all/ fonts.
 
 #+BEGIN_SRC emacs-lisp
@@ -2586,13 +2710,28 @@ This is the case when:
 
 *** Icons
 
-You need to install the icons yourself[fn:4]. Packages =dired=
-configures its own sub-package.
+**** all-the-icons
+
+You need to install the icons yourself[fn:4].
 
 #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons
   :commands (all-the-icons-octicon))
+
+(use-package all-the-icons-dired
+  :hook (dired-mode . all-the-icons-dired-mode)
+  :after all-the-icons
+  :diminish)
+
+(use-package all-the-icons-ivy-rich
+  :config
+  (wal/configure-rich-transformers)
+  (all-the-icons-ivy-rich-mode 1)
+  :demand
+  :after (all-the-cions ivy-rich))
 #+END_SRC
+
+**** emojify
 
 Display emojis[fn:13].
 
@@ -2604,6 +2743,8 @@ Display emojis[fn:13].
 #+END_SRC
 
 *** Screen-Saver
+
+**** zone
 
 Since this eats up a lot of CPU, the timer is disabled by default but
 zoning can always be triggered using =C-z=.
@@ -2633,6 +2774,27 @@ zoning can always be triggered using =C-z=.
   :bind
   ("C-z" . zone) ; Replaces `suspend-frame'.
   :ensure nil)
+#+END_SRC
+
+*** Other
+
+Allow using variable and fixed fonts in the same buffer.
+
+#+BEGIN_SRC emacs-lisp
+(use-package mixed-pitch
+  :custom
+  (mixed-pitch-variable-pitch-cursor nil)
+  (mixed-pitch-fixed-pitch-faces '(org-code
+                                   org-block
+                                   org-verbatim
+                                   org-table))
+  :delight " mpm")
+#+END_SRC
+
+Allow padding and centering text.
+
+#+BEGIN_SRC emacs-lisp
+(use-package visual-fill-column)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -2673,7 +2835,9 @@ Everything that has to do with windows.
  :tag "Windows")
 #+END_SRC
 
-=ace= interacting with (multiple) windows.
+*** ace
+
+Ace interacting with (multiple) windows.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/aw-delete-window-kill-buffer (window)
@@ -2723,6 +2887,8 @@ Everything that has to do with windows.
   :delight " ace")
 #+END_SRC
 
+**** golden-ratio
+
 Use the golden ratio.
 
 #+BEGIN_SRC emacs-lisp
@@ -2742,6 +2908,8 @@ Used to advise `aw-switch-to-window'."
   (wal/colonel "g" '(golden-ratio-mode :wk "golden-ratio"))
   :delight " gol")
 #+END_SRC
+
+**** popper
 
 Treat certain buffers and their windows as pop-ups.
 
@@ -2831,28 +2999,6 @@ Treat certain buffers and their windows as pop-ups.
   :after projectile)
 #+END_SRC
 
-Allow restoring window configurations.
-
-#+BEGIN_SRC emacs-lisp
-(use-package winner
-  :config
-  (defhydra wal/winner (:hint nil)
-    "
-%s`wal/ascii-whale Window layout: _u_ndo or _r_edo.
-"
-    ("u" winner-undo)
-    ("r" winner-redo)
-    ("q" nil "quit"))
-  (winner-mode +1)
-  :custom
-  (winner-dont-bind-my-keys t)
-  :general
-  (wal/captain
-    "w" '(wal/winner/body :wk "winner"))
-  :defer 3
-  :ensure nil)
-#+END_SRC
-
 #+BEGIN_SRC emacs-lisp
 (provide 'wal-windows)
 
@@ -2881,6 +3027,8 @@ Moving around should be fun.
 (defvar avy-goto-word-0)
 (defvar avy-goto-word-0-regexp)
 #+END_SRC
+
+*** avy
 
 Jump to (visible) lines and chars is fun if you are too lazy to use
 your mouse.
@@ -2927,7 +3075,17 @@ your mouse.
     "rm" '(avy-move-region :wk "move")
     "rw" '(avy-kill-ring-save-region :wk "kill"))
   :commands (avy-with))
+
+;; Use `avy' inside `ivy'.
+(use-package ivy-avy
+  :wal-bind
+  (:map ivy-minibuffer-map
+   ("l" . ivy-avy))
+  :demand
+  :after ivy)
 #+END_SRC
+
+*** mwim
 
 Move where I want. Useful for comments.
 
@@ -2951,6 +3109,9 @@ Move where I want. Useful for comments.
 
 I mostly search.
 
+Searches are done using either =ripgrep= or the *Silver Searcher*.
+Both require installation of their respective binary.
+
 #+BEGIN_SRC emacs-lisp
 ;;; wal-find.el --- Finding things.
 
@@ -2972,14 +3133,7 @@ I mostly search.
   "Change settings of search packages."
   :group 'wal
   :tag "Finding things")
-#+END_SRC
 
-Highlight search results using the *Silver Searcher* or =ripgrep=.
-
-Both require installation of their respective binary. You can get the
-=ag= binary from [[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:14], the =ripgrep= one from [[https://github.com/BurntSushi/ripgrep][here]].
-
-#+BEGIN_SRC emacs-lisp
 (defcustom wal/find-provider 'rg
   "The finder to use.
 
@@ -2989,7 +3143,27 @@ value other than the default will have no effect."
   :type '(choice (const rg)
                  (const ag))
   :group 'wal-find)
+#+END_SRC
 
+*** rg
+
+You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][here]].
+
+#+BEGIN_SRC emacs-lisp
+(use-package rg
+  :if (eq wal/find-provider 'rg)
+  :config
+  (wal/display-buffer-in-pop-up "\\`\\*rg\\*\\'")
+  :wal-bind
+  (("n" . rg-menu))
+  :ensure-system-package rg)
+#+END_SRC
+
+*** ag
+
+ And the =ag= one from [[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:14].
+
+#+BEGIN_SRC emacs-lisp
 (defun wal/ag-ignored (string)
   "Search project for STRING including VCS ignored files."
   (interactive (list (ag/read-from-minibuffer "Search string")))
@@ -3035,15 +3209,9 @@ value other than the default will have no effect."
   (("n" . wal/ag/body))
   :commands (ag/read-from-minibuffer)
   :ensure-system-package ag)
-
-(use-package rg
-  :if (eq wal/find-provider 'rg)
-  :config
-  (wal/display-buffer-in-pop-up "\\`\\*rg\\*\\'")
-  :wal-bind
-  (("n" . rg-menu))
-  :ensure-system-package rg)
 #+END_SRC
+
+*** ctrlf
 
 Replace =isearch=. Important command is =C-o s= to change search style.
 
@@ -3078,6 +3246,8 @@ This adds additional bindings."
   (ctrlf-alternate-search-style 'regexp)
   :defer 2)
 #+END_SRC
+
+*** dumb-jump
 
 Look up definitions when no LSP is already doing it. Jumping is done
 using =xref-find-definitions= (=M-.=).
@@ -3141,6 +3311,10 @@ value other than the default will have no effect."
   :group 'wal-complete)
 #+END_SRC
 
+*** Inline Completion
+
+**** company
+
 In-line completion.
 
 #+BEGIN_SRC emacs-lisp
@@ -3158,6 +3332,10 @@ In-line completion.
   :hook (company-mode . company-box-mode)
   :diminish)
 #+END_SRC
+
+*** Minibuffer A
+
+**** vertico
 
 Provide global option narrowing using the =vertico= family of products.
 
@@ -3187,6 +3365,23 @@ Provide global option narrowing using the =vertico= family of products.
   :load-path "site-lisp")
 #+END_SRC
 
+**** orderless
+
+Fuzzy matches.
+
+#+BEGIN_SRC emacs-lisp
+(use-package orderless
+  :if (eq wal/completion-provider 'vertico)
+  :config
+  (setq completion-styles '(orderless)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion))))
+  :after vertico
+  :demand)
+#+END_SRC
+
+**** marginalia
+
 Contextual information during completion, partial completion and
 completion actions.
 
@@ -3208,16 +3403,13 @@ completion actions.
    ("M-a" . marginalia-cycle))
   :demand t
   :after vertico)
+#+END_SRC
 
-(use-package orderless
-  :if (eq wal/completion-provider 'vertico)
-  :config
-  (setq completion-styles '(orderless)
-        completion-category-defaults nil
-        completion-category-overrides '((file (styles partial-completion))))
-  :after vertico
-  :demand)
+**** embark
 
+Do something else with minibuffer candidate.
+
+#+BEGIN_SRC emacs-lisp
 (use-package embark
   :config
   (wal/display-buffer-ethereally "\\`\\*Embark Collect \\(Live\\|Completions\\)\\*")
@@ -3227,7 +3419,15 @@ completion actions.
   (:map minibuffer-local-map
    ("M-o" . embark-act))
   :after vertico)
+
+(use-package embark-consult
+  :if (eq wal/completion-provider 'vertico)
+  :hook (embark-collect-mode . consult-preview-at-point-mode)
+  :demand t
+  :after (embark consult))
 #+END_SRC
+
+**** consult
 
 Heavy lifting with =consult=.
 
@@ -3291,15 +3491,13 @@ Heavy lifting with =consult=.
   :if (eq wal/completion-provider 'vertico)
   :demand t
   :after (consult flycheck))
-
-(use-package embark-consult
-  :if (eq wal/completion-provider 'vertico)
-  :hook (embark-collect-mode . consult-preview-at-point-mode)
-  :demand t
-  :after (embark consult))
 #+END_SRC
 
+*** Minibuffer B
+
 Alternatively do so using =ivy=.
+
+**** ivy
 
 #+BEGIN_SRC emacs-lisp
 ;; Hide `dired', `docker', `ag' and default Emacs buffers when switching.
@@ -3339,17 +3537,7 @@ Pass R to the switch buffer function."
   :defer 1)
 #+END_SRC
 
-Use =avy= inside =ivy=.
-
-#+BEGIN_SRC emacs-lisp
-(use-package ivy-avy
-  :if (eq wal/completion-provider 'ivy)
-  :wal-bind
-  (:map ivy-minibuffer-map
-   ("l" . ivy-avy))
-  :demand
-  :after ivy)
-#+END_SRC
+**** ivy-rich
 
 Some nicer candidate view when switching buffers.
 
@@ -3362,24 +3550,17 @@ This function is called before `all-the-icons-ivy-rich' is activated."
     (plist-put tl 'persp-kill-buffer* (plist-get tl 'persp-kill-buffer))))
 
 (use-package ivy-rich
-  :if (eq wal/completion-provider 'ivy)
   :config
   (when (fboundp 'ivy-format-function-line)
     (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line))
   (ivy-rich-mode 1)
   :demand
   :after ivy)
-
-(use-package all-the-icons-ivy-rich
-  :if (eq wal/completion-provider 'ivy)
-  :config
-  (wal/configure-rich-transformers)
-  (all-the-icons-ivy-rich-mode 1)
-  :demand
-  :after ivy-rich)
 #+END_SRC
 
-=counsel= me this, Counselor: =ivy= is not enough!
+**** prescient
+
+Better short-term-memory for =ivy=.
 
 #+BEGIN_SRC emacs-lisp
 ;; `prescient' is defined later, so we have to define it here.
@@ -3388,8 +3569,34 @@ This function is called before `all-the-icons-ivy-rich' is activated."
   :type 'boolean
   :group 'wal-complete)
 
+(use-package prescient
+  :if (and wal/use-prescient (eq wal/completion-provider 'ivy))
+  :config
+  (when (fboundp 'prescient-persist-mode)
+    (prescient-persist-mode +1))
+  :custom
+  (prescient-sort-length-enable nil)
+  (prescient-save-file (expand-file-name "prescient-persist" wal/cache-directory))
+  (prescient-filter-method '(literal regexp))
+  :demand
+  :after counsel)
+
+(use-package ivy-prescient
+  :if (and wal/use-prescient (eq wal/completion-provider 'ivy))
+  :config
+  (ivy-prescient-mode +1)
+  :custom
+  (ivy-prescient-retain-classic-highlighting t)
+  :demand
+  :after prescient)
+#+END_SRC
+
+**** counsel
+
+Cousnel me this, Counselor: =ivy= is not enough!
+
+#+BEGIN_SRC emacs-lisp
 (use-package counsel
-  :if (eq wal/completion-provider 'ivy)
   :config
   ;; Package ivy-prescient sets `ivy-initial-inputs-alist' to nil!
   (unless wal/use-prescient
@@ -3420,51 +3627,7 @@ This function is called before `all-the-icons-ivy-rich' is activated."
   :after ivy)
 #+END_SRC
 
-Better short-term-memory for =ivy=.
-
-#+BEGIN_SRC emacs-lisp
-(use-package prescient
-  :if (and wal/use-prescient (eq wal/completion-provider 'ivy))
-  :config
-  (when (fboundp 'prescient-persist-mode)
-    (prescient-persist-mode +1))
-  :custom
-  (prescient-sort-length-enable nil)
-  (prescient-save-file (expand-file-name "prescient-persist" wal/cache-directory))
-  (prescient-filter-method '(literal regexp))
-  :demand
-  :after counsel)
-
-(use-package ivy-prescient
-  :if (and wal/use-prescient (eq wal/completion-provider 'ivy))
-  :config
-  (ivy-prescient-mode +1)
-  :custom
-  (ivy-prescient-retain-classic-highlighting t)
-  :demand
-  :after prescient)
-#+END_SRC
-
-Use =selectrum= for =consult=.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/advise-selectrum(fun &rest r)
-  "Call FUN using `selectrum' for read completion, applying R."
-  (let ((completing-read-function #'selectrum-completing-read)
-        (read-buffer-function #'selectrum-read-buffer)
-        (read-file-name-function #'selectrum-read-file-name)
-        (completion-in-region-function #'selectrum-completion-in-region)
-        (coompleting-read-multiple #'selectrum-completing-read-multiple)
-        (read-libary-name #'selectrum-read-library-name)
-        (completion-styles '(substring partial-completion))
-        ;; Cannot advise `dired-read-dir-and-switches' and `minibuffer-message'.
-        (map (make-sparse-keymap)))
-    (set-keymap-parent map minibuffer-local-map)
-    (define-key map [remap previous-matching-history-element] 'selectrum-select-from-history)
-    (apply fun r)))
-
-(use-package selectrum)
-#+END_SRC
+**** counsel-projectile
 
 Add =counsel= integration to =projectile=.
 
@@ -3478,7 +3641,6 @@ This eliminates getting prompted to open one first."
     (apply 'counsel-ag r)))
 
 (use-package counsel-projectile
-  :if (eq wal/completion-provider 'ivy)
   :config
   ;; Make opening with `dired' the default action.
   (setf (nth 0 counsel-projectile-switch-project-action) 4)
@@ -3557,7 +3719,9 @@ Keep order.
   :tag "Workspace")
 #+END_SRC
 
-Perspectives.
+*** perspective
+
+Group buffers in workspaces.
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/use-perspectives t
@@ -3624,6 +3788,8 @@ completion provider also switches perspectives."
   :hook (kill-emacs . persp-state-save)
   :demand)
 #+END_SRC
+
+*** projectile
 
 More robust project management.
 
@@ -3715,7 +3881,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   :tag "Org")
 #+END_SRC
 
-Configure =org= itself.
+*** The Mode Itself
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/org-mode ()
@@ -3803,14 +3969,58 @@ Configure =org= itself.
   :ensure nil)
 #+END_SRC
 
-Prettier headlines.
+*** Agendas
 
 #+BEGIN_SRC emacs-lisp
-(use-package org-bullets
+(use-package org-agenda
   :custom
-  (org-bullets-bullet-list '("◆" "◈" "►" "▻" "▸" "▹" "•"))
-  :hook (org-mode . org-bullets-mode))
+  (org-agenda-hide-tags-regexp "^@")
+  (org-agenda-span 'day)
+  (org-agenda-restore-windows-after-quit t)
+  (org-agenda-time-leading-zero t)
+  :bind
+  (("C-c a" . org-agenda)
+   :map org-agenda-mode-map
+   ;; Swap.
+   ([remap org-agenda-switch-to] . org-agenda-goto)
+   ([remap org-agenda-goto] . org-agenda-switch-to))
+  :ensure nil)
 #+END_SRC
+
+**** org-super-agenda
+
+Allow for better grouping.
+
+#+BEGIN_SRC emacs-lisp
+(defcustom wal/org-super-agenda-groups
+  '((:name "Schedule"
+           :time-grid t)
+    (:name "Unscheduled"
+           :scheduled nil)
+    (:name "Leftovers"
+           :and (:todo ("IN PROGRESS" "WAITING")
+                       :scheduled past
+                       :not (:tag "@repeated")))
+    (:name "Blocked"
+           :todo ("BLOCKED"))
+    (:discard (:anything t)))
+  "The super agenda groups."
+  :type '(repeat plist)
+  :group 'wal-org)
+
+(use-package org-super-agenda
+  :config
+  (org-super-agenda-mode)
+  :custom
+  (org-super-agenda-groups wal/org-super-agenda-groups)
+  :general
+  (wal/major :keymaps 'org-agenda-keymap :major-modes t
+    "w" '(org-agenda-write :wk "write"))
+  :demand
+  :after org-agenda)
+#+END_SRC
+
+*** Capturing
 
 Capture templates.
 
@@ -3844,136 +4054,13 @@ If the project root cannot be determined, use
   :delight " cap")
 #+END_SRC
 
-You know the drill. Clock in, clock out.
-
-#+BEGIN_SRC emacs-lisp
-(use-package org-clock
-  :custom
-  (org-clock-idle-time 10)
-  (org-clock-continuously t)
-  (org-clock-persist t)
-  (org-clock-in-switch-to-state "IN PROGRESS")
-  (org-clock-in-resume t)
-  (org-clock-report-include-clocking-task t)
-  (org-clock-out-remove-zero-time-clocks t)
-  (org-clock-into-drawer t)
-  :after org
-  :ensure nil)
-#+END_SRC
-
-Add some user speed commands.
-
-#+BEGIN_SRC emacs-lisp
-(use-package org-keys
-  :custom
-  (org-use-speed-commands t)
-  (org-speed-commands-user
-   '(("w" widen)
-     ("n" org-narrow-to-subtree)
-     ;; Defaults are I and O.
-     ("i" org-clock-in)
-     ("o" org-clock-out)
-     ("a" org-archive-subtree)
-     ("r" org-clock-report)))
-  :after org
-  :ensure nil)
-#+END_SRC
-
-Editing source blocks.
-
-#+BEGIN_SRC emacs-lisp
-(defcustom wal/org-src-lang-modes
-  '(("dockerfile" . dockerfile)
-    ("conf" . conf)
-    ("markdown" . markdown))
-  "Additional mappings to add to `org-src-lang-modes'."
-  :type '(repeat
-	      (cons
-	       (string "Language name")
-	       (symbol "Major mode")))
-  :group 'wal-org)
-
-(defun wal/org-src-mode ()
-  "Hook into function `org-src-mode'."
-  (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
-
-
-(defun wal/configure-org-src ()
-  "Configure package `org-src'.
-
-This sets additional modes."
-  (mapc (lambda (it)
-          (add-to-list 'org-src-lang-modes it))
-        wal/org-src-lang-modes))
-
-(use-package org-src
-  :config
-  (wal/configure-org-src)
-  :custom
-  (org-src-tab-acts-natively nil) ; Defaults to t nowadays.
-  (org-edit-src-content-indentation 0) ; Defaults to 2 nowadays.
-  :bind
-  (:map org-src-mode-map
-   ("C-c C-c" . org-edit-src-exit))
-  :hook (org-src-mode . wal/org-src-mode)
-  :after org
-  :ensure nil
-  :delight " osc")
-#+END_SRC
-
-*** Agendas
-
-#+BEGIN_SRC emacs-lisp
-(use-package org-agenda
-  :custom
-  (org-agenda-hide-tags-regexp "^@")
-  (org-agenda-span 'day)
-  (org-agenda-restore-windows-after-quit t)
-  (org-agenda-time-leading-zero t)
-  :bind
-  (("C-c a" . org-agenda)
-   :map org-agenda-mode-map
-   ;; Swap.
-   ([remap org-agenda-switch-to] . org-agenda-goto)
-   ([remap org-agenda-goto] . org-agenda-switch-to))
-  :ensure nil)
-#+END_SRC
-
-Allow for better grouping.
-
-#+BEGIN_SRC emacs-lisp
-(defcustom wal/org-super-agenda-groups
-  '((:name "Schedule"
-           :time-grid t)
-    (:name "Unscheduled"
-           :scheduled nil)
-    (:name "Leftovers"
-           :and (:todo ("IN PROGRESS" "WAITING")
-                       :scheduled past
-                       :not (:tag "@repeated")))
-    (:name "Blocked"
-           :todo ("BLOCKED"))
-    (:discard (:anything t)))
-  "The super agenda groups."
-  :type '(repeat plist)
-  :group 'wal-org)
-
-(use-package org-super-agenda
-  :config
-  (org-super-agenda-mode)
-  :custom
-  (org-super-agenda-groups wal/org-super-agenda-groups)
-  :general
-  (wal/major :keymaps 'org-agenda-keymap :major-modes t
-    "w" '(org-agenda-write :wk "write"))
-  :demand
-  :after org-agenda)
-#+END_SRC
-
 *** Zettelkasten
 
-Trying to organize my thoughts using Zettelkästen. /Note/ that you will
-need to install =sqlite3= and =graphviz= manually.
+Trying to organize my thoughts using Zettelkästen.
+
+**** org-roam
+
+ /Note/ that you will need to install =sqlite3= and =graphviz= manually.
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/org-roam-dailies-directory "tagebuch/"
@@ -4011,6 +4098,8 @@ need to install =sqlite3= and =graphviz= manually.
 #+END_SRC
 
 *** Presentations
+
+**** org-tree-slide
 
 Turn any =org-mode= buffer into a presentation.
 
@@ -4087,23 +4176,96 @@ Turn any =org-mode= buffer into a presentation.
   :diminish buffer-face-mode)
 #+END_SRC
 
-Allow using variable and fixed fonts in the same buffer.
+*** Source Blocks
+
+Editing source blocks.
 
 #+BEGIN_SRC emacs-lisp
-(use-package mixed-pitch
+(defcustom wal/org-src-lang-modes
+  '(("dockerfile" . dockerfile)
+    ("conf" . conf)
+    ("markdown" . markdown))
+  "Additional mappings to add to `org-src-lang-modes'."
+  :type '(repeat
+	      (cons
+	       (string "Language name")
+	       (symbol "Major mode")))
+  :group 'wal-org)
+
+(defun wal/org-src-mode ()
+  "Hook into function `org-src-mode'."
+  (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
+
+
+(defun wal/configure-org-src ()
+  "Configure package `org-src'.
+
+This sets additional modes."
+  (mapc (lambda (it)
+          (add-to-list 'org-src-lang-modes it))
+        wal/org-src-lang-modes))
+
+(use-package org-src
+  :config
+  (wal/configure-org-src)
   :custom
-  (mixed-pitch-variable-pitch-cursor nil)
-  (mixed-pitch-fixed-pitch-faces '(org-code
-                                   org-block
-                                   org-verbatim
-                                   org-table))
-  :delight " mpm")
+  (org-src-tab-acts-natively nil) ; Defaults to t nowadays.
+  (org-edit-src-content-indentation 0) ; Defaults to 2 nowadays.
+  :bind
+  (:map org-src-mode-map
+   ("C-c C-c" . org-edit-src-exit))
+  :hook (org-src-mode . wal/org-src-mode)
+  :after org
+  :ensure nil
+  :delight " osc")
 #+END_SRC
 
-Allow padding and centering text.
+*** Other
+
+You know the drill. Clock in, clock out.
 
 #+BEGIN_SRC emacs-lisp
-(use-package visual-fill-column)
+(use-package org-clock
+  :custom
+  (org-clock-idle-time 10)
+  (org-clock-continuously t)
+  (org-clock-persist t)
+  (org-clock-in-switch-to-state "IN PROGRESS")
+  (org-clock-in-resume t)
+  (org-clock-report-include-clocking-task t)
+  (org-clock-out-remove-zero-time-clocks t)
+  (org-clock-into-drawer t)
+  :after org
+  :ensure nil)
+#+END_SRC
+
+Add some user speed commands.
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-keys
+  :custom
+  (org-use-speed-commands t)
+  (org-speed-commands-user
+   '(("w" widen)
+     ("n" org-narrow-to-subtree)
+     ;; Defaults are I and O.
+     ("i" org-clock-in)
+     ("o" org-clock-out)
+     ("a" org-archive-subtree)
+     ("r" org-clock-report)))
+  :after org
+  :ensure nil)
+#+END_SRC
+
+**** org-bullets
+
+Prettier headlines.
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-bullets
+  :custom
+  (org-bullets-bullet-list '("◆" "◈" "►" "▻" "▸" "▹" "•"))
+  :hook (org-mode . org-bullets-mode))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -4117,6 +4279,8 @@ Allow padding and centering text.
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-dired.el" wal/emacs-config-package-path)
 :END:
 
+Run =dired= [fn:15]with =C-x d=. You don't need no treeviews.
+
 #+BEGIN_SRC emacs-lisp
 ;;; wal-dired.el --- Dired.
 
@@ -4127,15 +4291,6 @@ Allow padding and centering text.
 ;;; Code:
 
 (declare-function dired-read-dir-and-switches "dired.el")
-#+END_SRC
-
-Group directories first in =dired=, override some keybindings.
-
-Did you know you can edit =dired= buffers using =C-x C-q=?
-
-Run =dired= with =C-x d=.
-
-#+BEGIN_SRC emacs-lisp
 
 (defun wal/dired-from-home (dirname &optional switches)
   "Find DIRNAME local to HOME directory.
@@ -4167,41 +4322,20 @@ Uses the same optional SWITCHES."
     "e" '(dired-create-empty-file :wk "create empty file")
     "i" '(wal/image-dired :wk "show images"))
   :ensure nil)
-#+END_SRC
 
-Show icons.
-
-#+BEGIN_SRC emacs-lisp
-(use-package all-the-icons-dired
-  :hook (dired-mode . all-the-icons-dired-mode)
-  :after all-the-icons
-  :diminish)
-#+END_SRC
-
-Allow filtering
-
-#+BEGIN_SRC emacs-lisp
 ;; Hit `/' to filter in dired buffers.
 (use-package dired-filter
   :delight " drf"
   :demand
   :after dired)
-#+END_SRC
 
-Better highlighting.
-
-#+BEGIN_SRC emacs-lisp
 ;; Highlighting in dired buffers.
 (use-package diredfl
   :config
   (diredfl-global-mode)
   :demand
   :after dired)
-#+END_SRC
 
-Edit files in =dired=.
-
-#+BEGIN_SRC emacs-lisp
 (use-package wdired
   :custom
   (wdired-allow-to-change-permissions t)
@@ -4209,20 +4343,7 @@ Edit files in =dired=.
   (:map wdired-mode-map
    ("C-c C-k" . wdired-abort-changes))
   :ensure nil)
-#+END_SRC
 
-Execute IO actions asynchronously.
-
-#+BEGIN_SRC emacs-lisp
-(use-package async
-  :config
-  (dired-async-mode 1)
-  :defer 4
-  :after dired
-  :diminish 'dired-async-mode)
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
 (provide 'wal-dired)
 
 ;;; wal-dired.el ends here
@@ -4254,49 +4375,9 @@ I am convinced that we are in a terminal process.
 (defvar eshell-prompt-function)
 #+END_SRC
 
-Set up =eshell=. I like the idea of it but I don't really use it.
+*** vterm
 
-#+BEGIN_SRC emacs-lisp
-(defun wal/advise-eshell/clear (&rest _r)
-  "Advise to truncate buffer."
-  (let ((eshell-buffer-maximum-lines 0))
-    (when (fboundp 'eshell-truncate-buffer)
-      (eshell-truncate-buffer))))
-
-(use-package esh-autosuggest
-  :hook (eshell-mode . esh-autosuggest-mode))
-
-(use-package eshell-prompt-extras
-  :config
-  (setq eshell-highlight-prompt nil
-        eshell-prompt-function 'epe-theme-lambda)
-  :demand
-  :after eshell)
-
-(use-package eshell-syntax-highlighting
-  :hook (eshell-mode . eshell-syntax-highlighting-mode))
-
-(use-package eshell
-  :config
-  (advice-add 'eshell/clear :override #'wal/advise-eshell/clear)
-  (wal/display-buffer-in-side-window "*eshell*")
-  :bind
-  (:map eshell-mode-map
-   ([remap eshell-pcomplete] . completion-at-point))
-  :general
-  (wal/general "e" '(eshell :wk "eshell"))
-  :ensure nil)
-#+END_SRC
-
-Set up =shell-script=.
-
-#+BEGIN_SRC emacs-lisp
-(use-package sh-script
-  :config
-  :hook (sh-set-shell . flycheck-mode))
-#+END_SRC
-
-=vterm= is better[fn:15] than included shells.
+=vterm= is better[fn:16] than included shells.
 
 Some common shell commands require an additional =C-c=:
 
@@ -4334,6 +4415,42 @@ Some common shell commands require an additional =C-c=:
   ("\\" . vterm-toggle))
 #+END_SRC
 
+*** eshell
+
+Set up =eshell=. I like the idea of it but I don't really use it.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/advise-eshell/clear (&rest _r)
+  "Advise to truncate buffer."
+  (let ((eshell-buffer-maximum-lines 0))
+    (when (fboundp 'eshell-truncate-buffer)
+      (eshell-truncate-buffer))))
+
+(use-package esh-autosuggest
+  :hook (eshell-mode . esh-autosuggest-mode))
+
+(use-package eshell-prompt-extras
+  :config
+  (setq eshell-highlight-prompt nil
+        eshell-prompt-function 'epe-theme-lambda)
+  :demand
+  :after eshell)
+
+(use-package eshell-syntax-highlighting
+  :hook (eshell-mode . eshell-syntax-highlighting-mode))
+
+(use-package eshell
+  :config
+  (advice-add 'eshell/clear :override #'wal/advise-eshell/clear)
+  (wal/display-buffer-in-side-window "*eshell*")
+  :bind
+  (:map eshell-mode-map
+   ([remap eshell-pcomplete] . completion-at-point))
+  :general
+  (wal/general "e" '(eshell :wk "eshell"))
+  :ensure nil)
+#+END_SRC
+
 #+BEGIN_SRC emacs-lisp
 (provide 'wal-terminal)
 
@@ -4359,6 +4476,8 @@ I'm becoming an old git.
 (declare-function magit-display-buffer-traditional "magit-mode.el")
 #+END_SRC
 
+*** magit
+
 Forget remembering =git= commands, use =transient=.
 
 #+BEGIN_SRC emacs-lisp
@@ -4377,6 +4496,8 @@ Forget remembering =git= commands, use =transient=.
     "md" '(magit-diff-range :wk "diff range")))
 #+END_SRC
 
+*** git-timemachine
+
 If you want to go back in time and point fingers at the progenitors of doom.
 
 #+BEGIN_SRC emacs-lisp
@@ -4386,6 +4507,8 @@ If you want to go back in time and point fingers at the progenitors of doom.
     "m" '(git-timemachine-toggle :wk "git-timemachine"))
   :delight " gtm")
 #+END_SRC
+
+*** gitignore-mode
 
 Syntax highlighting.
 
@@ -4399,6 +4522,8 @@ Syntax highlighting.
   :hook (gitignore-mode . wal/gitignore-mode))
 #+END_SRC
 
+*** smerge-mode
+
 When resolving conflicts, using =ours= and =theirs= should be easy.
 
 #+BEGIN_SRC emacs-lisp
@@ -4408,6 +4533,8 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
   :ensure nil
   :delight " smg")
 #+END_SRC
+
+*** ediff
 
 Use a single frame and split horizontally when diffing.
 
@@ -4448,6 +4575,25 @@ Let's greet the world.
 (declare-function wal/maybe-enable-tabs "wal-settings.el")
 #+END_SRC
 
+*** Elixir
+
+We don't use tabs here.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/elixir-mode ()
+  "Hook into `elixir-mode'."
+  (message "Mixin' potions")
+  (wal/disable-tabs)
+  (hack-local-variables)
+  (wal/lsp))
+
+(use-package elixir-mode
+  :general
+  (wal/major :keymaps 'elixir-mode-map :major-modes t
+    "f" '(elixir-format :wk "format with mode"))
+  :hook (elixir-mode . wal/elixir-mode))
+#+END_SRC
+
 *** C
 
 I want to be ready for =jai=.
@@ -4475,65 +4621,131 @@ I want to be ready for =jai=.
   :ensure nil)
 #+END_SRC
 
-*** Elixir
+*** Python
 
-We don't use tabs here.
+Use snake when you can't =make=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/elixir-mode ()
-  "Hook into `elixir-mode'."
-  (message "Mixin' potions")
+(defun wal/python-mode ()
+  "Hook into `python-mode'."
+  (message "Watch out for snakes!")
   (wal/disable-tabs)
   (hack-local-variables)
   (wal/lsp))
 
-(use-package elixir-mode
+(use-package python
+  :config
+  ;; Treat inferior shell as a pop-up.
+  (wal/display-buffer-in-side-window 'inferior-python-mode)
+  (with-eval-after-load 'dap-mode
+    (require 'dap-python))
   :general
-  (wal/major :keymaps 'elixir-mode-map :major-modes t
-    "f" '(elixir-format :wk "format with mode"))
-  :hook (elixir-mode . wal/elixir-mode))
+  (wal/major :keymaps 'python-mode-map :major-modes t
+    "i" '(run-python :wk "inferior shell")
+    "s" '(:ignore t :wk "send")
+    "sr" '(python-shell-send-region :wk "region")
+    "sb" '(python-shell-send-buffer :wk "buffer")
+    "sf" '(python-shell-send-file :wk "file"))
+  :hook (python-mode . wal/python-mode)
+  :ensure nil)
 #+END_SRC
 
-*** Flutter
+**** Virtual Envs
 
-Yes, you need to install *Android Studio* for some reason.
+It takes more than one environment to make sense of Python code.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/dart-mode()
-  "Hook into `dart-mode'."
-  (message "Bull's eye!")
-  (wal/disable-tabs)
-  (hack-local-variables)
-  (wal/lsp))
+(defun wal/configure-lsp-server-commands (venv)
+  "Configure server commands for `lsp-mode' using VENV."
+  (let ((pylsp (file-exists-p (expand-file-name "bin/pylsp" venv)))
+        (pyls (file-exists-p (expand-file-name "bin/pyls" venv))))
+    (when pylsp
+      (setq-local lsp-pylsp-server-command '("poetry" "run" "pylsp")))
+    (when pyls
+      (setq-local lsp-pyls-server-command '("poetry" "run" "pyls")))))
 
-(use-package dart-mode
-  :hook (dart-mode . wal/dart-mode))
+(defun wal/activate-venv ()
+  "Activate venv using poetry.
 
-(defun wal/find-dart-flutter-sdk-dir ()
-  "Find the Dart Flutter SDK directory."
-  (when-let* ((flutter-bin (executable-find "flutter"))
-              (sdk-dir (string-trim (shell-command-to-string "flutter sdk-path"))))
-    sdk-dir))
-
-(use-package lsp-dart
-  :custom
-  (lsp-dart-flutter-sdk-dir (wal/find-dart-flutter-sdk-dir)))
+This also works if the project isn't a poetry project."
+  (ignore-errors
+    (let* ((venv (poetry-venv-exist-p))
+           (is-poetry (poetry-ensure-in-project)))
+      (when venv
+        (if is-poetry
+            (progn
+              (wal/configure-lsp-server-commands venv)
+              (poetry-venv-workon))
+          (pyvenv-activate venv))))))
 #+END_SRC
 
-*** Go
+***** pyvenv
 
-Setup for LSP.
+Activating =virtualenv= inside of Emacs.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/go-mode ()
-  "Hook into `go-mode'."
-  (message "What does Sonic say?")
+(use-package pyvenv
+  :general
+  (wal/major :keymaps 'python-mode-map :major-modes t
+    "v" '(pyvenv-activate :wk "activate venv"))
+  :hook (python-mode . wal/activate-venv))
+#+END_SRC
+
+***** poetry
+
+=poetry= is like =npm= for Python, it's why it rhymes.
+
+#+BEGIN_SRC emacs-lisp
+(use-package poetry
+  :config
+  (wal/display-buffer-in-side-window "\\*poetry-shell\\*")
+  :general
+  (wal/major :keymaps 'python-mode-map :major-modes t
+    "p" '(poetry :wk "poetry"))
+  :commands (poetry-venv-exist-p))
+#+END_SRC
+
+*** Lisp
+
+The philosopher's choice.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/elisp-mode ()
+  "Hook into `emacs-lisp-mode'."
+  (message "So it's just a bunch of lists?")
   (wal/disable-tabs)
   (hack-local-variables)
-  (wal/lsp))
+  (flycheck-mode 1))
 
-(use-package go-mode
-  :hook (go-mode . wal/go-mode))
+(use-package elisp-mode
+  :general
+  (wal/major :keymaps 'emacs-lisp-mode-map :major-modes t
+    "p" '(check-parens :wk "check parens"))
+  :hook (emacs-lisp-mode . wal/elisp-mode)
+  :ensure nil)
+
+(use-package highlight-quoted
+  :hook (emacs-lisp-mode . highlight-quoted-mode))
+#+END_SRC
+
+**** slime
+
+Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html][lisp cookbook]] for =slime=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package slime
+  :config
+  (setq inferior-lisp-program "sbcl")
+  (slime-setup '(slime-fancy slime-quicklisp slime-asdf slime-company))
+  :general
+  (wal/colonel :keymaps 'lisp-mode-map :major-modes t
+    "l" '(slime-mode :wk "slime"))
+  (wal/major :keymaps 'slime-mode-map :major-modes t
+    "r" '(slime :wk "open REPL"))
+  :ensure-system-package sbcl
+  :delight " slm")
+
+(use-package slime-company)
 #+END_SRC
 
 *** JavaScript
@@ -4647,50 +4859,41 @@ Help out =flycheck=.
       bin)))
 #+END_SRC
 
-*** Lisp
+*** Go
 
-The philosopher's choice.
+Setup for LSP.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/elisp-mode ()
-  "Hook into `emacs-lisp-mode'."
-  (message "So it's just a bunch of lists?")
+(defun wal/go-mode ()
+  "Hook into `go-mode'."
+  (message "What does Sonic say?")
   (wal/disable-tabs)
   (hack-local-variables)
-  (flycheck-mode 1))
+  (wal/lsp))
 
-(use-package elisp-mode
-  :general
-  (wal/major :keymaps 'emacs-lisp-mode-map :major-modes t
-    "p" '(check-parens :wk "check parens"))
-  :hook (emacs-lisp-mode . wal/elisp-mode)
-  :ensure nil)
-
-(use-package highlight-quoted
-  :hook (emacs-lisp-mode . highlight-quoted-mode))
+(use-package go-mode
+  :hook (go-mode . wal/go-mode))
 #+END_SRC
 
-Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html][lisp cookbook]] for =slime=.
+*** Scripting
+
+Sometimes you have to deal with things at their time.
 
 #+BEGIN_SRC emacs-lisp
-(use-package slime
-  :config
-  (setq inferior-lisp-program "sbcl")
-  (slime-setup '(slime-fancy slime-quicklisp slime-asdf slime-company))
-  :general
-  (wal/colonel :keymaps 'lisp-mode-map :major-modes t
-    "l" '(slime-mode :wk "slime"))
-  (wal/major :keymaps 'slime-mode-map :major-modes t
-    "r" '(slime :wk "open REPL"))
-  :ensure-system-package sbcl
-  :delight " slm")
+(use-package crontab-mode)
+#+END_SRC
 
-(use-package slime-company)
+Support =fish= functions.
+
+#+BEGIN_SRC emacs-lisp
+(use-package fish-mode)
 #+END_SRC
 
 *** Markup
 
 Sometimes things that don't do things need to look nice.
+
+**** markdown-mode
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/markdown-view ()
@@ -4710,6 +4913,8 @@ Sometimes things that don't do things need to look nice.
     "v" '(wal/markdown-view :wk "view")))
 #+END_SRC
 
+**** yaml-mode
+
 Sometimes things that do as well.
 
 #+BEGIN_SRC emacs-lisp
@@ -4725,88 +4930,30 @@ Sometimes things that do as well.
   :hook (yaml-mode . wal/yaml-mode))
 #+END_SRC
 
-*** Python
+*** Flutter
 
-Use snake when you can't =make=.
+Yes, you need to install *Android Studio* for some reason.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/python-mode ()
-  "Hook into `python-mode'."
-  (message "Watch out for snakes!")
+(defun wal/dart-mode()
+  "Hook into `dart-mode'."
+  (message "Bull's eye!")
   (wal/disable-tabs)
   (hack-local-variables)
   (wal/lsp))
 
-(use-package python
-  :config
-  ;; Treat inferior shell as a pop-up.
-  (wal/display-buffer-in-side-window 'inferior-python-mode)
-  (with-eval-after-load 'dap-mode
-    (require 'dap-python))
-  :general
-  (wal/major :keymaps 'python-mode-map :major-modes t
-    "i" '(run-python :wk "inferior shell")
-    "s" '(:ignore t :wk "send")
-    "sr" '(python-shell-send-region :wk "region")
-    "sb" '(python-shell-send-buffer :wk "buffer")
-    "sf" '(python-shell-send-file :wk "file"))
-  :hook (python-mode . wal/python-mode)
-  :ensure nil)
-#+END_SRC
+(use-package dart-mode
+  :hook (dart-mode . wal/dart-mode))
 
-=poetry= is like =npm= for Python, it's why it rhymes.
+(defun wal/find-dart-flutter-sdk-dir ()
+  "Find the Dart Flutter SDK directory."
+  (when-let* ((flutter-bin (executable-find "flutter"))
+              (sdk-dir (string-trim (shell-command-to-string "flutter sdk-path"))))
+    sdk-dir))
 
-#+BEGIN_SRC emacs-lisp
-(defun wal/configure-lsp-server-commands (venv)
-  "Configure server commands for `lsp-mode' using VENV."
-  (let ((pylsp (file-exists-p (expand-file-name "bin/pylsp" venv)))
-        (pyls (file-exists-p (expand-file-name "bin/pyls" venv))))
-    (when pylsp
-      (setq-local lsp-pylsp-server-command '("poetry" "run" "pylsp")))
-    (when pyls
-      (setq-local lsp-pyls-server-command '("poetry" "run" "pyls")))))
-
-(defun wal/activate-venv ()
-  "Activate venv using poetry.
-
-This also works if the project isn't a poetry project."
-  (ignore-errors
-    (let* ((venv (poetry-venv-exist-p))
-           (is-poetry (poetry-ensure-in-project)))
-      (when venv
-        (if is-poetry
-            (progn
-              (wal/configure-lsp-server-commands venv)
-              (poetry-venv-workon))
-          (pyvenv-activate venv))))))
-
-(use-package pyvenv
-  :general
-  (wal/major :keymaps 'python-mode-map :major-modes t
-    "v" '(pyvenv-activate :wk "activate venv"))
-  :hook (python-mode . wal/activate-venv))
-
-(use-package poetry
-  :config
-  (wal/display-buffer-in-side-window "\\*poetry-shell\\*")
-  :general
-  (wal/major :keymaps 'python-mode-map :major-modes t
-    "p" '(poetry :wk "poetry"))
-  :commands (poetry-venv-exist-p))
-#+END_SRC
-
-*** Scripting
-
-Sometimes you have to deal with things at their time.
-
-#+BEGIN_SRC emacs-lisp
-(use-package crontab-mode)
-#+END_SRC
-
-Support =fish= functions.
-
-#+BEGIN_SRC emacs-lisp
-(use-package fish-mode)
+(use-package lsp-dart
+  :custom
+  (lsp-dart-flutter-sdk-dir (wal/find-dart-flutter-sdk-dir)))
 #+END_SRC
 
 *** Web
@@ -4874,6 +5021,8 @@ This depends on `wal/lsp-provider'."
   "f" '(wal/consult-fly :wk "fly-check"))
 #+END_SRC
 
+*** flycheck
+
 =flycheck= is for all of our linting/code quality needs.
 
 #+BEGIN_SRC emacs-lisp
@@ -4883,6 +5032,7 @@ This depends on `wal/lsp-provider'."
   :general
   (wal/colonel :keymaps '(prog-mode-map yaml-mode-map)
     "f" '(flycheck-mode :wk "flycheck"))
+  :hook (sh-set-shell . flycheck-mode)
   :delight " fly")
 #+END_SRC
 
@@ -4901,6 +5051,8 @@ Configs can be found using a file, not a directory.
     (eq exitcode 0)))
 #+END_SRC
 
+*** flymake
+
 Built-in syntax checker. Used by =eglot=.
 
 #+BEGIN_SRC emacs-lisp
@@ -4913,17 +5065,15 @@ Built-in syntax checker. Used by =eglot=.
     "fn" '(flymake-goto-next-error :wk "next")
     "fp" '(flymake-goto-prev-error :wk "prev"))
   :ensure nil)
-#+END_SRC
 
-ESLint plugin for =flymake=.
-
-#+BEGIN_SRC emacs-lisp
 (use-package flymake-eslint
   :custom
   (flymake-eslint-defer-binary-check t)
   :demand
   :after eglot)
 #+END_SRC
+
+*** flyspell
 
 My spelling is bad. Uses American English for =flyspell=.
 
@@ -5007,8 +5157,12 @@ Language servers are awesome. Thanks, Microsoft.
     "l" '(wal/lsp :wk "lsp"))
 #+END_SRC
 
+*** Option A
+
+**** lsp-mode
+
 =lsp-mode= is the fancy version. You'll have to install some language
-servers yourself[fn:16].
+servers yourself[fn:17].
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/lsp-file-watch-ignored-directories '("[/\\\\]build\\'")
@@ -5069,6 +5223,8 @@ This adds additional ignored directories."
   :after lsp-mode)
 #+END_SRC
 
+**** dap-mode
+
 Debugging using VSCode's DAP (in =lsp-mode=)
 
 #+BEGIN_SRC emacs-lisp
@@ -5090,6 +5246,63 @@ Debugging using VSCode's DAP (in =lsp-mode=)
   :after lsp-mode
   :delight " dap")
 #+END_SRC
+
+**** Debug Templates
+
+Put these templates in a file in your project root, and evaluate them
+there using =C-x C-e=.
+
+***** Node.js
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+This for attaching to a remote host (Docker container) using =nodemon=.
+
+For TypeScript compile your =src= with =--sourceMap= or set =sourceMap= to
+=true= in your =tsconfig.json=.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(when (require 'dap-mode nil 'noerror)
+  (progn
+    (let* ((use-source-maps t) ; Turn off if not needed.
+           (build-directory "build") ; Set to `nil' if this isn't transpiled JavaScript.
+           (remote-root "/usr/src/app") ; If this is running remotely.
+           (local-root (if build-directory
+                           (concat (file-name-directory buffer-file-name) build-directory)
+                         (file-name-directory buffer-file-name))))
+      (dap-register-debug-template
+       "attach::node"
+       (list :type "node"
+             :request "attach"
+             :sourceMaps use-source-maps
+             :remoteRoot remote-root
+             :localRoot local-root
+             :port 9229)))))
+#+END_SRC
+
+***** Python
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Attach to running process.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+;; Adapt your remote root
+(when (require 'dap-mode nil 'noerror)
+  (let ((mapping '(:localRoot "${workspaceFolder}" :remoteRoot "/usr/src/app")))
+    (dap-register-debug-template
+     "python::attach"
+     (list :type "python"
+           :request "attach"
+           :connect (list :host "localhost" :port 5678)
+           :pathMappings (vector mapping)))))
+#+END_SRC
+
+*** Option B
+
+**** eglot
 
 =eglot= is the light-weight alternative.
 
@@ -5206,59 +5419,6 @@ Taken from the official documentation.
 ;;; wal-lsp.el ends here
 #+END_SRC
 
-*** Debug Templates
-
-Put these templates in a file in your project root, and evaluate them
-there using =C-x C-e=.
-
-**** Node.js
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-This for attaching to a remote host (Docker container) using =nodemon=.
-
-For TypeScript compile your =src= with =--sourceMap= or set =sourceMap= to
-=true= in your =tsconfig.json=.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-(when (require 'dap-mode nil 'noerror)
-  (progn
-    (let* ((use-source-maps t) ; Turn off if not needed.
-           (build-directory "build") ; Set to `nil' if this isn't transpiled JavaScript.
-           (remote-root "/usr/src/app") ; If this is running remotely.
-           (local-root (if build-directory
-                           (concat (file-name-directory buffer-file-name) build-directory)
-                         (file-name-directory buffer-file-name))))
-      (dap-register-debug-template
-       "attach::node"
-       (list :type "node"
-             :request "attach"
-             :sourceMaps use-source-maps
-             :remoteRoot remote-root
-             :localRoot local-root
-             :port 9229)))))
-#+END_SRC
-
-**** Python
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Attach to running process.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-;; Adapt your remote root
-(when (require 'dap-mode nil 'noerror)
-  (let ((mapping '(:localRoot "${workspaceFolder}" :remoteRoot "/usr/src/app")))
-    (dap-register-debug-template
-     "python::attach"
-     (list :type "python"
-           :request "attach"
-           :connect (list :host "localhost" :port 5678)
-           :pathMappings (vector mapping)))))
-#+END_SRC
-
 ** DevOps
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-devops.el" wal/emacs-config-package-path)
@@ -5280,6 +5440,8 @@ Internet.
 (declare-function wal/display-buffer-in-direction "wal-func.el")
 #+END_SRC
 
+*** docker
+
 What goes =docker-compose= up, goes =docker-compose= down.
 
 #+BEGIN_SRC emacs-lisp
@@ -5296,6 +5458,8 @@ What goes =docker-compose= up, goes =docker-compose= down.
   :bind
   (("C-c d" . docker)))
 #+END_SRC
+
+*** dockerfile-mode
 
 Make =Dockerfiles= look nice.
 
@@ -5318,6 +5482,7 @@ Make =Dockerfiles= look nice.
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-web.el" wal/emacs-config-package-path)
 :END:
+
 I browse, I request.
 
 #+BEGIN_SRC emacs-lisp
@@ -5331,6 +5496,8 @@ I browse, I request.
 
 (declare-function wal/display-buffer-in-pop-up "wal-func.el")
 #+END_SRC
+
+*** restclient
 
 Postman is passé. I use a =.http= file extension for my request
 examples.
@@ -5377,6 +5544,8 @@ Sometimes you have to sit down and write something.
 ;;; Code:
 #+END_SRC
 
+*** typo
+
 Access complex punctuation. To me this doesn't necessarily make sense
 for all =text-mode= modes (like =org-mode=), so instead it needs to be
 triggered explicitly.
@@ -5388,6 +5557,8 @@ triggered explicitly.
     "t" '(typo-mode :wk "typo"))
   :delight " typ")
 #+END_SRC
+
+*** writeroom
 
 Create a room of one's own. I use a different (light) theme here.
 
@@ -5540,7 +5711,9 @@ set that supports your emojis.
 
 [fn:14] We will try to download it automatically, but might fail.
 
-[fn:15] If you're on an older distro your =libvterm= package might be
+[fn:15] Did you know you can edit =dired= buffers using =C-x C-q=?
+
+[fn:16] If you're on an older distro your =libvterm= package might be
 too old.
 
-[fn:16] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+[fn:17] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].

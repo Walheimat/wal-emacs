@@ -379,6 +379,29 @@ The elephant in the room.
   :hook (php-mode . wal/php-mode))
 #+END_SRC
 
+*** selectrum
+
+Use =selectrum= for =consult=.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defun wal/advise-selectrum(fun &rest r)
+  "Call FUN using `selectrum' for read completion, applying R."
+  (let ((completing-read-function #'selectrum-completing-read)
+        (read-buffer-function #'selectrum-read-buffer)
+        (read-file-name-function #'selectrum-read-file-name)
+        (completion-in-region-function #'selectrum-completion-in-region)
+        (coompleting-read-multiple #'selectrum-completing-read-multiple)
+        (read-libary-name #'selectrum-read-library-name)
+        (completion-styles '(substring partial-completion))
+        ;; Cannot advise `dired-read-dir-and-switches' and `minibuffer-message'.
+        (map (make-sparse-keymap)))
+    (set-keymap-parent map minibuffer-local-map)
+    (define-key map [remap previous-matching-history-element] 'selectrum-select-from-history)
+    (apply fun r)))
+
+(use-package selectrum)
+#+END_SRC
+
 ** Other Settings
 
 These are other settings that used to be in my config.
