@@ -2210,6 +2210,7 @@ I like nice-looking things.
 (declare-function wal/colonel-sink "wal-key-bindings.el")
 (declare-function wal/directory-files "init.el")
 
+(defvar all-the-icons-ivy-rich-display-transformers-list)
 (defvar beacon-dont-blink-commands)
 (defvar beacon-dont-blink-major-modes)
 (defvar dashboard-buffer-name)
@@ -2854,6 +2855,13 @@ This is the case when:
 You need to install the icons yourself[fn:4].
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/configure-rich-transformers ()
+  "Configure (additional) transformers in the list.
+
+This function is called before `all-the-icons-ivy-rich' is activated."
+  (let ((tl all-the-icons-ivy-rich-display-transformers-list))
+    (plist-put tl 'persp-kill-buffer* (plist-get tl 'persp-kill-buffer))))
+
 (use-package all-the-icons
   :commands (all-the-icons-octicon))
 
@@ -3505,7 +3513,6 @@ Complete commands and code.
 (declare-function projectile-project-p "projectile.el")
 (declare-function wal/display-buffer-ethereally "wal-func.el")
 
-(defvar all-the-icons-ivy-rich-display-transformers-list)
 (defvar consult-buffer-filter)
 (defvar consult--source-file)
 (defvar xref-show-definitions-function)
@@ -3684,6 +3691,7 @@ Heavy lifting with =consult=.
   (setq xref-show-definitions-function #'consult-xref)
   (mapc (lambda (it) (add-to-list 'consult-buffer-filter it))
         wal/consult-buffer-filter)
+  (declare-function consult--customize-set "consult.el")
   (consult-customize
    consult--source-file
    :preview-key (kbd "M-,")))
@@ -3781,13 +3789,6 @@ Pass R to the switch buffer function."
 Some nicer candidate view when switching buffers.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/configure-rich-transformers ()
-  "Configure (additional) transformers in the list.
-
-This function is called before `all-the-icons-ivy-rich' is activated."
-  (let ((tl all-the-icons-ivy-rich-display-transformers-list))
-    (plist-put tl 'persp-kill-buffer* (plist-get tl 'persp-kill-buffer))))
-
 (use-package ivy-rich
   :config
   (when (fboundp 'ivy-format-function-line)
