@@ -2774,11 +2774,17 @@ load path.
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/common-ligatures
-  '(">=" "<="  "+=" "-="
-    "||" "..." "??" "*/"
-    "/*" "//" "/**" "**/"
-    "&&" "==")
-  "A list of ligatures common to all programming modes."
+  '(
+    "==" "!=" ">=" "<=" ; Comparison.
+    "+=" "-=" "/=" "%=" "*=" ; Assignment.
+    "||" "&&"  ; Logical.
+    "/*" "*/" "//" "/**" "**/" ; Comments.
+    "++" "--" ;; Increment/decrement.
+    ">>=" "<<=" "&=" "|=" "^=" ; Bitwise assignments.
+    "<<" ">>" ; Bitwise shifts.
+    "..." ; Spread.
+    )
+  "A list of ligatures available in all programming modes."
   :type '(repeat string)
   :group 'wal-visuals)
 
@@ -2795,17 +2801,16 @@ ARGS is a list containing modes and additional ligatures."
    'ligature-set-ligatures
    :around #'wal/advise-ligature-set-ligatures)
   (ligature-set-ligatures 'lisp-data-mode '(";;"))
-  (ligature-set-ligatures 'c++-mode '("::" "->" ">>" "<<"
-                                      "++" "!=" "|=" "<<="
-                                      ">>="))
-  (ligature-set-ligatures 'python-mode '("->" "!=" "__"))
+  (ligature-set-ligatures 'c++-mode '("::" "->"))
+  (ligature-set-ligatures 'python-mode '("->" "__"))
   (ligature-set-ligatures 'js2-mode '("=>" "!==" "===" "!!"))
   (ligature-set-ligatures 'elixir-mode '("|>" "->" "<-" "=>"
-                                         "<<" ">>" "::" "<>"
-                                         "#{" "\\\\" "++" "--"
+                                        "::" "<>" "#{" "\\\\"
                                          "===" ".."))
   (ligature-set-ligatures 'prolog-mode '(":-"))
   (ligature-set-ligatures 'html-mode '("<!--" "-->"))
+  (ligature-set-ligatures 'dart-mode '("=>" "///" ".?" "??"
+                                       "??=" ".."))
   :hook (prog-mode . ligature-mode)
   :load-path "site-lisp")
 #+END_SRC
