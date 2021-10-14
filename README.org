@@ -979,6 +979,7 @@ There are two differences:
 
 (declare-function wal/bytes-per-mb "wal-settings.el")
 (declare-function wal/captain-sink "wal-key-bindings.el")
+(declare-function wal/colonel "wal-key-bindings.el")
 
 (defgroup wal-func nil
   "Change values used in additional functions."
@@ -1005,6 +1006,8 @@ should get created."
 #+END_SRC
 
 ** Buffers
+
+*** Ignoring
 
 Ignore some buffers when switching.
 
@@ -1094,6 +1097,18 @@ is removed."
                  `(,condition
                    nil
                    (window-parameters (mode-line-format . none))))))
+#+END_SRC
+
+*** Editing
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/kill-ring-save-whole-buffer ()
+  "Call `kill-ring-save' on the entire buffer."
+  (interactive)
+  (kill-ring-save (point-min) (point-max)))
+
+(wal/colonel
+  "h" '(wal/kill-ring-save-whole-buffer :wk "kill-ring-save buffer"))
 #+END_SRC
 
 ** Windows
