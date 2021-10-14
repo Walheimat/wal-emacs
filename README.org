@@ -523,11 +523,8 @@ There are some non-standard control sequences. Anywhere:
 
 User-reserved combinations are used for certain command maps:
 
-+ =C-c b= for =bookmark=, and when the respective mode is active:
-+ =C-c f= for =flycheck=
-+ =C-c k= for =kmacro=
-+ =C-c m= for =smerge=
-+ =C-c p= for =projectile=.
++ =C-c b= for =bookmark= and
++ =C-c k= for =kmacro=.
 
 It's also used for certain dispatches:
 
@@ -538,8 +535,6 @@ It's also used for certain dispatches:
 
 Most hyper[fn:9] bindings are quick-access actions:
 
-+ =H-7= opens (and =H-8= cycles through) =popper= pop-up(s)
-+ =H--= duplicates current line/region with =crux=
 + =H-h= finds file using =projectile= (or =counsel-projectile=)
 + =H-i= switches perspective (when using =perspective=)
 + =H-j= switches buffer using =consult= (or =counsel=)
@@ -684,8 +679,7 @@ This creates all leader keys and sinks."
 Leader key =general= prefixes Emacs actions like loading a theme,
 finding a library, quitting as well as opening =eshell= and =eww=.
 
-Leader key =colonel= prefixes mode toggles. Available modes may depend
-on =major-mode=.
+Leader key =colonel= prefixes editing actions.
 
 Leader keys =major= and =captain= prefix mode-specific actions, for major
 and minor modes respectively.
@@ -694,12 +688,15 @@ The =captain= prefixes, assuming the respective mode is on, are:
 
 + =d= for =dap-mode=
 + =f= for =flycheck= or =flymake=
++ =i= for =perspective=
 + =l= for =lsp-mode= or =eglot=
-+ =p= for =popper=
++ =m= for =smerge=
++ =o= for =popper=
++ =p= for =projectile=
 + =s= for =flyspell=
 + =t= for =treesitter=
 + =w= for =winner=
-+ =y= for =yasnippet=
++ =y= for =yasnippet=.
 
 Leader key =lieutenant= prefixes non- or semi-mode package actions. The
 package prefixes are:
@@ -2139,13 +2136,15 @@ there's a region, all lines that region covers will be duplicated."
    ("C-o" . crux-smart-open-line)
    ("M-o" . crux-smart-open-line-above))
   :wal-bind
-  (("9" . wal/crux-duplicate-current-line-or-region)
-   ("0" . wal/crux-duplicate-and-comment-current-line-or-region)
-   ("o" . crux-other-window-or-switch-buffer))
+  (("o" . crux-other-window-or-switch-buffer))
   :general
   (wal/general-sink
     "i" '(crux-find-shell-init-file :wk "find shell init")
     "c" '(crux-find-user-custom-file :wk "find custom file"))
+  (wal/colonel
+    "d" '(crux-duplicate-current-line-or-region :wk "duplicate"))
+  (wal/colonel :keymaps 'prog-mode-map
+    "D" '(crux-duplicate-and-comment-current-line-or-region :wk "duplicate and comment"))
   (wal/lieutenant
     "x" '(:ignore t :wk "crux")
     "xd" '(crux-delete-buffer-and-file :wk "delete buffer and file")
@@ -2539,12 +2538,12 @@ Help me find my cursor!
   (mapc (lambda (it)
           (add-to-list 'beacon-dont-blink-commands it))
         wal/beacon-dont-blink-commands)
-  (add-to-list 'beacon-dont-blink-major-modes 'vterm-mode)
-  (beacon-mode 1))
+  (add-to-list 'beacon-dont-blink-major-modes 'vterm-mode))
 
 (use-package beacon
   :config
   (wal/configure-beacon)
+  (beacon-mode +1)
   :custom
   (beacon-blink-when-focused t)
   (beacon-color 0.4)
@@ -2880,7 +2879,7 @@ This function is called before `all-the-icons-ivy-rich' is activated."
 (use-package all-the-icons-ivy-rich
   :config
   (wal/configure-rich-transformers)
-  (all-the-icons-ivy-rich-mode 1)
+  (all-the-icons-ivy-rich-mode +1)
   :demand
   :after (all-the-cions ivy-rich))
 #+END_SRC
@@ -2997,9 +2996,10 @@ Everything that has to do with windows.
 (declare-function aw-delete-window "ace-window.el")
 (declare-function comint-check-proc "comint.el")
 (declare-function popper-cycle "popper.el")
-(declare-function popper-open-all "popper.el")
 (declare-function popper-popup-p "popper.el")
 (declare-function popper-toggle-latest "popper.el")
+(declare-function popper--bury-all "popper.el")
+(declare-function popper--open-all "popper.el")
 
 (defvar wal/completion-provider)
 (defvar aw-dispatch-alist)
@@ -3153,34 +3153,44 @@ Treat certain buffers and their windows as pop-ups.
            (not (comint-check-proc buf))))))
 
 (defun wal/popper-open-all ()
-  "Same as `popper-open-all' but interactive."
+  "Same as `popper--open-all' but interactive."
   (interactive)
-  (popper-open-all))
+  (popper--open-all))
+
+(defun wal/popper-bury-all ()
+  "Same as `popper--bury-all' but interactive."
+  (interactive)
+  (popper--bury-all))
+
+(defun wal/configure-popper ()
+  "Configure package `popper'."
+  (defhydra wal/popper (:hint nil)
+    "
+%s`wal/ascii-whale Pop-ups: _t_oggle or _c_ycle.
+"
+    ("t" popper-toggle-latest :color blue)
+    ("c" popper-cycle)
+    ("a" wal/popper-open-all "show all")
+    ("x" wal/popper-bury-all "bury all")
+    ("q" nil "quit")))
 
 (use-package popper
   :config
+  (wal/configure-popper)
   (popper-mode +1)
   :custom
   (popper-reference-buffers wal/popper-reference-buffers)
   (popper-display-control 'user)
   ;; Remove if you don't use/have `doom-modeline'.
   (popper-mode-line wal/popper-mode-line)
-  :wal-bind
-  (:map popper-mode-map
-   ("7" . popper-toggle-latest)
-   ("8" . popper-cycle))
   :general
-  (wal/captain :keymaps 'popper-mode-map
-    "p" '(:ignore t :wk "popper")
-    "pr" '(popper-toggle-type :wk "raise or drop")
-    "pk" '(popper-kill-latest-popup :wk "kill latest")
-    "pa" '(wal/popper-open-all :wk "open all"))
+  (wal/captain
+    "o" '(wal/popper/body :wk "popper"))
   (general-define-key
    :keymaps 'popper-mode-map
    :predicate '(wal/popper-dead-shell-p)
    "q" 'kill-buffer-and-window)
-  :defer 1
-  :after projectile)
+  :defer 1)
 #+END_SRC
 
 ** Footer
@@ -3972,6 +3982,7 @@ Keep order.
 (declare-function persp-switch "perspective.el")
 (declare-function persp-switch-to-buffer "perspective.el")
 (declare-function projectile-project-p "projectile.el")
+(declare-function wal/captain "wal-key-bindings.el")
 
 (defvar consult--source-buffer)
 (defvar projectile-globally-ignored-directories)
@@ -4035,17 +4046,19 @@ completion provider also switches perspectives."
        :name "Perspective Buffer"
        :action #'persp-switch-to-buffer
        :items #'persp-current-buffer-names)))
-  (persp-mode))
+  (wal/captain
+    "i" '(:keymap perspective-map :wk "perspective")))
 
 (use-package perspective
   :if wal/use-perspectives
   :config
   (wal/configure-perspective)
+  (persp-mode +1)
+  (define-key persp-mode-map (kbd "C-x x") ctl-x-x-map) ;; Override the override to `perspective-map'.
   :custom
   (persp-modestring-dividers '(" (" ")" "/")) ; Add space for `doom-modeline'.
   (persp-initial-frame-name wal/default-perspective)
   (persp-state-default-file (expand-file-name "persp-persist" wal/cache-directory))
-  (persp-mode-prefix-key (kbd "C-c i"))
   :bind
   (:map persp-mode-map
    ("C-x b" . persp-switch-to-buffer)
@@ -4097,7 +4110,9 @@ This extends all ignore lists' default values."
         wal/projectile-globally-ignored-files)
   (mapc (lambda (it)
           (add-to-list 'projectile-globally-ignored-file-suffixes it))
-        wal/projectile-globally-ignored-file-suffixes))
+        wal/projectile-globally-ignored-file-suffixes)
+  (wal/captain
+    "p" '(:keymap projectile-command-map :wk "projectile")))
 
 (use-package projectile
   :config
@@ -4109,8 +4124,6 @@ This extends all ignore lists' default values."
   ;; Allow finding files that are ignored by `.gitignore'.
   (projectile-indexing-method 'hybrid)
   (projectile-enable-caching t)
-  :bind-keymap
-  ("C-c p" . projectile-command-map)
   :wal-bind
   (:map projectile-mode-map
    ("p" . projectile-switch-project)
@@ -4798,6 +4811,7 @@ I'm becoming an old git.
 ;;; Code:
 
 (declare-function magit-display-buffer-traditional "magit-mode.el")
+(declare-function wal/captain "wal-key-bindings.el")
 #+END_SRC
 
 ** Packages
@@ -4866,8 +4880,9 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
 
 #+BEGIN_SRC emacs-lisp
 (use-package smerge-mode
-  :custom
-  (smerge-command-prefix (kbd "C-c m"))
+  :config
+  (wal/captain :keymaps 'smerge-mode-map
+    "m" '(:keymap smerge-basic-map :wk "smerge"))
   :ensure nil
   :delight " smg")
 #+END_SRC
@@ -5394,18 +5409,6 @@ Please let me know when I screwed up. I promise I will learn.
 
 (declare-function flycheck-find-checker-executable "flycheck.el")
 (declare-function wal/captain "wal-key-bindings.el")
-
-(defun wal/consult-fly ()
-  "Call either `consult-flymake' or `consult-flycheck'.
-
-This depends on `wal/lsp-provider'."
-  (interactive)
-  (cond ((and (boundp 'flymake-mode) flymake-mode) (consult-flymake))
-        ((and (boundp 'flycheck-mode) flycheck-mode) (consult-flycheck))
-        (t nil)))
-
-(wal/captain :keymaps '(flymake-mode-map flycheck-mode-map)
-  "f" '(wal/consult-fly :wk "fly-check"))
 #+END_SRC
 
 ** Packages
@@ -5419,8 +5422,12 @@ This depends on `wal/lsp-provider'."
 
 #+BEGIN_SRC emacs-lisp
 (use-package flycheck
-  :custom
-  (flycheck-keymap-prefix (kbd "C-c f"))
+  :config
+  (wal/captain :keymaps 'flycheck-mode-map
+    "f" '(:keymap flycheck-command-map :wk "flycheck"))
+  (general-define-key
+    :keymaps 'flycheck-command-map
+    "u" '(consult-flycheck :wk "consult flycheck"))
   :general
   (wal/captain-sink :keymaps '(prog-mode-map yaml-mode-map)
     "f" '(flycheck-mode :wk "flycheck"))
@@ -5455,10 +5462,11 @@ Built-in syntax checker. Used by =eglot=.
   :config
   (setq flymake-mode-line-title "flm")
   :general
-  (wal/captain-sink :keymaps 'flymake-mode-map
+  (wal/captain :keymaps 'flymake-mode-map
     "f" '(:ignore t :wk "flymake")
     "fn" '(flymake-goto-next-error :wk "next")
-    "fp" '(flymake-goto-prev-error :wk "prev"))
+    "fp" '(flymake-goto-prev-error :wk "prev")
+    "fu" '(consult-flymake :wk "consult flymake"))
   :ensure nil)
 
 (use-package flymake-eslint
