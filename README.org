@@ -490,15 +490,16 @@ I use many[fn:8] custom keybindings.
 
 ;;; Code:
 
-(declare-function wal/tangle-config "init.el")
-(declare-function wal/general "wal-key-bindings.el")
-(declare-function wal/general-sink "wal-key-bindings.el")
-(declare-function wal/colonel "wal-key-bindings.el")
+(declare-function wal/captain-sink "wal-key-bindings.el")
 (declare-function wal/edge-left "wal-func.el")
 (declare-function wal/edge-right "wal-func.el")
 (declare-function wal/edge-down "wal-func.el")
 (declare-function wal/edge-up "wal-func.el")
+(declare-function wal/general "wal-key-bindings.el")
+(declare-function wal/general-sink "wal-key-bindings.el")
+(declare-function wal/major-sink "wal-key-bindings.el")
 (declare-function wal/split-window-the-other-way "wal-func.el")
+(declare-function wal/tangle-config "init.el")
 
 (defvar wal/emacs-config-default-path)
 
@@ -712,8 +713,9 @@ package prefixes are:
 + =x= for =crux=
 + =z= for =org-roam=.
 
-All leader keys have sinks for sporadically used actions that should
-still always be available.
+All leader keys have sinks. The sinks for =major= and =captain= toggle
+major and minor modes. The sink for =lieutenant= provides some
+additional useful commands.
 
 ** Additional (Un-)Bindings
 
@@ -882,7 +884,7 @@ Turning on/off certain major modes switching between =major-mode= and
       (setq wal/before-fundamental-mode m-mode))))
 
 ;; Little EOF joke for ya.
-(wal/colonel
+(wal/major-sink
   "E" '(lisp-interaction-mode :wk "Elisp")
   "O" '(org-mode :wk "Org")
   "F" '(wal/fundamental-mode :wk "Fundamental"))
@@ -979,7 +981,7 @@ There are two differences:
 ;;; Code:
 
 (declare-function wal/bytes-per-mb "wal-settings.el")
-(declare-function wal/colonel-sink "wal-key-bindings.el")
+(declare-function wal/captain-sink "wal-key-bindings.el")
 
 (defgroup wal-func nil
   "Change values used in additional functions."
@@ -1236,7 +1238,7 @@ Minor mode to dedicate buffers to windows.
     (set-window-dedicated-p window nil)
     (message "Window no longer dedicated to %s" bufname)))
 
-(wal/colonel-sink "." '(walled-mode :wk "walled"))
+(wal/captain-sink "." '(walled-mode :wk "walled"))
 #+END_SRC
 
 ** Garbage Collection
@@ -1551,7 +1553,7 @@ Up the kill count.
   ("C-?" . undo-redo)
   :general
   (wal/general-sink "p" '(list-processes :wk "list processes"))
-  (wal/colonel-sink "f" '(auto-fill-mode :wk "auto-fill"))
+  (wal/captain-sink "a" '(auto-fill-mode :wk "auto-fill"))
   (wal/lieutenant-sink "w" '(delete-trailing-whitespace :wk "delete trailing whitespace"))
   :ensure nil)
 #+END_SRC
@@ -1578,7 +1580,7 @@ Sometimes I need to see whitespace chars.
 
 (use-package whitespace
   :general
-  (wal/colonel "w" '(whitespace-mode :wk "whitespace"))
+  (wal/captain-sink "w" '(whitespace-mode :wk "whitespace"))
   :hook (whitespace-mode . wal/whitespace-mode)
   :ensure nil)
 #+END_SRC
@@ -1834,7 +1836,7 @@ Sometimes you do want to see the line numbers.
 #+BEGIN_SRC emacs-lisp
 (use-package linum
   :general
-  (wal/colonel-sink "l" '(linum-mode :wk "linum"))
+  (wal/captain-sink "n" '(linum-mode :wk "linum"))
   :ensure nil)
 #+END_SRC
 
@@ -2008,11 +2010,11 @@ results."
   (:map yas-minor-mode-map
    ("y" . #'wal/yas-expand))
   :general
-  (wal/colonel "y" '(yas-minor-mode :wk "yasnippet"))
   (wal/captain :keymaps 'yas-minor-mode-map
     "y" '(:ignore t :wk "yasnippet")
     "yv" '(yas-visit-snippet-file :wk "visit snippet file")
     "yn" '(yas-new-snippet :wk "create new snippet"))
+  (wal/captain-sink "y" '(yas-minor-mode :wk "yasnippet"))
   :hook (prog-mode . yas-minor-mode)
   :delight " yas")
 
@@ -2035,7 +2037,7 @@ Drag lines and regions around.
     (setq drag-stuff-modifier 'hyper))
   (drag-stuff-define-keys)
   :general
-  (wal/colonel-sink "d" '(drag-stuff-mode :wk "drag-stuff"))
+  (wal/captain-sink "k" '(drag-stuff-mode :wk "drag-stuff"))
   :hook (prog-mode . drag-stuff-mode)
   :delight " drg")
 #+END_SRC
@@ -2165,7 +2167,7 @@ Little Red Riding Hood!
   :custom
   (hungry-delete-join-reluctantly t)
   :general
-  (wal/colonel :keymaps 'prog-mode-map
+  (wal/captain-sink :keymaps 'prog-mode-map
     "h" '(hungry-delete-mode :wk "hungry-delete"))
   (wal/lieutenant :keymaps 'prog-mode-map
     "h" '(:ignore t :wk "hungry-delete")
@@ -2207,7 +2209,7 @@ I like nice-looking things.
 ;;; Code:
 
 (declare-function ligature-set-ligatures "ligature.el")
-(declare-function wal/colonel-sink "wal-key-bindings.el")
+(declare-function wal/captain-sink "wal-key-bindings.el")
 (declare-function wal/directory-files "init.el")
 
 (defvar all-the-icons-ivy-rich-display-transformers-list)
@@ -2409,7 +2411,7 @@ Show indentation.
   (highlight-indent-guides-method 'character)
   (highlight-indent-guides-responsive 'top)
   :general
-  (wal/colonel :keymaps '(prog-mode-map yaml-mode-map)
+  (wal/captain-sink :keymaps '(prog-mode-map yaml-mode-map)
     "i" '(highlight-indent-guides-mode :wk "h-indent"))
   :hook ((prog-mode yaml-mode) . highlight-indent-guides-mode)
   :delight " hig")
@@ -2642,7 +2644,7 @@ Scroll pixel-wise on certain jump commands.
 
 (use-package scroll-on-jump)
 
-(wal/colonel-sink "," '(smooth-scroll-mode :wk "smooth-scroll"))
+(wal/captain-sink "," '(smooth-scroll-mode :wk "smooth-scroll"))
 #+END_SRC
 
 ** Modeline
@@ -2742,7 +2744,7 @@ Sometimes the list of minor modes overcrowds the modeline.
                     flyspell-mode
                     org-tree-slide-mode))
   :general
-  (wal/colonel-sink "m" '(minions-mode :wk "minions"))
+  (wal/captain-sink "m" '(minions-mode :wk "minions"))
   :defer 3)
 #+END_SRC
 
@@ -2893,7 +2895,7 @@ Display emojis[fn:12].
 #+BEGIN_SRC emacs-lisp
 (use-package emojify
   :general
-  (wal/colonel-sink "e" '(emojify-mode :wk "emojify"))
+  (wal/captain-sink "e" '(emojify-mode :wk "emojify"))
   :hook (dashboard-mode . emojify-mode))
 #+END_SRC
 
@@ -3084,7 +3086,7 @@ Used to advise `aw-switch-to-window'."
    'aw-switch-to-window
    :after #'wal/aw-switch-maybe-golden-ratio)
   :general
-  (wal/colonel "g" '(golden-ratio-mode :wk "golden-ratio"))
+  (wal/captain-sink "g" '(golden-ratio-mode :wk "golden-ratio"))
   :delight " gol")
 #+END_SRC
 
@@ -3553,7 +3555,7 @@ In-line completion.
   (:map company-mode-map
    ("<return>" . company-complete))
   :general
-  (wal/colonel :keymaps '(prog-mode-map dap-ui-repl-mode-map)
+  (wal/captain-sink :keymaps '(prog-mode-map dap-ui-repl-mode-map)
     "c" '(company-mode :wk "company"))
   :hook (prog-mode . company-mode)
   :delight " cmp")
@@ -4233,7 +4235,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
      ("@bla" . ?b)
      ("@edu" . ?e)))
   :general
-  (wal/colonel :keymaps 'org-mode-map :major-modes t
+  (wal/captain-sink :keymaps 'org-mode-map :major-modes t
     "i" '(org-indent-mode :wk "org-indent"))
   (wal/major :keymaps 'org-mode-map :major-modes t
     "s" '(:ignore t :wk "subtree")
@@ -4833,8 +4835,8 @@ If you want to go back in time and point fingers at the progenitors of doom.
 #+BEGIN_SRC emacs-lisp
 (use-package git-timemachine
   :general
-  (wal/colonel :keymaps '(prog-mode-map yaml-mode-map)
-    "m" '(git-timemachine-toggle :wk "git-timemachine"))
+  (wal/captain-sink :keymaps '(prog-mode-map yaml-mode-map)
+    "t" '(git-timemachine-toggle :wk "git-timemachine"))
   :delight " gtm")
 #+END_SRC
 
@@ -5096,8 +5098,8 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
   (setq inferior-lisp-program "sbcl")
   (slime-setup '(slime-fancy slime-quicklisp slime-asdf slime-company))
   :general
-  (wal/colonel :keymaps 'lisp-mode-map :major-modes t
-    "l" '(slime-mode :wk "slime"))
+  (wal/captain-sink :keymaps 'lisp-mode-map :major-modes t
+    "u" '(slime-mode :wk "slime"))
   (wal/major :keymaps 'slime-mode-map :major-modes t
     "r" '(slime :wk "open REPL"))
   :ensure-system-package sbcl
@@ -5420,7 +5422,7 @@ This depends on `wal/lsp-provider'."
   :custom
   (flycheck-keymap-prefix (kbd "C-c f"))
   :general
-  (wal/colonel :keymaps '(prog-mode-map yaml-mode-map)
+  (wal/captain-sink :keymaps '(prog-mode-map yaml-mode-map)
     "f" '(flycheck-mode :wk "flycheck"))
   :hook (sh-set-shell . flycheck-mode)
   :delight " fly")
@@ -5493,11 +5495,11 @@ My spelling is bad. Uses American English for =flyspell=.
    ("C-." . ispell-word)) ;; Replaces `flyspell-auto-correct-word'.
                           ;; But still available via `C-M-i'.
   :general
-  (wal/colonel "s" '(wal/flyspell :wk "flyspell"))
   (wal/captain :keymaps 'flyspell-mode-map
     "s" '(:ignore t :wk "flyspell")
     "sb" '(flyspell-buffer :wk "buffer")
     "sr" '(flyspell-region :wk "region"))
+  (wal/captain-sink "s" '(wal/flyspell :wk "flyspell"))
   :ensure nil)
 #+END_SRC
 
@@ -5534,7 +5536,7 @@ Language servers are awesome. Thanks, Microsoft.
 ;;; Code:
 
 (declare-function eglot-managed-p "eglot.el")
-(declare-function wal/colonel "wal-key-bindings.el")
+(declare-function wal/captain-sink "wal-key-bindings.el")
 
 (defvar lsp-file-watch-ignored-directories)
 
@@ -5559,7 +5561,7 @@ Language servers are awesome. Thanks, Microsoft.
     ('eglot (eglot-ensure))
     (_ nil)))
 
-(wal/colonel :keymaps 'prog-mode-map
+(wal/captain-sink :keymaps 'prog-mode-map
     "l" '(wal/lsp :wk "lsp"))
 #+END_SRC
 
@@ -5657,7 +5659,7 @@ Debugging using VSCode's DAP (in =lsp-mode=)
   (dap-auto-show-output nil)
   (dap-auto-configure-features '(repl))
   :general
-  (wal/colonel :keymaps 'lsp-mode-map
+  (wal/captain-sink :keymaps 'lsp-mode-map
     "d" '(dap-mode :wk "dap"))
   (wal/captain :keymaps 'dap-mode-map
     "d" '(dap-hydra :wk "dap (hydra)"))
@@ -6022,7 +6024,7 @@ triggered explicitly.
 #+BEGIN_SRC emacs-lisp
 (use-package typo
   :general
-  (wal/colonel :keymaps '(text-mode-map org-mode-map) :major-modes t
+  (wal/captain-sink :keymaps '(text-mode-map org-mode-map) :major-modes t
     "t" '(typo-mode :wk "typo"))
   :delight " typ")
 #+END_SRC
@@ -6043,7 +6045,7 @@ Create a room of one's own. I use a different (light) theme here.
   (writeroom-restore-window-config t)
   (writeroom-extra-line-spacing 0.1)
   :general
-  (wal/colonel "r" '(writeroom-mode :wk "writeroom")))
+  (wal/captain-sink "r" '(writeroom-mode :wk "writeroom")))
 #+END_SRC
 
 ** Footer
