@@ -519,6 +519,7 @@ There are some non-standard control sequences. Anywhere:
 + =C-.= marks next like this allowing
   + =C-,= to delete last mark and
   + =C-/= to move it downward
++ =C-o= deletes (while =M-o= moves to) other windows
 + =C-?= redoes (as =C-/= undoes).
 
 User-reserved combinations are used for certain command maps:
@@ -545,12 +546,13 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-<return>= completes at point using =company= (in =company-mode=)
 + =H-== to do a =quick-calc= (inserted if called with =C-u=)
 + =H-\= toggles =vterm=
++ =H-u= toggles latest pop-up using =popper=
 + =H-y= expands snippets (in =yas-minor-mode=).
 
 It's also used for some dispatches:
 
 + =H-m= runs =magit-status=
-+ =H-u= for =ace-window=.
++ =H-o= for =ace-window=.
 
 **** Caps to Hyper
 
@@ -691,10 +693,10 @@ The =captain= prefixes, assuming the respective mode is on, are:
 + =i= for =perspective=
 + =l= for =lsp-mode= or =eglot=
 + =m= for =smerge=
-+ =o= for =popper=
 + =p= for =projectile=
 + =s= for =flyspell=
 + =t= for =treesitter=
++ =u= for =popper=
 + =w= for =winner=
 + =y= for =yasnippet=.
 
@@ -2148,16 +2150,16 @@ there's a region, all lines that region covers will be duplicated."
   :bind
   (("C-k" . crux-smart-kill-line)
    ("M-k" . crux-kill-line-backwards) ; Overrides `kill-sentence'.
-   ("C-o" . crux-smart-open-line)
-   ("M-o" . crux-smart-open-line-above))
-  :wal-bind
-  (("o" . crux-other-window-or-switch-buffer))
+   ("C-o" . delete-other-windows) ; Overrides `open-line'.
+   ("M-o" . crux-other-window-or-switch-buffer))
   :general
   (wal/general-sink
     "i" '(crux-find-shell-init-file :wk "find shell init")
     "c" '(crux-find-user-custom-file :wk "find custom file"))
   (wal/colonel
-    "d" '(crux-duplicate-current-line-or-region :wk "duplicate"))
+    "d" '(crux-duplicate-current-line-or-region :wk "duplicate")
+    "o" '(crux-smart-open-line :wk "open below")
+    "O" '(crux-smart-open-line-above :wk "open above"))
   (wal/colonel :keymaps 'prog-mode-map
     "D" '(crux-duplicate-and-comment-current-line-or-region :wk "duplicate and comment"))
   (wal/lieutenant
@@ -2181,12 +2183,11 @@ Little Red Riding Hood!
   :custom
   (hungry-delete-join-reluctantly t)
   :general
+  (wal/colonel
+    "k" '(hungry-delete-forward :wk "hungry forward")
+    "K" '(hungry-delete-backward :wk "hungry backward"))
   (wal/captain-sink :keymaps 'prog-mode-map
     "h" '(hungry-delete-mode :wk "hungry-delete"))
-  (wal/lieutenant :keymaps 'prog-mode-map
-    "h" '(:ignore t :wk "hungry-delete")
-    "hf" '(hungry-delete-forward :wk "forward")
-    "hb" '(hungry-delete-backward :wk "backward"))
   :delight " hun")
 #+END_SRC
 
@@ -3025,7 +3026,7 @@ Everything that has to do with windows.
  :tag "Windows")
 #+END_SRC
 
-** ace
+** ace-window
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -3054,6 +3055,7 @@ Ace interacting with (multiple) windows.
                             (?o delete-other-windows "delete other")
                             (?m aw-move-window "move")
                             (?c aw-copy-window "copy")
+                            (?s aw-swap-window "swap")
                             (?b aw-switch-buffer-in-window "buffer")
                             ;; If this has a description, it doesn't work.
                             (?? aw-show-dispatch-help)))
@@ -3076,7 +3078,7 @@ Ace interacting with (multiple) windows.
   (aw-keys '(?j ?k ?l ?\; ?u ?i ?o ?p))
   (aw-ignored-buffers '(vterm-mode))
   :wal-bind
-  ("u" . ace-window)
+  ("o" . ace-window)
   :delight " ace")
 #+END_SRC
 
@@ -3181,12 +3183,11 @@ Treat certain buffers and their windows as pop-ups.
   "Configure package `popper'."
   (defhydra wal/popper (:hint nil)
     "
-%s`wal/ascii-whale Pop-ups: _t_oggle or _c_ycle.
+%s`wal/ascii-whale Pop-ups: _c_ycle, _b_ury or _o_pen all.
 "
-    ("t" popper-toggle-latest :color blue)
     ("c" popper-cycle)
-    ("a" wal/popper-open-all "show all")
-    ("x" wal/popper-bury-all "bury all")
+    ("o" wal/popper-open-all)
+    ("b" wal/popper-bury-all)
     ("q" nil "quit")))
 
 (use-package popper
@@ -3196,11 +3197,12 @@ Treat certain buffers and their windows as pop-ups.
   :custom
   (popper-reference-buffers wal/popper-reference-buffers)
   (popper-display-control 'user)
-  ;; Remove if you don't use/have `doom-modeline'.
   (popper-mode-line wal/popper-mode-line)
+  :wal-bind
+  (("u" . popper-toggle-latest))
   :general
   (wal/captain
-    "o" '(wal/popper/body :wk "popper"))
+    "u" '(wal/popper/body :wk "popper"))
   (general-define-key
    :keymaps 'popper-mode-map
    :predicate '(wal/popper-dead-shell-p)
