@@ -2232,6 +2232,7 @@ I like nice-looking things.
 (defvar beacon-dont-blink-major-modes)
 (defvar dashboard-buffer-name)
 (defvar dimmer-prevent-dimming-predicates)
+(defvar doom-modeline-buffer-file-name-style)
 (defvar doom-modeline--vcs-text)
 
 (defgroup wal-visuals nil
@@ -2673,19 +2674,9 @@ shown, they are delighted unless they were diminished.
 :UNNUMBERED: t
 :END:
 
-Busier and prettier =modeline=. /Note/ that this package requires you to
-install =all-the-icons= fonts[fn:4].
+Busier and prettier[fn:12] =modeline=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-doom-modeline-update-vcs-text (&rest _r)
-  "Advise function to remove branch prefixes."
-  (when doom-modeline--vcs-text
-    (setq doom-modeline--vcs-text
-          (replace-regexp-in-string
-           "\\(feature\\|\\(\\w+\\)?fix\\|improvement\\)\\/"
-           ""
-           doom-modeline--vcs-text))))
-
 (use-package doom-modeline
   :config
   (doom-modeline-mode 1)
@@ -2700,7 +2691,40 @@ install =all-the-icons= fonts[fn:4].
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-icon t)
   (doom-modeline-vcs-max-length 25)
+  (doom-modeline-buffer-file-name-style 'truncate-with-project)
   :defer 1)
+
+(defun wal/advise-doom-modeline-update-vcs-text (&rest _r)
+  "Advise function to remove branch prefixes."
+  (when doom-modeline--vcs-text
+    (setq doom-modeline--vcs-text
+          (replace-regexp-in-string
+           "\\(feature\\|\\(\\w+\\)?fix\\|improvement\\)\\/"
+           ""
+           doom-modeline--vcs-text))))
+
+(defun wal/doom-modeline-buffer-file-name-styles ()
+  (completing-read
+   "Select style: "
+   '(truncate-upto-project
+     truncate-upto-project
+     truncate-from-project
+     truncate-with-project
+     truncate-except-project
+     truncate-upto-root
+     truncate-all
+     truncate-nil
+     relative-from-project
+     relative-to-project
+     file-name
+     buffer-name)))
+
+(defun wal/doom-modeline-switch-buffer-file-name-style (style)
+  (interactive (list (wal/doom-modeline-buffer-file-name-styles)))
+  (let ((style-symbol (if (symbolp style)
+                          style
+                        (intern style))))
+    (setq doom-modeline-buffer-file-name-style style-symbol)))
 #+END_SRC
 
 *** delight
@@ -2874,7 +2898,7 @@ This is the case when:
 :UNNUMBERED: t
 :END:
 
-You need to install the icons yourself[fn:4].
+You need to install the icons yourself[fn:12].
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/configure-rich-transformers ()
@@ -2905,7 +2929,7 @@ This function is called before `all-the-icons-ivy-rich' is activated."
 :UNNUMBERED: t
 :END:
 
-Display emojis[fn:12].
+Display emojis[fn:13].
 
 #+BEGIN_SRC emacs-lisp
 (use-package emojify
@@ -3402,7 +3426,7 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 :UNNUMBERED: t
 :END:
 
- And the =ag= one from [[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:13].
+ And the =ag= one from [[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:14].
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/ag-ignored (string)
@@ -4610,7 +4634,7 @@ Prettier headlines.
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-dired.el" wal/emacs-config-package-path)
 :END:
 
-Run =dired= [fn:14]with =C-x d=. You don't need no tree views.
+Run =dired= [fn:15]with =C-x d=. You don't need no tree views.
 
 #+BEGIN_SRC emacs-lisp
 ;;; wal-dired.el --- Dired.
@@ -4718,7 +4742,7 @@ I am convinced that we are in a terminal process.
 :UNNUMBERED: t
 :END:
 
-=vterm= is better[fn:15] than included shells.
+=vterm= is better[fn:16] than included shells.
 
 Some common shell commands require an additional =C-c=:
 
@@ -5598,7 +5622,7 @@ Language servers are awesome. Thanks, Microsoft.
 :END:
 
 =lsp-mode= is the fancy version. You'll have to install some language
-servers yourself[fn:16].
+servers yourself[fn:17].
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/lsp-file-watch-ignored-directories '("[/\\\\]build\\'")
@@ -6170,13 +6194,6 @@ Finally run =git clone git@gitlab.com:Walheimat/emacs-config.git ~/.emacs.d=
 [fn:4] This includes this very config which will be exported as a
 package collection.
 
-This config uses the =all-the-icons= package whose icons need to be
-downloaded manually by running =M-x all-the-icons-install-fonts= and
-selecting =yes=.
-
-If the installation process should fail for any reason, close Emacs
-and re-run it.
-
 [fn:5] Which means that a frame is created and control immediately
 returned.
 
@@ -6207,19 +6224,25 @@ found in other sections
 - =eshell= in [[*Terminal][Terminal]]
 - =python=, =emacs-lisp=, =cc-mode= and =css-mode= in [[*Languages][Langauges]]
 
-[fn:12] You might have to call =emojify-download-emoji= to download a
+[fn:12] The =all-the-icons= icons need to be downloaded manually by
+running =M-x all-the-icons-install-fonts= and selecting =yes=.
+
+If the installation process should fail for any reason, close Emacs
+and re-run it.
+
+[fn:13] You might have to call =emojify-download-emoji= to download a
 set that supports your emojis.
 
-[fn:13] We will try to download it automatically, but might fail.
+[fn:14] We will try to download it automatically, but might fail.
 
-[fn:14] Did you know you can edit =dired= buffers using =C-x C-q=?
+[fn:15] Did you know you can edit =dired= buffers using =C-x C-q=?
 
-[fn:15] If you're on an older distro your =libvterm= package might be
+[fn:16] If you're on an older distro your =libvterm= package might be
 too old.
 
-[fn:16] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+[fn:17] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
 
-[fn:17] Mostly from MELPA. /Note/ that many packages bind keys. Check
+[fn:18] Mostly from MELPA. /Note/ that many packages bind keys. Check
 the [[*Key Bindings][key bindings section]] if you need a list of the important ones, in
 that section you also find package configurations for
 key-binding-related packages =general= and =hydra=.
