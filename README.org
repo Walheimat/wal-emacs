@@ -2677,23 +2677,6 @@ shown, they are delighted unless they were diminished.
 Busier and prettier[fn:12] =modeline=.
 
 #+BEGIN_SRC emacs-lisp
-(use-package doom-modeline
-  :config
-  (doom-modeline-mode 1)
-  (advice-add
-   'doom-modeline-update-vcs-text
-   :after #'wal/advise-doom-modeline-update-vcs-text)
-  (when (fboundp 'doom-modeline-update-vcs-text)
-    (add-hook 'magit-post-refresh-hook #'doom-modeline-update-vcs-text))
-  :custom
-  (doom-modeline-project-detection 'projectile)
-  (doom-modeline-minor-modes t)
-  (doom-modeline-buffer-encoding nil)
-  (doom-modeline-icon t)
-  (doom-modeline-vcs-max-length 25)
-  (doom-modeline-buffer-file-name-style 'truncate-with-project)
-  :defer 1)
-
 (defun wal/advise-doom-modeline-update-vcs-text (&rest _r)
   "Advise function to remove branch prefixes."
   (when doom-modeline--vcs-text
@@ -2725,6 +2708,23 @@ Busier and prettier[fn:12] =modeline=.
                           style
                         (intern style))))
     (setq doom-modeline-buffer-file-name-style style-symbol)))
+
+(use-package doom-modeline
+  :config
+  (doom-modeline-mode 1)
+  (advice-add
+   'doom-modeline-update-vcs-text
+   :after #'wal/advise-doom-modeline-update-vcs-text)
+  (when (fboundp 'doom-modeline-update-vcs-text)
+    (add-hook 'magit-post-refresh-hook #'doom-modeline-update-vcs-text))
+  :custom
+  (doom-modeline-project-detection 'projectile)
+  (doom-modeline-minor-modes t)
+  (doom-modeline-buffer-encoding nil)
+  (doom-modeline-icon t)
+  (doom-modeline-vcs-max-length 25)
+  (doom-modeline-buffer-file-name-style 'truncate-with-project)
+  :defer 1)
 #+END_SRC
 
 *** delight
