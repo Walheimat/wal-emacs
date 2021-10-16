@@ -3761,7 +3761,7 @@ Heavy lifting with =consult=.
         wal/consult-buffer-filter)
   (declare-function consult--customize-set "consult.el")
   (consult-customize
-   consult--source-file
+   consult--source-file consult-recent-file
    :preview-key (kbd "M-,")))
 
  (use-package consult
@@ -5386,12 +5386,6 @@ Yes, you need to install *Android Studio* for some reason.
 
 (use-package dart-mode
   :hook (dart-mode . wal/dart-mode))
-
-(defun wal/find-dart-flutter-sdk-dir ()
-  "Find the Dart Flutter SDK directory."
-  (when-let* ((flutter-bin (executable-find "flutter"))
-              (sdk-dir (string-trim (shell-command-to-string "flutter sdk-path"))))
-    sdk-dir))
 #+END_SRC
 
 ** Web
@@ -5472,6 +5466,17 @@ Please let me know when I screwed up. I promise I will learn.
 =flycheck= is for all of our linting/code quality needs.
 
 #+BEGIN_SRC emacs-lisp
+(defun flycheck-eslint-config-exists-p ()
+  "Check if there is a valid ESLint config for the current buffer."
+  (let* ((executable (flycheck-find-checker-executable 'javascript-eslint))
+         (exitcode (and executable (call-process executable
+                                                 nil
+                                                 nil
+                                                 nil
+                                                 "--print-config"
+                                                 ".eslintrc"))))
+    (eq exitcode 0)))
+
 (use-package flycheck
   :config
   (wal/captain :keymaps 'flycheck-mode-map
@@ -5484,21 +5489,6 @@ Please let me know when I screwed up. I promise I will learn.
     "f" '(flycheck-mode :wk "flycheck"))
   :hook (sh-set-shell . flycheck-mode)
   :delight " fly")
-#+END_SRC
-
-Configs can be found using a file, not a directory.
-
-#+BEGIN_SRC emacs-lisp
-(defun flycheck-eslint-config-exists-p ()
-  "Check if there is a valid ESLint config for the current buffer."
-  (let* ((executable (flycheck-find-checker-executable 'javascript-eslint))
-         (exitcode (and executable (call-process executable
-                                                 nil
-                                                 nil
-                                                 nil
-                                                 "--print-config"
-                                                 ".eslintrc"))))
-    (eq exitcode 0)))
 #+END_SRC
 
 *** flymake
@@ -5683,7 +5673,16 @@ This adds additional ignored directories."
     "lr" '(lsp-rename :wk "rename")
     "lf" '(lsp-format-buffer :wk "format"))
   :delight " lsp")
+#+END_SRC
 
+*** lsp-ui
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Don't clutter things up too much.
+
+#+BEGIN_SRC emacs-lisp
 (use-package lsp-ui
   :custom
   (lsp-ui-sideline-enable nil)
@@ -5694,10 +5693,28 @@ This adds additional ignored directories."
   (lsp-ui-doc-max-height 25)
   (lsp-ui-doc-text-scale-level -1)
   :after lsp-mode)
+#+END_SRC
+
+*** lsp-dart
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+LSP support for Dart.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/find-dart-flutter-sdk-dir ()
+  "Find the Dart Flutter SDK directory."
+  (when-let* ((flutter-bin (executable-find "flutter"))
+              (sdk-dir (string-trim (shell-command-to-string "flutter sdk-path"))))
+    sdk-dir))
 
 (use-package lsp-dart
   :custom
-  (lsp-dart-flutter-sdk-dir (wal/find-dart-flutter-sdk-dir)))
+  (lsp-dart-flutter-sdk-dir (wal/find-dart-flutter-sdk-dir))
+  (lsp-dart-main-code-lens nil)
+  (lsp-dart-test-code-lens nil)
+  :after lsp-mode)
 #+END_SRC
 
 *** dap-mode
