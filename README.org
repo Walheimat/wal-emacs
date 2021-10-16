@@ -5585,6 +5585,9 @@ Language servers are awesome. Thanks, Microsoft.
 ;;; Code:
 
 (declare-function eglot-managed-p "eglot.el")
+(declare-function lsp-dart-define-key "lsp-dart.el")
+(declare-function lsp-enable-which-key-integration "lsp-mode.el")
+(declare-function wal/captain "wal-key-bindings.el")
 (declare-function wal/captain-sink "wal-key-bindings.el")
 
 (defvar lsp-file-watch-ignored-directories)
@@ -5640,38 +5643,27 @@ servers yourself[fn:17].
 This adds additional ignored directories."
   (mapc (lambda (it)
           (add-to-list 'lsp-file-watch-ignored-directories it))
-        wal/lsp-file-watch-ignored-directories))
+        wal/lsp-file-watch-ignored-directories)
+  (advice-add 'lsp :before 'wal/advise-lsp-to-prevent-multi-root)
+  (lsp-enable-which-key-integration t)
+  (wal/captain :keymaps 'lsp-mode-map
+    "l" '(:keymap lsp-command-map :wk "lsp")))
 
 (use-package lsp-mode
   :if (eq wal/lsp-provider 'lsp-mode)
   :config
-  ;; Prevent multi-root workspaces.
-  (advice-add 'lsp :before 'wal/advise-lsp-to-prevent-multi-root)
-  (lsp-enable-which-key-integration t)
   (wal/configure-lsp-mode)
   :custom
-  (lsp-enable-dap-auto-configure nil)
   (lsp-headerline-breadcrumb-enable nil)
   (lsp-modeline-code-actions-enable nil)
   ;; Enable `pylint' and pyenv for `jedi'.
-  (lsp-pyls-plugins-pylint-enabled t)
-  (lsp-pyls-plugins-jedi-use-pyenv-environment t)
   (lsp-pylsp-plugins-pylint-enabled t)
   (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
   ;; TypeScript/JavaScript
   (lsp-clients-typescript-log-verbosity "off")
   ;; Performance, uncomment
   (lsp-log-io nil) ; This is the default.
-  ;; (lsp-enable-file-watchers nil)
-  ;; (lsp-enable-symbol-highlighting nil)
-  ;; (lsp-enable-links nil)
-  ;; (lsp-enable-folding nil)
-  ;; (lsp-enable-text-document-color nil)
-  :general
-  (wal/captain :keymaps 'lsp-mode-map
-    "l" '(:ignore t :wk "lsp")
-    "lr" '(lsp-rename :wk "rename")
-    "lf" '(lsp-format-buffer :wk "format"))
+  (lsp-keymap-prefix (wal/prefix-user-key (concat wal/captain-key " " "l")))
   :delight " lsp")
 #+END_SRC
 
@@ -5709,11 +5701,17 @@ LSP support for Dart.
               (sdk-dir (string-trim (shell-command-to-string "flutter sdk-path"))))
     sdk-dir))
 
+(defun wal/configure-lsp-dart ()
+  "Configure package `lsp-dart'."
+  (when (fboundp 'lsp-dart-define-key)
+    (lsp-dart-define-key "r" #'lsp-dart-run)))
+
+;; Run `lsp-dart-dap-setup' once to install debugger.
 (use-package lsp-dart
+  :config
+  (wal/configure-lsp-dart)
   :custom
   (lsp-dart-flutter-sdk-dir (wal/find-dart-flutter-sdk-dir))
-  (lsp-dart-main-code-lens nil)
-  (lsp-dart-test-code-lens nil)
   :after lsp-mode)
 #+END_SRC
 
