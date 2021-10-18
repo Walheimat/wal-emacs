@@ -496,6 +496,7 @@ I use many[fn:8] custom keybindings.
 (declare-function wal/major-sink "wal-key-bindings.el")
 (declare-function wal/split-window-the-other-way "wal-func.el")
 (declare-function wal/tangle-config "init.el")
+(declare-function wal/text-scale-reset "wal-func.el")
 
 (defvar wal/emacs-config-default-path)
 
@@ -503,6 +504,68 @@ I use many[fn:8] custom keybindings.
   "Change key bindings settings."
   :group 'wal
   :tag "Key bindings")
+
+(defcustom wal/use-hyper-prefix t
+  "Whether the hyper modifier should be used to prefix user keys.
+
+Changing this value will only take effect after a re-load. Unless
+`wal/load-custom-file-immediately' is set to t, setting this to
+nil will have no effect."
+  :type 'boolean
+  :group 'wal-key-bindings)
+
+;; American ranks.
+(defcustom wal/general-key ","
+  "The primary (or general) leader key."
+  :type 'string
+  :group 'wal-key-bindings)
+
+(defcustom wal/colonel-key ";"
+  "The secondary (or colonel) leader key."
+  :type 'string
+  :group 'wal-key-bindings)
+
+(defcustom wal/major-key "."
+  "The tertiary (or major) leader key."
+  :type 'string
+  :group 'wal-key-bindings)
+
+(defcustom wal/captain-key "/"
+  "The quaternary (or captain) leader key."
+  :type 'string
+  :group 'wal-key-bindings)
+
+(defcustom wal/lieutenant-key "'"
+  "The quinary (or lieutenant) leader key."
+  :type 'string
+  :group 'wal-key-bindings)
+
+(cl-defmacro wal/create-leader-sink (name &key definer prefix)
+  "Macro to create a leader sink `NAME-sink'.
+
+NAME is the name of the macro. DEFINER is the definer to create
+the sink for and PREFIX is its prefix."
+  (let* ((defname (symbol-name definer))
+         (suf (substring prefix -1))
+         (wk (upcase (concat (substring defname 4) "!"))))
+    (progn
+      (general-define-key :prefix prefix suf `(:ignore t :wk ,wk))
+      `(defmacro ,name (&rest args)
+         `(, ',definer ,@,`(mapcar (lambda (it)
+                                     (if (stringp it)
+                                         (concat ,suf it)
+                                       it)) args))))))
+
+(defun wal/prefix-user-key (user-key)
+  "Prefix USER-KEY.
+
+The default prefix is the hyper key unless Emacs is not running
+in GUI mode or `wal/use-hyper-prefix' is nil."
+  (let ((prefix (if (and wal/use-hyper-prefix
+                         (or (daemonp) (display-graphic-p)))
+                    "H-"
+                  "C-c w ")))
+    (concat prefix user-key)))
 #+END_SRC
 
 ** Prefix Keys
@@ -591,98 +654,16 @@ this safer alternative to work for me.
 The are five multi-purpose =general= leader keys. They prefix actions by
 common context.
 
-#+BEGIN_SRC emacs-lisp
-(defcustom wal/use-hyper-prefix t
-  "Whether the hyper modifier should be used to prefix user keys.
+*** Prefixes
 
-Changing this value will only take effect after a re-load. Unless
-`wal/load-custom-file-immediately' is set to t, setting this to
-nil will have no effect."
-  :type 'boolean
-  :group 'wal-key-bindings)
+Leader key =general= (=<,>= by default) prefixes Emacs actions like
+loading a theme, finding a library, quitting as well as opening =eshell=
+and =eww=.
 
-;; American ranks.
-(defcustom wal/general-key ";"
-  "The primary (or general) leader key."
-  :type 'string
-  :group 'wal-key-bindings)
+Leader key =colonel= (=<;>= by default) prefixes editing actions.
 
-(defcustom wal/colonel-key "'"
-  "The secondary (or colonel) leader key."
-  :type 'string
-  :group 'wal-key-bindings)
-
-(defcustom wal/major-key ","
-  "The tertiary (or major) leader key."
-  :type 'string
-  :group 'wal-key-bindings)
-
-(defcustom wal/captain-key "."
-  "The quaternary (or captain) leader key."
-  :type 'string
-  :group 'wal-key-bindings)
-
-(defcustom wal/lieutenant-key "/"
-  "The quinary (or lieutenant) leader key."
-  :type 'string
-  :group 'wal-key-bindings)
-
-(cl-defmacro wal/create-leader-sink (name &key definer prefix)
-  "Macro to create a leader sink `NAME-sink'.
-
-NAME is the name of the macro. DEFINER is the definer to create
-the sink for and PREFIX is its prefix."
-  (let* ((defname (symbol-name definer))
-         (suf (substring prefix -1))
-         (wk (upcase (concat (substring defname 4) "!"))))
-    (progn
-      (general-define-key :prefix prefix suf `(:ignore t :wk ,wk))
-      `(defmacro ,name (&rest args)
-         `(, ',definer ,@,`(mapcar (lambda (it)
-                                     (if (stringp it)
-                                         (concat ,suf it)
-                                       it)) args))))))
-
-(defun wal/prefix-user-key (user-key)
-  "Prefix USER-KEY.
-
-The default prefix is the hyper key unless Emacs is not running
-in GUI mode or `wal/use-hyper-prefix' is nil."
-  (let ((prefix (if (and wal/use-hyper-prefix
-                         (or (daemonp) (display-graphic-p)))
-                    "H-"
-                  "C-c w ")))
-    (concat prefix user-key)))
-
-(defun wal/configure-general ()
-  "Configure package `general'.
-
-This creates all leader keys and sinks."
-  (mapc (lambda (it)
-          (let* ((key-sym (intern (format "%s-key" it)))
-                 (key (wal/prefix-user-key (symbol-value key-sym)))
-                 (sink (intern (format "%s-sink" it)))
-                 (name (substring (symbol-name it) 4)))
-            (eval `(which-key-add-key-based-replacements ,key ,name))
-            (eval `(general-create-definer ,it :prefix ,key))
-            (eval `(wal/create-leader-sink ,sink :definer ,it :prefix ,key))))
-        '(wal/general wal/colonel wal/major wal/captain wal/lieutenant)))
-
-(use-package general
-  :config
-  (wal/configure-general)
-  :demand)
-#+END_SRC
-
-*** About Leader Keys
-
-Leader key =general= prefixes Emacs actions like loading a theme,
-finding a library, quitting as well as opening =eshell= and =eww=.
-
-Leader key =colonel= prefixes editing actions.
-
-Leader keys =major= and =captain= prefix mode-specific actions, for major
-and minor modes respectively.
+Leader keys =major= and =captain= (=<.>= and =</>= by default) prefix
+mode-specific actions, for major and minor modes respectively.
 
 The =captain= prefixes, assuming the respective mode is on, are:
 
@@ -713,6 +694,32 @@ package prefixes are:
 All leader keys have sinks. The sinks for =major= and =captain= toggle
 major and minor modes. The sink for =lieutenant= provides some
 additional useful commands.
+
+*** general
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/configure-general ()
+  "Configure package `general'.
+
+This creates all leader keys and sinks."
+  (mapc (lambda (it)
+          (let* ((key-sym (intern (format "%s-key" it)))
+                 (key (wal/prefix-user-key (symbol-value key-sym)))
+                 (sink (intern (format "%s-sink" it)))
+                 (name (substring (symbol-name it) 4)))
+            (eval `(which-key-add-key-based-replacements ,key ,name))
+            (eval `(general-create-definer ,it :prefix ,key))
+            (eval `(wal/create-leader-sink ,sink :definer ,it :prefix ,key))))
+        '(wal/general wal/colonel wal/major wal/captain wal/lieutenant)))
+
+(use-package general
+  :config
+  (wal/configure-general)
+  :demand)
+#+END_SRC
 
 ** Additional (Un-)Bindings
 
@@ -786,7 +793,10 @@ the user to tangle its contents."
 (wal/general-sink "l" '(add-dir-local-variable :wk "add dir local variable"))
 #+END_SRC
 
-*** Hydra
+*** hydra
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Provides a context for related commands that can be (re-)executed in
 quick succession.
@@ -808,11 +818,6 @@ These hydras are mapped to:
 Additional left PADDING can be passed."
   (let ((padd (or padding 0)))
     (make-string (+ padd (length wal/ascii-whale)) ? )))
-
-(defun wal/text-scale-reset ()
-  "Reset `text-scale' level to 0."
-  (interactive)
-  (text-scale-set 0))
 
 (use-package hydra
   :demand)
@@ -1303,6 +1308,17 @@ is deleted."
  :after #'wal/advise-hack-local-variables)
 #+END_SRC
 
+** Text Scaling
+
+Allow resetting =text-scale=.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/text-scale-reset ()
+  "Reset `text-scale' level to 0."
+  (interactive)
+  (text-scale-set 0))
+#+END_SRC
+
 ** Footer
 :PROPERTIES:
 :VISIBILITY: folded
@@ -1648,6 +1664,18 @@ Some files are so long and Emacs will want to throw up.
   :custom
   (so-long-action 'so-long-minor-mode)
   :defer 4
+  :ensure nil)
+#+END_SRC
+
+*** newcomment
+
+Make commenting less of a dance.
+
+#+BEGIN_SRC emacs-lisp
+(use-package newcomment
+  :general
+  (wal/colonel :keymaps 'prog-mode-map
+    ";" '(comment-line :wk "comment"))
   :ensure nil)
 #+END_SRC
 
@@ -5118,7 +5146,10 @@ Let's greet the world.
 
 ** Elixir
 
-We don't use tabs here.
+*** elixir-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/elixir-mode ()
@@ -5139,10 +5170,15 @@ We don't use tabs here.
 
 I want to be ready for =jai=.
 
+*** cc-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
 =eglot= will use =ccls=, =lsp-mode= will use =clangd=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/c++-mode ()
+(defun wal/cc-mode ()
   "Hook into `cc-mode'."
   (message "Make tidy! Make clean!")
   (wal/disable-tabs)
@@ -5158,11 +5194,16 @@ I want to be ready for =jai=.
     "s" '(:ignore t :wk "style")
     "ss" '(c-set-style :wk "set")
     "sg" '(c-guess-install :wk "guess"))
-  :hook (c++-mode . wal/c++-mode)
+  :hook (cc-mode . wal/cc-mode)
   :ensure nil)
 #+END_SRC
 
 ** Python
+
+*** python-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Use snake when you can't =make=.
 
@@ -5254,6 +5295,11 @@ Activating =virtualenv= inside of Emacs.
 
 ** Lisp
 
+*** elisp-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
 The philosopher's choice.
 
 #+BEGIN_SRC emacs-lisp
@@ -5270,7 +5316,14 @@ The philosopher's choice.
     "p" '(check-parens :wk "check parens"))
   :hook (emacs-lisp-mode . wal/elisp-mode)
   :ensure nil)
+#+END_SRC
 
+*** highlight-quoted
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
 (use-package highlight-quoted
   :hook (emacs-lisp-mode . highlight-quoted-mode))
 #+END_SRC
@@ -5302,6 +5355,11 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
 
 Can we have =deno= instead of =node=?
 
+*** js2-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/js2-mode ()
   "Hook into `js2-mode'."
@@ -5327,9 +5385,16 @@ Can we have =deno= instead of =node=?
    ("<backtab>" . js2-indent-bounce)) ; `js2-bounce-indent-p' also binds <TAB>
   :mode "\\.js\\'"
   :hook (js2-mode . wal/js2-mode))
+#+END_SRC
 
-;; Improved editing for JSX files. Extends =js2=.
+*** rjsx-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
+Improved editing for JSX files. Extends =js2=.
+
+#+BEGIN_SRC emacs-lisp
 (defun wal/rjsx-mode ()
   "Hook into `rjsx-mode'."
   (message "Extend those ugly JavaScripts of yours!")
@@ -5338,9 +5403,16 @@ Can we have =deno= instead of =node=?
 (use-package rjsx-mode
   :mode "\\.jsx\\'"
   :hook (rjsx-mode . wal/rjsx-mode))
+#+END_SRC
 
-;; Please use TypeScript.
+*** typescript-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
+Please use TypeScript.
+
+#+BEGIN_SRC emacs-lisp
 (defun wal/typescript-mode ()
   "Hook into `typescript-mode'."
   (message "This is any, that is any, everything is any!")
@@ -5352,9 +5424,16 @@ Can we have =deno= instead of =node=?
 (use-package typescript-mode
   :mode "\\.ts\\'"
   :hook (typescript-mode . wal/typescript-mode))
+#+END_SRC
 
-;; The only way to store strings, JSON.
+*** json-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
+The only way to store strings, JSON.
+
+#+BEGIN_SRC emacs-lisp
 (defun wal/json-mode ()
   "Hook into `json-mode'."
   (message "JSON ...? JSON?! JSON!!")
@@ -5394,6 +5473,11 @@ Prettify your ugly JavaScript.
 #+END_SRC
 
 ** Go
+
+*** go-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Setup for LSP.
 
@@ -5484,6 +5568,11 @@ Sometimes things that do as well.
 
 Yes, you need to install *Android Studio* for some reason.
 
+*** dart-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/dart-mode()
   "Hook into `dart-mode'."
@@ -5499,6 +5588,11 @@ Yes, you need to install *Android Studio* for some reason.
 ** Web
 
 Does anyone actually like web development?
+
+*** css-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 We want quicker =company= suggestions when in CSS modes.
 
