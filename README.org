@@ -4811,7 +4811,7 @@ Run =dired= [fn:15]with =C-x d=. You don't need no tree views.
 (defun wal/dired-from-home (dirname &optional switches)
   "Find DIRNAME local to HOME directory.
 Uses the same optional SWITCHES."
-  (interactive (let ((default-directory "~"))
+  (interactive (let ((default-directory (expand-file-name "~/")))
                  (dired-read-dir-and-switches "")))
   (pop-to-buffer-same-window (dired-noselect dirname switches)))
 
@@ -4828,9 +4828,11 @@ Uses the same optional SWITCHES."
   (dired-auto-revert-buffer t)
   (dired-kill-when-opening-new-dired-buffer t) ;; New in Emacs 28.1.
   :bind
-  (("C-x x d" . wal/dired-from-home)
-   ("C-x j" . dired-jump)
-   ("C-x C-j" . dired-jump-other-window)
+  (:map ctl-x-map
+   ("j" . dired-jump)
+   :map ctl-x-x-map
+   ("d" . wal/dired-from-home)
+   ("j" . dired-jump-other-window)
    :map dired-mode-map
    ("." . dired-up-directory) ; Overrides `dired-clean-directory'.
    ("," . dired-display-file))
