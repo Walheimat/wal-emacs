@@ -5303,26 +5303,12 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
 Can we have =deno= instead of =node=?
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/find-local-node-binary (local-binary)
-  "Find LOCAL-BINARY in project's node_modules."
-  (let* ((root (locate-dominating-file
-                (or (buffer-file-name) default-directory)
-                "node_modules"))
-         (bin
-          (and root
-               (expand-file-name (concat "node_modules/.bin/" local-binary)
-                                 root))))
-    (when (and bin (file-executable-p bin))
-      bin)))
-
 (defun wal/js2-mode ()
   "Hook into `js2-mode'."
   (message "NaN !== NaN")
   (add-node-modules-path)
   (hack-local-variables)
   (wal/maybe-enable-tabs)
-  (when-let ((eslint (wal/find-local-node-binary "eslint")))
-    (setq-local flycheck-javascript-eslint-executable eslint))
   (wal/lsp))
 
 (use-package js2-mode
@@ -5361,8 +5347,6 @@ Can we have =deno= instead of =node=?
   (add-node-modules-path)
   (hack-local-variables)
   (wal/maybe-enable-tabs)
-  (when-let ((tslint (wal/find-local-node-binary "tslint")))
-    (setq-local flycheck-javascript-eslint-executable tslint))
   (wal/lsp))
 
 (use-package typescript-mode
@@ -5590,17 +5574,6 @@ Please let me know when I screwed up. I promise I will learn.
 =flycheck= is for all of our linting/code quality needs.
 
 #+BEGIN_SRC emacs-lisp
-(defun flycheck-eslint-config-exists-p ()
-  "Check if there is a valid ESLint config for the current buffer."
-  (let* ((executable (flycheck-find-checker-executable 'javascript-eslint))
-         (exitcode (and executable (call-process executable
-                                                 nil
-                                                 nil
-                                                 nil
-                                                 "--print-config"
-                                                 ".eslintrc"))))
-    (eq exitcode 0)))
-
 (use-package flycheck
   :config
   (wal/captain :keymaps 'flycheck-mode-map

@@ -490,3 +490,19 @@ It probably makes sense to bind `q' to `delete-frame' in
       (display-buffer buffer '(display-buffer-pop-up-frame))
     (magit-display-buffer-traditional buffer)))
 #+END_SRC
+
+*** Find local node binary
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defun wal/find-local-node-binary (local-binary)
+  "Find LOCAL-BINARY in project's node_modules."
+  (let* ((root (locate-dominating-file
+                (or (buffer-file-name) default-directory)
+                "node_modules"))
+         (bin
+          (and root
+               (expand-file-name (concat "node_modules/.bin/" local-binary)
+                                 root))))
+    (when (and bin (file-executable-p bin))
+      bin)))
+#+END_SRC
