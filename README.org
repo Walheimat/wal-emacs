@@ -91,6 +91,8 @@ evaluate /everything/[fn:6] that follows.
 ;;; Code:
 
 (defvar wal/load-custom-file-immediately)
+(defvar use-package-always-ensure)
+(defvar use-package-always-defer)
 
 (defgroup wal-settings nil
   "Change core settings."
@@ -485,6 +487,7 @@ I use many[fn:8] custom keybindings.
 ;;; Code:
 
 (declare-function wal/captain-sink "wal-key-bindings.el")
+(declare-function wal/colonel "wal-key-bindings.el")
 (declare-function wal/edge-left "wal-func.el")
 (declare-function wal/edge-right "wal-func.el")
 (declare-function wal/edge-down "wal-func.el")
@@ -780,15 +783,18 @@ the user to tangle its contents."
     (switch-to-buffer buf)))
 
 (wal/general
-  "c" '(wal/find-config :wk "find config")
-  "i" '(wal/find-init :wk "find init"))
+  "f" '(:ignore t :wk "find")
+  "fw" '(wal/find-config :wk "config")
+  "fi" '(wal/find-init :wk "init"))
 
 ;; Killing Emacs.
 (global-unset-key (kbd "C-x C-c"))
-(wal/general "q" '(save-buffers-kill-terminal :wk "quit Emacs"))
+(wal/general
+  "E" '(:ignore t :wk "Emacs")
+  "Eq" '(save-buffers-kill-terminal :wk "quit"))
 
 ;; Create dir locals.
-(wal/general-sink "l" '(add-dir-local-variable :wk "add dir local variable"))
+(wal/general-sink "l" '(add-dir-local-variable :wk "dir-locals"))
 
 ;; Editing.
 (wal/colonel
@@ -866,6 +872,8 @@ Additional left PADDING can be passed."
  "C-M-x" '(wal/text-scale/body :wk "text scale")
  "C-M-z" '(wal/resize-window/body :wk "resize window")
  [remap scroll-other-window] '(wal/scroll-other-window/body :wk "scroll other window"))
+
+(define-key emacs-lisp-mode-map (kbd "C-M-x") nil) ; Removes `eval-defun'.
 #+END_SRC
 
 *** Additional Mode Controls
@@ -1435,7 +1443,7 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
 ;;; Code:
 
 (declare-function doom-modeline-refresh-font-width-cache "doom-modeline.el")
-(declare-function wal/general-sink "wal-key-bindings.el")
+(declare-function wal/general "wal-key-bindings.el")
 
 (defgroup wal-fonts nil
   "Change fonts and font sizes."
@@ -1549,10 +1557,10 @@ available candidate from `wal/fixed-fonts'. Does the same for
   (set-face-attribute 'font-lock-comment-face nil :slant 'italic :weight 'normal)
   (set-face-attribute 'font-lock-keyword-face nil :weight 'bold))
 
-(wal/general-sink
- "f" '(:ignore t :wk "select font")
- "ff" '(wal/select-fixed-font :wk "fixed")
- "fv" '(wal/select-variable-font :wk "variable"))
+(wal/general
+ "F" '(:ignore t :wk "select font")
+ "Ff" '(wal/select-fixed-font :wk "fixed")
+ "Fv" '(wal/select-variable-font :wk "variable"))
 
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-fonts)
@@ -1612,7 +1620,7 @@ Up the kill count.
   :bind
   ("C-?" . undo-redo)
   :general
-  (wal/general-sink "p" '(list-processes :wk "list processes"))
+  (wal/general-sink "p" '(list-processes :wk "processes"))
   (wal/captain-sink "a" '(auto-fill-mode :wk "auto-fill"))
   (wal/lieutenant-sink "w" '(delete-trailing-whitespace :wk "delete trailing whitespace"))
   :ensure nil)
@@ -1874,7 +1882,7 @@ Find libraries.
 #+BEGIN_SRC emacs-lisp
 (use-package find-func
   :general
-  (wal/general "l" '(find-library :wk "find library"))
+  (wal/general "fl" '(find-library :wk "library"))
   :ensure nil)
 #+END_SRC
 
@@ -1948,8 +1956,7 @@ Browse web in Emacs. This requires Emacs to have been compiled with
 #+BEGIN_SRC emacs-lisp
 (use-package eww
   :general
-  (wal/general "b" '(eww :wk "eww"))
-  (wal/general-sink "b" '(eww-search-words :wk "search words (eww)"))
+  (wal/general-sink "b" '(eww :wk "eww"))
   :ensure nil)
 #+END_SRC
 
@@ -2054,7 +2061,7 @@ Sometimes I restart for fun.
   :custom
   (restart-emacs-restore-frames nil)
   :general
-  (wal/general "r" '(restart-emacs :wk "restart Emacs")))
+  (wal/general "Er" '(restart-emacs :wk "restart")))
 #+END_SRC
 
 *** cus-edit
@@ -2073,7 +2080,8 @@ You can customize this now!
 (use-package cus-edit
   :general
   (wal/general
-    "u" '(wal/customize-wal :wk "customize config"))
+    "c" '(:ignore t :wk "customization")
+    "cw" '(wal/customize-wal :wk "wal"))
   :ensure nil)
 #+END_SRC
 
@@ -2326,9 +2334,9 @@ there's a region, all lines that region covers will be duplicated."
    ("C-o" . delete-other-windows) ; Overrides `open-line'.
    ("M-o" . crux-other-window-or-switch-buffer))
   :general
-  (wal/general-sink
-    "i" '(crux-find-shell-init-file :wk "find shell init")
-    "c" '(crux-find-user-custom-file :wk "find custom file"))
+  (wal/general
+    "fs" '(crux-find-shell-init-file :wk "shell init")
+    "fc" '(crux-find-user-custom-file :wk "custom file"))
   (wal/colonel
     "d" '(crux-duplicate-current-line-or-region :wk "duplicate")
     "o" '(crux-smart-open-line :wk "open below")
@@ -2497,7 +2505,7 @@ A collection of GitLab status messages."
   (dashboard-agenda-time-string-format "%d/%m/%y")
   :general
   (wal/general-sink "d"
-    '(wal/show-dashboard :wk "show dashboard"))
+    '(wal/show-dashboard :wk "dashboard"))
   :hook (after-init . dashboard-setup-startup-hook))
 #+END_SRC
 
@@ -3948,7 +3956,7 @@ Heavy lifting with =consult=.
   :wal-bind
   (("j" . consult-buffer))
   :general
-  (wal/general "t" '(consult-theme :wk "theme"))
+  (wal/general "ct" '(consult-theme :wk "consult theme"))
   (wal/major :keymaps 'org-mode-map :major-modes t
     "h" '(consult-org-heading :wk "heading"))
   (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
@@ -4094,9 +4102,10 @@ Counsel me this, Counselor: =ivy= is not enough!
    ("b" . counsel-bookmark))
   :general
   (wal/general
-    "t" '(counsel-load-theme :wk "load theme")
-    "h" '(counsel-command-history :wk "show command history")
-    "l" '(counsel-find-library :wk "find library")
+    "ct" '(counsel-load-theme :wk "counsel theme")
+    "fl" '(counsel-find-library :wk "library"))
+  (wal/general-sink
+    "h" '(counsel-command-history :wk "command history")
     "v" '(counsel-set-variable :wk "set variable"))
   (wal/lieutenant
     "o" '(:ignore t :wk "counsel")
@@ -4995,7 +5004,7 @@ Set up =eshell=. I like the idea of it but I don't really use it.
   (:map eshell-mode-map
    ([remap eshell-pcomplete] . completion-at-point))
   :general
-  (wal/general "e" '(eshell :wk "eshell"))
+  (wal/general-sink "e" '(eshell :wk "eshell"))
   :ensure nil)
 #+END_SRC
 
