@@ -1704,9 +1704,9 @@ Make commenting less of a dance.
 
 #+BEGIN_SRC emacs-lisp
 (use-package newcomment
-  :general
-  (wal/colonel :keymaps 'prog-mode-map
-    ";" '(comment-line :wk "comment"))
+  :bind
+  (([remap comment-line] . comment-set-column)
+   ([remap comment-set-column] . comment-line))
   :ensure nil)
 #+END_SRC
 
@@ -2328,48 +2328,34 @@ there's a region, all lines that region covers will be duplicated."
     (goto-char (+ origin (* (length region) arg) arg))))
 
 (use-package crux
+  :config
+  (advice-add
+   'crux-duplicate-current-line-or-region
+   :override #'wal/crux-duplicate-current-line-or-region)
+  (advice-add
+   'crux-duplicate-and-comment-current-line-or-region
+   :override #'wal/crux-duplicate-and-comment-current-line-or-region)
   :bind
   (("C-k" . crux-smart-kill-line)
    ("M-k" . crux-kill-line-backwards) ; Overrides `kill-sentence'.
    ("C-o" . delete-other-windows) ; Overrides `open-line'.
-   ("M-o" . crux-other-window-or-switch-buffer))
+   ("M-o" . crux-other-window-or-switch-buffer)
+   ("C-j" . crux-smart-open-line) ; Overrides `electric-newline-and-maybe-indent'.
+   ("M-j" . crux-smart-open-line-above)) ; Overrides `default-indent-newline'.
   :general
   (wal/general
     "fs" '(crux-find-shell-init-file :wk "shell init")
     "fc" '(crux-find-user-custom-file :wk "custom file"))
   (wal/colonel
-    "d" '(crux-duplicate-current-line-or-region :wk "duplicate")
-    "o" '(crux-smart-open-line :wk "open below")
-    "O" '(crux-smart-open-line-above :wk "open above"))
-  (wal/colonel :keymaps 'prog-mode-map
-    "D" '(crux-duplicate-and-comment-current-line-or-region :wk "duplicate and comment"))
+    "d" '(crux-duplicate-current-line-or-region :wk "duplicate"))
+  (wal/colonel-sink :keymaps 'prog-mode-map
+    "d" '(crux-duplicate-and-comment-current-line-or-region :wk "duplicate and comment"))
   (wal/lieutenant
     "x" '(:ignore t :wk "crux")
     "xd" '(crux-delete-buffer-and-file :wk "delete buffer and file")
     "xr" '(crux-rename-file-and-buffer :wk "rename file and buffer")
     "xs" '(crux-sudo-edit :wk "sudo edit"))
   :commands (crux-get-positions-of-line-or-region))
-#+END_SRC
-
-** hungry-delete
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-I know you're hiding that sweet, sweet whitespace in that basket,
-Little Red Riding Hood!
-
-#+BEGIN_SRC emacs-lisp
-(use-package hungry-delete
-  :custom
-  (hungry-delete-join-reluctantly t)
-  :general
-  (wal/colonel
-    "k" '(hungry-delete-forward :wk "hungry forward")
-    "K" '(hungry-delete-backward :wk "hungry backward"))
-  (wal/captain-sink :keymaps 'prog-mode-map
-    "h" '(hungry-delete-mode :wk "hungry-delete"))
-  :delight " hun")
 #+END_SRC
 
 ** Footer
