@@ -198,11 +198,9 @@ Concludes by calling `delete-other-windows'."
    (package-refresh-contents)
    (wal/install-packages wal/core-packages)))
 
-;; Ensure all packages by default.
-(use-package use-package
-  :custom
-  (use-package-always-ensure t)
-  (use-package-always-defer t))
+;; Always ensure and defer.
+(setq use-package-always-ensure t
+      use-package-always-defer t)
 #+END_SRC
 
 ** Directories
@@ -791,6 +789,13 @@ the user to tangle its contents."
 
 ;; Create dir locals.
 (wal/general-sink "l" '(add-dir-local-variable :wk "add dir local variable"))
+
+;; Editing.
+(wal/colonel
+  "h" '(wal/kill-ring-save-whole-buffer :wk "kill-ring-save buffer"))
+
+ ;; Global minor modes.
+(wal/captain-sink "." '(walled-mode :wk "walled"))
 #+END_SRC
 
 *** hydra
@@ -982,8 +987,9 @@ There are two differences:
 ;;; Code:
 
 (declare-function wal/bytes-per-mb "wal-settings.el")
-(declare-function wal/captain-sink "wal-key-bindings.el")
-(declare-function wal/colonel "wal-key-bindings.el")
+(declare-function use-package-report "use-package-core.el")
+
+(defvar use-package-compute-statistics)
 
 (defgroup wal-func nil
   "Change values used in additional functions."
@@ -1115,9 +1121,6 @@ is removed."
   "Call `kill-ring-save' on the entire buffer."
   (interactive)
   (kill-ring-save (point-min) (point-max)))
-
-(wal/colonel
-  "h" '(wal/kill-ring-save-whole-buffer :wk "kill-ring-save buffer"))
 #+END_SRC
 
 ** Windows
@@ -1258,8 +1261,6 @@ Minor mode to dedicate buffers to windows.
          (bufname (window-dedicated-p window)))
     (set-window-dedicated-p window nil)
     (message "Window no longer dedicated to %s" bufname)))
-
-(wal/captain-sink "." '(walled-mode :wk "walled"))
 #+END_SRC
 
 ** Garbage Collection
@@ -1306,6 +1307,28 @@ is deleted."
 (advice-add
  'hack-local-variables
  :after #'wal/advise-hack-local-variables)
+#+END_SRC
+
+** Command Line
+
+Capture custom command line flags.
+
+#+BEGIN_SRC emacs-lisp
+(defconst wal/custom-flags
+  '((compute-statistics . "--doctor"))
+  "Alist of custom flags that can be passed to Emacs.")
+
+(defun wal/capture-flag (flag)
+  "Check for custom FLAG and delete it from the command line arguments."
+  (when-let* ((flag (cdr (assoc flag wal/custom-flags)))
+              (found (member flag command-line-args)))
+    (setq command-line-args (delete flag command-line-args))
+    t))
+
+;; Compute `use-package' statistics if flag was set.
+(when (wal/capture-flag 'compute-statistics)
+  (setq use-package-compute-statistics t)
+  (add-hook 'after-init-hook #'use-package-report))
 #+END_SRC
 
 ** Text Scaling
@@ -3800,7 +3823,6 @@ Provide global option narrowing using the =vertico= family of products.
   :defer 1)
 
 (use-package vertico-directory
-  :if (eq wal/completion-provider 'vertico)
   :bind
   (:map vertico-map
    ("RET" . vertico-directory-enter)
@@ -3821,7 +3843,6 @@ Fuzzy matches.
 
 #+BEGIN_SRC emacs-lisp
 (use-package orderless
-  :if (eq wal/completion-provider 'vertico)
   :config
   (setq completion-styles '(orderless)
         completion-category-defaults nil
@@ -3840,7 +3861,6 @@ completion actions.
 
 #+BEGIN_SRC emacs-lisp
 (use-package marginalia
-  :if (eq wal/completion-provider 'vertico)
   :config
   (marginalia-mode)
   :custom
@@ -3872,11 +3892,11 @@ Do something else with minibuffer candidate.
   :custom
   (embark-mixed-indicator-delay 2.0)
   :bind
-  ("M-." . embark-act)
+  (("M-." . embark-act) ; Overrides `xref-find-definition'.
+   ("C-M-." . embark-dwim)) ; Overrides `xref-find-apropos'.
   :after vertico)
 
 (use-package embark-consult
-  :if (eq wal/completion-provider 'vertico)
   :hook (embark-collect-mode . consult-preview-at-point-mode)
   :demand t
   :after (embark consult))
@@ -3915,7 +3935,6 @@ Heavy lifting with =consult=.
    :preview-key (kbd "M-,")))
 
  (use-package consult
-  :if (eq wal/completion-provider 'vertico)
   :config
   (wal/configure-consult)
   :custom
@@ -3925,7 +3944,7 @@ Heavy lifting with =consult=.
    ("M-g m" . consult-mark)
    ("M-g M-m" . consult-global-mark)
    :map bookmark-map
-   ("b" . consult-bookmark))
+   ("u" . consult-bookmark))
   :wal-bind
   (("j" . consult-buffer))
   :general
@@ -3947,7 +3966,6 @@ Heavy lifting with =consult=.
   :after vertico)
 
 (use-package consult-flycheck
-  :if (eq wal/completion-provider 'vertico)
   :demand t
   :after (consult flycheck))
 #+END_SRC
@@ -4043,13 +4061,12 @@ Better short-term-memory for =ivy=.
   :after counsel)
 
 (use-package ivy-prescient
-  :if (and wal/use-prescient (eq wal/completion-provider 'ivy))
   :config
   (ivy-prescient-mode +1)
   :custom
   (ivy-prescient-retain-classic-highlighting t)
   :demand
-  :after prescient)
+  :after (ivy prescient))
 #+END_SRC
 
 *** counsel
@@ -6364,8 +6381,8 @@ The root package of the configuration which is basically just a giant
 
 (defconst wal/sub-packages
   '(wal-settings
-    wal-key-bindings
     wal-func
+    wal-key-bindings
     wal-look
     wal-fonts
     ;; The following packages are optional.
