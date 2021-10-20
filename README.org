@@ -782,25 +782,21 @@ the user to tangle its contents."
       (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t))
     (switch-to-buffer buf)))
 
-(wal/general
-  "f" '(:ignore t :wk "find")
-  "fw" '(wal/find-config :wk "config")
-  "fi" '(wal/find-init :wk "init"))
-
-;; Killing Emacs.
 (global-unset-key (kbd "C-x C-c"))
+
+;; Additional `general' bindings.
 (wal/general
   "E" '(:ignore t :wk "Emacs")
-  "Eq" '(save-buffers-kill-terminal :wk "quit"))
+  "Eq" '(save-buffers-kill-terminal :wk "quit")
+  "f" '(:ignore t :wk "find")
+  "fi" '(wal/find-init :wk "init")
+  "fw" '(wal/find-config :wk "wal"))
 
-;; Create dir locals.
 (wal/general-sink "l" '(add-dir-local-variable :wk "dir-locals"))
 
-;; Editing.
 (wal/colonel
   "h" '(wal/kill-ring-save-whole-buffer :wk "kill-ring-save buffer"))
 
- ;; Global minor modes.
 (wal/captain-sink "." '(walled-mode :wk "walled"))
 #+END_SRC
 
@@ -1558,9 +1554,10 @@ available candidate from `wal/fixed-fonts'. Does the same for
   (set-face-attribute 'font-lock-keyword-face nil :weight 'bold))
 
 (wal/general
- "F" '(:ignore t :wk "select font")
- "Ff" '(wal/select-fixed-font :wk "fixed")
- "Fv" '(wal/select-variable-font :wk "variable"))
+ "s" '(:ignore t :wk "session")
+ "sf" '(:ignore t :wk "fonts")
+ "sff" '(wal/select-fixed-font :wk "fixed")
+ "sfv" '(wal/select-variable-font :wk "variable"))
 
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-fonts)
@@ -2080,8 +2077,7 @@ You can customize this now!
 (use-package cus-edit
   :general
   (wal/general
-    "c" '(:ignore t :wk "customization")
-    "cw" '(wal/customize-wal :wk "wal"))
+    "sw" '(wal/customize-wal :wk "customize wal"))
   :ensure nil)
 #+END_SRC
 
@@ -3942,7 +3938,7 @@ Heavy lifting with =consult=.
   :wal-bind
   (("j" . consult-buffer))
   :general
-  (wal/general "ct" '(consult-theme :wk "consult theme"))
+  (wal/general "st" '(consult-theme :wk "consult theme"))
   (wal/major :keymaps 'org-mode-map :major-modes t
     "h" '(consult-org-heading :wk "heading"))
   (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
@@ -4088,7 +4084,7 @@ Counsel me this, Counselor: =ivy= is not enough!
    ("b" . counsel-bookmark))
   :general
   (wal/general
-    "ct" '(counsel-load-theme :wk "counsel theme")
+    "st" '(counsel-load-theme :wk "counsel theme")
     "fl" '(counsel-find-library :wk "library"))
   (wal/general-sink
     "h" '(counsel-command-history :wk "command history")
