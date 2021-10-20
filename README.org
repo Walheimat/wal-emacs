@@ -3905,7 +3905,7 @@ Heavy lifting with =consult=.
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/consult-buffer-filter
-  '("\\`\\*[[:ascii:]]+\\*\\'")
+  '("\\`\\*[[:ascii:]]+\\*\\'" "^magit")
   "Additional buffers to filter."
   :type '(repeat string)
   :group 'wal-complete)
@@ -4188,6 +4188,7 @@ Keep order.
 ;;; Code:
 
 (declare-function consult-customize "consult.el")
+(declare-function consult--regexp-filter "consult.el")
 (declare-function persp-counsel-switch-buffer "perspective.el")
 (declare-function persp-current-buffer-names "perspective.el")
 (declare-function persp-mode "perspective.el")
@@ -4197,6 +4198,7 @@ Keep order.
 (declare-function projectile-project-p "projectile.el")
 (declare-function wal/captain "wal-key-bindings.el")
 
+(defvar consult-buffer-filter)
 (defvar consult--source-buffer)
 (defvar projectile-globally-ignored-directories)
 (defvar projectile-globally-ignored-files)
@@ -4244,6 +4246,14 @@ This only removes `process-kill-buffer-query-function'."
   (interactive)
   (switch-to-buffer (get-buffer-create (persp-scratch-buffer))))
 
+(defun wal/consult-persp-current-buffer-names ()
+  "Get current perspective's buffer names.
+The result is filtered using `consult-buffer-filter'."
+  (let ((filters (consult--regexp-filter consult-buffer-filter)))
+    (seq-filter
+     (lambda (it) (not (string-match-p filters it)))
+     (persp-current-buffer-names))))
+
 (defun wal/configure-perspective ()
   "Configure package `perspective'.
 
@@ -4257,7 +4267,7 @@ completion provider also switches perspectives."
        consult--source-buffer
        :name "Perspective Buffer"
        :action #'persp-switch-to-buffer
-       :items #'persp-current-buffer-names)))
+       :items #'wal/consult-persp-current-buffer-names)))
   (wal/captain
     "i" '(:keymap perspective-map :wk "perspective")))
 
