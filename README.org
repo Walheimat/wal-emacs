@@ -3364,17 +3364,6 @@ Treat certain buffers and their windows as pop-ups.
   (interactive)
   (popper--bury-all))
 
-(defun wal/popper-dwim ()
-  "Figure out what to do with regards to pop-ups.
-
-If the current buffer is a pop-up, call the hydra, otherwise just
-toggle the latest pop-up."
-  (interactive)
-  (if (and (popper-popup-p (current-buffer))
-           (fboundp 'wal/popper/body))
-      (wal/popper/body)
-    (popper-toggle-latest)))
-
 (defun wal/configure-popper ()
   "Configure package `popper'."
   (defhydra wal/popper (:hint nil)
@@ -3395,13 +3384,14 @@ toggle the latest pop-up."
   (popper-display-control 'user)
   (popper-mode-line wal/popper-mode-line)
   :wal-bind
-  ("u" . wal/popper-dwim)
+  ("u" . popper-toggle-latest)
   :general
+  (wal/captain "u" :keymaps '(popper-mode-map)
+    '(wal/popper/body :wk "popper"))
   (general-define-key
    :keymaps 'popper-mode-map
    :predicate '(wal/popper-dead-shell-p)
-   "q" 'kill-buffer-and-window)
-  :commands (popper-popup-p))
+   "q" 'kill-buffer-and-window))
 #+END_SRC
 
 ** Footer
