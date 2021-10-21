@@ -607,7 +607,7 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-<return>= completes at point using =company= (in =company-mode=)
 + =H-== to do a =quick-calc= (inserted if called with =C-u=)
 + =H-\= toggles =vterm=
-+ =H-u= toggles latest pop-up using =popper=
++ =H-u= toggles pop-ups using =popper= (or runs a =hydra= if focusing a pop-up)
 + =H-y= expands snippets (in =yas-minor-mode=).
 
 It's also used for some dispatches:
@@ -661,9 +661,8 @@ Leader key =general= (=<,>= by default) prefixes Emacs actions like
 loading a theme, finding a library, quitting as well as opening =eshell=
 and =eww=.
 
-Leader key =colonel= (=<;>= by default) provides an additional layer for
-the default user prefix (right hand) and additional actions (left
-hand).
+Leader key =colonel= (=<;>= by default) provides an additional
+quick-access actions.
 
 Leader keys =major= and =captain= (=<.>= and =</>= by default) prefix
 mode-specific actions, for major and minor modes respectively.
@@ -796,7 +795,7 @@ the user to tangle its contents."
 (wal/general-sink "l" '(add-dir-local-variable :wk "dir-locals"))
 
 (wal/colonel
-  "h" '(wal/kill-ring-save-whole-buffer :wk "kill-ring-save buffer"))
+  "w" '(wal/kill-ring-save-whole-buffer :wk "kill-ring-save buffer"))
 
 (wal/captain-sink "." '(walled-mode :wk "walled"))
 #+END_SRC
@@ -3346,13 +3345,6 @@ Treat certain buffers and their windows as pop-ups.
   :type 'sexp
   :group 'wal-windows)
 
-(defun wal/popper-toggle ()
-  "Toggle latest or cycle when focusing pop-up."
-  (interactive)
-  (if (popper-popup-p (current-buffer))
-      (popper-cycle)
-    (popper-toggle-latest)))
-
 (defun wal/popper-dead-shell-p ()
   "Check if the current buffer is a shell or comint pop-up with no process."
   (interactive)
@@ -3372,6 +3364,17 @@ Treat certain buffers and their windows as pop-ups.
   (interactive)
   (popper--bury-all))
 
+(defun wal/popper-dwim ()
+  "Figure out what to do with regards to pop-ups.
+
+If the current buffer is a pop-up, call the hydra, otherwise just
+toggle the latest pop-up."
+  (interactive)
+  (if (and (popper-popup-p (current-buffer))
+           (fboundp 'wal/popper/body))
+      (wal/popper/body)
+    (popper-toggle-latest)))
+
 (defun wal/configure-popper ()
   "Configure package `popper'."
   (defhydra wal/popper (:hint nil)
@@ -3379,8 +3382,8 @@ Treat certain buffers and their windows as pop-ups.
 %s`wal/ascii-whale Pop-ups: _c_ycle, _b_ury or _o_pen all.
 "
     ("c" popper-cycle)
-    ("o" wal/popper-open-all)
-    ("b" wal/popper-bury-all)
+    ("o" wal/popper-open-all :exit t)
+    ("b" wal/popper-bury-all :exit t)
     ("q" nil "quit")))
 
 (use-package popper
@@ -3392,15 +3395,13 @@ Treat certain buffers and their windows as pop-ups.
   (popper-display-control 'user)
   (popper-mode-line wal/popper-mode-line)
   :wal-bind
-  (("u" . popper-toggle-latest))
+  ("u" . wal/popper-dwim)
   :general
-  (wal/colonel :keymaps 'popper-mode-map
-    "u" '(wal/popper/body :wk "popper"))
   (general-define-key
    :keymaps 'popper-mode-map
    :predicate '(wal/popper-dead-shell-p)
    "q" 'kill-buffer-and-window)
-  :defer 1)
+  :commands (popper-popup-p))
 #+END_SRC
 
 ** Footer
