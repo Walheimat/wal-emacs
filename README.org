@@ -788,11 +788,12 @@ the user to tangle its contents."
 (wal/general
   "E" '(:ignore t :wk "Emacs")
   "Eq" '(save-buffers-kill-terminal :wk "quit")
+  "Ew" '(wal/tangle-config :wk "tangle config")
   "f" '(:ignore t :wk "find")
   "fi" '(wal/find-init :wk "init")
   "fw" '(wal/find-config :wk "wal")
   "p" '(:ignore t :wk "package")
-  "s" '(:ignore t :wk "session"))
+  "S" '(:ignore t :wk "session"))
 
 (wal/general-sink "l" '(add-dir-local-variable :wk "dir-locals"))
 
@@ -1556,9 +1557,9 @@ available candidate from `wal/fixed-fonts'. Does the same for
   (set-face-attribute 'font-lock-keyword-face nil :weight 'bold))
 
 (wal/general
- "sf" '(:ignore t :wk "fonts")
- "sff" '(wal/select-fixed-font :wk "fixed")
- "sfv" '(wal/select-variable-font :wk "variable"))
+ "Sf" '(:ignore t :wk "fonts")
+ "Sff" '(wal/select-fixed-font :wk "fixed")
+ "Sfv" '(wal/select-variable-font :wk "variable"))
 
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-fonts)
@@ -1904,8 +1905,11 @@ Let's try to be even more =helpful=.
    ([remap describe-key] . helpful-key)
    ([remap describe-variable] . helpful-variable))
   :general
-  (wal/major :keymaps 'emacs-lisp-mode-map :major-modes t
-    "h"  '(helpful-at-point :wk "at point")))
+  (wal/major
+    :keymaps '(emacs-lisp-mode-map lisp-interaction-mode-map)
+    :major-modes t
+    "H" '(:ignore t :wk "help")
+    "."  '(helpful-at-point :wk "helpful at point")))
 #+END_SRC
 
 ** Look-Up
@@ -2081,7 +2085,7 @@ You can customize this now!
 (use-package cus-edit
   :general
   (wal/general
-    "sw" '(wal/customize-wal :wk "customize wal"))
+    "Sw" '(wal/customize-wal :wk "customize wal"))
   :ensure nil)
 #+END_SRC
 
@@ -3934,7 +3938,7 @@ Heavy lifting with =consult=.
   :wal-bind
   (("j" . consult-buffer))
   :general
-  (wal/general "st" '(consult-theme :wk "consult theme"))
+  (wal/general "St" '(consult-theme :wk "consult theme"))
   (wal/major :keymaps 'org-mode-map :major-modes t
     "g" '(consult-org-heading :wk "go to heading"))
   (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
@@ -4080,7 +4084,7 @@ Counsel me this, Counselor: =ivy= is not enough!
    ("b" . counsel-bookmark))
   :general
   (wal/general
-    "st" '(counsel-load-theme :wk "counsel theme")
+    "St" '(counsel-load-theme :wk "counsel theme")
     "fl" '(counsel-find-library :wk "library"))
   (wal/general-sink
     "h" '(counsel-command-history :wk "command history")
@@ -4900,8 +4904,10 @@ The mother of all buffers. You don't need no tree views.
    ("," . dired-display-file))
   :general
   (wal/major :keymaps 'dired-mode-map :major-modes t
-    "e" '(dired-create-empty-file :wk "create empty file")
-    "i" '(wal/image-dired :wk "show images"))
+    "E" '(:ignore t :wk "edit")
+    "Ec" '(dired-create-empty-file :wk "create empty file")
+    "V" '(:ignore t :wk "visualization")
+    "Vi" '(wal/image-dired :wk "show images"))
   :ensure nil)
 #+END_SRC
 
@@ -5207,6 +5213,20 @@ Use a single frame and split horizontally when diffing.
   :ensure nil)
 #+END_SRC
 
+*** blamer
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Per-line blaming.
+
+#+BEGIN_SRC emacs-lisp
+(use-package blamer
+  :general
+  (wal/captain-sink "b" '(blamer-mode :wk "blamer"))
+  :load-path "site-lisp")
+#+END_SRC
+
 ** Footer
 :PROPERTIES:
 :VISIBILITY: folded
@@ -5264,7 +5284,8 @@ Let's greet the world.
 (use-package elixir-mode
   :general
   (wal/major :keymaps 'elixir-mode-map :major-modes t
-    "f" '(elixir-format :wk "format with mode"))
+    "E" '(:ignore t :wk "edit")
+    "Ef" '(elixir-format :wk "format"))
   :hook (elixir-mode . wal/elixir-mode))
 #+END_SRC
 
@@ -5293,9 +5314,9 @@ I want to be ready for =jai=.
   (advice-add 'c-update-modeline :override #'ignore)
   :general
   (wal/major :keymaps 'c++-mode-map :major-modes t
-    "s" '(:ignore t :wk "style")
-    "ss" '(c-set-style :wk "set")
-    "sg" '(c-guess-install :wk "guess"))
+    "S" '(:ignore t :wk "style")
+    "Ss" '(c-set-style :wk "set")
+    "Sg" '(c-guess-install :wk "guess"))
   :hook (cc-mode . wal/cc-mode)
   :ensure nil)
 #+END_SRC
@@ -5325,11 +5346,12 @@ Use snake when you can't =make=.
     (require 'dap-python))
   :general
   (wal/major :keymaps 'python-mode-map :major-modes t
-    "i" '(run-python :wk "inferior shell")
-    "s" '(:ignore t :wk "send")
-    "sr" '(python-shell-send-region :wk "region")
-    "sb" '(python-shell-send-buffer :wk "buffer")
-    "sf" '(python-shell-send-file :wk "file"))
+    "I" '(:ignore t :wk "inferior shell")
+    "Ir" '(run-python :wk "run")
+    "Is" '(:ignore t :wk "send")
+    "Isr" '(python-shell-send-region :wk "region")
+    "Isb" '(python-shell-send-buffer :wk "buffer")
+    "Isf" '(python-shell-send-file :wk "file"))
   :hook (python-mode . wal/python-mode)
   :ensure nil)
 #+END_SRC
@@ -5414,8 +5436,10 @@ The philosopher's choice.
 
 (use-package elisp-mode
   :general
-  (wal/major :keymaps 'emacs-lisp-mode-map :major-modes t
-    "p" '(check-parens :wk "check parens"))
+  (wal/major
+    :keymaps '(emacs-lisp-mode-map lisp-interaction-mode-map)
+    :major-modes t
+    "Hp" '(check-parens :wk "check parens"))
   :hook (emacs-lisp-mode . wal/elisp-mode)
   :ensure nil)
 #+END_SRC
