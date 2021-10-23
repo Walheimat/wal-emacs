@@ -5975,6 +5975,13 @@ This adds additional ignored directories."
   (wal/captain :keymaps 'lsp-mode-map
     "l" '(:keymap lsp-command-map :wk "lsp")))
 
+(defun wal/lsp-mode ()
+  "Hook into `lsp-mode'.
+
+Since `lsp-mode' also uses `lv', the `hydra-hint-display-type' is
+set to use a posframe instead."
+  (setq-local hydra-hint-display-type 'posframe))
+
 (use-package lsp-mode
   :if (eq wal/lsp-provider 'lsp-mode)
   :config
@@ -5990,6 +5997,7 @@ This adds additional ignored directories."
   ;; Performance, uncomment
   (lsp-log-io nil) ; This is the default.
   (lsp-keymap-prefix (wal/prefix-user-key (concat wal/captain-key " " "l")))
+  :hook (lsp-mode . wal/lsp-mode)
   :delight " lsp")
 #+END_SRC
 
