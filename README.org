@@ -1697,6 +1697,9 @@ Some files are so long and Emacs will want to throw up.
 #+END_SRC
 
 *** newcomment
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Make commenting less of a dance.
 
@@ -3933,7 +3936,7 @@ Heavy lifting with =consult=.
   :general
   (wal/general "st" '(consult-theme :wk "consult theme"))
   (wal/major :keymaps 'org-mode-map :major-modes t
-    "h" '(consult-org-heading :wk "heading"))
+    "g" '(consult-org-heading :wk "go to heading"))
   (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
   (wal/lieutenant
     "u" '(:ignore t :wk "consult")
@@ -4355,7 +4358,7 @@ This extends all ignore lists' default values."
 ;;; wal-workspace.el ends here
 #+END_SRC
 
-* Org
+* Org Mode
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-org.el" wal/emacs-config-package-path)
 :END:
@@ -4390,7 +4393,10 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   :tag "Org")
 #+END_SRC
 
-** The Mode Itself
+** org
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/org-mode ()
@@ -4447,10 +4453,6 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
      ("@home" . ?h)
      ("@away" . ?a)
      ("@repeated" . ?r)
-     ;; Time.
-     ("@short" . ?<)
-     ("@medium" . ?=)
-     ("@long" . ?>)
      ;; Energy.
      ("@easy" . ?1)
      ("@average" . ?2)
@@ -4463,22 +4465,24 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   (wal/captain-sink :keymaps 'org-mode-map :major-modes t
     "i" '(org-indent-mode :wk "org-indent"))
   (wal/major :keymaps 'org-mode-map :major-modes t
-    "s" '(:ignore t :wk "subtree")
-    "sw" '(org-cut-subtree :wk "cut subtree")
-    "sy" '(org-paste-subtree :wk "paste subtree")
-    "v" '(:ignore t :wk "visibility")
-    "va" '(org-show-all :wk "show all")
-    "vl" '(wal/org-content :wk "show level")
-    "f" '(:ignore t :wk "footnotes")
-    "fc" '(org-footnote-new :wk "create")
-    "fn" '(org-footnote-normalize :wk "normalize")
-    "e" '(org-edit-src-code :wk "edit source code")
-    "n" '(org-add-note :wk "add note"))
+    "E" '(:ignore t :wk "edit")
+    "Es" '(:ignore t :wk "subtree")
+    "Esw" '(org-cut-subtree :wk "cut subtree")
+    "Esy" '(org-paste-subtree :wk "paste subtree")
+    "V" '(:ignore t :wk "visualization")
+    "Va" '(org-show-all :wk "show all")
+    "Vl" '(wal/org-content :wk "show level")
+    "En" '(org-add-note :wk "add note"))
   :hook (org-mode . wal/org-mode)
   :ensure nil)
 #+END_SRC
 
 ** Agendas
+
+*** org-agenda
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-agenda
@@ -4525,57 +4529,18 @@ Allow for better grouping.
   (org-super-agenda-mode)
   :custom
   (org-super-agenda-groups wal/org-super-agenda-groups)
-  :general
-  (wal/major :keymaps 'org-agenda-keymap :major-modes t
-    "w" '(org-agenda-write :wk "write"))
   :demand
   :after org-agenda)
 #+END_SRC
 
-** Capturing
-
-Capture templates.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/org-capture-find-project-tasks ()
-  "Find a project's tasks file.
-
-If the project root cannot be determined, use
-`wal/org-directory'. as destination."
-  (expand-file-name "tasks.org" (or (projectile-project-root) org-directory)))
-
-(use-package org-capture
-  :custom
-  (org-capture-templates
-   `(("m" "meeting" entry
-      (file+olp+datetree ,(concat org-directory "/meetings.org"))
-      "* %?")
-     ("d" "daily" plain
-      (file+olp+datetree ,(concat org-directory "/dailies.org"))
-      "%i\n%?")
-     ("p" "project task" entry
-      (file+headline wal/org-capture-find-project-tasks "Tasks")
-      "* TODO %?\n\n%F\n\n%i"
-      :empty-lines-before 1)))
-  ;; This leads to endless edit buffers opening since we annotate bookmarks
-  (org-capture-bookmark nil)
-  :general
-  (wal/lieutenant-sink
-    "c" '(org-capture :wk "capture"))
-  :ensure nil
-  :delight " cap")
-#+END_SRC
-
-** Zettelkasten
-
-Trying to organize my thoughts using Zettelkästen.
-
-*** org-roam
+** Zettelkasten/org-roam
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
- /Note/ that you will need to install =sqlite3= and =graphviz= manually.
+Trying to organize my thoughts using Zettelkästen.
+
+/Note/ that you will need to install =sqlite3= and =graphviz= manually.
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/org-roam-dailies-directory "tagebuch/"
@@ -4612,9 +4577,7 @@ Trying to organize my thoughts using Zettelkästen.
    org-roam-node-read))
 #+END_SRC
 
-** Presentations
-
-*** org-tree-slide
+** Presentation/org-tree-slide
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -4686,7 +4649,7 @@ Turn any =org-mode= buffer into a presentation.
    ("v" . wal/org-tree-slide-toggle-visibility))
   :general
   (wal/major :keymaps 'org-mode-map :major-modes t
-    "p" '(org-tree-slide-mode :wk "presentation"))
+    "Vp" '(org-tree-slide-mode :wk "presentation"))
   :hook
   ((org-tree-slide-play . wal/org-tree-slide-play)
    (org-tree-slide-stop . wal/org-tree-slide-stop)
@@ -4694,7 +4657,12 @@ Turn any =org-mode= buffer into a presentation.
   :diminish buffer-face-mode)
 #+END_SRC
 
-** Source Blocks
+** Editing
+
+*** org-src
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Editing source blocks.
 
@@ -4732,13 +4700,76 @@ This sets additional modes."
   :bind
   (:map org-src-mode-map
    ("C-c C-c" . org-edit-src-exit))
+  :general
+  (wal/major :keymaps 'org-mode-map :major-modes t
+    "Ec" '(org-edit-src-code :wk "edit source code"))
   :hook (org-src-mode . wal/org-src-mode)
   :after org
   :ensure nil
   :delight " osc")
 #+END_SRC
 
+*** org-capture
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Capture templates.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/org-capture-find-project-tasks ()
+  "Find a project's tasks file.
+
+If the project root cannot be determined, use
+`wal/org-directory'. as destination."
+  (expand-file-name "tasks.org" (or (projectile-project-root) org-directory)))
+
+(use-package org-capture
+  :custom
+  (org-capture-templates
+   `(("m" "meeting" entry
+      (file+olp+datetree ,(concat org-directory "/meetings.org"))
+      "* %?")
+     ("d" "daily" plain
+      (file+olp+datetree ,(concat org-directory "/dailies.org"))
+      "%i\n%?")
+     ("p" "project task" entry
+      (file+headline wal/org-capture-find-project-tasks "Tasks")
+      "* TODO %?\n\n%F\n\n%i"
+      :empty-lines-before 1)))
+  ;; This leads to endless edit buffers opening since we annotate bookmarks
+  (org-capture-bookmark nil)
+  :general
+  (wal/colonel
+    "c" '(org-capture :wk "capture"))
+  :ensure nil
+  :delight " cap")
+#+END_SRC
+
+*** org-footnote
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Quick adding and normalizing.
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-footnote
+  :general
+  (wal/major :keymaps 'org-mode-map :major-modes t
+    "Ef" '(:ignore t :wk "footnotes")
+    "Efn" '(org-footnote-new :wk "new")
+    "Efo" '(org-footnote-normalize :wk "normalize"))
+  :after org
+  :ensure nil)
+#+END_SRC
+
 ** Other
+
+*** org-clock
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 You know the drill. Clock in, clock out.
 
@@ -4756,6 +4787,11 @@ You know the drill. Clock in, clock out.
   :after org
   :ensure nil)
 #+END_SRC
+
+*** org-keys
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Add some user speed commands.
 
@@ -4805,7 +4841,12 @@ Prettier headlines.
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-dired.el" wal/emacs-config-package-path)
 :END:
 
-Run =dired= [fn:15]with =C-x d=. You don't need no tree views.
+Run =dired= with =C-x d=.
+
+** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
 
 #+BEGIN_SRC emacs-lisp
 ;;; wal-dired.el --- Dired.
@@ -4829,7 +4870,18 @@ Uses the same optional SWITCHES."
   "Run `image-dired' in the `default-directory'."
   (interactive)
   (image-dired (expand-file-name default-directory)))
+#+END_SRC
 
+** Packages
+
+*** dired
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+The mother of all buffers. You don't need no tree views.
+
+#+BEGIN_SRC emacs-lisp
 (use-package dired
   :config
   (put 'dired-find-alternate-file 'disabled nil)
@@ -4851,20 +4903,45 @@ Uses the same optional SWITCHES."
     "e" '(dired-create-empty-file :wk "create empty file")
     "i" '(wal/image-dired :wk "show images"))
   :ensure nil)
+#+END_SRC
 
-;; Hit `/' to filter in dired buffers.
+*** dired-filter
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Hit =/= to filter in dired buffers.
+
+#+BEGIN_SRC emacs-lisp
 (use-package dired-filter
   :delight " drf"
   :demand
   :after dired)
+#+END_SRC
 
-;; Highlighting in dired buffers.
+*** diredfl
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Highlighting in dired buffers.
+
+#+BEGIN_SRC emacs-lisp
 (use-package diredfl
   :config
   (diredfl-global-mode)
   :demand
   :after dired)
+#+END_SRC
 
+*** wdired
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Did you know you can edit =dired= buffers using =C-x C-q=?
+
+#+BEGIN_SRC emacs-lisp
 (use-package wdired
   :custom
   (wdired-allow-to-change-permissions t)
@@ -4872,7 +4949,14 @@ Uses the same optional SWITCHES."
   (:map wdired-mode-map
    ("C-c C-k" . wdired-abort-changes))
   :ensure nil)
+#+END_SRC
 
+** Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
 (provide 'wal-dired)
 
 ;;; wal-dired.el ends here
@@ -4916,7 +5000,7 @@ I am convinced that we are in a terminal process.
 :UNNUMBERED: t
 :END:
 
-=vterm= is better[fn:16] than included shells.
+=vterm= is better[fn:15] than included shells.
 
 Some common shell commands require an additional =C-c=:
 
@@ -5834,7 +5918,7 @@ Language servers are awesome. Thanks, Microsoft.
 :END:
 
 =lsp-mode= is the fancy version. You'll have to install some language
-servers yourself[fn:17].
+servers yourself[fn:16].
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/lsp-file-watch-ignored-directories
@@ -6200,6 +6284,9 @@ Make =Dockerfiles= look nice.
 #+END_SRC
 
 *** kubernetes
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Who doesn't like pods and stuff?
 
@@ -6465,11 +6552,11 @@ keyboard unusable.
 [fn:11] The following packages (and their related or sub-packages) are
 found in other sections
 
-- =org-mode= and =org-agenda= in [[*Org][Org]]
+- =org= and =org-agenda= in [[*Org Mode][Org Mode]]
 - =flymake= and =flyspell= in [[*Fixing Things][Fixing Things]]
 - =dired= in [[*Dired][Dired]]
 - =eshell= in [[*Terminal][Terminal]]
-- =python=, =emacs-lisp=, =cc-mode= and =css-mode= in [[*Languages][Langauges]]
+- =python=, =emacs-lisp=, =cc-mode= and =css-mode= in [[*Languages][Languages]]
 
 [fn:12] The =all-the-icons= icons need to be downloaded manually by
 running =M-x all-the-icons-install-fonts= and selecting =yes=.
@@ -6482,14 +6569,12 @@ set that supports your emojis.
 
 [fn:14] We will try to download it automatically, but might fail.
 
-[fn:15] Did you know you can edit =dired= buffers using =C-x C-q=?
-
-[fn:16] If you're on an older distro your =libvterm= package might be
+[fn:15] If you're on an older distro your =libvterm= package might be
 too old.
 
-[fn:17] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+[fn:16] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
 
-[fn:18] Mostly from MELPA. /Note/ that many packages bind keys. Check
+[fn:17] Mostly from MELPA. /Note/ that many packages bind keys. Check
 the [[*Key Bindings][key bindings section]] if you need a list of the important ones, in
 that section you also find package configurations for
 key-binding-related packages =general= and =hydra=.
