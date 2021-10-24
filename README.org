@@ -813,11 +813,11 @@ quick succession.
 
 Package =smartparens= also defines a =hydra=.
 
-These hydras are mapped to:
+These hydras are mapped to =wal/colonel= using the following prefixes:
 
-+ =C-M-v= to scroll other window
-+ =C-M-x= to scale text
-+ =C-M-z= to resize window.
++ =o= to resize window
++ =t= to scale text
++ =v= to scroll other window.
 
 #+BEGIN_SRC emacs-lisp
 (defconst wal/ascii-whale #("}< ,.__)" 0 8 (face mode-line-emphasis))
@@ -840,7 +840,7 @@ Additional left PADDING can be passed."
 "
     ("i" text-scale-increase)
     ("d" text-scale-decrease)
-    ("r" wal/text-scale-reset "reset")
+    ("r" wal/text-scale-reset "reset" :color blue)
     ("q" nil "quit"))
 
   ;; Move window splitter or balance windows.
@@ -854,12 +854,12 @@ Additional left PADDING can be passed."
     ("f" wal/edge-right)
     ("n" wal/edge-down)
     ("p" wal/edge-up)
-    ("o" wal/split-window-the-other-way "re-split")
-    ("l" balance-windows "balance")
-    ("g" golden-ratio "golden")
+    ("o" wal/split-window-the-other-way "re-split" :color blue)
+    ("l" balance-windows "balance" :color blue)
+    ("g" golden-ratio "golden" :color blue)
     ("q" nil "quit"))
 
-  (defhydra wal/scroll-other-window (:timeout 4 :hint nil)
+  (defhydra wal/scroll-other-window (:hint nil)
     "
 %s`wal/ascii-whale Scroll other window: u_p_/dow_n_.
 "
@@ -867,10 +867,10 @@ Additional left PADDING can be passed."
     ("n" scroll-other-window)
     ("q" nil "quit")))
 
-(general-define-key
- "C-M-x" '(wal/text-scale/body :wk "text scale")
- "C-M-z" '(wal/resize-window/body :wk "resize window")
- [remap scroll-other-window] '(wal/scroll-other-window/body :wk "scroll other window"))
+(wal/colonel
+  "o" '(wal/resize-window/body :wk "resize window")
+  "t" '(wal/text-scale/body :wk "text scale")
+  "v" '(wal/scroll-other-window/body :wk "scroll other window"))
 
 (define-key emacs-lisp-mode-map (kbd "C-M-x") nil) ; Removes `eval-defun'.
 #+END_SRC
@@ -2275,8 +2275,8 @@ I didn't have smart parens growing up so I need help.
     ("f" sp-forward-sexp)
     ("p" sp-backward-up-sexp)
     ("n" sp-down-sexp)
-    ("w" wal/sp-rewrap-sexp)
-    ("s" sp-splice-sexp)
+    ("w" wal/sp-rewrap-sexp :color blue)
+    ("s" sp-splice-sexp :color blue)
     ("q" nil "quit")))
 
 (defun wal/sp-rewrap-sexp ()
@@ -3389,8 +3389,8 @@ Treat certain buffers and their windows as pop-ups.
 %s`wal/ascii-whale Pop-ups: _c_ycle, _b_ury or _o_pen all.
 "
     ("c" popper-cycle)
-    ("o" wal/popper-open-all :exit t)
-    ("b" wal/popper-bury-all :exit t)
+    ("o" wal/popper-open-all :color blue)
+    ("b" wal/popper-bury-all :color blue)
     ("q" nil "quit")))
 
 (use-package popper
@@ -3626,10 +3626,10 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
     "
 %s`wal/ascii-whale Silver-search: _n_ormal, in _p_roject, by _f_ile type.'
 "
-    ("n" ag)
-    ("p" ag-project)
-    ("f" ag-files)
-    ("i" wal/ag-ignored)))
+    ("n" ag :color blue)
+    ("p" ag-project :color blue)
+    ("f" ag-files :color blue)
+    ("i" wal/ag-ignored :color blue)))
 
 (use-package ag
   :if (eq wal/find-provider 'ag)
