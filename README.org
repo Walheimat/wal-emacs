@@ -500,6 +500,7 @@ I use many[fn:8] custom keybindings.
 (declare-function wal/text-scale-reset "wal-func.el")
 
 (defvar wal/emacs-config-default-path)
+(defvar wal/emacs-config-package-path)
 
 (defgroup wal-key-bindings nil
   "Change key bindings settings."
@@ -727,8 +728,42 @@ This creates all leader keys and sinks."
 Most bindings are declared in individual packages.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/find-init ()
+  "Find and switch to the `user-init-file'."
+  (interactive)
+  (switch-to-buffer (find-file-noselect user-init-file)))
+
+(global-unset-key (kbd "C-x C-c"))
+
+;; Additional `general' bindings.
+(wal/general
+  "E" '(:ignore t :wk "Emacs")
+  "Eq" '(save-buffers-kill-terminal :wk "quit")
+  "Ew" '(wal/tangle-config :wk "tangle config")
+  "f" '(:ignore t :wk "find")
+  "fi" '(wal/find-init :wk "init")
+  "fw" '(wal/find-config :wk "wal")
+  "p" '(:ignore t :wk "package")
+  "S" '(:ignore t :wk "session"))
+
+(wal/general-sink "l" '(add-dir-local-variable :wk "dir-locals"))
+
+(wal/colonel
+  "w" '(wal/kill-ring-save-whole-buffer :wk "kill-ring-save buffer"))
+
+(wal/captain-sink "." '(walled-mode :wk "walled"))
+#+END_SRC
+
+** Editing the Config
+
+Minor mode for editing this config.
+
+#+BEGIN_SRC emacs-lisp
 (defvar wal/tangle-do-prompt t
   "Whether to prompt user to tangle config.")
+
+(defvar wal/config-mode-map (make-sparse-keymap)
+  "Map for `wal/config-mode'.")
 
 (defconst wal/readme-config (expand-file-name "README.org" wal/emacs-config-default-path)
   "The path to Walheimat's config.")
@@ -765,42 +800,47 @@ If the answer is no, there will be no additional prompt."
             (message "To tangle, call `wal/tangle-config'"))
         (message "Config changed. To tangle, call `wal/tangle-config'")))))
 
-(defun wal/find-init ()
-  "Find and switch to the `user-init-file'."
-  (interactive)
-  (switch-to-buffer (find-file-noselect user-init-file)))
-
 (defun wal/find-config ()
   "Find Walheimat's config.
-Saving the config after finding it with this function will prompt
-the user to tangle its contents."
+
+This will activate minor mode `wal/config-mode'."
   (interactive)
   (let ((buf (find-file-noselect wal/readme-config)))
     (with-current-buffer buf
-      (auto-fill-mode)
-      (add-hook 'after-save-hook #'wal/tangle-config-prompt nil t)
-      (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t))
+      (wal/config-mode +1))
     (switch-to-buffer buf)))
 
-(global-unset-key (kbd "C-x C-c"))
+(defun wal/customize-group ()
+  "Customize `wal' group."
+  (interactive)
+  (customize-group 'wal t))
 
-;; Additional `general' bindings.
-(wal/general
-  "E" '(:ignore t :wk "Emacs")
-  "Eq" '(save-buffers-kill-terminal :wk "quit")
-  "Ew" '(wal/tangle-config :wk "tangle config")
-  "f" '(:ignore t :wk "find")
-  "fi" '(wal/find-init :wk "init")
-  "fw" '(wal/find-config :wk "wal")
-  "p" '(:ignore t :wk "package")
-  "S" '(:ignore t :wk "session"))
+(defun wal/dired-packages ()
+  "Open the packages with Dired."
+  (interactive)
+  (pop-to-buffer-same-window
+    (dired-noselect wal/emacs-config-package-path)))
 
-(wal/general-sink "l" '(add-dir-local-variable :wk "dir-locals"))
+(define-minor-mode wal/config-mode
+  "Mode for editing Walheimat's config."
+  :init-value nil
+  :global nil
+  :lighter " wal"
+  :keymap wal/config-mode-map
+  (require 'transient nil t)
+  (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t)
+  (auto-fill-mode))
 
-(wal/colonel
-  "w" '(wal/kill-ring-save-whole-buffer :wk "kill-ring-save buffer"))
-
-(wal/captain-sink "." '(walled-mode :wk "walled"))
+(use-package transient
+  :config
+  (with-no-warnings
+    (transient-define-prefix wal/config-dispatch ()
+      [["Export"
+        ("t" "tangle" wal/tangle-config)
+        ("d" "packages" wal/dired-packages)]
+       ["Customization"
+        ("g" "group" wal/customize-group)]])
+    (define-key wal/config-mode-map (kbd (wal/prefix-user-key "?")) #'wal/config-dispatch)))
 #+END_SRC
 
 *** hydra
@@ -1912,7 +1952,10 @@ Let's try to be even more =helpful=.
   (([remap describe-command] . helpful-command)
    ([remap describe-function] . helpful-function)
    ([remap describe-key] . helpful-key)
-   ([remap describe-variable] . helpful-variable))
+   ([remap describe-variable] . helpful-variable)
+   ([remap describe-symbol] . helpful-symbol)
+   :map help-map
+   ("M" . helpful-macro))
   :general
   (wal/major
     :keymaps '(emacs-lisp-mode-map lisp-interaction-mode-map)
@@ -2076,26 +2119,6 @@ Sometimes I restart for fun.
   (restart-emacs-restore-frames nil)
   :general
   (wal/general "Er" '(restart-emacs :wk "restart")))
-#+END_SRC
-
-*** cus-edit
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-You can customize this now!
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/customize-wal ()
-  "Customize `wal' group."
-  (interactive)
-  (customize-group 'wal t))
-
-(use-package cus-edit
-  :general
-  (wal/general
-    "Sw" '(wal/customize-wal :wk "customize wal"))
-  :ensure nil)
 #+END_SRC
 
 ** Footer
@@ -2967,7 +2990,8 @@ Sometimes the list of minor modes overcrowds the modeline.
                     typo-mode
                     auto-fill-function
                     flyspell-mode
-                    org-tree-slide-mode))
+                    org-tree-slide-mode
+                    wal/config-mode))
   :general
   (wal/captain-sink "m" '(minions-mode :wk "minions"))
   :defer 3)
