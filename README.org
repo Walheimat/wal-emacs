@@ -488,6 +488,7 @@ I use many[fn:8] custom keybindings.
 
 (declare-function wal/captain-sink "wal-key-bindings.el")
 (declare-function wal/colonel "wal-key-bindings.el")
+(declare-function wal/directory-files "init.el")
 (declare-function wal/edge-left "wal-func.el")
 (declare-function wal/edge-right "wal-func.el")
 (declare-function wal/edge-down "wal-func.el")
@@ -739,7 +740,6 @@ Most bindings are declared in individual packages.
 (wal/general
   "E" '(:ignore t :wk "Emacs")
   "Eq" '(save-buffers-kill-terminal :wk "quit")
-  "Ew" '(wal/tangle-config :wk "tangle config")
   "f" '(:ignore t :wk "find")
   "fi" '(wal/find-init :wk "init")
   "fw" '(wal/find-config :wk "wal")
@@ -821,6 +821,13 @@ This will activate minor mode `wal/config-mode'."
   (pop-to-buffer-same-window
     (dired-noselect wal/emacs-config-package-path)))
 
+(defun wal/checkdoc-packages ()
+  "Run `checkdoc-file' on all package files."
+  (interactive)
+  (let ((projectile-enable-caching nil))
+    (dolist (it (wal/directory-files wal/emacs-config-package-path))
+      (checkdoc-file it))))
+
 (define-minor-mode wal/config-mode
   "Mode for editing Walheimat's config."
   :init-value nil
@@ -828,6 +835,7 @@ This will activate minor mode `wal/config-mode'."
   :lighter " wal"
   :keymap wal/config-mode-map
   (require 'transient nil t)
+  (require 'checkdoc nil t)
   (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t)
   (auto-fill-mode))
 
@@ -835,8 +843,12 @@ This will activate minor mode `wal/config-mode'."
   :config
   (with-no-warnings
     (transient-define-prefix wal/config-dispatch ()
-      [["Export"
+      [["Actions"
         ("t" "tangle" wal/tangle-config)
+        ("c" "checkdoc" wal/checkdoc-packages)]
+       ["Go to"
+        ("h" "heading" consult-org-heading
+         :inapt-if-not (lambda () (eq wal/completion-provider 'vertico)))
         ("d" "packages" wal/dired-packages)]
        ["Customization"
         ("g" "group" wal/customize-group)]])
