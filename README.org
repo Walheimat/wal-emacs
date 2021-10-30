@@ -664,35 +664,37 @@ loading a theme, finding a library, quitting as well as opening =eshell=
 and =eww=.
 
 Leader key =colonel= (=<;>= by default) provides an additional
-quick-access actions.
+quick-access editing or editing-adjacent actions.
 
-Leader keys =major= and =captain= (=<.>= and =</>= by default) prefix
-mode-specific actions, for major and minor modes respectively.
+Leader key =major= (=<.>= by default) prefixes major-mode-specific
+actions.
 
-The =captain= prefixes, assuming the respective mode is on, are:
+Leader key =captain= (=</>= by default) prefixes minor-mode-specific
+actions, as well as packages that have their own ecosystem like
+=org-roam= and =magit=. The prefixes, sometimes depending on the
+respective global minor-mode being on, are:
 
 + =d= for =dap-mode=
 + =f= for =flycheck= or =flymake=
 + =i= for =perspective=
 + =l= for =lsp-mode= or =eglot=
-+ =m= for =smerge=
++ =m= for =magit=
 + =p= for =projectile=
 + =s= for =flyspell=
 + =t= for =treesitter=
 + =w= for =winner=
-+ =y= for =yasnippet=.
++ =y= for =yasnippet=
++ =z= for =org-roam=.
 
-Leader key =lieutenant= prefixes non- or semi-mode package actions. The
-package prefixes are:
+Leader key =lieutenant= prefixes non- or semi-mode package actions with
+a editing emphasis. The package prefixes are:
 
 + =.= for =multiple-cursors=
-+ =h= for =hungry-delete=
 + =l= and =r= for =avy= (line and region)
-+ =m= for =magit=
-+ =p= for =smartparens= (a =hydra=)
++ =m= for =smerge=
++ =p= for =smartparens=
 + =u= for =consult=
-+ =x= for =crux=
-+ =z= for =org-roam=.
++ =x= for =crux=.
 
 All leader keys have sinks. The sinks for =major= and =captain= toggle
 major and minor modes. The sink for =lieutenant= provides some
@@ -2285,7 +2287,7 @@ Drag lines and regions around.
   :delight " drg")
 #+END_SRC
 
-** smart-parens
+** smartparens
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -2299,19 +2301,17 @@ I didn't have smart parens growing up so I need help.
   (sp-with-modes
    sp-lisp-modes
    (sp-local-pair "'" nil :actions nil))
-  ;; Create a `hydra' for pair navigatino/editing.
+  ;; Create a `hydra' for pair navigation/editing.
   (defhydra wal/smartparens (:hint nil)
     "
 %s(wal/ascii-whale-hydra-offset 7)^_p_^
-%s`wal/ascii-whale Use _b_   _f_ to navigate pairs. You can also re_w_rap and _s_plice.
+%s`wal/ascii-whale Use _b_   _f_ to navigate pairs.
 %s(wal/ascii-whale-hydra-offset 7)^_n_^
 "
     ("b" sp-backward-sexp)
     ("f" sp-forward-sexp)
     ("p" sp-backward-up-sexp)
     ("n" sp-down-sexp)
-    ("w" wal/sp-rewrap-sexp :color blue)
-    ("s" sp-splice-sexp :color blue)
     ("q" nil "quit")))
 
 (defun wal/sp-rewrap-sexp ()
@@ -2330,7 +2330,10 @@ Advising the function does not work."
   (wal/configure-smartparens)
   :general
   (wal/lieutenant :keymaps 'prog-mode-map
-    "p" '(wal/smartparens/body :wk "smartparens")))
+    "p" '(:ignore t :wk "smartparens")
+    "ph" '(wal/smartparens/body :wk "hydra")
+    "pw" '(wal/sp-rewrap-sexp :wk "rewrap")
+    "ps" '(sp-splice-sexp :wk "splice")))
 #+END_SRC
 
 ** crux
@@ -4583,14 +4586,16 @@ Allow for better grouping.
   :after org-agenda)
 #+END_SRC
 
-** org-roam (Zettelkasten)
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
+** Zettelkasten
 
 Trying to organize my thoughts using Zettelkästen.
 
 /Note/ that you will need to install =sqlite3= and =graphviz= manually.
+
+*** org-roam
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/org-roam-dailies-directory "tagebuch/"
@@ -4610,15 +4615,17 @@ Trying to organize my thoughts using Zettelkästen.
   (org-roam-directory wal/org-roam-directory)
   (org-roam-dailies-directory wal/org-roam-dailies-directory)
   :general
-  (wal/lieutenant
+  (wal/captain
     "z" '(:ignore t :wk "roam")
-    "zf" '(org-roam-node-find :wk "find")
-    "zc" '(org-roam-capture :wk "capture")
+    "za" '(:ignore t :wk "actions")
+    "zaf" '(org-roam-node-find :wk "find")
+    "zac" '(org-roam-capture :wk "capture")
     "zr" '(org-roam-buffer-display-dedicated :wk "roam buffer"))
-  (wal/lieutenant :keymaps 'org-mode-map :major-modes t
-    "zi" '(org-roam-node-insert :wk "insert node"))
-  (wal/lieutenant :keymaps 'org-roam-mode-map
-    "zg" '(org-roam-graph :wk "write graph"))
+  (wal/captain :keymaps 'org-mode-map :major-modes t
+    "zai" '(org-roam-node-insert :wk "insert node"))
+  (wal/captain :keymaps 'org-roam-mode-map
+    "zV" '(:ignore t :wk "visualize")
+    "zVg" '(org-roam-graph :wk "write graph"))
   :commands
   (org-roam-buffer-display-dedicated
    org-roam-capture
@@ -5189,7 +5196,7 @@ Forget remembering =git= commands, use =transient=.
   :wal-bind
   ("m" . magit-status)
   :general
-  (wal/lieutenant
+  (wal/captain
     "m" '(:ignore t :wk "magit")
     "mf" '(magit-find-file :wk "find file")
     "mo" '(magit-find-file-other-window :wk "find file other window")
@@ -5238,7 +5245,7 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
 #+BEGIN_SRC emacs-lisp
 (use-package smerge-mode
   :config
-  (wal/captain :keymaps 'smerge-mode-map
+  (wal/lieutenant :keymaps 'smerge-mode-map
     "m" '(:keymap smerge-basic-map :wk "smerge"))
   :ensure nil
   :delight " smg")
