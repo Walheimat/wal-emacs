@@ -654,25 +654,23 @@ this safer alternative to work for me.
 
 ** Leader Keys
 
-The are five multi-purpose =general= leader keys. They prefix actions by
-common context.
+The are five =general= leader keys, each serving its unique purpose by
+prefixing (groups of) actions by common context.
 
 *** Prefixes
 
-Leader key =general= (=<,>= by default) prefixes Emacs actions like
-loading a theme, finding a library, quitting as well as opening =eshell=
-and =eww=.
+Leader key =general= (=,= by default) is responsible for Emacs actions
+like loading a theme, finding a library, quitting, as well as opening
+built-in programs like =eshell= and =eww=.
 
-Leader key =colonel= (=<;>= by default) provides an additional
-quick-access editing or editing-adjacent actions.
+Leader key =colonel= (=;= by default) provides a flat layer of
+additional editing or editing-adjacent actions.
 
-Leader key =major= (=<.>= by default) prefixes major-mode-specific
+Leader key =major= (=.= by default) is responsible major-mode-specific
 actions.
 
-Leader key =captain= (=</>= by default) prefixes minor-mode-specific
-actions, as well as packages that have their own ecosystem like
-=org-roam= and =magit=. The prefixes, sometimes depending on the
-respective global minor-mode being on, are:
+Leader key =captain= (=/= by default) is responsible
+minor-mode-specific[fn:11] actions. The package prefixes are:
 
 + =d= for =dap-mode=
 + =f= for =flycheck= or =flymake=
@@ -686,8 +684,8 @@ respective global minor-mode being on, are:
 + =y= for =yasnippet=
 + =z= for =org-roam=.
 
-Leader key =lieutenant= prefixes non- or semi-mode package actions with
-a editing emphasis. The package prefixes are:
+Leader key =lieutenant= is responsible non- or semi-mode package actions
+with an editing emphasis. The package prefixes are:
 
 + =.= for =multiple-cursors=
 + =l= and =r= for =avy= (line and region)
@@ -696,9 +694,10 @@ a editing emphasis. The package prefixes are:
 + =u= for =consult=
 + =x= for =crux=.
 
-All leader keys have sinks. The sinks for =major= and =captain= toggle
-major and minor modes. The sink for =lieutenant= provides some
-additional useful commands.
+All leader keys have so-called sinks. The sinks for =major= and =captain=
+toggle major and minor modes, respectively. The sink for =colonel=
+currently holds variations of the default actions. The sink for
+=lieutenant= is currently unused.
 
 *** general
 :PROPERTIES:
@@ -750,8 +749,7 @@ Most bindings are declared in individual packages.
 
 (wal/general-sink "l" '(add-dir-local-variable :wk "dir-locals"))
 
-(wal/colonel
-  "w" '(wal/kill-ring-save-whole-buffer :wk "kill-ring-save buffer"))
+(wal/colonel "h" '(wal/kill-ring-save-whole-buffer :wk "kill-ring-save buffer"))
 
 (wal/captain-sink "." '(walled-mode :wk "walled"))
 #+END_SRC
@@ -845,6 +843,7 @@ This will activate minor mode `wal/config-mode'."
   :config
   (with-no-warnings
     (transient-define-prefix wal/config-dispatch ()
+      "Facilitate the usage of or the working on Walheimat's config."
       [["Actions"
         ("t" "tangle" wal/tangle-config)
         ("c" "checkdoc" wal/checkdoc-packages)]
@@ -1633,7 +1632,7 @@ available candidate from `wal/fixed-fonts'. Does the same for
 
 Everything that has to do with Emacs-y stuff.
 
-This is a combination of configurations for built-in packages[fn:11]
+This is a combination of configurations for built-in packages[fn:12]
 and some external ones.
 
 ** Header
@@ -1674,8 +1673,8 @@ Up the kill count.
   ("C-?" . undo-redo)
   :general
   (wal/general "fp" '(list-processes :wk "processes"))
+  (wal/colonel "w" '(delete-trailing-whitespace :wk "delete trailing whitespace"))
   (wal/captain-sink "a" '(auto-fill-mode :wk "auto-fill"))
-  (wal/lieutenant-sink "w" '(delete-trailing-whitespace :wk "delete trailing whitespace"))
   :ensure nil)
 #+END_SRC
 
@@ -2045,7 +2044,7 @@ Look up words in a word book.
   :custom
   (dictionary-server "dict.org")
   :general
-  (wal/lieutenant-sink
+  (wal/general-sink
     "d" '(dictionary-lookup-definition :wk "lookup definition"))
   :ensure nil)
 #+END_SRC
@@ -2561,7 +2560,7 @@ A collection of GitLab status messages."
   (dashboard-week-agenda nil)
   (dashboard-agenda-time-string-format "%d/%m/%y")
   :general
-  (wal/general-sink "d"
+  (wal/general-sink "s"
     '(wal/show-dashboard :wk "dashboard"))
   :hook (after-init . dashboard-setup-startup-hook))
 #+END_SRC
@@ -2693,7 +2692,7 @@ Highlight =TODO=, =FIXME= etc. in =prog= modes.
 #+BEGIN_SRC emacs-lisp
 (use-package hl-todo
   :general
-  (wal/lieutenant-sink "t" '(hl-todo-insert :wk "insert todo"))
+  (wal/colonel-sink "t" '(hl-todo-insert :wk "insert todo"))
   :hook ((prog-mode yaml-mode) . hl-todo-mode))
 #+END_SRC
 
@@ -2810,6 +2809,8 @@ Help me find my cursor!
   (beacon-size 60)
   (beacon-blink-when-point-moves-vertically 2)
   (beacon-blink-when-point-moves-horizontally 8)
+  :wal-bind
+  ("<SPC>" . beacon-blink)
   :defer 3)
 #+END_SRC
 
@@ -2915,7 +2916,7 @@ shown, they are delighted unless they were diminished.
 :UNNUMBERED: t
 :END:
 
-Busier and prettier[fn:12] =modeline=.
+Busier and prettier[fn:13] =modeline=.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/advise-doom-modeline-update-vcs-text (&rest _r)
@@ -3142,7 +3143,7 @@ This is the case when:
 :UNNUMBERED: t
 :END:
 
-You need to install the icons yourself[fn:12].
+You need to install the icons yourself[fn:13].
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/configure-rich-transformers ()
@@ -3173,7 +3174,7 @@ This function is called before `all-the-icons-ivy-rich' is activated."
 :UNNUMBERED: t
 :END:
 
-Display emojis[fn:13].
+Display emojis[fn:14].
 
 #+BEGIN_SRC emacs-lisp
 (use-package emojify
@@ -3547,6 +3548,8 @@ your mouse.
   (("l" . avy-goto-end-of-line)
    ("k" . wal/avy-goto-word-in-line))
   :general
+  (wal/colonel
+    "j" '(avy-goto-word-0 :wk "jump to word"))
   (wal/lieutenant
     ;; Lines.
     "l" '(:ignore t :wk "avy (line)")
@@ -3668,7 +3671,7 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 :UNNUMBERED: t
 :END:
 
- And the =ag= one from [[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:14].
+ And the =ag= one from [[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:15].
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/ag-ignored (string)
@@ -4537,14 +4540,14 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   (wal/captain-sink :keymaps 'org-mode-map :major-modes t
     "i" '(org-indent-mode :wk "org-indent"))
   (wal/major :keymaps 'org-mode-map :major-modes t
-    "E" '(:ignore t :wk "edit")
-    "Es" '(:ignore t :wk "subtree")
-    "Esw" '(org-cut-subtree :wk "cut subtree")
-    "Esy" '(org-paste-subtree :wk "paste subtree")
+    "e" '(:ignore t :wk "edit")
+    "eS" '(:ignore t :wk "subtree")
+    "eSw" '(org-cut-subtree :wk "cut subtree")
+    "eSy" '(org-paste-subtree :wk "paste subtree")
     "V" '(:ignore t :wk "visualization")
     "Va" '(org-show-all :wk "show all")
     "Vl" '(wal/org-content :wk "show level")
-    "En" '(org-add-note :wk "add note"))
+    "eN" '(org-add-note :wk "add note"))
   :hook (org-mode . wal/org-mode)
   :ensure nil)
 #+END_SRC
@@ -4798,7 +4801,7 @@ This sets additional modes."
    ("C-c C-c" . org-edit-src-exit))
   :general
   (wal/major :keymaps 'org-mode-map :major-modes t
-    "Ec" '(org-edit-src-code :wk "edit source code"))
+    "ec" '(org-edit-src-code :wk "edit source code"))
   :hook (org-src-mode . wal/org-src-mode)
   :after org
   :ensure nil
@@ -4853,9 +4856,9 @@ Quick adding and normalizing.
 (use-package org-footnote
   :general
   (wal/major :keymaps 'org-mode-map :major-modes t
-    "Ef" '(:ignore t :wk "footnotes")
-    "Efn" '(org-footnote-new :wk "new")
-    "Efo" '(org-footnote-normalize :wk "normalize"))
+    "eF" '(:ignore t :wk "footnotes")
+    "eFn" '(org-footnote-new :wk "new")
+    "eFo" '(org-footnote-normalize :wk "normalize"))
   :after org
   :ensure nil)
 #+END_SRC
@@ -5098,7 +5101,7 @@ I am convinced that we are in a terminal process.
 :UNNUMBERED: t
 :END:
 
-=vterm= is better[fn:15] than included shells.
+=vterm= is better[fn:16] than included shells.
 
 Some common shell commands require an additional =C-c=:
 
@@ -5214,7 +5217,7 @@ I'm becoming an old git.
 ;;; Code:
 
 (declare-function magit-display-buffer-traditional "magit-mode.el")
-(declare-function wal/captain "wal-key-bindings.el")
+(declare-function wal/lieutenant "wal-key-bindings.el")
 #+END_SRC
 
 ** Packages
@@ -6034,7 +6037,7 @@ Language servers are awesome. Thanks, Microsoft.
 :END:
 
 =lsp-mode= is the fancy version. You'll have to install some language
-servers yourself[fn:16].
+servers yourself[fn:17].
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/lsp-file-watch-ignored-directories
@@ -6693,7 +6696,12 @@ and other bindings.
 [fn:10] Be careful! If you make a mistake you could render your
 keyboard unusable.
 
-[fn:11] The following packages (and their related or sub-packages) are
+[fn:11] They all require their respective mode to be on.
+
+The leader key also provides prefixes for packages that have their own
+ecosystem like =org-roam= and =magit=.
+
+[fn:12] The following packages (and their related or sub-packages) are
 found in other sections
 
 - =org= and =org-agenda= in [[*Org Mode][Org Mode]]
@@ -6702,23 +6710,23 @@ found in other sections
 - =eshell= in [[*Terminal][Terminal]]
 - =python=, =emacs-lisp=, =cc-mode= and =css-mode= in [[*Languages][Languages]]
 
-[fn:12] The =all-the-icons= icons need to be downloaded manually by
+[fn:13] The =all-the-icons= icons need to be downloaded manually by
 running =M-x all-the-icons-install-fonts= and selecting =yes=.
 
 If the installation process should fail for any reason, close Emacs
 and re-run it.
 
-[fn:13] You might have to call =emojify-download-emoji= to download a
+[fn:14] You might have to call =emojify-download-emoji= to download a
 set that supports your emojis.
 
-[fn:14] We will try to download it automatically, but might fail.
+[fn:15] We will try to download it automatically, but might fail.
 
-[fn:15] If you're on an older distro your =libvterm= package might be
+[fn:16] If you're on an older distro your =libvterm= package might be
 too old.
 
-[fn:16] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+[fn:17] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
 
-[fn:17] Mostly from MELPA. /Note/ that many packages bind keys. Check
+[fn:18] Mostly from MELPA. /Note/ that many packages bind keys. Check
 the [[*Key Bindings][key bindings section]] if you need a list of the important ones, in
 that section you also find package configurations for
 key-binding-related packages =general= and =hydra=.
