@@ -221,19 +221,16 @@ Make sure that custom directories exist. We want:
   :type 'string
   :group 'wal-settings)
 
-;; Cf. next section.
 (defcustom wal/site-lisp-directory (expand-file-name "site-lisp" user-emacs-directory)
   "Directory of site Lisp packages."
   :type 'string
   :group 'wal-settings)
 
-;; Change if necessary.
 (defcustom wal/org-directory (expand-file-name "org" "~")
   "Default directory for org files."
   :type 'string
   :group 'wal-settings)
 
-;; I put all of my tasks into a subfolder `tasks' inside the org directory.
 (defcustom wal/agenda-tasks-directory (expand-file-name "tasks" wal/org-directory)
   "One-size-fits-all directory for agenda tasks."
   :type 'string
@@ -270,7 +267,7 @@ non-MELPA packages here.
 (add-to-list 'custom-theme-load-path
              (expand-file-name "emacs-site-lisp" wal/site-lisp-directory))
 
-;; Add subdirs as well.
+;; Add subdirs as well so we don't need to match `:load-path'.
 (dolist (project (directory-files wal/site-lisp-directory t "\\w+"))
   (when (file-directory-p project)
     (add-to-list 'load-path project)))
@@ -489,16 +486,10 @@ I use many[fn:8] custom keybindings.
 (declare-function wal/captain-sink "wal-key-bindings.el")
 (declare-function wal/colonel "wal-key-bindings.el")
 (declare-function wal/directory-files "init.el")
-(declare-function wal/edge-left "wal-func.el")
-(declare-function wal/edge-right "wal-func.el")
-(declare-function wal/edge-down "wal-func.el")
-(declare-function wal/edge-up "wal-func.el")
 (declare-function wal/general "wal-key-bindings.el")
 (declare-function wal/general-sink "wal-key-bindings.el")
 (declare-function wal/major-sink "wal-key-bindings.el")
-(declare-function wal/split-window-the-other-way "wal-func.el")
 (declare-function wal/tangle-config "init.el")
-(declare-function wal/text-scale-reset "wal-func.el")
 
 (defvar wal/emacs-config-default-path)
 (defvar wal/emacs-config-package-path)
@@ -730,11 +721,6 @@ This creates all leader keys and sinks."
 Most bindings are declared in individual packages.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/find-init ()
-  "Find and switch to the `user-init-file'."
-  (interactive)
-  (switch-to-buffer (find-file-noselect user-init-file)))
-
 (global-unset-key (kbd "C-x C-c"))
 
 ;; Additional `general' bindings.
@@ -809,6 +795,11 @@ This will activate minor mode `wal/config-mode'."
     (with-current-buffer buf
       (wal/config-mode +1))
     (switch-to-buffer buf)))
+
+(defun wal/find-init ()
+  "Find and switch to the `user-init-file'."
+  (interactive)
+  (switch-to-buffer (find-file-noselect user-init-file)))
 
 (defun wal/customize-group ()
   "Customize `wal' group."
@@ -1760,8 +1751,7 @@ Make commenting less of a dance.
 #+BEGIN_SRC emacs-lisp
 (use-package newcomment
   :bind
-  (([remap comment-line] . comment-set-column)
-   ([remap comment-set-column] . comment-line))
+  ("C-;" . comment-line)
   :ensure nil)
 #+END_SRC
 
@@ -2011,7 +2001,7 @@ Quick calculations.
 #+BEGIN_SRC emacs-lisp
 (use-package calc
   :wal-bind
-  (("=" . quick-calc))
+  ("=" . quick-calc)
   :ensure nil)
 #+END_SRC
 
@@ -2176,7 +2166,6 @@ It's fun to edit things /quickly/.
 (declare-function sp-with-modes "smartparens.el")
 (declare-function sp--maybe-init "smartparens.el")
 (declare-function yas-expand "yasnippet.el")
-(declare-function wal/reset-to-standard "wal-settings.el")
 
 (defvar sp-lisp-modes)
 #+END_SRC
@@ -2204,7 +2193,7 @@ Don't you want to edit your buffer in multiple places at once?
    ("C-," . mc/unmark-next-like-this)
    ("C-/" . mc/skip-to-next-like-this))
   :wal-bind
-  (("<mouse-3>" . mc/add-cursor-on-click))
+  ("<mouse-3>" . mc/add-cursor-on-click)
   :general
   (wal/lieutenant
     "." '(:ignore t :wk "mc")
@@ -2461,7 +2450,6 @@ I like nice-looking things.
 
 (declare-function ligature-set-ligatures "ligature.el")
 (declare-function wal/captain-sink "wal-key-bindings.el")
-(declare-function wal/directory-files "init.el")
 
 (defvar all-the-icons-ivy-rich-display-transformers-list)
 (defvar beacon-dont-blink-commands)
@@ -3282,7 +3270,6 @@ Everything that has to do with windows.
 (declare-function comint-check-proc "comint.el")
 (declare-function popper-cycle "popper.el")
 (declare-function popper-popup-p "popper.el")
-(declare-function popper-toggle-latest "popper.el")
 (declare-function popper--bury-all "popper.el")
 (declare-function popper--open-all "popper.el")
 
@@ -3662,7 +3649,7 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
   :config
   (wal/display-buffer-in-pop-up "\\`\\*rg\\*\\'")
   :wal-bind
-  (("n" . rg-menu))
+  ("n" . rg-menu)
   :ensure-system-package rg)
 #+END_SRC
 
@@ -3716,7 +3703,7 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
                     "*.js.map"))
   (ag-project-root-function #'projectile-acquire-root)
   :wal-bind
-  (("n" . wal/ag/body))
+  ("n" . wal/ag/body)
   :commands (ag/read-from-minibuffer)
   :ensure-system-package ag)
 #+END_SRC
@@ -3812,12 +3799,9 @@ Complete commands and code.
 
 ;;; Code:
 
-(declare-function consult-customize "consult.el")
 (declare-function projectile-project-p "projectile.el")
 (declare-function wal/display-buffer-ethereally "wal-func.el")
 
-(defvar consult-buffer-filter)
-(defvar consult--source-file)
 (defvar xref-show-definitions-function)
 
 (defgroup wal-complete nil
@@ -4007,7 +3991,7 @@ Heavy lifting with =consult=.
    :map bookmark-map
    ("u" . consult-bookmark))
   :wal-bind
-  (("j" . consult-buffer))
+  ("j" . consult-buffer)
   :general
   (wal/general "St" '(consult-theme :wk "consult theme"))
   (wal/major :keymaps 'org-mode-map :major-modes t
@@ -4017,13 +4001,9 @@ Heavy lifting with =consult=.
     "u" '(:ignore t :wk "consult")
     "ur" '(consult-recent-file :wk "recent")
     "um" '(consult-kmacro :wk "macro")
-    "us" '(:ignore t :wk "search")
-    "usg" '(consult-grep :wk "grep")
-    "usr" '(consult-ripgrep :wk "ripgrep")
-    "usi" '(wal/consult-ripgrep-ignored :wk "ignored rg")
-    "ul" '(:ignore t :wk "lines")
-    "ulf" '(consult-focus-lines :wk "focus")
-    "uls" '(consult-line :wk "search"))
+    "us" '(consult-ripgrep :wk "rg")
+    "uS" '(wal/consult-ripgrep-ignored :wk "ignored rg")
+    "ul" '(consult-focus-lines :wk "lines"))
   :after vertico)
 
 (use-package consult-flycheck
@@ -4256,13 +4236,9 @@ Keep order.
 
 (declare-function consult-customize "consult.el")
 (declare-function consult--regexp-filter "consult.el")
-(declare-function persp-counsel-switch-buffer "perspective.el")
 (declare-function persp-current-buffer-names "perspective.el")
-(declare-function persp-mode "perspective.el")
 (declare-function persp-scratch-buffer "perspective.el")
-(declare-function persp-switch "perspective.el")
 (declare-function persp-switch-to-buffer "perspective.el")
-(declare-function projectile-project-p "projectile.el")
 (declare-function wal/captain "wal-key-bindings.el")
 
 (defvar consult-buffer-filter)
@@ -5216,7 +5192,6 @@ I'm becoming an old git.
 
 ;;; Code:
 
-(declare-function magit-display-buffer-traditional "magit-mode.el")
 (declare-function wal/lieutenant "wal-key-bindings.el")
 #+END_SRC
 
@@ -5430,6 +5405,7 @@ Use snake when you can't =make=.
   "Hook into `python-mode'."
   (message "Watch out for snakes!")
   (wal/disable-tabs)
+  (setq-local comment-inline-offset 2)
   (hack-local-variables)
   (wal/lsp))
 
@@ -5874,9 +5850,6 @@ Please let me know when I screwed up. I promise I will learn.
 ;; Provide fixing packages.
 
 ;;; Code:
-
-(declare-function flycheck-find-checker-executable "flycheck.el")
-(declare-function wal/captain "wal-key-bindings.el")
 #+END_SRC
 
 ** Packages
@@ -5997,7 +5970,6 @@ Language servers are awesome. Thanks, Microsoft.
 ;;; Code:
 
 (declare-function eglot-managed-p "eglot.el")
-(declare-function lsp-dart-define-key "lsp-dart.el")
 (declare-function lsp-enable-which-key-integration "lsp-mode.el")
 (declare-function wal/captain "wal-key-bindings.el")
 (declare-function wal/captain-sink "wal-key-bindings.el")
