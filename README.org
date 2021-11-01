@@ -384,17 +384,17 @@ Sets tab variable `indent-tabs-mode' to t."
   (interactive)
   (setq indent-tabs-mode t))
 
-(defun wal/maybe-enable-tabs (&optional tab-indent-fun mode-fun)
+(cl-defun wal/maybe-enable-tabs (&key indent mode)
   "Maybe enable tabs.
-Optionally set `indent-line-function' (if allowed) to
-TAB-INDENT-FUN and call MODE-FUN after changes."
+Optionally set `indent-line-function' (if allowed) to INDENT and
+call MODE after changes."
   (if wal/prefer-tabs
       (wal/enable-tabs)
     (wal/disable-tabs))
-  (when tab-indent-fun
-    (setq-local indent-line-function tab-indent-fun))
-  (when mode-fun
-    (funcall mode-fun)))
+  (when indent
+    (setq-local indent-line-function indent))
+  (when mode
+    (funcall mode)))
 
 (defun wal/set-indent-defaults (&optional num)
   "Set indent defaults.
@@ -1127,7 +1127,7 @@ The pop-up is a window unless IN-FRAME is t."
 
 ;; The next two functions make sense for `popper' buffers.
 
-(defun wal/display-buffer-in-side-window (buffer &optional side loose no-other height)
+(cl-defun wal/display-buffer-in-side-window (buffer &key side loose no-other height)
   "Display BUFFER in SIDE window.
 
 This window will be on SIDE (on the bottom by default), dedicated
@@ -1979,7 +1979,7 @@ Leave a bookmark why don't you.
 #+BEGIN_SRC emacs-lisp
 (use-package bookmark
   :config
-  (wal/display-buffer-in-side-window "\\*Bookmark Annotation\\*" 'left)
+  (wal/display-buffer-in-side-window "\\*Bookmark Annotation\\*" :side 'left)
   :custom
   (bookmark-use-annotations t)
   (bookmark-menu-confirm-deletion t)
@@ -3332,7 +3332,6 @@ Ace interacting with (multiple) windows.
   :custom
   (aw-dispatch-always t)
   (aw-keys '(?j ?k ?l ?\; ?u ?i ?o ?p))
-  (aw-ignored-buffers '(vterm-mode))
   :wal-bind
   ("o" . ace-window)
   :delight " ace")
@@ -3526,11 +3525,6 @@ your mouse.
   (add-to-list 'avy-dispatch-alist '(?q . wal/avy-action-zip-to-char))
   :custom
   (avy-background t)
-  (avy-ignored-modes '(image-mode
-                       doc-view-mode
-                       pdf-view-mode
-                       shell-mode
-                       vterm-mode))
   :wal-bind
   (("l" . avy-goto-end-of-line)
    ("k" . wal/avy-goto-word-in-line))
@@ -5063,7 +5057,6 @@ I am convinced that we are in a terminal process.
 
 ;;; Code:
 
-(declare-function vterm-toggle-show "vterm-toggle.el")
 (declare-function wal/display-buffer-in-side-window "wal-func.el")
 
 (defvar eshell-highlight-prompt)
@@ -5097,14 +5090,9 @@ flag to nil for the vterm process."
               (proc (get-buffer-process buf)))
     (set-process-query-on-exit-flag proc nil)))
 
-(defun wal/advise-vterm-toggle (&rest _r)
-  "Advise `vterm-toggle' to show unless the window is a vterm buffer."
-  (unless (derived-mode-p 'vterm-mode)
-    (vterm-toggle-show)))
-
 (use-package vterm
   :config
-  (wal/display-buffer-in-side-window (concat "\\" vterm-buffer-name) nil nil t 15)
+  (wal/display-buffer-in-side-window (concat "\\" vterm-buffer-name) :height 15)
   :custom
   (vterm-kill-buffer-on-exit t)
   :hook (vterm-mode . wal/vterm-mode)
@@ -5112,8 +5100,6 @@ flag to nil for the vterm process."
   (vterm-copy-mode " vcp"))
 
 (use-package vterm-toggle
-  :config
-  (advice-add 'vterm-toggle :before-until #'wal/advise-vterm-toggle)
   :custom
   (vterm-toggle-fullscreen-p nil)
   (vterm-toggle-scope 'project)
@@ -5151,7 +5137,7 @@ Set up =eshell=. I like the idea of it but I don't really use it.
 (use-package eshell
   :config
   (advice-add 'eshell/clear :override #'wal/advise-eshell/clear)
-  (wal/display-buffer-in-side-window "*eshell*")
+  (wal/display-buffer-in-side-window "*eshell*" :height 15 :loose t)
   :bind
   (:map eshell-mode-map
    ([remap eshell-pcomplete] . completion-at-point))
@@ -5595,7 +5581,7 @@ Improved editing for JSX files. Extends =js2=.
 (defun wal/rjsx-mode ()
   "Hook into `rjsx-mode'."
   (message "Extend those ugly JavaScripts of yours!")
-  (wal/maybe-enable-tabs 'js-jsx-indent-line))
+  (wal/maybe-enable-tabs :indent 'js-jsx-indent-line))
 
 (use-package rjsx-mode
   :mode "\\.jsx\\'"
@@ -5771,7 +5757,7 @@ Yes, you need to install *Android Studio* for some reason.
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/dart-mode()
+(defun wal/dart-mode ()
   "Hook into `dart-mode'."
   (message "Bull's eye!")
   (wal/disable-tabs)
@@ -6354,7 +6340,7 @@ What goes =docker-compose= up, goes =docker-compose= down.
 #+BEGIN_SRC emacs-lisp
 (use-package docker
   :config
-  (wal/display-buffer-in-side-window "\\*docker-containers\\*" 'top)
+  (wal/display-buffer-in-side-window "\\*docker-containers\\*" :side 'top)
   (wal/display-buffer-in-side-window "^\\* docker shell")
   (wal/display-buffer-in-direction "^\\* docker container")
   (wal/display-buffer-in-direction "^\\*docker-compose")
