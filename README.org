@@ -3994,20 +3994,25 @@ Heavy lifting with =consult=.
    ("M-g m" . consult-mark)
    ("M-g M-m" . consult-global-mark)
    :map bookmark-map
-   ("u" . consult-bookmark))
+   ("u" . consult-bookmark)
+   :map kmacro-keymap
+   ("u" . consult-kmacro)
+   :map ctl-x-r-map
+   ("u" . consult-register))
   :wal-bind
   ("j" . consult-buffer)
   :general
-  (wal/general "St" '(consult-theme :wk "consult theme"))
+  (wal/general
+    "St" '(consult-theme :wk "consult theme")
+    "fr" '(consult-recent-file :wk "recent"))
   (wal/major :keymaps 'org-mode-map :major-modes t
     "g" '(consult-org-heading :wk "go to heading"))
   (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
   (wal/lieutenant
     "u" '(:ignore t :wk "consult")
-    "ur" '(consult-recent-file :wk "recent")
-    "um" '(consult-kmacro :wk "macro")
-    "us" '(consult-ripgrep :wk "rg")
-    "uS" '(wal/consult-ripgrep-ignored :wk "ignored rg")
+    "ur" '(consult-ripgrep :wk "rg")
+    "ug" '(consult-goto-line :wk "goto")
+    "ui" '(wal/consult-ripgrep-ignored :wk "ignored rg")
     "ul" '(consult-focus-lines :wk "lines"))
   :after vertico)
 
@@ -4612,7 +4617,7 @@ Trying to organize my thoughts using Zettelkästen.
   (setq org-roam-v2-ack t)
   :config
   (org-roam-db-autosync-enable)
-  (wal/lieutenant
+  (wal/captain
     "zd" '(org-roam-dailies-goto-date :wk "dailies"))
   :custom
   (org-roam-directory wal/org-roam-directory)
