@@ -4460,6 +4460,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (declare-function wal/disable-tabs "wal-settings.el")
 (declare-function projectile-project-root "projectile.el")
 
+(defvar org-global-properties)
 (defvar org-mode-map)
 (defvar text-scale-mode-step)
 (defvar visual-fill-column-width)
@@ -4501,7 +4502,9 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   (define-key org-mode-map (kbd "C-,") nil) ; Remove `org-cycle-agenda-files'.
   (advice-add
    'org-export-dispatch
-   :before #'wal/advise-org-export-dispatch))
+   :before #'wal/advise-org-export-dispatch)
+  (add-to-list 'org-global-properties
+	           '("Effort_ALL". "30min 1h 1.5h 2h 2.5h 4h 6h 1d 1.5d 2d")))
 
 (use-package org
   :config
@@ -4892,6 +4895,26 @@ You know the drill. Clock in, clock out.
   (org-clock-report-include-clocking-task t)
   (org-clock-out-remove-zero-time-clocks t)
   (org-clock-into-drawer t)
+  :after org
+  :ensure nil)
+#+END_SRC
+
+*** org-duration
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Set up durations for a 40-hour week.
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-duration
+  :custom
+  (org-duration-units `(("min" . 1)
+                        ("h" . 60)
+                        ("d" . ,(* 60 8))
+                        ("w" . ,(* 60 8 5))
+                        ("m" . ,(* 60 8 5 4))
+                        ("y" . ,(* 60 8 5 4 11))))
   :after org
   :ensure nil)
 #+END_SRC
