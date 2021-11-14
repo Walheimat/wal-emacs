@@ -1774,11 +1774,9 @@ Editing server files.
 
 #+BEGIN_SRC emacs-lisp
 (use-package server
-  :general
-  (wal/colonel
-    "S" '(:ignore t :wk "server edit")
-    "Sd" '(server-edit :wk "done")
-    "Sa" '(server-edit-abort :wk "abort"))
+  :bind
+  (:map ctl-x-x-map
+   ("#" . server-edit-abort))
   :ensure nil)
 #+END_SRC
 
@@ -4263,6 +4261,7 @@ Keep order.
 
 (declare-function consult-customize "consult.el")
 (declare-function consult--regexp-filter "consult.el")
+(declare-function persp-counsel-switch-buffer "perspective.el")
 (declare-function persp-current-buffer-names "perspective.el")
 (declare-function persp-scratch-buffer "perspective.el")
 (declare-function persp-switch-to-buffer "perspective.el")
@@ -5155,7 +5154,10 @@ flag to nil for the vterm process."
   (wal/display-buffer-in-side-window (concat "\\" vterm-buffer-name) :height 15)
   :custom
   (vterm-kill-buffer-on-exit t)
-  :hook (vterm-mode . wal/vterm-mode)
+  :hook
+  ((vterm-mode . wal/vterm-mode)
+   (vterm-mode . with-editor-export-editor)
+   (vterm-mode . with-editor-export-git-editor))
   :delight
   (vterm-copy-mode " vcp"))
 
@@ -5203,6 +5205,9 @@ Set up =eshell=. I like the idea of it but I don't really use it.
    ([remap eshell-pcomplete] . completion-at-point))
   :general
   (wal/general-sink "e" '(eshell :wk "eshell"))
+  :hook
+  ((eshell-mode . with-editor-export-editor)
+   (eshell-mode . with-editor-export-git-editor))
   :ensure nil)
 #+END_SRC
 
