@@ -1,20 +1,39 @@
 #!/bin/bash
+#
+# Install npm dependencies and husky.
+
+# shellcheck disable=SC2119
 
 source "./variables.sh"
+source "./common.sh"
 
-function install_npm_dependencies() {
-  echo -e "\n${bold}[npm]${reset}"
-  (cd ..; npm install 2>&1)
+function wal::install_npm_dependencies() {
+  signal "Installing ${bold}npm${reset} packages"
+
+  if ! npm install &>"$WAL_LOG"; then
+    die
+  fi
+  live
 }
 
-function install_husky() {
-  echo -e "\n${bold}[husky]${reset}\n"
-  (cd ..; npx husky install 2>&1)
+function wal::install_husky() {
+  signal "Installing ${bold}husky${reset}"
+
+  if ! npx husky install &>"$WAL_LOG"; then
+    die
+  fi
+  live
 }
 
-echo -e "${blue}${whale}${reset} ${bold}[commit hooks setup]${reset}"
+function main() {
+  cd ..
 
-install_npm_dependencies
-install_husky
+  echo -e "${blue}${whale}${reset} ${bold}[commit hooks setup]${reset}"
 
-echo -e "${green}${whale}${reset} commit setup complete"
+  wal::install_npm_dependencies
+  wal::install_husky
+
+  echo -e "${green}${whale}${reset} commit setup complete"
+}
+
+main

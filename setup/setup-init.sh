@@ -1,43 +1,60 @@
 #!/bin/bash
+#
+# Copy or link init file.
+
+# shellcheck disable=SC2119
 
 source "./variables.sh"
+source "./common.sh"
 
 DIR="${0%/*}"
 
-function no_init_file_exists() {
+# Helper functions.
+
+function ensure_no_init() {
   local userdir=$1
   local method=$2
 
   if [[ -e "$userdir/init.el" || -e "$HOME/.emacs" ]]; then
-    echo -e "${red}${whale}${reset} found existing init file, can't $method"
-    return 1;
+    echo -e "Found existing init file, can't $method" >"$WAL_LOG"
+    die
   fi
-
-  return 0
 }
 
 function on_complete() {
   echo -e "\n${green}${whale}${reset} init file setup complete, you can restart Emacs"
 }
 
-function link_init_file() {
+# Main functions.
+
+function wal::link_init_file() {
   local userdir="${1:-$HOME}"
 
-  if no_init_file_exists "$userdir" "link"; then
-    echo -e "\n(symbolically) linking init file to ${userdir@Q}"
-    ln -s "$(cd ..; pwd)/templates/init.el" "$userdir/init.el"
-    on_complete
+  signal "(symbolically) linking init file to ${userdir@Q}"
+
+  ensure_no_init "$userdir" "link"
+
+  if ! ln -s "$(cd ..; pwd)/templates/init.el" "$userdir/init.el"; then
+    die
   fi
+  live
+
+  on_complete
 }
 
-function copy_init_file() {
+function wal::copy_init_file() {
   local userdir="${1:-$HOME}"
 
-  if no_init_file_exists "$userdir" "copy"; then
-    echo -e "\ncopying init file to ${userdir@Q}"
-    cp "$DIR/../templates/init.el" "$userdir/init.el"
-    on_complete
+  signal "copying init file to ${userdir@Q}"
+
+  ensure_no_init "$userdir" "copy"
+
+  if ! cp "$DIR/../templates/init.el" "$userdir/init.el" &>"$WAL_LOG"; then
+    die
   fi
+  live
+
+  on_complete
 }
 
 echo -e "${blue}${whale}${reset} ${bold}[init file setup]${reset}"
@@ -46,10 +63,10 @@ func=$1
 
 case $func in
   link)
-    link_init_file "${@:2}"
+    wal::link_init_file "${@:2}"
     ;;
   copy)
-    copy_init_file "${@:2}"
+    wal::copy_init_file "${@:2}"
     ;;
   *)
     echo -e "${red}${whale}${reset} call with 'link' or 'copy'"

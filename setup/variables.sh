@@ -12,3 +12,5 @@ blue="\e[1;34m"
 # other styles
 bold="\e[1m"
 reset="\e[0m"
+
+WAL_LOG=/tmp/wal-setup-log
