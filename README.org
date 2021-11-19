@@ -6584,6 +6584,47 @@ I'll replace =restclient= with =verb= soon.
   :delight " vrb")
 #+END_SRC
 
+*** mu4e
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+You either need to install =maildir-utils= or build from [[https://github.com/djcb/mu][source]].
+
+#+BEGIN_SRC emacs-lisp
+(use-package mu4e
+  :if (executable-find "mu")
+  :config
+  (setq mail-user-agent 'mu4e-user-agent)
+  :custom
+  (mu4e-confirm-quit nil)
+  (mu4e-completing-read-function 'completing-read)
+  (mu4e-compose-dont-reply-to-self t)
+  (mu4e-get-mail-command "offlineimap") ; This one works nicely.
+  :general
+  (wal/general-sink "m" '(mu4e :wk "emails"))
+  :ensure nil)
+#+END_SRC
+
+*** smtpmail
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+This configuration is from a (kind of) working [[https://www.djcbsoftware.nl/code/mu/mu4e/Gmail-configuration.html][Gmail setup]].
+
+I recommend putting personal data in a =site-start.el= file somewhere in
+your =load-path=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package smtpmail
+  :custom
+  (message-send-mail-function 'smtpmail-send-it)
+  (message-kill-buffer-on-exit t)
+  (starttls-use-gnutls t)
+  :ensure nil)
+#+END_SRC
+
 ** Footer
 :PROPERTIES:
 :VISIBILITY: folded
