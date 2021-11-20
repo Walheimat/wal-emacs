@@ -3549,9 +3549,17 @@ your mouse.
   (set-mark (point))
   (goto-char pt))
 
+(defun wal/advise-avy-goto-end-of-line (&rest _r)
+  "Advise `avy-goto-end-of-line' to go to beginning for `org' headings."
+  (when (and (eq major-mode 'org-mode) (org-at-heading-p))
+    (goto-char (line-beginning-position))))
+
 (use-package avy
   :config
   (add-to-list 'avy-dispatch-alist '(?q . wal/avy-action-zip-to-char))
+  (advice-add
+   'avy-goto-end-of-line
+   :after #'wal/advise-avy-goto-end-of-line)
   :custom
   (avy-background t)
   :wal-bind
@@ -4554,9 +4562,6 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
      ("@dev" . ?d)
      ("@bla" . ?b)
      ("@edu" . ?e)))
-  :bind
-  (:map org-mode-map
-   ([remap avy-goto-end-of-line] . avy-goto-line))
   :general
   (wal/captain-sink :keymaps 'org-mode-map :major-modes t
     "i" '(org-indent-mode :wk "org-indent"))
