@@ -3110,6 +3110,8 @@ ARGS is a list containing modes and additional ligatures."
   (ligature-set-ligatures 'html-mode '("<!--" "-->"))
   (ligature-set-ligatures 'dart-mode '("=>" "///" ".?" "??"
                                        "??=" ".."))
+  (ligature-set-ligatures 'rust-mode '("///" "->" "=>" "::"
+                                       ".." "#["))
   :hook (prog-mode . ligature-mode)
   :load-path "site-lisp")
 #+END_SRC
@@ -5450,6 +5452,45 @@ I want to be ready for =jai=.
     "Sg" '(c-guess-install :wk "guess"))
   :hook (cc-mode . wal/cc-mode)
   :ensure nil)
+#+END_SRC
+
+** Rust
+
+Consider the lobster.
+
+*** rust-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-server-binary][these instructions]] to download the =rust-analyzer= binary.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/rust-mode ()
+  "Hook into `rust-mode'."
+  (message "Consider the lobster")
+  (wal/disable-tabs)
+  (hack-local-variables)
+  (wal/lsp))
+
+(use-package rust-mode
+  :if (executable-find "cargo")
+  :general
+  (wal/major
+    "c" '(rust-compile :wk "compile")
+    "r" '(rust-run :wk "run"))
+  :hook (rust-mode . wal/rust-mode))
+#+END_SRC
+
+*** cargo
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package cargo
+  :demand
+  :after rust-mode)
 #+END_SRC
 
 ** Python
