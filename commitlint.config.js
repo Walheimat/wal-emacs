@@ -7,7 +7,7 @@ module.exports = {
 		'subject-empty': [2, 'never'],
 		'subject-case': [2, 'always', ['sentence-case', 'lower-case']],
         'subject-full-stop': [1, 'never'],
-		'body-empty': [2, 'never'],
+		'body-empty': [1, 'never'],
         'body-leading-blank': [1, 'always'],
 		'body-case': [1, 'always', ['lower-case', 'sentence-case']],
 		'body-full-stop': [1, 'always', '.'],
