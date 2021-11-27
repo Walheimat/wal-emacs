@@ -2492,6 +2492,19 @@ I like nice-looking things.
   "Change settings used for visual packages."
   :group 'wal
   :tag "Visuals")
+
+(defun wal/biased-random (limit &optional bias-low throws)
+  "Return a biased random number using LIMIT.
+
+The bias is the high end unless BIAS-LOW is passed. The number of
+throws are 3 or THROWS."
+  (let ((results (list))
+        (throws (or throws 3)))
+    (dotimes (i throws)
+      (add-to-list 'results (random limit)))
+    (if bias-low
+        (seq-min results)
+      (seq-max results))))
 #+END_SRC
 
 ** Dashboard
@@ -2550,6 +2563,10 @@ A collection of GitLab status messages."
   (let ((recentf-exclude wal/recentf-exclude))
     (apply fun r)))
 
+(defun wal/advise-dashboard-random-footer (&rest _r)
+  "Advise to use biased random footer message."
+  (nth (wal/biased-random (length dashboard-footer-messages)) dashboard-footer-messages))
+
 (defun wal/show-dashboard ()
   "Show the dashboar."
   (interactive)
@@ -2562,6 +2579,9 @@ A collection of GitLab status messages."
   (advice-add
    'dashboard-insert-startupify-lists
    :around #'wal/advise-dashboard-insert-startupify-lists)
+  (advice-add
+   'dashboard-random-footer
+   :override #'wal/advise-dashboard-random-footer)
   :config
   (setq dashboard-banner-logo-title (wal/describe-config-version))
   :custom
