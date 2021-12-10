@@ -5447,6 +5447,7 @@ Let's greet the world.
 ;;; Code:
 
 (declare-function poetry-ensure-in-project "poetry.el")
+(declare-function poetry-get-virtualenv "poetry.el")
 (declare-function poetry-venv-exist-p "poetry.el")
 (declare-function wal/disable-tabs "wal-settings.el")
 (declare-function wal/lsp "wal-lsp.el")
@@ -5588,14 +5589,17 @@ Use snake when you can't =make=.
 It takes more than one environment to make sense of Python code.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/configure-lsp-server-commands (venv)
-  "Configure server commands for `lsp-mode' using VENV."
+(defun wal/configure-lsp-server (venv)
+  "Configure server for `lsp-mode' using poetry."
   (let ((pylsp (file-exists-p (expand-file-name "bin/pylsp" venv)))
-        (pyls (file-exists-p (expand-file-name "bin/pyls" venv))))
+        (pyls (file-exists-p (expand-file-name "bin/pyls" venv)))
+        (jedi-env (expand-file-name (poetry-get-virtualenv))))
     (when pylsp
-      (setq-local lsp-pylsp-server-command '("poetry" "run" "pylsp")))
+      (setq-local lsp-pylsp-server-command '("poetry" "run" "pylsp"))
+      (setq-local lsp-pylsp-plugins-jedi-environment jedi-env))
     (when pyls
-      (setq-local lsp-pyls-server-command '("poetry" "run" "pyls")))))
+      (setq-local lsp-pyls-server-command '("poetry" "run" "pyls"))
+      (setq-local lsp-pyls-plugins-jedi-environment jedi-env))))
 
 (defun wal/activate-venv ()
   "Activate venv using poetry.
@@ -5607,7 +5611,7 @@ This also works if the project isn't a poetry project."
       (when venv
         (if is-poetry
             (progn
-              (wal/configure-lsp-server-commands venv)
+              (wal/configure-lsp-server venv)
               (poetry-venv-workon))
           (pyvenv-activate venv))))))
 #+END_SRC
