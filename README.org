@@ -592,16 +592,21 @@ Most hyper[fn:9] bindings are quick-access actions:
 
 + =H-h= finds file using =projectile= (or =counsel-projectile=)
 + =H-i= switches perspective (when using =perspective=)
-+ =H-j= switches buffer using =consult= (or =counsel=)
-+ =H-l= jumps to line (and =H-k= to word in line) with =avy=
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-n=, if chosen, searches with =ag= (a =hydra=)
 + =H-p= switches projects using =projectile=
 + =H-<return>= completes at point using =company= (in =company-mode=)
 + =H-== to do a =quick-calc= (inserted if called with =C-u=)
++ =H-[= toggles pop-ups using =popper= (or runs a =hydra= if focusing a pop-up)
 + =H-\= toggles =vterm=
-+ =H-u= toggles pop-ups using =popper= (or runs a =hydra= if focusing a pop-up)
++ =H-u= switches buffer using =consult= (or =counsel=)
 + =H-y= expands snippets (in =yas-minor-mode=).
+
+There's three =avy= actions:
+
++ =H-j= jumps to word of given char anywhere
++ =H-k= jumps to word in line
++ =H-l= jumps to line.
 
 It's also used for some dispatches:
 
@@ -2849,7 +2854,7 @@ Help me find my cursor!
   (beacon-blink-when-point-moves-vertically 2)
   (beacon-blink-when-point-moves-horizontally 8)
   :wal-bind
-  ("<SPC>" . beacon-blink)
+  ("]" . beacon-blink)
   :defer 3)
 #+END_SRC
 
@@ -3500,9 +3505,9 @@ Treat certain buffers and their windows as pop-ups.
   (popper-display-control 'user)
   (popper-mode-line wal/popper-mode-line)
   :wal-bind
-  ("u" . popper-toggle-latest)
+  ("[" . popper-toggle-latest)
   :general
-  (wal/captain "u" :keymaps '(popper-mode-map)
+  (wal/captain "[" :keymaps '(popper-mode-map)
     '(wal/popper/body :wk "popper"))
   (general-define-key
    :keymaps 'popper-mode-map
@@ -3589,13 +3594,10 @@ your mouse.
   :custom
   (avy-background t)
   :wal-bind
-  (("l" . avy-goto-end-of-line)
+  (("j" . avy-goto-word-1)
+   ("l" . avy-goto-end-of-line)
    ("k" . wal/avy-goto-word-in-line))
   :general
-  (wal/colonel
-    "l" '(avy-goto-word-1 :wk "go to word"))
-  (wal/colonel-sink
-    "l" '(avy-goto-word-0 :wk "go to any word"))
   (wal/lieutenant
     ;; Lines.
     "l" '(:ignore t :wk "avy (line)")
@@ -4062,7 +4064,7 @@ Heavy lifting with =consult=.
    :map ctl-x-r-map
    ("u" . consult-register))
   :wal-bind
-  ("j" . consult-buffer)
+  ("u" . consult-buffer)
   :general
   (wal/general
     "St" '(consult-theme :wk "consult theme")
@@ -4269,7 +4271,7 @@ This eliminates getting prompted to open one first."
   :wal-bind
   (:map projectile-mode-map
    ("h" . counsel-projectile-find-file)
-   ("j" . counsel-projectile-switch-to-buffer))
+   ("u" . counsel-projectile-switch-to-buffer))
   :demand
   :after (projectile counsel))
 #+END_SRC
@@ -5082,7 +5084,7 @@ The mother of all buffers. You don't need no tree views.
   (dired-auto-revert-buffer t)
   (dired-kill-when-opening-new-dired-buffer t) ;; New in Emacs 28.1.
   :wal-bind
-  ("[" . dired-jump)
+  ("<SPC>" . dired-jump)
   :bind
   (:map ctl-x-map
    ("j" . dired-jump)
