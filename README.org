@@ -3581,8 +3581,12 @@ your mouse.
   (goto-char pt))
 
 (defun wal/advise-avy-goto-end-of-line (&rest _r)
-  "Advise `avy-goto-end-of-line' to go to beginning for `org' headings."
-  (when (and (eq major-mode 'org-mode) (org-at-heading-p))
+  "Advise `avy-goto-end-of-line' to go to beginning for `org' headings.
+
+When called with `universal-argument', this also goes to the
+beginning."
+  (when (or (equal current-prefix-arg '(4))
+            (and (eq major-mode 'org-mode) (org-at-heading-p)))
     (goto-char (line-beginning-position))))
 
 (use-package avy
