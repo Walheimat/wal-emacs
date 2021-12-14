@@ -6682,9 +6682,15 @@ I'll replace =restclient= with =verb= soon.
 (use-package verb
   :config
   (add-to-list 'org-tag-alist '("verb" . ?v))
+  (wal/display-buffer-in-pop-up "\\*HTTP Response")
+  :custom
+  (verb-auto-kill-response-buffers t)
   :general
   (wal/major :keymaps 'org-mode-map
-    "r" '(:keymap verb-command-map :wk "verb"))
+    "r" '(:ignore t :wk "verb")
+    "rr" '(verb-send-request-on-point-other-window-stay :wk "make request")
+    "rk" '(verb-kill-all-response-buffers :wk "kill response buffers")
+    "rv" '(verb-set-var :wk "set var"))
   (wal/captain-sink :keymaps 'org-mode-map
     "r" '(verb-mode :wk "verb"))
   :after org
