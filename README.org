@@ -4371,10 +4371,14 @@ This only removes `process-kill-buffer-query-function'."
 
 (defun wal/consult-persp-current-buffer-names ()
   "Get current perspective's buffer names.
-The result is filtered using `consult-buffer-filter'."
-  (let ((filters (consult--regexp-filter consult-buffer-filter)))
+
+The result is filtered using `consult-buffer-filter'. The current
+buffer is also filtered."
+  (let ((filters (consult--regexp-filter consult-buffer-filter))
+        (current (buffer-name (current-buffer))))
     (seq-filter
-     (lambda (it) (not (string-match-p filters it)))
+     (lambda (it) (and (not (string-match-p filters it))
+                  (not (eq it current))))
      (persp-current-buffer-names))))
 
 (defun wal/configure-perspective ()
