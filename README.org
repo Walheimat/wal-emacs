@@ -5586,12 +5586,11 @@ Use snake when you can't =make=.
     (require 'dap-python))
   :general
   (wal/major :keymaps 'python-mode-map :major-modes t
-    "I" '(:ignore t :wk "inferior shell")
-    "Ir" '(run-python :wk "run")
-    "Is" '(:ignore t :wk "send")
-    "Isr" '(python-shell-send-region :wk "region")
-    "Isb" '(python-shell-send-buffer :wk "buffer")
-    "Isf" '(python-shell-send-file :wk "file"))
+    "i" '(:ignore t :wk "inferior shell")
+    "iR" '(run-python :wk "run")
+    "ir" '(python-shell-send-region :wk "send region")
+    "ib" '(python-shell-send-buffer :wk "send buffer")
+    "if" '(python-shell-send-file :wk "send file"))
   :hook (python-mode . wal/python-mode)
   :ensure nil)
 #+END_SRC
@@ -5604,14 +5603,10 @@ It takes more than one environment to make sense of Python code.
 (defun wal/configure-lsp-server (venv)
   "Configure poetry-managed server using VENV."
   (let ((pylsp (file-exists-p (expand-file-name "bin/pylsp" venv)))
-        (pyls (file-exists-p (expand-file-name "bin/pyls" venv)))
         (jedi-env (expand-file-name (poetry-get-virtualenv))))
     (when pylsp
       (setq-local lsp-pylsp-server-command '("poetry" "run" "pylsp"))
-      (setq-local lsp-pylsp-plugins-jedi-environment jedi-env))
-    (when pyls
-      (setq-local lsp-pyls-server-command '("poetry" "run" "pyls"))
-      (setq-local lsp-pyls-plugins-jedi-environment jedi-env))))
+      (setq-local lsp-pylsp-plugins-jedi-environment jedi-env))))
 
 (defun wal/activate-venv ()
   "Activate venv using poetry.
@@ -6464,7 +6459,7 @@ server.
               (add-to-list 'exec-path elixir-ls-release-location))))
 #+END_SRC
 
-*** Python (pyls/pylsp)
+*** Python (pylsp)
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -6474,9 +6469,7 @@ This one assumes you want to enable =pylint= and you're using =poetry=.
 #+BEGIN_SRC emacs-lisp :tangle no
 ((python-mode
   . ((eglot-workspace-configuration
-      . ((pyls . ((plugins (pylint (enabled . t)))
-                  (executable  . "poetry run pyls")))
-         (pylsp . ((plugins (pylint (enabled . t)))
+      . ((pylsp . ((plugins (pylint (enabled . t)))
                    (executable  "poetry run pylsp"))))))))
 #+END_SRC
 
