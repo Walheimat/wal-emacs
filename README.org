@@ -4551,7 +4551,8 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
     (require 'ox-md nil t)))
 
 (defun wal/org-content (level)
-  "Interactively call `org-content' with LEVEL."
+  "Show up to given LEVEL.
+This calls `org-content' interactively."
   (interactive "nShow content up to level: ")
   (when (fboundp 'org-content)
     (org-content level)))
@@ -4608,19 +4609,18 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   (wal/captain-sink :keymaps 'org-mode-map :major-modes t
     "i" '(org-indent-mode :wk "org-indent"))
   (wal/major :keymaps 'org-mode-map :major-modes t
-    "e" '(:ignore t :wk "edit")
-    "es" '(:ignore t :wk "subtree")
-    "esw" '(org-cut-subtree :wk "cut subtree")
-    "esy" '(org-paste-subtree :wk "paste subtree")
-    "v" '(:ignore t :wk "visualization")
-    "va" '(org-show-all :wk "show all")
-    "vl" '(wal/org-content :wk "show level")
-    "eN" '(org-add-note :wk "add note"))
+    "s" '(:ignore t :wk "subtree")
+    "sw" '(org-cut-subtree :wk "cut subtree")
+    "sy" '(org-paste-subtree :wk "paste subtree")
+    "S" '(:ignore t :wk "show")
+    "Sa" '(org-show-all :wk "all")
+    "Sl" '(wal/org-content :wk "level")
+    "n" '(org-add-note :wk "add note"))
   :hook (org-mode . wal/org-mode)
   :ensure nil)
 #+END_SRC
 
-** ob
+** org-babel
 
 Convenient (and less safe) source block interaction.
 
@@ -4635,7 +4635,7 @@ Convenient (and less safe) source block interaction.
   (org-confirm-babel-evalute nil)
   :general
   (wal/major :keymaps 'org-mode-map
-    "b" '(:keymap org-babel-map :wk "babel"))
+    "B" '(:keymap org-babel-map :wk "babel"))
   :ensure nil)
 #+end_src
 
@@ -4838,7 +4838,7 @@ Turn any =org-mode= buffer into a presentation.
    ("v" . wal/org-tree-slide-toggle-visibility))
   :general
   (wal/major :keymaps 'org-mode-map :major-modes t
-    "vp" '(org-tree-slide-mode :wk "presentation"))
+    "P" '(org-tree-slide-mode :wk "present"))
   :hook
   ((org-tree-slide-play . wal/org-tree-slide-play)
    (org-tree-slide-stop . wal/org-tree-slide-stop)
@@ -4891,7 +4891,7 @@ This sets additional modes."
    ("C-c C-c" . org-edit-src-exit))
   :general
   (wal/major :keymaps 'org-mode-map :major-modes t
-    "ec" '(org-edit-src-code :wk "edit source code"))
+    "c" '(org-edit-src-code :wk "edit source code"))
   :hook (org-src-mode . wal/org-src-mode)
   :after org
   :ensure nil
@@ -4946,9 +4946,9 @@ Quick adding and normalizing.
 (use-package org-footnote
   :general
   (wal/major :keymaps 'org-mode-map :major-modes t
-    "ef" '(:ignore t :wk "footnotes")
-    "efn" '(org-footnote-new :wk "new")
-    "efo" '(org-footnote-normalize :wk "normalize"))
+    "F" '(:ignore t :wk "footnotes")
+    "Fn" '(org-footnote-new :wk "new")
+    "Fo" '(org-footnote-normalize :wk "normalize"))
   :after org
   :ensure nil)
 #+END_SRC
@@ -6690,10 +6690,10 @@ I'll replace =restclient= with =verb= soon.
   (verb-auto-kill-response-buffers t)
   :general
   (wal/major :keymaps 'org-mode-map
-    "r" '(:ignore t :wk "verb")
-    "rr" '(verb-send-request-on-point-other-window-stay :wk "make request")
-    "rk" '(verb-kill-all-response-buffers :wk "kill response buffers")
-    "rv" '(verb-set-var :wk "set var"))
+    "v" '(:ignore t :wk "verb")
+    "vr" '(verb-send-request-on-point-other-window-stay :wk "make request")
+    "vk" '(verb-kill-all-response-buffers :wk "kill response buffers")
+    "vv" '(verb-set-var :wk "set var"))
   (wal/captain-sink :keymaps 'org-mode-map
     "r" '(verb-mode :wk "verb"))
   :after org
