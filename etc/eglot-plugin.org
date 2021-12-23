@@ -1,0 +1,102 @@
+#+TITLE: Eglot Configuration
+#+AUTHOR: @Walheimat
+
+I used =eglot= instead of =lsp-mode= for a while.
+
+As with =ivy=, I will not keep these configurations compatible with
+newer versions of the config.
+
+* Integration
+
+** Activation
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/lsp ()
+  "Activate LSP client."
+  (setq-local company-idle-delay 0.0)
+  (eglot-ensure))
+#+END_SRC
+
+** flymake
+
+Built-in syntax checker.
+
+#+BEGIN_SRC emacs-lisp
+(use-package flymake
+  :config
+  (setq flymake-mode-line-title "flm")
+  :general
+  (wal/captain :keymaps 'flymake-mode-map
+    "f" '(:ignore t :wk "flymake")
+    "fn" '(flymake-goto-next-error :wk "next")
+    "fp" '(flymake-goto-prev-error :wk "prev")
+    "fu" '(consult-flymake :wk "consult flymake"))
+  :ensure nil)
+#+END_SRC
+
+** flymake-eslint
+
+#+BEGIN_SRC emacs-lisp
+(use-package flymake-eslint
+  :custom
+  (flymake-eslint-defer-binary-check t)
+  :demand
+  :after eglot)
+#+END_SRC
+
+* Core Package
+
+** eglot
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/eglot-managed-mode ()
+  "Hook into `eglot-managed-mode'."
+  (pcase major-mode
+    ((or 'js2-mode 'rjsx-mode)
+     (if (eglot-managed-p)
+         (add-hook 'flymake-diagnostic-functions 'flymake-eslint--checker nil t)
+       (remove-hook 'flymake-diagnostic-functions 'flyamke-eslint--checker t)))
+    (_ nil)))
+
+(use-package eglot
+  :if (eq wal/lsp-provider 'eglot)
+  :custom
+  (eglot-autoshutdown t)
+  :general
+  (wal/captain :keymaps 'eglot-mode-map
+    "l" '(:ignore t :wk "eglot")
+    "lc" '(eglot-reconnect :wk "reconnect")
+    "lf" '(eglot-format :wk "format")
+    "lr" '(eglot-rename :wk "rename")
+    "ls" '(eglot-shutdown :wk "shutdown")
+    "la" '(eglot-code-actions :wk "code actions"))
+  :hook (eglot-managed-mode . wal/eglot-managed-mode))
+#+END_SRC
+
+** Server Configurations
+
+
+*** Python (pylsp)
+
+This one assumes you want to enable =pylint= and you're using =poetry=.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+((python-mode
+  . ((eglot-workspace-configuration
+      . ((pylsp . ((plugins (pylint (enabled . t)))
+                   (executable  "poetry run pylsp"))))))))
+#+END_SRC
+
+*** Go (gopls)
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Taken from the official documentation.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+((go-mode
+  . ((eglot-workspace-configuration
+      . ((gopls . ((staticcheck . t)
+                    (matcher . "CaseSensitive"))))))))
+#+END_SRC

@@ -675,7 +675,7 @@ minor-mode-specific[fn:11] actions. The package prefixes are:
 + =d= for =dap-mode=
 + =f= for =flycheck= or =flymake=
 + =i= for =perspective=
-+ =l= for =lsp-mode= or =eglot=
++ =l= for =lsp-mode=
 + =m= for =magit=
 + =p= for =projectile=
 + =s= for =flyspell=
@@ -2023,8 +2023,7 @@ Look up words in a word book.
 :UNNUMBERED: t
 :END:
 
-Contextual information. Packages =eglot= and =lsp-mode= use =eldoc=
-extensively.
+Contextual information. Package =lsp-mode= use =eldoc= extensively.
 
 #+BEGIN_SRC emacs-lisp
 (use-package eldoc
@@ -5224,8 +5223,6 @@ I want to be ready for =jai=.
 :UNNUMBERED: t
 :END:
 
-=eglot= will use =ccls=, =lsp-mode= will use =clangd=.
-
 #+BEGIN_SRC emacs-lisp
 (defun wal/cc-mode ()
   "Hook into `cc-mode'."
@@ -5809,32 +5806,6 @@ Please let me know when I screwed up. I promise I will learn.
   :delight " fly")
 #+END_SRC
 
-*** flymake
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Built-in syntax checker. Used by =eglot=.
-
-#+BEGIN_SRC emacs-lisp
-(use-package flymake
-  :config
-  (setq flymake-mode-line-title "flm")
-  :general
-  (wal/captain :keymaps 'flymake-mode-map
-    "f" '(:ignore t :wk "flymake")
-    "fn" '(flymake-goto-next-error :wk "next")
-    "fp" '(flymake-goto-prev-error :wk "prev")
-    "fu" '(consult-flymake :wk "consult flymake"))
-  :ensure nil)
-
-(use-package flymake-eslint
-  :custom
-  (flymake-eslint-defer-binary-check t)
-  :demand
-  :after eglot)
-#+END_SRC
-
 *** flyspell
 :PROPERTIES:
 :UNNUMBERED: t
@@ -5902,7 +5873,6 @@ Language servers are awesome. Thanks, Microsoft.
 
 ;;; Code:
 
-(declare-function eglot-managed-p "eglot.el")
 (declare-function lsp-enable-which-key-integration "lsp-mode.el")
 (declare-function wal/captain "wal-key-bindings.el")
 (declare-function wal/captain-sink "wal-key-bindings.el")
@@ -5914,21 +5884,11 @@ Language servers are awesome. Thanks, Microsoft.
   :group 'wal
   :tag "LSP")
 
-(defcustom wal/lsp-provider 'lsp-mode
-  "Which LSP client to use."
-  :type '(choice (const lsp-mode)
-                 (const eglot))
-  :group 'wal-lsp)
-
 (defun wal/lsp ()
   "Activate LSP client."
   (setq-local company-idle-delay 0.0)
-  (pcase wal/lsp-provider
-    ('lsp-mode (progn
-                 (setq-local company-backends '(company-capf company-yasnippet))
-                 (lsp-deferred)))
-    ('eglot (eglot-ensure))
-    (_ nil)))
+  (setq-local company-backends '(company-capf company-yasnippet))
+  (lsp-deferred))
 
 (wal/captain-sink :keymaps 'prog-mode-map
     "l" '(wal/lsp :wk "lsp"))
@@ -5974,7 +5934,6 @@ set to use a posframe instead."
   (setq-local hydra-hint-display-type 'posframe))
 
 (use-package lsp-mode
-  :if (eq wal/lsp-provider 'lsp-mode)
   :config
   (wal/configure-lsp-mode)
   :custom
@@ -6126,45 +6085,10 @@ Attach to running process.
 
 ** Option B
 
-*** eglot
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-=eglot= is the light-weight alternative.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/eglot-managed-mode ()
-  "Hook into `eglot-managed-mode'."
-  (pcase major-mode
-    ((or 'js2-mode 'rjsx-mode)
-     (if (eglot-managed-p)
-         (add-hook 'flymake-diagnostic-functions 'flymake-eslint--checker nil t)
-       (remove-hook 'flymake-diagnostic-functions 'flyamke-eslint--checker t)))
-    (_ nil)))
-
-(use-package eglot
-  :if (eq wal/lsp-provider 'eglot)
-  :custom
-  (eglot-autoshutdown t)
-  :general
-  (wal/captain :keymaps 'eglot-mode-map
-    "l" '(:ignore t :wk "eglot")
-    "lc" '(eglot-reconnect :wk "reconnect")
-    "lf" '(eglot-format :wk "format")
-    "lr" '(eglot-rename :wk "rename")
-    "ls" '(eglot-shutdown :wk "shutdown")
-    "la" '(eglot-code-actions :wk "code actions"))
-  :hook (eglot-managed-mode . wal/eglot-managed-mode))
-#+END_SRC
-
 ** Server Configurations
 
 Configure or register language servers that aren't as straight
 forward.
-
-=eglot= prefers using a =.dir-locals.el= file to configure a language
-server.
 
 *** Elixir (elixir-ls)
 :PROPERTIES:
@@ -6184,34 +6108,6 @@ server.
                                   "language_server.sh"
                                   elixir-ls-release-location))
               (add-to-list 'exec-path elixir-ls-release-location))))
-#+END_SRC
-
-*** Python (pylsp)
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-This one assumes you want to enable =pylint= and you're using =poetry=.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-((python-mode
-  . ((eglot-workspace-configuration
-      . ((pylsp . ((plugins (pylint (enabled . t)))
-                   (executable  "poetry run pylsp"))))))))
-#+END_SRC
-
-*** Go (gopls)
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Taken from the official documentation.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-((go-mode
-  . ((eglot-workspace-configuration
-      . ((gopls . ((staticcheck . t)
-                    (matcher . "CaseSensitive"))))))))
 #+END_SRC
 
 *** Prolog (swipl)
