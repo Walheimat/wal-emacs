@@ -1368,6 +1368,25 @@ Allow resetting =text-scale=.
   (text-scale-set 0))
 #+END_SRC
 
+** Utility
+
+Some more utility functions.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/biased-random (limit &optional bias-low throws)
+  "Return a biased random number using LIMIT.
+
+The bias is the high end unless BIAS-LOW is passed. The number of
+throws are 3 or THROWS."
+  (let ((results (list))
+        (throws (or throws 3)))
+    (dotimes (i throws)
+      (add-to-list 'results (random limit)))
+    (if bias-low
+        (seq-min results)
+      (seq-max results))))
+#+END_SRC
+
 ** Footer
 :PROPERTIES:
 :VISIBILITY: folded
@@ -2452,6 +2471,7 @@ I like nice-looking things.
 ;;; Code:
 
 (declare-function ligature-set-ligatures "ligature.el")
+(declare-function wal/biased-random "wal-func.el")
 (declare-function wal/captain-sink "wal-key-bindings.el")
 
 (defvar beacon-dont-blink-commands)
@@ -2465,19 +2485,6 @@ I like nice-looking things.
   "Change settings used for visual packages."
   :group 'wal
   :tag "Visuals")
-
-(defun wal/biased-random (limit &optional bias-low throws)
-  "Return a biased random number using LIMIT.
-
-The bias is the high end unless BIAS-LOW is passed. The number of
-throws are 3 or THROWS."
-  (let ((results (list))
-        (throws (or throws 3)))
-    (dotimes (i throws)
-      (add-to-list 'results (random limit)))
-    (if bias-low
-        (seq-min results)
-      (seq-max results))))
 #+END_SRC
 
 ** Dashboard
@@ -5186,9 +5193,18 @@ Let's greet the world.
 (declare-function poetry-ensure-in-project "poetry.el")
 (declare-function poetry-get-virtualenv "poetry.el")
 (declare-function poetry-venv-exist-p "poetry.el")
+(declare-function wal/biased-random "wal-func.el")
 (declare-function wal/disable-tabs "wal-settings.el")
 (declare-function wal/lsp "wal-lsp.el")
 (declare-function wal/maybe-enable-tabs "wal-settings.el")
+
+(defun wal/message-in-a-bottle (bottle)
+  "Randomly display a message from the given BOTTLE.
+
+That bottle is just an array of strings."
+  (let* ((rand (wal/biased-random (length bottle)))
+         (mess (nth rand bottle)))
+    (message mess)))
 #+END_SRC
 
 ** Elixir
@@ -5201,7 +5217,8 @@ Let's greet the world.
 #+BEGIN_SRC emacs-lisp
 (defun wal/elixir-mode ()
   "Hook into `elixir-mode'."
-  (message "Mixin' potions")
+  (wal/message-in-a-bottle '("Mixin' potions"
+                             "A hex on you"))
   (wal/disable-tabs)
   (hack-local-variables)
   (wal/lsp))
@@ -5224,9 +5241,10 @@ I want to be ready for =jai=.
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/cc-mode ()
-  "Hook into `cc-mode'."
-  (message "Make tidy! Make clean!")
+(defun wal/c++-mode ()
+  "Hook into `c++-mode'."
+  (wal/message-in-a-bottle '("Make tidy! Make clean!"
+                             "Serenity now!"))
   (wal/disable-tabs)
   (hack-local-variables)
   (wal/lsp))
@@ -5240,7 +5258,7 @@ I want to be ready for =jai=.
     "S" '(:ignore t :wk "style")
     "Ss" '(c-set-style :wk "set")
     "Sg" '(c-guess-install :wk "guess"))
-  :hook (c++-mode . wal/cc-mode)
+  :hook (c++-mode . wal/c++-mode)
   :ensure nil)
 #+END_SRC
 
@@ -5258,7 +5276,7 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
 #+BEGIN_SRC emacs-lisp
 (defun wal/rust-mode ()
   "Hook into `rust-mode'."
-  (message "Consider the lobster")
+  (wal/message-in-a-bottle '("Consider the lobster"))
   (wal/disable-tabs)
   (hack-local-variables)
   (wal/lsp))
@@ -5296,7 +5314,8 @@ Use snake when you can't =make=.
 #+BEGIN_SRC emacs-lisp
 (defun wal/python-mode ()
   "Hook into `python-mode'."
-  (message "Watch out for snakes!")
+  (wal/message-in-a-bottle '("Watch out for snakes!"
+                             "Vegetation, aggravation"))
   (wal/disable-tabs)
   (setq-local comment-inline-offset 2)
   (hack-local-variables)
@@ -5391,7 +5410,8 @@ The philosopher's choice.
 #+BEGIN_SRC emacs-lisp
 (defun wal/elisp-mode ()
   "Hook into `emacs-lisp-mode'."
-  (message "So it's just a bunch of lists?")
+  (wal/message-in-a-bottle '("So it's just a bunch of lists?"
+                             "List your lambdas"))
   (wal/disable-tabs)
   (hack-local-variables)
   (flycheck-mode 1))
@@ -5468,7 +5488,8 @@ Can we have =deno= instead of =node=?
 #+BEGIN_SRC emacs-lisp
 (defun wal/js2-mode ()
   "Hook into `js2-mode'."
-  (message "NaN !== NaN")
+  (wal/message-in-a-bottle '("NaN !== NaN"
+                             "Null falsy values or undefined"))
   (add-node-modules-path)
   (hack-local-variables)
   (wal/maybe-enable-tabs)
@@ -5589,7 +5610,8 @@ Setup for LSP.
 #+BEGIN_SRC emacs-lisp
 (defun wal/go-mode ()
   "Hook into `go-mode'."
-  (message "What does Sonic say?")
+  (wal/message-in-a-bottle '("What does Sonic say?"
+                             "Put a golang under your tongue"))
   (wal/disable-tabs)
   (hack-local-variables)
   (wal/lsp))
@@ -5610,7 +5632,8 @@ Bash your head in!
 #+BEGIN_SRC emacs-lisp
 (defun wal/sh-mode ()
   "Hook into `sh-mode'."
-  (message "Sh..sh..h..")
+  (wal/message-in-a-bottle '("Sh..sh..h.."
+                             "Bash your head in"))
   (wal/disable-tabs)
   (hack-local-variables))
 
