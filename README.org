@@ -591,7 +591,7 @@ It's also used for certain dispatches:
 
 Most hyper[fn:9] bindings are quick-access actions:
 
-+ =H-h= finds file using =projectile= (or =counsel-projectile=)
++ =H-h= finds file using =projectile=
 + =H-]= highlights the cursor using =beacon=
 + =H-i= switches perspective (when using =perspective=)
 + =H-<mouse3>= adds another =multiple-cursor= at point
@@ -603,7 +603,7 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-[= toggles pop-ups using =popper= (or runs a =hydra= if focusing a
   pop-up)
 + =H-\= toggles =vterm=
-+ =H-u= switches buffer using =consult= (or =counsel=)
++ =H-u= switches buffer using =consult=
 + =H-y= expands snippets (in =yas-minor-mode=).
 
 There's three =avy= actions:
@@ -847,8 +847,7 @@ This will activate minor mode `wal/config-mode'."
         ("t" "tangle" wal/tangle-config)
         ("c" "checkdoc" wal/checkdoc-packages)]
        ["Go to"
-        ("h" "heading" consult-org-heading
-         :inapt-if-not (lambda () (eq wal/completion-provider 'vertico)))
+        ("h" "heading" consult-org-heading)
         ("d" "packages" wal/dired-packages)]
        ["Customization"
         ("g" "group" wal/customize-group)]])
@@ -1075,38 +1074,6 @@ should get created."
 #+END_SRC
 
 ** Buffers
-
-*** Ignoring
-
-Ignore some buffers when switching.
-
-#+BEGIN_SRC emacs-lisp
-(defcustom wal/commonly-ignored-major-modes
-  '(dired-mode
-    wdired-mode
-    helpful-mode
-    magit-diff-mode
-    magit-status-mode
-    vterm-mode)
-  "Major modes whose buffers should be commonly ignored."
-  :type '(repeat symbol)
-  :group 'wal-func)
-
-(defun wal/commonly-ignored-buffer-p (buffer-or-string)
-  "Check if provided BUFFER-OR-STRING is commonly ignored.
-
-Commonly ignored buffers are those belonging to major modes in
-`wal/commonly-ignored-major-modes' as well as starred buffers
-other than scratch and eww buffers."
-  (let ((maj (with-current-buffer
-                 (get-buffer-create buffer-or-string)
-               major-mode)))
-    (or (member maj wal/commonly-ignored-major-modes)
-        ;; Starred buffers other than scratch and eww buffers.
-        (and (not (string-match "^\\*scratch" buffer-or-string))
-             (not (string-match "^\\*eww\\*\\'" buffer-or-string))
-             (string-match "^\\*[[:ascii:]]+\\*\\'" buffer-or-string)))))
-#+END_SRC
 
 *** Buffer Display
 
@@ -2488,7 +2455,6 @@ I like nice-looking things.
 (declare-function ligature-set-ligatures "ligature.el")
 (declare-function wal/captain-sink "wal-key-bindings.el")
 
-(defvar all-the-icons-ivy-rich-display-transformers-list)
 (defvar beacon-dont-blink-commands)
 (defvar beacon-dont-blink-major-modes)
 (defvar dashboard-buffer-name)
@@ -3197,13 +3163,6 @@ This is the case when:
 You need to install the icons yourself[fn:13].
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/configure-rich-transformers ()
-  "Configure (additional) transformers in the list.
-
-This function is called before `all-the-icons-ivy-rich' is activated."
-  (let ((tl all-the-icons-ivy-rich-display-transformers-list))
-    (plist-put tl 'persp-kill-buffer* (plist-get tl 'persp-kill-buffer))))
-
 (use-package all-the-icons
   :commands (all-the-icons-octicon))
 
@@ -3211,13 +3170,6 @@ This function is called before `all-the-icons-ivy-rich' is activated."
   :hook (dired-mode . all-the-icons-dired-mode)
   :after all-the-icons
   :diminish)
-
-(use-package all-the-icons-ivy-rich
-  :config
-  (wal/configure-rich-transformers)
-  (all-the-icons-ivy-rich-mode +1)
-  :demand
-  :after (all-the-cions ivy-rich))
 #+END_SRC
 
 *** emojify
@@ -3336,7 +3288,6 @@ Everything that has to do with windows.
 (declare-function popper--bury-all "popper.el")
 (declare-function popper--open-all "popper.el")
 
-(defvar wal/completion-provider)
 (defvar aw-dispatch-alist)
 
 (defgroup wal-windows nil
@@ -3361,10 +3312,6 @@ Ace interacting with (multiple) windows.
   "Advise `aw--switch-buffer' to use `consult-buffer'."
   (call-interactively 'consult-buffer))
 
-(defun wal/advise-aw--switch-buffer-ivy (&rest _r)
-  "Advise `aw--switch-buffer' to use `ivy-switch-buffer'."
-  (call-interactively 'wal/ivy-switch-buffer))
-
 (defun wal/configure-ace-window ()
   "Configure package `ace-window'."
   (setq aw-dispatch-alist '((?h aw-split-window-horz "horizontal split")
@@ -3378,16 +3325,9 @@ Ace interacting with (multiple) windows.
                             (?b aw-switch-buffer-in-window "buffer")
                             ;; If this has a description, it doesn't work.
                             (?? aw-show-dispatch-help)))
-  (cond
-   ((eq wal/completion-provider 'vertico)
-    (advice-add
-     'aw--switch-buffer
-     :override #'wal/advise-aw--switch-buffer-consult))
-   ((eq wal/completion-provider 'ivy)
-    (advice-add
-     'aw--switch-buffer
-     :override #'wal/advise-aw--switch-buffer-ivy))
-   (t nil)))
+  (advice-add
+   'aw--switch-buffer
+   :override #'wal/advise-aw--switch-buffer-consult))
 
 (use-package ace-window
   :config
@@ -3621,14 +3561,6 @@ beginning."
     "rm" '(avy-move-region :wk "move")
     "rw" '(avy-kill-ring-save-region :wk "kill"))
   :commands (avy-with))
-
-;; Use `avy' inside `ivy'.
-(use-package ivy-avy
-  :wal-bind
-  (:map ivy-minibuffer-map
-   ("l" . ivy-avy))
-  :demand
-  :after ivy)
 #+END_SRC
 
 *** mwim
@@ -3686,7 +3618,6 @@ Both require installation of their respective binary.
 (declare-function wal/display-buffer-in-pop-up "wal-func.el")
 
 (defvar ag-arguments)
-(defvar wal/completion-provider)
 
 (defgroup wal-find nil
   "Change settings of search packages."
@@ -3830,9 +3761,7 @@ using =xref-find-definitions= (=M-.=).
   :init
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
   :config
-  (if (eq wal/completion-provider 'ivy)
-      (setq dumb-jump-selector 'ivy)
-    (setq dumb-jump-selector 'completing-read))
+  (setq dumb-jump-selector 'completing-read)
   :custom
   (dumb-jump-force-searcher 'ag))
 #+END_SRC
@@ -3878,16 +3807,6 @@ Complete commands and code.
   "Change settings used for completion packages."
   :group 'wal
   :tag "Completion")
-
-(defcustom wal/completion-provider 'vertico
-  "Which completion system to user.
-
-Changing this value will only take effect after a re-load. Unless
-`wal/load-custom-file-immediately' is set to t, setting this to a
-value other than the default will have no effect."
-  :type '(choice (const vertico)
-                 (const ivy))
-  :group 'wal-complete)
 #+END_SRC
 
 ** Inline Completion
@@ -3915,7 +3834,7 @@ In-line completion.
   :diminish)
 #+END_SRC
 
-** Minibuffer A
+** Minibuffer Completion
 
 *** vertico
 :PROPERTIES:
@@ -3926,7 +3845,6 @@ Provide global option narrowing using the =vertico= family of products.
 
 #+BEGIN_SRC emacs-lisp
 (use-package vertico
-  :if (eq wal/completion-provider 'vertico)
   :config
   (setq enable-recursive-minibuffers t
         read-extended-command-predicate #'command-completion-default-include-p)
@@ -4095,197 +4013,6 @@ Heavy lifting with =consult=.
   :after (consult flycheck))
 #+END_SRC
 
-** Minibuffer B
-
-Alternatively do so using =ivy=.
-
-*** ivy
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-#+BEGIN_SRC emacs-lisp
-;; Hide `dired', `docker', `ag' and default Emacs buffers when switching.
-(defcustom wal/ivy-ignore-buffers
-  '(wal/commonly-ignored-buffer-p
-    "\\` "
-    "\\`\\*tramp/")
-  "Buffers that are commonly ignored when switching."
-  :type '(restricted-sexp :match-alternatives (stringp symbolp))
-  :group 'wal-complete)
-
-(defun wal/ivy-switch-ignored-buffers (&rest r)
-  "Show only commonly ignored buffers.
-Pass R to the switch buffer function."
-  (interactive)
-  (let ((ivy-ignore-buffers
-         '((lambda (buffer-or-string)
-             (not (wal/commmonly-ignored-buffer-p buffer-or-string))))))
-    (wal/ivy-switch-buffer r)))
-
-(defalias 'wal/ivy-switch-buffer #'ivy-switch-buffer)
-
-(use-package ivy
-  :if (eq wal/completion-provider 'ivy)
-  :config
-  (setq enable-recursive-minibuffers t)
-  (ivy-mode 1)
-  :custom
-  (ivy-height 6)
-  (ivy-ignore-buffers wal/ivy-ignore-buffers)
-  (ivy-count-format "%d/%d ")
-  (ivy-wrap t)
-  :bind
-  (:map ivy-mode-map
-   ("C-x b" . wal/ivy-switch-buffer)
-   ("C-x x b" . wal/ivy-switch-ignored-buffers))
-  :defer 1)
-#+END_SRC
-
-*** ivy-rich
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Some nicer candidate view when switching buffers.
-
-#+BEGIN_SRC emacs-lisp
-(use-package ivy-rich
-  :config
-  (when (fboundp 'ivy-format-function-line)
-    (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line))
-  (ivy-rich-mode 1)
-  :demand
-  :after ivy)
-#+END_SRC
-
-*** prescient
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Better short-term-memory for =ivy=.
-
-#+BEGIN_SRC emacs-lisp
-;; `prescient' is defined later, so we have to define it here.
-(defcustom wal/use-prescient t
-  "Whether `prescient' is used."
-  :type 'boolean
-  :group 'wal-complete)
-
-(use-package prescient
-  :if (and wal/use-prescient (eq wal/completion-provider 'ivy))
-  :config
-  (when (fboundp 'prescient-persist-mode)
-    (prescient-persist-mode +1))
-  :custom
-  (prescient-sort-length-enable nil)
-  (prescient-save-file (expand-file-name "prescient-persist" wal/cache-directory))
-  (prescient-filter-method '(literal regexp))
-  :demand
-  :after counsel)
-
-(use-package ivy-prescient
-  :config
-  (ivy-prescient-mode +1)
-  :custom
-  (ivy-prescient-retain-classic-highlighting t)
-  :demand
-  :after (ivy prescient))
-#+END_SRC
-
-*** counsel
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Counsel me this, Counselor: =ivy= is not enough!
-
-#+BEGIN_SRC emacs-lisp
-(use-package counsel
-  :config
-  ;; Package ivy-prescient sets `ivy-initial-inputs-alist' to nil!
-  (unless wal/use-prescient
-    (setcdr (assq 'counsel-M-x ivy-initial-inputs-alist) ""))
-  :custom
-  (counsel-linux-app-format-function #'counsel-linux-app-format-function-command-only)
-  :bind
-  (:map ivy-mode-map
-   ("M-g m" . counsel-mark-ring)
-   ("M-x" . counsel-M-x)
-   ("<menu>" . counsel-M-x)
-   ("C-x C-f" . counsel-find-file)
-   :map bookmark-map
-   ("b" . counsel-bookmark))
-  :general
-  (wal/general
-    "St" '(counsel-load-theme :wk "counsel theme")
-    "fl" '(counsel-find-library :wk "library"))
-  (wal/general-sink
-    "h" '(counsel-command-history :wk "command history")
-    "v" '(counsel-set-variable :wk "set variable"))
-  (wal/lieutenant
-    "o" '(:ignore t :wk "counsel")
-    "os" '(counsel-search :wk "search")
-    "ox" '(counsel-find-file-extern :wk "(external) find file")
-    "ol" '(counsel-linux-app :wk "Linux app")
-    "or" '(counsel-recentf :wk "find recent"))
-  :demand
-  :after ivy)
-#+END_SRC
-
-*** counsel-projectile
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Add =counsel= integration to =projectile=.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/advise-counsel-projectile-ag-around (fun &rest r)
-  "Call `counsel-ag' not FUN with R outside of projects.
-
-This eliminates getting prompted to open one first."
-  (if (projectile-project-p)
-      (apply fun r)
-    (apply 'counsel-ag r)))
-
-(use-package counsel-projectile
-  :config
-  ;; Make opening with `dired' the default action.
-  (setf (nth 0 counsel-projectile-switch-project-action) 4)
-  (advice-add
-   'counsel-projectile-ag
-   :around #'wal/advise-counsel-projectile-ag-around)
-  (counsel-projectile-mode +1)
-  :custom
-  ;; (counsel-projectile-preview-buffers t)
-  (counsel-projectile-org-capture-templates
-   ;; Reminders are stored relative to the project root
-   `(("r" "[${name}] reminder" entry
-      (file+headline "${root}/reminders.org" "Reminders")
-      "* TODO %?\n%i\n%U -- %a")
-     ;; Tasks are stored in the common task directory
-     ("t" "[${name}] task" entry
-      (file+headline ,(expand-file-name "${name}.org" wal/agenda-tasks-directory) "Tasks")
-      "* TODO %?")
-     ("n" "[${name}] note" entry
-      (file+olp+datetree "${root}/notes.org")
-      "* %?")))
-  :bind
-  (:map projectile-command-map
-   ("ss" . counsel-projectile-ag)
-   ("n" . counsel-projectile-org-capture)
-   ("b" . counsel-projectile-switch-to-buffer)
-   ("d" . counsel-projectile-find-dir))
-  :wal-bind
-  (:map projectile-mode-map
-   ("h" . counsel-projectile-find-file)
-   ("u" . counsel-projectile-switch-to-buffer))
-  :demand
-  :after (projectile counsel))
-#+END_SRC
-
 ** Footer
 :PROPERTIES:
 :VISIBILITY: folded
@@ -4320,7 +4047,6 @@ Keep order.
 
 (declare-function consult-customize "consult.el")
 (declare-function consult--regexp-filter "consult.el")
-(declare-function persp-counsel-switch-buffer "perspective.el")
 (declare-function persp-current-buffer-names "perspective.el")
 (declare-function persp-scratch-buffer "perspective.el")
 (declare-function persp-switch-to-buffer "perspective.el")
@@ -4331,7 +4057,6 @@ Keep order.
 (defvar projectile-globally-ignored-directories)
 (defvar projectile-globally-ignored-files)
 (defvar projectile-globally-ignored-file-suffixes)
-(defvar wal/completion-provider)
 
 (defgroup wal-workspace nil
   "Change settings used for workspace packages."
@@ -4392,14 +4117,12 @@ buffer is also filtered."
 This mainly makes sure that switching buffers using any
 completion provider also switches perspectives."
   (advice-add 'persp-kill :around #'wal/advise-persp-kill)
-  (if (eq wal/completion-provider 'ivy)
-      (defalias 'wal/ivy-switch-buffer #'persp-counsel-switch-buffer)
-    (with-eval-after-load 'consult
-      (consult-customize
-       consult--source-buffer
-       :name "Perspective Buffer"
-       :action #'persp-switch-to-buffer
-       :items #'wal/consult-persp-current-buffer-names)))
+  (with-eval-after-load 'consult
+    (consult-customize
+     consult--source-buffer
+     :name "Perspective Buffer"
+     :action #'persp-switch-to-buffer
+     :items #'wal/consult-persp-current-buffer-names))
   (wal/captain
     "i" '(:keymap perspective-map :wk "perspective")))
 
@@ -6610,7 +6333,8 @@ Who doesn't like pods and stuff?
   (kubernetes-json-mode 'json-mode)
   :bind
   ("C-c 8" . kubernetes-overview)
-  :commands kubernetes-overview)
+  :commands kubernetes-overview
+  :load-path "/home/karusster/emacs/kubernetes-el")
 #+END_SRC
 
 ** Footer
