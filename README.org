@@ -3618,27 +3618,12 @@ Both require installation of their respective binary.
 
 ;;; Code:
 
-(declare-function ag/project-root "ag.el")
-(declare-function ag/read-from-minibuffer "ag.el")
-(declare-function ag/search "ag.el")
 (declare-function wal/display-buffer-in-pop-up "wal-func.el")
-
-(defvar ag-arguments)
 
 (defgroup wal-find nil
   "Change settings of search packages."
   :group 'wal
   :tag "Finding things")
-
-(defcustom wal/find-provider 'rg
-  "The finder to use.
-
-Changing this value will only take effect after a re-load. Unless
-`wal/load-custom-file-immediately' is set to t, setting this to a
-value other than the default will have no effect."
-  :type '(choice (const rg)
-                 (const ag))
-  :group 'wal-find)
 #+END_SRC
 
 ** Packages
@@ -3652,67 +3637,11 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 
 #+BEGIN_SRC emacs-lisp
 (use-package rg
-  :if (eq wal/find-provider 'rg)
   :config
   (wal/display-buffer-in-pop-up "\\`\\*rg\\*\\'")
   :wal-bind
   ("n" . rg-menu)
   :ensure-system-package rg)
-#+END_SRC
-
-*** ag
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
- And the =ag= one from [[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:15].
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/ag-ignored (string)
-  "Search project for STRING including VCS ignored files."
-  (interactive (list (ag/read-from-minibuffer "Search string")))
-  (let ((ag-arguments (append ag-arguments '("--skip-vcs-ignores"))))
-    (ag/search string (ag/project-root default-directory))))
-
-(defun wal/configure-ag ()
-  "Configure package `ag'."
-  (wal/display-buffer-in-pop-up "^\\*ag")
-  (defhydra wal/ag (:hint nil)
-    "
-%s`wal/ascii-whale Silver-search: _n_ormal, in _p_roject, by _f_ile type.'
-"
-    ("n" ag :color blue)
-    ("p" ag-project :color blue)
-    ("f" ag-files :color blue)
-    ("i" wal/ag-ignored :color blue)))
-
-(use-package ag
-  :if (eq wal/find-provider 'ag)
-  :config
-  (wal/configure-ag)
-  :custom
-  (ag-highlight-search t)
-  (ag-reuse-buffers t)
-  ;; Include hidden files. We ignore only specific dirs.
-  (ag-arguments '("--smart-case" "--stats" "--hidden"))
-  (ag-ignore-list '(".git"
-                    ".idea"
-                    ".ccls-cache"
-                    ".vscode"
-                    "node_modules"
-                    "coverage"
-                    "deps"
-                    "dist"
-                    "build"
-                    "*.svg"
-                    ".log"
-                    "*.min.js"
-                    "*.js.map"))
-  (ag-project-root-function #'projectile-acquire-root)
-  :wal-bind
-  ("n" . wal/ag/body)
-  :commands (ag/read-from-minibuffer)
-  :ensure-system-package ag)
 #+END_SRC
 
 *** ctrlf

@@ -415,6 +415,61 @@ Little Red Riding Hood!
   :delight " hun")
 #+END_SRC
 
+** ag
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+ And the =ag= one from [[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:15].
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/ag-ignored (string)
+  "Search project for STRING including VCS ignored files."
+  (interactive (list (ag/read-from-minibuffer "Search string")))
+  (let ((ag-arguments (append ag-arguments '("--skip-vcs-ignores"))))
+    (ag/search string (ag/project-root default-directory))))
+
+(defun wal/configure-ag ()
+  "Configure package `ag'."
+  (wal/display-buffer-in-pop-up "^\\*ag")
+  (defhydra wal/ag (:hint nil)
+    "
+%s`wal/ascii-whale Silver-search: _n_ormal, in _p_roject, by _f_ile type.'
+"
+    ("n" ag :color blue)
+    ("p" ag-project :color blue)
+    ("f" ag-files :color blue)
+    ("i" wal/ag-ignored :color blue)))
+
+(use-package ag
+  :if (eq wal/find-provider 'ag)
+  :config
+  (wal/configure-ag)
+  :custom
+  (ag-highlight-search t)
+  (ag-reuse-buffers t)
+  ;; Include hidden files. We ignore only specific dirs.
+  (ag-arguments '("--smart-case" "--stats" "--hidden"))
+  (ag-ignore-list '(".git"
+                    ".idea"
+                    ".ccls-cache"
+                    ".vscode"
+                    "node_modules"
+                    "coverage"
+                    "deps"
+                    "dist"
+                    "build"
+                    "*.svg"
+                    ".log"
+                    "*.min.js"
+                    "*.js.map"))
+  (ag-project-root-function #'projectile-acquire-root)
+  :wal-bind
+  ("n" . wal/ag/body)
+  :commands (ag/read-from-minibuffer)
+  :ensure-system-package ag)
+#+END_SRC
+
 * Other Settings
 
 These are other settings that used to be in my config.
