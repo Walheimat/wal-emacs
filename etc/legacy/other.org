@@ -395,9 +395,6 @@ Use =selectrum= for =consult=.
 #+END_SRC
 
 ** hungry-delete
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
 
 I know you're hiding that sweet, sweet whitespace in that basket,
 Little Red Riding Hood!
@@ -489,6 +486,49 @@ examples.
   :config
   (require 'cl nil t)
   :load-path "site-lisp")
+#+END_SRC
+
+** scroll-on-jump
+
+Scroll pixel-wise on certain jump commands.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defcustom smooth-scroll-mode--commands
+  '(scroll-up-command
+    scroll-down-command
+    recenter-top-bottom)
+  "Commands that should use smooth scrolling."
+  :type '(repeat symbol)
+  :group 'wal-visuals)
+
+(defun smooth-scroll-mode--enable ()
+  "Enable smooth scrolling."
+  (mapc (lambda (it)
+          (eval `(scroll-on-jump-with-scroll-advice-add ,it)))
+        smooth-scroll-mode--commands))
+
+(defun smooth-scroll-mode--disable ()
+  "Disable smooth-scrolling."
+  (mapc (lambda (it)
+          (eval `(scroll-on-jump-with-scroll-advice-remove ,it)))
+        smooth-scroll-mode--commands))
+
+(define-minor-mode smooth-scroll-mode
+  "Use smooth scrolling."
+  :init-value nil
+  :global t
+  :lighter " scr"
+  (cond
+   (noninteractive
+    (setq smooth-scroll-mode nil))
+   (smooth-scroll-mode
+    (smooth-scroll-mode--enable))
+   (t
+    (smooth-scroll-mode--disable))))
+
+(use-package scroll-on-jump)
+
+(wal/captain-sink "," '(smooth-scroll-mode :wk "smooth-scroll"))
 #+END_SRC
 
 * Other Settings

@@ -2893,52 +2893,6 @@ Dim inactive frames.
   :delight " dmm")
 #+END_SRC
 
-*** scroll-on-jump
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Scroll pixel-wise on certain jump commands.
-
-#+BEGIN_SRC emacs-lisp
-(defcustom smooth-scroll-mode--commands
-  '(scroll-up-command
-    scroll-down-command
-    recenter-top-bottom)
-  "Commands that should use smooth scrolling."
-  :type '(repeat symbol)
-  :group 'wal-visuals)
-
-(defun smooth-scroll-mode--enable ()
-  "Enable smooth scrolling."
-  (mapc (lambda (it)
-          (eval `(scroll-on-jump-with-scroll-advice-add ,it)))
-        smooth-scroll-mode--commands))
-
-(defun smooth-scroll-mode--disable ()
-  "Disable smooth-scrolling."
-  (mapc (lambda (it)
-          (eval `(scroll-on-jump-with-scroll-advice-remove ,it)))
-        smooth-scroll-mode--commands))
-
-(define-minor-mode smooth-scroll-mode
-  "Use smooth scrolling."
-  :init-value nil
-  :global t
-  :lighter " scr"
-  (cond
-   (noninteractive
-    (setq smooth-scroll-mode nil))
-   (smooth-scroll-mode
-    (smooth-scroll-mode--enable))
-   (t
-    (smooth-scroll-mode--disable))))
-
-(use-package scroll-on-jump)
-
-(wal/captain-sink "," '(smooth-scroll-mode :wk "smooth-scroll"))
-#+END_SRC
-
 ** Modeline
 
 Minor modes are white-listed, hidden, delighted and diminished.
