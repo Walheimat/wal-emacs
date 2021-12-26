@@ -668,10 +668,10 @@ Leader key =captain= (=/= by default) is responsible
 minor-mode-specific[fn:11] actions. The package prefixes are:
 
 + =d= for =dap-mode=
-+ =f= for =flycheck= or =flymake=
++ =f= for =flycheck=
 + =i= for =perspective=
 + =l= for =lsp-mode=
-+ =m= for =magit=
++ =m= for =smerge=
 + =p= for =projectile=
 + =s= for =flyspell=
 + =t= for =treesitter=
@@ -679,20 +679,20 @@ minor-mode-specific[fn:11] actions. The package prefixes are:
 + =y= for =yasnippet=
 + =z= for =org-roam=.
 
-Leader key =lieutenant= is responsible non- or semi-mode package actions
-with an editing emphasis. The package prefixes are:
+Leader key =lieutenant= (='= by default) is responsible non- or semi-mode
+package actions with an editing emphasis. The package prefixes are:
 
 + =.= for =multiple-cursors=
 + =l= and =r= for =avy= (line and region)
-+ =m= for =smerge=
++ =m= for =magit=
 + =p= for =smartparens=
 + =u= for =consult=
 + =x= for =crux=.
 
 All leader keys have so-called sinks. The sinks for =major= and =captain=
 toggle major and minor modes, respectively. The sink for =colonel=
-currently holds variations of the default actions. The sink for
-=lieutenant= is currently unused.
+currently holds variations of the default actions as well as hydras.
+The sink for =lieutenant= is currently unused.
 
 ** Packages
 
@@ -732,7 +732,8 @@ quick succession.
 
 Package =smartparens= also defines a =hydra=.
 
-These hydras are mapped to =wal/colonel= using the following prefixes:
+These hydras are mapped to the =colonel= sink using the following
+prefixes:
 
 + =o= to resize window
 + =t= to scale text
@@ -883,6 +884,29 @@ There are two differences:
 (wal/insert-use-package-keyword :wal-bind :bind-keymap*)
 #+END_SRC
 
+** Additional (Un-)Bindings
+
+Most bindings are declared in individual packages.
+
+#+BEGIN_SRC emacs-lisp
+(global-unset-key (kbd "C-x C-c"))
+
+;; Additional `general' bindings.
+(wal/general
+  "E" '(:ignore t :wk "Emacs")
+  "Eq" '(save-buffers-kill-terminal :wk "quit")
+  "f" '(:ignore t :wk "find")
+  "fi" '(wal/find-init :wk "init")
+  "fw" '(wal/find-config :wk "wal")
+  "S" '(:ignore t :wk "session"))
+
+(wal/general-sink "l" '(add-dir-local-variable :wk "dir-locals"))
+
+(wal/colonel-sink "h" '(wal/kill-ring-save-whole-buffer :wk "kill-ring-save buffer"))
+
+(wal/captain-sink "." '(walled-mode :wk "walled"))
+#+END_SRC
+
 ** Additional Mode Controls
 
 Turning on/off certain major modes switching between =major-mode= and
@@ -909,29 +933,6 @@ Turning on/off certain major modes switching between =major-mode= and
   "E" '(lisp-interaction-mode :wk "Elisp")
   "O" '(org-mode :wk "Org")
   "F" '(wal/fundamental-mode :wk "Fundamental"))
-#+END_SRC
-
-** Additional (Un-)Bindings
-
-Most bindings are declared in individual packages.
-
-#+BEGIN_SRC emacs-lisp
-(global-unset-key (kbd "C-x C-c"))
-
-;; Additional `general' bindings.
-(wal/general
-  "E" '(:ignore t :wk "Emacs")
-  "Eq" '(save-buffers-kill-terminal :wk "quit")
-  "f" '(:ignore t :wk "find")
-  "fi" '(wal/find-init :wk "init")
-  "fw" '(wal/find-config :wk "wal")
-  "S" '(:ignore t :wk "session"))
-
-(wal/general-sink "l" '(add-dir-local-variable :wk "dir-locals"))
-
-(wal/colonel-sink "h" '(wal/kill-ring-save-whole-buffer :wk "kill-ring-save buffer"))
-
-(wal/captain-sink "." '(walled-mode :wk "walled"))
 #+END_SRC
 
 ** Footer
