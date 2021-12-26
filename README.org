@@ -694,6 +694,8 @@ toggle major and minor modes, respectively. The sink for =colonel=
 currently holds variations of the default actions. The sink for
 =lieutenant= is currently unused.
 
+** Packages
+
 *** general
 :PROPERTIES:
 :UNNUMBERED: t
@@ -718,58 +720,6 @@ This creates all leader keys and sinks."
   :config
   (wal/configure-general)
   :demand)
-#+END_SRC
-
-** Additional (Un-)Bindings
-
-Most bindings are declared in individual packages.
-
-#+BEGIN_SRC emacs-lisp
-(global-unset-key (kbd "C-x C-c"))
-
-;; Additional `general' bindings.
-(wal/general
-  "E" '(:ignore t :wk "Emacs")
-  "Eq" '(save-buffers-kill-terminal :wk "quit")
-  "f" '(:ignore t :wk "find")
-  "fi" '(wal/find-init :wk "init")
-  "fw" '(wal/find-config :wk "wal")
-  "S" '(:ignore t :wk "session"))
-
-(wal/general-sink "l" '(add-dir-local-variable :wk "dir-locals"))
-
-(wal/colonel-sink "h" '(wal/kill-ring-save-whole-buffer :wk "kill-ring-save buffer"))
-
-(wal/captain-sink "." '(walled-mode :wk "walled"))
-#+END_SRC
-
-*** transient
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/configure-transient()
-  "Define and bind all transients."
-  (with-no-warnings
-    (transient-define-prefix wal/config-dispatch ()
-      "Facilitate the usage of or the working on Walheimat's config."
-      [["Actions"
-        ("t" "tangle" wal/tangle-config)
-        ("c" "checkdoc" wal/checkdoc-packages)]
-       ["Go to"
-        ("h" "heading" consult-org-heading)
-        ("d" "packages" wal/dired-packages)]
-       ["Customization"
-        ("g" "group" wal/customize-group)]])
-    (define-key
-     wal/config-mode-map
-     (kbd (wal/prefix-user-key "?"))
-     #'wal/config-dispatch)))
-
-(use-package transient
-  :config
-  (wal/configure-transient))
 #+END_SRC
 
 *** hydra
@@ -844,7 +794,36 @@ Additional left PADDING can be passed."
 (define-key emacs-lisp-mode-map (kbd "C-M-x") nil) ; Removes `eval-defun'.
 #+END_SRC
 
-*** Extend =use-package=
+*** transient
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/configure-transient()
+  "Define and bind all transients."
+  (with-no-warnings
+    (transient-define-prefix wal/config-dispatch ()
+      "Facilitate the usage of or the working on Walheimat's config."
+      [["Actions"
+        ("t" "tangle" wal/tangle-config)
+        ("c" "checkdoc" wal/checkdoc-packages)]
+       ["Go to"
+        ("h" "heading" consult-org-heading)
+        ("d" "packages" wal/dired-packages)]
+       ["Customization"
+        ("g" "group" wal/customize-group)]])
+    (define-key
+     wal/config-mode-map
+     (kbd (wal/prefix-user-key "?"))
+     #'wal/config-dispatch)))
+
+(use-package transient
+  :config
+  (wal/configure-transient))
+#+END_SRC
+
+** Extend =use-package=
 
 We'll add keyword =:wal-bind= to =use-package= in order to create bindings
 prefixed by =wal/prefix-user-key=.
@@ -904,7 +883,7 @@ There are two differences:
 (wal/insert-use-package-keyword :wal-bind :bind-keymap*)
 #+END_SRC
 
-*** Additional Mode Controls
+** Additional Mode Controls
 
 Turning on/off certain major modes switching between =major-mode= and
 =fundamental-mode=.
@@ -930,6 +909,29 @@ Turning on/off certain major modes switching between =major-mode= and
   "E" '(lisp-interaction-mode :wk "Elisp")
   "O" '(org-mode :wk "Org")
   "F" '(wal/fundamental-mode :wk "Fundamental"))
+#+END_SRC
+
+** Additional (Un-)Bindings
+
+Most bindings are declared in individual packages.
+
+#+BEGIN_SRC emacs-lisp
+(global-unset-key (kbd "C-x C-c"))
+
+;; Additional `general' bindings.
+(wal/general
+  "E" '(:ignore t :wk "Emacs")
+  "Eq" '(save-buffers-kill-terminal :wk "quit")
+  "f" '(:ignore t :wk "find")
+  "fi" '(wal/find-init :wk "init")
+  "fw" '(wal/find-config :wk "wal")
+  "S" '(:ignore t :wk "session"))
+
+(wal/general-sink "l" '(add-dir-local-variable :wk "dir-locals"))
+
+(wal/colonel-sink "h" '(wal/kill-ring-save-whole-buffer :wk "kill-ring-save buffer"))
+
+(wal/captain-sink "." '(walled-mode :wk "walled"))
 #+END_SRC
 
 ** Footer
@@ -4623,6 +4625,9 @@ Quick adding and normalizing.
 ** Other
 
 *** org-babel
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Convenient (and less safe) source block interaction.
 
