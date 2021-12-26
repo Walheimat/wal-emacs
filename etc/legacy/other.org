@@ -416,13 +416,10 @@ Little Red Riding Hood!
 #+END_SRC
 
 ** ag
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
 
  And the =ag= one from [[https://github.com/ggreer/the_silver_searcher#installation][here]][fn:15].
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (defun wal/ag-ignored (string)
   "Search project for STRING including VCS ignored files."
   (interactive (list (ag/read-from-minibuffer "Search string")))
@@ -468,6 +465,30 @@ Little Red Riding Hood!
   ("n" . wal/ag/body)
   :commands (ag/read-from-minibuffer)
   :ensure-system-package ag)
+#+END_SRC
+
+** restclient
+
+Postman is passé. I use a =.http= file extension for my request
+examples.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(use-package restclient
+  :config
+  (wal/display-buffer-in-pop-up "\\*HTTP Response\\*")
+  :mode ("\\.http\\'" . restclient-mode))
+
+;; We use this for hooks.
+(use-package jq-mode
+  :demand
+  :after restclient
+  :ensure-system-package jq)
+
+;; You will need to clone restclient repo.
+(use-package restclient-jq
+  :config
+  (require 'cl nil t)
+  :load-path "site-lisp")
 #+END_SRC
 
 * Other Settings
