@@ -478,7 +478,7 @@ I use many[fn:8] custom keybindings.
 ;;; Code:
 
 (declare-function wal/captain-sink "wal-key-bindings.el")
-(declare-function wal/colonel "wal-key-bindings.el")
+(declare-function wal/colonel-sink "wal-key-bindings.el")
 (declare-function wal/general "wal-key-bindings.el")
 (declare-function wal/general-sink "wal-key-bindings.el")
 (declare-function wal/major-sink "wal-key-bindings.el")
@@ -1670,7 +1670,8 @@ Up the kill count.
   ("C-?" . undo-redo)
   :general
   (wal/general "fp" '(list-processes :wk "processes"))
-  (wal/colonel-sink "w" '(delete-trailing-whitespace :wk "delete trailing whitespace"))
+  (wal/colonel-sink :keymaps '(prog-mode-map yaml-mode-map)
+    "w" '(delete-trailing-whitespace :wk "delete trailing whitespace"))
   (wal/captain-sink "a" '(auto-fill-mode :wk "auto-fill"))
   :ensure nil)
 #+END_SRC
@@ -2390,11 +2391,12 @@ there's a region, all lines that region covers will be duplicated."
     "fs" '(crux-find-shell-init-file :wk "shell init")
     "fc" '(crux-find-user-custom-file :wk "custom file"))
   (wal/colonel
-    "d" '(crux-duplicate-current-line-or-region :wk "duplicate")
-    "r" '(crux-smart-open-line :wk "open line"))
-  (wal/colonel-sink
+    "d" '(crux-duplicate-current-line-or-region :wk "duplicate"))
+  (wal/colonel :keymaps '(prog-mode-map yaml-mode-map)
+    "l" '(crux-smart-open-line :wk "open line"))
+  (wal/colonel-sink :keymaps '(prog-mode-map yaml-mode-map)
     "d" '(crux-duplicate-and-comment-current-line-or-region :wk "duplicate and comment")
-    "r" '(crux-smart-open-line-above :wk "open line above"))
+    "l" '(crux-smart-open-line-above :wk "open line above"))
   (wal/lieutenant
     "x" '(:ignore t :wk "crux")
     "xd" '(crux-delete-buffer-and-file :wk "delete buffer and file")
