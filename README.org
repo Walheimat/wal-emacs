@@ -3762,18 +3762,55 @@ Provide global option narrowing using the =vertico= family of products.
   (vertico-cycle t)
   (vertico-sort-function #'vertico-sort-history-alpha)
   :defer 1)
+#+END_SRC
+
+*** vertico-directory
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(defvar-local wal/command nil
+  "Command that started completion session.")
+
+(defun wal/record-this-command ()
+  "Record the commnd which opened the minibuffer."
+  (setq-local wal/command this-command))
+
+(defun wal/advise-vertico-directory--completing-file-p (fun &rest r)
+  "Advise to exit if we came from `dired-goto-file'."
+  (if (eq wal/command 'dired-goto-file)
+      nil
+    (apply fun r)))
+
+(defun wal/configure-vertico-directory ()
+  "Configure package `vertico-directory'."
+  (advice-add
+   'vertico-directory--completing-file-p
+   :around #'wal/advise-vertico-directory--completing-file-p))
 
 (use-package vertico-directory
+  :config
+  (wal/configure-vertico-directory)
   :bind
   (:map vertico-map
    ("RET" . vertico-directory-enter)
    ("DEL" . vertico-directory-delete-char)
    ("M-DEL" . vertico-directory-delete-word))
-  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy)
+  :hook
+  ((rfn-eshadow-update-overlay . vertico-directory-tidy)
+   (minibuffer-setup . wal/record-this-command))
   :demand t
   :after vertico
   :load-path "site-lisp")
+#+END_SRC
 
+*** vertico-quick
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
 (use-package vertico-quick
   :wal-bind
   (:map vertico-map
