@@ -4683,9 +4683,17 @@ Set up durations for a 40-hour week.
 Add some user speed commands.
 
 #+BEGIN_SRC emacs-lisp
+(defcustom wal/org-speed-commands '(("a" . org-archive-subtree)
+                                    ("j" . consult-org-heading))
+  "Changes to `org-speed-commands'.")
+
 (use-package org-keys
   :config
-  (setcdr (assoc "a" org-speed-commands) 'org-archive-subtree)
+  (mapc (lambda (it)
+          (let ((key (car it))
+                (val (cdr it)))
+            (setcdr (assoc key org-speed-commands) val)))
+        wal/org-speed-commands)
   :custom
   (org-use-speed-commands t)
   (org-return-follows-link t)
