@@ -3082,7 +3082,7 @@ ARGS is a list containing modes and additional ligatures."
   (ligature-set-ligatures 'js2-mode '("=>" "!==" "===" "!!"))
   (ligature-set-ligatures 'elixir-mode '("|>" "->" "<-" "=>"
                                         "::" "<>" "#{" "\\\\"
-                                         "===" ".."))
+                                         "===" "!==" ".."))
   (ligature-set-ligatures 'prolog-mode '(":-"))
   (ligature-set-ligatures 'html-mode '("<!--" "-->"))
   (ligature-set-ligatures 'dart-mode '("=>" "///" ".?" "??"
@@ -3912,7 +3912,8 @@ Heavy lifting with =consult=.
 
 (defun wal/configure-consult ()
   "Configure package `consult'."
-  (setq xref-show-definitions-function #'consult-xref)
+  (setq xref-show-definitions-function #'consult-xref
+        xref-show-xrefs-function #'consult-xref)
   (mapc (lambda (it) (add-to-list 'consult-buffer-filter it))
         wal/consult-buffer-filter)
   (declare-function consult--customize-set "consult.el")
@@ -5263,7 +5264,8 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
   (wal/major :keymaps 'rust-mode-map :major-modes t
     "c" '(rust-compile :wk "compile")
     "r" '(rust-run :wk "run")
-    "t" '(rust-test :wk "test"))
+    "t" '(:ignore t :wk "test")
+    "tt" '(rust-test :wk "all"))
   :hook (rust-mode . wal/rust-mode))
 #+END_SRC
 
@@ -5274,6 +5276,10 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
 
 #+BEGIN_SRC emacs-lisp
 (use-package cargo
+  :general
+  (wal/major :keymaps 'rust-mode-map :major-modes t
+    "tc" '(cargo-process-current-test :wk "current")
+    "tf" '(cargo-process-current-file-tests :wk "file"))
   :demand
   :after rust-mode)
 #+END_SRC
