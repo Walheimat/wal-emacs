@@ -3247,6 +3247,7 @@ Everything that has to do with windows.
 (declare-function popper--open-all "popper.el")
 
 (defvar aw-dispatch-alist)
+(defvar wal/use-perspectives)
 
 (defgroup wal-windows nil
  "Change window settings."
@@ -3351,8 +3352,7 @@ Treat certain buffers and their windows as pop-ups.
     dictionary-mode
     shortdoc-mode
     ;; Search(-like).
-    "*rg*"
-    "*ag*")
+    "*rg*")
   "Replaces `popper-reference-buffers'."
   :type '(restricted-sexp
           :match-alternatives
@@ -3392,6 +3392,8 @@ Treat certain buffers and their windows as pop-ups.
 
 (defun wal/configure-popper ()
   "Configure package `popper'."
+  (when wal/use-perspectives
+    (setq popper-group-function 'popper-group-by-perspective))
   (defhydra wal/popper (:hint nil)
     "
 %s`wal/ascii-whale Pop-ups: _c_ycle, _b_ury or _o_pen all.
