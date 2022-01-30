@@ -5975,6 +5975,11 @@ LSP support for Dart.
               (sdk-dir (string-trim (shell-command-to-string "flutter sdk-path"))))
     sdk-dir))
 
+(defun wal/find-dart-sdk-dir ()
+  "Find the Dart SDK directory."
+  (when-let* ((flutter-sdk-dir (wal/find-dart-flutter-sdk-dir)))
+    (expand-file-name "bin/cache/dart-sdk" flutter-sdk-dir)))
+
 (defun wal/configure-lsp-dart ()
   "Configure package `lsp-dart'."
   (when (fboundp 'lsp-dart-define-key)
@@ -5987,6 +5992,7 @@ LSP support for Dart.
   (wal/configure-lsp-dart)
   :custom
   (lsp-dart-flutter-sdk-dir (wal/find-dart-flutter-sdk-dir))
+  (lsp-dart-sdk-dir (wal/find-dart-sdk-dir))
   :general
   (wal/major
     :keymaps 'dart-mode-map
