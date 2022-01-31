@@ -5980,10 +5980,19 @@ LSP support for Dart.
   (when-let* ((flutter-sdk-dir (wal/find-dart-flutter-sdk-dir)))
     (expand-file-name "bin/cache/dart-sdk" flutter-sdk-dir)))
 
+(defun wal/lsp-dart-set-process-query-on-exit-flag ()
+  "Set the query-on-exit flag to nil for the Dart language server."
+  (defvar lsp-dart-flutter-daemon-buffer-name)
+  (when-let (proc (get-buffer-process lsp-dart-flutter-daemon-buffer-name))
+    (set-process-query-on-exit-flag proc nil)))
+
 (defun wal/configure-lsp-dart ()
   "Configure package `lsp-dart'."
   (when (fboundp 'lsp-dart-define-key)
-    (lsp-dart-define-key "r" #'lsp-dart-run)))
+    (lsp-dart-define-key "r" #'lsp-dart-run))
+  (add-hook
+   'lsp-after-initialize-hook
+   #'wal/lsp-dart-set-process-query-on-exit-flag))
 
 ;; Run `lsp-dart-dap-setup' once to install debugger.
 (use-package lsp-dart
