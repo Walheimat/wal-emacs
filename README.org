@@ -1776,9 +1776,16 @@ Mouse yanks at point.
 No double spaces in sentences.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/text-mode ()
+  "Hook into `text-mode'."
+  ;; Activate `flyspell-mode' when editing commit messages.
+  (when (string-match "COMMIT_EDITMSG" (buffer-name))
+    (flyspell-mode)))
+
 (use-package text-mode
   :custom
   (sentence-end-double-space nil)
+  :hook (text-mode . wal/text-mode)
   :ensure nil)
 #+END_SRC
 
