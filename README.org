@@ -121,6 +121,11 @@ Customize start-up.
     running on Windows 10, it was quite tricky and involved
     setting unsafe options."))
 
+(defconst wal/experimental (> emacs-major-version 28)
+  "Set to t if Emacs was built from master branch.
+This variable is used to account for certain features (and
+bugs).")
+
 ;; Maximize frame.
 (setq frame-resize-pixelwise t)
 (add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; Leads to issues when using a tiling wm.
@@ -1956,6 +1961,9 @@ Let's try to be even more =helpful=.
 (use-package helpful
   :config
   (wal/display-buffer-in-direction 'helpful-mode)
+  ;; This variable was expunged.
+  (when wal/experimental
+    (defvar read-symbol-positions-list nil))
   :bind
   (([remap describe-command] . helpful-command)
    ([remap describe-function] . helpful-function)
