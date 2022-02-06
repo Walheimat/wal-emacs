@@ -24,6 +24,9 @@
   (expand-file-name "wal" wal/emacs-config-default-path)
   "The path to the tangled Lisp files.")
 
+(defvar wal/init-error nil
+  "Set to the error message if initialization failed.")
+
 (defun wal/find-or-create-package-directory ()
   "Find (or create) package directory.
 
@@ -52,7 +55,14 @@ loading the package."
       (require 'ob-tangle)
       (org-babel-tangle-file source-file))
     (when load
-      (load-file (expand-file-name "wal.el" (wal/find-or-create-package-directory))))))
+      (condition-case err
+          (load-file (expand-file-name "wal.el" (wal/find-or-create-package-directory)))
+        (error
+         (setq wal/init-error (error-message-string err))
+         (delay-warning
+          'wal
+          (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal/init-error)
+          :error))))))
 
 (defvar wal/load-custom-file-immediately nil
   "Whether to load the custom file immediately.
