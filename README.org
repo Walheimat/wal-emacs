@@ -3702,6 +3702,7 @@ Complete commands and code.
 
 (declare-function projectile-project-p "projectile.el")
 (declare-function wal/display-buffer-ethereally "wal-func.el")
+(declare-function wal/maybe-use-projectile "wal-workspace.el")
 
 (defvar xref-show-definitions-function)
 
@@ -3867,9 +3868,20 @@ completion actions.
 Do something else with minibuffer candidate.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/configure-embark ()
+  "Configure package `embark'."
+  (wal/display-buffer-ethereally "\\`\\*Embark Collect \\(Live\\|Completions\\)\\*")
+  (with-no-warnings
+    (define-key embark-file-map
+                (kbd "f")
+                (wal/maybe-use-projectile find-file))
+    (define-key embark-file-map
+                (kbd "o")
+                (wal/maybe-use-projectile find-file-other-window))))
+
 (use-package embark
   :config
-  (wal/display-buffer-ethereally "\\`\\*Embark Collect \\(Live\\|Completions\\)\\*")
+  (wal/configure-embark)
   :custom
   (embark-mixed-indicator-delay 2.0)
   :bind
@@ -4115,6 +4127,19 @@ More robust project management.
   "Additional file suffixes to ignore."
   :type '(repeat string)
   :group 'wal-workspace)
+
+(defmacro wal/maybe-use-projectile (func)
+  "Maybe use the `projectile' variant for FUNC."
+  (let* ((func-name (symbol-name func))
+         (projectile-func-name (concat "projectile-" func-name)))
+  `(defun ,(intern (concat "wal/maybe-use-projectile-" func-name)) ()
+     ,(format "Use `%s' instead of `%s' if in a project." projectile-func-name func-name)
+     (interactive)
+     (with-demoted-errors "%s"
+       (require 'projectile)
+       (if (projectile-project-p)
+           (call-interactively (symbol-function ',(intern projectile-func-name)))
+         (call-interactively (symbol-function ',func)))))))
 
 (defun wal/configure-projectile ()
   "Configure package `projectile'.
