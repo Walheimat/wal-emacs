@@ -5939,6 +5939,7 @@ Language servers are awesome. Thanks, Microsoft.
 (declare-function lsp-enable-which-key-integration "lsp-mode.el")
 (declare-function wal/captain "wal-key-bindings.el")
 (declare-function wal/captain-sink "wal-key-bindings.el")
+(declare-function wal/display-buffer-in-side-window "wal-func.el")
 
 (defvar lsp-file-watch-ignored-directories)
 
@@ -6097,22 +6098,38 @@ LSP support for Dart.
 Debugging using VSCode's DAP (in =lsp-mode=)
 
 #+BEGIN_SRC emacs-lisp
-(use-package dap-mode
-  :config
+(defun wal/configure-dap-mode ()
+  "Configure package `dap-mode'."
   (dap-ui-mode 1)
   (dap-auto-configure-mode)
   (wal/display-buffer-in-side-window 'dap-ui-repl-mode)
+  (with-no-warnings
+    (defhydra wal/dap-hydra (:hint nil :foreign-keys warn)
+      "
+%s`wal/ascii-whale _d_ebug: _n_ext, _i_n, _o_ut or _c_ontinue. Or toggle _b_reakpoint.
+"
+      ("n" dap-next)
+      ("i" dap-step-in)
+      ("o" dap-step-out)
+      ("c" dap-continue :color blue)
+      ("d" dap-debug :color blue)
+      ("b" dap-breakpoint-toggle :color blue)
+      ("q" nil))))
+
+(use-package dap-mode
+  :config
+  (wal/configure-dap-mode)
   :custom
   (dap-python-executable "python3")
   (dap-python-debugger 'debugpy)
-  ;; (dap-print-io t)
   (dap-auto-show-output nil)
   (dap-auto-configure-features '(repl))
   :general
   (wal/captain-sink :keymaps 'lsp-mode-map
     "d" '(dap-mode :wk "dap"))
   (wal/captain :keymaps 'lsp-mode-map
-    "d" '(dap-hydra :wk "dap (hydra)"))
+    "d" '(wal/dap-hydra/body :wk "debug")
+    "D" '(dap-hydra :wk "debug"))
   :after lsp-mode
   :delight " dap")
 #+END_SRC
