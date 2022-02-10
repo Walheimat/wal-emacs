@@ -4030,6 +4030,8 @@ Keep order.
 (declare-function consult-customize "consult.el")
 (declare-function consult--regexp-filter "consult.el")
 (declare-function persp-current-buffer-names "perspective.el")
+(declare-function persp-current-name "perspective.el")
+(declare-function persp-names "perspective.el")
 (declare-function persp-scratch-buffer "perspective.el")
 (declare-function persp-switch-to-buffer "perspective.el")
 (declare-function wal/captain "wal-key-bindings.el")
@@ -4068,6 +4070,13 @@ This requires `wal/load-custom-file-immediately' to be true."
   :type 'string
   :group 'wal-workspace)
 
+(defcustom wal/perspective-max-modeline-length 20
+  "Truncation threshold for perspective names.
+If the combined names succeed the threshold, inactive ones will
+get truncated."
+  :type 'integer
+  :group 'wal-workspace)
+
 (defun wal/advise-persp-kill (fun &rest r)
   "Advises FUN to kill processes without querying, applying R.
 
@@ -4075,6 +4084,26 @@ This only removes `process-kill-buffer-query-function'."
   (let ((kill-buffer-query-functions (delq 'process-kill-buffer-query-function
                                            kill-buffer-query-functions)))
     (apply fun r)))
+
+(defun wal/advise-persp-format-name (&rest args)
+  "Truncate non-active perspective name (in ARGS)."
+  (let* ((name (car args))
+         (curr-name (persp-current-name))
+         (names (persp-names))
+         (names-len (length names))
+         (divider-len (if (> 1 names-len)
+                          (+ 1 names-len)
+                        2))
+         (combined-length (+ divider-len
+                             (seq-reduce
+                              (lambda (acc item)
+                                (+ acc (length item)))
+                              names
+                              0))))
+    (if (and (> combined-length wal/perspective-max-modeline-length)
+             (not (string-match-p name curr-name)))
+        (substring name 0 1)
+      name)))
 
 (defun wal/switch-to-scratch-buffer ()
   "Switch to a perspective's scratch buffer."
@@ -4099,6 +4128,7 @@ buffer is also filtered."
 This mainly makes sure that switching buffers also switches
 perspectives."
   (advice-add 'persp-kill :around #'wal/advise-persp-kill)
+  (advice-add 'persp-format-name :filter-return #'wal/advise-persp-format-name)
   (with-eval-after-load 'consult
     (consult-customize
      consult--source-buffer
