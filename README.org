@@ -5990,14 +5990,6 @@ This adds additional ignored directories."
   (wal/captain :keymaps 'lsp-mode-map
     "l" '(:keymap lsp-command-map :wk "lsp")))
 
-(defun wal/lsp-mode ()
-  "Hook into `lsp-mode'.
-
-Since `lsp-mode' also uses `lv', the `hydra-hint-display-type' is
-set to use a posframe instead."
-  ;; (setq-local hydra-hint-display-type 'posframe)
-  )
-
 (use-package lsp-mode
   :config
   (wal/configure-lsp-mode)
@@ -6008,11 +6000,12 @@ set to use a posframe instead."
   (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
   ;; TypeScript/JavaScript
   (lsp-clients-typescript-log-verbosity "off")
+  (lsp-signature-render-documentation nil)
+  (lsp-signature-function 'lsp-signature-posframe)
   :wal-bind
   (:map lsp-mode-map
    ("L" . lsp-avy-lens)
    ("K" . lsp-execute-code-action))
-  :hook (lsp-mode . wal/lsp-mode)
   :delight
   (lsp-mode " lsp")
   (lsp-lens-mode " lns"))
