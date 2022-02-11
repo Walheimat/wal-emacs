@@ -5982,9 +5982,20 @@ Language servers are awesome. Thanks, Microsoft.
   :group 'wal
   :tag "LSP")
 
+(defcustom wal/lsp-slow-modes '(dart-mode)
+  "Modes that have slow langauge servers.
+
+For these modes, `company-idle-delay' will not set to nil instead
+of 0.0."
+  :type '(repeat symbol)
+  :group 'wal-lsp)
+
 (defun wal/lsp ()
   "Activate LSP client."
-  (setq-local company-idle-delay 0.0)
+  (if (memq major-mode wal/lsp-slow-modes)
+      (setq-local company-idle-delay nil)
+    (setq-local company-idle-delay 0.0
+                company-minimum-prefix-length 1))
   (setq-local company-backends '(company-capf company-yasnippet))
   (lsp-deferred))
 
@@ -6037,6 +6048,7 @@ This adds additional ignored directories."
   (lsp-clients-typescript-log-verbosity "off")
   (lsp-signature-render-documentation nil)
   (lsp-signature-function 'lsp-signature-posframe)
+  (lsp-signature-auto-activate '(:on-server-request))
   :wal-bind
   (:map lsp-mode-map
    ("L" . lsp-avy-lens)
@@ -6057,11 +6069,9 @@ Don't clutter things up too much.
 (use-package lsp-ui
   :custom
   (lsp-ui-doc-show-with-cursor t)
-  (lsp-ui-sideline-delay 1.5)
-  (lsp-ui-doc-position 'at-point)
-  (lsp-ui-doc-delay 0.4)
+  (lsp-ui-doc-delay 1.0)
   ;; Make sure that docs actually fit into the window.
-  (lsp-ui-doc-max-height 25)
+  (lsp-ui-doc-max-height 10)
   (lsp-ui-doc-text-scale-level -1)
   :after lsp-mode)
 #+END_SRC
@@ -6107,7 +6117,6 @@ LSP support for Dart.
   :custom
   (lsp-dart-flutter-sdk-dir (wal/find-dart-flutter-sdk-dir))
   (lsp-dart-sdk-dir (wal/find-dart-sdk-dir))
-  (lsp-dart-closing-labels nil)
   :general
   (wal/major
     :keymaps 'dart-mode-map
