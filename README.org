@@ -5290,10 +5290,6 @@ That bottle is just an array of strings."
   (wal/lsp))
 
 (use-package elixir-mode
-  :general
-  (wal/major :keymaps 'elixir-mode-map :major-modes t
-    "E" '(:ignore t :wk "edit")
-    "Ef" '(elixir-format :wk "format"))
   :hook (elixir-mode . wal/elixir-mode))
 #+END_SRC
 
@@ -6051,6 +6047,10 @@ This adds additional ignored directories."
   (:map lsp-mode-map
    ("L" . lsp-avy-lens)
    ("K" . lsp-execute-code-action))
+  :general
+  (wal/major
+    :keymaps 'lsp-mode-map
+    "f" '(lsp-format-buffer :wk "format"))
   :delight
   (lsp-mode " lsp")
   (lsp-lens-mode " lns"))
@@ -6125,9 +6125,7 @@ LSP support for Dart.
     "r" '(lsp-dart-dap-flutter-hot-reload :wk "hot reload")
     "t" '(lsp-dart-run-test-at-point :wk "test (current)")
     "T" '(lsp-dart-run-all-tests :wk "test (all)")
-    "D" '(lsp-dart-open-devtools :wk "devtools")
-    "l" '(dap-go-to-output-buffer :wk "logs")
-    "f" '(lsp-format-buffer :wk "format"))
+    "D" '(lsp-dart-open-devtools :wk "devtools"))
   :after lsp-mode)
 #+END_SRC
 
@@ -6147,14 +6145,16 @@ Debugging using VSCode's DAP (in =lsp-mode=)
   (with-no-warnings
     (defhydra wal/dap-hydra (:hint nil :foreign-keys warn)
       "
-%s`wal/ascii-whale _d_ebug: _n_ext, _i_n, _o_ut or _c_ontinue. Or toggle _b_reakpoint.
+%s`wal/ascii-whale _d_ebug: _n_ext, _i_n, _o_ut or _c_ontinue.
+
 "
       ("n" dap-next)
       ("i" dap-step-in)
       ("o" dap-step-out)
       ("c" dap-continue :color blue)
       ("d" dap-debug :color blue)
-      ("b" dap-breakpoint-toggle :color blue)
+      ("b" dap-breakpoint-toggle "toggle breakpoint" :color blue)
+      ("l" dap-go-to-output-buffer "show logs" :color blue)
       ("q" nil))))
 
 (use-package dap-mode
