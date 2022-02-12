@@ -2491,7 +2491,16 @@ Undo and redo with branching.
 Less intrusive pairing mode than =smartparens=.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/advise-electric-pair-default-inhibit (&rest _r)
+  "Advise to inhibit if `multiple-cursors-mode' is t."
+  (defvar multiple-cursors-mode)
+  multiple-cursors-mode)
+
 (use-package elec-pair
+  :init
+  (advice-add
+   'electric-pair-default-inhibit
+   :before-until #'wal/advise-electric-pair-default-inhibit)
   :hook (prog-mode . electric-pair-local-mode)
   :ensure nil)
 #+END_SRC
