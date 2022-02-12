@@ -1452,10 +1452,16 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 1 being (almost) completely transparent, 100 being opaque."
   (interactive "nSet transparency (1-100): ")
   (let ((transparency (min (max (or value wal/transparency) 1) 100))
-        (default-param (assoc 'alpha default-frame-alist)))
-    (set-frame-parameter (selected-frame) 'alpha transparency)
-    (when default-param
-      (setcdr default-param transparency))))
+        (alpha-default (assoc 'alpha default-frame-alist))
+        (alpha-background-default (assoc 'alpha-background default-frame-alist)))
+    (if wal/experimental
+        (progn
+          (set-frame-parameter (selected-frame) 'alpha-background transparency)
+          (when alpha-background-default
+            (setcdr alpha-background-default transparency)))
+      (set-frame-parameter (selected-frame) 'alpha transparency)
+      (when alpha-default
+        (setcdr alpha-default transparency)))))
 
 ;; Some themes require configuration, so we only load after initialization.
 (defun wal/setup-visuals ()
@@ -1465,7 +1471,9 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
     (load-theme wal/theme t))
   (wal/transparency)
   ;; Add the transparency to the `default-frame-alist' as well.
-  (add-to-list 'default-frame-alist `(alpha . ,wal/transparency)))
+  (if wal/experimental
+      (add-to-list 'default-frame-alist `(alpha-background . ,wal/transparency))
+    (add-to-list 'default-frame-alist `(alpha . ,wal/transparency))))
 
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-visuals)
@@ -4144,7 +4152,7 @@ perspectives."
   :config
   (wal/configure-perspective)
   (persp-mode +1)
-  (define-key persp-mode-map (kbd "C-x x") ctl-x-x-map) ;; Override the override to `perspective-map'.
+  (define-key persp-mode-map (kbd "C-x x") ctl-x-x-map) ; Override the override to `perspective-map'.
   :custom
   (persp-modestring-dividers '(" (" ")" "/")) ; Add space for `doom-modeline'.
   (persp-initial-frame-name wal/default-perspective)
