@@ -1427,6 +1427,8 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 
 ;;; Code:
 
+(defvar wal/experimental)
+
 (defgroup wal-look nil
   "Change the look."
   :group 'wal
@@ -1661,6 +1663,8 @@ and some external ones.
 
 (declare-function wal/display-buffer-in-side-window "wal-func.el")
 (declare-function wal/display-buffer-in-direction "wal-func.el")
+
+(defvar wal/experimental)
 #+END_SRC
 
 ** Improved Editing
@@ -1991,11 +1995,12 @@ Find libraries.
 Let's try to be even more =helpful=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-helpful--autoloaded-p (sym buf)
-  "Advise function to call `help-fns--autloaded-p' with single argument."
-  (-when-let (file-name (buffer-file-name buf))
-    (setq file-name (s-chop-suffix ".gz" file-name))
-    (help-fns--autoloaded-p sym)))
+(defun wal/advise-helpful--autoloaded-p (sym _buf)
+  "Advise function to call `help-fns--autloaded-p' with SYM only."
+  (with-no-warnings
+   (-when-let (file-name (buffer-file-name buf))
+     (setq file-name (s-chop-suffix ".gz" file-name))
+     (help-fns--autoloaded-p sym))))
 
 (defun wal/configure-helpful ()
   "Configure package `helpful'."
