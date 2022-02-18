@@ -6133,6 +6133,16 @@ LSP support for Dart.
   (when-let (proc (get-buffer-process lsp-dart-flutter-daemon-buffer-name))
     (set-process-query-on-exit-flag proc nil)))
 
+(defun wal/lsp-service-uri ()
+  "Get the service URI (needed for devtools)."
+  (interactive)
+  (condition-case nil
+      (let ((uri (lsp-workspace-get-metadata "devtools-vm-service-uri")))
+        (kill-new uri)
+        (message "Service URI (%s) copied to kill ring" uri))
+    (error
+      (message "Couldn't get service URI"))))
+
 (defun wal/configure-lsp-dart ()
   "Configure package `lsp-dart'."
   (when (fboundp 'lsp-dart-define-key)
@@ -6159,7 +6169,8 @@ LSP support for Dart.
     "r" '(lsp-dart-dap-flutter-hot-reload :wk "hot reload")
     "t" '(lsp-dart-run-test-at-point :wk "test (current)")
     "T" '(lsp-dart-run-all-tests :wk "test (all)")
-    "D" '(lsp-dart-open-devtools :wk "devtools"))
+    "D" '(lsp-dart-open-devtools :wk "devtools")
+    "U" '(wal/lsp-service-uri :wk "service URI"))
   :after lsp-mode)
 #+END_SRC
 
