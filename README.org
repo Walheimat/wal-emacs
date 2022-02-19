@@ -481,6 +481,7 @@ I use many[fn:8] custom keybindings.
 (declare-function wal/general "wal-key-bindings.el")
 (declare-function wal/general-sink "wal-key-bindings.el")
 (declare-function wal/major-sink "wal-key-bindings.el")
+(declare-function wal/find-file-delete-other-windows "wal-func.el")
 
 (defgroup wal-key-bindings nil
   "Change key bindings settings."
@@ -902,6 +903,8 @@ Most bindings are declared in individual packages.
 (wal/colonel-sink "h" '(wal/kill-ring-save-whole-buffer :wk "kill-ring-save buffer"))
 
 (wal/captain-sink "." '(walled-mode :wk "walled"))
+
+(keymap-set ctl-x-x-map "f" #'wal/find-file-delete-other-windows) ; Replaces `font-lock-update'.
 #+END_SRC
 
 ** Additional Mode Controls
@@ -1255,6 +1258,24 @@ is deleted."
 (advice-add
  'hack-local-variables
  :after #'wal/advise-hack-local-variables)
+
+(defun wal/find-file-delete-other-windows (filename &optional wildcards)
+  "Find FILENAME and make its window the only window.
+
+If WILDCARDS is non-nil, FILENAME can include wildcards. All
+matching files are visited but only the last-visited displayed."
+  (interactive
+   (find-file-read-args "Find file (deleting other windows): "
+                        (confirm-nonexistent-file-or-buffer)))
+  (let ((value (find-file-noselect filename nil nil nil)))
+    (if (listp value)
+        (progn
+          (setq value (nreverse value))
+          (switch-to-buffer (car value))
+          (mapc 'switch-to-buffer (cdr value))
+          value)
+      (switch-to-buffer value)
+      (delete-other-windows))))
 #+END_SRC
 
 ** Command Line
