@@ -480,6 +480,7 @@ I use many[fn:8] custom keybindings.
 (declare-function wal/colonel-sink "wal-key-bindings.el")
 (declare-function wal/general "wal-key-bindings.el")
 (declare-function wal/general-sink "wal-key-bindings.el")
+(declare-function wal/lieutenant-sink "wal-key-bindings.el")
 (declare-function wal/major-sink "wal-key-bindings.el")
 (declare-function wal/find-file-delete-other-windows "wal-func.el")
 
@@ -599,11 +600,10 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-u= switches buffer using =consult=
 + =H-y= expands snippets (in =yas-minor-mode=).
 
-There's three =avy= actions:
+There's two =avy= actions:
 
-+ =H-j= jumps to word of given char anywhere
-+ =H-k= jumps to word in line (=H-K= takes code action in =lsp-mode=)
-+ =H-l= jumps to line (=H-L= to code lens in =lsp-mode=).
++ =H-j= jumps to word in line (globally using =colonel-sink=)
++ =H-l= jumps to line.
 
 It's also used for some dispatches:
 
@@ -656,8 +656,16 @@ Leader key =general= (=,= by default) is responsible for Emacs actions
 like loading a theme, finding a library, quitting, as well as opening
 built-in programs like =eshell= and =eww=.
 
-Leader key =colonel= (=;= by default) provides a flat layer of
-additional editing or editing-adjacent actions.
+Leader key =colonel= (=;= by default) provides a layer of useful editing
+actions. Where possible, they are grouped by package or concern. The
+prefixes are:
+
++ =.= for =multiple-cursors=
++ =l= and =r= for =avy= (line and region)
++ =m= for =magit=
++ =p= for =smartparens=
++ =u= for =consult=
++ =x= for =crux=.
 
 Leader key =major= (=.= by default) is responsible major-mode-specific
 actions.
@@ -677,20 +685,14 @@ minor-mode-specific[fn:11] actions. The package prefixes are:
 + =y= for =yasnippet=
 + =z= for =org-roam=.
 
-Leader key =lieutenant= (='= by default) is responsible non- or semi-mode
-package actions with an editing emphasis. The package prefixes are:
-
-+ =.= for =multiple-cursors=
-+ =l= and =r= for =avy= (line and region)
-+ =m= for =magit=
-+ =p= for =smartparens=
-+ =u= for =consult=
-+ =x= for =crux=.
+Leader key =lieutenant= (='= by default) is currently used for adjustments
+(text size, windows, scrolling) and one-off actions (like capturing a
+note).
 
 All leader keys have so-called sinks. The sinks for =major= and =captain=
 toggle major and minor modes, respectively. The sink for =colonel=
-currently holds variations of the default actions as well as hydras.
-The sink for =lieutenant= is currently unused.
+currently holds variations of the default actions. The sink for
+=lieutenant= is currently unused.
 
 ** Packages
 
@@ -730,8 +732,7 @@ quick succession.
 
 Package =smartparens= also defines a =hydra=.
 
-These hydras are mapped to the =colonel= sink using the following
-prefixes:
+These hydras are mapped to =lieutenant= using the following prefixes:
 
 + =o= to resize window
 + =t= to scale text
@@ -785,7 +786,7 @@ Additional left PADDING can be passed."
     ("n" scroll-other-window)
     ("q" nil "quit")))
 
-(wal/colonel-sink
+(wal/lieutenant
   "o" '(wal/resize-window/body :wk "resize window")
   "t" '(wal/text-scale/body :wk "text scale")
   "v" '(wal/scroll-other-window/body :wk "scroll other window"))
@@ -899,8 +900,6 @@ Most bindings are declared in individual packages.
   "S" '(:ignore t :wk "session"))
 
 (wal/general-sink "l" '(add-dir-local-variable :wk "dir-locals"))
-
-(wal/colonel-sink "h" '(wal/kill-ring-save-whole-buffer :wk "kill-ring-save buffer"))
 
 (wal/captain-sink "." '(walled-mode :wk "walled"))
 
@@ -2301,7 +2300,7 @@ Don't you want to edit your buffer in multiple places at once?
   :wal-bind
   ("<mouse-3>" . mc/add-cursor-on-click)
   :general
-  (wal/lieutenant
+  (wal/colonel
     "." '(:ignore t :wk "mc")
     ".a" '(mc/mark-all-like-this :wk "all like this")
     ".b" '(mc/edit-beginnings-of-lines :wk "beginnings (region)")
@@ -2423,7 +2422,7 @@ Advising the function does not work."
   :config
   (wal/configure-smartparens)
   :general
-  (wal/lieutenant :keymaps 'prog-mode-map
+  (wal/colonel :keymaps 'prog-mode-map
     "p" '(:ignore t :wk "smartparens")
     "ph" '(wal/smartparens/body :wk "hydra")
     "pw" '(wal/sp-rewrap-sexp :wk "rewrap")
@@ -2490,18 +2489,18 @@ there's a region, all lines that region covers will be duplicated."
     "fs" '(crux-find-shell-init-file :wk "shell init")
     "fc" '(crux-find-user-custom-file :wk "custom file"))
   (wal/colonel
-    "d" '(crux-duplicate-current-line-or-region :wk "duplicate"))
-  (wal/colonel :keymaps '(prog-mode-map yaml-mode-map)
-    "l" '(crux-smart-open-line :wk "open line"))
-  (wal/colonel-sink :keymaps '(prog-mode-map yaml-mode-map)
-    "d" '(crux-duplicate-and-comment-current-line-or-region :wk "duplicate and comment")
-    "l" '(crux-smart-open-line-above :wk "open line above"))
-  (wal/lieutenant
     "x" '(:ignore t :wk "crux")
-    "xk" '(crux-kill-other-buffers :wk "kill other buffers")
-    "xd" '(crux-delete-buffer-and-file :wk "delete buffer and file")
-    "xr" '(crux-rename-file-and-buffer :wk "rename file and buffer")
-    "xs" '(crux-sudo-edit :wk "sudo edit"))
+    "xb" '(:ignore t :wk "buffers")
+    "xbk" '(crux-kill-other-buffers :wk "kill other buffers")
+    "xbd" '(crux-delete-buffer-and-file :wk "delete buffer and file")
+    "xbr" '(crux-rename-file-and-buffer :wk "rename file and buffer")
+    "xbs" '(crux-sudo-edit :wk "sudo edit")
+    "xd" '(crux-duplicate-current-line-or-region :wk "duplicate"))
+  (wal/colonel
+    :keymaps '(prog-mode-map yaml-mode-map)
+    "xD" '(crux-duplicate-and-comment-current-line-or-region :wk "duplicate and comment")
+    "xl" '(crux-smart-open-line :wk "open line")
+    "xL" '(crux-smart-open-line-above :wk "open line above"))
   :commands (crux-get-positions-of-line-or-region))
 #+END_SRC
 
@@ -3529,6 +3528,7 @@ Treat certain buffers and their windows as pop-ups.
   :wal-bind
   ("[" . popper-toggle-latest)
   :general
+  (wal/colonel-sink "[" '(popper-cycle :wk "cycle pop-ups")) ; Not sure if this is useful.
   (wal/captain "[" :keymaps '(popper-mode-map)
     '(wal/popper/body :wk "popper"))
   (general-define-key
@@ -3621,11 +3621,10 @@ beginning."
   :custom
   (avy-background t)
   :wal-bind
-  (("j" . avy-goto-word-1)
-   ("l" . avy-goto-end-of-line)
-   ("k" . wal/avy-goto-word-in-line))
+  (("l" . avy-goto-end-of-line)
+   ("j" . wal/avy-goto-word-in-line))
   :general
-  (wal/lieutenant
+  (wal/colonel
     ;; Lines.
     "l" '(:ignore t :wk "avy (line)")
     "lc" '(avy-copy-line :wk "copy")
@@ -3638,6 +3637,8 @@ beginning."
     "rd" '(avy-kill-region :wk "delete")
     "rm" '(avy-move-region :wk "move")
     "rw" '(avy-kill-ring-save-region :wk "kill"))
+  (wal/colonel-sink
+   "j"  '(avy-goto-word-1 :wk "go to any word"))
   :commands (avy-with))
 #+END_SRC
 
@@ -4055,14 +4056,14 @@ Heavy lifting with =consult=.
     "St" '(consult-theme :wk "consult theme")
     "fr" '(consult-recent-file :wk "recent"))
   (wal/colonel
+    "u" '(:ignore t :wk "consult")
+    "ui" '(wal/consult-ripgrep-ignored :wk "ignored rg")
+    "ul" '(consult-focus-lines :wk "lines"))
+  (wal/colonel-sink
     "n" '(consult-ripgrep :wk "rg"))
   (wal/major :keymaps 'org-mode-map :major-modes t
     "g" '(consult-org-heading :wk "go to heading"))
   (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
-  (wal/lieutenant
-    "u" '(:ignore t :wk "consult")
-    "ui" '(wal/consult-ripgrep-ignored :wk "ignored rg")
-    "ul" '(consult-focus-lines :wk "lines"))
   :after vertico)
 
 (use-package consult-flycheck
@@ -4743,7 +4744,7 @@ If the project root cannot be determined, use
   ;; This leads to endless edit buffers opening since we annotate bookmarks
   (org-capture-bookmark nil)
   :general
-  (wal/colonel
+  (wal/lieutenant
     "c" '(org-capture :wk "capture"))
   :ensure nil
   :delight " cap")
@@ -5195,7 +5196,7 @@ Forget remembering =git= commands, use =transient=.
   :wal-bind
   ("m" . magit-status)
   :general
-  (wal/lieutenant
+  (wal/colonel
     "m" '(:ignore t :wk "magit")
     "mf" '(magit-find-file :wk "find file")
     "mo" '(magit-find-file-other-window :wk "find file other window")
@@ -6135,6 +6136,16 @@ This adds additional ignored directories."
   (lsp-lens-mode " lns"))
 #+END_SRC
 
+**** Leader Keys
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+The following special key-bindings exist:
+
++ =H-L= selects code lenses
++ =H-K= takes code actions.
+
 *** lsp-ui
 :PROPERTIES:
 :UNNUMBERED: t
@@ -6740,9 +6751,6 @@ and other bindings.
 keyboard unusable.
 
 [fn:11] They all require their respective mode to be on.
-
-The leader key also provides prefixes for packages that have their own
-ecosystem like =org-roam= and =magit=.
 
 [fn:12] The following packages (and their related or sub-packages) are
 found in other sections
