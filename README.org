@@ -6182,9 +6182,10 @@ LSP support for Dart.
   "Get the service URI (needed for devtools)."
   (interactive)
   (condition-case nil
-      (let ((uri (lsp-workspace-get-metadata "devtools-vm-service-uri")))
-        (kill-new uri)
-        (message "Service URI (%s) copied to kill ring" uri))
+      (when (fboundp 'lsp-workspace-get-metadata)
+        (let ((uri (lsp-workspace-get-metadata "devtools-vm-service-uri")))
+          (kill-new uri)
+          (message "Service URI (%s) copied to kill ring" uri)))
     (error
       (message "Couldn't get service URI"))))
 
