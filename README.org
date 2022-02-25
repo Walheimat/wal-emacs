@@ -4010,7 +4010,14 @@ Heavy lifting with =consult=.
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/consult-buffer-filter
-  '("^magit" "\\*dashboard\\*" "\\*Messages\\*" "\\*scratch")
+  '("\\*scratch"
+    "\\` "
+    "\\*dashboard\\*"
+    "\\*Messages\\*"
+    "\\*docker"
+    "\\*poetry"
+    "\\*HTTP"
+    "^magit")
   "Additional buffers to filter."
   :type '(repeat string)
   :group 'wal-complete)
@@ -4019,8 +4026,7 @@ Heavy lifting with =consult=.
   "Search using `consult-ripgrep' without ignoring files."
   (interactive)
   (let ((consult-ripgrep-args
-         "rg --null --line-buffered --color=never --max-columns=1000 --path-separator /\
-   --smart-case --no-heading --line-number --no-ignore ."))
+         (concat (substring consult-ripgrep-args 0 -1) "--no-ignore .")))
     (call-interactively 'consult-ripgrep)))
 
 (defun wal/configure-consult ()
