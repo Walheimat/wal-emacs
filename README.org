@@ -1225,18 +1225,13 @@ Better(?) garbage collection.
   :type 'integer
   :group 'wal-func)
 
-(defvar wal/in-minibuffer nil
-  "Non-nil means the minibuffer is active.")
-
 (defun wal/minibuffer-setup-hook ()
   "Increase `gc-cons-threshold' to maximum on minibuffer setup."
-  (setq gc-cons-threshold most-positive-fixnum)
-  (setq wal/in-minibuffer t))
+  (setq gc-cons-threshold most-positive-fixnum))
 
 (defun wal/minibuffer-exit-hook ()
   "Decrease `gc-cons-threshold' on minibuffer exit."
-  (setq gc-cons-threshold (wal/bytes-per-mb wal/gc-cons-threshold-in-mb))
-  (setq wal/in-minibuffer nil))
+  (setq gc-cons-threshold (wal/bytes-per-mb wal/gc-cons-threshold-in-mb)))
 
 (add-hook 'minibuffer-setup-hook #'wal/minibuffer-setup-hook)
 (add-hook 'minibuffer-exit-hook #'wal/minibuffer-exit-hook)
@@ -3491,20 +3486,6 @@ Treat certain buffers and their windows as pop-ups.
   :type 'sexp
   :group 'wal-windows)
 
-(defvar wal/popper-hydra-visible nil
-  "Non-nil means `wal/popper' is visible.")
-
-(defun wal/popper-handle-window-change ()
-  "Activate `wal/popper' when selecting a pop-up window.
-
-If the minibuffer is active, do nothing."
-  (unless wal/in-minibuffer
-    (with-current-buffer (window-buffer)
-      (when (and (fboundp 'wal/popper/body)
-                 (popper-popup-p (current-buffer)))
-        (unless wal/popper-hydra-visible
-          (wal/popper/body))))))
-
 (defun wal/popper-dead-shell-p ()
   "Check if the current buffer is a shell or comint pop-up with no process."
   (interactive)
@@ -3514,38 +3495,16 @@ If the minibuffer is active, do nothing."
            (or (derived-mode-p 'shell-mode) (derived-mode-p 'comint-mode))
            (not (comint-check-proc buf))))))
 
-(defun wal/popper-open-all ()
-  "Same as `popper--open-all' but interactive."
-  (interactive)
-  (popper--open-all))
-
-(defun wal/popper-bury-all ()
-  "Same as `popper--bury-all' but interactive."
-  (interactive)
-  (popper--bury-all))
-
 (defun wal/configure-popper ()
   "Configure package `popper'."
   (when wal/use-perspectives
     (setq popper-group-function 'popper-group-by-perspective))
-  (defhydra wal/popper (:hint nil
-                        :timeout 1
-                        :foreign-keys warn
-                        :pre (setq wal/popper-hydra-visible t)
-                        :post (setq wal/popper-hydra-visible nil))
-    "
-%s`wal/ascii-whale Pop-ups: _c_ycle, _b_ury or _o_pen all.
-"
-    ("c" popper-cycle)
-    ("o" wal/popper-open-all :color blue)
-    ("b" wal/popper-bury-all :color blue)
-    ("q" nil "quit"))
-  (add-hook 'buffer-list-update-hook #'wal/popper-handle-window-change))
+  (popper-mode +1)
+  (popper-echo-mode +1))
 
 (use-package popper
   :config
   (wal/configure-popper)
-  (popper-mode +1)
   :custom
   (popper-reference-buffers wal/popper-reference-buffers)
   (popper-display-control 'user)
