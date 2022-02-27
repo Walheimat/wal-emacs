@@ -3485,6 +3485,17 @@ Treat certain buffers and their windows as pop-ups.
   :type 'sexp
   :group 'wal-windows)
 
+(defvar wal/popper-hydra-visible nil
+  "Non-nil means `wal/popper' is visible.")
+
+(defun wal/popper-handle-window-change ()
+  "Unless already shown, show `wal/popper' if changing to a pop-up."
+  (with-current-buffer (window-buffer)
+    (when (and (fboundp 'wal/popper/body)
+               (popper-popup-p (current-buffer)))
+      (unless wal/popper-hydra-visible
+        (wal/popper/body)))))
+
 (defun wal/popper-dead-shell-p ()
   "Check if the current buffer is a shell or comint pop-up with no process."
   (interactive)
@@ -3508,14 +3519,18 @@ Treat certain buffers and their windows as pop-ups.
   "Configure package `popper'."
   (when wal/use-perspectives
     (setq popper-group-function 'popper-group-by-perspective))
-  (defhydra wal/popper (:hint nil)
+  (defhydra wal/popper (:hint nil
+                        :timeout 1
+                        :pre (setq wal/popper-hydra-visible t)
+                        :post (setq wal/popper-hydra-visible nil))
     "
 %s`wal/ascii-whale Pop-ups: _c_ycle, _b_ury or _o_pen all.
 "
     ("c" popper-cycle)
     ("o" wal/popper-open-all :color blue)
     ("b" wal/popper-bury-all :color blue)
-    ("q" nil "quit")))
+    ("q" nil "quit"))
+  (add-hook 'buffer-list-update-hook #'wal/popper-handle-window-change))
 
 (use-package popper
   :config
@@ -3528,9 +3543,6 @@ Treat certain buffers and their windows as pop-ups.
   :wal-bind
   ("[" . popper-toggle-latest)
   :general
-  (wal/colonel-sink "[" '(popper-cycle :wk "cycle pop-ups")) ; Not sure if this is useful.
-  (wal/captain "[" :keymaps '(popper-mode-map)
-    '(wal/popper/body :wk "popper"))
   (general-define-key
    :keymaps 'popper-mode-map
    :predicate '(wal/popper-dead-shell-p)
