@@ -3355,7 +3355,7 @@ Everything that has to do with windows.
 ;;; Commentary:
 ;;
 ;; Provide window packages.
-
+n
 ;;; Code:
 
 (declare-function aw-delete-window "ace-window.el")
@@ -3430,6 +3430,11 @@ Ace interacting with (multiple) windows.
 Use the golden ratio.
 
 #+BEGIN_SRC emacs-lisp
+(defcustom wal/use-golden-ratio nil
+  "Whether to use the golden ratio."
+  :type 'boolean
+  :group 'wal-windows)
+
 (defun wal/aw-switch-maybe-golden-ratio (_window)
   "Invoke `golden-ratio' if mode is active.
 Used to advise `aw-switch-to-window'."
@@ -3442,9 +3447,12 @@ Used to advise `aw-switch-to-window'."
   (advice-add
    'aw-switch-to-window
    :after #'wal/aw-switch-maybe-golden-ratio)
+  (when wal/use-golden-ratio
+    (golden-ratio-mode +1))
   :general
   (wal/captain-sink "g" '(golden-ratio-mode :wk "golden-ratio"))
-  :delight " gol")
+  :delight " gol"
+  :defer 2)
 #+END_SRC
 
 *** popper
