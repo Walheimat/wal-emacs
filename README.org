@@ -2599,6 +2599,8 @@ I like nice-looking things.
 (defvar dimmer-prevent-dimming-predicates)
 (defvar doom-modeline-buffer-file-name-style)
 (defvar doom-modeline--vcs-text)
+(defvar wal/use-golden-ratio)
+(defvar which-key-popup-type)
 
 (defgroup wal-visuals nil
   "Change settings used for visual packages."
@@ -2892,9 +2894,18 @@ Provide alternative syntax highlighting.
 Show the next possible key presses towards a command.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/configure-which-key ()
+  "Configure package `which-key'.
+
+Use the minibuffer if we use `golden-ratio' since adding the
+buffer name to its exclusion lists will not work."
+  (when wal/use-golden-ratio
+    (setq which-key-popup-type 'minibuffer))
+  (which-key-mode +1))
+
 (use-package which-key
   :config
-  (which-key-mode)
+  (wal/configure-which-key)
   :custom
   (which-key-lighter " wk?")
   (which-key-idle-delay 0.4)
