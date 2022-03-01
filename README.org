@@ -3910,7 +3910,7 @@ Provide global option narrowing using the =vertico= family of products.
   :hook
   ((rfn-eshadow-update-overlay . vertico-directory-tidy)
    (minibuffer-setup . wal/record-this-command))
-  :demand t
+  :demand
   :after vertico
   :load-path "site-lisp")
 #+END_SRC
@@ -3925,7 +3925,7 @@ Provide global option narrowing using the =vertico= family of products.
   :wal-bind
   (:map vertico-map
    ("l" . vertico-quick-insert))
-  :demand t
+  :demand
   :after vertico
   :load-path "site-lisp")
 #+END_SRC
@@ -3943,8 +3943,8 @@ Fuzzy matches.
   (setq completion-styles '(orderless)
         completion-category-defaults nil
         completion-category-overrides '((file (styles partial-completion))))
-  :after vertico
-  :demand)
+  :demand
+  :after vertico)
 #+END_SRC
 
 *** marginalia
@@ -3970,7 +3970,7 @@ completion actions.
   :bind
   (:map minibuffer-local-map
    ("M-a" . marginalia-cycle))
-  :demand t
+  :demand
   :after vertico)
 #+END_SRC
 
@@ -4004,7 +4004,7 @@ Do something else with minibuffer candidate.
 
 (use-package embark-consult
   :hook (embark-collect-mode . consult-preview-at-point-mode)
-  :demand t
+  :demand
   :after (embark consult))
 #+END_SRC
 
@@ -4083,11 +4083,18 @@ Heavy lifting with =consult=.
   (wal/major :keymaps 'org-mode-map :major-modes t
     "g" '(consult-org-heading :wk "go to heading"))
   (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
+  :demand
   :after vertico)
 
 (use-package consult-flycheck
-  :demand t
+  :demand
   :after (consult flycheck))
+
+(use-package consult-lsp
+  :wal-bind
+  (:map lsp-mode-map
+   ("J" . consult-lsp-file-symbols))
+  :after (consult lsp-mode))
 #+END_SRC
 
 ** Footer
