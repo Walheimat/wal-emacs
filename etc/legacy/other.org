@@ -539,6 +539,126 @@ Lastly there's this.
 (use-package humanoid-themes)
 #+END_SRC
 
+** tree-sitter
+
+Provide alternative syntax highlighting.
+
+#+begin_src emacs-lisp :tangle no
+(defcustom wal/tree-sitter-mode-maps
+  '(js2-mode-map
+    python-mode-map
+    c++-mode-map)
+  "Mode maps that get `tree-sitter-hl-mode' bound."
+  :type '(repeat symbol)
+  :group 'wal-visuals)
+
+(defun wal/tree-sitter-mode ()
+  "(De-)Activate mode and highlighting."
+  (interactive)
+  (if (and (boundp 'tree-sitter-mode) tree-sitter-mode)
+      (tree-sitter-mode -1)
+    (tree-sitter-hl-mode)))
+
+(use-package tree-sitter
+  :general
+  (wal/captain :keymaps wal/tree-sitter-mode-maps :major-modes t
+    "t" '(wal/tree-sitter-mode :wk "treesitter"))
+  :delight " trs")
+
+(use-package tree-sitter-langs
+  :demand
+  :after tree-sitter)
+#+end_src
+
+** fira-code-mode
+
+Alternatively, enable FiraCode ligatures for /all/ fonts.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defun wal/use-fira-code-mode ()
+  "Determine whether `fira-code-mode' can/should be used.
+
+This is the case when:
+
+1. We can't use `ligature'
+2. The symbol font is installed
+3. We're not using Monoid font"
+  (and (not (require 'ligature nil t))
+       (x-list-fonts "Fira Code Symbol")
+       (not (string-match "Monoid" (face-font 'default)))))
+
+(defun wal/fira-code ()
+  "Wraps macro to only maybe enable."
+  (use-package fira-code-mode
+    :if (wal/use-fira-code-mode)
+    :custom
+    (fira-code-mode-disabled-ligatures '("[]" "x"))
+    :hook prog-mode
+    :diminish))
+
+;; We guard against font-related actions.
+(if (daemonp)
+    (add-hook 'server-after-make-frame-hook 'wal/fira-code t)
+  (add-hook 'emacs-startup-hook 'wal/fira-code t))
+#+END_SRC
+
+** blamer
+
+Per-line blaming.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(use-package blamer
+  :general
+  (wal/captain-sink "b" '(blamer-mode :wk "blamer"))
+  :load-path "site-lisp")
+#+END_SRC
+
+** smartparens
+
+I didn't have smart parens growing up so I need help.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defun wal/configure-smartparens ()
+  "Configure `smartparens'."
+  (add-to-list 'sp-lisp-modes 'lisp-data-mode)
+  (sp-with-modes
+   sp-lisp-modes
+   (sp-local-pair "'" nil :actions nil))
+  ;; Create a `hydra' for pair navigation/editing.
+  (defhydra wal/smartparens (:hint nil)
+    "
+%s(wal/ascii-whale-hydra-offset 7)^_p_^
+%s`wal/ascii-whale Use _b_   _f_ to navigate pairs.
+%s(wal/ascii-whale-hydra-offset 7)^_n_^
+"
+    ("b" sp-backward-sexp)
+    ("f" sp-forward-sexp)
+    ("p" sp-backward-up-sexp)
+    ("n" sp-down-sexp)
+    ("q" nil "quit")))
+
+(defun wal/sp-rewrap-sexp ()
+  "Call `sp--maybe-init' before `sp-rewrap-sexp'.
+
+Advising the function does not work."
+  (interactive)
+  (unless (boundp 'smartparens)
+    (require 'smartparens nil t))
+  (with-current-buffer (current-buffer)
+    (sp--maybe-init))
+  (call-interactively 'sp-rewrap-sexp))
+
+(use-package smartparens
+  :config
+  (wal/configure-smartparens)
+  :general
+  (wal/colonel :keymaps 'prog-mode-map
+    "p" '(:ignore t :wk "smartparens")
+    "ph" '(wal/smartparens/body :wk "hydra")
+    "pw" '(wal/sp-rewrap-sexp :wk "rewrap")
+    "ps" '(sp-splice-sexp :wk "splice")))
+#+END_SRC
+
 * Other Settings
 
 These are other settings that used to be in my config.
