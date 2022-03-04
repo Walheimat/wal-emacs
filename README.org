@@ -2025,23 +2025,11 @@ Find libraries.
 Let's try to be even more =helpful=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-helpful--autoloaded-p (sym buf)
-  "Advise function to call `help-fns--autloaded-p' with SYM only.
-
-BUF is only used to display the file name."
-  (with-no-warnings
-   (-when-let (file-name (buffer-file-name buf))
-     (setq file-name (s-chop-suffix ".gz" file-name))
-     (help-fns--autoloaded-p sym))))
-
 (defun wal/configure-helpful ()
   "Configure package `helpful'."
   (wal/display-buffer-in-direction 'helpful-mode)
   (when wal/experimental
-    (defvar read-symbol-positions-list nil)
-    (advice-add
-      'helpful--autoloaded-p
-      :override #' wal/advise-helpful--autoloaded-p)))
+    (defvar read-symbol-positions-list nil)))
 
 (use-package helpful
   :config
@@ -6080,7 +6068,7 @@ LSP support for Dart.
   (when-let (proc (get-buffer-process lsp-dart-flutter-daemon-buffer-name))
     (set-process-query-on-exit-flag proc nil)))
 
-(defun wal/lsp-service-uri ()
+(defun wal/lsp-dart-service-uri ()
   "Get the service URI (needed for devtools)."
   (interactive)
   (condition-case nil
@@ -6118,7 +6106,7 @@ LSP support for Dart.
     "t" '(lsp-dart-run-test-at-point :wk "test (current)")
     "T" '(lsp-dart-run-all-tests :wk "test (all)")
     "D" '(lsp-dart-open-devtools :wk "devtools")
-    "U" '(wal/lsp-service-uri :wk "service URI"))
+    "U" '(wal/lsp-dart-service-uri :wk "service URI"))
   :after lsp-mode)
 #+END_SRC
 
