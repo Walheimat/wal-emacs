@@ -177,21 +177,27 @@ and some other packages need to be installed the hard way.
   "Packages to install before using `use-package'.
 Such as package `use-package'.")
 
-(defun wal/install-packages (packages)
+(cl-defun wal/install-packages (packages &key delete-windows on-done)
   "Install all PACKAGES unless already installed.
-Concludes by calling `delete-other-windows'."
-  (mapc (lambda (it)
-          (when (not (package-installed-p it))
-            (package-install it)))
-        packages)
-  (delete-other-windows))
+Concludes by calling `delete-other-windows' if DELETE-WINDOWS is
+t, printing optional message ON-DONE."
+  (let ((installed (mapcar (lambda (it)
+                             (when (not (package-installed-p it))
+                               (package-install it)))
+                           packages)))
+    (if (= 0 (length (seq-filter #'identity installed)))
+        (message "Packages already installed.")
+      (when (and on-done (stringp on-done))
+        (message on-done))))
+  (when delete-windows
+    (delete-other-windows)))
 
 ;; Try to install. On fail refresh and install again.
 (condition-case nil
-    (wal/install-packages wal/core-packages)
+    (wal/install-packages wal/core-packages :delete-windows t)
   (error
    (package-refresh-contents)
-   (wal/install-packages wal/core-packages)))
+   (wal/install-packages wal/core-packages :delete-windows t)))
 
 ;; Always ensure and defer.
 (setq use-package-always-ensure t
@@ -5188,8 +5194,28 @@ Let's greet the world[fn:16].
 (declare-function poetry-venv-exist-p "poetry.el")
 (declare-function wal/biased-random "wal-func.el")
 (declare-function wal/disable-tabs "wal-settings.el")
+(declare-function wal/install-packages "wal-settings.el")
 (declare-function wal/lsp "wal-lsp.el")
 (declare-function wal/maybe-enable-tabs "wal-settings.el")
+
+(defconst wal/language-packs
+  '((clojure . (clojure-mode cider))
+    (elisp . (highlight-quoted slime slime-company))
+    (elixir . (elixir-mode))
+    (flutter . (dart-mode lsp-dart))
+    (go . (go-mode))
+    (javascript . (js2-mode
+                   rjsx-mode
+                   typescript-mode
+                   json-mode
+                   add-node-modules-path
+                   prettier))
+    (python . (python-isort pyvenv poetry))
+    (rust . (rust-mode cargo))
+    (shell . (crontab-mode fish-mode))
+    (structured . (markdown-mode yaml-mode))
+    (web . (pug-mode json-mode)))
+  "Packs of language packages to be installed using `wal/install-language-pack'.")
 
 (defun wal/message-in-a-bottle (bottle)
   "Randomly display a message from the given BOTTLE.
@@ -5198,6 +5224,19 @@ That bottle is just an array of strings."
   (let* ((rand (wal/biased-random (length bottle)))
          (mess (nth rand bottle)))
     (message mess)))
+
+(defun wal/install-language-pack (pack)
+  "Install the given language PACK."
+  (interactive
+   (list (completing-read "Select pack: "
+                          (mapcar (lambda (pack) (car pack)) wal/language-packs))))
+  (let* ((sym (if (symbolp pack)
+                  pack
+                (intern pack)))
+         (item (assoc sym wal/language-packs)))
+    (if item
+        (wal/install-packages (cdr item) :on-done (format "Installed '%s' language pack." pack))
+      (user-error "Unknown language '%s', check `wal/language-packs'" sym))))
 #+END_SRC
 
 ** Elixir
@@ -6152,7 +6191,8 @@ LSP support for Dart.
     "T" '(lsp-dart-run-all-tests :wk "test (all)")
     "D" '(lsp-dart-open-devtools :wk "devtools")
     "U" '(wal/lsp-dart-service-uri :wk "service URI"))
-  :after lsp-mode)
+  :after lsp-mode
+  :ensure nil)
 #+END_SRC
 
 *** dap-mode
