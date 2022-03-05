@@ -3879,12 +3879,15 @@ Heavy lifting with =consult=.
   :type '(repeat string)
   :group 'wal-complete)
 
-(defun wal/consult-ripgrep-ignored ()
-  "Search using `consult-ripgrep' without ignoring files."
-  (interactive)
+(defun wal/consult-ripgrep-ignored (&optional dir initial)
+  "Search for regexp with rg in DIR with INITIAL input.
+Do not ignore hidden files."
+  (interactive "P")
   (let ((consult-ripgrep-args
          (concat (substring consult-ripgrep-args 0 -1) "--no-ignore .")))
-    (call-interactively 'consult-ripgrep)))
+    (when (and (fboundp 'consult--grep)
+               (fboundp 'consult--ripgrep-builder))
+      (consult--grep "Ripgrep (ignored)" #'consult--ripgrep-builder dir initial))))
 
 (defun wal/configure-consult ()
   "Configure package `consult'."
@@ -3894,6 +3897,7 @@ Heavy lifting with =consult=.
   (consult-customize
    consult--source-recent-file
    consult--source-project-recent-file
+   consult--source-bookmark
    :preview-key (kbd "M-,")))
 
 (use-package consult
@@ -3903,10 +3907,7 @@ Heavy lifting with =consult=.
   (consult-project-root-function #'projectile-project-root) ; Deprecated.
   (consult-project-function #'projectile-project-root)
   :bind
-  (("M-g g" . consult-goto-line)
-   ("M-g m" . consult-mark)
-   ("M-g M-m" . consult-global-mark)
-   :map bookmark-map
+  (:map bookmark-map
    ("u" . consult-bookmark)
    :map kmacro-keymap
    ("u" . consult-kmacro)
@@ -3920,13 +3921,17 @@ Heavy lifting with =consult=.
     "fr" '(consult-recent-file :wk "recent"))
   (wal/colonel
     "u" '(:ignore t :wk "consult")
-    "ui" '(wal/consult-ripgrep-ignored :wk "ignored rg")
-    "ul" '(consult-focus-lines :wk "lines"))
+    "ub" '(consult-bookark :wk "bookmark")
+    "ul" '(consult-goto-line :wk "line")
+    "um" '(consult-mark :wk "mark")
+    "uM" '(consult-global-mark :wk "global mark"))
   (wal/colonel-sink
-    "n" '(consult-ripgrep :wk "rg"))
+    "n" '(consult-ripgrep :wk "rg")
+    "N" '(wal/consult-ripgrep-ignored :wk "ignored rg"))
   (wal/major :keymaps 'org-mode-map :major-modes t
     "g" '(consult-org-heading :wk "go to heading"))
   (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
+  (wal/captain-sink "M" '(consult-minor-mode-menu :wk "menu"))
   :demand
   :after vertico)
 
