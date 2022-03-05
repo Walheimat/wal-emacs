@@ -3325,7 +3325,6 @@ Treat certain buffers and their windows as pop-ups.
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/popper-reference-buffers
   '(docker-container-mode
-    debugger-mode
     "\\*Bookmark Annotation\\*"
     "\\*org-roam\\*"
     ;; Shell(-like).
@@ -3335,6 +3334,9 @@ Treat certain buffers and their windows as pop-ups.
     "^\\* docker"
     dap-ui-repl-mode
     inferior-python-mode
+    ;; Debug(-like).
+    debugger-mode
+    "\\*Flutter"
     ;; Help(-like).
     helpful-mode
     help-mode
@@ -3861,18 +3863,19 @@ Heavy lifting with =consult=.
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/consult-buffer-filter
-  '("\\*scratch"
-    "\\` "
-    "\\*dashboard\\*"
-    "\\*Messages\\*"
+  '("\\*Buffer List\\*"
+    "\\*dashboard"
     "\\*docker"
-    "\\* docker-compose"
-    "\\*poetry"
-    "\\*HTTP"
+    "\\* docker"
+    "\\*Flutter"
+    "\\*Flycheck"
     "\\*helpful"
+    "\\*HTTP"
+    "\\*Messages\\*"
+    "\\*poetry"
     "\\*rg"
+    "\\*scratch"
     "\\*vterm"
-    "\\*Buffer List\\*"
     "^magit")
   "Additional buffers to filter."
   :type '(repeat string)
@@ -6058,7 +6061,8 @@ LSP support for Dart.
     (lsp-dart-define-key "r" #'lsp-dart-run))
   (add-hook
    'lsp-after-initialize-hook
-   #'wal/lsp-dart-set-process-query-on-exit-flag))
+   #'wal/lsp-dart-set-process-query-on-exit-flag)
+  (wal/display-buffer-in-side-window "\\*Flutter" :height 10))
 
 ;; Run `lsp-dart-dap-setup' once to install debugger.
 (use-package lsp-dart
