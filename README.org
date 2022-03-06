@@ -383,17 +383,17 @@ Sets tab variable `indent-tabs-mode' to t."
   (interactive)
   (setq indent-tabs-mode t))
 
-(cl-defun wal/maybe-enable-tabs (&key indent mode)
+(cl-defun wal/maybe-enable-tabs (&key indent-with with-mode)
   "Maybe enable tabs.
-Optionally set `indent-line-function' (if allowed) to INDENT and
-call MODE after changes."
+Optionally set `indent-line-function' (if allowed) to INDENT-WITH
+and call WITH-MODE after changes."
   (if wal/prefer-tabs
       (wal/enable-tabs)
     (wal/disable-tabs))
-  (when indent
-    (setq-local indent-line-function indent))
-  (when mode
-    (funcall mode)))
+  (when indent-with
+    (setq-local indent-line-function indent-with))
+  (when with-mode
+    (funcall with-mode)))
 
 (defun wal/set-indent-defaults (&optional num)
   "Set indent defaults.
@@ -1416,6 +1416,12 @@ throws are 3 or THROWS."
     (if bias-low
         (seq-min results)
       (seq-max results))))
+
+(defun wal/maybe-intern (symbol?)
+  "Maybe `intern' symbol if it's not as symbool."
+  (if (symbolp symbol?)
+      symbol?
+    (intern symbol?)))
 #+END_SRC
 
 ** Footer
@@ -2890,7 +2896,6 @@ Dim inactive frames.
   (advice-add
    'dimmer-config-change-handler
    :override 'wal/advise-dimmer-config-change-handler)
-  (dimmer-configure-company-box)
   (dimmer-configure-hydra)
   (dimmer-configure-magit)
   (dimmer-configure-org)
@@ -2946,9 +2951,7 @@ Busier and prettier[fn:13] =modeline=.
 (defun wal/doom-modeline-switch-buffer-file-name-style (style)
   "Switch to `doom-modeline' buffer file name STYLE."
   (interactive (list (wal/doom-modeline-buffer-file-name-styles)))
-  (let ((style-symbol (if (symbolp style)
-                          style
-                        (intern style))))
+  (let ((style-symbol (wal/maybe-intern style)))
     (setq doom-modeline-buffer-file-name-style style-symbol)))
 
 (use-package doom-modeline
@@ -3403,8 +3406,8 @@ Treat certain buffers and their windows as pop-ups.
    :keymaps 'popper-mode-map
    :predicate '(wal/popper-dead-shell-p)
    "q" 'kill-buffer-and-window)
-  :after winner
-  :demand)
+  :demand
+  :after winner)
 #+END_SRC
 
 ** Footer
@@ -3579,7 +3582,7 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 #+BEGIN_SRC emacs-lisp
 (use-package rg
   :config
-  (wal/display-buffer-in-pop-up "\\`\\*rg\\*\\'")
+  (wal/display-buffer-in-pop-up "\\*rg\\*\\'")
   :wal-bind
   ("n" . rg-menu)
   :ensure-system-package rg)
@@ -5231,9 +5234,7 @@ That bottle is just an array of strings."
   (interactive
    (list (completing-read "Select pack to install: "
                           (mapcar (lambda (pack) (car pack)) wal/language-packs))))
-  (let* ((sym (if (symbolp pack)
-                  pack
-                (intern pack)))
+  (let* ((sym (wal/maybe-intern pack))
          (item (assoc sym wal/language-packs)))
     (if item
         (wal/install-packages (cdr item) :on-done (format "Installed '%s' language pack." pack))
@@ -5621,7 +5622,7 @@ Improved editing for JSX files. Extends =js2=.
 (defun wal/rjsx-mode ()
   "Hook into `rjsx-mode'."
   (message "Extend those ugly JavaScripts of yours!")
-  (wal/maybe-enable-tabs :indent 'js-jsx-indent-line))
+  (wal/maybe-enable-tabs :indent-with 'js-jsx-indent-line))
 
 (use-package rjsx-mode
   :mode "\\.jsx\\'"
@@ -5933,10 +5934,11 @@ Please let me know when I screwed up. I promise I will learn.
   (general-define-key
     :keymaps 'flycheck-command-map
     "u" '(consult-flycheck :wk "consult flycheck"))
+  :custom
+  (flycheck-mode-line-prefix "fly")
   :general
   (wal/captain-sink "f" '(flycheck-mode :wk "flycheck"))
-  :hook (sh-set-shell . flycheck-mode)
-  :delight " fly")
+  :hook (sh-set-shell . flycheck-mode))
 #+END_SRC
 
 *** flyspell
