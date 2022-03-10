@@ -314,12 +314,6 @@ Make things shorter and snappier. These settings don't belong to
 packages.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/bytes-per-mb (num)
-  "Return the integer value of NUM megabytes in bytes.
-
-This function may be used to set variables that expect bytes."
-  (floor (* 1024 1024 num)))
-
 (defcustom wal/read-process-output-max (wal/bytes-per-mb 50)
   "Increased `read-process-output-max'."
   :type 'integer
@@ -968,7 +962,6 @@ Turning on/off certain major modes switching between =major-mode= and
 ;;; Code:
 
 (declare-function use-package-report "use-package-core.el")
-(declare-function wal/bytes-per-mb "wal-settings.el")
 (declare-function wal/directory-files "init.el")
 (declare-function wal/tangle-config "init.el")
 
@@ -1225,6 +1218,12 @@ Better(?) garbage collection.
   "The default `gc-cons-threshold' epxressed in MB."
   :type 'integer
   :group 'wal-func)
+
+(defun wal/bytes-per-mb (num)
+  "Return the integer value of NUM megabytes in bytes.
+
+This function may be used to set variables that expect bytes."
+  (floor (* 1024 1024 num)))
 
 (defun wal/minibuffer-setup-hook ()
   "Increase `gc-cons-threshold' to maximum on minibuffer setup."
@@ -6645,8 +6644,8 @@ The root package of the configuration which is basically just a giant
   :prefix "wal/")
 
 (defconst wal/sub-packages
-  '(wal-settings
-    wal-func
+  '(wal-func
+    wal-settings
     wal-key-bindings
     wal-look
     wal-fonts
