@@ -320,7 +320,12 @@ packages.
 This function may be used to set variables that expect bytes."
   (floor (* 1024 1024 num)))
 
-(setq read-process-output-max (wal/bytes-per-mb 5)
+(defcustom wal/read-process-output-max (wal/bytes-per-mb 50)
+  "Increased `read-process-output-max'."
+  :type 'integer
+  :group 'wal-settings)
+
+(setq read-process-output-max wal/read-process-output-max
       echo-keystrokes 0.1
       ;; New in version 28. Otherwise you need an alias.
       use-short-answers t
@@ -1216,7 +1221,7 @@ Minor mode to dedicate buffers to windows.
 Better(?) garbage collection.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/gc-cons-threshold-in-mb 100
+(defcustom wal/gc-cons-threshold-in-mb 200
   "The default `gc-cons-threshold' epxressed in MB."
   :type 'integer
   :group 'wal-func)
@@ -2810,7 +2815,6 @@ adding the buffer name to its exclusion lists will not work."
   (wal/configure-which-key)
   :custom
   (which-key-lighter " wk?")
-  (which-key-idle-delay 0.4)
   (which-key-sort-uppercase-first nil)
   (which-key-preserve-window-configuration t)
   (which-key-show-docstrings t)
@@ -3877,6 +3881,7 @@ Heavy lifting with =consult=.
 (defcustom wal/consult-buffer-filter
   '("\\*Buffer List\\*"
     "\\*cider"
+    "\\*dap"
     "\\*dashboard"
     "\\*docker"
     "\\* docker"
@@ -3890,6 +3895,7 @@ Heavy lifting with =consult=.
     "\\*rg"
     "\\*scratch"
     "\\*vterm"
+    "out\\*$"
     "^magit")
   "Additional buffers to filter."
   :type '(repeat string)
@@ -6483,6 +6489,7 @@ I'll replace =restclient= with =verb= soon.
   (wal/major :keymaps 'org-mode-map
     "v" '(:ignore t :wk "verb")
     "vr" '(verb-send-request-on-point-other-window-stay :wk "make request")
+    "vc" '(verb-export-request-on-point-curl :wk "export cURL")
     "vk" '(verb-kill-all-response-buffers :wk "kill response buffers")
     "vv" '(verb-set-var :wk "set var"))
   (wal/captain-sink :keymaps 'org-mode-map
