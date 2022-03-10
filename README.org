@@ -3880,6 +3880,7 @@ Heavy lifting with =consult=.
 (defcustom wal/consult-buffer-filter
   '("\\*Buffer List\\*"
     "\\*cider"
+    "\\*compilation"
     "\\*dap"
     "\\*dashboard"
     "\\*docker"
@@ -4125,6 +4126,7 @@ perspectives."
    ("C-x b" . persp-switch-to-buffer)
    ("C-x C-b" . persp-buffer-menu)
    :map perspective-map
+   ("l" . persp-buffer-menu)
    ("x" . wal/switch-to-scratch-buffer)
    ("C-k" . persp-kill-buffer*))
   :wal-bind
@@ -4172,6 +4174,12 @@ More robust project management.
        (if (projectile-project-p)
            (call-interactively (symbol-function ',(intern projectile-func-name)))
          (call-interactively (symbol-function ',func)))))))
+
+(defun wal/projectile-test-project ()
+  "Runs `projectile-test-project' with the default command."
+  (interactive)
+  (let ((compilation-read-command nil))
+    (projectile-test-project nil)))
 
 (defun wal/configure-projectile ()
   "Configure package `projectile'.
@@ -5851,6 +5859,26 @@ Yes, you need to install *Android Studio* for some reason.
   :ensure nil)
 #+END_SRC
 
+** Java
+
+*** java-mode
+
+#+begin_src emacs-lisp
+(defun wal/java-mode ()
+  "Hook into `java-mode'."
+  (message "Mmmh ... maven")
+  (wal/disable-tabs)
+  (hack-local-variables)
+  (wal/lsp))
+
+(use-package java-mode
+  :general
+  (wal/major
+    "t" '(wal/projectile-test-project :wk "test project"))
+  :hook (java-mode . wal/java-mode)
+  :ensure nil)
+#+end_src
+
 ** Web
 
 Does anyone actually like web development?
@@ -6203,6 +6231,21 @@ LSP support for Dart.
   :after lsp-mode
   :ensure nil)
 #+END_SRC
+
+*** lsp-java
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+begin_src emacs-lisp
+(use-package java-lsp
+  :config
+  (require 'dap-java)
+  :general
+  (wal/major :keymaps 'java-mode-map :major-modes t
+    "l" '(lsp-jt-lens-mode :wk "show test lenses"))
+  :ensure nil)
+#+end_src
 
 *** dap-mode
 :PROPERTIES:
