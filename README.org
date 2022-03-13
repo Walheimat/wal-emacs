@@ -185,7 +185,7 @@ t, printing optional message ON-DONE."
                              (when (not (package-installed-p it))
                                (package-install it)))
                            packages)))
-    (if (= 0 (length (seq-filter #'identity installed)))
+    (if (and on-done (= 0 (length (seq-filter #'identity installed))))
         (message "Packages already installed.")
       (when (and on-done (stringp on-done))
         (message on-done))))
@@ -1401,6 +1401,16 @@ This will activate minor mode `wal/config-mode'."
   (require 'checkdoc nil t)
   (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t)
   (auto-fill-mode))
+#+END_SRC
+
+** Lists
+
+Manipulating lists.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/append (sym seq)
+  "Set list SYM to it with SEQ appended."
+  (set sym (append (symbol-value sym) seq)))
 #+END_SRC
 
 ** Utility
@@ -2839,9 +2849,8 @@ Help me find my cursor!
 
 (defun wal/configure-beacon ()
   "Configure `beacon' package."
-  (mapc (lambda (it)
-          (add-to-list 'beacon-dont-blink-commands it))
-        wal/beacon-dont-blink-commands)
+  (wal/append 'beacon-dont-blink-commands
+              wal/beacon-dont-blink-commands)
   (add-to-list 'beacon-dont-blink-major-modes 'vterm-mode))
 
 (defun wal/lighthouse ()
@@ -3914,8 +3923,8 @@ Do not ignore hidden files."
 (defun wal/configure-consult ()
   "Configure package `consult'."
   (setq xref-show-xrefs-function #'consult-xref)
-  (mapc (lambda (it) (add-to-list 'consult-buffer-filter it))
-        wal/consult-buffer-filter)
+  (wal/append 'consult-buffer-filter
+              wal/consult-buffer-filter)
   (consult-customize
    consult--source-recent-file
    consult--source-project-recent-file
@@ -4185,15 +4194,12 @@ More robust project management.
   "Configure package `projectile'.
 
 This extends all ignore lists' default values."
-  (mapc (lambda (it)
-          (add-to-list 'projectile-globally-ignored-directories it))
-        wal/projectile-globally-ignored-directories)
-  (mapc (lambda (it)
-          (add-to-list 'projectile-globally-ignored-files it))
-        wal/projectile-globally-ignored-files)
-  (mapc (lambda (it)
-          (add-to-list 'projectile-globally-ignored-file-suffixes it))
-        wal/projectile-globally-ignored-file-suffixes)
+  (wal/append 'projectile-globally-ignored-directories
+              wal/projectile-globally-ignored-directories)
+  (wal/append 'projectile-globally-ignored-files
+              wal/projectile-globally-ignored-files)
+  (wal/append 'projectile-globally-ignored-file-suffixes
+              wal/projectile-globally-ignored-file-suffixes)
   (wal/captain
     "p" '(:keymap projectile-command-map :wk "projectile")))
 
@@ -4574,9 +4580,7 @@ Editing source blocks.
   "Configure package `org-src'.
 
 This sets additional modes."
-  (mapc (lambda (it)
-          (add-to-list 'org-src-lang-modes it))
-        wal/org-src-lang-modes))
+  (wal/append 'org-src-lang-modes wal/org-src-lang-modes))
 
 (use-package org-src
   :config
@@ -6100,9 +6104,8 @@ servers yourself[fn:17].
   "Configure package `lsp-mode'.
 This adds additional ignored directories."
   (require 'avy nil t) ; For code lenses to work immediately.
-  (mapc (lambda (it)
-          (add-to-list 'lsp-file-watch-ignored-directories it))
-        wal/lsp-file-watch-ignored-directories)
+  (wal/append 'lsp-file-watch-ignored-directories
+              wal/lsp-file-watch-ignored-directories)
   (advice-add 'lsp :before 'wal/advise-lsp-to-prevent-multi-root)
   (lsp-enable-which-key-integration t)
   (wal/captain :keymaps 'lsp-mode-map
