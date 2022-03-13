@@ -90,6 +90,8 @@ evaluate /everything/[fn:6] that follows.
 
 ;;; Code:
 
+(declare-function wal/bytes-per-mb "wal-func.el")
+
 (defvar use-package-always-ensure)
 (defvar use-package-always-defer)
 
@@ -783,6 +785,8 @@ Additional left PADDING can be passed."
 :UNNUMBERED: t
 :END:
 
+Grouped commands.
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/configure-transient()
   "Define and bind all transients."
@@ -1423,7 +1427,7 @@ throws are 3 or THROWS."
       (seq-max results))))
 
 (defun wal/maybe-intern (symbol?)
-  "Maybe `intern' symbol if it's not as symbool."
+  "Maybe `intern' SYMBOL? if it's not a symbol."
   (if (symbolp symbol?)
       symbol?
     (intern symbol?)))
@@ -2530,7 +2534,9 @@ I like nice-looking things.
 ;;; Code:
 
 (declare-function ligature-set-ligatures "ligature.el")
+(declare-function wal/append "wal-func.el")
 (declare-function wal/biased-random "wal-func.el")
+(declare-function wal/maybe-intern "wal-func.el")
 
 (defvar beacon-dont-blink-commands)
 (defvar beacon-dont-blink-major-modes)
@@ -2648,13 +2654,13 @@ A collection of status messages."
 
 ** Themes
 
-The nicest theme packages out there. It supports many, many packages'
-=face= variants.
-
 *** doom-themes
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+The nicest theme packages out there. It supports many, many packages'
+=face= variants.
 
 #+BEGIN_SRC emacs-lisp
 (use-package doom-themes
@@ -3681,6 +3687,8 @@ Complete commands and code.
 ;;; Code:
 
 (declare-function wal/display-buffer-ethereally "wal-func.el")
+(declare-function wal/append "wal-func.el")
+
 (defvar xref-show-xrefs-function)
 
 (defgroup wal-complete nil
@@ -3773,7 +3781,7 @@ Provide global option narrowing using the =vertico= family of products.
    (minibuffer-setup . wal/record-this-command))
   :demand
   :after vertico
-  :load-path "site-lisp")
+  :ensure nil)
 #+END_SRC
 
 *** vertico-quick
@@ -3788,7 +3796,7 @@ Provide global option narrowing using the =vertico= family of products.
    ("l" . vertico-quick-insert))
   :demand
   :after vertico
-  :load-path "site-lisp")
+  :ensure nil)
 #+END_SRC
 
 *** orderless
@@ -4007,6 +4015,7 @@ Keep order.
 (declare-function persp-names "perspective.el")
 (declare-function persp-scratch-buffer "perspective.el")
 (declare-function persp-switch-to-buffer "perspective.el")
+(declare-function wal/append "wal-func.el")
 (declare-function wal/captain "wal-key-bindings.el")
 
 (defvar consult-buffer-filter)
@@ -4174,7 +4183,7 @@ More robust project management.
          (call-interactively (symbol-function ',func)))))))
 
 (defun wal/projectile-test-project ()
-  "Runs `projectile-test-project' with the default command."
+  "Run `projectile-test-project' with the default command."
   (interactive)
   (let ((compilation-read-command nil))
     (projectile-test-project nil)))
@@ -4242,6 +4251,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 
 ;;; Code:
 
+(declare-function wal/append "wal-func.el")
 (declare-function wal/disable-tabs "wal-settings.el")
 (declare-function projectile-project-root "projectile.el")
 
@@ -5200,6 +5210,7 @@ Let's greet the world[fn:16].
 
 ;;; Code:
 
+(declare-function add-node-modules-path "add-node-modules-path.el")
 (declare-function poetry-get-virtualenv "poetry.el")
 (declare-function poetry-venv-exist-p "poetry.el")
 (declare-function wal/biased-random "wal-func.el")
@@ -5207,6 +5218,9 @@ Let's greet the world[fn:16].
 (declare-function wal/install-packages "wal-settings.el")
 (declare-function wal/lsp "wal-lsp.el")
 (declare-function wal/maybe-enable-tabs "wal-settings.el")
+(declare-function wal/maybe-intern "wal-func.el")
+
+(defvar js2-mode-map)
 
 (defconst wal/language-packs
   '((clojure . (clojure-mode cider))
@@ -6036,6 +6050,7 @@ Language servers are awesome. Thanks, Microsoft.
 ;;; Code:
 
 (declare-function lsp-enable-which-key-integration "lsp-mode.el")
+(declare-function wal/append "wal-func.el")
 (declare-function wal/captain "wal-key-bindings.el")
 (declare-function wal/captain-sink "wal-key-bindings.el")
 (declare-function wal/display-buffer-in-side-window "wal-func.el")
