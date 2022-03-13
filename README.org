@@ -587,7 +587,7 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-== to do a =quick-calc= (inserted if called with =C-u=)
 + =H-[= toggles pop-ups using =popper= (or runs a =hydra= if focusing a
   pop-up)
-+ =H-\= toggles =vterm=
++ =H-\= opens new =vterm=
 + =H-u= switches buffer using =consult=
 + =H-y= expands snippets (in =yas-minor-mode=).
 
@@ -1053,6 +1053,13 @@ removed."
                  `(,condition
                    nil
                    (window-parameters (mode-line-format . none))))))
+
+(defun wal/display-buffer-reuse-same-window (buffer)
+  "Display BUFFER reusing same window."
+  (let ((condition (wal/display-buffer-condition buffer)))
+    (add-to-list 'display-buffer-alist
+                 `(,condition
+                   (display-buffer-reuse-window display-buffer-same-window)))))
 #+END_SRC
 
 *** Editing
@@ -3347,8 +3354,7 @@ Treat certain buffers and their windows as pop-ups.
   '(docker-container-mode
     "\\*Bookmark Annotation\\*"
     "\\*org-roam\\*"
-    ;; Shell(-like).
-    "*eshell*"
+    ;; Compilation and REPL(-like).
     "\\*poetry-shell\\*"
     "^\\*docker-compose"
     "^\\* docker"
@@ -3390,8 +3396,7 @@ Treat certain buffers and their windows as pop-ups.
     (with-current-buffer buf
       (and (popper-popup-p buf)
            (or (derived-mode-p 'shell-mode)
-               (derived-mode-p 'comint-mode)
-               (eq major-mode 'vterm-mode))
+               (derived-mode-p 'comint-mode))
            (not (comint-check-proc buf))))))
 
 (defun wal/configure-popper ()
@@ -4562,7 +4567,8 @@ Editing source blocks.
 (defcustom wal/org-src-lang-modes
   '(("dockerfile" . dockerfile)
     ("conf" . conf)
-    ("markdown" . markdown))
+    ("markdown" . markdown)
+    ("fish" . fish))
   "Additional mappings to add to `org-src-lang-modes'."
   :type '(repeat
 	      (cons
@@ -4969,23 +4975,32 @@ flag to nil for the vterm process."
     (set-process-query-on-exit-flag proc nil)))
 
 (use-package vterm
-  :config
-  (wal/display-buffer-in-side-window (concat "\\" vterm-buffer-name) :height 15)
   :custom
-  (vterm-kill-buffer-on-exit t)
+  (vterm-buffer-name-string "VTerm: %s")
+  :wal-bind
+  ("\\" . vterm)
   :hook
   ((vterm-mode . wal/vterm-mode)
    (vterm-mode . with-editor-export-editor)
    (vterm-mode . with-editor-export-git-editor))
   :delight
   (vterm-copy-mode " vcp"))
+#+END_SRC
 
-(use-package vterm-toggle
-  :custom
-  (vterm-toggle-fullscreen-p nil)
-  (vterm-toggle-scope 'project)
-  :wal-bind
-  ("\\" . vterm-toggle))
+**** =fish= configuration
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Add this function to your =fish= configuration to title your =vterm=
+buffers.
+
+#+BEGIN_SRC fish :tangle no
+function fish_title
+    pwd
+    echo "@"
+    hostname
+end
 #+END_SRC
 
 *** eshell
