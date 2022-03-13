@@ -5230,6 +5230,7 @@ Let's greet the world[fn:16].
 (declare-function poetry-venv-exist-p "poetry.el")
 (declare-function wal/biased-random "wal-func.el")
 (declare-function wal/disable-tabs "wal-settings.el")
+(declare-function wal/display-buffer-in-side-window "wal-func.el")
 (declare-function wal/install-packages "wal-settings.el")
 (declare-function wal/lsp "wal-lsp.el")
 (declare-function wal/maybe-enable-tabs "wal-settings.el")
@@ -5237,24 +5238,14 @@ Let's greet the world[fn:16].
 
 (defvar js2-mode-map)
 
-(defconst wal/language-packs
-  '((clojure . (clojure-mode cider))
-    (elisp . (highlight-quoted slime slime-company))
-    (elixir . (elixir-mode))
-    (flutter . (dart-mode lsp-dart))
-    (go . (go-mode))
-    (javascript . (js2-mode
-                   rjsx-mode
-                   typescript-mode
-                   json-mode
-                   add-node-modules-path
-                   prettier))
-    (python . (python-isort pyvenv poetry))
-    (rust . (rust-mode cargo))
-    (shell . (crontab-mode fish-mode))
-    (structured . (markdown-mode yaml-mode))
-    (web . (pug-mode json-mode)))
-  "Packs of language packages to be installed using `wal/install-language-pack'.")
+(defvar wal/language-packs nil
+  "Packs of language packages to be installed using `wal/install-language-pack'.
+
+Individual languages build this list using macro `wal/define-language-pack'.")
+
+(cl-defmacro wal/define-language-pack (lang &key packages)
+  "Define a language pack of PACKAGES for LANG."
+  `(add-to-list 'wal/language-packs '(,lang . ,packages)))
 
 (defun wal/message-in-a-bottle (bottle)
   "Randomly display a message from the given BOTTLE.
@@ -5277,6 +5268,19 @@ That bottle is just an array of strings."
 #+END_SRC
 
 ** Elixir
+
+*** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; Elixir:
+
+(wal/define-language-pack elixir
+  :packages
+  (elixir-mode))
+#+END_SRC
 
 *** elixir-mode
 :PROPERTIES:
@@ -5332,6 +5336,20 @@ I want to be ready for =jai=.
 
 Consider the lobster.
 
+*** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; Rust:
+
+(wal/define-language-pack rust
+  :packages
+  (rust-mode
+   cargo))
+#+END_SRC
+
 *** rust-mode
 :PROPERTIES:
 :UNNUMBERED: t
@@ -5377,6 +5395,21 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
 
 ** Python
 
+*** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; Python:
+
+(wal/define-language-pack python
+  :packages
+  (python-isort
+   pyvenv
+   poetry))
+#+END_SRC
+
 *** python-mode
 :PROPERTIES:
 :UNNUMBERED: t
@@ -5413,6 +5446,9 @@ Use snake when you can't =make=.
 #+END_SRC
 
 *** python-isort
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 Sort with =isort=.
 
@@ -5486,6 +5522,23 @@ Activating =virtualenv= inside of Emacs.
 #+END_SRC
 
 ** Lisp
+
+*** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; Lisp:
+
+(wal/define-language-pack lisp
+  :packages
+  (cider
+   clojure-mode
+   highlight-quoted
+   slime
+   slime-company))
+#+END_SRC
 
 *** elisp-mode
 :PROPERTIES:
@@ -5609,6 +5662,24 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
 #+END_SRC
 
 ** JavaScript
+
+*** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; JavaScript:
+
+(wal/define-language-pack javacsript
+  :packages
+  (js2-mode
+   rjsx-mode
+   typescript-mode
+   json-mode
+   add-node-module-path
+   prettier))
+#+END_SRC
 
 Can we have =deno= instead of =node=?
 
@@ -5739,6 +5810,19 @@ Prettify your ugly JavaScript.
 
 ** Go
 
+*** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; Golang:
+
+(wal/define-language-pack go
+  :packages
+  (go-mode))
+#+END_SRC
+
 *** go-mode
 :PROPERTIES:
 :UNNUMBERED: t
@@ -5761,6 +5845,20 @@ Setup for LSP.
 #+END_SRC
 
 ** Scripting
+
+*** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; Scripting:
+
+(wal/define-language-pack shell
+  :packages
+  (crontab-mode
+   fish-mode))
+#+END_SRC
 
 *** sh-script
 :PROPERTIES:
@@ -5813,6 +5911,20 @@ Support =fish= functions.
 
 Sometimes things that don't do things need to look nice.
 
+*** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; Markup:
+
+(wal/define-language-pack structured
+  :packages
+  (markdown-mode
+   yaml-mode))
+#+END_SRC
+
 *** markdown-mode
 :PROPERTIES:
 :UNNUMBERED: t
@@ -5863,6 +5975,20 @@ Sometimes things that do as well.
 
 Yes, you need to install *Android Studio* for some reason.
 
+*** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; Flutter/Dart:
+
+(wal/define-language-pack flutter
+  :packages
+  (dart-mode
+   lsp-dart))
+#+END_SRC
+
 *** dart-mode
 :PROPERTIES:
 :UNNUMBERED: t
@@ -5881,9 +6007,94 @@ Yes, you need to install *Android Studio* for some reason.
   :ensure nil)
 #+END_SRC
 
+*** lsp-dart
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+LSP support for Dart.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/find-dart-flutter-sdk-dir ()
+  "Find the Dart Flutter SDK directory."
+  (when-let* ((flutter-bin (executable-find "flutter"))
+              (sdk-dir (string-trim (shell-command-to-string "flutter sdk-path"))))
+    sdk-dir))
+
+(defun wal/find-dart-sdk-dir ()
+  "Find the Dart SDK directory."
+  (when-let* ((flutter-sdk-dir (wal/find-dart-flutter-sdk-dir)))
+    (expand-file-name "bin/cache/dart-sdk" flutter-sdk-dir)))
+
+(defun wal/lsp-dart-set-process-query-on-exit-flag ()
+  "Set the query-on-exit flag to nil for the Dart language server."
+  (defvar lsp-dart-flutter-daemon-buffer-name)
+  (when-let (proc (get-buffer-process lsp-dart-flutter-daemon-buffer-name))
+    (set-process-query-on-exit-flag proc nil)))
+
+(defun wal/lsp-dart-service-uri ()
+  "Get the service URI (needed for devtools)."
+  (interactive)
+  (condition-case nil
+      (when (fboundp 'lsp-workspace-get-metadata)
+        (let ((uri (lsp-workspace-get-metadata "devtools-vm-service-uri")))
+          (kill-new uri)
+          (message "Service URI (%s) copied to kill ring" uri)))
+    (error
+      (message "Couldn't get service URI"))))
+
+(defun wal/configure-lsp-dart ()
+  "Configure package `lsp-dart'."
+  (when (fboundp 'lsp-dart-define-key)
+    (lsp-dart-define-key "r" #'lsp-dart-run))
+  (add-hook
+   'lsp-after-initialize-hook
+   #'wal/lsp-dart-set-process-query-on-exit-flag)
+  (wal/display-buffer-in-side-window "\\*Flutter" :height 10))
+
+;; Run `lsp-dart-dap-setup' once to install debugger.
+(use-package lsp-dart
+  :if (executable-find "flutter")
+  :config
+  (wal/configure-lsp-dart)
+  :custom
+  (lsp-dart-flutter-sdk-dir (wal/find-dart-flutter-sdk-dir))
+  (lsp-dart-sdk-dir (wal/find-dart-sdk-dir))
+  :general
+  (wal/major
+    :keymaps 'dart-mode-map
+    :major-modes t
+    "o" '(lsp-dart-show-flutter-outline :wk "show outline")
+    "E" '(lsp-dart-run :wk "run")
+    "R" '(lsp-dart-dap-flutter-hot-restart :wk "restart")
+    "r" '(lsp-dart-dap-flutter-hot-reload :wk "hot reload")
+    "t" '(lsp-dart-run-test-at-point :wk "test (current)")
+    "T" '(lsp-dart-run-all-tests :wk "test (all)")
+    "D" '(lsp-dart-open-devtools :wk "devtools")
+    "U" '(wal/lsp-dart-service-uri :wk "service URI"))
+  :after lsp-mode
+  :ensure nil)
+#+END_SRC
+
 ** Java
 
+*** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; Java:
+
+(wal/define-language-pack java
+  :packages
+  (lsp-java))
+#+END_SRC
+
 *** java-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
 #+begin_src emacs-lisp
 (defun wal/java-mode ()
@@ -5901,9 +6112,40 @@ Yes, you need to install *Android Studio* for some reason.
   :ensure nil)
 #+end_src
 
+*** lsp-java
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+LSP integration.
+
+#+begin_src emacs-lisp
+(use-package java-lsp
+  :config
+  (require 'dap-java)
+  :general
+  (wal/major :keymaps 'java-mode-map :major-modes t
+    "l" '(lsp-jt-lens-mode :wk "show test lenses"))
+  :ensure nil)
+#+end_src
+
 ** Web
 
 Does anyone actually like web development?
+
+*** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; Web:
+
+(wal/define-language-pack web
+  :packages
+  (pug-mode
+   json-mode))
+#+END_SRC
 
 *** css-mode
 :PROPERTIES:
@@ -6184,90 +6426,6 @@ Don't clutter things up too much.
   (lsp-ui-doc-text-scale-level -1)
   :after lsp-mode)
 #+END_SRC
-
-*** lsp-dart
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-LSP support for Dart.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/find-dart-flutter-sdk-dir ()
-  "Find the Dart Flutter SDK directory."
-  (when-let* ((flutter-bin (executable-find "flutter"))
-              (sdk-dir (string-trim (shell-command-to-string "flutter sdk-path"))))
-    sdk-dir))
-
-(defun wal/find-dart-sdk-dir ()
-  "Find the Dart SDK directory."
-  (when-let* ((flutter-sdk-dir (wal/find-dart-flutter-sdk-dir)))
-    (expand-file-name "bin/cache/dart-sdk" flutter-sdk-dir)))
-
-(defun wal/lsp-dart-set-process-query-on-exit-flag ()
-  "Set the query-on-exit flag to nil for the Dart language server."
-  (defvar lsp-dart-flutter-daemon-buffer-name)
-  (when-let (proc (get-buffer-process lsp-dart-flutter-daemon-buffer-name))
-    (set-process-query-on-exit-flag proc nil)))
-
-(defun wal/lsp-dart-service-uri ()
-  "Get the service URI (needed for devtools)."
-  (interactive)
-  (condition-case nil
-      (when (fboundp 'lsp-workspace-get-metadata)
-        (let ((uri (lsp-workspace-get-metadata "devtools-vm-service-uri")))
-          (kill-new uri)
-          (message "Service URI (%s) copied to kill ring" uri)))
-    (error
-      (message "Couldn't get service URI"))))
-
-(defun wal/configure-lsp-dart ()
-  "Configure package `lsp-dart'."
-  (when (fboundp 'lsp-dart-define-key)
-    (lsp-dart-define-key "r" #'lsp-dart-run))
-  (add-hook
-   'lsp-after-initialize-hook
-   #'wal/lsp-dart-set-process-query-on-exit-flag)
-  (wal/display-buffer-in-side-window "\\*Flutter" :height 10))
-
-;; Run `lsp-dart-dap-setup' once to install debugger.
-(use-package lsp-dart
-  :if (executable-find "flutter")
-  :config
-  (wal/configure-lsp-dart)
-  :custom
-  (lsp-dart-flutter-sdk-dir (wal/find-dart-flutter-sdk-dir))
-  (lsp-dart-sdk-dir (wal/find-dart-sdk-dir))
-  :general
-  (wal/major
-    :keymaps 'dart-mode-map
-    :major-modes t
-    "o" '(lsp-dart-show-flutter-outline :wk "show outline")
-    "E" '(lsp-dart-run :wk "run")
-    "R" '(lsp-dart-dap-flutter-hot-restart :wk "restart")
-    "r" '(lsp-dart-dap-flutter-hot-reload :wk "hot reload")
-    "t" '(lsp-dart-run-test-at-point :wk "test (current)")
-    "T" '(lsp-dart-run-all-tests :wk "test (all)")
-    "D" '(lsp-dart-open-devtools :wk "devtools")
-    "U" '(wal/lsp-dart-service-uri :wk "service URI"))
-  :after lsp-mode
-  :ensure nil)
-#+END_SRC
-
-*** lsp-java
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-#+begin_src emacs-lisp
-(use-package java-lsp
-  :config
-  (require 'dap-java)
-  :general
-  (wal/major :keymaps 'java-mode-map :major-modes t
-    "l" '(lsp-jt-lens-mode :wk "show test lenses"))
-  :ensure nil)
-#+end_src
 
 *** dap-mode
 :PROPERTIES:
