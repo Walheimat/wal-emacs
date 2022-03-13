@@ -64,12 +64,6 @@ loading the package."
           (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal/init-error)
           :error))))))
 
-(defvar wal/load-custom-file-immediately nil
-  "Whether to load the custom file immediately.
-
-This is currently only necessary if you wish set
-`wal/use-hyper-prefix' and `wal/use-perspectives'.")
-
 ;; Maybe tangle, load.
 (let ((gc-cons-threshold most-positive-fixnum)
 	  (gc-cons-percentage 0.8)

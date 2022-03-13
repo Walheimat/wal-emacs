@@ -90,7 +90,6 @@ evaluate /everything/[fn:6] that follows.
 
 ;;; Code:
 
-(defvar wal/load-custom-file-immediately)
 (defvar use-package-always-ensure)
 (defvar use-package-always-defer)
 
@@ -139,15 +138,11 @@ bugs).")
 (unless (file-exists-p custom-file)
   (write-region "" nil custom-file))
 
-;; If the `custom-file' isn't loaded right away, customizing variables
-;; like `wal/use-hyper-prefix' will have no effect but it might
-;; (needlessly) increase start-up time.
-(if wal/load-custom-file-immediately
-    (load custom-file)
-  (add-hook 'after-init-hook (lambda () (load custom-file))))
-
 ;; Accept redefinitions.
 (setq ad-redefinition-action 'accept)
+
+;; Load customization.s
+(load custom-file)
 #+END_SRC
 
 ** Package Archives
@@ -493,11 +488,7 @@ I use many[fn:8] custom keybindings.
   :tag "Key bindings")
 
 (defcustom wal/use-hyper-prefix t
-  "Whether the hyper modifier should be used to prefix user keys.
-
-Changing this value will only take effect after a re-load. Unless
-`wal/load-custom-file-immediately' is set to t, setting this to
-nil will have no effect."
+  "Whether the hyper modifier should be used to prefix user keys."
   :type 'boolean
   :group 'wal-key-bindings)
 
@@ -4041,9 +4032,7 @@ Group buffers in workspaces.
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/use-perspectives t
-  "Whether to use perspectives.
-
-This requires `wal/load-custom-file-immediately' to be true."
+  "Whether to use perspectives."
   :type 'boolean
   :group 'wal-workspace)
 
