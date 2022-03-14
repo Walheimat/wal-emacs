@@ -4959,6 +4959,8 @@ I am convinced that we are in a terminal process.
 ;;; Code:
 
 (declare-function wal/display-buffer-in-side-window "wal-func.el")
+(declare-function projectile-project-p "projectile.el")
+(declare-function projectile-project-buffers "projectile.el")
 
 (defvar eshell-highlight-prompt)
 (defvar eshell-prompt-function)
@@ -4981,6 +4983,8 @@ Some common shell commands require an additional =C-c=:
 + =C-c C-t= to enter/exit =copy-mode=.
 
 #+BEGIN_SRC emacs-lisp
+(defconst wal/vterm-prefix "VTerm")
+
 (defun wal/vterm-mode ()
   "Hook into `vterm-mode'.
 
@@ -4991,14 +4995,36 @@ flag to nil for the vterm process."
               (proc (get-buffer-process buf)))
     (set-process-query-on-exit-flag proc nil)))
 
+(defun wal/vterm ()
+  "Get a `vterm' buffer.
+
+If called from a project buffer, this only creates a `vterm'
+buffer if one doesn't exist yet (unless called with
+`universal-argument')."
+  (interactive)
+  (if-let* ((cont (and (not (equal current-prefix-arg '(4)))
+                       (projectile-project-p)))
+            (buffers (projectile-project-buffers))
+            (project-vterm
+             (cl-find-if
+              #'(lambda (it)
+                  (and (provided-mode-derived-p
+                        (buffer-local-value 'major-mode it)
+                        'vterm-mode)
+                       (string-match-p
+                        wal/vterm-prefix
+                        (buffer-name it))))
+              buffers)))
+      (switch-to-buffer project-vterm)
+    (vterm)))
+
 (use-package vterm
   :custom
-  (vterm-buffer-name-string "VTerm: %s")
+  (vterm-buffer-name-string (concat wal/vterm-prefix ": %s"))
   :wal-bind
-  ("\\" . vterm)
+  ("\\" . wal/vterm)
   :hook
   ((vterm-mode . wal/vterm-mode)
-   (vterm-mode . with-editor-export-editor)
    (vterm-mode . with-editor-export-git-editor))
   :delight
   (vterm-copy-mode " vcp"))
@@ -5015,7 +5041,7 @@ buffers.
 #+BEGIN_SRC fish :tangle no
 function fish_title
   if set -q argv[1] && test argv[1] != "fish"
-    echo $argv[1]": "
+    echo $argv[1]":"
   end
   echo (pwd)"@"(hostname)
 end
