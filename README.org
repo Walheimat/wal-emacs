@@ -725,7 +725,7 @@ These hydras are mapped to =lieutenant= using the following prefixes:
 + =v= to scroll other window.
 
 #+BEGIN_SRC emacs-lisp
-(defconst wal/ascii-whale #("}< ,.__)" 0 8 (face mode-line-emphasis))
+(defconst wal/ascii-whale (propertize "}< ,.__)" 'face 'mode-line-emphasis)
   "A small, highlighted ASCII whale.")
 
 (defun wal/ascii-whale-hydra-offset (&optional padding)
@@ -4299,7 +4299,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 #+BEGIN_SRC emacs-lisp
 (defun wal/org-mode ()
   "Hook into `org-mode'."
-  (message "Organize! Seize the means of production!")
+  (wal/message-in-a-bottle '("Organize! Seize the means of production!"))
   ;; Since `9.4' org tries to please `electric-indent'.
   ;; (electric-indent-local-mode -1)
   (wal/disable-tabs)
@@ -5197,7 +5197,7 @@ Syntax highlighting.
 #+BEGIN_SRC emacs-lisp
 (defun wal/gitignore-mode ()
   "Hook into `gitignore-mode'."
-  (message "I don't think I know you"))
+  (wal/message-in-a-bottle '("I don't think I know you")))
 
 (use-package git-modes
   :mode (("/\\.npmignore\\'" . gitignore-mode)
@@ -5296,8 +5296,9 @@ Individual languages build this list using macro `wal/define-language-pack'.")
 
 That bottle is just an array of strings."
   (let* ((rand (wal/biased-random (length bottle)))
-         (mess (nth rand bottle)))
-    (message mess)))
+         (mess (nth rand bottle))
+         (prop-mess (propertize mess 'face 'italic)))
+    (message (concat wal/ascii-whale " " prop-mess))))
 
 (defun wal/install-language-pack (pack)
   "Install the given language PACK."
@@ -5774,7 +5775,8 @@ Improved editing for JSX files. Extends =js2=.
 #+BEGIN_SRC emacs-lisp
 (defun wal/rjsx-mode ()
   "Hook into `rjsx-mode'."
-  (message "Extend those ugly JavaScripts of yours!")
+  (wal/message-in-a-bottle
+   '("Extend those ugly JavaScripts of yours!"))
   (wal/maybe-enable-tabs :indent-with 'js-jsx-indent-line))
 
 (use-package rjsx-mode
@@ -5793,7 +5795,8 @@ Please use TypeScript.
 #+BEGIN_SRC emacs-lisp
 (defun wal/typescript-mode ()
   "Hook into `typescript-mode'."
-  (message "This is any, that is any, everything is any!")
+  (wal/message-in-a-bottle
+    '("This is any, that is any, everything is any!"))
   (add-node-modules-path)
   (hack-local-variables)
   (wal/maybe-enable-tabs)
@@ -5815,7 +5818,7 @@ The only way to store strings, JSON.
 #+BEGIN_SRC emacs-lisp
 (defun wal/json-mode ()
   "Hook into `json-mode'."
-  (message "JSON ...? JSON?! JSON!!")
+  (wal/message-in-a-bottle '("JSON ...? JSON?! JSON!!"))
   (rainbow-delimiters-mode)
   (hack-local-variables)
   (wal/maybe-enable-tabs)
@@ -6006,7 +6009,8 @@ Sometimes things that do as well.
 #+BEGIN_SRC emacs-lisp
 (defun wal/yaml-mode ()
   "Hook into command `yaml-mode'."
-  (message "JSON?! ... Ah, thank God it's you, YAML!")
+  (wal/message-in-a-bottle
+   '("JSON?! ... Ah, thank God it's you, YAML!"))
   (drag-stuff-mode +1)
   (wal/disable-tabs)
   (hack-local-variables)
@@ -6044,7 +6048,7 @@ Yes, you need to install *Android Studio* for some reason.
 #+BEGIN_SRC emacs-lisp
 (defun wal/dart-mode ()
   "Hook into `dart-mode'."
-  (message "Bull's eye!")
+  (wal/message-in-a-bottle '("Bull's eye!"))
   (wal/disable-tabs)
   (hack-local-variables)
   (wal/lsp))
@@ -6146,7 +6150,7 @@ LSP support for Dart.
 #+begin_src emacs-lisp
 (defun wal/java-mode ()
   "Hook into `java-mode'."
-  (message "Mmmh ... maven")
+  (wal/message-in-a-bottle '("Mmmh ... maven"))
   (wal/disable-tabs)
   (hack-local-variables)
   (wal/lsp))
@@ -6204,7 +6208,8 @@ We want quicker =company= suggestions when in CSS modes.
 #+BEGIN_SRC emacs-lisp
 (defun wal/css-mode ()
   "Hook into `css-mode'."
-  (message "Centering? It's simple. Here's 15 ways to do it.")
+  (wal/message-in-a-bottle
+   '("Centering? It's simple. Here's 15 ways to do it."))
   ;; Faster `company'.
   (setq-local company-idle-delay 0.1)
   (hack-local-variables)
@@ -6693,7 +6698,7 @@ Make =Dockerfiles= look nice.
 #+BEGIN_SRC emacs-lisp
 (defun wal/dockerfile-mode ()
   "Hook into `dockerfile-mode'."
-  (message "Have you ever given?"))
+  (wal/message-in-a-bottle '("Have you ever given?")))
 
 (use-package dockerfile-mode
   :hook (dockerfile-mode . wal/dockerfile-mode))
