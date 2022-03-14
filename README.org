@@ -5478,15 +5478,18 @@ It takes more than one environment to make sense of Python code.
   "Activate venv using poetry.
 
 This also works if the project isn't a poetry project."
-  (ignore-errors
-    (let* ((venv (poetry-venv-exist-p))
-           (is-poetry (poetry-find-project-root)))
-      (when venv
-        (if is-poetry
-            (progn
-              (wal/configure-lsp-server venv)
-              (poetry-venv-workon))
-          (pyvenv-activate venv))))))
+  (interactive)
+  (condition-case err
+      (let* ((venv (poetry-venv-exist-p))
+             (is-poetry (poetry-find-project-root)))
+        (when venv
+          (if is-poetry
+              (progn
+                (wal/configure-lsp-server venv)
+                (poetry-venv-workon))
+            (pyvenv-activate venv))))
+    (error
+     (message "Failed to activate venv: %s" err))))
 #+END_SRC
 
 **** pyvenv
@@ -6036,13 +6039,13 @@ LSP support for Dart.
 (defun wal/lsp-dart-service-uri ()
   "Get the service URI (needed for devtools)."
   (interactive)
-  (condition-case nil
+  (condition-case err
       (when (fboundp 'lsp-workspace-get-metadata)
         (let ((uri (lsp-workspace-get-metadata "devtools-vm-service-uri")))
           (kill-new uri)
           (message "Service URI (%s) copied to kill ring" uri)))
     (error
-      (message "Couldn't get service URI"))))
+      (message "Couldn't get service URI: %s" err))))
 
 (defun wal/configure-lsp-dart ()
   "Configure package `lsp-dart'."
