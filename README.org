@@ -520,6 +520,11 @@ I use many[fn:8] custom keybindings.
   :type 'string
   :group 'wal-key-bindings)
 
+(defcustom wal/sergeant-key "<SPC>"
+  "The senary (or sergeant) leader key."
+  :type 'string
+  :group 'wal-org)
+
 (cl-defmacro wal/create-leader-sink (name &key definer prefix)
   "Macro to create a leader sink `NAME-sink'.
 
@@ -583,7 +588,7 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-p= switches projects using =projectile=
 + =H-<return>= completes at point using =company= (in =company-mode=)
-+ =H-<SPC>= jumps to directory with =dired=
++ =H-<SPC>= interacts with =org-roam=
 + =H-== to do a =quick-calc= (inserted if called with =C-u=)
 + =H-[= toggles pop-ups using =popper= (or runs a =hydra= if focusing a
   pop-up)
@@ -638,7 +643,7 @@ this safer alternative to work for me.
 
 ** Leader Keys
 
-The are five =general= leader keys, each serving its unique purpose by
+The are six =general= leader keys, each serving its unique purpose by
 prefixing (groups of) actions by common context.
 
 *** Prefixes
@@ -670,17 +675,18 @@ minor-mode-specific[fn:11] actions. The package prefixes are:
 + =p= for =projectile=
 + =s= for =flyspell=
 + =w= for =winner=
-+ =y= for =yasnippet=
-+ =z= for =org-roam=.
++ =y= for =yasnippet=.
 
 Leader key =lieutenant= (='= by default) is currently used for adjustments
 (text size, windows, scrolling), one-off actions (like capturing a
 note) and =magit=.
 
+Leader key =sergeant= (=<SPC>= by default) is dedicated to =org-roam=.
+
 All leader keys have so-called sinks. The sinks for =major= and =captain=
 toggle major and minor modes, respectively. The sink for =colonel=
 currently holds variations of the default actions. The sink for
-=lieutenant= is currently unused.
+=lieutenant= and =sergeant= are currently unused.
 
 ** Packages
 
@@ -702,7 +708,7 @@ This creates all leader keys and sinks."
             (eval-after-load 'which-key `(which-key-add-key-based-replacements ,key ,name))
             (eval `(general-create-definer ,it :prefix ,key))
             (eval `(wal/create-leader-sink ,sink :definer ,it :prefix ,key))))
-        '(wal/general wal/colonel wal/major wal/captain wal/lieutenant)))
+        '(wal/general wal/colonel wal/major wal/captain wal/lieutenant wal/sergeant)))
 
 (use-package general
   :config
@@ -776,8 +782,6 @@ Additional left PADDING can be passed."
   "o" '(wal/resize-window/body :wk "resize window")
   "t" '(wal/text-scale/body :wk "text scale")
   "v" '(wal/scroll-other-window/body :wk "scroll other window"))
-
-(define-key emacs-lisp-mode-map (kbd "C-M-x") nil) ; Removes `eval-defun'.
 #+END_SRC
 
 *** transient
@@ -3759,7 +3763,6 @@ Provide global option narrowing using the =vertico= family of products.
   (savehist-mode)
   (vertico-mode)
   :custom
-  (vertico-count 5)
   (vertico-cycle t)
   (vertico-sort-function #'vertico-sort-history-alpha)
   :defer 1)
@@ -4275,6 +4278,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 
 (declare-function wal/append "wal-func.el")
 (declare-function wal/disable-tabs "wal-settings.el")
+(declare-function wal/message-in-a-bottle "wal-func.el")
 (declare-function projectile-project-root "projectile.el")
 
 (defvar org-global-properties)
@@ -4445,7 +4449,7 @@ Allow for better grouping.
 
 Trying to organize my thoughts using Zettelkästen.
 
-/Note/ that you will need to install =sqlite3= and =graphviz= manually.
+/Note/ that you will need to install =sqlite3= manually.
 
 *** org-roam
 :PROPERTIES:
@@ -4464,23 +4468,18 @@ Trying to organize my thoughts using Zettelkästen.
   (setq org-roam-v2-ack t)
   :config
   (org-roam-db-autosync-enable)
-  (wal/captain
-    "zd" '(org-roam-dailies-goto-date :wk "dailies"))
+  (wal/sergeant "d" '(org-roam-dailies-goto-date :wk "dailies"))
   :custom
   (org-roam-directory wal/org-roam-directory)
   (org-roam-dailies-directory wal/org-roam-dailies-directory)
   :general
-  (wal/captain
-    "z" '(:ignore t :wk "roam")
-    "za" '(:ignore t :wk "actions")
-    "zaf" '(org-roam-node-find :wk "find")
-    "zac" '(org-roam-capture :wk "capture")
-    "zr" '(org-roam-buffer-display-dedicated :wk "roam buffer"))
-  (wal/captain :keymaps 'org-mode-map :major-modes t
-    "zai" '(org-roam-node-insert :wk "insert node"))
-  (wal/captain :keymaps 'org-roam-mode-map
-    "zV" '(:ignore t :wk "visualize")
-    "zVg" '(org-roam-graph :wk "write graph"))
+  (wal/sergeant
+    "c" '(org-roam-capture :wk "capture")
+    "f" '(org-roam-node-find :wk "find")
+    "b" '(org-roam-buffer-display-dedicated :wk "buffer")
+    "t" '(org-roam-tag-add :wk "tag"))
+  (wal/sergeant :keymaps 'org-mode-map :major-modes t
+    "i" '(org-roam-node-insert :wk "insert node"))
   :commands
   (org-roam-buffer-display-dedicated
    org-roam-capture
@@ -4858,8 +4857,6 @@ The mother of all buffers. You don't need no tree views.
   (dired-listing-switches "-lah --group-directories-first")
   (dired-auto-revert-buffer t)
   (dired-kill-when-opening-new-dired-buffer t) ;; New in Emacs 28.1.
-  :wal-bind
-  ("<SPC>" . dired-jump)
   :bind
   (:map ctl-x-map
    ("j" . dired-jump)
