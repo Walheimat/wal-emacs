@@ -91,6 +91,7 @@ evaluate /everything/[fn:6] that follows.
 ;;; Code:
 
 (declare-function wal/bytes-per-mb "wal-func.el")
+(declare-function wal/install-packages "wal-func.el")
 
 (defvar use-package-always-ensure)
 (defvar use-package-always-defer)
@@ -173,21 +174,6 @@ and some other packages need to be installed the hard way.
     use-package)
   "Packages to install before using `use-package'.
 Such as package `use-package'.")
-
-(cl-defun wal/install-packages (packages &key delete-windows on-done)
-  "Install all PACKAGES unless already installed.
-Concludes by calling `delete-other-windows' if DELETE-WINDOWS is
-t, printing optional message ON-DONE."
-  (let ((installed (mapcar (lambda (it)
-                             (when (not (package-installed-p it))
-                               (package-install it)))
-                           packages)))
-    (if (and on-done (= 0 (length (seq-filter #'identity installed))))
-        (message "Packages already installed.")
-      (when (and on-done (stringp on-done))
-        (message on-done))))
-  (when delete-windows
-    (delete-other-windows)))
 
 ;; Try to install. On fail refresh and install again.
 (condition-case nil
@@ -588,7 +574,6 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-p= switches projects using =projectile=
 + =H-<return>= completes at point using =company= (in =company-mode=)
-+ =H-<SPC>= interacts with =org-roam=
 + =H-== to do a =quick-calc= (inserted if called with =C-u=)
 + =H-[= toggles pop-ups using =popper= (or runs a =hydra= if focusing a
   pop-up)
@@ -1459,6 +1444,21 @@ define a pack.
 
 Individual languages build this list using macro
 `wal/define-expansion-pack'.")
+
+(cl-defun wal/install-packages (packages &key delete-windows on-done)
+  "Install all PACKAGES unless already installed.
+Concludes by calling `delete-other-windows' if DELETE-WINDOWS is
+t, printing optional message ON-DONE."
+  (let ((installed (mapcar (lambda (it)
+                             (when (not (package-installed-p it))
+                               (package-install it)))
+                           packages)))
+    (if (and on-done (= 0 (length (seq-filter #'identity installed))))
+        (message "Packages already installed.")
+      (when (and on-done (stringp on-done))
+        (message on-done))))
+  (when delete-windows
+    (delete-other-windows)))
 
 (cl-defmacro wal/define-expansion-pack (name &key packages)
   "Define an expansion pack of PACKAGES under NAME."
@@ -5151,6 +5151,7 @@ I'm becoming an old git.
 ;;; Code:
 
 (declare-function wal/captain "wal-key-bindings.el")
+(declare-function wal/message-in-a-bottle "wal-lang.el")
 #+END_SRC
 
 ** Packages
@@ -5302,14 +5303,16 @@ Let's greet the world[fn:16].
 (declare-function poetry-get-virtualenv "poetry.el")
 (declare-function poetry-venv-exist-p "poetry.el")
 (declare-function wal/biased-random "wal-func.el")
+(declare-function wal/define-expansion-pack "wal-func.el")
 (declare-function wal/disable-tabs "wal-settings.el")
 (declare-function wal/display-buffer-in-side-window "wal-func.el")
-(declare-function wal/install-packages "wal-settings.el")
+(declare-function wal/install-packages "wal-func.el")
 (declare-function wal/lsp "wal-lsp.el")
 (declare-function wal/maybe-enable-tabs "wal-settings.el")
 (declare-function wal/maybe-intern "wal-func.el")
 
 (defvar js2-mode-map)
+(defvar wal/ascii-whale)
 
 (defun wal/message-in-a-bottle (bottle)
   "Randomly display a message from the given BOTTLE.
@@ -6668,6 +6671,7 @@ Internet.
 
 (declare-function wal/display-buffer-in-side-window "wal-func.el")
 (declare-function wal/display-buffer-in-direction "wal-func.el")
+(declare-function wal/message-in-a-bottle "wal-func.el")
 #+END_SRC
 
 ** Packages
