@@ -799,7 +799,7 @@ Grouped commands.
       "Facilitate the usage of or the working on Walheimat's config."
       [["Actions"
         ("t" "tangle" wal/tangle-config)
-        ("l" "install language pack" wal/install-language-pack)
+        ("x" "install expansion pack" wal/install-expansion-pack)
         ("c" "checkdoc" wal/checkdoc-packages)]
        ["Go to"
         ("h" "heading" consult-org-heading)
@@ -1442,6 +1442,38 @@ throws are 3 or THROWS."
   (if (symbolp symbol?)
       symbol?
     (intern symbol?)))
+#+END_SRC
+
+** Expansion Packs
+
+Some packages are opt-in and belong to one or several so-called
+expansion packs.
+
+These are mostly language-related but will be extended with additional
+packages that are not always needed but could be. Any section may
+define a pack.
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/expansion-packs nil
+  "Packs of expasion packages to be installed using `wal/install-expansion-pack'.
+
+Individual languages build this list using macro
+`wal/define-expansion-pack'.")
+
+(cl-defmacro wal/define-expansion-pack (name &key packages)
+  "Define an expansion pack of PACKAGES under NAME."
+  `(add-to-list 'wal/expansion-packs '(,name . ,packages)))
+
+(defun wal/install-expansion-pack (pack)
+  "Install the given expansion PACK."
+  (interactive
+   (list (completing-read "Select pack to install: "
+                          (mapcar (lambda (pack) (car pack)) wal/expansion-packs))))
+  (let* ((sym (wal/maybe-intern pack))
+         (item (assoc sym wal/expansion-packs)))
+    (if item
+        (wal/install-packages (cdr item) :on-done (format "Installed expansion pack '%s'." pack))
+      (user-error "Unknown pack '%s', check `wal/expansion-packs'" sym))))
 #+END_SRC
 
 ** Footer
@@ -5279,15 +5311,6 @@ Let's greet the world[fn:16].
 
 (defvar js2-mode-map)
 
-(defvar wal/language-packs nil
-  "Packs of language packages to be installed using `wal/install-language-pack'.
-
-Individual languages build this list using macro `wal/define-language-pack'.")
-
-(cl-defmacro wal/define-language-pack (lang &key packages)
-  "Define a language pack of PACKAGES for LANG."
-  `(add-to-list 'wal/language-packs '(,lang . ,packages)))
-
 (defun wal/message-in-a-bottle (bottle)
   "Randomly display a message from the given BOTTLE.
 
@@ -5296,17 +5319,6 @@ That bottle is just an array of strings."
          (mess (nth rand bottle))
          (prop-mess (propertize mess 'face 'italic)))
     (message (concat wal/ascii-whale " " prop-mess))))
-
-(defun wal/install-language-pack (pack)
-  "Install the given language PACK."
-  (interactive
-   (list (completing-read "Select pack to install: "
-                          (mapcar (lambda (pack) (car pack)) wal/language-packs))))
-  (let* ((sym (wal/maybe-intern pack))
-         (item (assoc sym wal/language-packs)))
-    (if item
-        (wal/install-packages (cdr item) :on-done (format "Installed '%s' language pack." pack))
-      (user-error "Unknown language '%s', check `wal/language-packs'" sym))))
 #+END_SRC
 
 ** Elixir
@@ -5319,7 +5331,7 @@ That bottle is just an array of strings."
 #+BEGIN_SRC emacs-lisp
 ;;; Elixir:
 
-(wal/define-language-pack elixir
+(wal/define-expansion-pack elixir
   :packages
   (elixir-mode))
 #+END_SRC
@@ -5386,7 +5398,7 @@ Consider the lobster.
 #+BEGIN_SRC emacs-lisp
 ;;; Rust:
 
-(wal/define-language-pack rust
+(wal/define-expansion-pack rust
   :packages
   (rust-mode
    cargo))
@@ -5445,7 +5457,7 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
 #+BEGIN_SRC emacs-lisp
 ;;; Python:
 
-(wal/define-language-pack python
+(wal/define-expansion-pack python
   :packages
   (python-isort
    pyvenv
@@ -5576,7 +5588,7 @@ Activating =virtualenv= inside of Emacs.
 #+BEGIN_SRC emacs-lisp
 ;;; Lisp:
 
-(wal/define-language-pack lisp
+(wal/define-expansion-pack lisp
   :packages
   (cider
    clojure-mode
@@ -5716,7 +5728,7 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
 #+BEGIN_SRC emacs-lisp
 ;;; JavaScript:
 
-(wal/define-language-pack javacsript
+(wal/define-expansion-pack javacsript
   :packages
   (js2-mode
    rjsx-mode
@@ -5865,7 +5877,7 @@ Prettify your ugly JavaScript.
 #+BEGIN_SRC emacs-lisp
 ;;; Golang:
 
-(wal/define-language-pack go
+(wal/define-expansion-pack go
   :packages
   (go-mode))
 #+END_SRC
@@ -5901,7 +5913,7 @@ Setup for LSP.
 #+BEGIN_SRC emacs-lisp
 ;;; Scripting:
 
-(wal/define-language-pack shell
+(wal/define-expansion-pack shell
   :packages
   (crontab-mode
    fish-mode))
@@ -5966,7 +5978,7 @@ Sometimes things that don't do things need to look nice.
 #+BEGIN_SRC emacs-lisp
 ;;; Markup:
 
-(wal/define-language-pack structured
+(wal/define-expansion-pack structured
   :packages
   (markdown-mode
    yaml-mode))
@@ -6031,7 +6043,7 @@ Yes, you need to install *Android Studio* for some reason.
 #+BEGIN_SRC emacs-lisp
 ;;; Flutter/Dart:
 
-(wal/define-language-pack flutter
+(wal/define-expansion-pack flutter
   :packages
   (dart-mode
    lsp-dart))
@@ -6134,7 +6146,7 @@ LSP support for Dart.
 #+BEGIN_SRC emacs-lisp
 ;;; Java:
 
-(wal/define-language-pack java
+(wal/define-expansion-pack java
   :packages
   (lsp-java))
 #+END_SRC
@@ -6189,7 +6201,7 @@ Does anyone actually like web development?
 #+BEGIN_SRC emacs-lisp
 ;;; Web:
 
-(wal/define-language-pack web
+(wal/define-expansion-pack web
   :packages
   (pug-mode
    json-mode))
