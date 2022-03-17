@@ -3164,6 +3164,7 @@ ARGS is a list containing modes and additional ligatures."
   (ligature-set-ligatures 'elixir-mode '("|>" "->" "<-" "=>"
                                         "::" "<>" "#{" "\\\\"
                                          "===" "!==" ".."))
+  (ligature-set-ligatures 'php-mode '("::" "=>" "->" "??" "__"))
   (ligature-set-ligatures 'prolog-mode '(":-"))
   (ligature-set-ligatures 'html-mode '("<!--" "-->"))
   (ligature-set-ligatures 'dart-mode '("=>" "///" ".?" "??"
@@ -6192,6 +6193,62 @@ LSP integration.
   :ensure nil)
 #+end_src
 
+** PHP
+
+*** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; PHP/Laravel:
+
+(wal/define-expansion-pack php
+  :packages
+  (php-mode
+   web-mode))
+#+END_SRC
+
+*** php-mode
+
+The elephant in the room.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/php-mode ()
+  "Hook into `php-mode'."
+  (wal/message-in-a-bottle '("Stampy, no!"))
+  (hack-local-variables)
+  (wal/disable-tabs)
+  (wal/lsp))
+
+(use-package php-mode
+  :config
+  (require 'dap-php) ; Run `dap-php-setup'.
+  (wal/display-buffer-in-side-window "\\*Php SOE" :height 15)
+  :hook (php-mode . wal/php-mode)
+  :ensure nil)
+#+END_SRC
+
+*** web-mode
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/web-mode ()
+  "Hook into `web-mode'."
+  (wal/message-in-a-bottle '("This is the Internet"))
+  (hack-local-variables)
+  (wal/lsp))
+
+(use-package web-mode
+  :hook (web-mode . wal/web-mode)
+  :custom
+  (web-mode-comment-style 2)
+  :mode ("\\.vue\\'"
+         "\\.blade.php\\'"
+         "\\.component.html\\'"
+         "\\.ejs\\'")
+  :ensure nil)
+#+END_SRC
+
 ** Web
 
 Does anyone actually like web development?
@@ -6416,7 +6473,7 @@ servers yourself[fn:17].
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/lsp-file-watch-ignored-directories
-  '("[/\\\\]build\\'")
+  '("[/\\\\]build\\'" "[/\\\\]vendor\\'")
   "Additional directories to not monitor."
   :type '(repeat regexp)
   :group 'wal-lsp)
@@ -6605,6 +6662,36 @@ Debugging without sound null safety.
     :type "flutter"
     :program "lib/main.dart"
     :args '("--no-sound-null-safety"))))
+#+END_SRC
+
+**** Laravel
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Make sure you expose port =9003= and put the following into your
+=php.ini=.
+
+#+begin_src conf
+[XDebug]
+xdebug.start_with_request = yes
+xdebug.show_local_vars = on
+xdebug.discover_client_host = true
+xdebug.client_host = 0.0.0.0
+xdebug.client_port = 9003
+#+end_src
+
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(when (require 'dap-mode nil 'noerror)
+  (let ((mapping '(:/var/www/html "${workspaceFolder}")))
+    (dap-register-debug-template
+     "laravel::launch"
+     (list
+      :type "php"
+      :request "launch"
+      :port 9003
+      :pathMappings mapping))))
 #+END_SRC
 
 ** Server Configurations
