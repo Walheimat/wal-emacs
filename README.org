@@ -1009,10 +1009,10 @@ The pop-up is a window unless IN-FRAME is t."
 (cl-defun wal/display-buffer-in-side-window (buffer &key side loose no-other height)
   "Display BUFFER in SIDE window.
 
-This window will be on SIDE (on the bottom by default), dedicated
-to the buffer (unless LOOSE), available to `other-window' (unless
-NO-OTHER) 20 (or HEIGHT) lines high and visible frames are
-considered reusable."
+This window will be on SIDE (on the bottom by default), not
+delete other windows, dedicated to the buffer (unless LOOSE),
+available to `other-window' (unless NO-OTHER) 20 (or HEIGHT)
+lines high and visible frames are considered reusable."
   (let ((condition (wal/display-buffer-condition buffer)))
     (add-to-list 'display-buffer-alist
                  `(,condition
@@ -1021,7 +1021,8 @@ considered reusable."
                    (dedicated . ,(not loose))
                    (reusable-frames . visible)
                    (window-height . ,(or height 10))
-                   (window-parameters . ((no-other-window . ,no-other)))))))
+                   (window-parameters . ((no-other-window . ,no-other)
+                                         (no-delete-other-windows . t)))))))
 
 (defun wal/display-buffer-in-direction (buffer &optional direction)
   "Display BUFFER in direction.
@@ -4610,7 +4611,7 @@ Trying to organize my thoughts using Zettelkästen.
   :config
   (org-roam-db-autosync-enable)
   (wal/sergeant "d" '(org-roam-dailies-goto-date :wk "dailies"))
-  (wdb/side 'org-roam-mode)
+  (wdb/side 'org-roam-mode :side 'right)
   :custom
   (org-roam-directory wal/org-roam-directory)
   (org-roam-dailies-directory wal/org-roam-dailies-directory)
