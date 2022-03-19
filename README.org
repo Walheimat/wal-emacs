@@ -1436,6 +1436,24 @@ throws are 3 or THROWS."
     (intern symbol?)))
 #+END_SRC
 
+** Regions
+
+Act on regions.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/duck-duck-go-region ()
+  "Query duckduckgo with active region."
+  (interactive)
+  (if mark-active
+      (let* ((beg (region-beginning))
+             (end (region-end))
+             (str (buffer-substring-no-properties beg end))
+             (hex-str (url-hexify-string str)))
+        (browse-url
+         (concat "https://duckduckgo.com/html/?q=" hex-str)))
+    (user-error "No active region")))
+#+END_SRC
+
 ** Expansion Packs
 
 Some packages are opt-in (will not be ensured) and belong to one or
@@ -4025,7 +4043,10 @@ Do something else with minibuffer candidate.
                 (wal/maybe-use-projectile find-file))
     (define-key embark-file-map
                 (kbd "o")
-                (wal/maybe-use-projectile find-file-other-window))))
+                (wal/maybe-use-projectile find-file-other-window))
+    (define-key embark-region-map
+                (kbd "g")
+                #'wal/duck-duck-go-region)))
 
 (use-package embark
   :config
