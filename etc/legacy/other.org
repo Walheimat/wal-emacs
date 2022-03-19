@@ -658,6 +658,78 @@ Fancy UI.
   ("\\" . vterm-toggle))
 #+end_src
 
+** crux
+
+Let's use =crux= for some editing magic.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+;; FIXME: Adding these as recent commit broke these.
+
+(defun wal/crux-duplicate-current-line-or-region (arg)
+  "Duplicates the current line or region ARG times.
+If there's no region, the current line will be duplicated.  However, if
+there's a region, all lines that region covers will be duplicated."
+  (interactive "p")
+  (pcase-let* ((origin (point))
+               (`(,beg . ,end) (crux-get-positions-of-line-or-region))
+               (region (buffer-substring-no-properties beg end)))
+    (dotimes (_i arg)
+      (goto-char end)
+      (newline)
+      (insert region)
+      (setq end (point)))
+    (goto-char (+ origin (* (length region) arg) arg))))
+
+(defun wal/crux-duplicate-and-comment-current-line-or-region (arg)
+  "Duplicates and comments the current line or region ARG times.
+If there's no region, the current line will be duplicated.  However, if
+there's a region, all lines that region covers will be duplicated."
+  (interactive "p")
+  (pcase-let* ((origin (point))
+               (`(,beg . ,end) (crux-get-positions-of-line-or-region))
+               (region (buffer-substring-no-properties beg end)))
+    (comment-or-uncomment-region beg end)
+    (setq end (line-end-position))
+    (dotimes (_ arg)
+      (goto-char end)
+      (newline)
+      (insert region)
+      (setq end (point)))
+    (goto-char (+ origin (* (length region) arg) arg))))
+
+(use-package crux
+  :config
+  (advice-add
+   'crux-duplicate-current-line-or-region
+   :override #'wal/crux-duplicate-current-line-or-region)
+  (advice-add
+   'crux-duplicate-and-comment-current-line-or-region
+   :override #'wal/crux-duplicate-and-comment-current-line-or-region)
+  :bind
+  (("C-k" . crux-smart-kill-line)
+   ("M-k" . crux-kill-line-backwards) ; Overrides `kill-sentence'.
+   ("C-o" . delete-other-windows) ; Overrides `open-line'.
+   ("M-o" . crux-other-window-or-switch-buffer))
+  :general
+  (wal/general
+    "fs" '(crux-find-shell-init-file :wk "shell init")
+    "fc" '(crux-find-user-custom-file :wk "custom file"))
+  (wal/colonel
+    "x" '(:ignore t :wk "crux")
+    "xb" '(:ignore t :wk "buffers")
+    "xbk" '(crux-kill-other-buffers :wk "kill other buffers")
+    "xbd" '(crux-delete-buffer-and-file :wk "delete buffer and file")
+    "xbr" '(crux-rename-file-and-buffer :wk "rename file and buffer")
+    "xbs" '(crux-sudo-edit :wk "sudo edit")
+    "xd" '(crux-duplicate-current-line-or-region :wk "duplicate"))
+  (wal/colonel
+    :keymaps '(prog-mode-map yaml-mode-map)
+    "xD" '(crux-duplicate-and-comment-current-line-or-region :wk "duplicate and comment")
+    "xl" '(crux-smart-open-line :wk "open line")
+    "xL" '(crux-smart-open-line-above :wk "open line above"))
+  :commands (crux-get-positions-of-line-or-region))
+#+END_SRC
+
 * Other Settings
 
 These are other settings that used to be in my config.
