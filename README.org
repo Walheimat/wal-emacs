@@ -469,6 +469,8 @@ I use many[fn:8] custom keybindings.
 (declare-function wal/general-sink "wal-key-bindings.el")
 (declare-function wal/lieutenant "wal-key-bindings.el")
 (declare-function wal/major-sink "wal-key-bindings.el")
+(declare-function wal/open-line "wal-func.el")
+(declare-function wal/open-line-above "wal-func.el")
 
 (defgroup wal-key-bindings nil
   "Change key bindings settings."
@@ -891,6 +893,9 @@ Most bindings are declared in individual packages.
  "f" 'wal/find-file-delete-other-windows) ; Replaces `font-lock-update'.
 
 (global-set-key (kbd "M-o") 'other-window)
+
+(global-set-key (kbd "C-o") #'wal/open-line)         ; Overrides `open-line'.
+(global-set-key (kbd "C-M-o") #'wal/open-line-above) ; Overrides `split-line'.
 #+END_SRC
 
 ** Additional Mode Controls
@@ -983,9 +988,7 @@ should get created."
 (add-to-list 'find-file-not-found-functions #'wal/create-non-existent-directory)
 #+END_SRC
 
-** Buffers
-
-*** Buffer Display
+** Buffer Display
 
 Utility functions to configure displaying buffers of a certain type.
 
@@ -1064,13 +1067,117 @@ removed."
 (defalias 'wdb/same 'wal/display-buffer-reuse-same-window)
 #+END_SRC
 
-*** Editing
+** Editing
+
+Editing.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/kill-ring-save-whole-buffer ()
   "Call `kill-ring-save' on the entire buffer."
   (interactive)
   (kill-ring-save (point-min) (point-max)))
+
+(defun wal/open-line ()
+  "Open line and indent."
+  (interactive)
+  (move-end-of-line nil)
+  (newline-and-indent))
+
+(defun wal/open-line-above ()
+  "Open line above and indent."
+  (interactive)
+  (forward-line -1)
+  (wal/open-line))
+#+END_SRC
+
+*** Editing the Config
+
+Minor mode for editing this config.
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/tangle-do-prompt t
+  "Whether to prompt user to tangle config.")
+
+(defvar wal/config-mode-map (make-sparse-keymap)
+  "Map for `wal/config-mode'.")
+
+(defconst wal/readme-config (expand-file-name "README.org" wal/emacs-config-default-path)
+  "The path to Walheimat's config.")
+
+(defun wal/describe-config-version ()
+  "Describe the config's version.
+
+This returns the tag and its annotation as propertized strings."
+  (interactive)
+  (let* ((default-directory wal/emacs-config-default-path)
+         (vers (propertize
+                (string-trim
+                 (shell-command-to-string "git describe --abbrev=0"))
+                'face 'bold))
+         (cat (propertize
+               (string-trim
+                (shell-command-to-string (format "git cat-file tag %s" vers)))
+               'face 'italic))
+         (out (concat vers ": " (car (last (string-lines cat))))))
+    (cond
+     (noninteractive out)
+     (t (message out)))))
+
+(defun wal/tangle-config-prompt ()
+  "Prompt the user to tangle the config.
+If the answer is no, there will be no additional prompt."
+  (interactive)
+  (let ((help-form (message "This will update your packages. Restart Emacs afterwards.")))
+    (if (and wal/tangle-do-prompt (y-or-n-p "Config changed, want to tangle? "))
+        (wal/tangle-config)
+      (if wal/tangle-do-prompt
+          (progn
+            (setq-local wal/tangle-do-prompt nil)
+            (message "To tangle, call `wal/tangle-config'"))
+        (message "Config changed. To tangle, call `wal/tangle-config'")))))
+
+(defun wal/find-config ()
+  "Find Walheimat's config.
+
+This will activate minor mode `wal/config-mode'."
+  (interactive)
+  (let ((buf (find-file-noselect wal/readme-config)))
+    (with-current-buffer buf
+      (wal/config-mode +1))
+    (switch-to-buffer buf)))
+
+(defun wal/find-init ()
+  "Find and switch to the `user-init-file'."
+  (interactive)
+  (switch-to-buffer (find-file-noselect (file-truename user-init-file))))
+
+(defun wal/customize-group ()
+  "Customize `wal' group."
+  (interactive)
+  (customize-group 'wal t))
+
+(defun wal/dired-packages ()
+  "Open the packages with Dired."
+  (interactive)
+  (pop-to-buffer-same-window
+    (dired-noselect wal/emacs-config-package-path)))
+
+(defun wal/checkdoc-packages ()
+  "Run `checkdoc-file' on all package files."
+  (interactive)
+  (let ((projectile-enable-caching nil))
+    (dolist (it (wal/directory-files wal/emacs-config-package-path))
+      (checkdoc-file it))))
+
+(define-minor-mode wal/config-mode
+  "Mode for editing Walheimat's config."
+  :init-value nil
+  :global nil
+  :lighter " wal"
+  :keymap wal/config-mode-map
+  (require 'transient nil t)
+  (require 'checkdoc nil t)
+  (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t))
 #+END_SRC
 
 ** Windows
@@ -1314,96 +1421,6 @@ Allow resetting =text-scale=.
   "Reset `text-scale' level to 0."
   (interactive)
   (text-scale-set 0))
-#+END_SRC
-
-** Editing the Config
-
-Minor mode for editing this config.
-
-#+BEGIN_SRC emacs-lisp
-(defvar wal/tangle-do-prompt t
-  "Whether to prompt user to tangle config.")
-
-(defvar wal/config-mode-map (make-sparse-keymap)
-  "Map for `wal/config-mode'.")
-
-(defconst wal/readme-config (expand-file-name "README.org" wal/emacs-config-default-path)
-  "The path to Walheimat's config.")
-
-(defun wal/describe-config-version ()
-  "Describe the config's version.
-
-This returns the tag and its annotation as propertized strings."
-  (interactive)
-  (let* ((default-directory wal/emacs-config-default-path)
-         (vers (propertize
-                (string-trim
-                 (shell-command-to-string "git describe --abbrev=0"))
-                'face 'bold))
-         (cat (propertize
-               (string-trim
-                (shell-command-to-string (format "git cat-file tag %s" vers)))
-               'face 'italic))
-         (out (concat vers ": " (car (last (string-lines cat))))))
-    (cond
-     (noninteractive out)
-     (t (message out)))))
-
-(defun wal/tangle-config-prompt ()
-  "Prompt the user to tangle the config.
-If the answer is no, there will be no additional prompt."
-  (interactive)
-  (let ((help-form (message "This will update your packages. Restart Emacs afterwards.")))
-    (if (and wal/tangle-do-prompt (y-or-n-p "Config changed, want to tangle? "))
-        (wal/tangle-config)
-      (if wal/tangle-do-prompt
-          (progn
-            (setq-local wal/tangle-do-prompt nil)
-            (message "To tangle, call `wal/tangle-config'"))
-        (message "Config changed. To tangle, call `wal/tangle-config'")))))
-
-(defun wal/find-config ()
-  "Find Walheimat's config.
-
-This will activate minor mode `wal/config-mode'."
-  (interactive)
-  (let ((buf (find-file-noselect wal/readme-config)))
-    (with-current-buffer buf
-      (wal/config-mode +1))
-    (switch-to-buffer buf)))
-
-(defun wal/find-init ()
-  "Find and switch to the `user-init-file'."
-  (interactive)
-  (switch-to-buffer (find-file-noselect (file-truename user-init-file))))
-
-(defun wal/customize-group ()
-  "Customize `wal' group."
-  (interactive)
-  (customize-group 'wal t))
-
-(defun wal/dired-packages ()
-  "Open the packages with Dired."
-  (interactive)
-  (pop-to-buffer-same-window
-    (dired-noselect wal/emacs-config-package-path)))
-
-(defun wal/checkdoc-packages ()
-  "Run `checkdoc-file' on all package files."
-  (interactive)
-  (let ((projectile-enable-caching nil))
-    (dolist (it (wal/directory-files wal/emacs-config-package-path))
-      (checkdoc-file it))))
-
-(define-minor-mode wal/config-mode
-  "Mode for editing Walheimat's config."
-  :init-value nil
-  :global nil
-  :lighter " wal"
-  :keymap wal/config-mode-map
-  (require 'transient nil t)
-  (require 'checkdoc nil t)
-  (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t))
 #+END_SRC
 
 ** Lists
