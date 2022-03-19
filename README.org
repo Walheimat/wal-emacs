@@ -1049,6 +1049,13 @@ removed."
     (add-to-list 'display-buffer-alist
                  `(,condition
                    (display-buffer-reuse-window display-buffer-same-window)))))
+
+;; Prefer short-hands.
+(defalias 'wdb/pop-up 'wal/display-buffer-in-pop-up)
+(defalias 'wdb/side 'wal/display-buffer-in-side-window)
+(defalias 'wdb/direction 'wal/display-buffer-in-direction)
+(defalias 'wdb/ghost 'wal/display-buffer-ethereally)
+(defalias 'wdb/same 'wal/display-buffer-reuse-same-window)
 #+END_SRC
 
 *** Editing
@@ -1362,7 +1369,7 @@ This will activate minor mode `wal/config-mode'."
 (defun wal/find-init ()
   "Find and switch to the `user-init-file'."
   (interactive)
-  (switch-to-buffer (find-file-noselect user-init-file)))
+  (switch-to-buffer (find-file-noselect (file-truename user-init-file))))
 
 (defun wal/customize-group ()
   "Customize `wal' group."
@@ -1390,8 +1397,7 @@ This will activate minor mode `wal/config-mode'."
   :keymap wal/config-mode-map
   (require 'transient nil t)
   (require 'checkdoc nil t)
-  (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t)
-  (auto-fill-mode))
+  (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t))
 #+END_SRC
 
 ** Lists
@@ -1826,8 +1832,8 @@ and some external ones.
 
 ;;; Code:
 
-(declare-function wal/display-buffer-in-side-window "wal-func.el")
-(declare-function wal/display-buffer-in-direction "wal-func.el")
+(declare-function wdb/side "wal-func.el")
+(declare-function wdb/direction "wal-func.el")
 
 (defvar wal/experimental)
 #+END_SRC
@@ -2121,7 +2127,7 @@ Emacs is mostly about looking up its documentation.
 #+BEGIN_SRC emacs-lisp
 (use-package help-mode
   :config
-  (wal/display-buffer-in-direction 'help-mode)
+  (wdb/direction 'help-mode)
   :ensure nil)
 #+END_SRC
 
@@ -2135,7 +2141,7 @@ There's also =short-doc= now.
 #+BEGIN_SRC emacs-lisp
 (use-package shortdoc
   :config
-  (wal/display-buffer-in-direction 'shortdoc-mode)
+  (wdb/direction 'shortdoc-mode)
   :ensure nil)
 #+END_SRC
 
@@ -2149,7 +2155,7 @@ For internal debugging.
 #+BEGIN_SRC emacs-lisp
 (use-package debug
   :config
-  (wal/display-buffer-in-side-window 'debug-mode)
+  (wdb/side 'debug-mode)
   :custom
   (debugger-bury-or-kill 'kill)
   :ensure nil)
@@ -2193,7 +2199,7 @@ Let's try to be even more =helpful=.
 #+BEGIN_SRC emacs-lisp
 (defun wal/configure-helpful ()
   "Configure package `helpful'."
-  (wal/display-buffer-in-direction 'helpful-mode)
+  (wdb/direction 'helpful-mode)
   (when wal/experimental
     (defvar read-symbol-positions-list nil)))
 
@@ -2207,7 +2213,9 @@ Let's try to be even more =helpful=.
    ([remap describe-variable] . helpful-variable)
    ([remap describe-symbol] . helpful-symbol)
    :map help-map
-   ("M" . helpful-macro))
+   ("M" . helpful-macro)
+   :map helpful-mode-map
+   ("x" . kill-buffer-and-window))
   :general
   (wal/major
     :keymaps '(emacs-lisp-mode-map lisp-interaction-mode-map)
@@ -2228,7 +2236,7 @@ Leave a bookmark why don't you.
 #+BEGIN_SRC emacs-lisp
 (use-package bookmark
   :config
-  (wal/display-buffer-in-side-window "\\*Bookmark Annotation\\*" :side 'left)
+  (wdb/side "\\*Bookmark Annotation\\*" :side 'left)
   :custom
   (bookmark-use-annotations t)
   (bookmark-menu-confirm-deletion t)
@@ -2279,7 +2287,7 @@ Look up words in a word book.
 #+BEGIN_SRC emacs-lisp
 (use-package dictionary
   :config
-  (wal/display-buffer-in-direction "^\\*Dictionary")
+  (wdb/direction "^\\*Dictionary")
   :custom
   (dictionary-server "dict.org")
   :general
@@ -3431,10 +3439,10 @@ Ace interacting with (multiple) windows.
   "Configure package `ace-window'."
   (setq aw-dispatch-alist '((?h aw-split-window-horz "horizontal split")
                             (?v aw-split-window-vert "vertical split")
+                            (?f aw-split-window-fair "fair split")
                             (?d aw-delete-window "delete")
                             (?x wal/aw-delete-window-kill-buffer "kill")
                             (?o delete-other-windows "delete other")
-                            (?m aw-move-window "move")
                             (?c aw-copy-window "copy")
                             (?s aw-swap-window "swap")
                             (?b aw-switch-buffer-in-window "buffer")
@@ -3450,6 +3458,7 @@ Ace interacting with (multiple) windows.
   :custom
   (aw-dispatch-always t)
   (aw-keys '(?j ?k ?l ?\; ?u ?i ?o ?p))
+  (aw-fair-aspect-ratio 3)
   :wal-bind
   ("o" . ace-window)
   :delight " ace")
@@ -3561,6 +3570,9 @@ Treat certain buffers and their windows as pop-ups.
   (popper-reference-buffers wal/popper-reference-buffers)
   (popper-display-control 'user)
   (popper-mode-line wal/popper-mode-line)
+  (popper-echo-dispatch-persist nil)
+  (popper-echo-dispatch-keys '(?a ?s ?d ?f ?g ?q ?w ?e ?r ?t))
+  (popper-echo-lines 1)
   :wal-bind
   ("[" . popper-toggle-latest)
   :general
@@ -3724,7 +3736,7 @@ Both require installation of their respective binary.
 
 ;;; Code:
 
-(declare-function wal/display-buffer-in-pop-up "wal-func.el")
+(declare-function wdb/pop-up "wal-func.el")
 
 (defgroup wal-find nil
   "Change settings of search packages."
@@ -3744,7 +3756,7 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 #+BEGIN_SRC emacs-lisp
 (use-package rg
   :config
-  (wal/display-buffer-in-pop-up "\\*rg\\*\\'")
+  (wdb/pop-up "\\*rg\\*\\'")
   :wal-bind
   ("n" . rg-menu)
   :ensure-system-package rg)
@@ -3839,7 +3851,7 @@ Complete commands and code.
 
 ;;; Code:
 
-(declare-function wal/display-buffer-ethereally "wal-func.el")
+(declare-function wdb/ghost "wal-func.el")
 (declare-function wal/append "wal-func.el")
 
 (defvar xref-show-xrefs-function)
@@ -4005,7 +4017,7 @@ Do something else with minibuffer candidate.
 #+BEGIN_SRC emacs-lisp
 (defun wal/configure-embark ()
   "Configure package `embark'."
-  (wal/display-buffer-ethereally "\\`\\*Embark Collect \\(Live\\|Completions\\)\\*")
+  (wdb/ghost "\\`\\*Embark Collect \\(Live\\|Completions\\)\\*")
   (with-no-warnings
     (define-key embark-file-map
                 (kbd "f")
@@ -4508,7 +4520,9 @@ This calls `org-content' interactively."
     "Sa" '(org-show-all :wk "all")
     "Sl" '(wal/org-content :wk "level")
     "n" '(org-add-note :wk "add note"))
-  :hook (org-mode . wal/org-mode)
+  :hook
+  ((org-mode . wal/org-mode)
+   (org-mode . auto-fill-mode))
   :ensure nil)
 #+END_SRC
 
@@ -4596,6 +4610,7 @@ Trying to organize my thoughts using Zettelkästen.
   :config
   (org-roam-db-autosync-enable)
   (wal/sergeant "d" '(org-roam-dailies-goto-date :wk "dailies"))
+  (wdb/side 'org-roam-mode)
   :custom
   (org-roam-directory wal/org-roam-directory)
   (org-roam-dailies-directory wal/org-roam-dailies-directory)
@@ -4603,7 +4618,7 @@ Trying to organize my thoughts using Zettelkästen.
   (wal/sergeant
     "c" '(org-roam-capture :wk "capture")
     "f" '(org-roam-node-find :wk "find")
-    "b" '(org-roam-buffer-display-dedicated :wk "buffer")
+    "<SPC>" '(org-roam-buffer-toggle :wk "buffer")
     "t" '(org-roam-tag-add :wk "tag"))
   (wal/sergeant :keymaps 'org-mode-map :major-modes t
     "i" '(org-roam-node-insert :wk "insert node"))
@@ -5082,7 +5097,7 @@ I am convinced that we are in a terminal process.
 
 ;;; Code:
 
-(declare-function wal/display-buffer-in-side-window "wal-func.el")
+(declare-function wdb/side "wal-func.el")
 (declare-function projectile-project-p "projectile.el")
 (declare-function projectile-project-buffers "projectile.el")
 
@@ -5201,7 +5216,6 @@ Set up =eshell=. I like the idea of it but I don't really use it.
 (use-package eshell
   :config
   (advice-add 'eshell/clear :override #'wal/advise-eshell/clear)
-  (wal/display-buffer-in-side-window "*eshell*" :height 15 :loose t)
   :bind
   (:map eshell-mode-map
    ([remap eshell-pcomplete] . completion-at-point))
@@ -5399,7 +5413,7 @@ Let's greet the world[fn:16].
 (declare-function poetry-venv-exist-p "poetry.el")
 (declare-function wal/biased-random "wal-func.el")
 (declare-function wal/disable-tabs "wal-settings.el")
-(declare-function wal/display-buffer-in-side-window "wal-func.el")
+(declare-function wdb/side "wal-func.el")
 (declare-function wal/install-packages "wal-func.el")
 (declare-function wal/lsp "wal-lsp.el")
 (declare-function wal/maybe-enable-tabs "wal-settings.el")
@@ -5539,8 +5553,6 @@ Use snake when you can't =make=.
 
 (use-package python
   :config
-  ;; Treat inferior shell as a pop-up.
-  (wal/display-buffer-in-side-window 'inferior-python-mode)
   (with-eval-after-load 'dap-mode
     (require 'dap-python))
   :general
@@ -5624,8 +5636,6 @@ Activating =virtualenv= inside of Emacs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package poetry
-  :config
-  (wal/display-buffer-in-side-window "\\*poetry-shell\\*")
   :general
   (wal/major :keymaps 'python-mode-map :major-modes t
     "p" '(poetry :wk "poetry"))
@@ -5691,7 +5701,7 @@ Can't have closure without REPL.
 #+begin_src emacs-lisp
 (use-package cider
   :config
-  (wal/display-buffer-in-side-window 'cider-repl-mode)
+  (wdb/side 'cider-repl-mode)
   :general
   (wal/major :keymaps 'clojure-mode-map :major-modes t
     "r" '(cider-jack-in :wk "repl"))
@@ -6075,7 +6085,7 @@ LSP support for Dart.
   (add-hook
    'lsp-after-initialize-hook
    #'wal/lsp-dart-set-process-query-on-exit-flag)
-  (wal/display-buffer-in-side-window "\\*Flutter" :height 10))
+  (wdb/side "\\*Flutter" :height 10))
 
 (use-package lsp-dart
   :if (executable-find "flutter")
@@ -6158,7 +6168,7 @@ The elephant in the room.
 (use-package php-mode
   :config
   (require 'dap-php) ; Run `dap-php-setup'.
-  (wal/display-buffer-in-side-window "\\*Php SOE" :height 15)
+  (wdb/side "\\*Php SOE" :height 15)
   :hook (php-mode . wal/php-mode)
   :ensure nil)
 #+END_SRC
@@ -6351,7 +6361,7 @@ Language servers are awesome. Thanks, Microsoft.
 (declare-function wal/append "wal-func.el")
 (declare-function wal/captain "wal-key-bindings.el")
 (declare-function wal/captain-sink "wal-key-bindings.el")
-(declare-function wal/display-buffer-in-side-window "wal-func.el")
+(declare-function wdb/side "wal-func.el")
 
 (defvar lsp-file-watch-ignored-directories)
 
@@ -6480,7 +6490,7 @@ Debugging using VSCode's DAP (in =lsp-mode=)
   "Configure package `dap-mode'."
   (dap-ui-mode 1)
   (dap-auto-configure-mode)
-  (wal/display-buffer-in-side-window 'dap-ui-repl-mode)
+  (wdb/side 'dap-ui-repl-mode)
   (with-no-warnings
     (defhydra wal/dap-hydra (:hint nil :foreign-keys warn)
       "
@@ -6676,8 +6686,8 @@ Internet.
 
 ;;; Code:
 
-(declare-function wal/display-buffer-in-side-window "wal-func.el")
-(declare-function wal/display-buffer-in-direction "wal-func.el")
+(declare-function wdb/side "wal-func.el")
+(declare-function wdb/direction "wal-func.el")
 (declare-function wal/message-in-a-bottle "wal-func.el")
 #+END_SRC
 
@@ -6693,9 +6703,9 @@ What goes =docker-compose= up, goes =docker-compose= down.
 #+BEGIN_SRC emacs-lisp
 (use-package docker
   :config
-  (wal/display-buffer-in-side-window "\\*docker-containers\\*" :side 'top)
-  (wal/display-buffer-in-direction "^\\* docker container")
-  (wal/display-buffer-in-direction "^\\*docker-compose")
+  (wdb/side "\\*docker-containers\\*" :side 'top :height 15)
+  (wdb/direction "^\\* docker container")
+  (wdb/direction "^\\*docker-compose")
   :custom
   (docker-run-async-with-buffer-function 'docker-run-async-with-buffer-shell)
   (docker-container-default-sort-key '("Names"))
@@ -6776,7 +6786,7 @@ I browse, I request.
 
 ;;; Code:
 
-(declare-function wal/display-buffer-in-pop-up "wal-func.el")
+(declare-function wdb/pop-up "wal-func.el")
 #+END_SRC
 
 ** Packages
@@ -6792,7 +6802,7 @@ I'll replace =restclient= with =verb= soon.
 (use-package verb
   :config
   (add-to-list 'org-tag-alist '("verb" . ?v))
-  (wal/display-buffer-in-pop-up "\\*HTTP Response")
+  (wdb/pop-up "\\*HTTP Response")
   :custom
   (verb-auto-kill-response-buffers t)
   :general
