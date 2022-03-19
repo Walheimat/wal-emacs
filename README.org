@@ -130,7 +130,7 @@ bugs).")
 
 ;; Maximize frame.
 (setq frame-resize-pixelwise t)
-(add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; Leads to issues when using a tiling wm.
+(add-to-list 'initial-frame-alist '(fullscreen . maximized))
 
 ;; No splash.
 (setq inhibit-startup-message t)
@@ -307,7 +307,7 @@ packages.
       ;; New in version 28. Otherwise you need an alias.
       use-short-answers t
       ;; Undo limits, keeping factor, defaults in side commments.
-      undo-limit (wal/bytes-per-mb 1) ; 160000 bytes.
+      undo-limit (wal/bytes-per-mb 1)          ; 160000 bytes.
       undo-strong-limit (wal/bytes-per-mb 1.5) ; 240000 bytes.
       undo-outer-limit (wal/bytes-per-mb 150)) ; 24000000 bytes.
 #+END_SRC
@@ -383,8 +383,8 @@ All offsets are set to `wal/indent-offset' or optionally to NUM."
   (interactive "nSet tab width to: ")
   (let ((offset (or num wal/indent-offset)))
     (setq-default python-indent-offset offset ; Python
-                  js-indent-level offset ; JavaScript
-                  css-indent-offset offset ; CSS and SCSS
+                  js-indent-level offset      ; JavaScript
+                  css-indent-offset offset    ; CSS and SCSS
                   tab-width offset
                   electric-indent-inhibit t
                   indent-tabs-mode wal/prefer-tabs)
@@ -1021,8 +1021,7 @@ lines high and visible frames are considered reusable."
                    (dedicated . ,(not loose))
                    (reusable-frames . visible)
                    (window-height . ,(or height 10))
-                   (window-parameters . ((no-other-window . ,no-other)
-                                         (no-delete-other-windows . t)))))))
+                   (window-parameters . ((no-other-window . ,no-other)))))))
 
 (defun wal/display-buffer-in-direction (buffer &optional direction)
   "Display BUFFER in direction.
@@ -1991,8 +1990,7 @@ Automatic quick expansion.
 (use-package abbrev
   :config
   (setq save-abbrevs nil)
-  (define-abbrev-table 'elixir-mode-abbrev-table '(
-    ("p" "|>")))
+  (define-abbrev-table 'elixir-mode-abbrev-table '(("p" "|>")))
   :hook ((elixir-mode) . abbrev-mode)
   :ensure nil
   :delight " abb")
@@ -2213,7 +2211,7 @@ Let's try to be even more =helpful=.
    :map help-map
    ("M" . helpful-macro)
    :map helpful-mode-map
-   ("x" . kill-buffer-and-window))
+   ("k" . kill-buffer-and-window))
   :general
   (wal/major
     :keymaps '(emacs-lisp-mode-map lisp-interaction-mode-map)
@@ -3439,7 +3437,7 @@ Ace interacting with (multiple) windows.
                             (?v aw-split-window-vert "vertical split")
                             (?f aw-split-window-fair "fair split")
                             (?d aw-delete-window "delete")
-                            (?x wal/aw-delete-window-kill-buffer "kill")
+                            (?k wal/aw-delete-window-kill-buffer "kill")
                             (?o delete-other-windows "delete other")
                             (?c aw-copy-window "copy")
                             (?s aw-swap-window "swap")
@@ -3577,7 +3575,7 @@ Treat certain buffers and their windows as pop-ups.
   (general-define-key
    :keymaps 'popper-mode-map
    :predicate '(wal/popper-dead-shell-p)
-   "q" 'kill-buffer-and-window)
+   "k" 'kill-buffer-and-window)
   :demand
   :after winner)
 #+END_SRC
@@ -6544,8 +6542,8 @@ For TypeScript compile your =src= with =--sourceMap= or set =sourceMap= to
 #+BEGIN_SRC emacs-lisp :tangle no
 (when (require 'dap-mode nil 'noerror)
   (progn
-    (let* ((use-source-maps t) ; Turn off if not needed.
-           (build-directory "build") ; Set to `nil' if this isn't transpiled JavaScript.
+    (let* ((use-source-maps t)          ; Turn off if not needed.
+           (build-directory "build")    ; Set to `nil' if this isn't transpiled JavaScript.
            (remote-root "/usr/src/app") ; If this is running remotely.
            (local-root (if build-directory
                            (concat (file-name-directory buffer-file-name) build-directory)
