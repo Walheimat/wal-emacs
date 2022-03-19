@@ -1457,7 +1457,7 @@ Act on regions.
 ** Expansion Packs
 
 Some packages are opt-in (will not be ensured) and belong to one or
-several so-called expansion packs.
+several so-called expansion packs[fn:12].
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal/expansion-packs nil
@@ -1481,9 +1481,10 @@ t, printing optional message ON-DONE."
   (when delete-windows
     (delete-other-windows)))
 
-(cl-defmacro wal/define-expansion-pack (name &key packages)
+(cl-defmacro wal/define-expansion-pack (name &key packages extras)
   "Define an expansion pack of PACKAGES under NAME."
-  `(add-to-list 'wal/expansion-packs '(,name . ,packages)))
+  (declare (indent defun))
+  `(add-to-list 'wal/expansion-packs '(,name . (:packages ,packages :extras ,extras))))
 
 (defun wal/install-expansion-pack (pack)
   "Install the given expansion PACK."
@@ -1491,9 +1492,14 @@ t, printing optional message ON-DONE."
    (list (completing-read "Select pack to install: "
                           (mapcar (lambda (pack) (car pack)) wal/expansion-packs))))
   (let* ((sym (wal/maybe-intern pack))
-         (item (assoc sym wal/expansion-packs)))
+         (item (assoc sym wal/expansion-packs))
+         (core-packages (plist-get (cdr item) :packages))
+         (extras (plist-get (cdr item) :extras)))
     (if item
-        (wal/install-packages (cdr item) :on-done (format "Installed expansion pack '%s'." pack))
+        (progn
+          (wal/install-packages core-packages :on-done (format "Installed expansion pack '%s'." pack))
+          (when (and extras (yes-or-no-p (format "Want to install extras %s? " extras)))
+            (wal/install-packages extras :on-done (format "Installed '%s' extras." pack))))
       (user-error "Unknown pack '%s', check `wal/expansion-packs'" sym))))
 #+END_SRC
 
@@ -1503,91 +1509,64 @@ t, printing optional message ON-DONE."
 ;;; Elixir:
 
 (wal/define-expansion-pack elixir
-  :packages
-  (elixir-mode))
+  :packages (elixir-mode))
 
 ;;; Rust:
 
 (wal/define-expansion-pack rust
-  :packages
-  (rust-mode
-   cargo))
+  :packages (rust-mode cargo))
 
 ;;; Python:
 
 (wal/define-expansion-pack python
-  :packages
-  (python-isort
-   pyvenv
-   poetry))
+  :packages (python-isort pyvenv poetry))
 
 ;;; Lisp:
 
 (wal/define-expansion-pack lisp
-  :packages
-  (cider
-   clojure-mode
-   highlight-quoted
-   slime
-   slime-company))
+  :packages (highlight-quoted slime slime-company)
+  :extras (cider clojure-mode))
 
 ;;; JavaScript:
 
-(wal/define-expansion-pack javacsript
-  :packages
-  (js2-mode
-   rjsx-mode
-   typescript-mode
-   json-mode
-   add-node-module-path
-   prettier))
+(wal/define-expansion-pack javascript
+  :packages (js2-mode json-mode)
+  :extras (rjsx-mode typescript-mode add-node-modules-path prettier))
 
 ;;; Golang:
 
 (wal/define-expansion-pack go
-  :packages
-  (go-mode))
+  :packages (go-mode))
 
 ;;; Markup:
 
 (wal/define-expansion-pack structured
-  :packages
-  (markdown-mode
-   yaml-mode))
+  :packages (markdown-mode yaml-mode))
 
 ;;; Flutter/Dart:
 
 (wal/define-expansion-pack flutter
-  :packages
-  (dart-mode
-   lsp-dart))
+  :packages (dart-mode lsp-dart))
 
 ;;; Java:
 
 (wal/define-expansion-pack java
-  :packages
-  (lsp-java))
+  :packages (lsp-java))
 
 ;;; PHP/Laravel:
 
 (wal/define-expansion-pack php
-  :packages
-  (php-mode
-   web-mode))
+  :packages (php-mode web-mode))
 
 ;;; Web:
 
 (wal/define-expansion-pack web
-  :packages
-  (pug-mode
-   json-mode))
+  :packages (pug-mode json-mode))
 
 ;;; Scripting:
 
 (wal/define-expansion-pack shell
-  :packages
-  (crontab-mode
-   fish-mode))
+  :packages (crontab-mode fish-mode))
 #+END_SRC
 
 ** Footer
@@ -1834,7 +1813,7 @@ available candidate from `wal/fixed-fonts'. Does the same for
 
 Everything that has to do with Emacs-y stuff.
 
-This is a combination of configurations for built-in packages[fn:12]
+This is a combination of configurations for built-in packages[fn:13]
 and some external ones.
 
 ** Header
@@ -3104,7 +3083,7 @@ shown, they are delighted unless they were diminished.
 :UNNUMBERED: t
 :END:
 
-Busier and prettier[fn:13] =modeline=.
+Busier and prettier[fn:14] =modeline=.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/advise-doom-modeline-update-vcs-text (&rest _r)
@@ -3301,7 +3280,7 @@ ARGS is a list containing modes and additional ligatures."
 :UNNUMBERED: t
 :END:
 
-You need to install the icons yourself[fn:13].
+You need to install the icons yourself[fn:14].
 
 #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons
@@ -3318,7 +3297,7 @@ You need to install the icons yourself[fn:13].
 :UNNUMBERED: t
 :END:
 
-Display emojis[fn:14].
+Display emojis[fn:15].
 
 #+BEGIN_SRC emacs-lisp
 (use-package emojify
@@ -5134,7 +5113,7 @@ I am convinced that we are in a terminal process.
 :UNNUMBERED: t
 :END:
 
-=vterm= is better[fn:15] than included shells.
+=vterm= is better[fn:16] than included shells.
 
 Some common shell commands require an additional =C-c=:
 
@@ -5414,7 +5393,7 @@ Use a single frame and split horizontally when diffing.
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-lang.el" wal/emacs-config-package-path)
 :END:
 
-Let's greet the world[fn:16].
+Let's greet the world[fn:17].
 
 ** Header
 :PROPERTIES:
@@ -6421,7 +6400,7 @@ of 0.0."
 :END:
 
 =lsp-mode= is the fancy version. You'll have to install some language
-servers yourself[fn:17].
+servers yourself[fn:18].
 
 #+BEGIN_SRC emacs-lisp
 (defcustom wal/lsp-file-watch-ignored-directories
@@ -7072,7 +7051,9 @@ keyboard unusable.
 
 [fn:11] They all require their respective mode to be on.
 
-[fn:12] The following packages (and their related or sub-packages) are
+[fn:12] Alternate spelling is "expansion pak".
+
+[fn:13] The following packages (and their related or sub-packages) are
 found in other sections
 
 - =org= and =org-agenda= in [[*Org Mode][Org Mode]]
@@ -7081,26 +7062,26 @@ found in other sections
 - =eshell= in [[*Terminal][Terminal]]
 - =python=, =emacs-lisp=, =cc-mode= and =css-mode= in [[*Languages][Languages]]
 
-[fn:13] The =all-the-icons= icons need to be downloaded manually by
+[fn:14] The =all-the-icons= icons need to be downloaded manually by
 running =M-x all-the-icons-install-fonts= and selecting =yes=.
 
 If the installation process should fail for any reason, close Emacs
 and re-run it.
 
-[fn:14] You might have to call =emojify-download-emoji= to download a
+[fn:15] You might have to call =emojify-download-emoji= to download a
 set that supports your emojis.
 
-[fn:15] If you're on an older distro your =libvterm= package might be
+[fn:16] If you're on an older distro your =libvterm= package might be
 too old.
 
-[fn:16] None of the language packages are ensured, meaning you will
+[fn:17] None of the language packages are ensured, meaning you will
 need to install them yourself.
 
-[fn:17] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+[fn:18] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
 
-[fn:18] Mostly from MELPA. /Note/ that many packages bind keys. Check
+[fn:19] We will try to download it automatically, but might fail.
+
+[fn:20] Mostly from MELPA. /Note/ that many packages bind keys. Check
 the [[*Key Bindings][key bindings section]] if you need a list of the important ones, in
 that section you also find package configurations for
 key-binding-related packages =general= and =hydra=.
-
-[fn:19] We will try to download it automatically, but might fail.
