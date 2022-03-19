@@ -574,12 +574,12 @@ There are a few nons-standard meta sequences.
 
 Most hyper[fn:9] bindings are quick-access actions:
 
-+ =H-h= finds file using =projectile=
++ =H-h= finds project file
 + =H-]= highlights the cursor using =beacon=
 + =H-i= switches perspective (when using =perspective=)
 + =H-k= acts on the current point with =embark=
 + =H-<mouse3>= adds another =multiple-cursor= at point
-+ =H-p= switches projects using =projectile=
++ =H-p= switches projects
 + =H-<return>= completes at point using =company= (in =company-mode=)
 + =H-== to do a =quick-calc= (inserted if called with =C-u=)
 + =H-[= toggles pop-ups using =popper= (or runs a =hydra= if focusing a
@@ -2735,7 +2735,9 @@ A collection of status messages."
   (setq dashboard-banner-logo-title (wal/describe-config-version))
   :custom
   (dashboard-startup-banner wal/startup-banner)
-  (dashboard-projects-backend 'projectile)
+  (dashboard-projects-backend (if wal/use-projectile
+                                  'projectile
+                                'project-el))
   (dashboard-items '((recents . 5)
                      (projects . 3)
                      (bookmarks . 3)))
@@ -3072,7 +3074,9 @@ Busier and prettier[fn:14] =modeline=.
   (when (fboundp 'doom-modeline-update-vcs-text)
     (add-hook 'magit-post-refresh-hook #'doom-modeline-update-vcs-text))
   :custom
-  (doom-modeline-project-detection 'projectile)
+  (doom-modeline-project-detection (if wal/use-projectile
+                                       'projectile
+                                     'project))
   (doom-modeline-minor-modes t)
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-icon t)
@@ -3795,8 +3799,10 @@ Complete commands and code.
 
 (declare-function wdb/ghost "wal-func.el")
 (declare-function wal/append "wal-func.el")
+(declare-function projectile-project-root "projectile.el")
 
 (defvar xref-show-xrefs-function)
+(defvar wal/use-projectile)
 
 (defgroup wal-complete nil
   "Change settings used for completion packages."
@@ -3961,12 +3967,13 @@ Do something else with minibuffer candidate.
   "Configure package `embark'."
   (wdb/ghost "\\`\\*Embark Collect \\(Live\\|Completions\\)\\*")
   (with-no-warnings
-    (define-key embark-file-map
-                (kbd "f")
-                (wal/maybe-use-projectile find-file))
-    (define-key embark-file-map
-                (kbd "o")
-                (wal/maybe-use-projectile find-file-other-window))
+    (when wal/use-projectile
+      (define-key embark-file-map
+                  (kbd "f")
+                  (wal/maybe-use-projectile find-file))
+      (define-key embark-file-map
+                  (kbd "o")
+                  (wal/maybe-use-projectile find-file-other-window)))
     (define-key embark-region-map
                 (kbd "g")
                 #'wal/duck-duck-go-region)))
@@ -4030,6 +4037,8 @@ Do not ignore hidden files."
 
 (defun wal/configure-consult ()
   "Configure package `consult'."
+  (when wal/use-projectile
+    (setq consult-project-function #'projectile-project-root))
   (setq xref-show-xrefs-function #'consult-xref)
   (wal/append 'consult-buffer-filter
               wal/consult-buffer-filter)
@@ -4042,9 +4051,6 @@ Do not ignore hidden files."
 (use-package consult
   :config
   (wal/configure-consult)
-  :custom
-  (consult-project-root-function #'projectile-project-root) ; Deprecated.
-  (consult-project-function #'projectile-project-root)
   :bind
   (:map bookmark-map
    ("u" . consult-bookmark)
@@ -4137,6 +4143,16 @@ Keep order.
   "Change settings used for workspace packages."
   :group 'wal
   :tag "Workspace")
+
+(defcustom wal/use-perspectives t
+  "Whether to use perspectives."
+  :type 'boolean
+  :group 'wal-workspace)
+
+(defcustom wal/use-projectile t
+  "Whether to use `projectile' over `project'."
+  :type 'boolean
+  :group 'wal-workspace)
 #+END_SRC
 
 ** Packages
@@ -4149,11 +4165,6 @@ Keep order.
 Group buffers in workspaces.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/use-perspectives t
-  "Whether to use perspectives."
-  :type 'boolean
-  :group 'wal-workspace)
-
 (defcustom wal/default-perspective "walheimat"
   "The name of my default perspective."
   :type 'string
@@ -4311,6 +4322,7 @@ This extends all ignore lists' default values."
     "p" '(:keymap projectile-command-map :wk "projectile")))
 
 (use-package projectile
+  :if wal/use-projectile
   :config
   (wal/configure-projectile)
   (projectile-mode +1)
@@ -4326,6 +4338,37 @@ This extends all ignore lists' default values."
    ("h" . projectile-find-file))
   :defer 1
   :delight " pjt")
+#+END_SRC
+
+*** project
+
+Built-in but entirely dependent on either =git= or =hg=.
+
+#+BEGIN_SRC emacs-lisp
+(defcustom wal/project-vc-ignores
+  '("node_modules/"
+    "build/"
+    "android/"
+    "*.lock"
+    "bundle.js"
+    "*.min.js"
+    "*.js.map")
+  "Additional directories to ignore."
+  :type '(repeat string)
+  :group 'wal-workspace)
+
+(use-package project
+  :if (not wal/use-projectile)
+  :custom
+  (project-switch-commands 'project-find-dir)
+  (project-vc-ignores wal/project-vc-ignores)
+  :bind-keymap
+  ("C-c p" . project-prefix-map)
+  :wal-bind
+  (("p" . project-switch-project)
+   ("h" . project-find-file))
+  :ensure nil
+  :demand)
 #+END_SRC
 
 ** Footer
@@ -4364,12 +4407,14 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (declare-function wal/disable-tabs "wal-settings.el")
 (declare-function wal/message-in-a-bottle "wal-func.el")
 (declare-function projectile-project-root "projectile.el")
+(declare-function project-root "project.el")
 
 (defvar org-global-properties)
 (defvar org-mode-map)
 (defvar text-scale-mode-step)
 (defvar visual-fill-column-width)
 (defvar visual-fill-column-center-text)
+(defvar wal/use-projectile)
 
 (defgroup wal-org nil
   "Change settings used for org packages."
@@ -4721,7 +4766,10 @@ Capture templates.
 
 If the project root cannot be determined, use
 `wal/org-directory'. as destination."
-  (expand-file-name "tasks.org" (or (projectile-project-root) org-directory)))
+  (let ((proj-root (if wal/use-projectile
+                       (projectile-project-root)
+                     (project-root (project-current)))))
+    (expand-file-name "tasks.org" (or proj-root org-directory))))
 
 (use-package org-capture
   :custom
@@ -5043,11 +5091,13 @@ I am convinced that we are in a terminal process.
 ;;; Code:
 
 (declare-function wdb/side "wal-func.el")
+(declare-function project-buffers "project.el")
 (declare-function projectile-project-p "projectile.el")
 (declare-function projectile-project-buffers "projectile.el")
 
 (defvar eshell-highlight-prompt)
 (defvar eshell-prompt-function)
+(defvar wal/use-projectile)
 #+END_SRC
 
 ** Packages
@@ -5087,8 +5137,12 @@ buffer if one doesn't exist yet (unless called with
 `universal-argument')."
   (interactive)
   (if-let* ((cont (and (not (equal current-prefix-arg '(4)))
-                       (projectile-project-p)))
-            (buffers (projectile-project-buffers))
+                       (if wal/use-projectile
+                           (projectile-project-p)
+                         (project-current))))
+            (buffers (if wal/use-projectile
+                         (projectile-project-buffers)
+                       (project-buffers (project-current))))
             (project-vterm
              (cl-find-if
               #'(lambda (it)
@@ -5361,11 +5415,13 @@ Let's greet the world[fn:17].
 (declare-function wdb/side "wal-func.el")
 (declare-function wal/install-packages "wal-func.el")
 (declare-function wal/lsp "wal-lsp.el")
+(declare-function wal/major "wal-key-bindings.el")
 (declare-function wal/maybe-enable-tabs "wal-settings.el")
 (declare-function wal/maybe-intern "wal-func.el")
 
 (defvar js2-mode-map)
 (defvar wal/ascii-whale)
+(defvar wal/use-projectile)
 
 (defun wal/message-in-a-bottle (bottle)
   "Randomly display a message from the given BOTTLE.
@@ -6073,9 +6129,9 @@ LSP support for Dart.
   (wal/lsp))
 
 (use-package java-mode
-  :general
-  (wal/major
-    "t" '(wal/projectile-test-project :wk "test project"))
+  :config
+  (when wal/use-projectile
+    (wal/major "t" '(wal/projectile-test-project :wk "test project")))
   :hook (java-mode . wal/java-mode)
   :ensure nil)
 #+end_src
