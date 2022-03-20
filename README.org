@@ -4277,22 +4277,12 @@ perspectives."
 More robust project management.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/projectile-globally-ignored-directories
-  '("node_modules" "build" "_build" "android")
-  "Additional directories to ignore."
-  :type '(repeat string)
-  :group 'wal-workspace)
-
-(defcustom wal/projectile-globally-ignored-files
-  '("yarn.lock" "package.lock" "bundle.js")
-  "Additional files to ignore."
-  :type '(repeat string)
-  :group 'wal-workspace)
-
-(defcustom wal/projectile-globally-ignored-file-suffixes
-  '(".min.js" ".js.map")
-  "Additional file suffixes to ignore."
-  :type '(repeat string)
+(defcustom wal/projectile-ignored
+  '(("node_modules" "build" "_build" "android")
+    ("yarn.lock" "package.lock" "bundle.js")
+    (".min.js" ".js.map"))
+  "Additional directories, files and file suffixes to ignore."
+  :type '(list)
   :group 'wal-workspace)
 
 (defmacro wal/maybe-use-projectile (func)
@@ -4319,11 +4309,11 @@ More robust project management.
 
 This extends all ignore lists' default values."
   (wal/append 'projectile-globally-ignored-directories
-              wal/projectile-globally-ignored-directories)
+              (nth 0 wal/projectile-ignored))
   (wal/append 'projectile-globally-ignored-files
-              wal/projectile-globally-ignored-files)
+              (nth 1 wal/projectile-ignored))
   (wal/append 'projectile-globally-ignored-file-suffixes
-              wal/projectile-globally-ignored-file-suffixes)
+              (nth 2 wal/projectile-ignored))
   (wal/captain
     "p" '(:keymap projectile-command-map :wk "projectile")))
 
