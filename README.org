@@ -4183,6 +4183,11 @@ get truncated."
   :type 'integer
   :group 'wal-workspace)
 
+(defcustom wal/perspective-truncated-length 3
+  "The length of a perspective name when truncated."
+  :type 'integer
+  :group 'wal-workspace)
+
 (defun wal/advise-persp-kill (fun &rest r)
   "Advises FUN to kill processes without querying, applying R.
 
@@ -4208,8 +4213,18 @@ This only removes `process-kill-buffer-query-function'."
                               0))))
     (if (and (> combined-length wal/perspective-max-modeline-length)
              (not (string-match-p name curr-name)))
-        (substring name 0 1)
+        (substring name 0 wal/perspective-truncated-length)
       name)))
+
+(defun wal/advise-persp-mode-line-click (event)
+  "Override `persp-mode-line-click' to deal with truncated perspectives."
+  (let ((clicked (format "%s" (car (posn-string (event-start event))))))
+    (if (eq (length clicked) wal/perspective-truncated-length)
+        (when-let* ((r (concat "^" clicked))
+                    (names (persp-names))
+                    (p (cl-find-if (lambda (it) (string-match r it)) names)))
+          (persp-switch p))
+      (persp-switch clicked))))
 
 (defun wal/switch-to-scratch-buffer ()
   "Switch to a perspective's scratch buffer."
@@ -4235,6 +4250,7 @@ This mainly makes sure that switching buffers also switches
 perspectives."
   (advice-add 'persp-kill :around #'wal/advise-persp-kill)
   (advice-add 'persp-format-name :filter-return #'wal/advise-persp-format-name)
+  (advice-add 'persp-mode-line-click :override #'wal/advise-persp-mode-line-click)
   (with-eval-after-load 'consult
     (consult-customize
      consult--source-buffer
