@@ -880,6 +880,7 @@ Most bindings are declared in individual packages.
   "E" '(:ignore t :wk "Emacs")
   "Eq" '(save-buffers-kill-terminal :wk "quit")
   "f" '(:ignore t :wk "find")
+  "fc" '(wal/find-custom-file :wk "custom")
   "fi" '(wal/find-init :wk "init")
   "fw" '(wal/find-config :wk "wal")
   "S" '(:ignore t :wk "session"))
@@ -1072,6 +1073,23 @@ removed."
 Editing.
 
 #+BEGIN_SRC emacs-lisp
+(defcustom wal/delete-trailing-whitespace t
+  "Whether to delete trailing whitespace."
+  :type 'boolean
+  :group 'wal-func)
+
+(defun wal/advise-hack-local-variables (&rest _r)
+  "Advise to conditionally add before save hook.
+
+When `wal/delete-trailing-whitespace' is t, trailing whitespace
+is deleted."
+  (when wal/delete-trailing-whitespace
+    (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)))
+
+(advice-add
+ 'hack-local-variables
+ :after #'wal/advise-hack-local-variables)
+
 (defun wal/kill-ring-save-whole-buffer ()
   "Call `kill-ring-save' on the entire buffer."
   (interactive)
@@ -1354,23 +1372,6 @@ This function may be used to set variables that expect bytes."
 Handling of files.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/delete-trailing-whitespace t
-  "Whether to delete trailing whitespace."
-  :type 'boolean
-  :group 'wal-func)
-
-(defun wal/advise-hack-local-variables (&rest _r)
-  "Advise to conditionally add before save hook.
-
-When `wal/delete-trailing-whitespace' is t, trailing whitespace
-is deleted."
-  (when wal/delete-trailing-whitespace
-    (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)))
-
-(advice-add
- 'hack-local-variables
- :after #'wal/advise-hack-local-variables)
-
 (defun wal/find-file-delete-other-windows (filename &optional wildcards)
   "Find FILENAME and make its window the only window.
 
@@ -1388,6 +1389,11 @@ matching files are visited but only the last-visited displayed."
           value)
       (switch-to-buffer value)
       (delete-other-windows))))
+
+(defun wal/find-custom-file ()
+  "Find the `custom-file'."
+  (interactive)
+  (switch-to-buffer (find-file-noselect (file-truename custom-file))))
 #+END_SRC
 
 ** Command Line
@@ -4336,7 +4342,6 @@ This extends all ignore lists' default values."
   (:map projectile-mode-map
    ("p" . projectile-switch-project)
    ("h" . projectile-find-file))
-  :defer 1
   :delight " pjt")
 #+END_SRC
 
