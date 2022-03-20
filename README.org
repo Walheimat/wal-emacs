@@ -100,6 +100,53 @@ evaluate /everything/[fn:6] that follows.
   "Change core settings."
   :group 'wal
   :tag "Settings")
+
+;;;; Customization:
+
+(defcustom wal/cache-directory (expand-file-name ".cache" user-emacs-directory)
+  "The cache directory."
+  :type 'string
+  :group 'wal-settings)
+
+(defcustom wal/site-lisp-directory (expand-file-name "site-lisp" user-emacs-directory)
+  "Directory of site Lisp packages."
+  :type 'string
+  :group 'wal-settings)
+
+(defcustom wal/org-directory (expand-file-name "org" "~")
+  "Default directory for org files."
+  :type 'string
+  :group 'wal-settings)
+
+(defcustom wal/agenda-tasks-directory (expand-file-name "tasks" wal/org-directory)
+  "One-size-fits-all directory for agenda tasks."
+  :type 'string
+  :group 'wal-settings)
+
+(defcustom wal/org-roam-directory (expand-file-name "zettelkasten" wal/org-directory)
+  "Directory for Zettelkasten note-taking."
+  :type 'string
+  :group 'wal-settings)
+
+(defcustom wal/read-process-output-max (wal/bytes-per-mb 50)
+  "Increased `read-process-output-max'."
+  :type 'integer
+  :group 'wal-settings)
+
+(defcustom wal/indent-offset 4
+  "The indent offset in spaces."
+  :type 'integer
+  :group 'wal-settings)
+
+(defcustom wal/prefer-tabs nil
+  "Whether tabs are preferred for indentation."
+  :type 'boolean
+  :group 'wal-settings)
+
+(defcustom wal/scratch-persist-file (expand-file-name "scratch-persist" wal/cache-directory)
+  "The file to persist the *scratch* buffer's content in."
+  :type 'string
+  :group 'wal-settings)
 #+END_SRC
 
 ** Personal
@@ -144,7 +191,7 @@ bugs).")
 ;; Accept redefinitions.
 (setq ad-redefinition-action 'accept)
 
-;; Load customization.s
+;; Load customizations.
 (load custom-file)
 #+END_SRC
 
@@ -198,31 +245,6 @@ Make sure that custom directories exist. We want:
 + a default directory for notes.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/cache-directory (expand-file-name ".cache" user-emacs-directory)
-  "The cache directory."
-  :type 'string
-  :group 'wal-settings)
-
-(defcustom wal/site-lisp-directory (expand-file-name "site-lisp" user-emacs-directory)
-  "Directory of site Lisp packages."
-  :type 'string
-  :group 'wal-settings)
-
-(defcustom wal/org-directory (expand-file-name "org" "~")
-  "Default directory for org files."
-  :type 'string
-  :group 'wal-settings)
-
-(defcustom wal/agenda-tasks-directory (expand-file-name "tasks" wal/org-directory)
-  "One-size-fits-all directory for agenda tasks."
-  :type 'string
-  :group 'wal-settings)
-
-(defcustom wal/org-roam-directory (expand-file-name "zettelkasten" wal/org-directory)
-  "Directory for Zettelkasten note-taking."
-  :type 'string
-  :group 'wal-settings)
-
 (defun wal/maybe-create-directories ()
   "Create directories if they don't exist."
   (mapc (lambda (it)
@@ -297,11 +319,6 @@ Make things shorter and snappier. These settings don't belong to
 packages.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/read-process-output-max (wal/bytes-per-mb 50)
-  "Increased `read-process-output-max'."
-  :type 'integer
-  :group 'wal-settings)
-
 (setq read-process-output-max wal/read-process-output-max
       echo-keystrokes 0.1
       ;; New in version 28. Otherwise you need an alias.
@@ -317,16 +334,6 @@ packages.
 Set up an easy way to switch between tabs and spaces for indentation.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/indent-offset 4
-  "The indent offset in spaces."
-  :type 'integer
-  :group 'wal-settings)
-
-(defcustom wal/prefer-tabs nil
-  "Whether tabs are preferred for indentation."
-  :type 'boolean
-  :group 'wal-settings)
-
 (defun wal/reset-to-standard (sym &optional locally)
   "Reset symbol SYM to its standard value.
 If LOCALLY is t, the local variable is killed while its global
@@ -408,11 +415,6 @@ config]].
 ;; Empty scratch message.
 (setq initial-scratch-message "")
 
-(defcustom wal/scratch-persist-file (expand-file-name "scratch-persist" wal/cache-directory)
-  "The file to persist the *scratch* buffer's content in."
-  :type 'string
-  :group 'wal-settings)
-
 (defun wal/persist-scratch ()
   "Persist contents of *scratch* buffer.
 The contents are stored in `wal/scratch-persist-file'."
@@ -477,12 +479,15 @@ I use many[fn:8] custom keybindings.
   :group 'wal
   :tag "Key bindings")
 
+;;;; Customization:
+
 (defcustom wal/use-hyper-prefix t
   "Whether the hyper modifier should be used to prefix user keys."
   :type 'boolean
   :group 'wal-key-bindings)
 
-;; American ranks.
+;;;;;; American ranks:
+
 (defcustom wal/general-key ","
   "The primary (or general) leader key."
   :type 'string
@@ -511,7 +516,7 @@ I use many[fn:8] custom keybindings.
 (defcustom wal/sergeant-key "<SPC>"
   "The senary (or sergeant) leader key."
   :type 'string
-  :group 'wal-org)
+  :group 'wal-key-bindings)
 
 (cl-defmacro wal/create-leader-sink (name &key definer prefix)
   "Macro to create a leader sink `NAME-sink'.
@@ -969,6 +974,18 @@ Turning on/off certain major modes switching between =major-mode= and
   "Change values used in additional functions."
   :group 'wal
   :tag "Functions")
+
+;;;; Customization:
+
+(defcustom wal/delete-trailing-whitespace t
+  "Whether to delete trailing whitespace."
+  :type 'boolean
+  :group 'wal-func)
+
+(defcustom wal/gc-cons-threshold-in-mb 200
+  "The default `gc-cons-threshold' epxressed in MB."
+  :type 'integer
+  :group 'wal-func)
 #+END_SRC
 
 ** Directories
@@ -1073,11 +1090,6 @@ removed."
 Editing.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/delete-trailing-whitespace t
-  "Whether to delete trailing whitespace."
-  :type 'boolean
-  :group 'wal-func)
-
 (defun wal/advise-hack-local-variables (&rest _r)
   "Advise to conditionally add before save hook.
 
@@ -1343,11 +1355,6 @@ Minor mode to dedicate buffers to windows.
 Better(?) garbage collection.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/gc-cons-threshold-in-mb 200
-  "The default `gc-cons-threshold' epxressed in MB."
-  :type 'integer
-  :group 'wal-func)
-
 (defun wal/bytes-per-mb (num)
   "Return the integer value of NUM megabytes in bytes.
 
@@ -1631,6 +1638,8 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
   :group 'wal
   :tag "Look")
 
+;;;; Customization:
+
 (defcustom wal/transparency 90
   "The default frame transparency."
   :type 'integer
@@ -1706,6 +1715,8 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
   "Change fonts and font sizes."
   :group 'wal
   :tag "Fonts")
+
+;;;; Customization:
 
 (defcustom wal/fixed-fonts
   '("JetBrains Mono"
@@ -2659,18 +2670,9 @@ I like nice-looking things.
   "Change settings used for visual packages."
   :group 'wal
   :tag "Visuals")
-#+END_SRC
 
-** Dashboard
+;;;; Customization:
 
-*** dashboard
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Let's have a dash of board.
-
-#+BEGIN_SRC emacs-lisp
 (defcustom wal/dashboard-footer-messages
   '("breaching your favorite stupid framework"
     "I propel myself forward on nothing but flukes"
@@ -2713,6 +2715,56 @@ A collection of status messages."
   :type 'string
   :group 'wal-visuals)
 
+(defcustom wal/beacon-dont-blink-commands
+  '(tab-to-tab-stop
+    mouse-drag-region
+    mouse-set-region
+    mouse-set-point)
+  "List of additional commands that should not trigger a blink."
+  :type '(repeat symbol)
+  :group 'wal-visuals)
+
+(defcustom wal/major-delight t
+  "Whether some major modes are delighted beyond reason."
+  :type 'boolean
+  :group 'wal-visuals)
+
+(defcustom wal/common-ligatures
+  '(
+    "==" "!=" ">=" "<=" ; Comparison.
+    "+=" "-=" "/=" "%=" "*=" ; Assignment.
+    "||" "&&"  ; Logical.
+    "/*" "*/" "//" "/**" "**/" ; Comments.
+    "++" "--" ;; Increment/decrement.
+    ">>=" "<<=" "&=" "|=" "^=" ; Bitwise assignments.
+    "<<" ">>" ; Bitwise shifts.
+    "..." ; Spread.
+    )
+  "A list of ligatures available in all programming modes."
+  :type '(repeat string)
+  :group 'wal-visuals)
+
+(defcustom wal/zone-when-idle nil
+  "Determine whether to zone out when idling."
+  :type 'boolean
+  :group 'wal-visuals)
+
+(defcustom wal/zone-timer (* 5 60)
+  "The time in seconds when we will zone out."
+  :type 'integer
+  :group 'wal-visuals)
+#+END_SRC
+
+** Dashboard
+
+*** dashboard
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Let's have a dash of board.
+
+#+BEGIN_SRC emacs-lisp
 (defun wal/advise-dashboard-insert-startupify-lists (fun &rest r)
   "Advise FUN to ignore certain directories, applying R."
   (let ((recentf-exclude wal/recentf-exclude))
@@ -2943,15 +2995,6 @@ adding the buffer name to its exclusion lists will not work."
 Help me find my cursor!
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/beacon-dont-blink-commands
-  '(tab-to-tab-stop
-    mouse-drag-region
-    mouse-set-region
-    mouse-set-point)
-  "List of additional commands that should not trigger a blink."
-  :type '(repeat symbol)
-  :group 'wal-visuals)
-
 (defun wal/configure-beacon ()
   "Configure `beacon' package."
   (wal/append 'beacon-dont-blink-commands
@@ -3101,11 +3144,6 @@ Busier and prettier[fn:14] =modeline=.
 Refine a couple of major and minor mode names.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/major-delight t
-  "Whether some major modes are delighted beyond reason."
-  :type 'boolean
-  :group 'wal-visuals)
-
 (use-package delight
   :config
   (delight 'dired-mode "Dired" :major)
@@ -3179,21 +3217,6 @@ load path.
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/common-ligatures
-  '(
-    "==" "!=" ">=" "<=" ; Comparison.
-    "+=" "-=" "/=" "%=" "*=" ; Assignment.
-    "||" "&&"  ; Logical.
-    "/*" "*/" "//" "/**" "**/" ; Comments.
-    "++" "--" ;; Increment/decrement.
-    ">>=" "<<=" "&=" "|=" "^=" ; Bitwise assignments.
-    "<<" ">>" ; Bitwise shifts.
-    "..." ; Spread.
-    )
-  "A list of ligatures available in all programming modes."
-  :type '(repeat string)
-  :group 'wal-visuals)
-
 (defun wal/advise-ligature-set-ligatures (fun &rest args)
   "Advise FUN to append common ligatures.
 ARGS is a list containing modes and additional ligatures."
@@ -3272,16 +3295,6 @@ Since this eats up a lot of CPU, the timer is disabled by default but
 zoning can always be triggered using =C-z=.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/zone-when-idle nil
-  "Determine whether to zone out when idling."
-  :type 'boolean
-  :group 'wal-visuals)
-
-(defcustom wal/zone-timer (* 5 60)
-  "The time in seconds when we will zone out."
-  :type 'integer
-  :group 'wal-visuals)
-
 (use-package zone
   :config
   (setq zone-programs [
@@ -3368,6 +3381,54 @@ Everything that has to do with windows.
  "Change window settings."
  :group 'wal
  :tag "Windows")
+
+;;;; Customization:
+
+(defcustom wal/use-golden-ratio nil
+  "Whether to use the golden ratio."
+  :type 'boolean
+  :group 'wal-windows)
+
+(defcustom wal/popper-reference-buffers
+  '(docker-container-mode
+    "\\*Bookmark Annotation\\*"
+    "\\*org-roam\\*"
+    ;; Compilation and REPL(-like).
+    "\\*poetry-shell\\*"
+    "^\\*docker-compose"
+    "^\\* docker-compose up"
+    "^\\* docker-compose build"
+    dap-ui-repl-mode
+    cider-repl-mode
+    inferior-python-mode
+    ;; Debug(-like).
+    debugger-mode
+    "\\*Flutter"
+    "^\\* docker container"
+    ;; Help(-like).
+    helpful-mode
+    help-mode
+    dictionary-mode
+    shortdoc-mode
+    ;; Response(-like).
+    "\\*HTTP Response")
+  "Replaces `popper-reference-buffers'."
+  :type '(restricted-sexp
+          :match-alternatives
+          (stringp symbolp functionp consp))
+  :group 'wal-windows)
+
+(defcustom wal/popper-mode-line
+  '(:eval (concat
+           " "
+           (doom-modeline-icon 'faicon "fort-awesome" nil nil
+                               :face 'all-the-icons-dsilver
+                               :height 0.9
+                               :v-adjust 0.0)
+           " "))
+  "Replaces `popper-mode-line'."
+  :type 'sexp
+  :group 'wal-windows)
 #+END_SRC
 
 ** Packages
@@ -3425,11 +3486,6 @@ Ace interacting with (multiple) windows.
 Use the golden ratio.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/use-golden-ratio nil
-  "Whether to use the golden ratio."
-  :type 'boolean
-  :group 'wal-windows)
-
 (defun wal/aw-switch-maybe-golden-ratio (_window)
   "Invoke `golden-ratio' if mode is active.
 Used to advise `aw-switch-to-window'."
@@ -3458,47 +3514,6 @@ Used to advise `aw-switch-to-window'."
 Treat certain buffers and their windows as pop-ups.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/popper-reference-buffers
-  '(docker-container-mode
-    "\\*Bookmark Annotation\\*"
-    "\\*org-roam\\*"
-    ;; Compilation and REPL(-like).
-    "\\*poetry-shell\\*"
-    "^\\*docker-compose"
-    "^\\* docker-compose up"
-    "^\\* docker-compose build"
-    dap-ui-repl-mode
-    cider-repl-mode
-    inferior-python-mode
-    ;; Debug(-like).
-    debugger-mode
-    "\\*Flutter"
-    "^\\* docker container"
-    ;; Help(-like).
-    helpful-mode
-    help-mode
-    dictionary-mode
-    shortdoc-mode
-    ;; Response(-like).
-    "\\*HTTP Response")
-  "Replaces `popper-reference-buffers'."
-  :type '(restricted-sexp
-          :match-alternatives
-          (stringp symbolp functionp consp))
-  :group 'wal-windows)
-
-(defcustom wal/popper-mode-line
-  '(:eval (concat
-           " "
-           (doom-modeline-icon 'faicon "fort-awesome" nil nil
-                               :face 'all-the-icons-dsilver
-                               :height 0.9
-                               :v-adjust 0.0)
-           " "))
-  "Replaces `popper-mode-line'."
-  :type 'sexp
-  :group 'wal-windows)
-
 (defun wal/popper-dead-shell-p ()
   "Check if the current buffer is a shell or comint pop-up with no process."
   (interactive)
@@ -3695,6 +3710,17 @@ Both require installation of their respective binary.
   "Change settings of search packages."
   :group 'wal
   :tag "Finding things")
+
+;;;; Customization:
+
+(defcustom wal/ctrlf-cancel-commands
+  '(ace-window
+    other-window)
+  "Commands that are remapped to `ctrlf-cancel'.
+
+Commands that unfocus the ctrlf minibuffer should quit it."
+  :type '(repeat symbol)
+  :group 'wal-find)
 #+END_SRC
 
 ** Packages
@@ -3723,15 +3749,6 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 Replace =isearch=. Important command is =C-o s= to change search style.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/ctrlf-cancel-commands
-  '(ace-window
-    other-window)
-  "Commands that are remapped to `ctrlf-cancel'.
-
-Commands that unfocus the ctrlf minibuffer should quit it."
-  :type '(repeat symbol)
-  :group 'wal-find)
-
 (defun wal/configure-ctrlf ()
   "Configure package `ctrlf'.
 
@@ -3814,6 +3831,32 @@ Complete commands and code.
   "Change settings used for completion packages."
   :group 'wal
   :tag "Completion")
+
+;;;; Customization:
+
+(defcustom wal/consult-buffer-filter
+  '("\\*Buffer List\\*"
+    "\\*cider"
+    "\\*compilation"
+    "\\*dap"
+    "\\*dashboard"
+    "\\*docker"
+    "\\* docker"
+    "\\*Flutter"
+    "\\*Flycheck"
+    "\\*Help"
+    "\\*helpful"
+    "\\*HTTP"
+    "\\*Messages\\*"
+    "\\*poetry"
+    "\\*rg"
+    "\\*scratch"
+    "\\*vterm"
+    "out\\*$"
+    "^magit")
+  "Additional buffers to filter."
+  :type '(repeat string)
+  :group 'wal-complete)
 #+END_SRC
 
 ** Inline Completion
@@ -4007,30 +4050,6 @@ Do something else with minibuffer candidate.
 Heavy lifting with =consult=.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/consult-buffer-filter
-  '("\\*Buffer List\\*"
-    "\\*cider"
-    "\\*compilation"
-    "\\*dap"
-    "\\*dashboard"
-    "\\*docker"
-    "\\* docker"
-    "\\*Flutter"
-    "\\*Flycheck"
-    "\\*Help"
-    "\\*helpful"
-    "\\*HTTP"
-    "\\*Messages\\*"
-    "\\*poetry"
-    "\\*rg"
-    "\\*scratch"
-    "\\*vterm"
-    "out\\*$"
-    "^magit")
-  "Additional buffers to filter."
-  :type '(repeat string)
-  :group 'wal-complete)
-
 (defun wal/consult-ripgrep-ignored (&optional dir initial)
   "Search for regexp with rg in DIR with INITIAL input.
 Do not ignore hidden files."
@@ -4135,6 +4154,7 @@ Keep order.
 (declare-function persp-current-name "perspective.el")
 (declare-function persp-names "perspective.el")
 (declare-function persp-scratch-buffer "perspective.el")
+(declare-function persp-switch "perspective.el")
 (declare-function persp-switch-to-buffer "perspective.el")
 (declare-function wal/append "wal-func.el")
 (declare-function wal/captain "wal-key-bindings.el")
@@ -4150,6 +4170,8 @@ Keep order.
   :group 'wal
   :tag "Workspace")
 
+;;;; Customization:
+
 (defcustom wal/use-perspectives t
   "Whether to use perspectives."
   :type 'boolean
@@ -4159,18 +4181,7 @@ Keep order.
   "Whether to use `projectile' over `project'."
   :type 'boolean
   :group 'wal-workspace)
-#+END_SRC
 
-** Packages
-
-*** perspective
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Group buffers in workspaces.
-
-#+BEGIN_SRC emacs-lisp
 (defcustom wal/default-perspective "walheimat"
   "The name of my default perspective."
   :type 'string
@@ -4188,6 +4199,38 @@ get truncated."
   :type 'integer
   :group 'wal-workspace)
 
+
+(defcustom wal/projectile-ignored
+  '(("node_modules" "build" "_build" "android")
+    ("yarn.lock" "package.lock" "bundle.js")
+    (".min.js" ".js.map"))
+  "Additional directories, files and file suffixes to ignore."
+  :type '(list)
+  :group 'wal-workspace)
+
+(defcustom wal/project-vc-ignores
+  '("node_modules/"
+    "build/"
+    "android/"
+    "*.lock"
+    "bundle.js"
+    "*.min.js"
+    "*.js.map")
+  "Additional directories to ignore."
+  :type '(repeat string)
+  :group 'wal-workspace)
+#+END_SRC
+
+** Packages
+
+*** perspective
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Group buffers in workspaces.
+
+#+BEGIN_SRC emacs-lisp
 (defun wal/advise-persp-kill (fun &rest r)
   "Advises FUN to kill processes without querying, applying R.
 
@@ -4217,7 +4260,7 @@ This only removes `process-kill-buffer-query-function'."
       name)))
 
 (defun wal/advise-persp-mode-line-click (event)
-  "Override `persp-mode-line-click' to deal with truncated perspectives."
+  "Guess perspective from click EVENT and switch."
   (let ((clicked (format "%s" (car (posn-string (event-start event))))))
     (if (eq (length clicked) wal/perspective-truncated-length)
         (when-let* ((r (concat "^" clicked))
@@ -4293,14 +4336,6 @@ perspectives."
 More robust project management.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/projectile-ignored
-  '(("node_modules" "build" "_build" "android")
-    ("yarn.lock" "package.lock" "bundle.js")
-    (".min.js" ".js.map"))
-  "Additional directories, files and file suffixes to ignore."
-  :type '(list)
-  :group 'wal-workspace)
-
 (defmacro wal/maybe-use-projectile (func)
   "Maybe use the `projectile' variant for FUNC."
   (let* ((func-name (symbol-name func))
@@ -4356,18 +4391,6 @@ This extends all ignore lists' default values."
 Built-in but entirely dependent on either =git= or =hg=.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/project-vc-ignores
-  '("node_modules/"
-    "build/"
-    "android/"
-    "*.lock"
-    "bundle.js"
-    "*.min.js"
-    "*.js.map")
-  "Additional directories to ignore."
-  :type '(repeat string)
-  :group 'wal-workspace)
-
 (use-package project
   :if (not wal/use-projectile)
   :custom
@@ -4431,6 +4454,55 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   "Change settings used for org packages."
   :group 'wal
   :tag "Org")
+
+;;;; Customization:
+
+(defcustom wal/org-super-agenda-groups
+  '((:name "Schedule"
+     :time-grid t)
+    (:name "Unscheduled"
+     :and (:scheduled nil
+           :not (:tag "@intermittent" :todo "BLOCKED")))
+    (:name "Leftovers"
+     :and (:todo ("IN PROGRESS" "WAITING")
+           :scheduled past
+           :not (:tag "@repeated" :tag "@edu")))
+    (:name "Blocked"
+     :todo "BLOCKED")
+    (:discard (:anything t)))
+  "The super agenda groups."
+  :type '(repeat plist)
+  :group 'wal-org)
+
+(defcustom wal/org-roam-dailies-directory "tagebuch/"
+  "The directory for dailies."
+  :type 'string
+  :group 'wal-org)
+
+(defcustom wal/org-tree-slide-visual-fill-column-width 160
+  "The base `visual-fill-column-width' for `org-tree-slide' presentations."
+  :type 'integer
+  :group 'wal-org)
+
+(defcustom wal/org-src-lang-modes
+  '(("dockerfile" . dockerfile)
+    ("conf" . conf)
+    ("markdown" . markdown)
+    ("fish" . fish))
+  "Additional mappings to add to `org-src-lang-modes'."
+  :type '(repeat
+	      (cons
+	       (string "Language name")
+	       (symbol "Major mode")))
+  :group 'wal-org)
+
+(defcustom wal/org-speed-commands '(("a" . org-archive-subtree)
+                                    ("j" . consult-org-heading))
+  "Changes to `org-speed-commands'."
+  :type '(repeat
+          (cons "Key")
+          (symbol "Command"))
+  :group 'wal-org)
 #+END_SRC
 
 ** The Mode Itself
@@ -4561,23 +4633,6 @@ This calls `org-content' interactively."
 Allow for better grouping.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/org-super-agenda-groups
-  '((:name "Schedule"
-     :time-grid t)
-    (:name "Unscheduled"
-     :and (:scheduled nil
-           :not (:tag "@intermittent" :todo "BLOCKED")))
-    (:name "Leftovers"
-     :and (:todo ("IN PROGRESS" "WAITING")
-           :scheduled past
-           :not (:tag "@repeated" :tag "@edu")))
-    (:name "Blocked"
-     :todo "BLOCKED")
-    (:discard (:anything t)))
-  "The super agenda groups."
-  :type '(repeat plist)
-  :group 'wal-org)
-
 (use-package org-super-agenda
   :config
   (org-super-agenda-mode)
@@ -4599,11 +4654,6 @@ Trying to organize my thoughts using Zettelkästen.
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/org-roam-dailies-directory "tagebuch/"
-  "The directory for dailies."
-  :type 'string
-  :group 'wal-org)
-
 (use-package org-roam
   :if (executable-find "sqlite3")
   :init
@@ -4641,11 +4691,6 @@ Trying to organize my thoughts using Zettelkästen.
 Turn any =org-mode= buffer into a presentation.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/org-tree-slide-visual-fill-column-width 160
-  "The base `visual-fill-column-width' for `org-tree-slide' presentations."
-  :type 'integer
-  :group 'wal-org)
-
 (defun wal/relative-column-width (&optional target-width)
   "Get the relative column width of TARGET-WIDTH."
   (let ((width (or target-width 160))
@@ -4723,22 +4768,9 @@ Turn any =org-mode= buffer into a presentation.
 Editing source blocks.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/org-src-lang-modes
-  '(("dockerfile" . dockerfile)
-    ("conf" . conf)
-    ("markdown" . markdown)
-    ("fish" . fish))
-  "Additional mappings to add to `org-src-lang-modes'."
-  :type '(repeat
-	      (cons
-	       (string "Language name")
-	       (symbol "Major mode")))
-  :group 'wal-org)
-
 (defun wal/org-src-mode ()
   "Hook into function `org-src-mode'."
   (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
-
 
 (defun wal/configure-org-src ()
   "Configure package `org-src'.
@@ -4902,14 +4934,6 @@ Set up durations for a 40-hour week.
 Add some user speed commands.
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/org-speed-commands '(("a" . org-archive-subtree)
-                                    ("j" . consult-org-heading))
-  "Changes to `org-speed-commands'."
-  :type '(repeat
-          (cons "Key")
-          (symbol "Command"))
-  :group 'wal-org)
-
 (use-package org-keys
   :config
   (mapc (lambda (it)
@@ -6391,17 +6415,11 @@ of 0.0."
   :type '(repeat symbol)
   :group 'wal-lsp)
 
-(defun wal/lsp ()
-  "Activate LSP client."
-  (if (memq major-mode wal/lsp-slow-modes)
-      (setq-local company-idle-delay nil)
-    (setq-local company-idle-delay 0.0
-                company-minimum-prefix-length 1))
-  (setq-local company-backends '(company-capf company-yasnippet))
-  (lsp-deferred))
-
-(wal/captain-sink :keymaps 'prog-mode-map
-    "l" '(wal/lsp :wk "lsp"))
+(defcustom wal/lsp-file-watch-ignored-directories
+  '("[/\\\\]build\\'" "[/\\\\]vendor\\'")
+  "Additional directories to not monitor."
+  :type '(repeat regexp)
+  :group 'wal-lsp)
 #+END_SRC
 
 ** Packages
@@ -6415,11 +6433,17 @@ of 0.0."
 servers yourself[fn:18].
 
 #+BEGIN_SRC emacs-lisp
-(defcustom wal/lsp-file-watch-ignored-directories
-  '("[/\\\\]build\\'" "[/\\\\]vendor\\'")
-  "Additional directories to not monitor."
-  :type '(repeat regexp)
-  :group 'wal-lsp)
+(defun wal/lsp ()
+  "Activate LSP client."
+  (if (memq major-mode wal/lsp-slow-modes)
+      (setq-local company-idle-delay nil)
+    (setq-local company-idle-delay 0.0
+                company-minimum-prefix-length 1))
+  (setq-local company-backends '(company-capf company-yasnippet))
+  (lsp-deferred))
+
+(wal/captain-sink :keymaps 'prog-mode-map
+    "l" '(wal/lsp :wk "lsp"))
 
 (defun wal/advise-lsp-to-prevent-multi-root (&rest _r)
   "Prevent adding workspace roots from other projects."
