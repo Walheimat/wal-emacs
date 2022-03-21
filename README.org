@@ -571,7 +571,7 @@ It's also used for certain dispatches:
 
 *** Meta
 
-There are a few nons-standard meta sequences.
+There are a few non-standard meta sequences.
 
 + =M-o= does =other-window=
 
@@ -887,6 +887,7 @@ Most bindings are declared in individual packages.
   "f" '(:ignore t :wk "find")
   "fc" '(wal/find-custom-file :wk "custom")
   "fi" '(wal/find-init :wk "init")
+  "ff" '(wal/find-fish-config :wk "fish config")
   "fw" '(wal/find-config :wk "wal")
   "s" '(:ignore t :wk "session"))
 
@@ -1087,7 +1088,7 @@ removed."
 
 ** Editing
 
-Editing.
+More convenient editing.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/advise-hack-local-variables (&rest _r)
@@ -1401,6 +1402,18 @@ matching files are visited but only the last-visited displayed."
   "Find the `custom-file'."
   (interactive)
   (switch-to-buffer (find-file-noselect (file-truename custom-file))))
+
+(defun wal/find-fish-config ()
+  "Find the fish shell config file."
+  (interactive)
+  (let* ((files '("~/.config/fish/config.fish"
+                  "~/.config/omf"))
+         (init-file (cl-find-if
+                     'file-exists-p
+                     (mapcar 'expand-file-name files))))
+    (if init-file
+        (switch-to-buffer (find-file-noselect (file-truename init-file)))
+      (user-error "Couldn't find fish config file"))))
 #+END_SRC
 
 ** Command Line
