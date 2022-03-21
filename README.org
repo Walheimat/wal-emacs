@@ -1482,6 +1482,12 @@ throws are 3 or THROWS."
   (if (symbolp symbol?)
       symbol?
     (intern symbol?)))
+
+(defun wal/truncate (text max-len)
+  "Truncate TEXT if longer than MAX-LEN."
+  (if (> (length text) max-len)
+      (concat (substring text 0 (max (- max-len 3) 1)) "...")
+    text))
 #+END_SRC
 
 ** Regions
@@ -4453,6 +4459,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (declare-function wal/append "wal-func.el")
 (declare-function wal/disable-tabs "wal-settings.el")
 (declare-function wal/message-in-a-bottle "wal-func.el")
+(declare-function wal/truncate "wal-func.el")
 (declare-function projectile-project-root "projectile.el")
 (declare-function project-root "project.el")
 
@@ -4905,6 +4912,13 @@ You know the drill. Clock in, clock out.
   (when todo-state
     "IN PROGRESS"))
 
+(defun wal/org-clock-heading ()
+  "Render a truncated heading for modeline."
+  (when (and (fboundp 'org-link-display-format) (fboundp 'org-get-heading))
+    (let ((heading (org-link-display-format
+	                (org-no-properties (org-get-heading t t t t)))))
+      (wal/truncate heading 12))))
+
 (use-package org-clock
   :custom
   (org-clock-idle-time 60)
@@ -4915,6 +4929,7 @@ You know the drill. Clock in, clock out.
   (org-clock-report-include-clocking-task t)
   (org-clock-out-remove-zero-time-clocks t)
   (org-clock-into-drawer t)
+  (org-clock-heading-function #'wal/org-clock-heading)
   :after org
   :ensure nil)
 #+END_SRC
