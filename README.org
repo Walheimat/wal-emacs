@@ -6216,7 +6216,7 @@ LSP support for Dart.
 :UNNUMBERED: t
 :END:
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun wal/java-mode ()
   "Hook into `java-mode'."
   (wal/message-in-a-bottle '("Mmmh ... maven"))
@@ -6224,13 +6224,15 @@ LSP support for Dart.
   (hack-local-variables)
   (wal/lsp))
 
-(use-package java-mode
+;; For some reason, this is also defined in `cc-mode'.
+(use-package cc-mode
   :config
   (when wal/use-projectile
-    (wal/major "t" '(wal/projectile-test-project :wk "test project")))
+    (wal/major :keymaps 'java-mode-map :major-modes t
+      "t" '(wal/projectile-test-project :wk "test project")))
   :hook (java-mode . wal/java-mode)
   :ensure nil)
-#+end_src
+#+END_SRC
 
 *** lsp-java
 :PROPERTIES:
@@ -6240,9 +6242,18 @@ LSP support for Dart.
 LSP integration.
 
 #+begin_src emacs-lisp
+(defconst wal/jdtls-fs
+  "https://download.eclipse.org/jdtls/milestones/%1$s/jdt-language-server-%1$s-%2$s.tar.gz"
+  "The base URL for jdtls.")
+
 (use-package java-lsp
   :config
   (require 'dap-java)
+  :custom
+  ;; Latest version.
+  (lsp-java-jdt-download-url (format wal/jdtls-fs "1.9.0" "202203031534"))
+  ;; Suggested fix for failing completion.
+  (lsp-java-format-on-type-enabled nil)
   :general
   (wal/major :keymaps 'java-mode-map :major-modes t
     "l" '(lsp-jt-lens-mode :wk "show test lenses"))
