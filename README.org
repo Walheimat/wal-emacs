@@ -573,7 +573,7 @@ It's also used for certain dispatches:
 
 There are a few non-standard meta sequences.
 
-+ =M-o= does =other-window=
++ =M-o= does =other-window= (using =crux=)
 
 *** Hyper
 
@@ -898,11 +898,6 @@ Most bindings are declared in individual packages.
 (general-define-key
  :keymaps 'ctl-x-x-map
  "f" 'wal/find-file-delete-other-windows) ; Replaces `font-lock-update'.
-
-(global-set-key (kbd "M-o") 'other-window)
-
-(global-set-key (kbd "C-o") #'wal/open-line)         ; Overrides `open-line'.
-(global-set-key (kbd "C-M-o") #'wal/open-line-above) ; Overrides `split-line'.
 #+END_SRC
 
 ** Additional Mode Controls
@@ -1107,18 +1102,6 @@ is deleted."
   "Call `kill-ring-save' on the entire buffer."
   (interactive)
   (kill-ring-save (point-min) (point-max)))
-
-(defun wal/open-line ()
-  "Open line and indent."
-  (interactive)
-  (move-end-of-line nil)
-  (newline-and-indent))
-
-(defun wal/open-line-above ()
-  "Open line above and indent."
-  (interactive)
-  (forward-line -1)
-  (wal/open-line))
 #+END_SRC
 
 *** Editing the Config
@@ -2659,6 +2642,22 @@ Make commenting less of a dance.
   :bind
   ("C-;" . comment-line)
   :ensure nil)
+#+END_SRC
+
+*** crux
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+I guess I can't live without this package.
+
+#+BEGIN_SRC emacs-lisp
+(use-package crux
+  :bind
+  ("M-o" . crux-other-window-or-switch-buffer)
+  ("C-k" . crux-smart-kill-line)
+  ("C-o" . crux-smart-open-line)
+  ("C-M-o" . crux-smart-open-line-above))
 #+END_SRC
 
 ** Footer
