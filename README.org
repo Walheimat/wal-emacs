@@ -1890,6 +1890,7 @@ and some external ones.
 
 (declare-function wdb/side "wal-func.el")
 (declare-function wdb/direction "wal-func.el")
+(declare-function comint-check-proc "comint.el")
 
 (defvar wal/experimental)
 #+END_SRC
@@ -2168,6 +2169,29 @@ Execute IO actions asynchronously.
   :defer 4
   :after dired
   :diminish 'dired-async-mode)
+#+END_SRC
+
+*** shell
+
+I'd like to kill shells without a process quickly.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/dead-shell-p ()
+  "Check if the current buffer is a shell or comint buffer with no process."
+  (interactive)
+  (let ((buf (current-buffer)))
+    (with-current-buffer buf
+      (and (or (derived-mode-p 'shell-mode)
+               (derived-mode-p 'comint-mode))
+           (not (comint-check-proc buf))))))
+
+(use-package shell
+  :general
+  (general-define-key
+   :keymaps 'shell-mode-map
+   :predicate '(wal/dead-shell-p)
+   "k" 'kill-buffer-and-window)
+  :ensure nil)
 #+END_SRC
 
 ** Help
@@ -3389,7 +3413,6 @@ Everything that has to do with windows.
 ;;; Code:
 
 (declare-function aw-delete-window "ace-window.el")
-(declare-function comint-check-proc "comint.el")
 (declare-function popper-popup-p "popper.el")
 
 (defvar aw-dispatch-alist)
@@ -3533,16 +3556,6 @@ Used to advise `aw-switch-to-window'."
 Treat certain buffers and their windows as pop-ups.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/popper-dead-shell-p ()
-  "Check if the current buffer is a shell or comint pop-up with no process."
-  (interactive)
-  (let ((buf (current-buffer)))
-    (with-current-buffer buf
-      (and (popper-popup-p buf)
-           (or (derived-mode-p 'shell-mode)
-               (derived-mode-p 'comint-mode))
-           (not (comint-check-proc buf))))))
-
 (defun wal/configure-popper ()
   "Configure package `popper'."
   (when wal/use-perspectives
@@ -3562,11 +3575,6 @@ Treat certain buffers and their windows as pop-ups.
   (popper-echo-lines 1)
   :wal-bind
   ("[" . popper-toggle-latest)
-  :general
-  (general-define-key
-   :keymaps 'popper-mode-map
-   :predicate '(wal/popper-dead-shell-p)
-   "k" 'kill-buffer-and-window)
   :demand
   :after winner)
 #+END_SRC
