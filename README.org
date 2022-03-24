@@ -4139,16 +4139,6 @@ Do not ignore hidden files."
   (wal/captain-sink "u" '(consult-minor-mode-menu :wk "menu"))
   :demand
   :after vertico)
-
-(use-package consult-flycheck
-  :demand
-  :after (consult flycheck))
-
-(use-package consult-lsp
-  :wal-bind
-  (:map lsp-mode-map
-   ("J" . consult-lsp-file-symbols))
-  :after (consult lsp-mode))
 #+END_SRC
 
 ** Footer
@@ -6397,9 +6387,6 @@ Please let me know when I screwed up. I promise I will learn.
   :config
   (wal/captain :keymaps 'flycheck-mode-map
     "f" '(:keymap flycheck-command-map :wk "flycheck"))
-  (general-define-key
-    :keymaps 'flycheck-command-map
-    "u" '(consult-flycheck :wk "consult flycheck"))
   :custom
   (flycheck-mode-line-prefix "fly")
   :general
@@ -6441,6 +6428,23 @@ My spelling is bad. Uses American English for =flyspell=.
     "sc" '(ispell-change-dictionary :wk "change dictionary"))
   (wal/captain-sink "s" '(wal/flyspell :wk "flyspell"))
   :ensure nil)
+#+END_SRC
+
+*** consult-flycheck
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Find errors by severity.
+
+#+BEGIN_SRC emacs-lisp
+(use-package consult-flycheck
+  :general
+  (general-define-key
+    :keymaps 'flycheck-command-map
+    "u" '(consult-flycheck :wk "consult flycheck"))
+  :demand
+  :after (consult flycheck))
 #+END_SRC
 
 ** Footer
@@ -6642,12 +6646,27 @@ Debugging using VSCode's DAP (in =lsp-mode=)
   :delight " dap")
 #+END_SRC
 
-*** Debug Templates
+*** consult-lsp
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Jump to symbols with =consult=.
+
+#+begin_src emacs-lisp
+(use-package consult-lsp
+  :general
+  (wal/major :keymaps 'lsp-mode-map
+    "s" '(consult-lsp-file-symbols :wk "jump to symbol"))
+  :after (consult lsp-mode))
+#+end_src
+
+** Debug Templates
 
 Put these templates in a file in your project root, and evaluate them
 there using =C-x C-e=.
 
-**** Node.js
+*** Node.js
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
