@@ -2859,6 +2859,7 @@ Let's have a dash of board.
   (dashboard-footer-messages wal/dashboard-footer-messages)
   (dashboard-week-agenda nil)
   (dashboard-agenda-time-string-format "%d/%m/%y")
+  (dashboard-agenda-release-buffers t)
   :general
   (wal/general-sink "s"
     '(wal/show-dashboard :wk "dashboard"))
@@ -3003,6 +3004,8 @@ Show colors colorfully.
 
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-mode
+  :general
+  (wal/captain-sink "c" '(rainbow-mode :wk "rainbow"))
   :delight " rbm")
 #+END_SRC
 
@@ -7074,6 +7077,52 @@ Create a room of one's own. I use a different (light) theme here.
 ;;; wal-writing.el ends here
 #+END_SRC
 
+* Fluff
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle (expand-file-name "wal-fluff.el" wal/emacs-config-package-path)
+:END:
+
+** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-fluff.el --- Fluff.
+
+;;; Commentary:
+;;
+;; Provide fluff packages. These are not installed by default.
+
+;;; Code:
+#+END_SRC
+
+
+** Packages
+
+*** display-wttr
+
+Provide some knowledge of the outside world.
+
+#+begin_src emacs-lisp
+(use-package display-wttr
+  :custom
+  (display-wttr-format "1")
+  :ensure nil)
+#+end_src
+
+** Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+
+(provide 'wal-fluff)
+
+;;; wal-fluff.el ends here
+#+END_SRC
+
 * Config Package
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal.el" wal/emacs-config-package-path)
@@ -7120,7 +7169,8 @@ The root package of the configuration which is basically just a giant
     wal-lsp
     wal-devops
     wal-web
-    wal-writing)
+    wal-writing
+    wal-fluff)
   "List of sub-packages that will be loaded.
 
 The order determines the load order as well.")
