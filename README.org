@@ -587,9 +587,8 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-p= switches projects
 + =H-<return>= completes at point using =company= (in =company-mode=)
 + =H-== to do a =quick-calc= (inserted if called with =C-u=)
-+ =H-[= toggles pop-ups using =popper= (or runs a =hydra= if focusing a
-  pop-up)
-+ =H-\= opens new =vterm=
++ =H-[= toggles pop-ups using =popper=
++ =H-\= opens new =vterm= terminal
 + =H-u= switches buffer using =consult=
 + =H-y= expands snippets (in =yas-minor-mode=).
 
@@ -3555,6 +3554,15 @@ Used to advise `aw-switch-to-window'."
 Treat certain buffers and their windows as pop-ups.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/popper-echo-transform (buffer-name)
+  "Transform BUFFER-NAME by truncating certain prefixes."
+  (cond
+   ((string-match "\\*helpful" buffer-name)
+    (concat
+     (substring (replace-regexp-in-string "\\*helpful \\w+\:" "" buffer-name) 0 -1)
+     "/help"))
+   (t buffer-name)))
+
 (defun wal/configure-popper ()
   "Configure package `popper'."
   (when wal/use-perspectives
@@ -3572,6 +3580,7 @@ Treat certain buffers and their windows as pop-ups.
   (popper-echo-dispatch-persist nil)
   (popper-echo-dispatch-keys '(?a ?s ?d ?f ?g ?q ?w ?e ?r ?t))
   (popper-echo-lines 1)
+  (popper-echo-transform-function #'wal/popper-echo-transform)
   :wal-bind
   ("[" . popper-toggle-latest)
   :demand
