@@ -897,6 +897,8 @@ Most bindings are declared in individual packages.
 (general-define-key
  :keymaps 'ctl-x-x-map
  "f" 'wal/find-file-delete-other-windows) ; Replaces `font-lock-update'.
+
+ (global-set-key (kbd "M-o") #'wal/other-window)
 #+END_SRC
 
 ** Additional Mode Controls
@@ -1296,6 +1298,17 @@ This shrinks or enlarges the window depending on its position."
   "Enlarge the selected window horizontally."
   (interactive)
   (wal/enlarge-window t))
+
+(defun wal/other-window ()
+  "Switch buffers, open minibuffer or other window."
+  (interactive)
+  (cond
+   ((active-minibuffer-window)
+    (switch-to-minibuffer))
+   ((one-window-p)
+    (switch-to-buffer nil))
+   (t
+    (other-window 1))))
 #+END_SRC
 
 *** walled-mode
@@ -1381,7 +1394,7 @@ matching files are visited but only the last-visited displayed."
       (delete-other-windows))))
 
 (defun wal/find-custom-file ()
-  "Find the `custom-file'."
+  "Find the custom file."
   (interactive)
   (switch-to-buffer (find-file-noselect (file-truename custom-file))))
 
@@ -2653,8 +2666,8 @@ I guess I can't live without this package.
 #+BEGIN_SRC emacs-lisp
 (use-package crux
   :bind
-  ("M-o" . crux-other-window-or-switch-buffer)
   ("C-k" . crux-smart-kill-line)
+  ("M-k" . crux-kill-line-backwards)
   ("C-o" . crux-smart-open-line)
   ("C-M-o" . crux-smart-open-line-above))
 #+END_SRC
