@@ -7105,7 +7105,15 @@ Create a room of one's own. I use a different (light) theme here.
 Provide some knowledge of the outside world.
 
 #+begin_src emacs-lisp
+(defun wal/advise-display-wttr--clean-string (string)
+  "Advise to pad STRING."
+  (concat " " (string-trim string)))
+
 (use-package display-wttr
+  :config
+  (advice-add
+   'display-wttr--clean-string :filter-return
+   'wal/advise-display-wttr--clean-string)
   :custom
   (display-wttr-format "1")
   :ensure nil)
