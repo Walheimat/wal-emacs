@@ -147,6 +147,11 @@ evaluate /everything/[fn:6] that follows.
   "The file to persist the *scratch* buffer's content in."
   :type 'string
   :group 'wal-settings)
+
+(defcustom wal/minimal nil
+  "Whether to use a minimal configuration."
+  :type 'boolean
+  :group 'wal-settings)
 #+END_SRC
 
 ** Personal
@@ -232,6 +237,92 @@ Such as package `use-package'.")
 ;; Always ensure and defer.
 (setq use-package-always-ensure t
       use-package-always-defer t)
+
+(eval-when-compile
+  (require 'use-package))
+#+END_SRC
+
+*** Extend =use-package=
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/insert-use-package-keyword (keyword preceding)
+  "Insert KEYWORD after PRECEDING keyword into `use-package-keywords'."
+  (let* ((kw use-package-keywords)
+         (remainder (nthcdr (cl-position preceding kw) kw)))
+    (setcdr remainder (cons keyword (cdr remainder)))))
+#+END_SRC
+
+**** =:wal-bind=
+
+We'll add keyword =:wal-bind= to =use-package= in order to create bindings
+prefixed by =wal/prefix-user-key=.
+
+#+BEGIN_SRC emacs-lisp
+(defun use-package-normalize/:wal-bind (name keyword args)
+  "Normalize NAME, KEYWORD, ARGS.
+
+This normalizer is a copy of the normalizer for `:bind'. There
+are two differences:
+
+1. It prefixes the key strings with `wal/prefix-user-key'.
+2. On recursion it calls this normalizer."
+  (let ((arg args)
+        args*)
+    (while arg
+      (let ((x (car arg)))
+        (cond
+         ((and (consp x)
+               (or (stringp (car x))
+                   (vectorp (car x)))
+               (or (use-package-recognize-function (cdr x) t #'stringp)))
+          ;; This is where we deviate from the `:bind' normalizer.
+          (setq args* (nconc args* (list (cons (wal/prefix-user-key (car x)) (cdr x)))))
+          (setq arg (cdr arg)))
+         ((or (and (eq x :map) (symbolp (cadr arg)))
+              (and (eq x :prefix) (stringp (cadr arg)))
+              (and (eq x :prefix-map) (symbolp (cadr arg)))
+              (and (eq x :prefix-docstring) (stringp (cadr arg)))
+              (eq x :filter)
+              (and (eq x :menu-name) (stringp (cadr arg)))
+              (and (eq x :package) (symbolp (cadr arg))))
+          (setq args* (nconc args* (list x (cadr arg))))
+          (setq arg (cddr arg)))
+         ((listp x)
+          (setq args*
+                (nconc args* (use-package-normalize/:wal-bind name keyword x)))
+          (setq arg (cdr arg)))
+         (t
+          (use-package-error
+           (concat (symbol-name name)
+                   " wants arguments acceptable to the `bind-keys' macro,"
+                   " or a list of such values"))))))
+    args*))
+
+;; We can use the same handler as `:bind'.
+(defalias 'use-package-handler/:wal-bind 'use-package-handler/:bind)
+
+;; Make sure that functions are autoloaded.
+(defalias 'use-package-autoloads/:wal-bind 'use-package-autoloads-mode)
+
+(wal/insert-use-package-keyword :wal-bind :bind-keymap*)
+#+END_SRC
+
+**** :wal-ways
+
+Certain packages do not belong to a minimal setup, these are tagged
+with =:wal-ways nil=.
+
+#+BEGIN_SRC emacs-lisp
+(defalias 'use-package-normalize/:wal-ways 'use-package-normalize/:if)
+
+(defun use-package-handler/:wal-ways (name _keyword pred rest state)
+  "Ignoring NAME, REST and STATE, only expand if PRED or `wal/minimal' is nil."
+  (let ((body (use-package-process-keywords name rest state)))
+    `((when (or ,pred (not ,wal/minimal)) ,@body))))
+
+(wal/insert-use-package-keyword :wal-ways :if)
+
+(add-to-list 'use-package-defaults '(:wal-ways t t))
 #+END_SRC
 
 ** Directories
@@ -573,7 +664,7 @@ It's also used for certain dispatches:
 
 There are a few non-standard meta sequences.
 
-+ =M-o= does =other-window= (using =crux=)
++ =M-o= does =other-window= (using =crux=).
 
 *** Hyper
 
@@ -809,67 +900,6 @@ Grouped commands.
 (use-package transient
   :config
   (wal/configure-transient))
-#+END_SRC
-
-** Extend =use-package=
-
-We'll add keyword =:wal-bind= to =use-package= in order to create bindings
-prefixed by =wal/prefix-user-key=.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/insert-use-package-keyword (keyword preceding)
-  "Insert KEYWORD after PRECEDING keyword into `use-package-keywords'."
-  (let* ((kw use-package-keywords)
-         (remainder (nthcdr (cl-position preceding kw) kw)))
-    (setcdr remainder (cons keyword (cdr remainder)))))
-
-(defun use-package-normalize/:wal-bind (name keyword args)
-  "Normalize NAME, KEYWORD, ARGS.
-
-This normalizer is a copy of the normalizer for `:bind'. There
-are two differences:
-
-1. It prefixes the key strings with `wal/prefix-user-key'.
-2. On recursion it calls this normalizer."
-  (let ((arg args)
-        args*)
-    (while arg
-      (let ((x (car arg)))
-        (cond
-         ((and (consp x)
-               (or (stringp (car x))
-                   (vectorp (car x)))
-               (or (use-package-recognize-function (cdr x) t #'stringp)))
-          ;; This is where we deviate from the `:bind' normalizer.
-          (setq args* (nconc args* (list (cons (wal/prefix-user-key (car x)) (cdr x)))))
-          (setq arg (cdr arg)))
-         ((or (and (eq x :map) (symbolp (cadr arg)))
-              (and (eq x :prefix) (stringp (cadr arg)))
-              (and (eq x :prefix-map) (symbolp (cadr arg)))
-              (and (eq x :prefix-docstring) (stringp (cadr arg)))
-              (eq x :filter)
-              (and (eq x :menu-name) (stringp (cadr arg)))
-              (and (eq x :package) (symbolp (cadr arg))))
-          (setq args* (nconc args* (list x (cadr arg))))
-          (setq arg (cddr arg)))
-         ((listp x)
-          (setq args*
-                (nconc args* (use-package-normalize/:wal-bind name keyword x)))
-          (setq arg (cdr arg)))
-         (t
-          (use-package-error
-           (concat (symbol-name name)
-                   " wants arguments acceptable to the `bind-keys' macro,"
-                   " or a list of such values"))))))
-    args*))
-
-;; We can use the same handler as `:bind'.
-(defalias 'use-package-handler/:wal-bind 'use-package-handler/:bind)
-
-;; Make sure that functions are autoloaded.
-(defalias 'use-package-autoloads/:wal-bind 'use-package-autoloads-mode)
-
-(wal/insert-use-package-keyword :wal-bind :bind-keymap*)
 #+END_SRC
 
 ** Additional (Un-)Bindings
@@ -2277,6 +2307,7 @@ Let's try to be even more =helpful=.
     (defvar read-symbol-positions-list nil)))
 
 (use-package helpful
+  :wal-ways nil
   :config
   (wal/configure-helpful)
   :bind
@@ -2447,6 +2478,7 @@ Sometimes I restart for fun.
 #+BEGIN_SRC emacs-lisp
 (use-package restart-emacs
   :if (not (daemonp))
+  :wal-ways nil
   :custom
   (restart-emacs-restore-frames nil)
   :general
@@ -2555,6 +2587,7 @@ results."
     (yas-expand)))
 
 (use-package yasnippet
+  :wal-ways nil
   :config
   (define-key yas-minor-mode-map (kbd "<tab>") nil)
   (define-key yas-minor-mode-map (kbd "TAB") nil)
@@ -2572,6 +2605,7 @@ results."
   :delight " yas")
 
 (use-package yasnippet-snippets
+  :wal-ways nil
   :demand
   :after yasnippet)
 #+END_SRC
@@ -2604,6 +2638,7 @@ Undo and redo with branching.
 
 #+BEGIN_SRC emacs-lisp
 (use-package undo-tree
+  :wal-ways nil
   :custom
   (undo-tree-mode-lighter " udt")
   (undo-tree-auto-save-history nil)
@@ -2835,6 +2870,7 @@ Let's have a dash of board.
 
 (use-package dashboard
   :if (not (daemonp))
+  :wal-ways nil
   :init
   (advice-add
    'dashboard-insert-startupify-lists
@@ -2878,6 +2914,7 @@ The nicest theme packages out there. It supports many, many packages'
 
 #+BEGIN_SRC emacs-lisp
 (use-package doom-themes
+  :wal-ways nil
   :config
   (doom-themes-org-config))
 #+END_SRC
@@ -2892,6 +2929,7 @@ Another collection of beautiful themes, but it doesn't color every
 
 #+BEGIN_SRC emacs-lisp
 (use-package kaolin-themes
+  :wal-ways nil
   :config
   (kaolin-treemacs-theme)
   :custom
@@ -2946,6 +2984,7 @@ Show indentation.
 
 #+BEGIN_SRC emacs-lisp
 (use-package highlight-indent-guides
+  :wal-ways nil
   :custom
   (highlight-indent-guides-method 'character)
   (highlight-indent-guides-responsive 'top)
@@ -2965,6 +3004,7 @@ Make numbers stand out.
 
 #+BEGIN_SRC emacs-lisp
 (use-package highlight-numbers
+  :wal-ways nil
   :hook (prog-mode . highlight-numbers-mode))
 #+END_SRC
 
@@ -2977,6 +3017,7 @@ Highlight =TODO=, =FIXME= etc. in =prog= modes.
 
 #+BEGIN_SRC emacs-lisp
 (use-package hl-todo
+  :wal-ways nil
   :custom
   (hl-todo-highlight-punctuation ":")
   (hl-todo-require-punctuation t)
@@ -2992,6 +3033,7 @@ Make delimiters stand out.
 
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-delimiters
+  :wal-ways nil
   :hook (prog-mode . rainbow-delimiters-mode))
 #+END_SRC
 
@@ -3004,6 +3046,7 @@ Show colors colorfully.
 
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-mode
+  :wal-ways nil
   :general
   (wal/captain-sink "c" '(rainbow-mode :wk "rainbow"))
   :delight " rbm")
@@ -3065,6 +3108,7 @@ This just means increasing duration, delay, size and brightness."
     (beacon-blink)))
 
 (use-package beacon
+  :wal-ways nil
   :config
   (wal/configure-beacon)
   (beacon-mode +1)
@@ -3104,6 +3148,7 @@ Dim inactive frames.
    #'wal/lsp-ui-doc-frame-p))
 
 (use-package dimmer
+  :wal-ways nil
   :config
   (advice-add
    'dimmer-config-change-handler
@@ -3226,6 +3271,7 @@ Sometimes the list of minor modes overcrowds the modeline.
 
 #+BEGIN_SRC emacs-lisp
 (use-package minions
+  :wal-ways nil
   :config
   (minions-mode +1)
   :custom
@@ -3331,6 +3377,7 @@ Display emojis[fn:15].
 
 #+BEGIN_SRC emacs-lisp
 (use-package emojify
+  :wal-ways nil
   :general
   (wal/captain-sink "e" '(emojify-mode :wk "emojify"))
   :hook (dashboard-mode . emojify-mode))
@@ -3374,6 +3421,7 @@ Allow using variable and fixed fonts in the same buffer.
 
 #+BEGIN_SRC emacs-lisp
 (use-package mixed-pitch
+  :wal-ways nil
   :custom
   (mixed-pitch-variable-pitch-cursor nil)
   (mixed-pitch-fixed-pitch-faces '(org-code
@@ -3386,7 +3434,8 @@ Allow using variable and fixed fonts in the same buffer.
 Allow padding and centering text.
 
 #+BEGIN_SRC emacs-lisp
-(use-package visual-fill-column)
+(use-package visual-fill-column
+  :wal-ways nil)
 #+END_SRC
 
 ** Footer
@@ -3544,6 +3593,7 @@ Used to advise `aw-switch-to-window'."
     (golden-ratio)))
 
 (use-package golden-ratio
+  :wal-ways nil
   :config
   ;; Make sure to run golden ratio after `aw-switch-to-window'.
   (advice-add
@@ -3582,6 +3632,7 @@ Treat certain buffers and their windows as pop-ups.
   (popper-echo-mode +1))
 
 (use-package popper
+  :wal-ways nil
   :config
   (wal/configure-popper)
   :custom
@@ -4341,6 +4392,7 @@ perspectives."
 
 (use-package perspective
   :if wal/use-perspectives
+  :wal-ways nil
   :config
   (wal/configure-perspective)
   (persp-mode +1)
@@ -4674,6 +4726,7 @@ Allow for better grouping.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-super-agenda
+  :wal-ways nil
   :config
   (org-super-agenda-mode)
   :custom
@@ -4696,6 +4749,7 @@ Trying to organize my thoughts using Zettelkästen.
 #+BEGIN_SRC emacs-lisp
 (use-package org-roam
   :if (executable-find "sqlite3")
+  :wal-ways nil
   :init
   (setq org-roam-v2-ack t)
   :config
@@ -4774,6 +4828,7 @@ Turn any =org-mode= buffer into a presentation.
     (wal/org-tree-slide-play)))
 
 (use-package org-tree-slide
+  :wal-ways nil
   :custom
   (org-tree-slide-never-touch-face t)
   (org-tree-slide-cursor-init nil)
@@ -5005,6 +5060,7 @@ Prettier headlines.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-bullets
+  :wal-ways nil
   :custom
   (org-bullets-bullet-list '("◆" "◈" "►" "▻" "▸" "▹" "•"))
   :hook (org-mode . org-bullets-mode))
@@ -5019,6 +5075,7 @@ Display current location in a sticky header.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-sticky-header
+  :wal-ways nil
   :custom
   (org-sticky-header-full-path 'full)
   (org-sticky-header-prefix
@@ -5141,6 +5198,7 @@ Highlighting in dired buffers.
 
 #+BEGIN_SRC emacs-lisp
 (use-package diredfl
+  :wal-ways nil
   :config
   (diredfl-global-mode)
   :demand
@@ -5266,6 +5324,7 @@ buffer if one doesn't exist yet (unless called with
     (vterm)))
 
 (use-package vterm
+  :wal-ways nil
   :custom
   (vterm-buffer-name-string (concat wal/vterm-prefix ": %s"))
   :wal-bind
@@ -5309,9 +5368,11 @@ Set up =eshell=. I like the idea of it but I don't really use it.
       (eshell-truncate-buffer))))
 
 (use-package esh-autosuggest
+  :wal-ways nil
   :hook (eshell-mode . esh-autosuggest-mode))
 
 (use-package eshell-prompt-extras
+  :wal-ways nil
   :config
   (setq eshell-highlight-prompt nil
         eshell-prompt-function 'epe-theme-lambda)
@@ -5319,6 +5380,7 @@ Set up =eshell=. I like the idea of it but I don't really use it.
   :after eshell)
 
 (use-package eshell-syntax-highlighting
+  :wal-ways nil
   :hook (eshell-mode . eshell-syntax-highlighting-mode))
 
 (use-package eshell
@@ -5403,6 +5465,7 @@ Forget remembering =git= commands, use =transient=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package forge
+  :wal-ways nil
   :demand
   :after magit)
 #+END_SRC
@@ -5414,6 +5477,7 @@ Forget remembering =git= commands, use =transient=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package code-review
+  :wal-ways nil
   :general
   (wal/major :keymaps 'forge-topic-mode-map
     "r" '(code-review-forge-pr-at-point :wk "code review")))
@@ -5428,6 +5492,7 @@ If you want to go back in time and point fingers at the progenitors of doom.
 
 #+BEGIN_SRC emacs-lisp
 (use-package git-timemachine
+  :wal-ways nil
   :general
   (wal/captain-sink :keymaps '(prog-mode-map yaml-mode-map)
     "t" '(git-timemachine-toggle :wk "git-timemachine"))
@@ -6559,6 +6624,7 @@ This adds additional ignored directories."
     "l" '(:keymap lsp-command-map :wk "lsp")))
 
 (use-package lsp-mode
+  :wal-ways nil
   :config
   (wal/configure-lsp-mode)
   :custom
@@ -6590,6 +6656,7 @@ Don't clutter things up too much.
 
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-ui
+  :wal-ways nil
   :custom
   (lsp-ui-doc-show-with-cursor t)
   (lsp-ui-doc-delay 1.0)
@@ -6628,6 +6695,7 @@ Debugging using VSCode's DAP (in =lsp-mode=)
       ("q" nil))))
 
 (use-package dap-mode
+  :wal-ways nil
   :config
   (wal/configure-dap-mode)
   :custom
@@ -6654,6 +6722,7 @@ Jump to symbols with =consult=.
 
 #+begin_src emacs-lisp
 (use-package consult-lsp
+  :wal-ways nil
   :general
   (wal/major :keymaps 'lsp-mode-map
     "s" '(consult-lsp-file-symbols :wk "jump to symbol"))
@@ -6838,6 +6907,7 @@ What goes =docker-compose= up, goes =docker-compose= down.
 
 #+BEGIN_SRC emacs-lisp
 (use-package docker
+  :wal-ways nil
   :config
   (wdb/side "\\*docker-containers\\*" :side 'top :height 15)
   (wdb/direction "^\\* docker container")
@@ -6866,7 +6936,8 @@ Make =Dockerfiles= look nice.
   (wal/message-in-a-bottle '("Have you ever given?")))
 
 (use-package dockerfile-mode
-  :hook (dockerfile-mode . wal/dockerfile-mode))
+  :hook (dockerfile-mode . wal/dockerfile-mode)
+  :ensure nil)
 #+END_SRC
 
 *** kubernetes
@@ -6878,6 +6949,7 @@ Who doesn't like pods and stuff?
 
 #+BEGIN_SRC emacs-lisp
 (use-package kubernetes
+  :wal-ways nil
   :if (executable-find "kubectl")
   :custom
   (kubernetes-commands-display-buffer-function 'display-buffer)
@@ -6936,6 +7008,7 @@ I'll replace =restclient= with =verb= soon.
 
 #+BEGIN_SRC emacs-lisp
 (use-package verb
+  :wal-ways nil
   :config
   (add-to-list 'org-tag-alist '("verb" . ?v))
   (wdb/pop-up "\\*HTTP Response")
@@ -6963,6 +7036,7 @@ You either need to install =maildir-utils= or build from [[https://github.com/dj
 
 #+BEGIN_SRC emacs-lisp
 (use-package mu4e
+  :wal-ways nil
   :if (executable-find "mu")
   :config
   (setq mail-user-agent 'mu4e-user-agent)
@@ -7041,6 +7115,7 @@ triggered explicitly.
 
 #+BEGIN_SRC emacs-lisp
 (use-package typo
+  :wal-ways nil
   :general
   (wal/captain-sink :keymaps '(text-mode-map org-mode-map) :major-modes t
     "t" '(typo-mode :wk "typo"))
@@ -7057,6 +7132,7 @@ Create a room of one's own. I use a different (light) theme here.
 
 #+BEGIN_SRC emacs-lisp
 (use-package writeroom-mode
+  :wal-ways nil
   :config
   (setq writeroom-global-effects (remove 'writeroom-set-alpha writeroom-global-effects)) ; Keep transparency.
   :custom
@@ -7111,6 +7187,7 @@ Provide some knowledge of the outside world.
   (concat " " (string-trim string)))
 
 (use-package display-wttr
+  :wal-ways nil
   :config
   (advice-add
    'display-wttr--clean-string :filter-return
