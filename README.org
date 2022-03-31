@@ -2855,6 +2855,11 @@ A collection of status messages."
   "The time in seconds when we will zone out."
   :type 'integer
   :group 'wal-visuals)
+
+(defcustom wal/no-indent-guides '(dart-mode)
+  "Programming modes that should not enable `highlight-indent-guides-mode'."
+  :type '(repeat symbol)
+  :group 'wal-visuals)
 #+END_SRC
 
 ** Dashboard
@@ -2997,6 +3002,14 @@ Show diffs in the fringe (also in =dired= buffers).
 Show indentation.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/maybe-highlight-indent-guides ()
+  "Maybe enable indent guides.
+
+Only enables `highlight-indent-guides-mode' if the major mode is
+not a member of `wal/no-indent-guides'."
+  (unless (memq major-mode wal/no-indent-guides)
+    (highlight-indent-guides-mode +1)))
+
 (use-package highlight-indent-guides
   :wal-ways nil
   :custom
@@ -3005,7 +3018,7 @@ Show indentation.
   :general
   (wal/captain-sink :keymaps '(prog-mode-map yaml-mode-map)
     "i" '(highlight-indent-guides-mode :wk "h-indent"))
-  :hook ((prog-mode yaml-mode) . highlight-indent-guides-mode)
+  :hook ((prog-mode yaml-mode) . wal/maybe-highlight-indent-guides)
   :delight " hig")
 #+END_SRC
 
@@ -6310,7 +6323,7 @@ LSP support for Dart.
     :major-modes t
     "o" '(lsp-dart-show-flutter-outline :wk "show outline")
     "e" '(lsp-dart-run :wk "run")
-    "s" '(lsp-dart-dap-flutter-hot-restart :wk "restart")
+    "R" '(lsp-dart-dap-flutter-hot-restart :wk "restart")    ; Exception to mimic default binding.
     "r" '(lsp-dart-dap-flutter-hot-reload :wk "hot reload")
     "tc" '(lsp-dart-run-test-at-point :wk "test (current)")
     "ta" '(lsp-dart-run-all-tests :wk "test (all)")
@@ -6414,8 +6427,7 @@ The elephant in the room.
   (web-mode-comment-style 2)
   :mode ("\\.vue\\'"
          "\\.blade.php\\'"
-         "\\.component.html\\'"
-         "\\.ejs\\'")
+         "\\.component.html\\'")
   :ensure nil)
 #+END_SRC
 
