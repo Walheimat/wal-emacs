@@ -952,6 +952,8 @@ Turning on/off certain major modes switching between =major-mode= and
 (declare-function use-package-report "ext:use-package-core.el")
 (declare-function wal/directory-files "init.el")
 (declare-function wal/tangle-config "init.el")
+(declare-function wal/ascii-whale-setup "wal.el")
+(declare-function wal/ascii-whale-toggle-display "wal.el")
 
 (defvar use-package-compute-statistics)
 (defvar wal/emacs-config-default-path)
@@ -972,6 +974,11 @@ Turning on/off certain major modes switching between =major-mode= and
 (defcustom wal/gc-cons-threshold-in-mb 200
   "The default `gc-cons-threshold' epxressed in MB."
   :type 'integer
+  :group 'wal-func)
+
+(defcustom wal/config-show-whale-animation nil
+  "Whether to show an animated whale while editing the config."
+  :type 'boolean
   :group 'wal-func)
 #+END_SRC
 
@@ -1189,7 +1196,9 @@ This will activate minor mode `wal/config-mode'."
           ("h" "heading" consult-org-heading)
           ("d" "packages" wal/dired-packages)]
          ["Customization"
-          ("g" "group" wal/customize-group)]])
+          ("g" "group" wal/customize-group)]
+         ["Fluff"
+          ("w" "toggle animation" wal/ascii-whale-toggle-display)]])
       (wal/lieutenant :keymaps 'wal/config-mode-map
         "c" '(wal/config-dispatch :wk "config")))))
 
@@ -1201,8 +1210,11 @@ This will activate minor mode `wal/config-mode'."
   :keymap wal/config-mode-map
   (require 'transient nil t)
   (require 'checkdoc nil t)
+  (require 'posframe nil t)
   (wal/config-maybe-create-transient)
-  (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t))
+  (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t)
+  (when wal/config-show-whale-animation
+    (wal/ascii-whale-setup)))
 #+END_SRC
 
 ** Windows
@@ -1354,6 +1366,17 @@ Minor mode to dedicate buffers to windows.
          (bufname (window-dedicated-p window)))
     (set-window-dedicated-p window nil)
     (message "Window no longer dedicated to %s" bufname)))
+#+END_SRC
+
+** Frames
+
+Each window has a frame.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/posframe-hidehandler-when-invisible (info)
+  "Check INFO whether the parent buffer is invisible."
+  (when-let ((parent (cdr (plist-get info :posframe-parent-buffer))))
+    (not (get-buffer-window parent t))))
 #+END_SRC
 
 ** Garbage Collection
@@ -7254,6 +7277,11 @@ Provide some knowledge of the outside world.
 :header-args:emacs-lisp: :tangle (expand-file-name "wal.el" wal/emacs-config-package-path)
 :END:
 
+** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
 The root package of the configuration which is basically just a giant
 =require=.
 
@@ -7265,6 +7293,16 @@ The root package of the configuration which is basically just a giant
 ;; Require all sub-packages.
 
 ;;; Code:
+
+(declare-function posframe-delete "ext:posframe.el")
+(declare-function posframe-refresh "ext:posframe.el")
+(declare-function posframe-show "ext:posframe.el")
+(declare-function wal/directory-files "init.el")
+(declare-function wal/posframe-hidehandler-when-invisible "wal-func.el")
+(declare-function wal/tangle-config "init.el")
+
+(defvar wal/emacs-config-default-path)
+(defvar wal/emacs-config-package-path)
 
 (defgroup wal nil
   "Walheimat's configuration."
@@ -7306,6 +7344,90 @@ The order determines the load order as well.")
 
 (dolist (it wal/sub-packages)
   (require it nil t))
+#+END_SRC
+
+** Lovable Things
+
+*** Whale Animation
+
+Animate a swimming whale in a =posframe=.
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/ascii-whale-key-frames
+  [
+   "(__.- >{"
+   "(__.' >{"
+   "(__.- >{"
+   "(__., >{"
+   ])
+(defvar wal/ascii-whale-frame-index 0)
+(defvar wal/ascii-whale-animation-speed 0.4)
+
+(defvar wal/ascii-whale-buffer "*swimming-whale*")
+(defvar wal/ascii-whale-timer nil)
+(defvar wal/ascii-whale-parent-buffer nil)
+
+(defun wal/ascii-whale-animate ()
+  "Animate the ASCII whale."
+  (with-current-buffer (get-buffer-create wal/ascii-whale-buffer)
+    (erase-buffer)
+    (let* ((frame (aref wal/ascii-whale-key-frames wal/ascii-whale-frame-index))
+           (colored (propertize frame 'face 'mode-line-highlight)))
+      (insert colored)
+      (setq wal/ascii-whale-frame-index
+            (mod
+             (1+ wal/ascii-whale-frame-index)
+             (length wal/ascii-whale-key-frames))))))
+
+(defun wal/ascii-whale-setup ()
+  "Set up the animated whale."
+  (when (featurep 'posframe)
+    (setq wal/ascii-whale-parent-buffer (current-buffer))
+    (add-hook 'kill-buffer-hook #'wal/ascii-whale-clean-up nil t)
+    (add-hook 'window-configuration-change-hook #'wal/ascii-whale-display nil t)
+    (unless wal/ascii-whale-timer
+      (setq wal/ascii-whale-timer (run-with-timer
+                                   0
+                                   wal/ascii-whale-animation-speed
+                                   #'wal/ascii-whale-animate)))
+   (wal/ascii-whale-display)))
+
+(defun wal/ascii-whale-clean-up ()
+  "Clean up the animation."
+  (when wal/ascii-whale-timer
+    (cancel-timer wal/ascii-whale-timer)
+    (setq wal/ascii-whale-timer nil))
+  (posframe-delete wal/ascii-whale-buffer)
+  (remove-hook 'kill-buffer-hook #'wal/ascii-whale-clean-up t)
+  (remove-hook 'window-configuration-change-hook #'wal/ascii-whale-display t))
+
+(defun wal/ascii-whale-display ()
+  "Display the running animation in a posframe."
+  (posframe-show
+     wal/ascii-whale-buffer
+     :position (point)
+     :width 8
+     :border-width 6
+     :border-color (face-attribute 'mode-line-highlight :background nil t)
+     :poshandler 'posframe-poshandler-window-top-right-corner
+     :posframe-parent-buffer (or wal/ascii-whale-parent-buffer (current-buffer))
+     :hidehandler 'wal/posframe-hidehandler-when-invisible))
+
+(defun wal/ascii-whale-toggle-display ()
+  "Toggle the animation."
+  (interactive)
+  (if wal/ascii-whale-timer
+      (wal/ascii-whale-clean-up)
+    (wal/ascii-whale-setup)))
+#+END_SRC
+
+
+** Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
 
 (provide 'wal)
 
