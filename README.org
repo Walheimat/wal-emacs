@@ -268,6 +268,7 @@ are two differences:
          ((and (consp x)
                (or (stringp (car x))
                    (vectorp (car x)))
+               (fboundp 'use-package-recognize-function)
                (or (use-package-recognize-function (cdr x) t #'stringp)))
           ;; This is where we deviate from the `:bind' normalizer.
           (setq args* (nconc args* (list (cons (wal/prefix-user-key (car x)) (cdr x)))))
@@ -311,8 +312,9 @@ with =:wal-ways nil=.
 
 (defun use-package-handler/:wal-ways (name _keyword pred rest state)
   "Ignoring NAME, REST and STATE, only expand if PRED or `wal/minimal' is nil."
-  (let ((body (use-package-process-keywords name rest state)))
-    `((when (or ,pred (not ,wal/minimal)) ,@body))))
+  (when (fboundp 'use-package-process-keywords)
+    (let ((body (use-package-process-keywords name rest state)))
+      `((when (or ,pred (not ,wal/minimal)) ,@body)))))
 
 (wal/insert-use-package-keyword :wal-ways :if)
 
