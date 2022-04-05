@@ -756,7 +756,7 @@ minor-mode-specific[fn:11] actions. The package prefixes are:
 + =y= for =yasnippet=.
 
 Leader key =lieutenant= (='= by default) is currently used for adjustments
-(text size, windows, scrolling).
+custom =hydra= and =transient= maps.
 
 Leader key =sergeant= (=<SPC>= by default) is dedicated to =org-roam=.
 
@@ -861,38 +861,6 @@ Additional left PADDING can be passed."
   "v" '(wal/scroll-other-window/body :wk "scroll other window"))
 #+END_SRC
 
-*** transient
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Grouped commands.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/configure-transient()
-  "Define and bind all transients."
-  (with-no-warnings
-    (transient-define-prefix wal/config-dispatch ()
-      "Facilitate the usage of or the working on Walheimat's config."
-      [["Actions"
-        ("t" "tangle" wal/tangle-config)
-        ("x" "install expansion pack" wal/install-expansion-pack)
-        ("c" "checkdoc" wal/checkdoc-packages)]
-       ["Go to"
-        ("h" "heading" consult-org-heading)
-        ("d" "packages" wal/dired-packages)]
-       ["Customization"
-        ("g" "group" wal/customize-group)]])
-    (define-key
-     wal/config-mode-map
-     (kbd (wal/prefix-user-key "?"))
-     #'wal/config-dispatch)))
-
-(use-package transient
-  :config
-  (wal/configure-transient))
-#+END_SRC
-
 ** Additional (Un-)Bindings
 
 Most bindings are declared in individual packages.
@@ -980,6 +948,7 @@ Turning on/off certain major modes switching between =major-mode= and
 
 ;;; Code:
 
+(declare-function transient-define-prefix "ext:transient.el")
 (declare-function use-package-report "ext:use-package-core.el")
 (declare-function wal/directory-files "init.el")
 (declare-function wal/tangle-config "init.el")
@@ -1205,6 +1174,25 @@ This will activate minor mode `wal/config-mode'."
     (dolist (it (wal/directory-files wal/emacs-config-package-path))
       (checkdoc-file it))))
 
+(defun wal/config-maybe-create-transient ()
+  "Create a `transient' if it doesn't exist yet and bind it."
+  (unless (fboundp 'wal/config-dispatch)
+    (require 'transient)
+    (with-no-warnings
+      (transient-define-prefix wal/config-dispatch ()
+        "Facilitate the usage of or the working on Walheimat's config."
+        [["Actions"
+          ("t" "tangle" wal/tangle-config)
+          ("x" "install expansion pack" wal/install-expansion-pack)
+          ("c" "checkdoc" wal/checkdoc-packages)]
+         ["Go to"
+          ("h" "heading" consult-org-heading)
+          ("d" "packages" wal/dired-packages)]
+         ["Customization"
+          ("g" "group" wal/customize-group)]])
+      (wal/lieutenant :keymaps 'wal/config-mode-map
+        "c" '(wal/config-dispatch :wk "config")))))
+
 (define-minor-mode wal/config-mode
   "Mode for editing Walheimat's config."
   :init-value nil
@@ -1213,6 +1201,7 @@ This will activate minor mode `wal/config-mode'."
   :keymap wal/config-mode-map
   (require 'transient nil t)
   (require 'checkdoc nil t)
+  (wal/config-maybe-create-transient)
   (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t))
 #+END_SRC
 
@@ -2175,7 +2164,7 @@ be gone.
   :custom
   (winner-dont-bind-my-keys t)
   :general
-  (wal/captain
+  (wal/lieutenant
     "w" '(wal/winner/body :wk "winner"))
   :defer 3
   :ensure nil)
@@ -6781,8 +6770,9 @@ Debugging using VSCode's DAP (in =lsp-mode=)
   (wal/captain-sink :keymaps 'lsp-mode-map
     "d" '(dap-mode :wk "dap"))
   (wal/captain :keymaps 'lsp-mode-map
-    "d" '(wal/dap-hydra/body :wk "debug")
-    "h" '(dap-hydra :wk "debug"))
+    "d" '(dap-hydra :wk "debug"))
+  (wal/lieutenant :keymaps 'lsp-mode-map
+    "d" '(wal/dap-hydra/body :wk "debug"))
   :after lsp-mode
   :delight " dap")
 #+END_SRC
