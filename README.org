@@ -3602,9 +3602,13 @@ Jump to (visible) lines and chars is fun if you are too lazy to use
 your mouse.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/avy-goto-word-in-line ()
-  "Jump to currently visible word in the current line."
+(defun wal/avy-jump ()
+  "Jump to currently visible word in the current line.
+
+If called with `universal-argument', go to line first."
   (interactive)
+  (when (equal current-prefix-arg '(4))
+    (avy-goto-line))
   (avy-with avy-goto-word-0
     (avy-jump avy-goto-word-0-regexp
               :beg (line-beginning-position)
@@ -3634,7 +3638,7 @@ beginning."
   (avy-background t)
   :wal-bind
   (("l" . avy-goto-end-of-line)
-   ("j" . wal/avy-goto-word-in-line))
+   ("j" . wal/avy-jump))
   :general
   (wal/colonel
     ;; Lines.
