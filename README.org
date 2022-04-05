@@ -21,10 +21,10 @@ config. Just know that nothing in this config should be considered
 If you're interested in trying out Emacs using my config, here are the
 necessary steps:
 
-+ Install Emacs if you haven't[fn:2]
++ install Emacs if you haven't[fn:2]
 + =git clone= this repository into your =user-emacs-directory=[fn:3]
-+ load file =setup/wal-setup.el=, select =init file= and choose =link= or
-  =copy=
++ run =load-file= and navigate to =setup/wal-setup=, run =wal/setup=, select
+  =init file= and choose =link= or =copy=
 + close and re-run Emacs which should (download and) install all[fn:4]
   packages.
 
@@ -44,16 +44,9 @@ This config is /daemon-ready/, i.e. if you start Emacs with the =--daemon=
 flag, the config will make sure that any customization that requires a
 frame will only be loaded once a frame was created.
 
-A =systemd= service config can be found in the =/templates= directory to
-get you started:
-
-+ Run =mkdir -p ~/.config/systemd/user=
-+ run =cp ./templates/emacs.service ~/.config/systemd/user=
-+ adapt that =emacs.service= file to point to the correct path
-+ run =systemctl --user enable emacs=.
-
-Or you just execute =emacs --daemon= in a terminal or your shell's
-config.
+You can install either a =systemd= service using =wal/setup= or just
+execute =emacs --daemon= in a terminal or your login shell's
+configuration.
 
 In any case, an Emacs daemon will start (on start-up). To connect, you
 can use, for example, =emacsclient -c -n=[fn:5].
@@ -1727,11 +1720,11 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
   (interactive)
   (when wal/theme
     (load-theme wal/theme t))
-  (wal/transparency)
   ;; Add the transparency to the `default-frame-alist' as well.
   (if wal/experimental
       (add-to-list 'default-frame-alist `(alpha-background . ,wal/transparency))
-    (add-to-list 'default-frame-alist `(alpha . ,wal/transparency))))
+    (add-to-list 'default-frame-alist `(alpha . ,wal/transparency)))
+  (wal/transparency))
 
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-visuals)
@@ -2888,7 +2881,6 @@ Let's have a dash of board.
   (delete-other-windows))
 
 (use-package dashboard
-  :if (not (daemonp))
   :wal-ways nil
   :init
   (advice-add
@@ -7349,8 +7341,11 @@ Finally run =git clone git@gitlab.com:Walheimat/emacs-config.git ~/.emacs.d=
 [fn:4] This includes this very config which will be exported as a
 package collection.
 
-[fn:5] Which means that a frame is created and control immediately
-returned.
+Packages that belong to an expansion pack or its extras need to be
+installed manually by calling =wal/install-expansion-pack=.
+
+[fn:5] Which means that a frame is reused or created and control
+immediately returned.
 
 [fn:6] Not including where =:tangle no= was set.
 
