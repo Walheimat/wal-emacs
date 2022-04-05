@@ -151,6 +151,11 @@ evaluate /everything/[fn:6] that follows.
   "Whether to use a minimal configuration."
   :type 'boolean
   :group 'wal-settings)
+
+(defcustom wal/minimal-exclude '()
+  "Packages that are not part of a minimal configuration but should be installed."
+  :type '(repeat symbol)
+  :group 'wal-settings)
 #+END_SRC
 
 ** Personal
@@ -303,19 +308,36 @@ are two differences:
 (wal/insert-use-package-keyword :wal-bind :bind-keymap*)
 #+END_SRC
 
-**** :wal-ways
+**** =:wal-ways=
 
 Certain packages do not belong to a minimal setup, these are tagged
 with =:wal-ways nil=.
 
 #+BEGIN_SRC emacs-lisp
-(defalias 'use-package-normalize/:wal-ways 'use-package-normalize/:if)
+(defalias 'use-package-normalize/:wal-ways 'use-package-normalize-predicate)
 
 (defun use-package-handler/:wal-ways (name _keyword pred rest state)
   "Ignoring NAME, REST and STATE, only expand if PRED or `wal/minimal' is nil."
-  (when (fboundp 'use-package-process-keywords)
+  (when (and (fboundp 'use-package-process-keywords)
+             (fboundp 'use-package-plist-maybe-put))
     (let ((body (use-package-process-keywords name rest state)))
-      `((when (or ,pred (not ,wal/minimal)) ,@body)))))
+      (use-package-plist-maybe-put
+       state
+       :wal-ways (or pred
+                     (not wal/minimal)
+                     (not (null (memq name wal/minimal-exclude)))))
+      `((when (or ,pred
+                  (not ,wal/minimal)
+                  (not (null (memq ',name wal/minimal-exclude))))
+          ,@body)))))
+
+(defun wal/advise-use-package-ensure-elpa (_name _args state &optional _no-refresh)
+  "Advise function to not run if `:wal-ways' is nil in STATE."
+  (plist-get state :wal-ways))
+
+(advice-add
+  'use-package-ensure-elpa
+  :before-while #'wal/advise-use-package-ensure-elpa)
 
 (wal/insert-use-package-keyword :wal-ways :if)
 
