@@ -205,9 +205,7 @@ installed from there.
 #+BEGIN_SRC emacs-lisp
 (require 'package)
 
-(add-to-list 'package-archives
-             '("melpa" . "https://melpa.org/packages/")
-             t)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 #+END_SRC
 
 ** Core Packages
@@ -1475,7 +1473,7 @@ Manipulating lists.
 (defun wal/append (sym seq)
   "Set list SYM to it with SEQ appended.
 
-Duplicates items are removed."
+Duplicate items are removed."
   (set sym (delq nil (delete-dups (append (symbol-value sym) seq)))))
 #+END_SRC
 
@@ -2314,7 +2312,6 @@ Let's try to be even more =helpful=.
     (defvar read-symbol-positions-list nil)))
 
 (use-package helpful
-  :wal-ways nil
   :config
   (wal/configure-helpful)
   :bind
@@ -2485,7 +2482,6 @@ Sometimes I restart for fun.
 #+BEGIN_SRC emacs-lisp
 (use-package restart-emacs
   :if (not (daemonp))
-  :wal-ways nil
   :custom
   (restart-emacs-restore-frames nil)
   :general
@@ -2594,7 +2590,6 @@ results."
     (yas-expand)))
 
 (use-package yasnippet
-  :wal-ways nil
   :config
   (define-key yas-minor-mode-map (kbd "<tab>") nil)
   (define-key yas-minor-mode-map (kbd "TAB") nil)
@@ -2612,7 +2607,6 @@ results."
   :delight " yas")
 
 (use-package yasnippet-snippets
-  :wal-ways nil
   :demand
   :after yasnippet)
 #+END_SRC
@@ -2645,7 +2639,6 @@ Undo and redo with branching.
 
 #+BEGIN_SRC emacs-lisp
 (use-package undo-tree
-  :wal-ways nil
   :custom
   (undo-tree-mode-lighter " udt")
   (undo-tree-auto-save-history nil)
@@ -2656,7 +2649,6 @@ Undo and redo with branching.
     "u" '(undo-tree-mode :wk "undo tree"))
   (wal/captain :keymaps 'undo-tree-map
     "u" '(undo-tree-visualize :wk "undo tree"))
-  :hook ((org-mode prog-mode) . undo-tree-mode)
   :delight
   (undo-tree-visualizer-selection-mode " uds"))
 #+END_SRC
@@ -2779,7 +2771,8 @@ I like nice-looking things.
     "infinite whale loop"
     "from echo location to perimeter expansion"
     "a mystic of profounder divings"
-    "superior, clear and fine code; but there's little of it")
+    "superior, clear and fine code; but there's little of it"
+    "formed by intertwisting, slanting folds")
   "The dashboard footer messages.
 
 A collection of status messages."
@@ -3091,6 +3084,7 @@ adding the buffer name to its exclusion lists will not work."
   (which-key-mode +1))
 
 (use-package which-key
+  :wal-ways nil
   :config
   (wal/configure-which-key)
   :custom
@@ -3231,6 +3225,7 @@ Busier and prettier[fn:14] =modeline=.
     (setq doom-modeline-buffer-file-name-style style-symbol)))
 
 (use-package doom-modeline
+  :wal-ways nil
   :config
   (doom-modeline-mode 1)
   (advice-add
@@ -3342,6 +3337,7 @@ ARGS is a list containing modes and additional ligatures."
     (apply fun `(,modes ,ligatures))))
 
 (use-package ligature
+  :wal-ways nil
   :config
   (advice-add
    'ligature-set-ligatures
@@ -3354,7 +3350,7 @@ ARGS is a list containing modes and additional ligatures."
                                         "::" "<>" "#{" "\\\\"
                                          "===" "!==" ".."))
   (ligature-set-ligatures 'html-mode '("<!--" "-->"))
-  (ligature-set-ligatures 'java-mode '("::"))
+  (ligature-set-ligatures 'java-mode '("::" "->"))
   (ligature-set-ligatures 'js2-mode '("=>" "!==" "===" "!!"))
   (ligature-set-ligatures 'lisp-data-mode '(";;"))
   (ligature-set-ligatures 'php-mode '("::" "=>" "->" "??"
@@ -3379,9 +3375,11 @@ You need to install the icons yourself[fn:14].
 
 #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons
+  :wal-ways nil
   :commands (all-the-icons-octicon))
 
 (use-package all-the-icons-dired
+  :wal-ways nil
   :hook (dired-mode . all-the-icons-dired-mode)
   :after all-the-icons
   :diminish)
@@ -4411,7 +4409,6 @@ perspectives."
 
 (use-package perspective
   :if wal/use-perspectives
-  :wal-ways nil
   :config
   (wal/configure-perspective)
   (persp-mode +1)
@@ -4492,6 +4489,7 @@ This extends all ignore lists' default values."
   :bind
   (:map projectile-command-map
     ("P" . wal/projectile-test-project))
+  :commands (projectile-project-root)
   :delight " pjt")
 #+END_SRC
 
@@ -4770,7 +4768,6 @@ Trying to organize my thoughts using Zettelkästen.
 #+BEGIN_SRC emacs-lisp
 (use-package org-roam
   :if (executable-find "sqlite3")
-  :wal-ways nil
   :init
   (setq org-roam-v2-ack t)
   :config
@@ -5669,13 +5666,16 @@ Let's greet the world[fn:17].
   "Randomly display a message from the given BOTTLE.
 
 That bottle is just an array of strings."
-  (let* ((rand (wal/biased-random (length bottle)))
+  (let* ((message-log-max nil) ; Don't clutter.
+         (rand (wal/biased-random (length bottle)))
          (mess (nth rand bottle))
          (prop-mess (propertize mess 'face 'italic)))
     (message (concat wal/ascii-whale " " prop-mess))))
 #+END_SRC
 
 ** Elixir
+
+Bitches brew.
 
 *** elixir-mode
 :PROPERTIES:
@@ -5696,11 +5696,11 @@ That bottle is just an array of strings."
   :ensure nil)
 #+END_SRC
 
-** C
+** C/C++
 
 I want to be ready for =jai=.
 
-*** cc-mode
+*** c++-mode
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -5720,10 +5720,11 @@ I want to be ready for =jai=.
   (advice-add 'c-update-modeline :override #'ignore)
   :general
   (wal/major :keymaps 'c++-mode-map :major-modes t
-    "s" '(:ignore t :wk "style")
-    "ss" '(c-set-style :wk "set")
-    "sg" '(c-guess-install :wk "guess"))
+    "S" '(:ignore t :wk "style")
+    "Ss" '(c-set-style :wk "set")
+    "Sg" '(c-guess-install :wk "guess"))
   :hook (c++-mode . wal/c++-mode)
+  :mode ("\\.h\\'" . c++-mode) ; I don't use C, no need to (often incorrectly) guess.
   :ensure nil)
 #+END_SRC
 
@@ -5820,7 +5821,7 @@ Sort with =isort=.
 (use-package python-isort
   :general
   (wal/major :keymaps 'python-mode-map :major-modes t
-    "s" '(python-isort-buffer :wk "sort imports"))
+    "F" '(python-isort-buffer :wk "sort imports"))
   :ensure nil)
 #+end_src
 
@@ -5961,7 +5962,7 @@ Can't have closure without REPL.
 :UNNUMBERED: t
 :END:
 
-Evaluate from the right, edebug from the left.
+Evaluate from the right, =edebug= from the left.
 
 #+BEGIN_SRC emacs-lisp
 (use-package edebug
@@ -6569,8 +6570,8 @@ My spelling is bad. Uses American English for =flyspell=.
   (flyspell-default-dictionary "american")
   :bind
   (:map flyspell-mode-map
-   ("C-." . ispell-word)) ;; Replaces `flyspell-auto-correct-word'.
-                          ;; But still available via `C-M-i'.
+   ("C-." . ispell-word)) ; Replaces `flyspell-auto-correct-word'
+                          ; which is still available via `C-M-i'.
   :general
   (wal/captain :keymaps 'flyspell-mode-map
     "s" '(:ignore t :wk "flyspell")
@@ -6877,18 +6878,7 @@ Debugging without sound null safety.
 :UNNUMBERED: t
 :END:
 
-Make sure you expose port =9003= and put the following into your
-=php.ini=.
-
-#+begin_src conf
-[XDebug]
-xdebug.start_with_request = yes
-xdebug.show_local_vars = on
-xdebug.discover_client_host = true
-xdebug.client_host = 0.0.0.0
-xdebug.client_port = 9003
-#+end_src
-
+Make sure you expose port =9003=.
 
 #+BEGIN_SRC emacs-lisp :tangle no
 (when (require 'dap-mode nil 'noerror)
@@ -6902,33 +6892,17 @@ xdebug.client_port = 9003
       :pathMappings mapping))))
 #+END_SRC
 
-** Server Configurations
+**** XDebug Config
 
-Configure or register language servers that aren't as straight
-forward.
+Put the following into your =php.ini=.
 
-*** Prolog (swipl)
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-=?-likes(krister, Prolog).=
-
-#+BEGIN_SRC emacs-lisp
-(with-eval-after-load 'lsp-mode
-  (with-suppressed-warnings
-      (lsp-register-client
-       (make-lsp-client
-        :new-connection
-        (lsp-stdio-connection (list "swipl"
-                                    "-g" "use_module(library(lsp_server))."
-                                    "-g" "lsp_server:main"
-                                    "-t" "halt"
-                                    "--" "stdio"))
-        :major-modes '(prolog-mode)
-        :priority 1
-        :multi-root t
-        :server-id 'prolog-ls))))
+#+BEGIN_SRC conf
+[XDebug]
+xdebug.start_with_request = yes
+xdebug.show_local_vars = on
+xdebug.discover_client_host = true
+xdebug.client_host = 0.0.0.0
+xdebug.client_port = 9003
 #+END_SRC
 
 ** Footer
@@ -7257,7 +7231,7 @@ Create a room of one's own. I use a different (light) theme here.
 
 Provide some knowledge of the outside world.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun wal/advise-display-wttr--clean-string (string)
   "Advise to pad STRING."
   (concat " " (string-trim string)))
@@ -7271,7 +7245,7 @@ Provide some knowledge of the outside world.
   :custom
   (display-wttr-format "1")
   :ensure nil)
-#+end_src
+#+END_SRC
 
 ** Footer
 :PROPERTIES:
