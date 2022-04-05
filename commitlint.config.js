@@ -14,5 +14,6 @@ module.exports = {
 		'body-full-stop': [2, 'always', '.'],
 		'body-max-line-length': [2, 'always', 70],
 		'footer-max-line-length': [2, 'always', 70]
-	}
+	},
+    ignores: [(commit) => commit.includes('fixup')],
 };
