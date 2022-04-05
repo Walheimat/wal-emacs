@@ -122,6 +122,11 @@ evaluate /everything/[fn:6] that follows.
   :type 'string
   :group 'wal-settings)
 
+(defcustom wal/custom-file (expand-file-name "custom.el" user-emacs-directory)
+  "Location of the custom file."
+  :type 'string
+  :group 'wal-settings)
+
 (defcustom wal/read-process-output-max (wal/bytes-per-mb 50)
   "Increased `read-process-output-max'."
   :type 'integer
@@ -182,16 +187,14 @@ bugs).")
 (setq inhibit-startup-message t)
 (setq initial-major-mode 'fundamental-mode) ; Avoids loading `prog-mode' derivatives.
 
-;; Use a distinct file for customization and create it if it doesn't exist.
-(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+;; Load cutom file. Create it if it doesn't yet exist.
+(setq custom-file wal/custom-file)
 (unless (file-exists-p custom-file)
   (write-region "" nil custom-file))
+(load custom-file)
 
 ;; Accept redefinitions.
 (setq ad-redefinition-action 'accept)
-
-;; Load customizations.
-(load custom-file)
 #+END_SRC
 
 ** Package Archives
@@ -348,20 +351,14 @@ Make sure that custom directories exist. We want:
 
 ** Site-Lisp
 
-Add =site-lisp= directory and sub-directories to load path. I put
-non-MELPA packages here.
+Add all sub-directories of the site lisp directory to load path (and
+custom theme load path). I put non-MELPA packages here.
 
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'load-path wal/site-lisp-directory)
-
-;; Allow us to load from site-lisp package.
-(add-to-list 'custom-theme-load-path
-             (expand-file-name "emacs-site-lisp" wal/site-lisp-directory))
-
-;; Add subdirs as well so we don't need to match `:load-path'.
 (dolist (project (directory-files wal/site-lisp-directory t "\\w+"))
   (when (file-directory-p project)
-    (add-to-list 'load-path project)))
+    (add-to-list 'load-path project)
+    (add-to-list 'custom-theme-load-path project)))
 #+END_SRC
 
 ** Saving and Backups
