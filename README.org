@@ -684,7 +684,7 @@ There's two =avy= actions:
 
 It's also used for some dispatches:
 
-+ =H-m= dispatches =magit-status=
++ =H-m= dispatches =wal/magit=
 + =H-n= dispatches =rg-menu=
 + =H-o= dispatches =ace-window=.
 
@@ -758,8 +758,7 @@ minor-mode-specific[fn:11] actions. The package prefixes are:
 + =y= for =yasnippet=.
 
 Leader key =lieutenant= (='= by default) is currently used for adjustments
-(text size, windows, scrolling), one-off actions (like capturing a
-note) and =magit=.
+(text size, windows, scrolling).
 
 Leader key =sergeant= (=<SPC>= by default) is dedicated to =org-roam=.
 
@@ -5483,24 +5482,33 @@ Forget remembering =git= commands, use =transient=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
+  :config
+  (transient-define-prefix wal/magit ()
+    "Call `magit' functions in a `magit'-y way."
+    [["Core"
+      ("s" "status (quick)" magit-status-quick)
+      ("S" "status (full)" magit-status)
+      ("b" "blame" magit-blame)]
+     ["Files"
+      ("f" "find" magit-find-file)
+      ("o" "find other window" magit-find-file-other-window)]
+     ["Diff"
+      ("r" "range" magit-diff-range)]])
+  :wal-bind
+  ("m" . wal/magit)
   :custom
   (magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
   (magit-blame-mode-lighter " mbl")
   (magit-bury-buffer-function 'magit-restore-window-configuration)
-  :wal-bind
-  ("m" . magit-status)
-  :general
-  (wal/lieutenant
-    "m" '(:ignore t :wk "magit")
-    "mf" '(magit-find-file :wk "find file")
-    "mo" '(magit-find-file-other-window :wk "find file other window")
-    "md" '(magit-diff-range :wk "diff range")))
+  :commands (wal/magit))
 #+END_SRC
 
 *** forge
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Deal with pull/merge requests.
 
 #+BEGIN_SRC emacs-lisp
 (use-package forge
@@ -5513,6 +5521,8 @@ Forget remembering =git= commands, use =transient=.
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Review pull/merge requests.
 
 #+BEGIN_SRC emacs-lisp
 (use-package code-review
