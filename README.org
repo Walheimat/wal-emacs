@@ -87,6 +87,8 @@ evaluate /everything/[fn:6] that follows.
 (declare-function wal/install-packages "wal-func.el")
 (declare-function wal/prefix-user-key "wal-key-bindings.el")
 
+
+(defvar global-auto-revert-non-file-buffers)
 (defvar use-package-always-ensure)
 (defvar use-package-always-defer)
 
@@ -4168,6 +4170,7 @@ Keep order.
 
 (declare-function consult-customize "ext:consult.el")
 (declare-function consult--regexp-filter "ext:consult.el")
+(declare-function persp-current-buffers "ext:perspective.el")
 (declare-function persp-current-buffer-names "ext:perspective.el")
 (declare-function persp-current-name "ext:perspective.el")
 (declare-function persp-names "ext:perspective.el")
@@ -4287,6 +4290,10 @@ This only removes `process-kill-buffer-query-function'."
           (persp-switch p))
       (persp-switch clicked))))
 
+(defun wal/advise-persp-list-buffers-refresh (fun &rest _r)
+  "Advise FUN `list-buffers--refresh' to only consider perspective buffers."
+  (apply fun (list (seq-filter 'buffer-live-p (persp-current-buffers)))))
+
 (defun wal/switch-to-scratch-buffer ()
   "Switch to a perspective's scratch buffer."
   (interactive)
@@ -4312,6 +4319,7 @@ perspectives."
   (advice-add 'persp-kill :around #'wal/advise-persp-kill)
   (advice-add 'persp-format-name :filter-return #'wal/advise-persp-format-name)
   (advice-add 'persp-mode-line-click :override #'wal/advise-persp-mode-line-click)
+  (advice-add 'list-buffers--refresh :around #'wal/advise-persp-list-buffers-refresh)
   (with-eval-after-load 'consult
     (consult-customize
      consult--source-buffer
