@@ -87,7 +87,6 @@ evaluate /everything/[fn:6] that follows.
 (declare-function wal/install-packages "wal-func.el")
 (declare-function wal/prefix-user-key "wal-key-bindings.el")
 
-
 (defvar global-auto-revert-non-file-buffers)
 (defvar use-package-always-ensure)
 (defvar use-package-always-defer)
@@ -1643,7 +1642,9 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
   (wal/transparency))
 
 (if (daemonp)
-    (add-hook 'server-after-make-frame-hook 'wal/setup-visuals)
+    (progn
+      (wal/setup-visuals)
+      (add-hook 'server-after-make-frame-hook 'wal/setup-visuals))
   (add-hook 'emacs-startup-hook 'wal/setup-visuals))
 
 ;; Mix of old and new.
@@ -2703,7 +2704,7 @@ A collection of status messages."
   :group 'wal-visuals)
 
 (defcustom wal/startup-banner
-  (let ((ext (if (display-graphic-p)
+  (let ((ext (if (or (daemonp) (display-graphic-p))
                  ".png"
                ".txt")))
     (expand-file-name
@@ -2714,7 +2715,7 @@ A collection of status messages."
   :group 'wal-visuals)
 
 (defcustom wal/footer-icon
-  (if (display-graphic-p)
+  (if (or (daemonp) (display-graphic-p))
       ":whale:"
     wal/ascii-whale)
   "The path to the footer icon."
@@ -2785,12 +2786,6 @@ Let's have a dash of board.
   "Advise to use biased random footer message."
   (nth (wal/biased-random (length dashboard-footer-messages)) dashboard-footer-messages))
 
-(defun wal/show-dashboard ()
-  "Show the dashboard."
-  (interactive)
-  (switch-to-buffer dashboard-buffer-name)
-  (delete-other-windows))
-
 (use-package dashboard
   :wal-ways nil
   :init
@@ -2820,7 +2815,7 @@ Let's have a dash of board.
   (dashboard-agenda-release-buffers t)
   :general
   (wal/general-sink "s"
-    '(wal/show-dashboard :wk "dashboard"))
+    '(dashboard-refresh-buffer :wk "dashboard"))
   :hook (after-init . dashboard-setup-startup-hook))
 #+END_SRC
 
@@ -7196,7 +7191,6 @@ Provide some knowledge of the outside world.
 :END:
 
 #+BEGIN_SRC emacs-lisp
-
 (provide 'wal-fluff)
 
 ;;; wal-fluff.el ends here
@@ -7482,7 +7476,6 @@ This will activate minor mode `wal/config-mode'."
 :END:
 
 #+BEGIN_SRC emacs-lisp
-
 (provide 'wal)
 
 ;;; wal.el ends here
