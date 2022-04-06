@@ -2135,7 +2135,7 @@ I'd like to kill shells without a process quickly.
 (use-package shell
   :general
   (general-define-key
-   :keymaps 'shell-mode-map
+   :keymaps '(shell-mode-map comint-mode-map)
    :predicate '(wal/dead-shell-p)
    "k" 'kill-buffer-and-window)
   :ensure nil)
@@ -5739,6 +5739,7 @@ Use snake when you can't =make=.
   :config
   (with-eval-after-load 'dap-mode
     (require 'dap-python))
+  (wdb/side 'inferior-python-mode)
   :general
   (wal/major :keymaps 'python-mode-map :major-modes t
     "i" '(:ignore t :wk "inferior shell")
@@ -5787,6 +5788,7 @@ This also works if the project isn't a poetry project."
       (let* ((venv (poetry-venv-exist-p))
              (is-poetry (poetry-find-project-root)))
         (when venv
+          (setq-local python-shell-virtualenv-root venv)
           (if is-poetry
               (progn
                 (wal/configure-lsp-server venv)
