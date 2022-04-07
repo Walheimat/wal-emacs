@@ -57,20 +57,18 @@ function wal::copy_init_file() {
   on_complete
 }
 
-echo -e "${blue}${whale}${reset} ${bold}[init file setup]${reset}"
+if ensure_log_file; then
+  echo -e "${blue}${whale}${reset} ${bold}[init file setup]${reset}"
 
-func=$1
-
-case $func in
-  link)
-    ensure_log_file
-    wal::link_init_file "${@:2}"
-    ;;
-  copy)
-    ensure_log_file
-    wal::copy_init_file "${@:2}"
-    ;;
-  *)
-    echo -e "${red}${whale}${reset} call with 'link' or 'copy'"
-    ;;
-esac
+  case $1 in
+    link)
+      wal::link_init_file "${@:2}"
+      ;;
+    copy)
+      wal::copy_init_file "${@:2}"
+      ;;
+    *)
+      echo -e "${red}${whale}${reset} call with 'link' or 'copy'"
+      ;;
+  esac
+fi

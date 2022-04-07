@@ -25,9 +25,7 @@ function wal::install_husky() {
   live
 }
 
-function main() {
-  ensure_log_file
-
+if ensure_log_file; then
   cd ..
 
   echo -e "${blue}${whale}${reset} ${bold}[commit hooks setup]${reset}"
@@ -36,6 +34,4 @@ function main() {
   wal::install_husky
 
   echo -e "${green}${whale}${reset} commit setup complete"
-}
-
-main
+fi

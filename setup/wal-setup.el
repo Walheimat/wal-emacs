@@ -59,14 +59,14 @@
 
 ;; Setup functions:
 
-(defun wal/setup-init-file (method)
+(defun wal/setup-init-file ()
   "Set up the init file using METHOD."
-  (interactive (list (completing-read "Select setup method: "
-                                      '(link copy))))
+  (interactive)
   (unless (wal/setup--executables-exist-p)
     (user-error "Setup script requires bash to be in path"))
-  (wal/setup--show-results)
-  (wal/setup--async-run-script "setup-init" (list method user-emacs-directory)))
+  (let ((method (completing-read "Select setup method: " '(link copy))))
+    (wal/setup--show-results)
+    (wal/setup--async-run-script "setup-init" (list method user-emacs-directory))))
 
 (defun wal/setup-commit-hooks ()
   "Set up commit hooks."

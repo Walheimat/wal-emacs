@@ -51,9 +51,7 @@ function wal::enable_service() {
   live
 }
 
-function main() {
-  ensure_log_file
-
+if ensure_log_file; then
   cd ..
 
   echo -e "${blue}${whale}${reset} ${bold}[daemon setup]${reset}"
@@ -62,6 +60,4 @@ function main() {
   wal::enable_service
 
   echo -e "${green}${whale}${reset} daemon setup complete"
-}
-
-main
+fi
