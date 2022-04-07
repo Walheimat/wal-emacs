@@ -63,9 +63,11 @@ func=$1
 
 case $func in
   link)
+    ensure_log_file
     wal::link_init_file "${@:2}"
     ;;
   copy)
+    ensure_log_file
     wal::copy_init_file "${@:2}"
     ;;
   *)

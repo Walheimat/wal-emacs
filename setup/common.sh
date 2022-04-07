@@ -34,6 +34,13 @@ function maybe_kill_bg() {
 }
 
 #######################################
+# Ensure the log file exists.
+#######################################
+function ensure_log_file() {
+  touch "$WAL_LOG"
+}
+
+#######################################
 # Echo message with loading spinner.
 #######################################
 function signal() {

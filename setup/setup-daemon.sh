@@ -9,12 +9,12 @@ source "./common.sh"
 
 DIR="${0%/*}"
 
-TARGET_PATH="$HOME/.config/systemd/user/"
+TARGET_PATH="$HOME/.config/systemd/user"
 
 DEFAULT_EMACS_PATH="/usr/local/bin/emacs"
 
 function wal::ensure() {
-  if [[ -z "$TARGET_PATH" ]]; then
+  if [[ ! -d "$TARGET_PATH" ]]; then
     signal "Creating path ${TARGET_PATH@Q}"
     if ! mkdir -p "$TARGET_PATH" &> "$WAL_LOG"; then
       die
@@ -52,6 +52,8 @@ function wal::enable_service() {
 }
 
 function main() {
+  ensure_log_file
+
   cd ..
 
   echo -e "${blue}${whale}${reset} ${bold}[daemon setup]${reset}"
