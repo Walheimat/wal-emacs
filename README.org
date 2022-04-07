@@ -6271,7 +6271,11 @@ LSP support for Dart.
   (add-hook
    'lsp-after-initialize-hook
    #'wal/lsp-dart-set-process-query-on-exit-flag)
-  (wdb/side "\\*Flutter" :height 10))
+  (wdb/side "\\*Flutter" :height 10)
+  ;; HACK: Temporary empty override to avoid duplicate logs.
+  (cl-defmethod dap-handle-event ((_event (eql dart.log)) _session _params)
+    "Handle debugger uris EVENT for SESSION with PARAMS."
+    nil))
 
 (use-package lsp-dart
   :if (executable-find "flutter")
