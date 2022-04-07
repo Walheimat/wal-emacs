@@ -1785,7 +1785,9 @@ available candidate from `wal/fixed-fonts'. Does the same for
     ;; Variable pitch face.
     (set-face-attribute 'variable-pitch nil
                         :font (wal/fonts-candidate wal/variable-fonts t)
-                        :height wal/variable-font-height)))
+                        :height wal/variable-font-height))
+    (when (and (featurep 'doom-modeline) doom-modeline-mode)
+      (doom-modeline-refresh-font-width-cache)))
 
 ;; Slanted and enchanted.
 (defun wal/font-lock ()
@@ -2906,6 +2908,10 @@ Show indentation.
 Only enables `highlight-indent-guides-mode' if the major mode is
 not a member of `wal/no-indent-guides'."
   (unless (memq major-mode wal/no-indent-guides)
+    ;; HACK: The library does not call this function when in daemon
+    ;;       mode for whatever reason.
+    (when (daemonp)
+      (highlight-indent-guides-auto-set-faces))
     (highlight-indent-guides-mode +1)))
 
 (use-package highlight-indent-guides
