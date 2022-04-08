@@ -1594,6 +1594,8 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 
 ;;; Code:
 
+(declare-function wal/setup-p "wal.el")
+
 (defvar wal/experimental)
 
 (defgroup wal-look nil
@@ -1633,19 +1635,20 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 (defun wal/setup-visuals ()
   "Setup visual frills like theme and transparency."
   (interactive)
-  (when wal/theme
-    (load-theme wal/theme t))
-  ;; Add the transparency to the `default-frame-alist' as well.
-  (if wal/experimental
-      (add-to-list 'default-frame-alist `(alpha-background . ,wal/transparency))
-    (add-to-list 'default-frame-alist `(alpha . ,wal/transparency)))
-  (wal/transparency))
+  (unless (wal/setup-p 'visuals)
+    (when wal/theme
+      (load-theme wal/theme t))
+    ;; Add the transparency to the `default-frame-alist' as well.
+    (if wal/experimental
+        (add-to-list 'default-frame-alist `(alpha-background . ,wal/transparency))
+      (add-to-list 'default-frame-alist `(alpha . ,wal/transparency)))
+    (wal/transparency)))
 
 (if (daemonp)
     (progn
       (wal/setup-visuals)
-      (add-hook 'server-after-make-frame-hook 'wal/setup-visuals))
-  (add-hook 'emacs-startup-hook 'wal/setup-visuals))
+      (add-hook 'server-after-make-frame-hook #'wal/transparency))
+  (add-hook 'emacs-startup-hook #'wal/setup-visuals))
 
 ;; Mix of old and new.
 (setq frame-title-format '(multiple-frames "%b"
@@ -1675,6 +1678,7 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
 
 (declare-function doom-modeline-refresh-font-width-cache "ext:doom-modeline.el")
 (declare-function wal/general "wal-key-bindings.el")
+(declare-function wal/setup-p "wal.el")
 
 (defgroup wal-fonts nil
   "Change fonts and font sizes."
@@ -1772,22 +1776,23 @@ This sets `default' and `fixed-pitch' fonts to the first
 available candidate from `wal/fixed-fonts'. Does the same for
 `variable-pitch' using `wal/variable-fonts'."
   (when (or (daemonp) (display-graphic-p))
-    (mapc (lambda (it)
-            (when (internal-lisp-face-p it)
-              (set-face-attribute it nil
-                                  :font (wal/fonts-candidate wal/fixed-fonts t)
-                                  :height wal/fixed-font-height)))
-          '(default fixed-pitch))
-    (mapc (lambda (it)
-            (when (internal-lisp-face-p it)
-              (set-face-attribute it nil :inherit 'mode-line)))
-          '(mode-line-active mode-line-inactive))
-    ;; Variable pitch face.
-    (set-face-attribute 'variable-pitch nil
-                        :font (wal/fonts-candidate wal/variable-fonts t)
-                        :height wal/variable-font-height))
-    (when (and (featurep 'doom-modeline) doom-modeline-mode)
-      (doom-modeline-refresh-font-width-cache)))
+    (unless (wal/setup-p 'fonts)
+      (mapc (lambda (it)
+              (when (internal-lisp-face-p it)
+                (set-face-attribute it nil
+                                    :font (wal/fonts-candidate wal/fixed-fonts t)
+                                    :height wal/fixed-font-height)))
+            '(default fixed-pitch))
+      (mapc (lambda (it)
+              (when (internal-lisp-face-p it)
+                (set-face-attribute it nil :inherit 'mode-line)))
+            '(mode-line-active mode-line-inactive))
+      ;; Variable pitch face.
+      (set-face-attribute 'variable-pitch nil
+                          :font (wal/fonts-candidate wal/variable-fonts t)
+                          :height wal/variable-font-height)))
+  (when (and (featurep 'doom-modeline) doom-modeline-mode)
+    (doom-modeline-refresh-font-width-cache)))
 
 ;; Slanted and enchanted.
 (defun wal/font-lock ()
@@ -7284,12 +7289,6 @@ Provide some knowledge of the outside world.
   "List of sub-packages that will be loaded.
 
 The order determines the load order as well.")
-
-(when (boundp 'wal/emacs-config-package-path)
-  (add-to-list 'load-path wal/emacs-config-package-path))
-
-(dolist (it wal/sub-packages)
-  (require it nil t))
 #+END_SRC
 
 ** Lovable Things
@@ -7479,6 +7478,31 @@ This will activate minor mode `wal/config-mode'."
   (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t)
   (when wal/config-show-whale-animation
     (wal/ascii-whale-setup)))
+#+END_SRC
+
+** Loading
+
+This basically just a giant =require=.
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/setup-alist '()
+  "Alists of already performed setups.")
+
+(defun wal/setup-p (sym)
+  "Check if SYM has already been setup.
+
+If return nil after setting it to t."
+  (if (car (assoc sym wal/setup-alist))
+      t
+    (message "Setting up %s" sym)
+    (push `(,sym . t) wal/setup-alist)
+    nil))
+
+(when (boundp 'wal/emacs-config-package-path)
+  (add-to-list 'load-path wal/emacs-config-package-path))
+
+(dolist (it wal/sub-packages)
+  (require it nil t))
 #+END_SRC
 
 ** Footer
