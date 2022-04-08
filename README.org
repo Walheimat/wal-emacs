@@ -2663,6 +2663,7 @@ I like nice-looking things.
 
 ;;; Code:
 
+(declare-function dashboard-insert-startupify-lists "ext:dashboard.el")
 (declare-function ligature-set-ligatures "ext:ligature.el")
 (declare-function wal/append "wal-func.el")
 (declare-function wal/biased-random "wal-func.el")
@@ -2793,6 +2794,13 @@ Let's have a dash of board.
   "Advise to use biased random footer message."
   (nth (wal/biased-random (length dashboard-footer-messages)) dashboard-footer-messages))
 
+(defun wal/advise-dashboard-setup-startup-hook ()
+  "Setup the dashboard in a daemon-friendly way."
+  (when (daemonp)
+    (add-hook
+     'server-after-make-frame-hook
+     #'dashboard-insert-startupify-lists)))
+
 (use-package dashboard
   :wal-ways nil
   :init
@@ -2802,6 +2810,9 @@ Let's have a dash of board.
   (advice-add
    'dashboard-random-footer
    :override #'wal/advise-dashboard-random-footer)
+  (advice-add
+   'dashboard-setup-startup-hook
+   :before-until #'wal/advise-dashboard-setup-startup-hook)
   :config
   (setq dashboard-banner-logo-title (wal/describe-config-version))
   :custom
