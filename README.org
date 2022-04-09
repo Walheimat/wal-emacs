@@ -898,8 +898,6 @@ Additional left PADDING can be passed."
 Most bindings are declared in individual packages.
 
 #+BEGIN_SRC emacs-lisp
-(global-unset-key (kbd "C-x C-c"))
-
 ;; Additional `general' bindings.
 (wal/general
   "e" '(:ignore t :wk "Emacs")
@@ -909,7 +907,7 @@ Most bindings are declared in individual packages.
   "fi" '(wal/find-init :wk "init")
   "ff" '(wal/find-fish-config :wk "fish config")
   "fw" '(wal/find-config :wk "wal")
-  "s" '(:ignore t :wk "session"))
+  "s" '(:ignore t :wk "set"))
 
 (wal/general-sink "l" '(add-dir-local-variable :wk "dir-locals"))
 
@@ -919,7 +917,8 @@ Most bindings are declared in individual packages.
  :keymaps 'ctl-x-x-map
  "f" 'wal/find-file-delete-other-windows) ; Replaces `font-lock-update'.
 
- (global-set-key (kbd "M-o") #'wal/other-window)
+(global-set-key (kbd "M-o") #'wal/other-window)
+(global-unset-key (kbd "C-x C-c"))
 #+END_SRC
 
 ** Additional Mode Controls
@@ -1732,23 +1731,42 @@ This has no default value."
   :type 'integer
   :group 'wal-fonts)
 
-(defun wal/select-fixed-font (font)
-  "Select fixed (available) FONT.
+(defun wal/font-update (attribute value faces &optional refresh)
+  "Set ATTRIBUTE to VALUE for FACES.
 
-This sets both the `default' and `fixed-pitch' fonts. If variable
-`doom-modeline-mode' is t, refresh font width cache."
+Optionally REFRESH font width cache aftewards."
+  (mapc (lambda (it)
+    (when (internal-lisp-face-p it)
+      (set-face-attribute it nil attribute value)))
+    faces)
+  (when (and refresh (boundp 'doom-modeline-mode) doom-modeline-mode)
+    (run-with-idle-timer 0.2 nil #'doom-modeline-refresh-font-width-cache)))
+
+(defun wal/select-fixed-font (font)
+  "Select fixed (available) FONT."
   (interactive
    (list (completing-read "Select font: " (wal/available-fonts wal/fixed-fonts))))
-  (set-face-attribute 'default nil :font font)
-  (set-face-attribute 'fixed-pitch nil :font font)
-  (when (and (boundp 'doom-modeline-mode) doom-modeline-mode)
-    (run-with-idle-timer 0.2 nil #'doom-modeline-refresh-font-width-cache)))
+  (wal/font-update :font font '(default fixed-pitch) t))
+
+(defun wal/set-fixed-font-height (&optional height)
+  "Set the HEIGHT for fixed fonts."
+  (interactive "nSet fixed font height: ")
+  (let ((sensible-height (max (min height 200) 80)))
+    (wal/font-update :height sensible-height '(default fixed-pitch) t)
+    (setq wal/fixed-font-height sensible-height)))
 
 (defun wal/select-variable-font (font)
   "Select variable (available) FONT."
   (interactive
    (list (completing-read "Select font: " (wal/available-fonts wal/variable-fonts))))
-  (set-face-attribute 'variable-pitch nil :font font))
+  (wal/font-update :font font '(variable-pitch) t))
+
+(defun wal/set-variable-font-height (&optional height)
+  "Set the HEIGHT for variable fonts."
+  (interactive "nSet variable font height: ")
+  (let ((sensible-height (max (min height 200) 80)))
+    (wal/font-update :height sensible-height '(variable-pitch) t)
+    (setq wal/variable-font-height sensible-height)))
 
 (defun wal/available-fonts (fonts)
   "Filter FONTS down to available fonts."
@@ -1792,7 +1810,7 @@ available candidate from `wal/fixed-fonts'. Does the same for
                           :font (wal/fonts-candidate wal/variable-fonts t)
                           :height wal/variable-font-height)))
   (when (and (featurep 'doom-modeline) doom-modeline-mode)
-    (doom-modeline-refresh-font-width-cache)))
+    (run-with-idle-timer 0.2 nil #'doom-modeline-refresh-font-width-cache)))
 
 ;; Slanted and enchanted.
 (defun wal/font-lock ()
@@ -1801,9 +1819,10 @@ available candidate from `wal/fixed-fonts'. Does the same for
   (set-face-attribute 'font-lock-keyword-face nil :weight 'bold))
 
 (wal/general
- "sf" '(:ignore t :wk "fonts")
- "sff" '(wal/select-fixed-font :wk "fixed")
- "sfv" '(wal/select-variable-font :wk "variable"))
+ "sf" '(wal/set-fixed-font-height :wk "fixed height")
+ "sv" '(wal/set-variable-font-height :wk "variable height")
+ "sF" '(wal/select-fixed-font :wk "fixed family")
+ "sV" '(wal/select-variable-font :wk "variable family"))
 
 (if (daemonp)
     (add-hook 'server-after-make-frame-hook 'wal/setup-fonts)
