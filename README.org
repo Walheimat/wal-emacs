@@ -44,9 +44,9 @@ This config is /daemon-ready/, i.e. if you start Emacs with the =--daemon=
 flag, the config will make sure that any customization that requires a
 frame will only be loaded once a frame was created.
 
-You can install either a =systemd= service using =wal/setup= or just
-execute =emacs --daemon= in a terminal or your login shell's
-configuration.
+You can install either a =systemd= service using =wal/setup= (described
+above) or just execute =emacs --daemon= in a terminal or your login
+shell's configuration.
 
 In any case, an Emacs daemon will start (on start-up). To connect, you
 can use, for example, =emacsclient -c -n=[fn:5].
@@ -494,9 +494,9 @@ and call WITH-MODE after changes."
 All offsets are set to `wal/indent-offset' or optionally to NUM."
   (interactive "nSet tab width to: ")
   (let ((offset (or num wal/indent-offset)))
-    (setq-default python-indent-offset offset ; Python
-                  js-indent-level offset      ; JavaScript
-                  css-indent-offset offset    ; CSS and SCSS
+    (setq-default python-indent-offset offset ; Python.
+                  js-indent-level offset      ; JavaScript.
+                  css-indent-offset offset    ; CSS and SCSS.
                   tab-width offset
                   electric-indent-inhibit t
                   indent-tabs-mode wal/prefer-tabs)
@@ -1902,7 +1902,7 @@ Show 'em early!
 (use-package paren
   :custom
   (show-paren-delay 0.1)
-  (show-paren-context-when-offscreen t) ; New in Emacs 29!
+  (show-paren-context-when-offscreen t) ; New in Emacs 29.
   :ensure nil)
 #+END_SRC
 
@@ -2054,7 +2054,7 @@ Effing diffing.
 #+BEGIN_SRC emacs-lisp
 (use-package diff-mode
   :config
-  (define-key diff-mode-shared-map (kbd "o") nil) ; Remove `diff-goto-source'.
+  (define-key diff-mode-shared-map (kbd "o") nil) ; Removes `diff-goto-source'.
   :ensure nil)
 #+END_SRC
 
@@ -3782,9 +3782,6 @@ Move where I want. Useful for comments.
 
 I mostly search.
 
-Searches are done using either =ripgrep= or the *Silver Searcher*.
-Both require installation of their respective binary.
-
 ** Header
 :PROPERTIES:
 :VISIBILITY: folded
@@ -4136,6 +4133,7 @@ completion actions.
       (projectile-switch-to-buffer . buffer)
       (projectile-find-file . project-file)
       (projectile-find-file-other-window . project-file)
+      (projectile-switch-project . project-file)
       (persp-switch-to-buffer . buffer)
       (persp-kill-buffer* . buffer)))
   :bind
@@ -4660,8 +4658,6 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (defun wal/org-mode ()
   "Hook into `org-mode'."
   (wal/message-in-a-bottle '("Organize! Seize the means of production!"))
-  ;; Since `9.4' org tries to please `electric-indent'.
-  ;; (electric-indent-local-mode -1)
   (wal/disable-tabs)
   (hack-local-variables))
 
@@ -4690,7 +4686,7 @@ This calls `org-content' interactively."
   :config
   (wal/configure-org)
   :custom
-  (org-adapt-indentation nil) ; Defaults to `t' nowadays ...
+  (org-adapt-indentation nil)
   (org-ellipsis "↷")
   (org-hide-emphasis-markers t)
   (org-log-done 'time)
@@ -4946,8 +4942,8 @@ This sets additional modes."
   :config
   (wal/configure-org-src)
   :custom
-  (org-src-tab-acts-natively nil) ; Defaults to t nowadays.
-  (org-edit-src-content-indentation 0) ; Defaults to 2 nowadays.
+  (org-src-tab-acts-natively nil)
+  (org-edit-src-content-indentation 0)
   :bind
   (:map org-src-mode-map
    ("C-c C-c" . org-edit-src-exit))
@@ -4992,8 +4988,7 @@ If the project root cannot be determined, use
       (file+headline wal/org-capture-find-project-tasks "Tasks")
       "* TODO %?\n\n%F\n\n%i"
       :empty-lines-before 1)))
-  ;; This leads to endless edit buffers opening since we annotate bookmarks
-  (org-capture-bookmark nil)
+  (org-capture-bookmark nil) ; Prevents countless edit buffers since we annotate bookmarks.
   :general
   (wal/sergeant "o" '(org-capture :wk "org-capture"))
   :ensure nil
@@ -5245,7 +5240,7 @@ The mother of all buffers. You don't need no tree views.
   :custom
   (dired-listing-switches "-lah --group-directories-first")
   (dired-auto-revert-buffer t)
-  (dired-kill-when-opening-new-dired-buffer t) ;; New in Emacs 28.1.
+  (dired-kill-when-opening-new-dired-buffer t) ; New in Emacs 28.
   :bind
   (:map ctl-x-map
    ("j" . dired-jump)
@@ -6100,7 +6095,7 @@ Can we have =deno= instead of =node=?
   (js2-include-node-externs t)
   :bind
   (:map js2-mode-map
-   ("<backtab>" . js2-indent-bounce)) ; `js2-bounce-indent-p' also binds <TAB>
+   ("<backtab>" . js2-indent-bounce)) ; `js2-bounce-indent-p' also binds <TAB>.
   :mode "\\.js\\'"
   :hook (js2-mode . wal/js2-mode)
   :ensure nil)
@@ -6407,7 +6402,7 @@ LSP support for Dart.
     :major-modes t
     "o" '(lsp-dart-show-flutter-outline :wk "show outline")
     "e" '(lsp-dart-run :wk "run")
-    "R" '(lsp-dart-dap-flutter-hot-restart :wk "restart")    ; Exception to mimic default binding.
+    "R" '(lsp-dart-dap-flutter-hot-restart :wk "restart") ; Exception to mimic default binding.
     "r" '(lsp-dart-dap-flutter-hot-reload :wk "hot reload")
     "tc" '(lsp-dart-run-test-at-point :wk "test (current)")
     "ta" '(lsp-dart-run-all-tests :wk "test (all)")
@@ -6632,8 +6627,7 @@ My spelling is bad. Uses American English for =flyspell=.
   (flyspell-default-dictionary "american")
   :bind
   (:map flyspell-mode-map
-   ("C-." . ispell-word)) ; Replaces `flyspell-auto-correct-word'
-                          ; which is still available via `C-M-i'.
+   ("C-." . ispell-word)) ; Replaces `flyspell-auto-correct-word', which is still available via `C-M-i'.
   :general
   (wal/captain :keymaps 'flyspell-mode-map
     "s" '(:ignore t :wk "flyspell")
@@ -6780,6 +6774,7 @@ This adds additional ignored directories."
   (lsp-keymap-prefix (wal/prefix-user-key (concat wal/captain-key " " "l")))
   (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
   (lsp-clients-typescript-log-verbosity "off")
+  (lsp-rust-analyzer-cargo-watch-command "clippy")
   (lsp-signature-render-documentation nil)
   (lsp-signature-function 'lsp-signature-posframe)
   (lsp-signature-auto-activate '(:on-server-request))
@@ -6808,8 +6803,7 @@ Don't clutter things up too much.
   :custom
   (lsp-ui-doc-show-with-cursor t)
   (lsp-ui-doc-delay 1.0)
-  ;; Make sure that docs actually fit into the window.
-  (lsp-ui-doc-max-height 10)
+  (lsp-ui-doc-max-height 10) ; Ensures that docs fit.
   (lsp-ui-doc-text-scale-level -1)
   :after lsp-mode)
 #+END_SRC
@@ -7637,7 +7631,7 @@ If return nil after setting it to t."
 * Footnotes
 
 [fn:1] Jumped ship from =27.1=. Some minor things might not work there.
-I currently use this config in =28.0.60= and =29.0.50=.
+I currently use this config in =28.1.50= and =29.0.50=.
 
 [fn:2] If you're feeling adventurous, [[https://git.savannah.gnu.org/cgit/emacs.git/tree/INSTALL][build from source]].
 
