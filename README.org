@@ -700,7 +700,7 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-k= acts on the current point with =embark=
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-p= switches projects
-+ =H-<return>= completes at point using =company= (in =company-mode=)
++ =H-<return>= completes at point (using =company= if selected)
 + =H-== to do a =quick-calc= (inserted if called with =C-u=)
 + =H-[= toggles pop-ups using =popper=
 + =H-\= opens new =vterm= terminal
@@ -3077,10 +3077,6 @@ Dim inactive frames.
 
 #+BEGIN_SRC emacs-lisp
 ;; Solution from buzztaiki https://github.com/gonewest818/dimmer.el/issues/49
-(defun wal/lsp-ui-doc-frame-p ()
-  "Check if buffer is a lsp-ui-doc frame buffer."
-  (string-match-p "\\` \\*lsp-ui-doc" (buffer-name)))
-
 (defun wal/advise-dimmer-config-change-handler ()
   "Advise to only force process if no predicate is truthy."
   (let ((ignore (cl-some (lambda (f) (and (fboundp f) (funcall f)))
@@ -3089,11 +3085,25 @@ Dim inactive frames.
       (when (fboundp 'dimmer-process-all)
         (dimmer-process-all t)))))
 
+(defun wal/lsp-ui-doc-frame-p ()
+  "Check if buffer is a lsp-ui-doc frame buffer."
+  (string-match-p "\\` \\*lsp-ui-doc" (buffer-name)))
+
 (defun wal/dimmer-configure-lsp-doc ()
   "Convenience settings for lsp-doc users."
   (add-to-list
    'dimmer-prevent-dimming-predicates
    #'wal/lsp-ui-doc-frame-p))
+
+(defun wal/corfu-frame-p ()
+  "Check if the buffer is a corfu frame buffer."
+  (string-match-p "\\` \\*corfu" (buffer-name)))
+
+(defun wal/dimmer-configure-corfu ()
+  "Convenience settings for corfu users."
+  (add-to-list
+   'dimmer-prevent-dimming-predicates
+   #'wal/corfu-frame-p))
 
 (use-package dimmer
   :wal-ways nil
@@ -3106,6 +3116,7 @@ Dim inactive frames.
   (dimmer-configure-org)
   (dimmer-configure-which-key)
   (wal/dimmer-configure-lsp-doc)
+  (wal/dimmer-configure-corfu)
   (dimmer-mode t)
   :custom
   (dimmer-fraction 0.3)
@@ -3904,6 +3915,11 @@ Complete commands and code.
   "Additional buffers to filter."
   :type '(repeat string)
   :group 'wal-complete)
+
+(defcustom wal/cap-provider 'company
+  "The `completion-at-point' provider."
+  :type 'symbol
+  :group 'wal-complete)
 #+END_SRC
 
 ** Inline Completion
@@ -3917,6 +3933,7 @@ In-line completion.
 
 #+BEGIN_SRC emacs-lisp
 (use-package company
+  :if (eq wal/cap-provider 'company)
   :custom
   (company-show-quick-access 'left)
   (company-lighter-base "cmp")
@@ -3927,6 +3944,28 @@ In-line completion.
   (wal/captain-sink :keymaps '(prog-mode-map dap-ui-repl-mode-map)
     "c" '(company-mode :wk "company"))
   :hook (prog-mode . company-mode))
+#+END_SRC
+
+*** corfu
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Alternative.
+
+#+BEGIN_SRC emacs-lisp
+(use-package corfu
+  :if (eq wal/cap-provider 'corfu)
+  :custom
+  (corfu-auto t)
+  (corfu-quit-no-match t)
+  (corfu-cycle t)
+  :wal-bind
+  ("<return>" . completion-at-point)
+  :general
+  (wal/captain-sink :keymaps '(prog-mode-map dap-ui-repl-mode-map)
+    "c" '(corfu-mode :wk "corfu"))
+  :hook (prog-mode . corfu-mode))
 #+END_SRC
 
 ** Minibuffer Completion
@@ -6437,7 +6476,8 @@ We want quicker =company= suggestions when in CSS modes.
   "Hook into `css-mode'."
   (wal/message-in-a-bottle
    '("Centering? It's simple. Here's 15 ways to do it."))
-  (setq-local company-idle-delay 0.1)
+  (setq-local company-idle-delay 0.1
+              corfu-auto-delay 0.1)
   (hack-local-variables)
   (wal/maybe-enable-tabs)
   (flycheck-mode +1))
@@ -6604,7 +6644,9 @@ Language servers are awesome. Thanks, Microsoft.
 (declare-function wal/captain-sink "wal-key-bindings.el")
 (declare-function wdb/side "wal-func.el")
 
+(defvar lsp-completion-provider)
 (defvar lsp-file-watch-ignored-directories)
+(defvar wal/cap-provider)
 
 (defgroup wal-lsp nil
   "Change settings for LSP packages."
@@ -6614,8 +6656,8 @@ Language servers are awesome. Thanks, Microsoft.
 (defcustom wal/lsp-slow-modes nil
   "Modes that have slow langauge servers.
 
-For these modes, `company-idle-delay' will not set to nil instead
-of 0.0."
+For these modes, `company-idle-delay' and `corfu-auto' will be
+set to nil instead of 0.0."
   :type '(repeat symbol)
   :group 'wal-lsp)
 
@@ -6639,11 +6681,19 @@ servers yourself[fn:18].
 #+BEGIN_SRC emacs-lisp
 (defun wal/lsp ()
   "Activate LSP client."
-  (if (memq major-mode wal/lsp-slow-modes)
-      (setq-local company-idle-delay nil)
-    (setq-local company-idle-delay 0.0
-                company-minimum-prefix-length 1))
-  (setq-local company-backends '(company-capf company-yasnippet))
+  (cond
+   ((eq wal/cap-provider 'company)
+    (if (memq major-mode wal/lsp-slow-modes)
+        (setq-local company-idle-delay nil)
+      (setq-local company-idle-delay 0.0
+                  company-minimum-prefix-length 1)
+      (setq-local company-backends '(company-capf company-yasnippet))))
+   ((eq wal/cap-provider 'corfu)
+    (if (memq major-mode wal/lsp-slow-modes)
+        (setq-local corfu-auto nil)
+      (setq-local corfu-auto-delay 0.0
+                  corfu-auto-prefix 1)))
+   (t nil))
   (lsp-deferred))
 
 (wal/captain-sink :keymaps 'prog-mode-map
@@ -6661,6 +6711,8 @@ This adds additional ignored directories."
               wal/lsp-file-watch-ignored-directories)
   (advice-add 'lsp :before 'wal/advise-lsp-to-prevent-multi-root)
   (lsp-enable-which-key-integration t)
+  (when (eq wal/cap-provider 'corfu)
+    (setq lsp-completion-provider :none))
   (wal/captain :keymaps 'lsp-mode-map
     "l" '(:keymap lsp-command-map :wk "lsp")))
 
