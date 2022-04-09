@@ -697,7 +697,9 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-h= finds project file
 + =H-]= highlights the cursor using =beacon=
 + =H-i= switches perspective (when using =perspective=)
-+ =H-k= acts on the current point with =embark=
++ =H-k= acts on the current point with =embark= (immediately if called
+  with =C-u=
++ =H-m= shows version control status using =magit=
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-p= switches projects
 + =H-<return>= completes at point (using =company= if selected)
@@ -714,7 +716,7 @@ There's two =avy= actions:
 
 It's also used for some dispatches:
 
-+ =H-m= dispatches =wal/magit=
++ =H-m= dispatches =wal/magit-dispatch= (if called with =C-u=)
 + =H-n= dispatches =rg-menu=
 + =H-o= dispatches =ace-window=.
 
@@ -1422,6 +1424,34 @@ throws are 3 or THROWS."
   (if (> (length text) max-len)
       (concat (substring text 0 (max (- max-len 3) 1)) "...")
     text))
+#+END_SRC
+
+*** Differentiating by =universal-argument=
+
+Make function calls even more versatile.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/univ-p ()
+  "Check if the `current-prefix-arg' is the `universal-argument'."
+  (equal current-prefix-arg '(4)))
+
+(cl-defmacro wal/univ (a b &key pass-args)
+  "Define a `universal-argument'-modified function for A.
+It will call B instead if the argument is present.
+
+If PASS-ARGS is non-nil, both functions will be called
+interactively providing an empty list as arguments."
+  (declare (indent defun))
+  (let ((a-name (symbol-name a))
+        (b-name (symbol-name b)))
+    `(defun ,(intern (concat "wal/univ-" a-name)) ()
+       ,(format "Call `%s' unless `universal-argument' is present, in that case call `%s' instead."
+                a-name
+                b-name)
+       (interactive)
+       (if (wal/univ-p)
+           ,(if pass-args `(funcall-interactively ',b '()) `(,b))
+         ,(if pass-args `(funcall-interactively ',a '()) `(,a))))))
 #+END_SRC
 
 ** Regions
@@ -3678,6 +3708,7 @@ Moving around should be fun.
 (declare-function avy-with "ext:avy.el")
 (declare-function avy-jump "ext:avy.el")
 (declare-function org-at-heading-p "ext:org.el")
+(declare-function wal/univ-p "wal-func.el")
 
 (defvar avy-goto-word-0)
 (defvar avy-goto-word-0-regexp)
@@ -3699,7 +3730,7 @@ your mouse.
 
 If called with `universal-argument', go to line first."
   (interactive)
-  (when (equal current-prefix-arg '(4))
+  (when (wal/univ-p)
     (avy-goto-line))
   (avy-with avy-goto-word-0
     (avy-jump avy-goto-word-0-regexp
@@ -3716,7 +3747,7 @@ If called with `universal-argument', go to line first."
 
 When called with `universal-argument', this also goes to the
 beginning."
-  (when (or (equal current-prefix-arg '(4))
+  (when (or (wal/univ-p)
             (and (eq major-mode 'org-mode) (org-at-heading-p)))
     (goto-char (line-beginning-position))))
 
@@ -4167,13 +4198,16 @@ Do something else with minibuffer candidate.
                 #'wal/duck-duck-go-region)))
 
 (use-package embark
+  :init
+  (wal/univ embark-act embark-dwim)
   :config
   (wal/configure-embark)
   :custom
   (embark-mixed-indicator-delay 2.0)
   :wal-bind
-  ("k" . embark-act)
-  :after vertico)
+  ("k" . wal/univ-embark-act)
+  :after vertico
+  :commands (wal/univ-embark-act))
 
 (use-package embark-consult
   :hook (embark-collect-mode . consult-preview-at-point-mode)
@@ -4440,6 +4474,8 @@ perspectives."
 
 (use-package perspective
   :if wal/use-perspectives
+  :init
+  (wal/univ persp-switch persp-buffer-menu :pass-args t)
   :config
   (wal/configure-perspective)
   (persp-mode +1)
@@ -4458,7 +4494,7 @@ perspectives."
    ("C-k" . persp-kill-buffer*))
   :wal-bind
   (:map persp-mode-map
-   ("i" . persp-switch))
+   ("i" . wal/univ-persp-switch))
   :hook (kill-emacs . persp-state-save)
   :demand)
 #+END_SRC
@@ -5357,10 +5393,11 @@ I am convinced that we are in a terminal process.
 
 ;;; Code:
 
-(declare-function wdb/side "wal-func.el")
 (declare-function project-buffers "ext:project.el")
 (declare-function projectile-project-p "ext:projectile.el")
 (declare-function projectile-project-buffers "ext:projectile.el")
+(declare-function wal/univ-p "wal-func.el")
+(declare-function wdb/side "wal-func.el")
 
 (defvar eshell-highlight-prompt)
 (defvar eshell-prompt-function)
@@ -5403,7 +5440,7 @@ If called from a project buffer, this only creates a `vterm'
 buffer if one doesn't exist yet (unless called with
 `universal-argument')."
   (interactive)
-  (if-let* ((cont (and (not (equal current-prefix-arg '(4)))
+  (if-let* ((cont (and (not (wal/univ-p))
                        (if wal/use-projectile
                            (projectile-project-p)
                          (project-current))))
@@ -5544,8 +5581,10 @@ Forget remembering =git= commands, use =transient=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
+  :init
+  (wal/univ magit-status wal/magit-dispatch)
   :config
-  (transient-define-prefix wal/magit ()
+  (transient-define-prefix wal/magit-dispatch ()
     "Call `magit' functions in a `magit'-y way."
     [["Core"
       ("s" "status (quick)" magit-status-quick)
@@ -5561,12 +5600,12 @@ Forget remembering =git= commands, use =transient=.
       ("x" "run" magit-run)
       ("c" "clone" magit-clone)]])
   :wal-bind
-  ("m" . wal/magit)
+  ("m" . wal/univ-magit-status)
   :custom
   (magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
   (magit-blame-mode-lighter " mbl")
   (magit-bury-buffer-function 'magit-restore-window-configuration)
-  :commands (wal/magit))
+  :commands (wal/univ-magit-status wal/magit-dispatch))
 #+END_SRC
 
 *** forge
