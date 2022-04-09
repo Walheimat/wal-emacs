@@ -60,4 +60,8 @@ if ensure_log_file; then
   wal::enable_service
 
   echo -e "${green}${whale}${reset} daemon setup complete"
+
+  echo -e "\nMake sure to import PATH after login. For example (at end of file):\n
+${bold}bash (.profile):${reset} systemctl --user import path
+${bold}fish (config.fish):${reset} status is-login; and systemctl --user import-environment PATH"
 fi
