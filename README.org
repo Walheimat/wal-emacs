@@ -1638,6 +1638,7 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
 
 ;;; Code:
 
+(declare-function doom-modeline-refresh-bars "ext:doom-modeline.el")
 (declare-function doom-modeline-refresh-font-width-cache "ext:doom-modeline.el")
 (declare-function wal/general "wal-key-bindings.el")
 (declare-function wal/setup-p "wal.el")
@@ -1694,41 +1695,41 @@ This has no default value."
   :type 'integer
   :group 'wal-fonts)
 
-(defun wal/font-update (attribute value faces &optional refresh)
-  "Set ATTRIBUTE to VALUE for FACES.
+(defvar wal/fonts-updated-hook nil
+  "Functions to run when fonts were updated.")
 
-Optionally REFRESH font width cache aftewards."
+(defun wal/font-update (attribute value faces)
+  "Set ATTRIBUTE to VALUE for FACES."
   (mapc (lambda (it)
     (when (internal-lisp-face-p it)
       (set-face-attribute it nil attribute value)))
     faces)
-  (when (and refresh (boundp 'doom-modeline-mode) doom-modeline-mode)
-    (run-with-idle-timer 0.2 nil #'doom-modeline-refresh-font-width-cache)))
+  (run-hooks 'wal/fonts-updated-hook))
 
 (defun wal/select-fixed-font (font)
   "Select fixed (available) FONT."
   (interactive
    (list (completing-read "Select font: " (wal/available-fonts wal/fixed-fonts))))
-  (wal/font-update :font font '(default fixed-pitch) t))
+  (wal/font-update :font font '(default fixed-pitch)))
 
 (defun wal/set-fixed-font-height (&optional height)
   "Set the HEIGHT for fixed fonts."
   (interactive "nSet fixed font height: ")
   (let ((sensible-height (max (min height 200) 80)))
-    (wal/font-update :height sensible-height '(default fixed-pitch) t)
+    (wal/font-update :height sensible-height '(default fixed-pitch))
     (setq wal/fixed-font-height sensible-height)))
 
 (defun wal/select-variable-font (font)
   "Select variable (available) FONT."
   (interactive
    (list (completing-read "Select font: " (wal/available-fonts wal/variable-fonts))))
-  (wal/font-update :font font '(variable-pitch) t))
+  (wal/font-update :font font '(variable-pitch)))
 
 (defun wal/set-variable-font-height (&optional height)
   "Set the HEIGHT for variable fonts."
   (interactive "nSet variable font height: ")
   (let ((sensible-height (max (min height 200) 80)))
-    (wal/font-update :height sensible-height '(variable-pitch) t)
+    (wal/font-update :height sensible-height '(variable-pitch))
     (setq wal/variable-font-height sensible-height)))
 
 (defun wal/available-fonts (fonts)
@@ -1771,9 +1772,11 @@ available candidate from `wal/fixed-fonts'. Does the same for
       ;; Variable pitch face.
       (set-face-attribute 'variable-pitch nil
                           :font (wal/fonts-candidate wal/variable-fonts t)
-                          :height wal/variable-font-height)))
-  (when (and (featurep 'doom-modeline) doom-modeline-mode)
-    (run-with-idle-timer 0.2 nil #'doom-modeline-refresh-font-width-cache)))
+                          :height wal/variable-font-height)
+      (when (and (featurep 'doom-modeline) doom-modeline-mode)
+        (add-hook 'wal/fonts-updated-hook #'doom-modeline-refresh-font-width-cache)
+        (add-hook 'wal/fonts-updated-hook #'doom-modeline-refresh-bars))))
+  (run-hooks 'wal/fonts-updated-hook))
 
 ;; Slanted and enchanted.
 (defun wal/font-lock ()
@@ -3190,7 +3193,7 @@ Busier and prettier[fn:14] =modeline=.
   (doom-modeline-buffer-file-name-style 'truncate-with-project)
   :custom-face
   (doom-modeline-debug-visual ((t (:inherit 'mode-line))))
-  :defer 1)
+  :demand)
 #+END_SRC
 
 *** delight
@@ -7438,7 +7441,6 @@ Provide some knowledge of the outside world.
     ;; The following packages are optional.
     wal-emacs
     wal-edit
-    wal-visuals
     wal-windows
     wal-movement
     wal-find
@@ -7448,6 +7450,7 @@ Provide some knowledge of the outside world.
     wal-dired
     wal-terminal
     wal-vc
+    wal-visuals
     wal-lang
     wal-fix
     wal-lsp
