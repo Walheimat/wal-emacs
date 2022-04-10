@@ -157,6 +157,11 @@ evaluate /everything/[fn:6] that follows.
   "Packages that are not part of a minimal configuration but should be installed."
   :type '(repeat symbol)
   :group 'wal-settings)
+
+(defcustom wal/maximize-by-default t
+  "Whether to maximize new frames by default."
+  :type 'boolean
+  :group 'wal-settings)
 #+END_SRC
 
 ** Personal
@@ -173,34 +178,36 @@ Set some personal info[fn:7].
 Customize start-up.
 
 #+BEGIN_SRC emacs-lisp
+(defconst wal/experimental (> emacs-major-version 28)
+  "Set to t if Emacs was built from master branch.
+This variable is used to account for certain features (and
+bugs).")
+
+;; Load custom file. Create it if it doesn't yet exist.
+(setq custom-file wal/custom-file)
+(unless (file-exists-p custom-file)
+  (write-region "" nil custom-file))
+(load custom-file)
+
+;; Maximize frame.
+(setq frame-resize-pixelwise t)
+(add-to-list 'initial-frame-alist '(fullscreen . maximized))
+(when wal/maximize-by-default
+  (add-to-list 'default-frame-alist '(fullscreen . maximized)))
+
+;; No splash.
+(setq inhibit-startup-message t)
+(setq initial-major-mode 'fundamental-mode) ; Avoids loading `prog-mode' derivatives.
+
+;; Accept redefinitions.
+(setq ad-redefinition-action 'accept)
+
 ;; Warn Mac/Windows users.
 (unless (eq system-type 'gnu/linux)
   (warn "\
     Warning: Config only tested on Linux. While I did get in
     running on Windows 10, it was quite tricky and involved
     setting unsafe options."))
-
-(defconst wal/experimental (> emacs-major-version 28)
-  "Set to t if Emacs was built from master branch.
-This variable is used to account for certain features (and
-bugs).")
-
-;; Maximize frame.
-(setq frame-resize-pixelwise t)
-(add-to-list 'initial-frame-alist '(fullscreen . maximized))
-
-;; No splash.
-(setq inhibit-startup-message t)
-(setq initial-major-mode 'fundamental-mode) ; Avoids loading `prog-mode' derivatives.
-
-;; Load cutom file. Create it if it doesn't yet exist.
-(setq custom-file wal/custom-file)
-(unless (file-exists-p custom-file)
-  (write-region "" nil custom-file))
-(load custom-file)
-
-;; Accept redefinitions.
-(setq ad-redefinition-action 'accept)
 #+END_SRC
 
 ** Package Archives
