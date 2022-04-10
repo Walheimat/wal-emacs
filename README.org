@@ -1439,26 +1439,27 @@ Make function calls even more versatile.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/univ-p ()
-  "Check if the `current-prefix-arg' is the `universal-argument'."
+  "Check if the `current-prefix-arg' is the `universal-argument'.
+
+This is mainly useful for non-interactive functions."
   (equal current-prefix-arg '(4)))
 
-(cl-defmacro wal/univ (a b &key pass-args)
+(cl-defmacro wal/univ (a b)
   "Define a `universal-argument'-modified function for A.
 It will call B instead if the argument is present.
 
-If PASS-ARGS is non-nil, both functions will be called
-interactively providing an empty list as arguments."
+Both functions will be called interactively."
   (declare (indent defun))
   (let ((a-name (symbol-name a))
         (b-name (symbol-name b)))
-    `(defun ,(intern (concat "wal/univ-" a-name)) ()
-       ,(format "Call `%s' unless `universal-argument' is present, in that case call `%s' instead."
+    `(defun ,(intern (concat "wal/univ-" a-name)) (&optional call-other)
+       ,(format "Call `%s' unless `universal-argument' is present, in that case CALL-OTHER `%s' instead."
                 a-name
                 b-name)
-       (interactive)
-       (if (wal/univ-p)
-           ,(if pass-args `(funcall-interactively ',b '()) `(,b))
-         ,(if pass-args `(funcall-interactively ',a '()) `(,a))))))
+       (interactive "P")
+       (if call-other
+           (call-interactively ',b)
+         (call-interactively ',a)))))
 #+END_SRC
 
 ** Regions
@@ -3657,12 +3658,12 @@ Jump to (visible) lines and chars is fun if you are too lazy to use
 your mouse.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/avy-jump ()
+(defun wal/avy-jump (&optional line-first)
   "Jump to currently visible word in the current line.
 
-If called with `universal-argument', go to line first."
-  (interactive)
-  (when (wal/univ-p)
+If called with `universal-argument', go to LINE-FIRST."
+  (interactive "P")
+  (when line-first
     (avy-goto-line))
   (avy-with avy-goto-word-0
     (avy-jump avy-goto-word-0-regexp
@@ -3760,6 +3761,7 @@ I mostly search.
 ;;; Code:
 
 (declare-function wdb/pop-up "wal-func.el")
+(declare-function wal/univ "wal-func.el")
 
 (defgroup wal-find nil
   "Change settings of search packages."
@@ -3789,11 +3791,14 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 
 #+BEGIN_SRC emacs-lisp
 (use-package rg
+  :init
+  (wal/univ rg-project rg-menu)
   :config
   (wdb/pop-up "\\*rg\\*\\'")
   :wal-bind
-  ("n" . rg-menu)
-  :ensure-system-package rg)
+  ("n" . wal/univ-rg-project)
+  :ensure-system-package rg
+  :commands (wal/univ-rg-project))
 #+END_SRC
 
 *** ctrlf
@@ -4131,15 +4136,15 @@ Do something else with minibuffer candidate.
 
 (use-package embark
   :init
-  (wal/univ embark-act embark-dwim)
+  (wal/univ embark-dwim embark-act)
   :config
   (wal/configure-embark)
   :custom
   (embark-mixed-indicator-delay 2.0)
   :wal-bind
-  ("k" . wal/univ-embark-act)
+  ("k" . wal/univ-embark-dwim)
   :after vertico
-  :commands (wal/univ-embark-act))
+  :commands (wal/univ-embark-dwim))
 
 (use-package embark-consult
   :hook (embark-collect-mode . consult-preview-at-point-mode)
@@ -4407,7 +4412,7 @@ perspectives."
 (use-package perspective
   :if wal/use-perspectives
   :init
-  (wal/univ persp-switch persp-buffer-menu :pass-args t)
+  (wal/univ persp-switch persp-buffer-menu)
   :config
   (wal/configure-perspective)
   (persp-mode +1)
@@ -5374,14 +5379,14 @@ flag to nil for the vterm process."
               (proc (get-buffer-process buf)))
     (set-process-query-on-exit-flag proc nil)))
 
-(defun wal/vterm ()
+(defun wal/vterm (&optional force-new)
   "Get a `vterm' buffer.
 
 If called from a project buffer, this only creates a `vterm'
 buffer if one doesn't exist yet (unless called with
-`universal-argument')."
-  (interactive)
-  (if-let* ((cont (and (not (wal/univ-p))
+FORCE-NEW/`universal-argument')."
+  (interactive "P")
+  (if-let* ((cont (and (not force-new)
                        (if wal/use-projectile
                            (projectile-project-p)
                          (project-current))))
