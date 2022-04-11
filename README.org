@@ -3885,6 +3885,7 @@ Complete commands and code.
 
 (declare-function wdb/ghost "wal-func.el")
 (declare-function wal/append "wal-func.el")
+(declare-function wal/slow-lsp-p "wal-lsp.el")
 (declare-function projectile-project-root "ext:projectile.el")
 
 (defvar xref-show-xrefs-function)
@@ -3959,6 +3960,13 @@ In-line completion.
 Alternative.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/corfu-mode ()
+  "Hook into `corfu-mode.'"
+  (corfu-mode)
+  (unless (wal/slow-lsp-p major-mode)
+    (when (fboundp 'corfu-doc-mode)
+      (corfu-doc-mode))))
+
 (use-package corfu
   :if (eq wal/cap-provider 'corfu)
   :custom
@@ -3970,7 +3978,7 @@ Alternative.
   :general
   (wal/captain-sink :keymaps '(prog-mode-map dap-ui-repl-mode-map)
     "c" '(corfu-mode :wk "corfu"))
-  :hook (prog-mode . corfu-mode))
+  :hook (prog-mode . wal/corfu-mode))
 #+END_SRC
 
 *** corfu-doc
@@ -3988,7 +3996,8 @@ Show docs while selecting.
    ("M-p" . corfu-doc-scroll-down)
    ("M-n" . corfu-doc-scroll-up)
    ("M-d" . corfu-doc-toggle))
-  :hook (corfu-mode . corfu-doc-mode))
+  :demand
+  :after corfu)
 #+END_SRC
 
 ** Minibuffer Completion
@@ -6762,7 +6771,7 @@ Language servers are awesome. Thanks, Microsoft.
   :group 'wal
   :tag "LSP")
 
-(defcustom wal/lsp-slow-modes nil
+(defcustom wal/lsp-slow-modes '(dart-mode)
   "Modes that have slow langauge servers.
 
 For these modes, `company-idle-delay' and `corfu-auto' will be
@@ -6788,20 +6797,22 @@ set to nil instead of 0.0."
 servers yourself[fn:18].
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/slow-lsp-p (mode)
+  "Check if MODE is considered slow."
+  (memq mode wal/lsp-slow-modes))
+
 (defun wal/lsp ()
   "Activate LSP client."
   (cond
    ((eq wal/cap-provider 'company)
-    (if (memq major-mode wal/lsp-slow-modes)
-        (setq-local company-idle-delay nil)
-      (setq-local company-idle-delay 0.0
-                  company-minimum-prefix-length 1)
-      (setq-local company-backends '(company-capf company-yasnippet))))
+    (when (wal/slow-lsp-p major-mode)
+      (setq-local lsp-ui-doc-enable nil))
+    (setq-local company-idle-delay 0.0
+                company-minimum-prefix-length 1
+                company-backends '(company-capf company-yasnippet)))
    ((eq wal/cap-provider 'corfu)
-    (if (memq major-mode wal/lsp-slow-modes)
-        (setq-local corfu-auto nil)
-      (setq-local corfu-auto-delay 0.0
-                  corfu-auto-prefix 1)))
+    (setq-local corfu-auto-delay 0.0
+                corfu-auto-prefix 1))
    (t nil))
   (lsp-deferred))
 
