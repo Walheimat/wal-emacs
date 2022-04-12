@@ -3885,7 +3885,6 @@ Complete commands and code.
 
 (declare-function wdb/ghost "wal-func.el")
 (declare-function wal/append "wal-func.el")
-(declare-function wal/slow-lsp-p "wal-lsp.el")
 (declare-function projectile-project-root "ext:projectile.el")
 
 (defvar xref-show-xrefs-function)
@@ -3960,13 +3959,6 @@ In-line completion.
 Alternative.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/corfu-mode ()
-  "Hook into `corfu-mode.'"
-  (corfu-mode)
-  (unless (wal/slow-lsp-p major-mode)
-    (when (fboundp 'corfu-doc-mode)
-      (corfu-doc-mode))))
-
 (use-package corfu
   :if (eq wal/cap-provider 'corfu)
   :custom
@@ -3978,7 +3970,7 @@ Alternative.
   :general
   (wal/captain-sink :keymaps '(prog-mode-map dap-ui-repl-mode-map)
     "c" '(corfu-mode :wk "corfu"))
-  :hook (prog-mode . wal/corfu-mode))
+  :hook (prog-mode . corfu-mode))
 #+END_SRC
 
 *** corfu-doc
