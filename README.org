@@ -6748,12 +6748,16 @@ Language servers are awesome. Thanks, Microsoft.
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'transient))
+
 (declare-function lsp-enable-which-key-integration "ext:lsp-mode.el")
 (declare-function wal/append "wal-func.el")
 (declare-function wal/captain "wal-key-bindings.el")
 (declare-function wal/captain-sink "wal-key-bindings.el")
 (declare-function wdb/side "wal-func.el")
 
+(defvar company-backends)
 (defvar lsp-completion-provider)
 (defvar lsp-file-watch-ignored-directories)
 (defvar wal/cap-provider)
@@ -6763,11 +6767,11 @@ Language servers are awesome. Thanks, Microsoft.
   :group 'wal
   :tag "LSP")
 
-(defcustom wal/lsp-slow-modes '(dart-mode)
+(defcustom wal/lsp-slow-modes '()
   "Modes that have slow langauge servers.
 
-For these modes, `company-idle-delay' and `corfu-auto' will be
-set to nil instead of 0.0."
+For these modes, `company' and `corfu' settings will not be
+adjusted to be smaller."
   :type '(repeat symbol)
   :group 'wal-lsp)
 
@@ -6794,17 +6798,20 @@ servers yourself[fn:18].
   (memq mode wal/lsp-slow-modes))
 
 (defun wal/lsp ()
-  "Activate LSP client."
+  "Defer LSP setup for the file.
+
+Unless the associated server is considered slow, delays and
+minimum prefixes are reduced."
   (cond
    ((eq wal/cap-provider 'company)
-    (when (wal/slow-lsp-p major-mode)
-      (setq-local lsp-ui-doc-enable nil))
-    (setq-local company-idle-delay 0.0
-                company-minimum-prefix-length 1
-                company-backends '(company-capf company-yasnippet)))
+    (unless (wal/slow-lsp-p major-mode)
+      (setq-local company-idle-delay 0.0
+                  company-minimum-prefix-length 1))
+    (setq-local company-backends '(company-capf company-yasnippet)))
    ((eq wal/cap-provider 'corfu)
-    (setq-local corfu-auto-delay 0.0
-                corfu-auto-prefix 1))
+    (unless (wal/slow-lsp-p major-mode)
+      (setq-local corfu-auto-delay 0.0
+                  corfu-auto-prefix 1)))
    (t nil))
   (lsp-deferred))
 
@@ -6821,12 +6828,26 @@ This adds additional ignored directories."
   (require 'avy nil t) ; For code lenses to work immediately.
   (wal/append 'lsp-file-watch-ignored-directories
               wal/lsp-file-watch-ignored-directories)
-  (advice-add 'lsp :before 'wal/advise-lsp-to-prevent-multi-root)
+  (advice-add 'lsp :before #'wal/advise-lsp-to-prevent-multi-root)
   (lsp-enable-which-key-integration t)
   (when (eq wal/cap-provider 'corfu)
     (setq lsp-completion-provider :none))
   (wal/captain :keymaps 'lsp-mode-map
-    "l" '(:keymap lsp-command-map :wk "lsp")))
+    "l" '(:keymap lsp-command-map :wk "lsp"))
+  (transient-define-prefix wal/lsp-dispatch ()
+    "Call `lsp-mode' functions."
+    [["Format"
+      ("f" "format" lsp-format-buffer)]
+     ["Actions"
+      ("x" "execute" lsp-execute-code-action)
+      ("l" "jump to lens" lsp-avy-lens)]
+     ["Refactor"
+      ("r" "rename" lsp-rename)]
+     ["Go to"
+      ("d" "definition" lsp-find-definition)
+      ("s" "symbol" consult-lsp-file-symbols
+       :inapt-if-not (lambda () (require 'consult-lsp nil 'noerror)))
+      ]]))
 
 (use-package lsp-mode
   :wal-ways nil
@@ -6843,11 +6864,8 @@ This adds additional ignored directories."
   (lsp-signature-auto-activate '(:on-server-request))
   (lsp-keep-workspace-alive nil)
   :general
-  (wal/major
-    :keymaps 'lsp-mode-map
-    "f" '(lsp-format-buffer :wk "format")
-    "l" '(lsp-avy-lens :wk "jump to lens")
-    "x" '(lsp-execute-code-action :wk "execute action"))
+  (wal/lieutenant :keymaps 'lsp-mode-map
+    "l" '(wal/lsp-dispatch :wk "LSP"))
   :delight
   (lsp-mode " lsp")
   (lsp-lens-mode " lns"))
@@ -6929,9 +6947,6 @@ Jump to symbols with =consult=.
 #+begin_src emacs-lisp
 (use-package consult-lsp
   :wal-ways nil
-  :general
-  (wal/major :keymaps 'lsp-mode-map
-    "s" '(consult-lsp-file-symbols :wk "jump to symbol"))
   :after (consult lsp-mode))
 #+end_src
 
