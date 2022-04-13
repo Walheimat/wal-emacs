@@ -1430,19 +1430,21 @@ throws are 3 or THROWS."
   (if (> (length text) max-len)
       (concat (substring text 0 (max (- max-len 3) 1)) "...")
     text))
+
+(defun wal/univ-p ()
+  "Check if the `current-prefix-arg' is the `universal-argument'.
+
+This is mainly useful for non-interactive functions."
+  (equal current-prefix-arg '(4)))
 #+END_SRC
+
+** Macros
 
 *** Differentiating by =universal-argument=
 
 Make function calls even more versatile.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/univ-p ()
-  "Check if the `current-prefix-arg' is the `universal-argument'.
-
-This is mainly useful for non-interactive functions."
-  (equal current-prefix-arg '(4)))
-
 (cl-defmacro wal/univ (a b)
   "Define a `universal-argument'-modified function for A.
 It will call B instead if the argument is present.
@@ -1462,6 +1464,38 @@ Both functions will be called interactively. The
        (if call-other
            (call-interactively ',b)
          (call-interactively ',a)))))
+#+END_SRC
+
+*** Initial Setups
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/setup-list '()
+  "List of already performed setups.")
+
+(cl-defmacro wal/define-init-setup (name docs &key initial always immediately)
+  "Define an initial setup for NAME.
+
+The INITIAL setup is only run once. The ALWAYS one on every call.
+
+In daemon-mode the function may be called IMMEDIATELY. An
+appropriate hook is chosen for the original call."
+  (declare (indent defun) (doc-string 2))
+  (let ((func-name (intern (concat "wal/init-setup-" (symbol-name name)))))
+    `(progn
+       (defun ,func-name ()
+         ,(format "Do base setup for %s. Do minimal setup on repeats.\n%s" name docs)
+         (unless (memq ',name wal/setup-list)
+           (progn
+             (message "Initial setup of '%s'" ,(symbol-name name))
+             ,@initial
+             (add-to-list 'wal/setup-list ',name)))
+         ,@always)
+       (if (daemonp)
+           (progn
+             (when ,immediately
+               (funcall ',func-name))
+             (add-hook 'server-after-make-frame-hook ',func-name))
+         (add-hook 'emacs-startup-hook ',func-name)))))
 #+END_SRC
 
 ** Regions
@@ -1558,7 +1592,8 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 
 ;;; Code:
 
-(declare-function wal/setup-p "wal.el")
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
 (defvar wal/experimental)
 
@@ -1596,23 +1631,19 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
         (setcdr alpha-default transparency)))))
 
 ;; Some themes require configuration, so we only load after initialization.
-(defun wal/setup-visuals ()
-  "Setup visual frills like theme and transparency."
-  (interactive)
-  (unless (wal/setup-p 'visuals)
-    (when wal/theme
-      (load-theme wal/theme t))
-    ;; Add the transparency to the `default-frame-alist' as well.
-    (if wal/experimental
-        (add-to-list 'default-frame-alist `(alpha-background . ,wal/transparency))
-      (add-to-list 'default-frame-alist `(alpha . ,wal/transparency)))
-    (wal/transparency)))
-
-(if (daemonp)
-    (progn
-      (wal/setup-visuals)
-      (add-hook 'server-after-make-frame-hook #'wal/transparency))
-  (add-hook 'emacs-startup-hook #'wal/setup-visuals))
+(wal/define-init-setup visuals
+  "Set up visual frills like theme and transparency."
+  :initial
+  ((if wal/experimental
+       (add-to-list 'default-frame-alist `(alpha-background . ,wal/transparency))
+     (add-to-list 'default-frame-alist `(alpha . ,wal/transparency)))
+   (when wal/theme
+     (if (custom-theme-p wal/theme)
+         (enable-theme wal/theme)
+       (load-theme wal/theme t))))
+  :always
+  ((wal/transparency))
+  :immediately t)
 
 ;; Mix of old and new.
 (setq frame-title-format '(multiple-frames "%b"
@@ -1640,10 +1671,12 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+
 (declare-function doom-modeline-refresh-bars "ext:doom-modeline.el")
 (declare-function doom-modeline-refresh-font-width-cache "ext:doom-modeline.el")
 (declare-function wal/general "wal-key-bindings.el")
-(declare-function wal/setup-p "wal.el")
 
 (defgroup wal-fonts nil
   "Change fonts and font sizes."
@@ -1753,32 +1786,33 @@ instead."
         (car preferred)
       (car available-fonts))))
 
-(defun wal/setup-fonts ()
-  "Setup fonts for GUI Emacs.
+(wal/define-init-setup fonts
+  "Set up fonts for GUI Emacs.
 
 This sets `default' and `fixed-pitch' fonts to the first
 available candidate from `wal/fixed-fonts'. Does the same for
 `variable-pitch' using `wal/variable-fonts'."
-  (when (or (daemonp) (display-graphic-p))
-    (unless (wal/setup-p 'fonts)
-      (mapc (lambda (it)
-              (when (internal-lisp-face-p it)
-                (set-face-attribute it nil
-                                    :font (wal/fonts-candidate wal/fixed-fonts t)
-                                    :height wal/fixed-font-height)))
-            '(default fixed-pitch))
-      (mapc (lambda (it)
-              (when (internal-lisp-face-p it)
-                (set-face-attribute it nil :inherit 'mode-line)))
-            '(mode-line-active mode-line-inactive))
-      ;; Variable pitch face.
-      (set-face-attribute 'variable-pitch nil
-                          :font (wal/fonts-candidate wal/variable-fonts t)
-                          :height wal/variable-font-height)
-      (when (and (featurep 'doom-modeline) doom-modeline-mode)
-        (add-hook 'wal/fonts-updated-hook #'doom-modeline-refresh-font-width-cache)
-        (add-hook 'wal/fonts-updated-hook #'doom-modeline-refresh-bars))))
-  (run-hooks 'wal/fonts-updated-hook))
+  :initial
+  ((when (or (daemonp) (display-graphic-p))
+     (mapc (lambda (it)
+             (when (internal-lisp-face-p it)
+               (set-face-attribute it nil
+                                   :font (wal/fonts-candidate wal/fixed-fonts t)
+                                   :height wal/fixed-font-height)))
+           '(default fixed-pitch))
+     (mapc (lambda (it)
+             (when (internal-lisp-face-p it)
+               (set-face-attribute it nil :inherit 'mode-line)))
+           '(mode-line-active mode-line-inactive))
+     ;; Variable pitch face.
+     (set-face-attribute 'variable-pitch nil
+                         :font (wal/fonts-candidate wal/variable-fonts t)
+                         :height wal/variable-font-height)
+     (when (and (featurep 'doom-modeline) doom-modeline-mode)
+       (add-hook 'wal/fonts-updated-hook #'doom-modeline-refresh-font-width-cache)
+       (add-hook 'wal/fonts-updated-hook #'doom-modeline-refresh-bars))))
+  :always
+  ((run-hooks 'wal/fonts-updated-hook)))
 
 ;; Slanted and enchanted.
 (defun wal/font-lock ()
@@ -1791,10 +1825,6 @@ available candidate from `wal/fixed-fonts'. Does the same for
  "sv" '(wal/set-variable-font-height :wk "variable height")
  "sF" '(wal/select-fixed-font :wk "fixed family")
  "sV" '(wal/select-variable-font :wk "variable family"))
-
-(if (daemonp)
-    (add-hook 'server-after-make-frame-hook 'wal/setup-fonts)
-  (add-hook 'emacs-startup-hook 'wal/setup-fonts))
 
 (add-hook 'font-lock-mode-hook 'wal/font-lock)
 
@@ -7694,19 +7724,6 @@ This will activate minor mode `wal/config-mode'."
 This basically just a giant =require=.
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/setup-alist '()
-  "Alists of already performed setups.")
-
-(defun wal/setup-p (sym)
-  "Check if SYM has already been setup.
-
-If return nil after setting it to t."
-  (if (car (assoc sym wal/setup-alist))
-      t
-    (message "Setting up %s" sym)
-    (push `(,sym . t) wal/setup-alist)
-    nil))
-
 (when (boundp 'wal/emacs-config-package-path)
   (add-to-list 'load-path wal/emacs-config-package-path))
 
