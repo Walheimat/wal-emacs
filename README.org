@@ -1447,7 +1447,8 @@ This is mainly useful for non-interactive functions."
   "Define a `universal-argument'-modified function for A.
 It will call B instead if the argument is present.
 
-Both functions will be called interactively."
+Both functions will be called interactively. The
+`current-prefix-arg' is consumed by setting it to nil."
   (declare (indent defun))
   (let ((a-name (symbol-name a))
         (b-name (symbol-name b)))
@@ -1456,6 +1457,8 @@ Both functions will be called interactively."
                 a-name
                 b-name)
        (interactive "P")
+       (setq current-prefix-arg nil)
+       (prefix-command-update)
        (if call-other
            (call-interactively ',b)
          (call-interactively ',a)))))
