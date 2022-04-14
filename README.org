@@ -700,14 +700,14 @@ There are a few non-standard meta sequences.
 
 Most hyper[fn:9] bindings are quick-access actions:
 
-+ =H-h= finds project file
++ =H-h= finds project file (or switches projects if called with =C-u=)
 + =H-]= highlights the cursor using =beacon=
-+ =H-i= switches perspective (when using =perspective=)
++ =H-i= switches =perspective= (or lists its buffers if called with =C-u=)
 + =H-k= acts on the current point with =embark= (immediately if called
   with =C-u=
 + =H-m= shows version control status using =magit=
++ =H-n= searches project with =rg=
 + =H-<mouse3>= adds another =multiple-cursor= at point
-+ =H-p= switches projects
 + =H-<return>= completes at point (using =company= if selected)
 + =H-== to do a =quick-calc= (inserted if called with =C-u=)
 + =H-[= toggles pop-ups using =popper=
@@ -717,13 +717,13 @@ Most hyper[fn:9] bindings are quick-access actions:
 
 There's two =avy= actions:
 
-+ =H-j= jumps to word in line (globally using =colonel-sink=)
++ =H-j= jumps to word in line
 + =H-l= jumps to line.
 
 It's also used for some dispatches:
 
-+ =H-m= dispatches =wal/magit-dispatch= (if called with =C-u=)
-+ =H-n= dispatches =rg-menu=
++ =H-m= dispatches =wal/magit-dispatch= if called with =C-u=
++ =H-n= dispatches =rg-menu= if called with =C-u=
 + =H-o= dispatches =ace-window=.
 
 **** Caps to Hyper
@@ -792,7 +792,6 @@ minor-mode-specific[fn:11] actions. The package prefixes are:
 + =m= for =smerge=
 + =p= for =projectile=
 + =s= for =flyspell=
-+ =w= for =winner=
 + =y= for =yasnippet=.
 
 Leader key =lieutenant= (='= by default) is currently used for adjustments
@@ -801,8 +800,7 @@ custom =hydra= and =transient= maps.
 Leader key =sergeant= (=<SPC>= by default) is dedicated to =org-roam=.
 
 All leader keys have so-called sinks. The sinks for =major= and =captain=
-toggle major and minor modes, respectively. The sink for =colonel=
-currently holds variations of the default actions. The sink for
+toggle major and minor modes, respectively. The sink for =colonel=,
 =lieutenant= and =sergeant= are currently unused.
 
 ** Packages
@@ -1473,7 +1471,7 @@ Both functions will be called interactively. The
   "List of already performed setups.")
 
 (cl-defmacro wal/define-init-setup (name docs &key initial always immediately)
-  "Define an initial setup for NAME.
+  "Define an initial setup for NAME documented by DOCS.
 
 The INITIAL setup is only run once. The ALWAYS one on every call.
 
@@ -1883,8 +1881,6 @@ Up the kill count.
   ("C-?" . undo-redo)
   :general
   (wal/general "fp" '(list-processes :wk "processes"))
-  (wal/colonel-sink :keymaps '(prog-mode-map yaml-mode-map)
-    "w" '(delete-trailing-whitespace :wk "delete trailing whitespace"))
   (wal/captain-sink "a" '(auto-fill-mode :wk "auto-fill"))
   :ensure nil)
 #+END_SRC
@@ -2600,6 +2596,7 @@ Undo and redo with branching.
 
 #+BEGIN_SRC emacs-lisp
 (use-package undo-tree
+  :wal-ways nil
   :custom
   (undo-tree-mode-lighter " udt")
   (undo-tree-auto-save-history nil)
@@ -3744,8 +3741,6 @@ beginning."
     "rd" '(avy-kill-region :wk "delete")
     "rm" '(avy-move-region :wk "move")
     "rw" '(avy-kill-ring-save-region :wk "kill"))
-  (wal/colonel-sink
-   "j"  '(avy-goto-word-1 :wk "go to any word"))
   :commands (avy-with))
 #+END_SRC
 
@@ -4135,6 +4130,7 @@ completion actions.
   (marginalia-command-categories
     '((imenu . imenu)
       (projectile-switch-to-buffer . buffer)
+      (wal/univ-projectile-find-file . project-file)
       (projectile-find-file . project-file)
       (projectile-find-file-other-window . project-file)
       (projectile-switch-project . project-file)
@@ -4240,10 +4236,9 @@ Do not ignore hidden files."
     "ub" '(consult-bookark :wk "bookmark")
     "ul" '(consult-goto-line :wk "line")
     "um" '(consult-mark :wk "mark")
-    "ug" '(consult-global-mark :wk "global mark"))
-  (wal/colonel-sink
-    "n" '(consult-ripgrep :wk "rg")
-    "i" '(wal/consult-ripgrep-ignored :wk "ignored rg"))
+    "ug" '(consult-global-mark :wk "global mark")
+    "ur" '(consult-ripgrep :wk "rg")
+    "ui" '(wal/consult-ripgrep-ignored :wk "ignored rg"))
   (wal/major :keymaps 'org-mode-map :major-modes t
     "g" '(consult-org-heading :wk "go to heading"))
   (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
@@ -4514,6 +4509,8 @@ This extends all ignore lists' default values."
 
 (use-package projectile
   :if wal/use-projectile
+  :init
+  (wal/univ projectile-find-file projectile-switch-project)
   :config
   (wal/configure-projectile)
   (projectile-mode +1)
@@ -4524,12 +4521,11 @@ This extends all ignore lists' default values."
   (projectile-indexing-method 'hybrid)
   (projectile-enable-caching t)
   :wal-bind
-  (("p" . projectile-switch-project)
-   ("h" . projectile-find-file))
+  ("h" . wal/univ-projectile-find-file)
   :bind
   (:map projectile-command-map
     ("P" . wal/projectile-test-project))
-  :commands (projectile-project-root)
+  :commands (projectile-project-root wal/univ-projectile-find-file)
   :delight " pjt")
 #+END_SRC
 
@@ -4543,14 +4539,16 @@ Built-in but entirely dependent on either =git= or =hg=.
 #+BEGIN_SRC emacs-lisp
 (use-package project
   :if (not wal/use-projectile)
+  :init
+  (wal/univ project-find-file project-switch-project)
   :custom
   (project-switch-commands 'project-find-dir)
   (project-vc-ignores wal/project-vc-ignores)
   :bind-keymap
   ("C-c p" . project-prefix-map)
   :wal-bind
-  (("p" . project-switch-project)
-   ("h" . project-find-file))
+  ("h" . wal/univ-project-find-file)
+  :commands (wal/univ-project-find-file)
   :ensure nil
   :demand)
 #+END_SRC
@@ -4828,7 +4826,7 @@ Trying to organize my thoughts using Zettelkästen.
   (wal/sergeant
     "c" '(org-roam-capture :wk "capture")
     "f" '(org-roam-node-find :wk "find")
-    "<SPC>" '(org-roam-buffer-toggle :wk "buffer")
+    "b" '(org-roam-buffer-toggle :wk "buffer")
     "t" '(org-roam-tag-add :wk "tag")
     "g" '(org-roam-graph :wk "graph"))
   (wal/sergeant :keymaps 'org-mode-map :major-modes t
@@ -5576,7 +5574,7 @@ Forget remembering =git= commands, use =transient=.
       ("f" "find" magit-find-file)
       ("o" "find other window" magit-find-file-other-window)]
      ["Diff"
-      ("f" "file" magit-diff-buffer-file)
+      ("d" "file" magit-diff-buffer-file)
       ("r" "range" magit-diff-range)]
      ["Other"
       ("x" "run" magit-run)
@@ -6895,9 +6893,9 @@ This adds additional ignored directories."
   (lsp-signature-function 'lsp-signature-posframe)
   (lsp-signature-auto-activate '(:on-server-request))
   (lsp-keep-workspace-alive nil)
-  :general
-  (wal/lieutenant :keymaps 'lsp-mode-map
-    "l" '(wal/lsp-dispatch :wk "LSP"))
+  :wal-bind
+  (:map lsp-mode-map
+   ("p" . wal/lsp-dispatch))
   :delight
   (lsp-mode " lsp")
   (lsp-lens-mode " lns"))
@@ -7437,9 +7435,6 @@ Display code statistics.
 (use-package tokei
   :if (executable-find "tokei")
   :wal-ways nil
-  :general
-  (wal/colonel-sink
-    "t" '(tokei :wk "tokei"))
   :ensure nil)
 #+END_SRC
 
