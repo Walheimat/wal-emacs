@@ -722,9 +722,10 @@ There's two =avy= actions:
 
 It's also used for some dispatches:
 
-+ =H-m= dispatches =wal/magit-dispatch= if called with =C-u=
-+ =H-n= dispatches =rg-menu= if called with =C-u=
-+ =H-o= dispatches =ace-window=.
++ =H-m= for =magit= if called with =C-u=
++ =H-n= for =rg= if called with =C-u=
++ =H-o= for =ace-window=
++ =H-p= for =lsp-mode=.
 
 **** Caps to Hyper
 
@@ -785,7 +786,6 @@ actions.
 Leader key =captain= (=/= by default) is responsible
 minor-mode-specific[fn:11] actions. The package prefixes are:
 
-+ =d= for =dap-mode=
 + =f= for =flycheck=
 + =i= for =perspective=
 + =l= for =lsp-mode=
@@ -3915,6 +3915,7 @@ Complete commands and code.
 (declare-function projectile-project-root "ext:projectile.el")
 
 (defvar xref-show-xrefs-function)
+(defvar xref-show-definitions-function)
 (defvar wal/use-projectile)
 
 (defgroup wal-complete nil
@@ -3926,6 +3927,7 @@ Complete commands and code.
 
 (defcustom wal/consult-buffer-filter
   '("\\*Buffer List\\*"
+    "\\*Call Hierarchy\\*"
     "\\*cider"
     "\\*compilation"
     "\\*dap"
@@ -3937,11 +3939,14 @@ Complete commands and code.
     "\\*Help"
     "\\*helpful"
     "\\*HTTP"
+    "\\*lsp"
     "\\*Messages\\*"
+    "\\*Packages\\*"
     "\\*poetry"
     "\\*rg"
     "\\*scratch"
     "\\*vterm"
+    "\\*xref"
     "out\\*$"
     "^magit")
   "Additional buffers to filter."
@@ -4206,7 +4211,8 @@ Do not ignore hidden files."
   "Configure package `consult'."
   (when wal/use-projectile
     (setq consult-project-function #'projectile-project-root))
-  (setq xref-show-xrefs-function #'consult-xref)
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref)
   (wal/append 'consult-buffer-filter
               wal/consult-buffer-filter)
   (consult-customize
@@ -6845,9 +6851,6 @@ minimum prefixes are reduced."
    (t nil))
   (lsp-deferred))
 
-(wal/captain-sink :keymaps 'prog-mode-map
-    "l" '(wal/lsp :wk "lsp"))
-
 (defun wal/advise-lsp-to-prevent-multi-root (&rest _r)
   "Prevent adding workspace roots from other projects."
   (eval '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))
@@ -6867,17 +6870,23 @@ This adds additional ignored directories."
   (transient-define-prefix wal/lsp-dispatch ()
     "Call `lsp-mode' functions."
     [["Format"
-      ("f" "format" lsp-format-buffer)]
+      ("f" "buffer" lsp-format-buffer)
+      ("F" "region" lsp-format-region)]
      ["Actions"
-      ("x" "execute" lsp-execute-code-action)
-      ("l" "jump to lens" lsp-avy-lens)]
+      ("a" "execute" lsp-execute-code-action)
+      ("l" "jump to lens" lsp-avy-lens)
+      ("h" "highlight symbol" lsp-document-highlight)]
      ["Refactor"
-      ("r" "rename" lsp-rename)]
+      ("r" "rename" lsp-rename)
+      ("o" "organize imports" lsp-organize-imports)]
      ["Go to"
       ("d" "definition" lsp-find-definition)
       ("s" "symbol" consult-lsp-file-symbols
        :inapt-if-not (lambda () (require 'consult-lsp nil 'noerror)))
-      ]]))
+      ("H" "hierarchy" lsp-treemacs-call-hierarchy)]
+     ["Workspace"
+      ("R" "restart" lsp-workspace-restart)
+      ("Q" "quit" lsp-workspace-shutdown)]]))
 
 (use-package lsp-mode
   :wal-ways nil
@@ -6960,9 +6969,9 @@ Debugging using VSCode's DAP (in =lsp-mode=)
   (wal/captain-sink :keymaps 'lsp-mode-map
     "d" '(dap-mode :wk "dap"))
   (wal/captain :keymaps 'lsp-mode-map
-    "d" '(dap-hydra :wk "debug"))
+    "D" '(dap-hydra :wk "debug"))
   (wal/lieutenant :keymaps 'lsp-mode-map
-    "d" '(wal/dap-hydra/body :wk "debug"))
+    "d" '(wal/dap-hydra/body :wk "debug (minimal)"))
   :after lsp-mode
   :delight " dap")
 #+END_SRC
