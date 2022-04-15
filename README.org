@@ -966,7 +966,7 @@ Turning on/off certain major modes switching between =major-mode= and
 ;;; wal-key-bindings.el ends here
 #+END_SRC
 
-* Additional Functions
+* Utility
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-func.el" wal/emacs-config-package-path)
 :END:
@@ -977,11 +977,11 @@ Turning on/off certain major modes switching between =major-mode= and
 :END:
 
 #+BEGIN_SRC emacs-lisp
-;;; wal-func.el --- Additional functions.
+;;; wal-func.el --- Utilities.
 
 ;;; Commentary:
 ;;
-;; Additional functions package.
+;; Provides functions and macros to simplify various configurations.
 
 ;;; Code:
 
@@ -990,9 +990,9 @@ Turning on/off certain major modes switching between =major-mode= and
 (defvar use-package-compute-statistics)
 
 (defgroup wal-func nil
-  "Change values used in additional functions."
+  "Change values used in utility functions."
   :group 'wal
-  :tag "Functions")
+  :tag "Utility")
 
 ;;;; Customization:
 
@@ -1399,9 +1399,35 @@ Duplicate items are removed."
   (set sym (delq nil (delete-dups (append (symbol-value sym) seq)))))
 #+END_SRC
 
-** Utility
+** Commands
 
-Some more utility functions.
+Make function calls even more versatile.
+
+#+BEGIN_SRC emacs-lisp
+(cl-defmacro wal/univ (a b)
+  "Define a `universal-argument'-modified function for A.
+It will call B instead if the argument is present.
+
+Both functions will be called interactively. The
+`current-prefix-arg' is consumed by setting it to nil."
+  (declare (indent defun))
+  (let ((a-name (symbol-name a))
+        (b-name (symbol-name b)))
+    `(defun ,(intern (concat "wal/univ-" a-name)) (&optional call-other)
+       ,(format "Call `%s' unless `universal-argument' is present, in that case CALL-OTHER `%s' instead."
+                a-name
+                b-name)
+       (interactive "P")
+       (setq current-prefix-arg nil)
+       (prefix-command-update)
+       (if call-other
+           (call-interactively ',b)
+         (call-interactively ',a)))))
+#+END_SRC
+
+** Helpers
+
+Some more helper functions.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/biased-random (limit &optional bias-low throws)
@@ -1436,35 +1462,9 @@ This is mainly useful for non-interactive functions."
   (equal current-prefix-arg '(4)))
 #+END_SRC
 
-** Macros
+** Setup
 
-*** Differentiating by =universal-argument=
-
-Make function calls even more versatile.
-
-#+BEGIN_SRC emacs-lisp
-(cl-defmacro wal/univ (a b)
-  "Define a `universal-argument'-modified function for A.
-It will call B instead if the argument is present.
-
-Both functions will be called interactively. The
-`current-prefix-arg' is consumed by setting it to nil."
-  (declare (indent defun))
-  (let ((a-name (symbol-name a))
-        (b-name (symbol-name b)))
-    `(defun ,(intern (concat "wal/univ-" a-name)) (&optional call-other)
-       ,(format "Call `%s' unless `universal-argument' is present, in that case CALL-OTHER `%s' instead."
-                a-name
-                b-name)
-       (interactive "P")
-       (setq current-prefix-arg nil)
-       (prefix-command-update)
-       (if call-other
-           (call-interactively ',b)
-         (call-interactively ',a)))))
-#+END_SRC
-
-*** Initial Setups
+Allow differentiating between initial and repeated setups.
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal/setup-list '()
