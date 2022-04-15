@@ -4286,6 +4286,7 @@ Keep order.
 ;;; Code:
 
 (declare-function consult-customize "ext:consult.el")
+(declare-function consult--buffer-state "ext:consult.el")
 (declare-function consult--regexp-filter "ext:consult.el")
 (declare-function persp-current-buffers "ext:perspective.el")
 (declare-function persp-current-buffer-names "ext:perspective.el")
@@ -4298,6 +4299,7 @@ Keep order.
 (declare-function wal/captain "wal-key-bindings.el")
 
 (defvar consult-buffer-filter)
+(defvar consult-buffer-sources)
 (defvar consult--source-buffer)
 (defvar projectile-globally-ignored-directories)
 (defvar projectile-globally-ignored-files)
@@ -4416,17 +4418,38 @@ This only removes `process-kill-buffer-query-function'."
   (interactive)
   (switch-to-buffer (get-buffer-create (persp-scratch-buffer))))
 
-(defun wal/consult-persp-current-buffer-names ()
+(defun wal/consult-filtered-persp-buffers ()
+  "Get current perspective's filtered buffers.
+
+The results are filtered using `consult-buffer-filter'"
+  (let ((filters (consult--regexp-filter consult-buffer-filter)))
+    (seq-filter
+     (lambda (it) (and (buffer-live-p it)
+                       (not (string-match-p filters (buffer-name it)))))
+     (persp-current-buffers))))
+
+(defun wal/consult-persp-buffer-names ()
   "Get current perspective's buffer names.
 
-The result is filtered using `consult-buffer-filter'. The current
-buffer is also filtered."
-  (let ((filters (consult--regexp-filter consult-buffer-filter))
-        (current (buffer-name (current-buffer))))
-    (seq-filter
-     (lambda (it) (and (not (string-match-p filters it))
-                  (not (eq it current))))
-     (persp-current-buffer-names))))
+The current buffer and Dired buffers are filtered."
+  (let* ((persp-buffers (wal/consult-filtered-persp-buffers))
+         (current (current-buffer))
+         (desired (seq-filter
+                   (lambda (it) (and (not (eq it current))
+                                (with-current-buffer it
+                                  (not (derived-mode-p 'dired-mode)))))
+                   persp-buffers)))
+    (mapcar #'buffer-name desired)))
+
+(defun wal/consult-persp-dired-buffer-names ()
+  "Get current persepective's Dired buffer names."
+  (let* ((persp-buffers (wal/consult-filtered-persp-buffers))
+         (desired (seq-filter
+                   (lambda (it)
+                     (with-current-buffer it
+                       (derived-mode-p 'dired-mode)))
+                   persp-buffers)))
+    (mapcar #'buffer-name desired)))
 
 (defun wal/configure-perspective ()
   "Configure package `perspective'.
@@ -4442,7 +4465,15 @@ perspectives."
      consult--source-buffer
      :name "Perspective Buffer"
      :action #'persp-switch-to-buffer
-     :items #'wal/consult-persp-current-buffer-names))
+     :items #'wal/consult-persp-buffer-names)
+    (add-to-list 'consult-buffer-sources
+                 (list :name "Dired"
+                       :narrow ?d
+                       :category 'buffer
+                       :face 'font-lock-keyword-face
+                       :state #'consult--buffer-state
+                       :items #'wal/consult-persp-dired-buffer-names)
+                 t))
   (wal/captain
     "i" '(:keymap perspective-map :wk "perspective")))
 
@@ -5262,7 +5293,7 @@ The mother of all buffers. You don't need no tree views.
   :custom
   (dired-listing-switches "-lah --group-directories-first")
   (dired-auto-revert-buffer t)
-  (dired-kill-when-opening-new-dired-buffer t) ; New in Emacs 28.
+  (dired-kill-when-opening-new-dired-buffer (not wal/use-perspectives)) ; New in Emacs 28.
   :bind
   (:map ctl-x-map
    ("j" . dired-jump)
