@@ -777,8 +777,7 @@ actions. Where possible, they are grouped by package or concern. The
 prefixes are:
 
 + =.= for =multiple-cursors=
-+ =l= and =r= for =avy= (line and region)
-+ =u= for =consult=.
++ =l= and =r= for =avy= (line and region).
 
 Leader key =major= (=.= by default) is responsible major-mode-specific
 actions.
@@ -3910,6 +3909,9 @@ Complete commands and code.
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'transient))
+
 (declare-function wdb/ghost "wal-func.el")
 (declare-function wal/append "wal-func.el")
 (declare-function projectile-project-root "ext:projectile.el")
@@ -4219,9 +4221,28 @@ Do not ignore hidden files."
    consult--source-recent-file
    consult--source-project-recent-file
    consult--source-bookmark
-   :preview-key (kbd "M-,")))
+   :preview-key (kbd "M-,"))
+  (transient-define-prefix wal/consult-dispatch ()
+    "Call `consult' functions."
+    [["Act"
+      ("y" "yank" consult-yank-pop)
+      ("g" "store" consult-register-store)
+      ("G" "load" consult-register-load)]
+     ["Go to"
+      ("l" "line" consult-goto-line)
+      ("m" "mark" consult-mark)
+      ("M" "global mark" consult-global-mark)]
+     ["Find"
+      ("b" "bookmark" consult-bookmark)
+      ("f" "recent" consult-recent-file)]
+     ["Search"
+      ("r" "ripgrep" consult-ripgrep)
+      ("i" "ignored" wal/consult-ripgrep-ignored)]
+     ]))
 
 (use-package consult
+  :init
+  (wal/univ consult-buffer wal/consult-dispatch)
   :config
   (wal/configure-consult)
   :bind
@@ -4232,23 +4253,16 @@ Do not ignore hidden files."
    :map ctl-x-r-map
    ("u" . consult-register))
   :wal-bind
-  ("u" . consult-buffer)
+  ("u" . wal/univ-consult-buffer)
   :general
   (wal/general
     "st" '(consult-theme :wk "consult theme")
     "fr" '(consult-recent-file :wk "recent"))
-  (wal/colonel
-    "u" '(:ignore t :wk "consult")
-    "ub" '(consult-bookark :wk "bookmark")
-    "ul" '(consult-goto-line :wk "line")
-    "um" '(consult-mark :wk "mark")
-    "ug" '(consult-global-mark :wk "global mark")
-    "ur" '(consult-ripgrep :wk "rg")
-    "ui" '(wal/consult-ripgrep-ignored :wk "ignored rg"))
   (wal/major :keymaps 'org-mode-map :major-modes t
     "g" '(consult-org-heading :wk "go to heading"))
   (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
   (wal/captain-sink "u" '(consult-minor-mode-menu :wk "menu"))
+  :commands (wal/univ-consult-buffer)
   :demand
   :after vertico)
 #+END_SRC
