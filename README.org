@@ -984,6 +984,10 @@ Turning on/off certain major modes switching between =major-mode= and
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'marginalia))
+
+(declare-function marginalia-annotate-binding "ext:marginalia.el")
 (declare-function use-package-report "ext:use-package-core.el")
 
 (defvar use-package-compute-statistics)
@@ -1540,10 +1544,12 @@ t, printing optional message ON-DONE."
   (when delete-windows
     (delete-other-windows)))
 
-(cl-defmacro wal/define-expansion-pack (name &key packages extras)
-  "Define an expansion pack of PACKAGES under NAME."
-  (declare (indent defun))
-  `(add-to-list 'wal/expansion-packs '(,name . (:packages ,packages :extras ,extras))))
+(cl-defmacro wal/define-expansion-pack (name docs &key packages extras)
+  "Define an expansion pack of PACKAGES under NAME documented with DOCS."
+  (declare (indent defun) (doc-string 2))
+  `(add-to-list
+    'wal/expansion-packs
+    '(,name . (:packages ,packages :extras ,extras :docs ,docs))))
 
 (defun wal/install-expansion-pack (pack)
   "Install the given expansion PACK."
@@ -1560,6 +1566,26 @@ t, printing optional message ON-DONE."
           (when (and extras (yes-or-no-p (format "Want to install extras %s? " extras)))
             (wal/install-packages extras :on-done (format "Installed '%s' extras." pack))))
       (user-error "Unknown pack '%s', check `wal/expansion-packs'" sym))))
+
+(defun wal/expansion--stringify (package-list)
+  "Stringify PACKAGE-LIST."
+  (if package-list (string-join (mapcar (lambda (it) (format "%s" it)) package-list) ", ") ""))
+
+;; Make completion look nice.
+(with-eval-after-load 'marginalia
+  (defun wal/annotate-expansion-pack (candidate)
+    "Annotate CANDIDATE expansion pack."
+    (let* ((item (assoc (intern candidate) wal/expansion-packs))
+           (docs (plist-get (cdr item) :docs))
+           (packages (wal/expansion--stringify (plist-get (cdr item) :packages)))
+           (extras (wal/expansion--stringify (plist-get (cdr item) :extras))))
+      (marginalia--fields
+       (docs :face 'marginalia-documentation :truncate 0.6)
+       (packages :face 'marginalia-value :truncate 0.8)
+       (extras :face 'marginalia-value :truncate 0.4))))
+
+  (add-to-list 'marginalia-annotator-registry '(expansion-pack wal/annotate-expansion-pack builtin none))
+  (add-to-list 'marginalia-command-categories '(wal/install-expansion-pack . expansion-pack)))
 #+END_SRC
 
 ** Footer
@@ -4127,10 +4153,9 @@ completion actions.
 (use-package marginalia
   :config
   (marginalia-mode)
-  :custom
-  (marginalia-command-categories
-    '((imenu . imenu)
-      (projectile-switch-to-buffer . buffer)
+  (wal/append
+    'marginalia-command-categories
+    '((projectile-switch-to-buffer . buffer)
       (wal/univ-projectile-find-file . project-file)
       (projectile-find-file . project-file)
       (projectile-find-file-other-window . project-file)
@@ -4630,7 +4655,6 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 
 ;;; Code:
 
-;; Allow including `wal/define-expansion-pack' macro.
 (eval-when-compile
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
@@ -4847,6 +4871,7 @@ Trying to organize my thoughts using Zettelkästen.
 
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack org-roam
+  "Fancy UI for your note rhizome."
   :packages (org-roam-ui))
 #+END_SRC
 
@@ -5522,7 +5547,10 @@ end
 
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack eshell
-  :packages (esh-autosuggest eshell-prompt-extras eshell-syntax-highlighting))
+  "Make eshell feel like a feature-complete shell."
+  :packages (esh-autosuggest
+             eshell-prompt-extras
+             eshell-syntax-highlighting))
 #+END_SRC
 
 *** eshell
@@ -5638,6 +5666,7 @@ Forget remembering =git= commands, use =transient=.
 
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack magit
+  "Support pull requests and code reviews."
   :packages (forge code-review))
 #+END_SRC
 
@@ -5805,7 +5834,6 @@ Let's greet the world[fn:17].
 
 ;;; Code:
 
-;; Allow including `wal/define-expansion-pack' macro.
 (eval-when-compile
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
@@ -5842,6 +5870,7 @@ Bitches brew.
 
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack elixir
+  "For Elixir developers."
   :packages (elixir-mode))
 #+END_SRC
 
@@ -5902,6 +5931,7 @@ Consider the lobster.
 
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack rust
+  "For Rust developers."
   :packages (rust-mode cargo))
 #+END_SRC
 
@@ -5954,6 +5984,7 @@ Hide those details from me.
 
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack python
+  "Virtual environment, isort and poetry support."
   :packages (python-isort pyvenv poetry))
 #+END_SRC
 
@@ -6075,8 +6106,12 @@ The philosopher's choice.
 
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack lisp
-  :packages (highlight-quoted slime slime-company)
-  :extras (cider clojure-mode))
+  "For (common-)lisp developers using sbcl."
+  :packages (highlight-quoted slime slime-company))
+
+(wal/define-expansion-pack clojure
+  "For Clojure developers using cider with lein."
+  :packages (clojure-mode cider))
 #+END_SRC
 
 *** elisp-mode
@@ -6203,8 +6238,9 @@ Can we have =deno= instead of =node=?
 
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack javascript
-  :packages (js2-mode json-mode)
-  :extras (rjsx-mode typescript-mode add-node-modules-path prettier))
+  "For Node.js developers."
+  :packages (js2-mode add-node-modules-path json-mode)
+  :extras (rjsx-mode typescript-mode prettier))
 #+END_SRC
 
 *** js2-mode
@@ -6285,28 +6321,6 @@ Please use TypeScript.
   :ensure nil)
 #+END_SRC
 
-*** json-mode
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-The only way to store strings, JSON.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/json-mode ()
-  "Hook into `json-mode'."
-  (wal/message-in-a-bottle '("JSON ...? JSON?! JSON!!"))
-  (rainbow-delimiters-mode)
-  (hack-local-variables)
-  (wal/maybe-enable-tabs)
-  (flycheck-mode 1))
-
-(use-package json-mode
-  :mode "\\.arb\\'"
-  :hook (json-mode . wal/json-mode)
-  :ensure nil)
-#+END_SRC
-
 *** add-node-modules-path
 :PROPERTIES:
 :UNNUMBERED: t
@@ -6341,6 +6355,7 @@ Ogling new languages.
 
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack go
+  "For Go developers."
   :packages (go-mode))
 #+END_SRC
 
@@ -6368,8 +6383,13 @@ Setup for LSP.
 ** Scripting
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack shell
-  :packages (crontab-mode fish-mode))
+(wal/define-expansion-pack fish
+  "For fish shell users."
+  :packages (fish-mode))
+
+(wal/define-expansion-pack cli
+  "For CLI power users."
+  :packages (crontab-mode))
 #+END_SRC
 
 *** sh-script
@@ -6424,8 +6444,9 @@ Support =fish= functions.
 Sometimes things that don't do things need to look nice.
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack structured
-  :packages (markdown-mode yaml-mode))
+(wal/define-expansion-pack markdown
+  "For MD users."
+  :packages (markdown-mode))
 #+END_SRC
 
 *** markdown-mode
@@ -6452,35 +6473,13 @@ Sometimes things that don't do things need to look nice.
   :ensure nil)
 #+END_SRC
 
-*** yaml-mode
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Sometimes things that do as well.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/yaml-mode ()
-  "Hook into command `yaml-mode'."
-  (wal/message-in-a-bottle
-   '("JSON?! ... Ah, thank God it's you, YAML!"))
-  (drag-stuff-mode +1)
-  (wal/disable-tabs)
-  (hack-local-variables)
-  (flycheck-mode +1))
-
-(use-package yaml-mode
-  :mode "\\.tpl\\'" ; Helm templates.
-  :hook (yaml-mode . wal/yaml-mode)
-  :ensure nil)
-#+END_SRC
-
 ** Flutter
 
 Yes, you need to install *Android Studio* for some reason.
 
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack flutter
+  "Dart major mode and LSP package."
   :packages (dart-mode lsp-dart))
 #+END_SRC
 
@@ -6581,6 +6580,7 @@ It's a =JavaEmacsPackageConfigurationSectionFactory=, mate.
 
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack java
+  "Java LSP package."
   :packages (lsp-java))
 #+END_SRC
 
@@ -6639,6 +6639,7 @@ The elephant in the room.
 
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack php
+  "Major mode and web mode for templates."
   :packages (php-mode web-mode))
 #+END_SRC
 
@@ -6691,7 +6692,54 @@ Does anyone actually like web development?
 
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack web
-  :packages (pug-mode json-mode))
+  "For web developers."
+  :packages (yaml-mode json-mode)
+  :extras (pug-mode))
+#+END_SRC
+
+*** json-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+The only way to store strings, JSON.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/json-mode ()
+  "Hook into `json-mode'."
+  (wal/message-in-a-bottle '("JSON ...? JSON?! JSON!!"))
+  (rainbow-delimiters-mode)
+  (hack-local-variables)
+  (wal/maybe-enable-tabs)
+  (flycheck-mode 1))
+
+(use-package json-mode
+  :mode "\\.arb\\'"
+  :hook (json-mode . wal/json-mode)
+  :ensure nil)
+#+END_SRC
+
+*** yaml-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Sometimes things that do as well.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/yaml-mode ()
+  "Hook into command `yaml-mode'."
+  (wal/message-in-a-bottle
+   '("JSON?! ... Ah, thank God it's you, YAML!"))
+  (drag-stuff-mode +1)
+  (wal/disable-tabs)
+  (hack-local-variables)
+  (flycheck-mode +1))
+
+(use-package yaml-mode
+  :mode "\\.tpl\\'" ; Helm templates.
+  :hook (yaml-mode . wal/yaml-mode)
+  :ensure nil)
 #+END_SRC
 
 *** css-mode
@@ -7219,6 +7267,7 @@ Internet.
 
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack docker
+  "Dockerfile mode."
   :packages (dockerfile-mode))
 #+END_SRC
 
@@ -7360,6 +7409,7 @@ I'll replace =restclient= with =verb= soon.
 
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack mailing
+  "For people reading/writing emails in Emacs."
   :packages (mu4e smtpmail))
 #+END_SRC
 
