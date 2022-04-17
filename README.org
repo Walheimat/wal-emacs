@@ -224,13 +224,13 @@ installed from there.
 ** Core Packages
 
 Before =use-package= macro can be used to configure other packages it
-and some other packages need to be installed the hard way.
+needs to be installed. We also install optional dependencies to
+diminish and delight minor modes.
 
 #+BEGIN_SRC emacs-lisp
 (defconst wal/core-packages
   '(diminish
     delight
-    use-package-ensure-system-package
     use-package)
   "Packages to install before using `use-package'.
 Such as package `use-package'.")
@@ -3818,7 +3818,6 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
   (wdb/pop-up "\\*rg\\*\\'")
   :wal-bind
   ("n" . wal/univ-rg-project)
-  :ensure-system-package rg
   :commands (wal/univ-rg-project))
 #+END_SRC
 
@@ -6093,8 +6092,7 @@ Can't have closure without REPL.
     "n" '(cider-repl-set-ns :wk "set ns"))
   :custom
   (cider-jack-in-default 'lein)
-  :ensure nil
-  :ensure-system-package lein)
+  :ensure nil)
 #+end_src
 
 *** edebug
@@ -6134,6 +6132,7 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
 
 #+BEGIN_SRC emacs-lisp
 (use-package slime
+  :if (executable-find "sbcl")
   :config
   (setq inferior-lisp-program "sbcl")
   (slime-setup '(slime-fancy slime-quicklisp slime-asdf slime-company))
@@ -6142,7 +6141,6 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
     "u" '(slime-mode :wk "slime"))
   (wal/major :keymaps 'slime-mode-map :major-modes t
     "r" '(slime :wk "open REPL"))
-  :ensure-system-package sbcl
   :ensure nil
   :delight " slm")
 
