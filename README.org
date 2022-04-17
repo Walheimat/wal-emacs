@@ -5415,6 +5415,9 @@ I am convinced that we are in a terminal process.
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+
 (declare-function project-buffers "ext:project.el")
 (declare-function projectile-project-p "ext:projectile.el")
 (declare-function projectile-project-buffers "ext:projectile.el")
@@ -5512,6 +5515,13 @@ function fish_title
 end
 #+END_SRC
 
+** Eshell
+
+#+BEGIN_SRC emacs-lisp
+(wal/define-expansion-pack eshell
+  :packages (esh-autosuggest eshell-prompt-extras eshell-syntax-highlighting))
+#+END_SRC
+
 *** eshell
 :PROPERTIES:
 :UNNUMBERED: t
@@ -5526,22 +5536,6 @@ Set up =eshell=. I like the idea of it but I don't really use it.
     (when (fboundp 'eshell-truncate-buffer)
       (eshell-truncate-buffer))))
 
-(use-package esh-autosuggest
-  :wal-ways nil
-  :hook (eshell-mode . esh-autosuggest-mode))
-
-(use-package eshell-prompt-extras
-  :wal-ways nil
-  :config
-  (setq eshell-highlight-prompt nil
-        eshell-prompt-function 'epe-theme-lambda)
-  :demand
-  :after eshell)
-
-(use-package eshell-syntax-highlighting
-  :wal-ways nil
-  :hook (eshell-mode . eshell-syntax-highlighting-mode))
-
 (use-package eshell
   :config
   (advice-add 'eshell/clear :override #'wal/advise-eshell/clear)
@@ -5553,6 +5547,46 @@ Set up =eshell=. I like the idea of it but I don't really use it.
   :hook
   ((eshell-mode . with-editor-export-editor)
    (eshell-mode . with-editor-export-git-editor))
+  :ensure nil)
+#+END_SRC
+
+*** esh-autosuggest
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package esh-autosuggest
+  :wal-ways nil
+  :hook (eshell-mode . esh-autosuggest-mode)
+  :ensure nil)
+#+END_SRC
+
+*** eshell-prompt-extras
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package eshell-prompt-extras
+  :wal-ways nil
+  :config
+  (setq eshell-highlight-prompt nil
+        eshell-prompt-function 'epe-theme-lambda)
+  :demand
+  :after eshell
+  :ensure nil)
+#+END_SRC
+
+*** eshell-syntax-highlighting
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package eshell-syntax-highlighting
+  :wal-ways nil
+  :hook (eshell-mode . eshell-syntax-highlighting-mode)
   :ensure nil)
 #+END_SRC
 
@@ -5588,18 +5622,26 @@ I'm becoming an old git.
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+
 (declare-function wal/captain "wal-key-bindings.el")
 (declare-function wal/message-in-a-bottle "wal-lang.el")
 #+END_SRC
 
-** Packages
+** Magit
+
+Forget remembering =git= commands, use =transient=.
+
+#+BEGIN_SRC emacs-lisp
+(wal/define-expansion-pack magit
+  :packages (forge code-review))
+#+END_SRC
 
 *** magit
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
-
-Forget remembering =git= commands, use =transient=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
@@ -5640,7 +5682,8 @@ Deal with pull/merge requests.
 (use-package forge
   :wal-ways nil
   :demand
-  :after magit)
+  :after magit
+  :ensure nil)
 #+END_SRC
 
 *** code-review
@@ -5655,8 +5698,11 @@ Review pull/merge requests.
   :wal-ways nil
   :general
   (wal/major :keymaps 'forge-topic-mode-map
-    "r" '(code-review-forge-pr-at-point :wk "code review")))
+    "r" '(code-review-forge-pr-at-point :wk "code review"))
+  :ensure nil)
 #+END_SRC
+
+** Other
 
 *** git-timemachine
 :PROPERTIES:
@@ -7158,12 +7204,20 @@ Internet.
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+
 (declare-function wdb/side "wal-func.el")
 (declare-function wdb/direction "wal-func.el")
 (declare-function wal/message-in-a-bottle "wal-func.el")
 #+END_SRC
 
-** Packages
+** Docker
+
+#+BEGIN_SRC emacs-lisp
+(wal/define-expansion-pack docker
+  :packages (dockerfile-mode))
+#+END_SRC
 
 *** docker
 :PROPERTIES:
@@ -7206,6 +7260,8 @@ Make =Dockerfiles= look nice.
   :hook (dockerfile-mode . wal/dockerfile-mode)
   :ensure nil)
 #+END_SRC
+
+** Kubernetes
 
 *** kubernetes
 :PROPERTIES:
@@ -7261,10 +7317,13 @@ I browse, I request.
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+
 (declare-function wdb/pop-up "wal-func.el")
 #+END_SRC
 
-** Packages
+** Requests
 
 *** verb
 :PROPERTIES:
@@ -7292,6 +7351,13 @@ I'll replace =restclient= with =verb= soon.
     "v" '(verb-mode :wk "verb"))
   :after org
   :delight " vrb")
+#+END_SRC
+
+** E-Mails
+
+#+BEGIN_SRC emacs-lisp
+(wal/define-expansion-pack mailing
+  :packages (mu4e smtpmail))
 #+END_SRC
 
 *** mu4e
