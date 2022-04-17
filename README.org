@@ -88,6 +88,11 @@ evaluate /everything/[fn:6] that follows.
 (declare-function wal/prefix-user-key "wal-key-bindings.el")
 
 (defvar global-auto-revert-non-file-buffers)
+(defvar debugger-bury-or-kill)
+(defvar display-time-default-load-average)
+(defvar display-time-format)
+(defvar native-comp-async-report-warnings-errors)
+(defvar so-long-action)
 (defvar use-package-always-ensure)
 (defvar use-package-always-defer)
 
@@ -418,14 +423,19 @@ Any mode that should be on/off no matter what.
 (save-place-mode 1)
 (delete-selection-mode 1)
 (column-number-mode 1)
+(global-so-long-mode 1)
 
 ;; No need for bars.
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
+
+;; Emacs 29.
+(if wal/experimental
+  (pixel-scroll-precision-mode 1))
 #+END_SRC
 
-** Reasonable Sizes
+** Reasonable Values
 
 Make things shorter and snappier. These settings don't belong to
 packages.
@@ -433,12 +443,30 @@ packages.
 #+BEGIN_SRC emacs-lisp
 (setq read-process-output-max wal/read-process-output-max
       echo-keystrokes 0.1
-      ;; New in version 28. Otherwise you need an alias.
-      use-short-answers t
-      ;; Undo limits, keeping factor, defaults in side commments.
-      undo-limit (wal/bytes-per-mb 1)          ; 160000 bytes.
-      undo-strong-limit (wal/bytes-per-mb 1.5) ; 240000 bytes.
-      undo-outer-limit (wal/bytes-per-mb 150)) ; 24000000 bytes.
+      use-short-answers t ; New in Emacs 28. Otherwise you need an alias.
+      ;; Undo limits
+      undo-limit (wal/bytes-per-mb 1)
+      undo-strong-limit (wal/bytes-per-mb 1.5)
+      undo-outer-limit (wal/bytes-per-mb 150)
+      ;; Mouse.
+      mouse-yank-at-point t
+      ;; Native compilation.
+      package-native-compile t
+      native-comp-async-report-warnings-errors 'silent
+      ;; Annoyances.
+      disabled-command-function nil
+      debugger-bury-or-kill 'kill
+      so-long-action 'so-long-minor-mode
+      ;; Time.
+      display-time-format " %H:%M"
+      display-time-default-load-average nil
+      save-interprogram-paste-before-kill t
+      ;; Mark ring.
+      mark-ring-max 32
+      global-mark-ring-max 32
+      ;; Parentheses.
+      show-paren-delay 0.1
+      show-paren-context-when-offscreen t) ; New in Emacs 29.
 #+END_SRC
 
 ** Indentation
@@ -810,10 +838,8 @@ toggle major and minor modes, respectively. The sink for =colonel=,
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/configure-general ()
-  "Configure package `general'.
-
-This creates all leader keys and sinks."
+(use-package general
+  :config
   (mapc (lambda (it)
           (let* ((key-sym (intern (format "%s-key" it)))
                  (key (wal/prefix-user-key (symbol-value key-sym)))
@@ -822,11 +848,7 @@ This creates all leader keys and sinks."
             (eval-after-load 'which-key `(which-key-add-key-based-replacements ,key ,name))
             (eval `(general-create-definer ,it :prefix ,key))
             (eval `(wal/create-leader-sink ,sink :definer ,it :prefix ,key))))
-        '(wal/general wal/colonel wal/major wal/captain wal/lieutenant wal/sergeant)))
-
-(use-package general
-  :config
-  (wal/configure-general)
+        '(wal/general wal/colonel wal/major wal/captain wal/lieutenant wal/sergeant))
   :demand)
 #+END_SRC
 
@@ -911,18 +933,37 @@ Most bindings are declared in individual packages.
   "fc" '(wal/find-custom-file :wk "custom")
   "fi" '(wal/find-init :wk "init")
   "ff" '(wal/find-fish-config :wk "fish config")
+  "fl" '(find-library :wk "library")
   "fw" '(wal/find-config :wk "wal")
-  "s" '(:ignore t :wk "set"))
+  "fp" '(list-processes :wk "processes")
+  "s" '(:ignore t :wk "set")
+  "p" '(:ignore t :wk "package")
+  "pf" '(package-refresh-contents :wk "refresh")
+  "pi" '(package-install :wk "install")
+  "pl" '(list-packages :wk "list")
+  "pr" '(package-reinstall :wk "re-install")
+  "pd" '(package-delete :wk "delete"))
 
-(wal/general-sink "l" '(add-dir-local-variable :wk "dir-locals"))
+(wal/general-sink
+ "l" '(add-dir-local-variable :wk "dir-locals")
+ "b" '(eww :wk "eww"))
 
-(wal/captain-sink "." '(walled-mode :wk "walled"))
+(wal/captain-sink
+  "." '(walled-mode :wk "walled")
+  "n" '(linum-mode :wk "linum")
+  "a" '(auto-fill-mode :wk "auto-fill"))
 
 (general-define-key
  :keymaps 'ctl-x-x-map
  "f" 'wal/find-file-delete-other-windows) ; Replaces `font-lock-update'.
 
+(general-define-key
+ :keymaps 'ctl-x-x-map
+ "#" 'server-edit-abort)
+
+(global-set-key (kbd "C-?") #'undo-redo)
 (global-set-key (kbd "M-o") #'wal/other-window)
+(global-set-key (kbd "C-;") #'comment-line)
 (global-unset-key (kbd "C-x C-c"))
 #+END_SRC
 
@@ -1885,45 +1926,13 @@ and some external ones.
 (declare-function comint-check-proc "ext:comint.el")
 
 (defvar wal/experimental)
+
+(wdb/direction 'help-mode)
+(wdb/direction 'shortdoc-mode)
+(wdb/side 'debug-mode)
 #+END_SRC
 
 ** Improved Editing
-
-*** simple
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Up the kill count.
-
-#+BEGIN_SRC emacs-lisp
-(use-package simple
-  :custom
-  (save-interprogram-paste-before-kill t)
-  (mark-ring-max 32)
-  (global-mark-ring-max 32)
-  :bind
-  ("C-?" . undo-redo)
-  :general
-  (wal/general "fp" '(list-processes :wk "processes"))
-  (wal/captain-sink "a" '(auto-fill-mode :wk "auto-fill"))
-  :ensure nil)
-#+END_SRC
-
-*** paren
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Show 'em early!
-
-#+BEGIN_SRC emacs-lisp
-(use-package paren
-  :custom
-  (show-paren-delay 0.1)
-  (show-paren-context-when-offscreen t) ; New in Emacs 29.
-  :ensure nil)
-#+END_SRC
 
 Sometimes I need to see whitespace chars.
 
@@ -1962,37 +1971,6 @@ Use better commands for macros.
   :ensure nil)
 #+END_SRC
 
-*** so-long
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Some files are so long and Emacs will want to throw up.
-
-#+BEGIN_SRC emacs-lisp
-(use-package so-long
-  :config
-  (global-so-long-mode t)
-  :custom
-  (so-long-action 'so-long-minor-mode)
-  :defer 4
-  :ensure nil)
-#+END_SRC
-
-*** mouse
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Mouse yanks at point.
-
-#+BEGIN_SRC emacs-lisp
-(use-package mouse
-  :custom
-  (mouse-yank-at-point t)
-  :ensure nil)
-#+END_SRC
-
 *** text-mode
 :PROPERTIES:
 :UNNUMBERED: t
@@ -2011,21 +1989,6 @@ No double spaces in sentences.
   :custom
   (sentence-end-double-space nil)
   :hook (text-mode . wal/text-mode)
-  :ensure nil)
-#+END_SRC
-
-*** server
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Editing server files.
-
-#+BEGIN_SRC emacs-lisp
-(use-package server
-  :bind
-  (:map ctl-x-x-map
-   ("#" . server-edit-abort))
   :ensure nil)
 #+END_SRC
 
@@ -2056,7 +2019,7 @@ Follow me around.
 #+begin_src emacs-lisp
 (use-package follow-mode
   :custom
-  (follow-mode-line-test " flw")
+  (follow-mode-line-text " flw")
   :general
   (wal/captain-sink
     "o" '(follow-mode :wk "follow"))
@@ -2092,44 +2055,6 @@ According to my tabulations, your columns are too small.
    ("M-n" . tabulated-list-next-column)
    ("M-f" . tabulated-list-widen-current-column)
    ("M-b" . tabulated-list-narrow-current-column))
-  :ensure nil)
-#+END_SRC
-
-** Dealing With Packages
-
-*** package
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Bind some functions to refresh, install and delete packages.
-
-#+BEGIN_SRC emacs-lisp
-(use-package package
-  :custom
-  (package-native-compile t)
-  :general
-  (wal/general
-    "p" '(:ignore t :wk "package")
-    "pf" '(package-refresh-contents :wk "refresh")
-    "pi" '(package-install :wk "install")
-    "pl" '(list-packages :wk "list")
-    "pr" '(package-reinstall :wk "re-install")
-    "pd" '(package-delete :wk "delete"))
-  :ensure nil)
-#+END_SRC
-
-*** comp
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Silent native compilation.
-
-#+BEGIN_SRC emacs-lisp
-(use-package comp
-  :custom
-  (native-comp-async-report-warnings-errors 'silent)
   :ensure nil)
 #+END_SRC
 
@@ -2189,11 +2114,9 @@ I'd like to kill shells without a process quickly.
 #+BEGIN_SRC emacs-lisp
 (defun wal/dead-shell-p ()
   "Check if the current buffer is a shell or comint buffer with no process."
-  (interactive)
   (let ((buf (current-buffer)))
     (with-current-buffer buf
-      (and (or (derived-mode-p 'shell-mode)
-               (derived-mode-p 'comint-mode))
+      (and (derived-mode-p 'comint-mode)
            (not (comint-check-proc buf))))))
 
 (use-package shell
@@ -2207,78 +2130,6 @@ I'd like to kill shells without a process quickly.
 
 ** Help
 
-*** help-mode
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Emacs is mostly about looking up its documentation.
-
-#+BEGIN_SRC emacs-lisp
-(use-package help-mode
-  :config
-  (wdb/direction 'help-mode)
-  :ensure nil)
-#+END_SRC
-
-*** short-doc
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-There's also =short-doc= now.
-
-#+BEGIN_SRC emacs-lisp
-(use-package shortdoc
-  :config
-  (wdb/direction 'shortdoc-mode)
-  :ensure nil)
-#+END_SRC
-
-*** debug
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-For internal debugging.
-
-#+BEGIN_SRC emacs-lisp
-(use-package debug
-  :config
-  (wdb/side 'debug-mode)
-  :custom
-  (debugger-bury-or-kill 'kill)
-  :ensure nil)
-#+END_SRC
-
-*** novice
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Don't disable commands.
-
-#+BEGIN_SRC emacs-lisp
-(use-package novice
-  :init
-  (setq disabled-command-function nil)
-  :ensure nil)
-#+END_SRC
-
-*** find-func
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Find libraries.
-
-#+BEGIN_SRC emacs-lisp
-(use-package find-func
-  :general
-  (wal/general "fl" '(find-library :wk "library"))
-  :ensure nil)
-#+END_SRC
-
 *** helpful
 :PROPERTIES:
 :UNNUMBERED: t
@@ -2287,15 +2138,11 @@ Find libraries.
 Let's try to be even more =helpful=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/configure-helpful ()
-  "Configure package `helpful'."
-  (wdb/direction 'helpful-mode)
-  (when wal/experimental
-    (defvar read-symbol-positions-list nil)))
-
 (use-package helpful
   :config
-  (wal/configure-helpful)
+  (wdb/direction 'helpful-mode)
+  (when wal/experimental
+    (defvar read-symbol-positions-list nil))
   :bind
   (([remap describe-command] . helpful-command)
    ([remap describe-function] . helpful-function)
@@ -2352,21 +2199,6 @@ Quick calculations.
   :ensure nil)
 #+END_SRC
 
-*** eww
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Browse web in Emacs. This requires Emacs to have been compiled with
-=--with-xml2= flag.
-
-#+BEGIN_SRC emacs-lisp
-(use-package eww
-  :general
-  (wal/general-sink "b" '(eww :wk "eww"))
-  :ensure nil)
-#+END_SRC
-
 *** dictionary
 :PROPERTIES:
 :UNNUMBERED: t
@@ -2406,20 +2238,6 @@ Contextual information. Package =lsp-mode= use =eldoc= extensively.
   :delight " eld")
 #+END_SRC
 
-*** linum
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Sometimes you do want to see the line numbers.
-
-#+BEGIN_SRC emacs-lisp
-(use-package linum
-  :general
-  (wal/captain-sink "n" '(linum-mode :wk "linum"))
-  :ensure nil)
-#+END_SRC
-
 *** hl-line
 :PROPERTIES:
 :UNNUMBERED: t
@@ -2434,21 +2252,6 @@ Highlighting the current line.
     tabulated-list-mode
     dired-mode
     dashboard-mode) . hl-line-mode)
-  :ensure nil)
-#+END_SRC
-
-*** time
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-What time is it?
-
-#+BEGIN_SRC emacs-lisp
-(use-package time
-  :custom
-  (display-time-format " %H:%M")
-  (display-time-default-load-average nil)
   :ensure nil)
 #+END_SRC
 
@@ -2631,20 +2434,6 @@ Less intrusive pairing mode than =smartparens=.
    'electric-pair-default-inhibit
    :before-until #'wal/advise-electric-pair-default-inhibit)
   :hook (prog-mode . electric-pair-local-mode)
-  :ensure nil)
-#+END_SRC
-
-*** newcomment
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Make commenting less of a dance.
-
-#+BEGIN_SRC emacs-lisp
-(use-package newcomment
-  :bind
-  ("C-;" . comment-line)
   :ensure nil)
 #+END_SRC
 
@@ -3061,19 +2850,12 @@ Show colors colorfully.
 Show the next possible key presses towards a command.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/configure-which-key ()
-  "Configure package `which-key'.
-
-Use the minibuffer in Emacs 29 if we use `golden-ratio' since
-adding the buffer name to its exclusion lists will not work."
-  (when (and wal/experimental wal/use-golden-ratio)
-    (setq which-key-popup-type 'minibuffer))
-  (which-key-mode +1))
-
 (use-package which-key
   :wal-ways nil
   :config
-  (wal/configure-which-key)
+  (when (and wal/experimental wal/use-golden-ratio)
+    (setq which-key-popup-type 'minibuffer))
+  (which-key-mode +1)
   :custom
   (which-key-lighter " wk?")
   (which-key-sort-uppercase-first nil)
@@ -3090,12 +2872,6 @@ adding the buffer name to its exclusion lists will not work."
 Help me find my cursor!
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/configure-beacon ()
-  "Configure `beacon' package."
-  (wal/append 'beacon-dont-blink-commands
-              wal/beacon-dont-blink-commands)
-  (add-to-list 'beacon-dont-blink-major-modes 'vterm-mode))
-
 (defun wal/lighthouse ()
   "Do a heavy `beacon-blink'.
 
@@ -3110,7 +2886,9 @@ This just means increasing duration, delay, size and brightness."
 (use-package beacon
   :wal-ways nil
   :config
-  (wal/configure-beacon)
+  (wal/append 'beacon-dont-blink-commands
+              wal/beacon-dont-blink-commands)
+  (add-to-list 'beacon-dont-blink-major-modes 'vterm-mode)
   :custom
   (beacon-blink-when-focused t)
   (beacon-blink-when-window-scrolls nil)
@@ -3225,12 +3003,12 @@ Busier and prettier[fn:14] =modeline=.
 (use-package doom-modeline
   :wal-ways nil
   :config
-  (doom-modeline-mode 1)
   (advice-add
    'doom-modeline-update-vcs-text
    :after #'wal/advise-doom-modeline-update-vcs-text)
   (when (fboundp 'doom-modeline-update-vcs-text)
     (add-hook 'magit-post-refresh-hook #'doom-modeline-update-vcs-text))
+  (doom-modeline-mode 1)
   :custom
   (doom-modeline-project-detection (if wal/use-projectile
                                        'projectile
@@ -3558,8 +3336,8 @@ Ace interacting with (multiple) windows.
   "Advise `aw--switch-buffer' to use `consult-buffer'."
   (call-interactively 'consult-buffer))
 
-(defun wal/configure-ace-window ()
-  "Configure package `ace-window'."
+(use-package ace-window
+  :config
   (setq aw-dispatch-alist '((?h aw-split-window-horz "horizontal split")
                             (?v aw-split-window-vert "vertical split")
                             (?f aw-split-window-fair "fair split")
@@ -3573,11 +3351,7 @@ Ace interacting with (multiple) windows.
                             (?? aw-show-dispatch-help)))
   (advice-add
    'aw--switch-buffer
-   :override #'wal/advise-aw--switch-buffer-consult))
-
-(use-package ace-window
-  :config
-  (wal/configure-ace-window)
+   :override #'wal/advise-aw--switch-buffer-consult)
   :custom
   (aw-dispatch-always t)
   (aw-keys '(?j ?k ?l ?\; ?u ?i ?o ?p))
@@ -3633,17 +3407,13 @@ Treat certain buffers and their windows as pop-ups.
      "/help"))
    (t buffer-name)))
 
-(defun wal/configure-popper ()
-  "Configure package `popper'."
-  (when wal/use-perspectives
-    (setq popper-group-function 'popper-group-by-perspective))
-  (popper-mode +1)
-  (popper-echo-mode +1))
-
 (use-package popper
   :wal-ways nil
   :config
-  (wal/configure-popper)
+  (when wal/use-perspectives
+    (setq popper-group-function 'popper-group-by-perspective))
+  (popper-mode +1)
+  (popper-echo-mode +1)
   :custom
   (popper-reference-buffers wal/popper-reference-buffers)
   (popper-display-control 'user)
@@ -3858,17 +3628,11 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 Replace =isearch=. Important command is =C-o s= to change search style.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/configure-ctrlf ()
-  "Configure package `ctrlf'.
-
-This adds additional bindings."
-  (eval
-   `(bind-keys :map ctrlf-minibuffer-mode-map
-      ,@(mapcar (lambda (it) (cons `[remap ,it] 'ctrlf-cancel)) wal/ctrlf-cancel-commands))))
-
 (use-package ctrlf
   :config
-  (wal/configure-ctrlf)
+  (eval
+   `(bind-keys :map ctrlf-minibuffer-mode-map
+      ,@(mapcar (lambda (it) (cons `[remap ,it] 'ctrlf-cancel)) wal/ctrlf-cancel-commands)))
   (when (fboundp 'ctrlf-mode)
     (ctrlf-mode +1))
   :custom
@@ -4087,15 +3851,11 @@ Provide global option narrowing using the =vertico= family of products.
       nil
     (apply fun r)))
 
-(defun wal/configure-vertico-directory ()
-  "Configure package `vertico-directory'."
-  (advice-add
-   'vertico-directory--completing-file-p
-   :around #'wal/advise-vertico-directory--completing-file-p))
-
 (use-package vertico-directory
   :config
-  (wal/configure-vertico-directory)
+  (advice-add
+   'vertico-directory--completing-file-p
+   :around #'wal/advise-vertico-directory--completing-file-p)
   :bind
   (:map vertico-map
    ("RET" . vertico-directory-enter)
@@ -4177,26 +3937,21 @@ completion actions.
 Do something else with minibuffer candidate.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/configure-embark ()
-  "Configure package `embark'."
-  (wdb/ghost "\\`\\*Embark Collect \\(Live\\|Completions\\)\\*")
-  (with-no-warnings
-    (when wal/use-projectile
-      (define-key embark-file-map
-                  (kbd "f")
-                  (wal/maybe-use-projectile find-file))
-      (define-key embark-file-map
-                  (kbd "o")
-                  (wal/maybe-use-projectile find-file-other-window)))
-    (define-key embark-region-map
-                (kbd "g")
-                #'wal/duck-duck-go-region)))
-
 (use-package embark
   :init
   (wal/univ embark-act embark-dwim)
   :config
-  (wal/configure-embark)
+  (wdb/ghost "\\`\\*Embark Collect \\(Live\\|Completions\\)\\*")
+  (when wal/use-projectile
+    (define-key embark-file-map
+                (kbd "f")
+                (wal/maybe-use-projectile find-file))
+    (define-key embark-file-map
+                (kbd "o")
+                (wal/maybe-use-projectile find-file-other-window)))
+  (define-key embark-region-map
+              (kbd "g")
+              #'wal/duck-duck-go-region)
   :custom
   (embark-mixed-indicator-delay 2.0)
   :wal-bind
@@ -4228,8 +3983,10 @@ Do not ignore hidden files."
                (fboundp 'consult--ripgrep-builder))
       (consult--grep "Ripgrep (ignored)" #'consult--ripgrep-builder dir initial))))
 
-(defun wal/configure-consult ()
-  "Configure package `consult'."
+(use-package consult
+  :init
+  (wal/univ consult-buffer wal/consult-dispatch)
+  :config
   (when wal/use-projectile
     (setq consult-project-function #'projectile-project-root))
   (setq xref-show-xrefs-function #'consult-xref
@@ -4256,14 +4013,7 @@ Do not ignore hidden files."
       ("f" "recent" consult-recent-file)]
      ["Search"
       ("r" "ripgrep" consult-ripgrep)
-      ("i" "ignored" wal/consult-ripgrep-ignored)]
-     ]))
-
-(use-package consult
-  :init
-  (wal/univ consult-buffer wal/consult-dispatch)
-  :config
-  (wal/configure-consult)
+      ("i" "ignored" wal/consult-ripgrep-ignored)]])
   :bind
   (:map bookmark-map
    ("u" . consult-bookmark)
@@ -4484,11 +4234,11 @@ The current buffer and Dired buffers are filtered."
                    persp-buffers)))
     (mapcar #'buffer-name desired)))
 
-(defun wal/configure-perspective ()
-  "Configure package `perspective'.
-
-This mainly makes sure that switching buffers also switches
-perspectives."
+(use-package perspective
+  :if wal/use-perspectives
+  :init
+  (wal/univ persp-switch persp-buffer-menu)
+  :config
   (advice-add 'persp-kill :around #'wal/advise-persp-kill)
   (advice-add 'persp-format-name :filter-return #'wal/advise-persp-format-name)
   (advice-add 'persp-mode-line-click :override #'wal/advise-persp-mode-line-click)
@@ -4508,14 +4258,7 @@ perspectives."
                        :items #'wal/consult-persp-dired-buffer-names)
                  t))
   (wal/captain
-    "i" '(:keymap perspective-map :wk "perspective")))
-
-(use-package perspective
-  :if wal/use-perspectives
-  :init
-  (wal/univ persp-switch persp-buffer-menu)
-  :config
-  (wal/configure-perspective)
+    "i" '(:keymap perspective-map :wk "perspective"))
   (persp-mode +1)
   (define-key persp-mode-map (kbd "C-x x") ctl-x-x-map) ; Override the override to `perspective-map'.
   :custom
@@ -4564,10 +4307,11 @@ More robust project management.
   (let ((compilation-read-command nil))
     (projectile-test-project nil)))
 
-(defun wal/configure-projectile ()
-  "Configure package `projectile'.
-
-This extends all ignore lists' default values."
+(use-package projectile
+  :if wal/use-projectile
+  :init
+  (wal/univ projectile-find-file projectile-switch-project)
+  :config
   (wal/append 'projectile-globally-ignored-directories
               (nth 0 wal/projectile-ignored))
   (wal/append 'projectile-globally-ignored-files
@@ -4575,14 +4319,7 @@ This extends all ignore lists' default values."
   (wal/append 'projectile-globally-ignored-file-suffixes
               (nth 2 wal/projectile-ignored))
   (wal/captain
-    "p" '(:keymap projectile-command-map :wk "projectile")))
-
-(use-package projectile
-  :if wal/use-projectile
-  :init
-  (wal/univ projectile-find-file projectile-switch-project)
-  :config
-  (wal/configure-projectile)
+    "p" '(:keymap projectile-command-map :wk "projectile"))
   (projectile-mode +1)
   :custom
   (projectile-switch-project-action #'projectile-dired)
@@ -4753,18 +4490,14 @@ This calls `org-content' interactively."
   (when (fboundp 'org-content)
     (org-content level)))
 
-(defun wal/configure-org ()
-  "Configure `org'."
+(use-package org
+  :config
   (define-key org-mode-map (kbd "C-,") nil) ; Remove `org-cycle-agenda-files'.
   (advice-add
    'org-export-dispatch
    :before #'wal/advise-org-export-dispatch)
   (add-to-list 'org-global-properties
-	           '("Effort_ALL". "15min 30min 1h 1.5h 2h 2.5h 4h 6h 1d 1.5d 2d")))
-
-(use-package org
-  :config
-  (wal/configure-org)
+	           '("Effort_ALL". "15min 30min 1h 1.5h 2h 2.5h 4h 6h 1d 1.5d 2d"))
   :custom
   (org-adapt-indentation nil)
   (org-ellipsis "↷")
@@ -5018,15 +4751,9 @@ Editing source blocks.
   "Hook into function `org-src-mode'."
   (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
 
-(defun wal/configure-org-src ()
-  "Configure package `org-src'.
-
-This sets additional modes."
-  (wal/append 'org-src-lang-modes wal/org-src-lang-modes))
-
 (use-package org-src
   :config
-  (wal/configure-org-src)
+  (wal/append 'org-src-lang-modes wal/org-src-lang-modes)
   :custom
   (org-src-tab-acts-natively nil)
   (org-edit-src-content-indentation 0)
@@ -6042,7 +5769,7 @@ Sort with =isort=.
 It takes more than one environment to make sense of Python code.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/configure-lsp-server (venv)
+(defun wal/configure-python-lsp-server (venv)
   "Configure poetry-managed server using VENV."
   (let ((pylsp (file-exists-p (expand-file-name "bin/pylsp" venv)))
         (jedi-env (expand-file-name (poetry-get-virtualenv))))
@@ -6062,7 +5789,7 @@ This also works if the project isn't a poetry project."
           (setq-local python-shell-virtualenv-root venv)
           (if is-poetry
               (progn
-                (wal/configure-lsp-server venv)
+                (wal/configure-python-lsp-server venv)
                 (poetry-venv-workon))
             (pyvenv-activate venv))))
     (error
@@ -6537,8 +6264,9 @@ LSP support for Dart.
     (error
       (message "Couldn't get service URI: %s" err))))
 
-(defun wal/configure-lsp-dart ()
-  "Configure package `lsp-dart'."
+(use-package lsp-dart
+  :if (executable-find "flutter")
+  :config
   (when (fboundp 'lsp-dart-define-key)
     (lsp-dart-define-key "r" #'lsp-dart-run))
   (add-hook
@@ -6548,12 +6276,7 @@ LSP support for Dart.
   ;; HACK: Temporary empty override to avoid duplicate logs.
   (cl-defmethod dap-handle-event ((_event (eql dart.log)) _session _params)
     "Handle debugger uris EVENT for SESSION with PARAMS."
-    nil))
-
-(use-package lsp-dart
-  :if (executable-find "flutter")
-  :config
-  (wal/configure-lsp-dart)
+    nil)
   :custom
   (lsp-dart-flutter-sdk-dir (wal/find-dart-flutter-sdk-dir))
   (lsp-dart-sdk-dir (wal/find-dart-sdk-dir))
@@ -6986,9 +6709,9 @@ minimum prefixes are reduced."
   "Prevent adding workspace roots from other projects."
   (eval '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))
 
-(defun wal/configure-lsp-mode ()
-  "Configure package `lsp-mode'.
-This adds additional ignored directories."
+(use-package lsp-mode
+  :wal-ways nil
+  :config
   (require 'avy nil t) ; For code lenses to work immediately.
   (wal/append 'lsp-file-watch-ignored-directories
               wal/lsp-file-watch-ignored-directories)
@@ -7017,12 +6740,7 @@ This adds additional ignored directories."
       ("H" "hierarchy" lsp-treemacs-call-hierarchy)]
      ["Workspace"
       ("R" "restart" lsp-workspace-restart)
-      ("Q" "quit" lsp-workspace-shutdown)]]))
-
-(use-package lsp-mode
-  :wal-ways nil
-  :config
-  (wal/configure-lsp-mode)
+      ("Q" "quit" lsp-workspace-shutdown)]])
   :custom
   (lsp-headerline-breadcrumb-enable nil)
   (lsp-keymap-prefix (wal/prefix-user-key (concat wal/captain-key " " "l")))
@@ -7067,8 +6785,9 @@ Don't clutter things up too much.
 Debugging using VSCode's DAP (in =lsp-mode=)
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/configure-dap-mode ()
-  "Configure package `dap-mode'."
+(use-package dap-mode
+  :wal-ways nil
+  :config
   (dap-ui-mode 1)
   (dap-auto-configure-mode)
   (wdb/side 'dap-ui-repl-mode)
@@ -7085,12 +6804,7 @@ Debugging using VSCode's DAP (in =lsp-mode=)
       ("d" dap-debug :color blue)
       ("b" dap-breakpoint-toggle "toggle breakpoint" :color blue)
       ("l" dap-go-to-output-buffer "show logs" :color blue)
-      ("q" nil))))
-
-(use-package dap-mode
-  :wal-ways nil
-  :config
-  (wal/configure-dap-mode)
+      ("q" nil)))
   :custom
   (dap-python-executable "python3")
   (dap-python-debugger 'debugpy)
