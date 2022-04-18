@@ -1441,6 +1441,12 @@ Manipulating lists.
 
 Duplicate items are removed."
   (set sym (delq nil (delete-dups (append (symbol-value sym) seq)))))
+
+(defun wal/replace-in-alist (target values)
+  "Edit TARGET alist in-place using VALUES."
+  (if (seq-every-p (lambda (it) (assoc (car it) target)) values)
+      (seq-each (lambda (it) (map-put! target (car it) (cdr it))) values)
+    (user-error "All keys bust be already present in list")))
 #+END_SRC
 
 ** Commands
@@ -4398,6 +4404,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (declare-function wal/append "wal-func.el")
 (declare-function wal/disable-tabs "wal-settings.el")
 (declare-function wal/message-in-a-bottle "wal-func.el")
+(declare-function wal/replace-in-alist "wal-fun.el")
 (declare-function wal/truncate "wal-func.el")
 (declare-function projectile-project-root "ext:projectile.el")
 (declare-function project-root "ext:project.el")
@@ -4837,12 +4844,14 @@ Convenient (and less safe) source block interaction.
 
 #+BEGIN_SRC emacs-lisp
 (use-package ob
+  :config
+  (wal/append
+   'org-babel-load-languages
+   '((shell . t)
+     (python . t)
+     (latex . t)
+     (js . t)))
   :custom
-  (org-babel-load-languages '((emacs-lisp . t)
-                              (shell . t)
-                              (python .t)
-                              (latex . t)
-                              (js . t)))
   (org-confirm-babel-evalute nil)
   :general
   (wal/major :keymaps 'org-mode-map
@@ -4894,13 +4903,13 @@ Set up durations for a 40-hour week.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-duration
-  :custom
-  (org-duration-units `(("min" . 1)
-                        ("h" . 60)
-                        ("d" . ,(* 60 8))
-                        ("w" . ,(* 60 8 5))
-                        ("m" . ,(* 60 8 5 4))
-                        ("y" . ,(* 60 8 5 4 11))))
+  :config
+  (wal/replace-in-alist
+    org-duration-units
+    `(("d" . ,(* 60 8))
+      ("w" . ,(* 60 8 5))
+      ("m" . ,(* 60 8 5 4))
+      ("y" . ,(* 60 8 5 4 11))))
   :after org
   :ensure nil)
 #+END_SRC
@@ -4915,11 +4924,7 @@ Add some user speed commands.
 #+BEGIN_SRC emacs-lisp
 (use-package org-keys
   :config
-  (mapc (lambda (it)
-          (let ((key (car it))
-                (val (cdr it)))
-            (setcdr (assoc key org-speed-commands) val)))
-        wal/org-speed-commands)
+  (wal/replace-in-alist org-speed-commands wal/org-speed-commands)
   :custom
   (org-use-speed-commands t)
   (org-return-follows-link t)
