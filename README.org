@@ -1455,24 +1455,33 @@ Make function calls even more versatile.
 
 #+BEGIN_SRC emacs-lisp
 (cl-defmacro wal/univ (a b)
-  "Define a `universal-argument'-modified function for A.
-It will call B instead if the argument is present.
+  "Define a prefix-modified function for A.
 
-Both functions will be called interactively. The
-`current-prefix-arg' is consumed by setting it to nil."
+It will call B instead if the default `universal-argument' is
+present. It will again call A with `universal-argument' if the
+function is called with two `C-u' or more.
+
+Both functions will be called interactively."
   (declare (indent defun))
   (let ((a-name (symbol-name a))
         (b-name (symbol-name b)))
     `(defun ,(intern (concat "wal/univ-" a-name)) (&optional call-other)
-       ,(format "Call `%s' unless `universal-argument' is present, in that case CALL-OTHER `%s' instead."
-                a-name
-                b-name)
+       ,(concat (format "Call `%s' or `%s' depending on prefix argument."
+                        a-name
+                        b-name)
+                "\n"
+                "No argument means: call the prior. "
+                "A single `C-u' means: call the latter. "
+                "Two or more `C-u' means: call the prior with `universal-argument'.")
        (interactive "P")
-       (setq current-prefix-arg nil)
-       (prefix-command-update)
-       (if call-other
-           (call-interactively ',b)
-         (call-interactively ',a)))))
+       (if (> (prefix-numeric-value call-other) 4)
+           (progn
+             (universal-argument)
+             (prefix-command-update)
+             (call-interactively ',a))
+         (if call-other
+             (call-interactively ',b)
+           (call-interactively ',a))))))
 #+END_SRC
 
 ** Helpers
