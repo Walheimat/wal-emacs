@@ -430,7 +430,7 @@ Any mode that should be on/off no matter what.
 (scroll-bar-mode -1)
 
 ;; Emacs 29.
-(if wal/experimental
+(when wal/experimental
   (pixel-scroll-precision-mode 1))
 #+END_SRC
 
@@ -4274,11 +4274,14 @@ The current buffer and Dired buffers are filtered."
   (wal/captain
     "i" '(:keymap perspective-map :wk "perspective"))
   (persp-mode +1)
-  (define-key persp-mode-map (kbd "C-x x") ctl-x-x-map) ; Override the override to `perspective-map'.
+  ;; Override the override to `perspective-map'.
+  (when (< emacs-major-version 28)
+    (define-key persp-mode-map (kbd "C-x x") ctl-x-x-map))
   :custom
   (persp-modestring-dividers '(" (" ")" "/")) ; Add space for `doom-modeline'.
   (persp-initial-frame-name wal/default-perspective)
   (persp-state-default-file (expand-file-name "persp-persist" wal/cache-directory))
+  (persp-suppress-no-prefix-key-warning t)
   :bind
   (:map persp-mode-map
    ("C-x b" . persp-switch-to-buffer)
