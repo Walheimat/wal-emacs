@@ -3078,14 +3078,15 @@ Sometimes the list of minor modes overcrowds the modeline.
   :config
   (minions-mode +1)
   :custom
-  (minions-direct '(smerge-mode
-                    git-timemachine-mode
-                    vterm-copy-mode
-                    typo-mode
-                    auto-fill-function
-                    flyspell-mode
-                    org-tree-slide-mode
-                    wal/config-mode))
+  (minions-prominent-modes '(smerge-mode
+                             git-timemachine-mode
+                             vterm-copy-mode
+                             with-editor-mode
+                             typo-mode
+                             auto-fill-function
+                             flyspell-mode
+                             org-tree-slide-mode
+                             wal/config-mode))
   :general
   (wal/captain-sink "m" '(minions-mode :wk "minions"))
   :defer 3)
@@ -3802,6 +3803,38 @@ Alternative.
   (wal/captain-sink :keymaps '(prog-mode-map dap-ui-repl-mode-map)
     "c" '(corfu-mode :wk "corfu"))
   :hook (prog-mode . corfu-mode))
+#+END_SRC
+
+*** corfu-quick
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package corfu-quick
+  :bind
+  (:map corfu-map
+   ("M-q" . corfu-quick-complete)
+   ("C-q" . corfu-quick-exit))
+  :after corfu
+  :ensure nil)
+#+END_SRC
+
+*** corfu-history
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package corfu-history
+  :config
+  (add-to-list 'savehist-additional-variables 'corfu-history)
+  (corfu-history-mode)
+  :custom
+  (corfu-history-length 200)
+  :demand
+  :after corfu
+  :ensure nil)
 #+END_SRC
 
 *** corfu-doc
@@ -5201,6 +5234,17 @@ I am convinced that we are in a terminal process.
 #+END_SRC
 
 ** Packages
+
+*** with-editor
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package with-editor
+  :custom
+  (with-editor-mode-lighter " w/e"))
+#+END_SRC
 
 *** vterm
 :PROPERTIES:
