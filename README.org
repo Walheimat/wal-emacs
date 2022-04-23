@@ -623,6 +623,8 @@ I use many[fn:8] custom keybindings.
 (declare-function wal/open-line-above "wal-func.el")
 (declare-function wal/other-window "wal-func.el")
 
+(defvar wal/ascii-whale)
+
 (defgroup wal-key-bindings nil
   "Change key bindings settings."
   :group 'wal
@@ -666,33 +668,6 @@ I use many[fn:8] custom keybindings.
   "The senary (or sergeant) leader key."
   :type 'string
   :group 'wal-key-bindings)
-
-(cl-defmacro wal/create-leader-sink (name &key definer prefix)
-  "Macro to create a leader sink `NAME-sink'.
-
-NAME is the name of the macro. DEFINER is the definer to create
-the sink for and PREFIX is its prefix."
-  (let* ((defname (symbol-name definer))
-         (suf (substring prefix -1))
-         (wk (upcase (concat (substring defname 4) "!"))))
-    (progn
-      (general-define-key :prefix prefix suf `(:ignore t :wk ,wk))
-      `(defmacro ,name (&rest args)
-         `(, ',definer ,@,`(mapcar (lambda (it)
-                                     (if (stringp it)
-                                         (concat ,suf it)
-                                       it)) args))))))
-
-(defun wal/prefix-user-key (user-key)
-  "Prefix USER-KEY.
-
-The default prefix is the hyper key unless Emacs is not running
-in GUI mode or `wal/use-hyper-prefix' is nil."
-  (let ((prefix (if (and wal/use-hyper-prefix
-                         (or (daemonp) (display-graphic-p)))
-                    "H-"
-                  "C-c w ")))
-    (concat prefix user-key)))
 #+END_SRC
 
 ** Prefix Keys
@@ -753,7 +728,8 @@ It's also used for some dispatches:
 + =H-m= for =magit= if called with =C-u=
 + =H-n= for =rg= if called with =C-u=
 + =H-o= for =ace-window=
-+ =H-p= for =lsp-mode=.
++ =H-p= for =lsp-mode=
++ =H-u= for =consult= if caleld with =C-u=.
 
 **** Caps to Hyper
 
@@ -838,6 +814,33 @@ toggle major and minor modes, respectively. The sink for =colonel=,
 :END:
 
 #+BEGIN_SRC emacs-lisp
+(cl-defmacro wal/create-leader-sink (name &key definer prefix)
+  "Macro to create a leader sink `NAME-sink'.
+
+NAME is the name of the macro. DEFINER is the definer to create
+the sink for and PREFIX is its prefix."
+  (let* ((defname (symbol-name definer))
+         (suf (substring prefix -1))
+         (wk (upcase (concat (substring defname 4) "!"))))
+    (progn
+      (general-define-key :prefix prefix suf `(:ignore t :wk ,wk))
+      `(defmacro ,name (&rest args)
+         `(, ',definer ,@,`(mapcar (lambda (it)
+                                     (if (stringp it)
+                                         (concat ,suf it)
+                                       it)) args))))))
+
+(defun wal/prefix-user-key (user-key)
+  "Prefix USER-KEY.
+
+The default prefix is the hyper key unless Emacs is not running
+in GUI mode or `wal/use-hyper-prefix' is nil."
+  (let ((prefix (if (and wal/use-hyper-prefix
+                         (or (daemonp) (display-graphic-p)))
+                    "H-"
+                  "C-c w ")))
+    (concat prefix user-key)))
+
 (use-package general
   :config
   (mapc (lambda (it)
@@ -867,9 +870,6 @@ These hydras are mapped to =lieutenant= using the following prefixes:
 + =v= to scroll other window.
 
 #+BEGIN_SRC emacs-lisp
-(defconst wal/ascii-whale (propertize "}< ,.__)" 'face 'mode-line-emphasis)
-  "A small, highlighted ASCII whale.")
-
 (defun wal/ascii-whale-hydra-offset (&optional padding)
   "Get a string offset for the `wal/ascii-whale'.
 Additional left PADDING can be passed."
@@ -1570,6 +1570,26 @@ Act on regions.
         (browse-url
          (concat "https://duckduckgo.com/html/?q=" hex-str)))
     (user-error "No active region")))
+#+END_SRC
+
+** Messages
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(defconst wal/ascii-whale (propertize "}< ,.__)" 'face 'mode-line-emphasis)
+  "A small, highlighted ASCII whale.")
+
+(defun wal/message-in-a-bottle (bottle)
+  "Randomly display a message from the given BOTTLE.
+
+That bottle is just an array of strings."
+  (let* ((message-log-max nil) ; Don't clutter.
+         (rand (wal/biased-random (length bottle)))
+         (mess (nth rand bottle))
+         (prop-mess (propertize mess 'face 'italic)))
+    (message (concat wal/ascii-whale " " prop-mess))))
 #+END_SRC
 
 ** Expansion Packs
@@ -3714,6 +3734,7 @@ Complete commands and code.
 (declare-function wal/append "wal-func.el")
 (declare-function projectile-project-root "ext:projectile.el")
 
+(defvar savehist-additional-variables)
 (defvar xref-show-xrefs-function)
 (defvar xref-show-definitions-function)
 (defvar wal/use-projectile)
@@ -5072,18 +5093,6 @@ Run =dired= with =C-x d=.
 ;;; Code:
 
 (declare-function dired-read-dir-and-switches "ext:dired.el")
-
-(defun wal/dired-from-home (dirname &optional switches)
-  "Find DIRNAME local to HOME directory.
-Uses the same optional SWITCHES."
-  (interactive (let ((default-directory (expand-file-name "~/")))
-                 (dired-read-dir-and-switches "")))
-  (pop-to-buffer-same-window (dired-noselect dirname switches)))
-
-(defun wal/image-dired ()
-  "Run `image-dired' in the `default-directory'."
-  (interactive)
-  (image-dired (expand-file-name default-directory)))
 #+END_SRC
 
 ** Packages
@@ -5096,6 +5105,18 @@ Uses the same optional SWITCHES."
 The mother of all buffers. You don't need no tree views.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/dired-from-home (dirname &optional switches)
+  "Find DIRNAME local to HOME directory.
+Uses the same optional SWITCHES."
+  (interactive (let ((default-directory (expand-file-name "~/")))
+                 (dired-read-dir-and-switches "")))
+  (pop-to-buffer-same-window (dired-noselect dirname switches)))
+
+(defun wal/image-dired ()
+  "Run `image-dired' in the `default-directory'."
+  (interactive)
+  (image-dired (expand-file-name default-directory)))
+
 (use-package dired
   :config
   (put 'dired-find-alternate-file 'disabled nil)
@@ -5636,20 +5657,11 @@ Let's greet the world[fn:17].
 (declare-function wal/major "wal-key-bindings.el")
 (declare-function wal/maybe-enable-tabs "wal-settings.el")
 (declare-function wal/maybe-intern "wal-func.el")
+(declare-function wal/message-in-a-bottle "wal-func.el")
 
 (defvar js2-mode-map)
 (defvar wal/ascii-whale)
 (defvar wal/use-projectile)
-
-(defun wal/message-in-a-bottle (bottle)
-  "Randomly display a message from the given BOTTLE.
-
-That bottle is just an array of strings."
-  (let* ((message-log-max nil) ; Don't clutter.
-         (rand (wal/biased-random (length bottle)))
-         (mess (nth rand bottle))
-         (prop-mess (propertize mess 'face 'italic)))
-    (message (concat wal/ascii-whale " " prop-mess))))
 #+END_SRC
 
 ** Elixir
