@@ -2647,6 +2647,12 @@ A collection of status messages."
   "Programming modes that should not enable `highlight-indent-guides-mode'."
   :type '(repeat symbol)
   :group 'wal-visuals)
+
+(defcustom wal/mode-line 'doom-modeline
+  "The mode-line to use."
+  :type '(choice (const doom-modeline)
+                 (const wal-line))
+  :group 'wal-visuals)
 #+END_SRC
 
 ** Dashboard
@@ -3034,6 +3040,7 @@ Busier and prettier[fn:14] =modeline=.
     (setq doom-modeline-buffer-file-name-style style-symbol)))
 
 (use-package doom-modeline
+  :if (eq wal/mode-line 'doom-modeline)
   :wal-ways nil
   :config
   (advice-add
@@ -3054,6 +3061,23 @@ Busier and prettier[fn:14] =modeline=.
   :custom-face
   (doom-modeline-debug-visual ((t (:inherit 'mode-line))))
   :demand)
+#+END_SRC
+
+*** wal-line
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+My own mode line.
+
+#+BEGIN_SRC emacs-lisp
+(use-package wal-line
+  :if (eq wal/mode-line 'wal-line)
+  :wal-ways nil
+  :config
+  (wal-line-mode +1)
+  :demand
+  :ensure nil)
 #+END_SRC
 
 *** delight
