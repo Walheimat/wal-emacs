@@ -357,6 +357,26 @@ with =:wal-ways nil=.
 (add-to-list 'use-package-defaults '(:wal-ways t t))
 #+END_SRC
 
+*** quelpa
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Allows installing from other sources (like GitHub) using recipes.
+
+#+BEGIN_SRC emacs-lisp
+(use-package quelpa
+  :custom
+  (quelpa-update-melpa-p nil)
+  :demand)
+
+(use-package quelpa-use-package
+  :config
+  (quelpa-use-package-activate-advice)
+  :after quelpa
+  :demand)
+#+END_SRC
+
 ** Directories
 
 Make sure that custom directories exist. We want:
@@ -2648,7 +2668,7 @@ A collection of status messages."
   :type '(repeat symbol)
   :group 'wal-visuals)
 
-(defcustom wal/mode-line 'doom-modeline
+(defcustom wal/mode-line 'wal-line
   "The mode-line to use."
   :type '(choice (const doom-modeline)
                  (const wal-line))
@@ -2999,6 +3019,23 @@ Minor modes are white-listed, hidden, delighted and diminished.
 Meaning that, if not white-listed, they are not shown, if they are
 shown, they are delighted unless they were diminished.
 
+*** wal-line
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+My own mode line.
+
+#+BEGIN_SRC emacs-lisp
+(use-package wal-line
+  :if (eq wal/mode-line 'wal-line)
+  :wal-ways nil
+  :config
+  (wal-line-mode +1)
+  :demand
+  :quelpa (wal-line :fetcher github :repo "Walheimat/wal-line"))
+#+END_SRC
+
 *** doom-modeline
 :PROPERTIES:
 :UNNUMBERED: t
@@ -3061,23 +3098,6 @@ Busier and prettier[fn:14] =modeline=.
   :custom-face
   (doom-modeline-debug-visual ((t (:inherit 'mode-line))))
   :demand)
-#+END_SRC
-
-*** wal-line
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-My own mode line.
-
-#+BEGIN_SRC emacs-lisp
-(use-package wal-line
-  :if (eq wal/mode-line 'wal-line)
-  :wal-ways nil
-  :config
-  (wal-line-mode +1)
-  :demand
-  :ensure nil)
 #+END_SRC
 
 *** delight
@@ -3195,7 +3215,7 @@ ARGS is a list containing modes and additional ligatures."
   (ligature-set-ligatures 'rust-mode '("///" "->" "=>" "::"
                                        ".." "#["))
   :hook (prog-mode . ligature-mode)
-  :load-path "site-lisp")
+  :quelpa (ligature :fetcher github :repo "mickeynp/ligature.el"))
 #+END_SRC
 
 ** Icons
