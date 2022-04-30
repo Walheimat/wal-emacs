@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Remove `eshell-mode-map` mapping in `eshell` configuration (the map
+  belongs to `esh-mode` but is no longer required).
+
 ## [1.7.0] - 2021-04-30
 
 ### Added
