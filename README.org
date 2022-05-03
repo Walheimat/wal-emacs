@@ -1733,19 +1733,16 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 
 (defun wal/transparency (&optional value)
   "Set the transparency of the frame to VALUE.
-1 being (almost) completely transparent, 100 being opaque."
+1 being (almost) completely transparent, 100 being opaque.
+
+This also updates variable `wal/transparency' for the duration of
+the session."
   (interactive "nSet transparency (1-100): ")
-  (let ((transparency (min (max (or value wal/transparency) 1) 100))
-        (alpha-default (assoc 'alpha default-frame-alist))
-        (alpha-background-default (assoc 'alpha-background default-frame-alist)))
+  (let ((transparency (min (max (or value wal/transparency) 1) 100)))
+    (setq wal/transparency transparency)
     (if wal/experimental
-        (progn
-          (set-frame-parameter (selected-frame) 'alpha-background transparency)
-          (when alpha-background-default
-            (setcdr alpha-background-default transparency)))
-      (set-frame-parameter (selected-frame) 'alpha transparency)
-      (when alpha-default
-        (setcdr alpha-default transparency)))))
+        (modify-all-frames-parameters `((alpha-background . ,transparency)))
+      (modify-all-frames-parameters `((alpha . ,transparency))))))
 
 ;; Some themes require configuration, so we only load after initialization.
 (wal/define-init-setup visuals
