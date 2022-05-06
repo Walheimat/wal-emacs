@@ -7,10 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add and configure package `imenu-list`.
+
+### Changed
+
+- Uses `modify-all-frames-parameters` for setting transparency and
+  also updates `wal/transparency`.
+- Suggest using `.Xmodmap` file for hyper/caps switch.
+
 ### Fixed
 
 - Remove `eshell-mode-map` mapping in `eshell` configuration (the map
   belongs to `esh-mode` but is no longer required).
+- Advice for `persp-format-name` takes names shorter than the
+  truncation into account.
 
 ## [1.7.0] - 2021-04-30
 
