@@ -9,13 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add and configure package `imenu-list`.
+- Adds and configure package `imenu-list`.
+- Adds and configures package `org-transclusion`.
 
 ### Changed
 
 - Uses `modify-all-frames-parameters` for setting transparency and
   also updates `wal/transparency`.
 - Suggest using `.Xmodmap` file for hyper/caps switch.
+- No longer uses the `consult` variants of yanking.
 
 ### Fixed
 
