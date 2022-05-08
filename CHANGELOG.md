@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Adds and configure package `imenu-list`.
 - Adds and configures package `org-transclusion`.
+- Adds and configures package `goggles`.
 
 ### Changed
 
