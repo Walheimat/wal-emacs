@@ -333,15 +333,14 @@ with =:wal-ways nil=.
   "Ignoring NAME, REST and STATE, only expand if PRED or `wal/minimal' is nil."
   (when (and (fboundp 'use-package-process-keywords)
              (fboundp 'use-package-plist-maybe-put))
-    (let ((body (use-package-process-keywords name rest state)))
-      (use-package-plist-maybe-put
-       state
-       :wal-ways (or pred
-                     (not wal/minimal)
-                     (not (null (memq name wal/minimal-exclude)))))
-      `((when (or ,pred
-                  (not ,wal/minimal)
-                  (not (null (memq ',name wal/minimal-exclude))))
+    (let* ((active (or pred
+                       (not wal/minimal)
+                       (not (null (memq name wal/minimal-exclude)))))
+           (body (use-package-process-keywords
+                   name
+                   rest
+                   (use-package-plist-maybe-put state :wal-ways pred))))
+      `((when ,active
           ,@body)))))
 
 (defun wal/advise-use-package-ensure-elpa (_name _args state &optional _no-refresh)
@@ -352,7 +351,7 @@ with =:wal-ways nil=.
   'use-package-ensure-elpa
   :before-while #'wal/advise-use-package-ensure-elpa)
 
-(wal/insert-use-package-keyword :wal-ways :if)
+(wal/insert-use-package-keyword :wal-ways :pin)
 
 (add-to-list 'use-package-defaults '(:wal-ways t t))
 #+END_SRC
