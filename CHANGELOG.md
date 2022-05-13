@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   truncation into account.
 - Always use copying for backup files to prevent problems with
   `lsp-mode` managed buffers.
+- Custom `use-package` keyword `:wal-ways` should now work as intended
+  (and not only if a different keyword was included in the state).
+  Packages should now be automatically ensured again unless the
+  keyword is `nil`.
 
 ## [1.7.0] - 2021-04-30
 
