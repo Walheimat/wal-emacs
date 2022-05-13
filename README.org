@@ -330,7 +330,13 @@ with =:wal-ways nil=.
 (defalias 'use-package-normalize/:wal-ways 'use-package-normalize-predicate)
 
 (defun use-package-handler/:wal-ways (name _keyword pred rest state)
-  "Ignoring NAME, REST and STATE, only expand if PRED or `wal/minimal' is nil."
+  "Update state and only expand conditionallly.
+
+The conditions are: (1) the PRED is t, (2) `wal/minimal' is nil
+or (3) NAME is never excluded.
+
+The STATE is updated as well before parsing REST so we can
+further prevent ELPA installations."
   (when (and (fboundp 'use-package-process-keywords)
              (fboundp 'use-package-plist-maybe-put))
     (let* ((active (or pred
