@@ -330,7 +330,7 @@ with =:wal-ways nil=.
 (defalias 'use-package-normalize/:wal-ways 'use-package-normalize-predicate)
 
 (defun use-package-handler/:wal-ways (name _keyword pred rest state)
-  "Update state and only expand conditionallly.
+  "Only expand conditionallly.
 
 The conditions are: (1) the PRED is t, (2) `wal/minimal' is nil
 or (3) NAME is never excluded.
@@ -345,17 +345,9 @@ further prevent ELPA installations."
            (body (use-package-process-keywords
                    name
                    rest
-                   (use-package-plist-maybe-put state :do-install active))))
+                   (use-package-plist-maybe-put state :wal-ways active))))
       `((when ,active
           ,@body)))))
-
-(defun wal/advise-use-package-ensure-elpa (_name _args state &optional _no-refresh)
-  "Advise function to not run if `:wal-ways' is nil in STATE."
-  (plist-get state :do-install))
-
-(advice-add
-  'use-package-ensure-elpa
-  :before-while #'wal/advise-use-package-ensure-elpa)
 
 (wal/insert-use-package-keyword :wal-ways :pin)
 
