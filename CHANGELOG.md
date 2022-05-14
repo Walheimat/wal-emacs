@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Suggest using `.Xmodmap` file for hyper/caps switch.
 - No longer uses the `consult` variants of yanking.
 - The default `dap-mode` hydra is now bound in the smaller hydra.
+- Offset for `fish-mode` is now 2.
 
 ### Fixed
 
@@ -32,7 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom `use-package` keyword `:wal-ways` should now work as intended
   (and not only if a different keyword was included in the state).
   Packages should now be automatically ensured again unless the
-  keyword is `nil`.
+  evaluation of keyword, `wal/minimal` and `wal/minimal-exclude`
+  resolves to `nil`.
 
 ## [1.7.0] - 2021-04-30
 
