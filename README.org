@@ -345,13 +345,13 @@ further prevent ELPA installations."
            (body (use-package-process-keywords
                    name
                    rest
-                   (use-package-plist-maybe-put state :wal-ways pred))))
+                   (use-package-plist-maybe-put state :do-install active))))
       `((when ,active
           ,@body)))))
 
 (defun wal/advise-use-package-ensure-elpa (_name _args state &optional _no-refresh)
   "Advise function to not run if `:wal-ways' is nil in STATE."
-  (plist-get state :wal-ways))
+  (plist-get state :do-install))
 
 (advice-add
   'use-package-ensure-elpa
@@ -6340,6 +6340,8 @@ Support =fish= functions.
 
 #+BEGIN_SRC emacs-lisp
 (use-package fish-mode
+  :custom
+  (fish-indent-offset 2)
   :ensure nil)
 #+END_SRC
 
