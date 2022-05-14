@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.1] - 202-05-14
+
+Less is less.
+
 ### Added
 
 - Adds and configure package `imenu-list`.
@@ -37,6 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolves to `nil`.
 
 ## [1.7.0] - 2021-04-30
+
+Locally sourced.
 
 ### Added
 
