@@ -167,6 +167,11 @@ evaluate /everything/[fn:6] that follows.
   "Whether to maximize new frames by default."
   :type 'boolean
   :group 'wal-settings)
+
+(defcustom wal/ack-warnings nil
+  "Acknowledge all warnings."
+  :type 'boolean
+  :group 'wal-settings)
 #+END_SRC
 
 ** Personal
@@ -208,11 +213,12 @@ bugs).")
 (setq ad-redefinition-action 'accept)
 
 ;; Warn Mac/Windows users.
-(unless (eq system-type 'gnu/linux)
+(unless (or (eq system-type 'gnu/linux) wal/ack-warnings)
   (warn "\
-    Warning: Config only tested on Linux. While I did get in
-    running on Windows 10, it was quite tricky and involved
-    setting unsafe options."))
+     Warning: Config only tested on Linux. The configuration may
+     not work correctly on your system.
+
+     Set `wal/ack-warnings' to t to ignore this warning."))
 #+END_SRC
 
 ** Package Archives

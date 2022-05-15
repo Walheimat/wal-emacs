@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Warning emitted for non-GNU systems can now be ignored by setting
+  `wal/ack-warnings` to `t`.
+
+### Fixed
+
+- Package `marginalia` is now required with errors ignored (on first
+  start-up, the package won't be there).
+
 ## [1.7.1] - 202-05-14
 
 Less is less.
