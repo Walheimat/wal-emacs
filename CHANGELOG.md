@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Package `marginalia` is now required with errors ignored (on first
   start-up, the package won't be there).
+- Expansion pack packages are now only loaded if installed.
 
 ## [1.7.1] - 202-05-14
 

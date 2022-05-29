@@ -85,6 +85,7 @@ evaluate /everything/[fn:6] that follows.
 
 (declare-function wal/bytes-per-mb "wal-func.el")
 (declare-function wal/install-packages "wal-func.el")
+(declare-function wal/is-expansion-pack "wal-func.el")
 (declare-function wal/prefix-user-key "wal-key-bindings.el")
 
 (defvar global-auto-revert-non-file-buffers)
@@ -338,16 +339,21 @@ with =:wal-ways nil=.
 (defun use-package-handler/:wal-ways (name _keyword pred rest state)
   "Only expand conditionallly.
 
-The conditions are: (1) the PRED is t, (2) `wal/minimal' is nil
-or (3) NAME is never excluded.
+The conditions for normla packages are: (1) the PRED is t, (2)
+`wal/minimal' is nil or (3) NAME is never excluded.
 
-The STATE is updated as well before parsing REST so we can
-further prevent ELPA installations."
+If NAME is an expansion pack package, the conditions are: (1) the
+PRED is t or (2) NAME is installed.
+
+The STATE is updated as well before parsing REST if we want to
+use the result further down the line."
   (when (and (fboundp 'use-package-process-keywords)
              (fboundp 'use-package-plist-maybe-put))
     (let* ((active (or pred
-                       (not wal/minimal)
-                       (not (null (memq name wal/minimal-exclude)))))
+                       (if (wal/is-expansion-pack name)
+                           (not (null (package-installed-p name)))
+                         (or (not wal/minimal)
+                             (not (null (memq name wal/minimal-exclude)))))))
            (body (use-package-process-keywords
                    name
                    rest
@@ -1654,6 +1660,17 @@ t, printing optional message ON-DONE."
   `(add-to-list
     'wal/expansion-packs
     '(,name . (:packages ,packages :extras ,extras :docs ,docs))))
+
+(defun wal/is-expansion-pack (pack)
+  "Check if PACK is an expansion pack package."
+  (let ((packages (seq-reduce (lambda (acc it)
+                                (let* ((pl (cdr it))
+                                       (p (plist-get pl :packages))
+                                       (e (plist-get pl :extras)))
+                                  (append acc p e)))
+                              wal/expansion-packs
+                              '())))
+    (memq pack packages)))
 
 (defun wal/install-expansion-pack (pack)
   "Install the given expansion PACK."
