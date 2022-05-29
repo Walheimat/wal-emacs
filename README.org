@@ -5813,6 +5813,7 @@ Bitches brew.
   (wal/lsp))
 
 (use-package elixir-mode
+  :wal-ways nil
   :hook (elixir-mode . wal/elixir-mode)
   :ensure nil)
 #+END_SRC
@@ -5876,6 +5877,7 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
 
 (use-package rust-mode
   :if (executable-find "cargo")
+  :wal-ways nil
   :general
   (wal/major :keymaps 'rust-mode-map :major-modes t
     "c" '(rust-compile :wk "compile")
@@ -5893,6 +5895,7 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
 
 #+BEGIN_SRC emacs-lisp
 (use-package cargo
+  :wal-ways nil
   :general
   (wal/major :keymaps 'rust-mode-map :major-modes t
     "tc" '(cargo-process-current-test :wk "current")
@@ -6025,6 +6028,7 @@ Activating =virtualenv= inside of Emacs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package pyvenv
+  :wal-ways nil
   :general
   (wal/major :keymaps 'python-mode-map :major-modes t
     "v" '(pyvenv-activate :wk "activate venv"))
@@ -6040,6 +6044,7 @@ Activating =virtualenv= inside of Emacs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package poetry
+  :wal-ways nil
   :general
   (wal/major :keymaps 'python-mode-map :major-modes t
     "p" '(poetry :wk "poetry"))
@@ -6102,6 +6107,7 @@ Get some closure.
   (wal/lsp))
 
 (use-package clojure-mode
+ :wal-ways nil
  :hook (clojure-mode . wal/clojure-mode)
  :ensure nil)
 #+end_src
@@ -6115,6 +6121,7 @@ Can't have closure without REPL.
 
 #+begin_src emacs-lisp
 (use-package cider
+  :wal-ways nil
   :config
   (wdb/side 'cider-repl-mode)
   :general
@@ -6151,6 +6158,7 @@ Evaluate from the right, =edebug= from the left.
 
 #+BEGIN_SRC emacs-lisp
 (use-package highlight-quoted
+  :wal-ways nil
   :hook (emacs-lisp-mode . highlight-quoted-mode)
   :ensure nil)
 #+END_SRC
@@ -6165,6 +6173,7 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
 #+BEGIN_SRC emacs-lisp
 (use-package slime
   :if (executable-find "sbcl")
+  :wal-ways nil
   :config
   (setq inferior-lisp-program "sbcl")
   (slime-setup '(slime-fancy slime-quicklisp slime-asdf slime-company))
@@ -6208,6 +6217,7 @@ Can we have =deno= instead of =node=?
   (wal/lsp))
 
 (use-package js2-mode
+  :wal-ways nil
   :config
   ;; Don't override `xref-find-definitions'.
   (define-key js2-mode-map (kbd "M-.") nil)
@@ -6241,6 +6251,7 @@ Improved editing for JSX files. Extends =js2=.
   (wal/maybe-enable-tabs :indent-with 'js-jsx-indent-line))
 
 (use-package rjsx-mode
+  :wal-ways nil
   :mode "\\.jsx\\'"
   :hook (rjsx-mode . wal/rjsx-mode)
   :ensure nil)
@@ -6264,6 +6275,7 @@ Please use TypeScript.
   (wal/lsp))
 
 (use-package typescript-mode
+  :wal-ways nil
   :mode "\\.ts\\'"
   :hook (typescript-mode . wal/typescript-mode)
   :ensure nil)
@@ -6278,7 +6290,7 @@ Allow accessing a project's =node_modules=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package add-node-modules-path
-  :defer t
+  :wal-ways nil
   :ensure nil)
 #+END_SRC
 
@@ -6291,6 +6303,7 @@ Prettify your ugly JavaScript.
 
 #+BEGIN_SRC emacs-lisp
 (use-package prettier
+  :wal-ways nil
   :general
   (wal/major :keymaps '(js2-mode-map typescript-mode-map) :major-modes t
     "p" '(prettier-prettify :wk "run prettier"))
@@ -6324,6 +6337,7 @@ Setup for LSP.
   (wal/lsp))
 
 (use-package go-mode
+  :wal-ways nil
   :hook (go-mode . wal/go-mode)
   :ensure nil)
 #+END_SRC
@@ -6372,6 +6386,7 @@ Sometimes you have to deal with things at their time.
 
 #+BEGIN_SRC emacs-lisp
 (use-package crontab-mode
+  :wal-ways nil
   :ensure nil)
 #+END_SRC
 
@@ -6384,6 +6399,7 @@ Support =fish= functions.
 
 #+BEGIN_SRC emacs-lisp
 (use-package fish-mode
+  :wal-ways nil
   :custom
   (fish-indent-offset 2)
   :ensure nil)
@@ -6419,6 +6435,7 @@ Sometimes things that don't do things need to look nice.
     (error "Can't change view outside of markdown modes"))))
 
 (use-package markdown-mode
+  :wal-ways nil
   :general
   (wal/major :keymaps 'markdown-mode-map :major-modes t
     "v" '(wal/markdown-view :wk "view"))
@@ -6449,6 +6466,7 @@ Yes, you need to install *Android Studio* for some reason.
   (wal/lsp))
 
 (use-package dart-mode
+  :wal-ways nil
   :hook (dart-mode . wal/dart-mode)
   :ensure nil)
 #+END_SRC
@@ -6490,7 +6508,8 @@ LSP support for Dart.
       (message "Couldn't get service URI: %s" err))))
 
 (use-package lsp-dart
-  :if (executable-find "flutter")
+  :if (or (executable-find "flutter") (executable-find "dart"))
+  :wal-ways nil
   :config
   (when (fboundp 'lsp-dart-define-key)
     (lsp-dart-define-key "r" #'lsp-dart-run))
@@ -6568,6 +6587,7 @@ LSP integration.
   "The base URL for jdtls.")
 
 (use-package java-lsp
+  :wal-ways nil
   :config
   (require 'dap-java)
   :custom
@@ -6605,6 +6625,7 @@ The elephant in the room.
   (wal/lsp))
 
 (use-package php-mode
+  :wal-ways nil
   :config
   (require 'dap-php) ; Run `dap-php-setup'.
   (wdb/side "\\*Php SOE" :height 15)
@@ -6625,6 +6646,7 @@ The elephant in the room.
   (wal/lsp))
 
 (use-package web-mode
+  :wal-ways nil
   :hook (web-mode . wal/web-mode)
   :custom
   (web-mode-comment-style 2)
@@ -6662,6 +6684,7 @@ The only way to store strings, JSON.
   (flycheck-mode 1))
 
 (use-package json-mode
+  :wal-ways nil
   :mode "\\.arb\\'"
   :hook (json-mode . wal/json-mode)
   :ensure nil)
@@ -6685,6 +6708,7 @@ Sometimes things that do as well.
   (flycheck-mode +1))
 
 (use-package yaml-mode
+  :wal-ways nil
   :mode "\\.tpl\\'" ; Helm templates.
   :hook (yaml-mode . wal/yaml-mode)
   :ensure nil)
@@ -6722,6 +6746,7 @@ Support for =pug= templates.
 
 #+BEGIN_SRC emacs-lisp
 (use-package pug-mode
+  :wal-ways nil
   :ensure nil)
 #+END_SRC
 
@@ -7204,8 +7229,9 @@ Internet.
 
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack docker
-  "Dockerfile mode."
-  :packages (dockerfile-mode))
+  "Docker and Kubernetes."
+  :packages (docker dockerfile-mode)
+  :extras (kubernetes))
 #+END_SRC
 
 *** docker
@@ -7230,7 +7256,8 @@ What goes =docker-compose= up, goes =docker-compose= down.
   (docker-show-status nil)
   :bind
   (("C-c d" . docker))
-  :defer 2)
+  :defer 2
+  :ensure nil)
 #+END_SRC
 
 *** dockerfile-mode
@@ -7246,6 +7273,7 @@ Make =Dockerfiles= look nice.
   (wal/message-in-a-bottle '("Have you ever given?")))
 
 (use-package dockerfile-mode
+  :wal-ways nil
   :hook (dockerfile-mode . wal/dockerfile-mode)
   :ensure nil)
 #+END_SRC
@@ -7261,8 +7289,8 @@ Who doesn't like pods and stuff?
 
 #+BEGIN_SRC emacs-lisp
 (use-package kubernetes
-  :wal-ways nil
   :if (executable-find "kubectl")
+  :wal-ways nil
   :custom
   (kubernetes-commands-display-buffer-function 'display-buffer)
   (kubernetes-poll-frequency 3600)
@@ -7271,7 +7299,8 @@ Who doesn't like pods and stuff?
   (kubernetes-json-mode (if (featurep 'json-mode) 'json-mode 'js-mode))
   :bind
   ("C-c 8" . kubernetes-overview)
-  :commands kubernetes-overview)
+  :commands kubernetes-overview
+  :ensure nil)
 #+END_SRC
 
 ** Footer
@@ -7359,8 +7388,8 @@ You either need to install =maildir-utils= or build from [[https://github.com/dj
 
 #+BEGIN_SRC emacs-lisp
 (use-package mu4e
-  :wal-ways nil
   :if (executable-find "mu")
+  :wal-ways nil
   :config
   (setq mail-user-agent 'mu4e-user-agent)
   :custom
@@ -7385,6 +7414,7 @@ your =load-path=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package smtpmail
+  :wal-ways nil
   :custom
   (message-send-mail-function 'smtpmail-send-it)
   (message-kill-buffer-on-exit t)
