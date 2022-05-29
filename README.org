@@ -3402,6 +3402,7 @@ Everything that has to do with windows.
     dap-ui-repl-mode
     cider-repl-mode
     inferior-python-mode
+    python-pytest-mode
     ;; Debug(-like).
     debugger-mode
     "\\*\\(.+\\)out\\*"
@@ -5908,7 +5909,7 @@ Hide those details from me.
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack python
   "Virtual environment, isort and poetry support."
-  :packages (python-isort pyvenv poetry))
+  :packages (python-isort python-pytest pyvenv poetry))
 #+END_SRC
 
 *** python-mode
@@ -5954,11 +5955,34 @@ Sort with =isort=.
 
 #+begin_src emacs-lisp
 (use-package python-isort
+  :wal-ways nil
   :general
   (wal/major :keymaps 'python-mode-map :major-modes t
     "f" '(python-isort-buffer :wk "sort imports"))
   :ensure nil)
 #+end_src
+
+*** python-pytest
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Test with =pytest=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package python-pytest
+  :wal-ways nil
+  :config
+  (wdb/pop-up python-pytest-buffer-name)
+  :bind
+  (:map python-pytest-mode-map
+   ("g" . python-pytest-repeat)
+   ("q" . quit-window))
+  :general
+  (wal/major :keymaps 'python-mode-map :major-modes t
+    "t" '(python-pytest-dispatch :wk "pytest"))
+  :ensure nil)
+#+END_SRC
 
 *** Virtual Envs
 
@@ -6996,7 +7020,6 @@ Debugging using VSCode's DAP (in =lsp-mode=)
     (defhydra wal/dap-hydra (:hint nil :foreign-keys warn)
       "
 %s`wal/ascii-whale _d_ebug: _n_ext, _i_n, _o_ut or _c_ontinue.
-
 "
       ("n" dap-next)
       ("i" dap-step-in)

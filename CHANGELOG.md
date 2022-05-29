@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Warning emitted for non-GNU systems can now be ignored by setting
   `wal/ack-warnings` to `t`.
+- Adds and configures packages `python-pytest`.
 
 ### Fixed
 
