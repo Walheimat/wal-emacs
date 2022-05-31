@@ -13,11 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal/ack-warnings` to `t`.
 - Adds and configures packages `python-pytest`.
 
+### Changed
+
+- Added listing errors to `lsp-mode` transient.
+- Improved inferior shell mappings for `python-mode`.
+
 ### Fixed
 
 - Package `marginalia` is now required with errors ignored (on first
   start-up, the package won't be there).
 - Expansion pack packages are now only loaded if installed.
+- Advise function `kubernetes-utils--save-window-state` to use a
+  function, not a macro so that it works (in Emacs 29).
+- Disables `org-sticky-header-mode` in presentations.
 
 ## [1.7.1] - 202-05-14
 
