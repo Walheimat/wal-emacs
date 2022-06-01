@@ -7289,7 +7289,7 @@ Make =Dockerfiles= look nice.
 Who doesn't like pods and stuff?
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-kubernetes-utils--save-window-state (&rest body)
+(defun wal/kubernetes-utils--save-window-state (&rest body)
   "Restore window state after executing BODY.
 
 This is an exact copy of the original function which was defined
@@ -7307,10 +7307,11 @@ as a macro (which does not work for me)."
 (use-package kubernetes
   :if (executable-find "kubectl")
   :wal-ways nil
+  :init
+  ;; This already has an autoload that doesn't load the base package.
+  (autoload #'kubernetes-overview "kubernetes" nil t)
   :config
-  (advice-add
-    'kubernetes-utils--save-window-state :override
-    'wal/advise-kubernetes-utils--save-window-state)
+  (defalias 'kubernetes-utils--save-window-state 'wal/kubernetes-utils--save-window-state)
   :custom
   (kubernetes-commands-display-buffer-function 'display-buffer)
   (kubernetes-poll-frequency 3600)
@@ -7319,7 +7320,6 @@ as a macro (which does not work for me)."
   (kubernetes-json-mode (if (featurep 'json-mode) 'json-mode 'js-mode))
   :bind
   ("C-c 8" . kubernetes-overview)
-  :commands kubernetes-overview
   :ensure nil)
 #+END_SRC
 
