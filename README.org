@@ -826,10 +826,10 @@ Leader key =captain= (=/= by default) is responsible
 minor-mode-specific[fn:11] actions. The package prefixes are:
 
 + =f= for =flycheck=
++ =h= for =projectile=
 + =i= for =perspective=
-+ =l= for =lsp-mode=
 + =m= for =smerge=
-+ =p= for =projectile=
++ =p= for =lsp-mode=
 + =s= for =flyspell=
 + =y= for =yasnippet=.
 
@@ -4453,6 +4453,12 @@ More robust project management.
            (call-interactively (symbol-function ',(intern projectile-func-name)))
          (call-interactively (symbol-function ',func)))))))
 
+(defun wal/advise-projectile-find-file (func &rest r)
+  "Call FUNC with R or switch project."
+  (if (projectile-project-p)
+      (apply func r)
+    (call-interactively 'projectile-switch-project)))
+
 (defun wal/projectile-test-project ()
   "Run `projectile-test-project' with the default command."
   (interactive)
@@ -4463,6 +4469,9 @@ More robust project management.
   :if wal/use-projectile
   :init
   (wal/univ projectile-find-file projectile-switch-project)
+  (advice-add
+    'projectile-find-file :around
+    'wal/advise-projectile-find-file)
   :config
   (wal/append 'projectile-globally-ignored-directories
               (nth 0 wal/projectile-ignored))
@@ -4471,7 +4480,7 @@ More robust project management.
   (wal/append 'projectile-globally-ignored-file-suffixes
               (nth 2 wal/projectile-ignored))
   (wal/captain
-    "p" '(:keymap projectile-command-map :wk "projectile"))
+    "h" '(:keymap projectile-command-map :wk "projectile"))
   (projectile-mode +1)
   :custom
   (projectile-switch-project-action #'projectile-dired)
@@ -6970,7 +6979,7 @@ minimum prefixes are reduced."
   (when (eq wal/cap-provider 'corfu)
     (setq lsp-completion-provider :none))
   (wal/captain :keymaps 'lsp-mode-map
-    "l" '(:keymap lsp-command-map :wk "lsp"))
+    "p" '(:keymap lsp-command-map :wk "lsp"))
   (transient-define-prefix wal/lsp-dispatch ()
     "Call `lsp-mode' functions."
     [["Format"
@@ -6994,7 +7003,7 @@ minimum prefixes are reduced."
       ("Q" "quit" lsp-workspace-shutdown)]])
   :custom
   (lsp-headerline-breadcrumb-enable nil)
-  (lsp-keymap-prefix (wal/prefix-user-key (concat wal/captain-key " " "l")))
+  (lsp-keymap-prefix (wal/prefix-user-key (concat wal/captain-key " " "p")))
   (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
   (lsp-clients-typescript-log-verbosity "off")
   (lsp-rust-analyzer-cargo-watch-command "clippy")

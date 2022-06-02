@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added listing errors to `lsp-mode` transient.
 - Improved inferior shell mappings for `python-mode`.
+- Finding a file with projectile while not in a project is now advised
+  to switch projects.
 
 ### Fixed
 
