@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved inferior shell mappings for `python-mode`.
 - Finding a file with projectile while not in a project is now advised
   to switch projects.
+- Capture template for `org-roam` now uses slug with no date prefix.
 
 ### Fixed
 
