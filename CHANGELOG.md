@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Finding a file with projectile while not in a project is now advised
   to switch projects.
 - Capture template for `org-roam` now uses slug with no date prefix.
+- Commands from `projectile` are advised to only prompt if
+  `universal-argument` is given.
 
 ### Fixed
 

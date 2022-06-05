@@ -4459,11 +4459,13 @@ More robust project management.
       (apply func r)
     (call-interactively 'projectile-switch-project)))
 
-(defun wal/projectile-test-project ()
-  "Run `projectile-test-project' with the default command."
-  (interactive)
-  (let ((compilation-read-command nil))
-    (projectile-test-project nil)))
+(defun wal/advise-projectile-maybe-read-command (arg default-cmd prompt)
+  "Advise function to only PROMPT if ARG is provided.
+Otherwise treat DEFAULT-CMD normally."
+  (if (and (or (stringp default-cmd) (null default-cmd))
+           arg)
+      (projectile-read-command prompt default-cmd)
+    default-cmd))
 
 (use-package projectile
   :if wal/use-projectile
@@ -4472,6 +4474,9 @@ More robust project management.
   (advice-add
     'projectile-find-file :around
     'wal/advise-projectile-find-file)
+  (advice-add
+    'projectile-maybe-read-command :override
+    'wal/advise-projectile-maybe-read-command)
   :config
   (wal/append 'projectile-globally-ignored-directories
               (nth 0 wal/projectile-ignored))
@@ -4490,9 +4495,6 @@ More robust project management.
   (projectile-enable-caching t)
   :wal-bind
   ("h" . wal/univ-projectile-find-file)
-  :bind
-  (:map projectile-command-map
-    ("P" . wal/projectile-test-project))
   :commands (projectile-project-root wal/univ-projectile-find-file)
   :delight " pjt")
 #+END_SRC
