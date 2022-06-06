@@ -4462,10 +4462,9 @@ More robust project management.
 (defun wal/advise-projectile-maybe-read-command (arg default-cmd prompt)
   "Advise function to only PROMPT if ARG is provided.
 Otherwise treat DEFAULT-CMD normally."
-  (if (and (or (stringp default-cmd) (null default-cmd))
-           arg)
-      (projectile-read-command prompt default-cmd)
-    default-cmd))
+  (if (and (stringp default-cmd) (not arg))
+      default-cmd
+    (projectile-read-command prompt default-cmd)))
 
 (use-package projectile
   :if wal/use-projectile
