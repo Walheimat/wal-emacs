@@ -5070,7 +5070,14 @@ You know the drill. Clock in, clock out.
 	                (org-no-properties (org-get-heading t t t t)))))
       (wal/truncate heading 12))))
 
+(defun wal/org-clock-in-from-now ()
+  "Force `org-clock-in' without continuous logging."
+  (let ((org-clock-continuously nil))
+    (org-clock-in)))
+
 (use-package org-clock
+  :config
+  (add-to-list 'org-speed-commands '("N" . wal/org-clock-in-from-now))
   :custom
   (org-clock-idle-time 60)
   (org-clock-continuously t)
