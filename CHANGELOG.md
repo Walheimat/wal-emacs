@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds and configures packages `python-pytest`.
 - Adds `org-speed` command "N" to log non-continuously (as in from
   now).
+- Adds `ein` as a Python expansion pack extra.
 
 ### Changed
 
