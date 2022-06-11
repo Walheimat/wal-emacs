@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   now).
 - Adds `ein` as a Python expansion pack extra.
 - Adds `org-alert`.
+- Configures `org-refile` to consider headlines up to level 3.
 
 ### Changed
 
