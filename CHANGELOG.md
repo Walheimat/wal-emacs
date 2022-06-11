@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Capture template for `org-roam` now uses slug with no date prefix.
 - Commands from `projectile` are advised to only prompt if
   `universal-argument` is given.
+- The `modus-themes` are now always loaded because of a customization
+  quirk.
 
 ### Fixed
 
@@ -36,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Advise function `kubernetes-utils--save-window-state` to use a
   function, not a macro so that it works (in Emacs 29).
 - Disables `org-sticky-header-mode` in presentations.
+- Borderless setting for `modus-themes` was fixed.
 
 ## [1.7.1] - 202-05-14
 
