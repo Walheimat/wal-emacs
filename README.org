@@ -5234,13 +5234,35 @@ Show =imenu= as a list.
 Show notifications for scheduled items and deadlines.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/advise-org-alert--check-time (time &optional against)
+  "Check if TIME is in range of the cutoff.
+
+The reference point is either current time or AGAINST.
+
+Other than the library function, also make sure that the event
+doesn't lie in the past."
+  (let* ((time (mapcar #'string-to-number (split-string time ":")))
+	     (comp (or against (decode-time (current-time))))
+	     (now (org-alert--to-minute (decoded-time-hour comp) (decoded-time-minute comp)))
+	     (then (org-alert--to-minute (car time) (cadr time)))
+         (time-diff (- then now)))
+    (and (> time-diff 0) (<= time-diff org-alert-notify-cutoff))))
+
 (use-package org-alert
   :wal-ways nil
   :config
   (setq alert-default-style 'libnotify
-        org-alert-notification-title "Org Alert")
+        org-alert-notification-title "Org Alert"
+        org-alert-time-match-string "<.*\\([0-9]\\{2\\}:[0-9]\\{2\\}\\).*>"
+        org-alert-match-string (concat "SCHEDULED>=\"<today>\"+SCHEDULED<\"<tomorrow>\""
+                                       "|DEADLINE>=\"<today>\"+DEADLINE<\"<tomorrow>\""
+                                       "|TIMESTAMP>=\"<today>\"+TIMESTAMP<\"<tomorrow>\""))
+  (advice-add
+    #'org-alert--check-time :override
+    #'wal/advise-org-alert--check-time)
   (org-alert-enable)
-  :defer 1
+  :demand
+  :after org-agenda
   :ensure nil)
 #+END_SRC
 
