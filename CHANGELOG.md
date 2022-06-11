@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   function, not a macro so that it works (in Emacs 29).
 - Disables `org-sticky-header-mode` in presentations.
 - Borderless setting for `modus-themes` was fixed.
+- Fixes `slime` requiring potentially missing `slime-company`.
 
 ## [1.7.1] - 202-05-14
 
