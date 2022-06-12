@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.2] - 2021-06-12
+
+Slug or snail.
+
 ### Added
 
 - Warning emitted for non-GNU systems can now be ignored by setting
@@ -29,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `universal-argument` is given.
 - The `modus-themes` are now always loaded because of a customization
   quirk.
+- Upgraded to latest `commitlint` version.
 
 ### Fixed
 
@@ -41,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Borderless setting for `modus-themes` was fixed.
 - Fixes `slime` requiring potentially missing `slime-company`.
 
-## [1.7.1] - 202-05-14
+## [1.7.1] - 2021-05-14
 
 Less is less.
 
