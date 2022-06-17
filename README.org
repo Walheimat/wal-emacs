@@ -1771,6 +1771,16 @@ the session."
         (modify-all-frames-parameters `((alpha-background . ,transparency)))
       (modify-all-frames-parameters `((alpha . ,transparency))))))
 
+(defvar wal/active-theme nil)
+
+(defun wal/load-active-theme ()
+  "Load the currently active theme."
+  (interactive)
+  (when wal/active-theme
+    (if (custom-theme-p wal/active-theme)
+        (enable-theme wal/active-theme)
+      (load-theme wal/active-theme t))))
+
 ;; Some themes require configuration, so we only load after initialization.
 (wal/define-init-setup visuals
   "Set up visual frills like theme and transparency."
@@ -1779,14 +1789,13 @@ the session."
        (add-to-list 'default-frame-alist `(alpha-background . ,wal/transparency))
      (add-to-list 'default-frame-alist `(alpha . ,wal/transparency)))
    (when wal/theme
-     (if (custom-theme-p wal/theme)
-         (enable-theme wal/theme)
-       (load-theme wal/theme t))))
+     (setq wal/active-theme wal/theme)
+     (wal/load-active-theme)))
   :always
   ((wal/transparency)
    ;; Load `modus-themes' again because of customization quirk.
-   (when (memq wal/theme '(modus-operandi modus-vivendi))
-     (load-theme wal/theme t)))
+   (when (memq wal/active-theme '(modus-operandi modus-vivendi))
+     (wal/load-active-theme)))
   :immediately t)
 
 ;; Mix of old and new.
@@ -3703,6 +3712,8 @@ I mostly search.
 (declare-function wdb/pop-up "wal-func.el")
 (declare-function wal/univ "wal-func.el")
 
+(defvar wal/active-theme)
+
 (defgroup wal-find nil
   "Change settings of search packages."
   :group 'wal
@@ -4138,6 +4149,11 @@ Do not ignore hidden files."
                (fboundp 'consult--ripgrep-builder))
       (consult--grep "Ripgrep (ignored)" #'consult--ripgrep-builder dir initial))))
 
+
+(defun wal/advise-consult-theme (theme)
+  "Advise to set `wal/active-theme' to THEME."
+  (setq wal/active-theme theme))
+
 (use-package consult
   :init
   (wal/univ consult-buffer wal/consult-dispatch)
@@ -4164,6 +4180,9 @@ Do not ignore hidden files."
      ["Register"
       ("g" "store" consult-register-store)
       ("G" "load" consult-register-load)]])
+  (advice-add
+    #'consult-theme :after
+    #'wal/advise-consult-theme)
   :bind
   (:map bookmark-map
    ("u" . consult-bookmark)

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New variable `wal/active-theme` set during initialization. Function
+  `consult-theme` updates it. The variable is read when calling new
+  function `wal/load-active-theme` (also called during
+  initialization).
+
 ## [1.7.2] - 2021-06-12
 
 Slug or snail.
