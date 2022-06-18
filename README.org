@@ -2468,6 +2468,8 @@ results."
   (define-key yas-minor-mode-map (kbd "<tab>") nil)
   (define-key yas-minor-mode-map (kbd "TAB") nil)
   (yas-reload-all)
+  (add-hook 'prog-mode-hook #'yas-minor-mode)
+  (add-hook 'org-mode-hook #'yas-minor-mode)
   :wal-bind
   (:map yas-minor-mode-map
    ("y" . #'wal/yas-expand))
@@ -2477,7 +2479,7 @@ results."
     "yv" '(yas-visit-snippet-file :wk "visit snippet file")
     "yn" '(yas-new-snippet :wk "create new snippet"))
   (wal/captain-sink "y" '(yas-minor-mode :wk "yasnippet"))
-  :hook ((prog-mode org-mode) . yas-minor-mode)
+  :defer 1
   :delight " yas")
 
 (use-package yasnippet-snippets
@@ -2501,6 +2503,7 @@ Drag lines and regions around.
   :general
   (wal/captain-sink "k" '(drag-stuff-mode :wk "drag-stuff"))
   :hook (prog-mode . drag-stuff-mode)
+  :defer 1
   :delight " drg")
 #+END_SRC
 
@@ -3084,7 +3087,7 @@ My own mode line.
   :wal-ways nil
   :config
   (wal-line-mode +1)
-  :demand
+  :defer 1
   :quelpa (wal-line :fetcher github :repo "Walheimat/wal-line"))
 #+END_SRC
 
@@ -3834,6 +3837,7 @@ Complete commands and code.
 (defvar savehist-additional-variables)
 (defvar xref-show-xrefs-function)
 (defvar xref-show-definitions-function)
+(defvar wal/active-theme)
 (defvar wal/use-projectile)
 
 (defgroup wal-complete nil
@@ -4586,9 +4590,11 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (declare-function wal/message-in-a-bottle "wal-func.el")
 (declare-function wal/replace-in-alist "wal-fun.el")
 (declare-function wal/truncate "wal-func.el")
+(declare-function org-alert--to-minute "ext:org-alert.el")
 (declare-function projectile-project-root "ext:projectile.el")
 (declare-function project-root "ext:project.el")
 
+(defvar org-alert-notify-cutoff)
 (defvar org-global-properties)
 (defvar org-mode-map)
 (defvar text-scale-mode-step)
@@ -5113,7 +5119,8 @@ You know the drill. Clock in, clock out.
 (defun wal/org-clock-in-from-now ()
   "Force `org-clock-in' without continuous logging."
   (let ((org-clock-continuously nil))
-    (org-clock-in)))
+    (when (fboundp 'org-clock-in)
+      (org-clock-in))))
 
 (use-package org-clock
   :config
