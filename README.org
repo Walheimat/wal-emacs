@@ -743,7 +743,7 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-m= shows version control status using =magit=
 + =H-n= searches project with =rg=
 + =H-<mouse3>= adds another =multiple-cursor= at point
-+ =H-<return>= completes at point (using =company= if selected)
++ =H-<return>= completes at point
 + =H-== to do a =quick-calc= (inserted if called with =C-u=)
 + =H-[= toggles pop-ups using =popper=
 + =H-\= opens new =vterm= terminal
@@ -2796,8 +2796,7 @@ Another collection of beautiful themes, but it doesn't color every
   (kaolin-themes-italic-comments t)
   (kaolin-themes-git-gutter-solid t)
   (kaolin-themes-modeline-border nil)
-  (kaolin-themes-distinct-fringe t)
-  (kaolin-themes-distinct-company-scrollbar t))
+  (kaolin-themes-distinct-fringe t))
 #+END_SRC
 
 *** modus-themes
@@ -3765,36 +3764,9 @@ Complete commands and code.
   "Additional buffers to filter."
   :type '(repeat string)
   :group 'wal-complete)
-
-(defcustom wal/cap-provider 'corfu
-  "The `completion-at-point' provider."
-  :type 'symbol
-  :group 'wal-complete)
 #+END_SRC
 
 ** Inline Completion
-
-*** company
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-In-line completion.
-
-#+BEGIN_SRC emacs-lisp
-(use-package company
-  :if (eq wal/cap-provider 'company)
-  :custom
-  (company-show-quick-access 'left)
-  (company-lighter-base "cmp")
-  :wal-bind
-  (:map company-mode-map
-   ("<return>" . company-complete))
-  :general
-  (wal/captain-sink :keymaps '(prog-mode-map dap-ui-repl-mode-map)
-    "c" '(company-mode :wk "company"))
-  :hook (prog-mode . company-mode))
-#+END_SRC
 
 *** corfu
 :PROPERTIES:
@@ -3805,7 +3777,6 @@ Alternative.
 
 #+BEGIN_SRC emacs-lisp
 (use-package corfu
-  :if (eq wal/cap-provider 'corfu)
   :custom
   (corfu-auto t)
   (corfu-quit-no-match t)
@@ -3859,7 +3830,6 @@ Show docs while selecting.
 
 #+BEGIN_SRC emacs-lisp
 (use-package corfu-doc
-  :if (eq wal/cap-provider 'corfu)
   :bind
   (:map corfu-map
    ("M-p" . corfu-doc-scroll-down)
@@ -6077,7 +6047,7 @@ The philosopher's choice.
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack lisp
   "For (common-)lisp developers using sbcl."
-  :packages (highlight-quoted slime slime-company))
+  :packages (highlight-quoted slime))
 
 (wal/define-expansion-pack clojure
   "For Clojure developers using cider with lein."
@@ -6194,9 +6164,7 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
   :wal-ways nil
   :config
   (setq inferior-lisp-program "sbcl")
-  (if (featurep 'slime-company)
-      (slime-setup '(slime-fancy slime-quicklisp slime-asdf slime-company))
-    (slime-setup '(slime-fancy slime-quicklisp slime-asdf)))
+  (slime-setup '(slime-fancy slime-quicklisp slime-asdf))
   :general
   (wal/captain-sink :keymaps 'lisp-mode-map :major-modes t
     "u" '(slime-mode :wk "slime"))
@@ -6204,10 +6172,6 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
     "r" '(slime :wk "open REPL"))
   :ensure nil
   :delight " slm")
-
-(use-package slime-company
-  :wal-ways nil
-  :ensure nil)
 #+END_SRC
 
 ** JavaScript
@@ -6740,15 +6704,14 @@ Sometimes things that do as well.
 :UNNUMBERED: t
 :END:
 
-We want quicker =company= suggestions when in CSS modes.
+We want quicker suggestions when in CSS modes.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/css-mode ()
   "Hook into `css-mode'."
   (wal/message-in-a-bottle
    '("Centering? It's simple. Here's 15 ways to do it."))
-  (setq-local company-idle-delay 0.1
-              corfu-auto-delay 0.1)
+  (setq-local corfu-auto-delay 0.1)
   (hack-local-variables)
   (wal/maybe-enable-tabs)
   (flycheck-mode +1))
@@ -6918,10 +6881,8 @@ Language servers are awesome. Thanks, Microsoft.
 (declare-function wal/captain-sink "wal-key-bindings.el")
 (declare-function wdb/side "wal-func.el")
 
-(defvar company-backends)
 (defvar lsp-completion-provider)
 (defvar lsp-file-watch-ignored-directories)
-(defvar wal/cap-provider)
 
 (defgroup wal-lsp nil
   "Change settings for LSP packages."
@@ -6931,8 +6892,8 @@ Language servers are awesome. Thanks, Microsoft.
 (defcustom wal/lsp-slow-modes '()
   "Modes that have slow language servers.
 
-For these modes, `company' and `corfu' settings will not be
-adjusted to be smaller."
+For these modes `corfu' settings will not be adjusted to be
+smaller."
   :type '(repeat symbol)
   :group 'wal-lsp)
 
@@ -6963,17 +6924,9 @@ servers yourself[fn:19].
 
 Unless the associated server is considered slow, delays and
 minimum prefixes are reduced."
-  (cond
-   ((eq wal/cap-provider 'company)
-    (unless (wal/slow-lsp-p major-mode)
-      (setq-local company-idle-delay 0.0
-                  company-minimum-prefix-length 1))
-    (setq-local company-backends '(company-capf company-yasnippet)))
-   ((eq wal/cap-provider 'corfu)
-    (unless (wal/slow-lsp-p major-mode)
-      (setq-local corfu-auto-delay 0.0
-                  corfu-auto-prefix 1)))
-   (t nil))
+  (unless (wal/slow-lsp-p major-mode)
+    (setq-local corfu-auto-delay 0.0
+                corfu-auto-prefix 1))
   (lsp-deferred))
 
 (defun wal/advise-lsp-to-prevent-multi-root (&rest _r)
@@ -6988,8 +6941,7 @@ minimum prefixes are reduced."
               wal/lsp-file-watch-ignored-directories)
   (advice-add 'lsp :before #'wal/advise-lsp-to-prevent-multi-root)
   (lsp-enable-which-key-integration t)
-  (when (eq wal/cap-provider 'corfu)
-    (setq lsp-completion-provider :none))
+  (setq lsp-completion-provider :none) ;; We're using `corfu'.
   (wal/captain :keymaps 'lsp-mode-map
     "p" '(:keymap lsp-command-map :wk "lsp"))
   (transient-define-prefix wal/lsp-dispatch ()
