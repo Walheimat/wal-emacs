@@ -815,6 +815,32 @@ Busier and prettier =modeline=.
   :demand)
 #+END_SRC
 
+** golden-ratio
+
+Use the golden ratio.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defun wal/aw-switch-maybe-golden-ratio (_window)
+  "Invoke `golden-ratio' if mode is active.
+Used to advise `aw-switch-to-window'."
+  (when (eq golden-ratio-mode t)
+    (golden-ratio)))
+
+(use-package golden-ratio
+  :wal-ways nil
+  :config
+  ;; Make sure to run golden ratio after `aw-switch-to-window'.
+  (advice-add
+   'aw-switch-to-window
+   :after #'wal/aw-switch-maybe-golden-ratio)
+  (when wal/use-golden-ratio
+    (golden-ratio-mode +1))
+  :general
+  (wal/captain-sink "g" '(golden-ratio-mode :wk "golden-ratio"))
+  :delight " gol"
+  :defer 2)
+#+END_SRC
+
 * Other Settings
 
 These are other settings that used to be in my config.

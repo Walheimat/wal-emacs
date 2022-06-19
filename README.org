@@ -939,7 +939,6 @@ Additional left PADDING can be passed."
     ("p" wal/edge-up)
     ("o" wal/split-window-the-other-way "re-split" :color blue)
     ("l" balance-windows "balance" :color blue)
-    ("g" golden-ratio "golden" :color blue)
     ("q" nil "quit"))
 
   (defhydra wal/scroll-other-window (:hint nil)
@@ -2601,7 +2600,6 @@ I like nice-looking things.
 (defvar dashboard-buffer-name)
 (defvar dashboard-footer-messages)
 (defvar dimmer-prevent-dimming-predicates)
-(defvar wal/use-golden-ratio)
 (defvar wal/experimental)
 (defvar which-key-popup-type)
 
@@ -2940,8 +2938,6 @@ Show the next possible key presses towards a command.
 (use-package which-key
   :wal-ways nil
   :config
-  (when (and wal/experimental wal/use-golden-ratio)
-    (setq which-key-popup-type 'minibuffer))
   (which-key-mode +1)
   :custom
   (which-key-lighter " wk?")
@@ -3271,6 +3267,11 @@ Allow using variable and fixed fonts in the same buffer.
   :delight " mpm")
 #+END_SRC
 
+*** visual-fill-column
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
 Allow padding and centering text.
 
 #+BEGIN_SRC emacs-lisp
@@ -3323,11 +3324,6 @@ Everything that has to do with windows.
  :tag "Windows")
 
 ;;;; Customization:
-
-(defcustom wal/use-golden-ratio nil
-  "Whether to use the golden ratio."
-  :type 'boolean
-  :group 'wal-windows)
 
 (defcustom wal/popper-reference-buffers
   '(docker-container-mode
@@ -3413,35 +3409,6 @@ Ace interacting with (multiple) windows.
   :wal-bind
   ("o" . ace-window)
   :delight " ace")
-#+END_SRC
-
-*** golden-ratio
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Use the golden ratio.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/aw-switch-maybe-golden-ratio (_window)
-  "Invoke `golden-ratio' if mode is active.
-Used to advise `aw-switch-to-window'."
-  (when (eq golden-ratio-mode t)
-    (golden-ratio)))
-
-(use-package golden-ratio
-  :wal-ways nil
-  :config
-  ;; Make sure to run golden ratio after `aw-switch-to-window'.
-  (advice-add
-   'aw-switch-to-window
-   :after #'wal/aw-switch-maybe-golden-ratio)
-  (when wal/use-golden-ratio
-    (golden-ratio-mode +1))
-  :general
-  (wal/captain-sink "g" '(golden-ratio-mode :wk "golden-ratio"))
-  :delight " gol"
-  :defer 2)
 #+END_SRC
 
 *** popper

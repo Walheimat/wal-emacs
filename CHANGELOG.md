@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Removed package `doom-modeline`.
+- Removed package `golden-ratio`.
 
 ## [1.7.2] - 2021-06-12
 
