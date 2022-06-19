@@ -16,9 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Removed package `doom-modeline`.
-- Removed package `golden-ratio`.
-- Removed package `company` and `slime-company`.
+- Package `doom-modeline`.
+- Package `golden-ratio`.
+- Package `company` and `slime-company`.
+- Hack to fix duplicate logs in `lsp-dart`.
 
 ## [1.7.2] - 2021-06-12
 
