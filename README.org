@@ -1827,8 +1827,6 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
 (eval-when-compile
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
-(declare-function doom-modeline-refresh-bars "ext:doom-modeline.el")
-(declare-function doom-modeline-refresh-font-width-cache "ext:doom-modeline.el")
 (declare-function wal/general "wal-key-bindings.el")
 
 (defgroup wal-fonts nil
@@ -1960,10 +1958,7 @@ available candidate from `wal/fixed-fonts'. Does the same for
      ;; Variable pitch face.
      (set-face-attribute 'variable-pitch nil
                          :font (wal/fonts-candidate wal/variable-fonts t)
-                         :height wal/variable-font-height)
-     (when (bound-and-true-p doom-modeline-mode)
-       (add-hook 'wal/fonts-updated-hook #'doom-modeline-refresh-font-width-cache)
-       (add-hook 'wal/fonts-updated-hook #'doom-modeline-refresh-bars))))
+                         :height wal/variable-font-height)))
   :always
   ((run-hooks 'wal/fonts-updated-hook)))
 
@@ -2606,8 +2601,6 @@ I like nice-looking things.
 (defvar dashboard-buffer-name)
 (defvar dashboard-footer-messages)
 (defvar dimmer-prevent-dimming-predicates)
-(defvar doom-modeline-buffer-file-name-style)
-(defvar doom-modeline--vcs-text)
 (defvar wal/use-golden-ratio)
 (defvar wal/experimental)
 (defvar which-key-popup-type)
@@ -2706,12 +2699,6 @@ A collection of status messages."
 (defcustom wal/no-indent-guides '(dart-mode)
   "Programming modes that should not enable `highlight-indent-guides-mode'."
   :type '(repeat symbol)
-  :group 'wal-visuals)
-
-(defcustom wal/mode-line 'wal-line
-  "The mode-line to use."
-  :type '(choice (const doom-modeline)
-                 (const wal-line))
   :group 'wal-visuals)
 #+END_SRC
 
@@ -3083,76 +3070,11 @@ My own mode line.
 
 #+BEGIN_SRC emacs-lisp
 (use-package wal-line
-  :if (eq wal/mode-line 'wal-line)
   :wal-ways nil
   :config
   (wal-line-mode +1)
   :defer 1
   :quelpa (wal-line :fetcher github :repo "Walheimat/wal-line"))
-#+END_SRC
-
-*** doom-modeline
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Busier and prettier[fn:15] =modeline=.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/advise-doom-modeline-update-vcs-text (&rest _r)
-  "Advise function to remove branch prefixes."
-  (when doom-modeline--vcs-text
-    (setq doom-modeline--vcs-text
-          (replace-regexp-in-string
-           "\\(feature\\|\\(\\w+\\)?fix\\|improvement\\)\\/"
-           ""
-           doom-modeline--vcs-text))))
-
-(defun wal/doom-modeline-buffer-file-name-styles ()
-  "Complete `doom-modeline' buffer file name styles."
-  (completing-read
-   "Select style: "
-   '(truncate-upto-project
-     truncate-upto-project
-     truncate-from-project
-     truncate-with-project
-     truncate-except-project
-     truncate-upto-root
-     truncate-all
-     truncate-nil
-     relative-from-project
-     relative-to-project
-     file-name
-     buffer-name)))
-
-(defun wal/doom-modeline-switch-buffer-file-name-style (style)
-  "Switch to `doom-modeline' buffer file name STYLE."
-  (interactive (list (wal/doom-modeline-buffer-file-name-styles)))
-  (let ((style-symbol (wal/maybe-intern style)))
-    (setq doom-modeline-buffer-file-name-style style-symbol)))
-
-(use-package doom-modeline
-  :if (eq wal/mode-line 'doom-modeline)
-  :wal-ways nil
-  :config
-  (advice-add
-   'doom-modeline-update-vcs-text
-   :after #'wal/advise-doom-modeline-update-vcs-text)
-  (when (fboundp 'doom-modeline-update-vcs-text)
-    (add-hook 'magit-post-refresh-hook #'doom-modeline-update-vcs-text))
-  (doom-modeline-mode 1)
-  :custom
-  (doom-modeline-project-detection (if wal/use-projectile
-                                       'projectile
-                                     'project))
-  (doom-modeline-minor-modes t)
-  (doom-modeline-buffer-encoding nil)
-  (doom-modeline-icon t)
-  (doom-modeline-vcs-max-length 25)
-  (doom-modeline-buffer-file-name-style 'truncate-with-project)
-  :custom-face
-  (doom-modeline-debug-visual ((t (:inherit 'mode-line))))
-  :demand)
 #+END_SRC
 
 *** delight

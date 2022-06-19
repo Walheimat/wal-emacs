@@ -754,6 +754,67 @@ Create a room of one's own.
   (wal/captain-sink "r" '(writeroom-mode :wk "writeroom")))
 #+END_SRC
 
+** doom-modeline
+
+Busier and prettier =modeline=.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defun wal/advise-doom-modeline-update-vcs-text (&rest _r)
+  "Advise function to remove branch prefixes."
+  (when doom-modeline--vcs-text
+    (setq doom-modeline--vcs-text
+          (replace-regexp-in-string
+           "\\(feature\\|\\(\\w+\\)?fix\\|improvement\\)\\/"
+           ""
+           doom-modeline--vcs-text))))
+
+(defun wal/doom-modeline-buffer-file-name-styles ()
+  "Complete `doom-modeline' buffer file name styles."
+  (completing-read
+   "Select style: "
+   '(truncate-upto-project
+     truncate-upto-project
+     truncate-from-project
+     truncate-with-project
+     truncate-except-project
+     truncate-upto-root
+     truncate-all
+     truncate-nil
+     relative-from-project
+     relative-to-project
+     file-name
+     buffer-name)))
+
+(defun wal/doom-modeline-switch-buffer-file-name-style (style)
+  "Switch to `doom-modeline' buffer file name STYLE."
+  (interactive (list (wal/doom-modeline-buffer-file-name-styles)))
+  (let ((style-symbol (wal/maybe-intern style)))
+    (setq doom-modeline-buffer-file-name-style style-symbol)))
+
+(use-package doom-modeline
+  :if (eq wal/mode-line 'doom-modeline)
+  :wal-ways nil
+  :config
+  (advice-add
+   'doom-modeline-update-vcs-text
+   :after #'wal/advise-doom-modeline-update-vcs-text)
+  (when (fboundp 'doom-modeline-update-vcs-text)
+    (add-hook 'magit-post-refresh-hook #'doom-modeline-update-vcs-text))
+  (doom-modeline-mode 1)
+  :custom
+  (doom-modeline-project-detection (if wal/use-projectile
+                                       'projectile
+                                     'project))
+  (doom-modeline-minor-modes t)
+  (doom-modeline-buffer-encoding nil)
+  (doom-modeline-icon t)
+  (doom-modeline-vcs-max-length 25)
+  (doom-modeline-buffer-file-name-style 'truncate-with-project)
+  :custom-face
+  (doom-modeline-debug-visual ((t (:inherit 'mode-line))))
+  :demand)
+#+END_SRC
+
 * Other Settings
 
 These are other settings that used to be in my config.

@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   function `wal/load-active-theme` (also called during
   initialization).
 
+### Removed
+
+- Removed package `doom-modeline`.
+
 ## [1.7.2] - 2021-06-12
 
 Slug or snail.
