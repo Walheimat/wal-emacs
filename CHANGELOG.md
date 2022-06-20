@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `consult-theme` updates it. The variable is read when calling new
   function `wal/load-active-theme` (also called during
   initialization).
+- Functions `query-replace` are now bound in `wal/colonel` to "q" and
+  "Q".
 
 ### Removed
 
