@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Functions `query-replace` are now bound in `wal/colonel` to "q" and
   "Q".
 - Temporary fix to make `kubernetes--save-window-state` work.
+- Temporary fix to require `org-indent` because some package uses its
+  face without requiring the package.
 
 ### Removed
 
