@@ -260,6 +260,10 @@ Such as package `use-package'.")
 
 (eval-when-compile
   (require 'use-package))
+
+(when wal/doctor
+  (setq use-package-compute-statistics t)
+  (add-hook 'after-init-hook #'use-package-report))
 #+END_SRC
 
 *** Extend =use-package=
@@ -1442,8 +1446,10 @@ matching files are visited but only the last-visited displayed."
 Capture custom command line flags.
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/doctor nil)
+
 (defconst wal/custom-flags
-  '((compute-statistics . "--doctor"))
+  '((doctor . "--doctor"))
   "Alist of custom flags that can be passed to Emacs.")
 
 (defun wal/capture-flag (flag)
@@ -1453,10 +1459,10 @@ Capture custom command line flags.
     (setq command-line-args (delete flag command-line-args))
     t))
 
-;; Compute `use-package' statistics if flag was set.
-(when (wal/capture-flag 'compute-statistics)
-  (setq use-package-compute-statistics t)
-  (add-hook 'after-init-hook #'use-package-report))
+;; Flag `--doctor' will set up `use-package' to collect statistics and
+;; turn on `explain-pause-mode'.
+(when (wal/capture-flag 'doctor)
+  (setq wal/doctor t))
 #+END_SRC
 
 ** Text Scaling
@@ -2229,6 +2235,26 @@ I'd like to kill shells without a process quickly.
    :predicate '(wal/dead-shell-p)
    "k" 'kill-buffer-and-window)
   :ensure nil)
+#+END_SRC
+
+*** explain-pause-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Check what's slowing down Emacs.
+
+#+BEGIN_SRC emacs-lisp
+(use-package explain-pause-mode
+  :config
+  (when wal/doctor
+    (explain-pause-mode +1))
+  :general
+  (wal/captain
+    "?" '(explain-pause-top :wk "explain pauses"))
+  :quelpa
+  (explain-pause-mode :fetcher github :repo "lastquestion/explain-pause-mode")
+  :defer 3)
 #+END_SRC
 
 ** Help

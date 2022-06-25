@@ -24,11 +24,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sets `persp-modestring-short` if even the truncated perspective
   names go beyond new threshold `wal/perspective-shorten-after`
   (default is 30 characters).
+- Adds `explain-pause-mode` using `quelpa` to have a history of why
+  Emacs was slow.
 
 ### Changed
 
--  Custom variable `wal/perspective-max-modeline-length` was renamed
-  to `wal/perspective-truncate-after`.
+- Custom variable `wal/perspective-max-modeline-length` was renamed to
+  `wal/perspective-truncate-after`.
+- Custom command line flag `--doctor` not sets new variable
+  `wal/doctor` which both controls `use-package` collecting statistics
+  and turns on `explain-pause-mode`.
 ### Removed
 
 - Package `doom-modeline`.
