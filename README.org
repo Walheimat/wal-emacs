@@ -4150,6 +4150,7 @@ Keep order.
 (declare-function persp-current-buffer-names "ext:perspective.el")
 (declare-function persp-current-name "ext:perspective.el")
 (declare-function persp-names "ext:perspective.el")
+(declare-function persp-mode-line "ext:perspective.el")
 (declare-function persp-scratch-buffer "ext:perspective.el")
 (declare-function persp-switch "ext:perspective.el")
 (declare-function persp-switch-to-buffer "ext:perspective.el")
@@ -4161,6 +4162,7 @@ Keep order.
 (defvar consult-buffer-filter)
 (defvar consult-buffer-sources)
 (defvar consult--source-buffer)
+(defvar persp-modestring-short)
 (defvar projectile-globally-ignored-directories)
 (defvar projectile-globally-ignored-files)
 (defvar projectile-globally-ignored-file-suffixes)
@@ -4187,10 +4189,19 @@ Keep order.
   :type 'string
   :group 'wal-workspace)
 
-(defcustom wal/perspective-max-modeline-length 20
-  "Truncation threshold for perspective names.
-If the combined names succeed the threshold, inactive ones will
-get truncated."
+(defcustom wal/perspective-truncate-after 20
+  "Name truncation threshold.
+
+If the combined length of names pass it, names of inactive
+perspectives are truncated."
+  :type 'integer
+  :group 'wal-workspace)
+
+(defcustom wal/perspective-shorten-after 20
+  "Shorten threshold.
+
+If the mode-line string passes it, only the active perspective is
+shown."
   :type 'integer
   :group 'wal-workspace)
 
@@ -4239,6 +4250,12 @@ This only removes `process-kill-buffer-query-function'."
                                            kill-buffer-query-functions)))
     (apply fun r)))
 
+(defun wal/persp-maybe-shorten ()
+  "Maybe shorten mode-line string when many perspectives are open."
+  (let ((truncated-length (length (string-join (persp-mode-line)))))
+    (setq persp-modestring-short
+        (> truncated-length wal/perspective-shorten-after))))
+
 (defun wal/advise-persp-format-name (&rest args)
   "Truncate non-active perspective name (in ARGS)."
   (let* ((name (car args))
@@ -4254,7 +4271,7 @@ This only removes `process-kill-buffer-query-function'."
                                 (+ acc (length item)))
                               names
                               0))))
-    (if (and (> combined-length wal/perspective-max-modeline-length)
+    (if (and (> combined-length wal/perspective-truncate-after)
              (not (string-match-p name curr-name)))
         (substring name 0 (min (length name) wal/perspective-truncated-length))
       name)))
@@ -4356,7 +4373,11 @@ The current buffer and Dired buffers are filtered."
   :wal-bind
   (:map persp-mode-map
    ("i" . wal/univ-persp-switch))
-  :hook (kill-emacs . persp-state-save)
+  :hook
+  ((kill-emacs . persp-state-save)
+   ((persp-created
+     persp-killed
+     persp-after-rename) . wal/persp-maybe-shorten))
   :demand)
 #+END_SRC
 

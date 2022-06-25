@@ -21,7 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Binds toggling built-in package `hideshow`.
 - New function `wal/avy-mark-region` to do just that, bound to
   `wal/colonel` + "r SPC".
+- Sets `persp-modestring-short` if even the truncated perspective
+  names go beyond new threshold `wal/perspective-shorten-after`
+  (default is 30 characters).
 
+### Changed
+
+-  Custom variable `wal/perspective-max-modeline-length` was renamed
+  to `wal/perspective-truncate-after`.
 ### Removed
 
 - Package `doom-modeline`.
