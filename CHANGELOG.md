@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom command line flag `--doctor` not sets new variable
   `wal/doctor` which both controls `use-package` collecting statistics
   and turns on `explain-pause-mode`.
+- Updated `commitlint` dependencies.
+
 ### Removed
 
 - Package `doom-modeline`.
