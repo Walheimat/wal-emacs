@@ -3501,7 +3501,10 @@ Moving around should be fun.
 
 ;;; Code:
 
-(declare-function avy-with "ext:avy.el")
+(eval-when-compile
+  (require 'avy))
+
+(declare-function avy--line "ext:avy.el")
 (declare-function avy-jump "ext:avy.el")
 (declare-function org-at-heading-p "ext:org.el")
 (declare-function wal/univ-p "wal-func.el")
@@ -3532,6 +3535,20 @@ If called with `universal-argument', go to LINE-FIRST."
     (avy-jump avy-goto-word-0-regexp
               :beg (line-beginning-position)
               :end (line-end-position))))
+
+(defun wal/avy-mark-region ()
+  "Select two lines and mark the region between them."
+  (interactive)
+  (avy-with wal/avy-mark-region
+    (let* ((initial-window (selected-window))
+           (beg (avy--line))
+           (end (avy--line)))
+      (when (> beg end)
+        (cl-rotatef beg end))
+      (set-mark beg)
+      (goto-char end)
+      (forward-visible-line 1)
+      (point))))
 
 (defun wal/avy-action-zip-to-char (pt)
   "Zip (just mark) from current point up to PT."
@@ -3571,6 +3588,7 @@ beginning."
     "rc" '(avy-copy-region :wk "copy")
     "rd" '(avy-kill-region :wk "delete")
     "rm" '(avy-move-region :wk "move")
+    "r SPC" '(wal/avy-mark-region :wk "mark")
     "rw" '(avy-kill-ring-save-region :wk "kill"))
   :commands (avy-with))
 #+END_SRC

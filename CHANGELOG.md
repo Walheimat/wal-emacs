@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Temporary fix to require `org-indent` because some package uses its
   face without requiring the package.
 - Binds toggling built-in package `hideshow`.
+- New function `wal/avy-mark-region` to do just that, bound to
+  `wal/colonel` + "r SPC".
 
 ### Removed
 
