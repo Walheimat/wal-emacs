@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal/doctor` which both controls `use-package` collecting statistics
   and turns on `explain-pause-mode`.
 - Updated `commitlint` dependencies.
+- Dispatch/command map for `bookmark` now uses "C-c m".
 - Lints `commitlint` config with `prettier`.
 
 ### Removed
