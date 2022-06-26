@@ -7310,25 +7310,6 @@ Who doesn't like pods and stuff?
 (use-package kubernetes
   :if (executable-find "kubectl")
   :wal-ways nil
-  :init
-  ;; This already has an autoload that doesn't load the base package.
-  (autoload #'kubernetes-overview "kubernetes" nil t)
-  :config
-  ;; XXX: Override macro.
-  (defun kubernetes--save-window-state (&rest body)
-    "Restore window state after executing BODY.
-
-This is an exact copy of the original function which was defined
-as a macro (which does not work for me)."
-    (let ((pos (point))
-          (col (current-column))
-          (window-start-line (window-start))
-          (inhibit-redisplay t))
-      (save-excursion
-        ',@body)
-      (goto-char pos)
-      (move-to-column col)
-      (set-window-start (selected-window) window-start-line)))
   :custom
   (kubernetes-commands-display-buffer-function 'display-buffer)
   (kubernetes-poll-frequency 3600)

@@ -45,6 +45,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `company` and `slime-company`.
 - Package `highlight-indent-guide` (temporarily).
 - Hack to fix duplicate logs in `lsp-dart`.
+- Hack to fix `kubernetes` function to refresh overview (about to be
+  fixed upstream).
+- Hack to fix autloads for `kubernetes-overview` (seemingly fixed
+  upstream).
 
 ## [1.7.2] - 2021-06-12
 
