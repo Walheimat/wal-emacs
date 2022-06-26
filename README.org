@@ -2035,14 +2035,9 @@ Sometimes I need to see whitespace chars.
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/whitespace-mode ()
-  "Hook into command `whitespace-mode'."
-  (highlight-indent-guides-mode -1))
-
 (use-package whitespace
   :general
   (wal/captain-sink "w" '(whitespace-mode :wk "whitespace"))
-  :hook (whitespace-mode . wal/whitespace-mode)
   :ensure nil)
 #+END_SRC
 
@@ -2740,11 +2735,6 @@ A collection of status messages."
   "The time in seconds when we will zone out."
   :type 'integer
   :group 'wal-visuals)
-
-(defcustom wal/no-indent-guides '(dart-mode)
-  "Programming modes that should not enable `highlight-indent-guides-mode'."
-  :type '(repeat symbol)
-  :group 'wal-visuals)
 #+END_SRC
 
 ** Dashboard
@@ -2880,38 +2870,6 @@ Show diffs in the fringe (also in =dired= buffers).
   ((magit-post-refresh . diff-hl-magit-post-refresh)
    (dired-mode . diff-hl-dired-mode))
   :defer 2)
-#+END_SRC
-
-*** highlight-indent-guides
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Show indentation.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/maybe-highlight-indent-guides ()
-  "Maybe enable indent guides.
-
-Only enables `highlight-indent-guides-mode' if the major mode is
-not a member of `wal/no-indent-guides'."
-  (unless (memq major-mode wal/no-indent-guides)
-    ;; HACK: The library does not call this function when in daemon
-    ;;       mode for whatever reason.
-    (when (daemonp)
-      (highlight-indent-guides-auto-set-faces))
-    (highlight-indent-guides-mode +1)))
-
-(use-package highlight-indent-guides
-  :wal-ways nil
-  :custom
-  (highlight-indent-guides-method 'character)
-  (highlight-indent-guides-responsive 'top)
-  :general
-  (wal/captain-sink :keymaps '(prog-mode-map yaml-mode-map)
-    "i" '(highlight-indent-guides-mode :wk "h-indent"))
-  :hook ((prog-mode yaml-mode) . wal/maybe-highlight-indent-guides)
-  :delight " hig")
 #+END_SRC
 
 *** highlight-numbers

@@ -860,6 +860,40 @@ In-line completion.
   :hook (prog-mode . company-mode))
 #+END_SRC
 
+** highlight-indent-guides
+
+Show indentation.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defcustom wal/no-indent-guides '(dart-mode)
+  "Programming modes that should not enable `highlight-indent-guides-mode'."
+  :type '(repeat symbol)
+  :group 'wal-visuals)
+
+(defun wal/maybe-highlight-indent-guides ()
+  "Maybe enable indent guides.
+
+Only enables `highlight-indent-guides-mode' if the major mode is
+not a member of `wal/no-indent-guides'."
+  (unless (memq major-mode wal/no-indent-guides)
+    ;; HACK: The library does not call this function when in daemon
+    ;;       mode for whatever reason.
+    (when (daemonp)
+      (highlight-indent-guides-auto-set-faces))
+    (highlight-indent-guides-mode +1)))
+
+(use-package highlight-indent-guides
+  :wal-ways nil
+  :custom
+  (highlight-indent-guides-method 'character)
+  (highlight-indent-guides-responsive 'top)
+  :general
+  (wal/captain-sink :keymaps '(prog-mode-map yaml-mode-map)
+    "i" '(highlight-indent-guides-mode :wk "h-indent"))
+  :hook ((prog-mode yaml-mode) . wal/maybe-highlight-indent-guides)
+  :delight " hig")
+#+END_SRC
+
 * Other Settings
 
 These are other settings that used to be in my config.
