@@ -6190,7 +6190,7 @@ Can we have =deno= instead of =node=?
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack javascript
   "For Node.js developers."
-  :packages (js2-mode add-node-modules-path json-mode)
+  :packages (js2-mode add-node-modules-path jsonian)
   :extras (rjsx-mode typescript-mode prettier))
 #+END_SRC
 
@@ -6653,11 +6653,11 @@ Does anyone actually like web development?
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack web
   "For web developers."
-  :packages (yaml-mode json-mode)
+  :packages (yaml-mode jsonian)
   :extras (pug-mode))
 #+END_SRC
 
-*** json-mode
+*** jsonian
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -6665,18 +6665,31 @@ Does anyone actually like web development?
 The only way to store strings, JSON.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/json-mode ()
-  "Hook into `json-mode'."
+(defun wal/jsonian-mode ()
+  "Hook into `jsonian-mode'."
   (wal/message-in-a-bottle '("JSON ...? JSON?! JSON!!"))
-  (rainbow-delimiters-mode)
   (hack-local-variables)
-  (wal/maybe-enable-tabs)
   (flycheck-mode 1))
 
-(use-package json-mode
+(use-package jsonian
   :wal-ways nil
-  :mode "\\.arb\\'"
-  :hook (json-mode . wal/json-mode)
+  :config
+  (jsonian-no-so-long-mode)
+  (with-eval-after-load 'flycheck
+    (jsonian-enable-flycheck))
+  ;; HACK: Since `json-mode' is a dependency for `docker', we
+  ;;       remove it the hard way.
+  (with-eval-after-load 'json-mode
+    (setq auto-mode-alist (delete json-mode--auto-mode-entry auto-mode-alist)))
+  :general
+  (wal/major :keymaps 'jsonian-mode-map
+    "f" '(jsonian-find :wk "find")
+    "e" '(jsonian-edit-string :wk "edit"))
+  :mode
+  (("\\.json\\'" . jsonian-mode)
+   ("\\.arb\\'" . jsonian-mode))
+  :hook (jsonian-mode . wal/jsonian-mode)
+  :after so-long
   :ensure nil)
 #+END_SRC
 
@@ -7275,7 +7288,7 @@ Who doesn't like pods and stuff?
   (kubernetes-poll-frequency 3600)
   (kubernetes-redraw-frequency 3600)
   (kubernetes-default-overview-view 'deployments)
-  (kubernetes-json-mode (if (featurep 'json-mode) 'json-mode 'js-mode))
+  (kubernetes-json-mode (if (featurep 'jsonian-mode) 'jsonian-mode 'js-mode))
   :bind
   ("C-c 8" . kubernetes-overview)
   :ensure nil)
