@@ -10,8 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Replaced `json-mode` with `jsonian-mode`.
-- Hack to make sure `jsonian-mode` still works if `docker` is
-  installed which requires `json-mode` as a dependency.
 
 ### Removed
 
