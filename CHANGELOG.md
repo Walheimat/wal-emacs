@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced `json-mode` with `jsonian-mode`.
 
+### Changed
+
+- Response buffers for `verb` now use directional display.
+- Improved bindings for `org-roam`, notably to bind capturing "today".
+
 ### Removed
 
 - Package `org-alert` was mothballed as it doesn't reliably work and
