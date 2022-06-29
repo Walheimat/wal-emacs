@@ -1681,6 +1681,19 @@ t, printing optional message ON-DONE."
                               '())))
     (memq pack packages)))
 
+(defun wal/install-expansion-pack-extra (pack)
+  "Install an or all extras of an expansion for PACK."
+  (let* ((extras (plist-get (cdr pack) :extras))
+         (selection (completing-read "Select extra to install: "
+                                     (append extras '(all))))
+         (sym (wal/maybe-intern selection)))
+    (pcase sym
+      ('all
+       (wal/install-packages extras :on-done "Installed all extras."))
+      (_
+       (wal/install-packages
+        (list sym) :on-done (format "Installed extra '%s'." sym))))))
+
 (defun wal/install-expansion-pack (pack)
   "Install the given expansion PACK."
   (interactive
@@ -1693,8 +1706,8 @@ t, printing optional message ON-DONE."
     (if item
         (progn
           (wal/install-packages core-packages :on-done (format "Installed expansion pack '%s'." pack))
-          (when (and extras (yes-or-no-p (format "Want to install extras %s? " extras)))
-            (wal/install-packages extras :on-done (format "Installed '%s' extras." pack))))
+          (when (and extras (yes-or-no-p "Want to install an extras?"))
+            (wal/install-expansion-pack-extra item)))
       (user-error "Unknown pack '%s', check `wal/expansion-packs'" sym))))
 
 (defun wal/expansion--stringify (package-list)

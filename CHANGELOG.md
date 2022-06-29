@@ -10,11 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Replaced `json-mode` with `jsonian-mode`.
+- Expansion pack extras can now be installed individually **and** in
+  bulk.
 
 ### Changed
 
 - Response buffers for `verb` now use directional display.
 - Improved bindings for `org-roam`, notably to bind capturing "today".
+- Package `org-roam` is now an expansion itself.
+- The expansion packs were slightly adapted.
 
 ### Removed
 
