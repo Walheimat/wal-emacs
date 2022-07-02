@@ -742,33 +742,28 @@ There are a few non-standard meta sequences.
 
 Most hyper[fn:9] bindings are quick-access actions:
 
-+ =H-h= finds project file (or switches projects if called with =C-u=)
 + =H-]= highlights the cursor using =beacon=
 + =H-i= switches =perspective= (or lists its buffers if called with =C-u=)
++ =H-j= switches buffer using =consult=
 + =H-k= acts on the current point with =embark= (immediately if called
   with =C-u=)
++ =H-l= finds project file
++ =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-m= shows version control status using =magit=
 + =H-n= searches project with =rg=
-+ =H-<mouse3>= adds another =multiple-cursor= at point
++ =H-\= opens new =vterm= terminal
 + =H-<return>= completes at point
 + =H-== to do a =quick-calc= (inserted if called with =C-u=)
 + =H-[= toggles pop-ups using =popper=
-+ =H-\= opens new =vterm= terminal
-+ =H-u= switches buffer using =consult=
 + =H-y= expands snippets (in =yas-minor-mode=).
-
-There's two =avy= actions:
-
-+ =H-j= jumps to word in line
-+ =H-l= jumps to line.
 
 It's also used for some dispatches:
 
++ =H-h= for =lsp-mode= (when active)
 + =H-m= for =magit= if called with =C-u=
 + =H-n= for =rg= if called with =C-u=
 + =H-o= for =ace-window=
-+ =H-p= for =lsp-mode=
-+ =H-u= for =consult= if called with =C-u=.
++ =H-u= for =consult=.
 
 **** Caps to Hyper
 
@@ -908,9 +903,11 @@ quick succession.
 
 These hydras are mapped to =lieutenant= using the following prefixes:
 
++ =d= for a minimal set of debugging keys using =dap-mode=.
 + =o= to resize window
 + =t= to scale text
-+ =v= to scroll other window.
++ =v= to scroll other window
++ =w= to undo/redo window configurations using =winner=.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/ascii-whale-hydra-offset (&optional padding)
@@ -3522,7 +3519,7 @@ Jump to (visible) lines and chars is fun if you are too lazy to use
 your mouse.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/avy-jump (&optional line-first)
+(defun wal/avy-goto-word (&optional line-first)
   "Jump to currently visible word in the current line.
 
 If called with `universal-argument', go to LINE-FIRST."
@@ -3570,9 +3567,10 @@ beginning."
    :after #'wal/advise-avy-goto-end-of-line)
   :custom
   (avy-background t)
-  :wal-bind
-  (("l" . avy-goto-end-of-line)
-   ("j" . wal/avy-jump))
+  :bind
+  (:map goto-map
+    ("l" . avy-goto-end-of-line)
+    ("w" . wal/avy-goto-word))
   :general
   (wal/colonel
     ;; Lines.
@@ -3981,7 +3979,6 @@ completion actions.
   (wal/append
     'marginalia-command-categories
     '((projectile-switch-to-buffer . buffer)
-      (wal/univ-projectile-find-file . project-file)
       (projectile-find-file . project-file)
       (projectile-find-file-other-window . project-file)
       (projectile-switch-project . project-file)
@@ -4055,8 +4052,6 @@ Do not ignore hidden files."
   (setq wal/active-theme theme))
 
 (use-package consult
-  :init
-  (wal/univ consult-buffer wal/consult-dispatch)
   :config
   (when wal/use-projectile
     (setq consult-project-function #'projectile-project-root))
@@ -4095,7 +4090,8 @@ Do not ignore hidden files."
    ("m" . consult-mark)
    ("M" . consult-global-mark))
   :wal-bind
-  ("u" . wal/univ-consult-buffer)
+  (("j" . consult-buffer)
+   ("u" . wal/consult-dispatch))
   :general
   (wal/general
     "st" '(consult-theme :wk "consult theme")
@@ -4104,7 +4100,7 @@ Do not ignore hidden files."
     "g" '(consult-org-heading :wk "go to heading"))
   (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
   (wal/captain-sink "u" '(consult-minor-mode-menu :wk "menu"))
-  :commands (wal/univ-consult-buffer wal/consult-dispatch)
+  :commands (wal/consult-dispatch)
   :demand
   :after vertico)
 #+END_SRC
@@ -4416,7 +4412,6 @@ Otherwise treat DEFAULT-CMD normally."
 (use-package projectile
   :if wal/use-projectile
   :init
-  (wal/univ projectile-find-file projectile-switch-project)
   (advice-add
     'projectile-find-file :around
     'wal/advise-projectile-find-file)
@@ -4431,7 +4426,7 @@ Otherwise treat DEFAULT-CMD normally."
   (wal/append 'projectile-globally-ignored-file-suffixes
               (nth 2 wal/projectile-ignored))
   (wal/captain
-    "h" '(:keymap projectile-command-map :wk "projectile"))
+    "p" '(:keymap projectile-command-map :wk "projectile"))
   (projectile-mode +1)
   :custom
   (projectile-switch-project-action #'projectile-dired)
@@ -4440,8 +4435,9 @@ Otherwise treat DEFAULT-CMD normally."
   (projectile-indexing-method 'hybrid)
   (projectile-enable-caching t)
   :wal-bind
-  ("h" . wal/univ-projectile-find-file)
-  :commands (projectile-project-root wal/univ-projectile-find-file)
+  (("l" . projectile-find-file)
+   ("p" . projectile-switch-project))
+  :commands (projectile-project-root)
   :delight " pjt")
 #+END_SRC
 
@@ -4455,16 +4451,14 @@ Built-in but entirely dependent on either =git= or =hg=.
 #+BEGIN_SRC emacs-lisp
 (use-package project
   :if (not wal/use-projectile)
-  :init
-  (wal/univ project-find-file project-switch-project)
   :custom
   (project-switch-commands 'project-find-dir)
   (project-vc-ignores wal/project-vc-ignores)
   :bind-keymap
   ("C-c p" . project-prefix-map)
   :wal-bind
-  ("h" . wal/univ-project-find-file)
-  :commands (wal/univ-project-find-file)
+  (("l" . project-find-file)
+   ("p" . project-switch-project))
   :ensure nil
   :demand)
 #+END_SRC
@@ -4736,7 +4730,7 @@ Trying to organize my thoughts using Zettelkästen.
   :config
   (org-roam-db-autosync-enable)
   (wal/sergeant "d" '(org-roam-dailies-goto-date :wk "dailies")
-                "SPC" '(org-roam-dailies-capture-today :wk "capture today"))
+                "t" '(org-roam-dailies-capture-today :wk "capture today"))
   (wdb/side 'org-roam-mode :side 'right)
   :custom
   (org-roam-directory wal/org-roam-directory)
@@ -4751,11 +4745,12 @@ Trying to organize my thoughts using Zettelkästen.
   (wal/sergeant
     "c" '(org-roam-capture :wk "capture")
     "f" '(org-roam-node-find :wk "find")
+    "w" '(org-roam-refile :wk "refile")
     "b" '(org-roam-buffer-toggle :wk "buffer")
     "g" '(org-roam-graph :wk "graph"))
   (wal/sergeant :keymaps 'org-mode-map :major-modes t
     "i" '(org-roam-node-insert :wk "insert node")
-    "t" '(org-roam-tag-add :wk "tag"))
+    "T" '(org-roam-tag-add :wk "tag"))
   :commands
   (org-roam-buffer-display-dedicated
    org-roam-capture
@@ -5059,6 +5054,9 @@ You know the drill. Clock in, clock out.
   (org-clock-out-remove-zero-time-clocks t)
   (org-clock-into-drawer t)
   (org-clock-heading-function #'wal/org-clock-heading)
+  :bind
+  (:map goto-map
+    ("t" . org-clock-goto))
   :after org
   :ensure nil)
 #+END_SRC
@@ -6974,7 +6972,7 @@ minimum prefixes are reduced."
   (lsp-enable-which-key-integration t)
   (setq lsp-completion-provider :none) ;; We're using `corfu'.
   (wal/captain :keymaps 'lsp-mode-map
-    "p" '(:keymap lsp-command-map :wk "lsp"))
+    "l" '(:keymap lsp-command-map :wk "lsp"))
   (transient-define-prefix wal/lsp-dispatch ()
     "Call `lsp-mode' functions."
     [["Format"
@@ -6998,7 +6996,7 @@ minimum prefixes are reduced."
       ("Q" "quit" lsp-workspace-shutdown)]])
   :custom
   (lsp-headerline-breadcrumb-enable nil)
-  (lsp-keymap-prefix (wal/prefix-user-key (concat wal/captain-key " " "p")))
+  (lsp-keymap-prefix (wal/prefix-user-key (concat wal/captain-key " " "l")))
   (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
   (lsp-clients-typescript-log-verbosity "off")
   (lsp-rust-analyzer-cargo-watch-command "clippy")
@@ -7008,7 +7006,7 @@ minimum prefixes are reduced."
   (lsp-keep-workspace-alive nil)
   :wal-bind
   (:map lsp-mode-map
-   ("p" . wal/lsp-dispatch))
+   ("h" . wal/lsp-dispatch))
   :delight
   (lsp-mode " lsp")
   (lsp-lens-mode " lns"))
