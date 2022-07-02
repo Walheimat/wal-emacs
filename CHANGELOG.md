@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced `json-mode` with `jsonian-mode`.
 - Expansion pack extras can now be installed individually **and** in
   bulk.
+- Going to clocked task bound in `goto-map` + "t".
+- Explicit `transient` configuration.
 
 ### Changed
 
@@ -19,6 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved bindings for `org-roam`, notably to bind capturing "today".
 - Package `org-roam` is now an expansion itself.
 - The expansion packs were slightly adapted.
+- Package `yasnippet` was reverted to old hook-based configuration.
+- Jumping to line and word was moved to `goto-map` using "l" and "w";
+  function `wal/avy-jump` was renamed to `wal/avy-goto-word`.
+- The freed keys ("j" and "l") are now used by `consult-buffer` and
+  `projectile-` and `project-find-file` respectively.
+- Package `projectile` uses "p" again for its prefixes.
+- Package `lsp-mode` uses "l" again for its prefixes and "h" for the
+  dispatch.
+- Binding `:wal-bind` for "u" is bound to the dispatch for now.
 
 ### Removed
 
@@ -69,7 +80,7 @@ Active pause.
 - Hack to fix duplicate logs in `lsp-dart`.
 - Hack to fix `kubernetes` function to refresh overview (about to be
   fixed upstream).
-- Hack to fix autloads for `kubernetes-overview` (seemingly fixed
+- Hack to fix autoloads for `kubernetes-overview` (seemingly fixed
   upstream).
 
 ## [1.7.2] - 2021-06-12
