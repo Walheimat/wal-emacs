@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `lsp-mode` uses "l" again for its prefixes and "h" for the
   dispatch.
 - Binding `:wal-bind` for "u" is bound to the dispatch for now.
+- Some functions were moved to `wal-func`.
 
 ### Removed
 

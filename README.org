@@ -87,6 +87,7 @@ evaluate /everything/[fn:6] that follows.
 (declare-function wal/install-packages "wal-func.el")
 (declare-function wal/is-expansion-pack "wal-func.el")
 (declare-function wal/prefix-user-key "wal-key-bindings.el")
+(declare-function wal/reset-to-standard "wal-func.el")
 
 (defvar global-auto-revert-non-file-buffers)
 (defvar debugger-bury-or-kill)
@@ -503,7 +504,9 @@ packages.
       global-mark-ring-max 32
       ;; Parentheses.
       show-paren-delay 0.1
-      show-paren-context-when-offscreen t) ; New in Emacs 29.
+      show-paren-context-when-offscreen t ; New in Emacs 29.
+      ;; Editing.
+      backward-delete-char-untabify-method 'hungry)
 #+END_SRC
 
 ** Indentation
@@ -511,16 +514,6 @@ packages.
 Set up an easy way to switch between tabs and spaces for indentation.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/reset-to-standard (sym &optional locally)
-  "Reset symbol SYM to its standard value.
-If LOCALLY is t, the local variable is killed while its global
-value is left untouched."
-  (if locally
-      (if (local-variable-p sym)
-          (kill-local-variable sym)
-        (user-error "'%s' has no local binding" sym))
-    (set-default sym (eval (car (get sym 'standard-value))))))
-
 (defun wal/reset-indent-defaults ()
   "Reset indent defaults.
 Resets all variables that were initially set by
@@ -572,8 +565,7 @@ All offsets are set to `wal/indent-offset' or optionally to NUM."
                   json-encoding-default-indentation (make-string offset ? )
                   tab-width offset
                   electric-indent-inhibit t
-                  indent-tabs-mode wal/prefer-tabs)
-    (setq backward-delete-char-untabify-method 'hungry)))
+                  indent-tabs-mode wal/prefer-tabs)))
 
 (add-hook 'emacs-startup-hook 'wal/set-indent-defaults)
 #+END_SRC
@@ -1584,6 +1576,16 @@ throws are 3 or THROWS."
 
 This is mainly useful for non-interactive functions."
   (equal current-prefix-arg '(4)))
+
+(defun wal/reset-to-standard (sym &optional locally)
+  "Reset symbol SYM to its standard value.
+If LOCALLY is t, the local variable is killed while its global
+value is left untouched."
+  (if locally
+      (if (local-variable-p sym)
+          (kill-local-variable sym)
+        (user-error "'%s' has no local binding" sym))
+    (set-default sym (eval (car (get sym 'standard-value))))))
 #+END_SRC
 
 ** Setup
