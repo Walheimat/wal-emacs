@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Response buffers for `verb` now use directional display.
 - Improved bindings for `org-roam`, notably to bind capturing "today".
 - Package `org-roam` is now an expansion itself.
+- The templates used by `org-roam` have been slightly adapted; the one
+  for daily files has an alternative one for adding an active
+  timestamp.
 - The expansion packs were slightly adapted.
 - Package `yasnippet` was reverted to old hook-based configuration.
 - Jumping to line and word was moved to `goto-map` using "l" and "w";
@@ -31,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dispatch.
 - Binding `:wal-bind` for "u" is bound to the dispatch for now.
 - Some functions were moved to `wal-func`.
+- Forces `compile-mode` to scroll.
 
 ### Removed
 
