@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.4] - 2021-07-09
+
 ### Added
 
 - Replaced `json-mode` with `jsonian-mode`.
@@ -14,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   bulk.
 - Going to clocked task bound in `goto-map` + "t".
 - Explicit `transient` configuration.
+- Binds `avy-goto-char` and `avy-goto-word-0` in `goto-map`.
+- Binds more commands in the `transient` for `consult`.
+- Creates `transient` maps for `projectile`, `perspective`,
+  `yasnippet` and binds them to their keys using `wal/univ`.
+- Creates `transient` for `verb` and its response buffers.
 
 ### Changed
 
