@@ -818,16 +818,16 @@ prefixes are:
 Leader key =major= (=.= by default) is responsible major-mode-specific
 actions.
 
-Leader key =captain= (=/= by default) is responsible
-minor-mode-specific[fn:11] actions. The package prefixes are:
+Leader key =captain= (=/= by default) gives access to global
+minor-mode[fn:11] command maps. The package prefixes are:
 
 + =f= for =flycheck=
 + =h= for =projectile=
 + =i= for =perspective=
 + =m= for =smerge=
-+ =p= for =lsp-mode=
 + =s= for =flyspell=
-+ =y= for =yasnippet=.
++ =p= for =lsp-mode=
++ =v= for =verb=.
 
 Leader key =lieutenant= (='= by default) is currently used for adjustments
 custom =hydra= and =transient= maps.
@@ -971,7 +971,7 @@ above).
 (use-package transient
   :custom
   (transient-hide-during-minibuffer-read t)
-  (transient-show-popup 1))
+  (transient-show-popup 0.4))
 #+END_SRC
 
 ** Additional (Un-)Bindings
@@ -2524,29 +2524,22 @@ One thing that can be a bit tricky is selecting regions, not anymore.
 Use snippets in =prog= mode buffers.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/yas-expand ()
-  "Call `yas-expand' in a `org-mode'-safe way.
-
-Makes sure that indentation variables don't produce unexpected
-results."
-  (interactive)
-  (let ((org-src-tab-acts-natively nil)
-        (org-adapt-indentation nil))
-    (yas-expand)))
-
 (use-package yasnippet
+  :init
+  (wal/univ yas-expand wal/yas-dispatch)
   :config
   (define-key yas-minor-mode-map (kbd "<tab>") nil)
   (define-key yas-minor-mode-map (kbd "TAB") nil)
+  (transient-define-prefix wal/yas-dispatch ()
+    "Call `yasnippet' functions."
+    [["Snipppets"
+      ("v" "visit" yas-visit-snippet-file)
+      ("n" "new" yas-new-snippet)]])
   (yas-reload-all)
   :wal-bind
   (:map yas-minor-mode-map
-   ("y" . #'wal/yas-expand))
+   ("y" . #'wal/univ-yas-expand))
   :general
-  (wal/captain :keymaps 'yas-minor-mode-map
-    "y" '(:ignore t :wk "yasnippet")
-    "yv" '(yas-visit-snippet-file :wk "visit snippet file")
-    "yn" '(yas-new-snippet :wk "create new snippet"))
   (wal/captain-sink "y" '(yas-minor-mode :wk "yasnippet"))
   :hook ((prog-mode org-mode) . yas-minor-mode)
   :delight " yas")
@@ -3161,7 +3154,9 @@ Sometimes the list of minor modes overcrowds the modeline.
                              auto-fill-function
                              flyspell-mode
                              org-tree-slide-mode
-                             wal/config-mode))
+                             wal/config-mode
+                             verb-mode
+                             verb-response-body-mode))
   :general
   (wal/captain-sink "m" '(minions-mode :wk "minions"))
   :defer 3)
@@ -3384,9 +3379,7 @@ Everything that has to do with windows.
     helpful-mode
     help-mode
     dictionary-mode
-    shortdoc-mode
-    ;; Response(-like).
-    "\\*HTTP Response")
+    shortdoc-mode)
   "Replaces `popper-reference-buffers'."
   :type '(restricted-sexp
           :match-alternatives
@@ -4006,7 +3999,11 @@ completion actions.
     '((projectile-switch-to-buffer . buffer)
       (projectile-find-file . project-file)
       (projectile-find-file-other-window . project-file)
+      (projectile-find-dir . project-file)
+      (projectile-find-file-in-directory . project-file)
+      (projectile-recentf . project-file)
       (projectile-switch-project . project-file)
+      (wal/univ-projectile-switch-project . project-file)
       (persp-switch-to-buffer . buffer)
       (persp-kill-buffer* . buffer)))
   :bind
@@ -4359,6 +4356,8 @@ The current buffer and Dired buffers are filtered."
 
 (use-package perspective
   :if wal/use-perspectives
+  :init
+  (wal/univ persp-switch wal/persp-dispatch)
   :config
   (advice-add 'persp-kill :around #'wal/advise-persp-kill)
   (advice-add 'persp-format-name :filter-return #'wal/advise-persp-format-name)
@@ -4380,6 +4379,17 @@ The current buffer and Dired buffers are filtered."
                  t))
   (wal/captain
     "i" '(:keymap perspective-map :wk "perspective"))
+  (transient-define-prefix wal/persp-dispatch ()
+    "Call `perspective' functions."
+    [["Buffers"
+      ("a" "add" persp-add-buffer)
+      ("s" "set" persp-set-buffer)
+      ("r" "remove" persp-remove-buffer)
+      ("l" "list" persp-buffer-menu)]
+     ["Perspectives"
+      ("r" "rename" persp-rename)
+      ("k" "kill" persp-kill)
+      ("m" "merge" persp-merge)]])
   (persp-mode +1)
   ;; Override the override to `perspective-map'.
   (when (< emacs-major-version 28)
@@ -4398,7 +4408,7 @@ The current buffer and Dired buffers are filtered."
    ("x" . wal/switch-to-scratch-buffer))
   :wal-bind
   (:map persp-mode-map
-   ("i" . persp-switch))
+   ("i" . wal/univ-persp-switch))
   :hook
   ((kill-emacs . persp-state-save)
    ((persp-created
@@ -4450,6 +4460,7 @@ Otherwise treat DEFAULT-CMD normally."
   (advice-add
     'projectile-maybe-read-command :override
     'wal/advise-projectile-maybe-read-command)
+  (wal/univ projectile-switch-project wal/projectile-dispatch)
   :config
   (wal/append 'projectile-globally-ignored-directories
               (nth 0 wal/projectile-ignored))
@@ -4459,6 +4470,27 @@ Otherwise treat DEFAULT-CMD normally."
               (nth 2 wal/projectile-ignored))
   (wal/captain
     "p" '(:keymap projectile-command-map :wk "projectile"))
+  (transient-define-prefix wal/projectile-dispatch ()
+    "Call `projectile' commands."
+    [["Command"
+      ("c" "compile" projectile-compile-project)
+      ("i" "install" projectile-install-project)
+      ("x" "configure" projectile-configure-project)
+      ("p" "package" projectile-package-project)
+      ("u" "run" projectile-run-project)
+      ("t" "test"  projectile-test-project)]
+     ["Buffers"
+      ("k" "kill" projectile-kill-buffers)
+      ("s" "switch" projectile-switch-to-buffer)]
+     ["Find"
+      ("a" "other file" projectile-find-other-file)
+      ("d" "directory" projectile-find-dir)
+      ("f" "file in directory" projectile-find-file-in-directory)
+      ("r" "recent file" projectile-recentf)]
+     ["Edit"
+      ("l" "dir-locals" projectile-edit-dir-locals)]
+     ["Projects"
+      ("o" "switch to open project" projectile-switch-open-project)]])
   (projectile-mode +1)
   :custom
   (projectile-switch-project-action #'projectile-dired)
@@ -4468,7 +4500,7 @@ Otherwise treat DEFAULT-CMD normally."
   (projectile-enable-caching t)
   :wal-bind
   (("l" . projectile-find-file)
-   ("p" . projectile-switch-project))
+   ("p" . wal/univ-projectile-switch-project))
   :commands (projectile-project-root)
   :delight " pjt")
 #+END_SRC
@@ -7399,31 +7431,50 @@ I browse, I request.
 :UNNUMBERED: t
 :END:
 
-I'll replace =restclient= with =verb= soon.
+Make requests using Org.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/advise-verb-to-keep-window (&rest _rest)
+  "Proivde t to `verb-kill-*' functions to keep window."
+  (list t))
+
 (use-package verb
   :wal-ways nil
   :config
   (add-to-list 'org-tag-alist '("verb" . ?v))
-  (wdb/side "\\*HTTP Response" :height 20)
-  :custom
-  (verb-auto-kill-response-buffers t)
+  (advice-add 'verb-kill-all-response-buffers :filter-args
+    #'wal/advise-verb-to-keep-window)
+  (advice-add 'verb-kill-response-buffer-and-window :filter-args
+    #'wal/advise-verb-to-keep-window)
+  (transient-define-prefix wal/verb-dispatch ()
+    "Dispatch `verb' commands."
+    [["Request"
+      ("r" "send" verb-send-request-on-point
+       :inapt-if-non-nil verb-response-body-mode)
+      ("e" "export" verb-export-request-on-point
+       :inapt-if-non-nil verb-response-body-mode)]
+     ["Response"
+      ("R" "resend" verb-re-send-request
+       :inapt-if-nil verb-response-body-mode)
+      ("k" "kill all" verb-kill-all-response-buffers)]
+     ["Variables"
+      ("v" "set" verb-set-var)
+      ("V" "show" verb-show-vars)]])
   :bind
   (:map verb-response-body-mode-map
-   ("k" . kill-buffer-and-window)
+   ("k" . verb-kill-buffer-and-window)
    ("q" . quit-window))
   :general
-  (wal/major :keymaps 'org-mode-map
-    "v" '(:ignore t :wk "verb")
-    "vr" '(verb-send-request-on-point-other-window-stay :wk "make request")
-    "vc" '(verb-export-request-on-point-curl :wk "export cURL")
-    "vk" '(verb-kill-all-response-buffers :wk "kill response buffers")
-    "vv" '(verb-set-var :wk "set var"))
+  (wal/captain :keymaps 'verb-mode-map
+    "v" '(:keymap verb-command-map :wk "verb"))
   (wal/captain-sink :keymaps 'org-mode-map
     "v" '(verb-mode :wk "verb"))
+  (wal/lieutenant :keymaps '(verb-mode-map verb-response-body-mode-map)
+    "r" '(wal/verb-dispatch :wk "verb"))
   :after org
-  :delight " vrb")
+  :delight
+  (verb-mode " vrb")
+  (verb-response-body-mode " vRb"))
 #+END_SRC
 
 ** E-Mails
@@ -7949,7 +8000,7 @@ and other bindings.
 [fn:10] Be careful! If you make a mistake you could render your
 keyboard unusable.
 
-[fn:11] They all require their respective mode to be on.
+[fn:11] Provided the modes are active.
 
 [fn:12] Alternate spelling is "expansion pak".
 
