@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Function to write a `dap-mode` template into a JSON and save that as
+  a file.
+
+### Changed
+
+- `dap-mode`-Template for `debugpy` is now an interactive function.
+
 ## [1.7.4] - 2021-07-09
 
 ### Added

@@ -6979,14 +6979,19 @@ Language servers are awesome. Thanks, Microsoft.
 ;;; Code:
 
 (eval-when-compile
-  (require 'transient))
+  (require 'transient)
+  (require 'dash))
 
+(declare-function dap--completing-read "ext:dap-mode.el")
+(declare-function dap--json-encode "ext:dap-mode.el")
+(declare-function dap-register-debug-template "ext:dap-mode.el")
 (declare-function lsp-enable-which-key-integration "ext:lsp-mode.el")
 (declare-function wal/append "wal-func.el")
 (declare-function wal/captain "wal-key-bindings.el")
 (declare-function wal/captain-sink "wal-key-bindings.el")
 (declare-function wdb/side "wal-func.el")
 
+(defvar dap-debug-template-configurations)
 (defvar lsp-completion-provider)
 (defvar lsp-file-watch-ignored-directories)
 
@@ -7167,6 +7172,25 @@ Jump to symbols with =consult=.
 Put these templates in a file in your project root, and evaluate them
 there using =C-x C-e=.
 
+#+BEGIN_SRC emacs-lisp
+(defun wal/dap-create-launch-json-from-template ()
+  "Create and write a VSCode launch configuration using a template."
+  (interactive)
+  (let* ((args (-> (dap--completing-read "Select template: "
+                                         dap-debug-template-configurations
+                                         'cl-first nil t)
+                   cl-rest
+                   copy-tree))
+         (serialized (dap--json-encode args))
+         (file-args (find-file-read-args "Find file (deleting other windows): "
+                                         (confirm-nonexistent-file-or-buffer)))
+         (filename (car file-args)))
+    (with-temp-buffer
+      (insert serialized)
+      (json-pretty-print-buffer)
+      (write-region (buffer-string) nil filename))))
+#+END_SRC
+
 *** Node.js
 :PROPERTIES:
 :UNNUMBERED: t
@@ -7203,16 +7227,20 @@ For TypeScript compile your =src= with =--sourceMap= or set =sourceMap= to
 
 Attach to running process.
 
-#+BEGIN_SRC emacs-lisp :tangle no
-;; Adapt your remote root.
-(when (require 'dap-mode nil 'noerror)
-  (let ((mapping '(:localRoot "${workspaceFolder}" :remoteRoot "/usr/src/app")))
-    (dap-register-debug-template
-     "python::attach"
-     (list :type "python"
-           :request "attach"
-           :connect (list :host "localhost" :port 5678)
-           :pathMappings (vector mapping)))))
+#+BEGIN_SRC emacs-lisp
+(defun wal/dap-register-debugpy-template (name remote-root)
+  "Create template for debugpy.
+
+Prompts user for NAME of the template and the REMOTE-ROOT."
+  (interactive "sName of the template: \nsRemote root: ")
+  (when (require 'dap-mode nil 'noerror)
+    (let ((mapping `(:localRoot "${workspaceFolder}" :remoteRoot ,remote-root)))
+      (dap-register-debug-template
+       name
+       (list :type "python"
+             :request "attach"
+             :connect (list :host "localhost" :port 5678)
+             :pathMappings (vector mapping))))))
 #+END_SRC
 
 *** Flutter
