@@ -1589,6 +1589,11 @@ value is left untouched."
           (kill-local-variable sym)
         (user-error "'%s' has no local binding" sym))
     (set-default sym (eval (car (get sym 'standard-value))))))
+
+(defmacro wal/try (package &rest body)
+  "Exceute BODY if PACKAGE can be required."
+  (declare (indent 1))
+  `(when (require ',package nil :no-error) ,@body))
 #+END_SRC
 
 ** Setup
@@ -6980,7 +6985,8 @@ Language servers are awesome. Thanks, Microsoft.
 
 (eval-when-compile
   (require 'transient)
-  (require 'dash))
+  (require 'dash)
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
 (declare-function dap--completing-read "ext:dap-mode.el")
 (declare-function dap--json-encode "ext:dap-mode.el")
@@ -7176,19 +7182,20 @@ there using =C-x C-e=.
 (defun wal/dap-create-launch-json-from-template ()
   "Create and write a VSCode launch configuration using a template."
   (interactive)
-  (let* ((args (-> (dap--completing-read "Select template: "
-                                         dap-debug-template-configurations
-                                         'cl-first nil t)
-                   cl-rest
-                   copy-tree))
-         (serialized (dap--json-encode args))
-         (file-args (find-file-read-args "Find file (deleting other windows): "
-                                         (confirm-nonexistent-file-or-buffer)))
-         (filename (car file-args)))
-    (with-temp-buffer
-      (insert serialized)
-      (json-pretty-print-buffer)
-      (write-region (buffer-string) nil filename))))
+  (wal/try dap-mode
+    (let* ((args (-> (dap--completing-read "Select template: "
+                                           dap-debug-template-configurations
+                                           'cl-first nil t)
+                     cl-rest
+                     copy-tree))
+           (serialized (dap--json-encode args))
+           (file-args (find-file-read-args "Find file (deleting other windows): "
+                                           (confirm-nonexistent-file-or-buffer)))
+           (filename (car file-args)))
+      (with-temp-buffer
+        (insert serialized)
+        (json-pretty-print-buffer)
+        (write-region (buffer-string) nil filename)))))
 #+END_SRC
 
 *** Node.js
@@ -7233,7 +7240,7 @@ Attach to running process.
 
 Prompts user for NAME of the template and the REMOTE-ROOT."
   (interactive "sName of the template: \nsRemote root: ")
-  (when (require 'dap-mode nil 'noerror)
+  (wal/try dap-mode
     (let ((mapping `(:localRoot "${workspaceFolder}" :remoteRoot ,remote-root)))
       (dap-register-debug-template
        name

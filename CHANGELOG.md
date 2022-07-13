@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Function to write a `dap-mode` template into a JSON and save that as
   a file.
+- Macro `wal/try` to do a safe `require` before executing body.
 
 ### Changed
 
