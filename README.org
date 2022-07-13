@@ -1020,6 +1020,11 @@ Most bindings are declared in individual packages.
  :keymaps 'ctl-x-x-map
  "#" 'server-edit-abort)
 
+;; Use H-u for C-u.
+(when wal/use-hyper-prefix
+  (general-define-key
+   (wal/prefix-user-key "u") 'universal-argument))
+
 (global-set-key (kbd "C-?") #'undo-redo)
 (global-set-key (kbd "M-o") #'wal/other-window)
 (global-set-key (kbd "C-;") #'comment-line)
@@ -4080,6 +4085,8 @@ Do not ignore hidden files."
   (setq wal/active-theme theme))
 
 (use-package consult
+  :init
+  (wal/univ consult-buffer wal/consult-dispatch)
   :config
   (when wal/use-projectile
     (setq consult-project-function #'projectile-project-root))
@@ -4127,8 +4134,7 @@ Do not ignore hidden files."
    ("m" . consult-mark)
    ("M" . consult-global-mark))
   :wal-bind
-  (("j" . consult-buffer)
-   ("u" . wal/consult-dispatch))
+  ("j" . wal/univ-consult-buffer)
   :general
   (wal/general
     "st" '(consult-theme :wk "consult theme")

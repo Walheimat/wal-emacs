@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `dap-mode`-Template for `debugpy` is now an interactive function.
+- The `consult` dispatch is bound to `wal/univ`-ed `consult-buffer`
+  again.
+- `H-u` doubles for `C-u` now.
 
 ## [1.7.4] - 2021-07-09
 
