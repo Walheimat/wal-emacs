@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Package `perspective` is now always enabled, custom variable
   `wal/use-perspectives` was removed.
+- Valid efforts are no longer set for `org-mode`.
 
 ## [1.7.4] - 2021-07-09
 
