@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Binds `yas-insert-snippet` in its `transient`.
 - Adds `wal/univ` commands to `consult` and `projectile` configurations.
 - Improves (and extends) the `transient` for `consult`.
+- Binds `persp-forget-buffer` in its `transient`; the function
+  definitions were shuffled a bit.
 
 ### Removed
 
