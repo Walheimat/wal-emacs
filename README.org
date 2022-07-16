@@ -3378,8 +3378,7 @@ Everything that has to do with windows.
     ;; Compilation and REPL(-like).
     "\\*poetry-shell\\*"
     "^\\*docker-compose"
-    "^\\* docker-compose up"
-    "^\\* docker-compose build"
+    "^\\* docker-compose \\(up\\|run\\|build\\)"
     dap-ui-repl-mode
     cider-repl-mode
     inferior-python-mode
@@ -3470,6 +3469,14 @@ Treat certain buffers and their windows as pop-ups.
     (concat
      (substring (replace-regexp-in-string "\\*helpful \\w+\:" "" buffer-name) 0 -1)
      "/help"))
+   ((string-match "\\* docker-compose \\(up\\|run\\|build\\)\\( --rm\\)?" buffer-name)
+    (concat
+     (substring
+      (replace-regexp-in-string
+       "\\* docker-compose \\(up\\|run\\|build\\)\\( --rm\\)?"
+       "" buffer-name)
+      0 -2)
+     "/dc"))
    (t buffer-name)))
 
 (use-package popper
