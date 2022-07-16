@@ -3363,7 +3363,6 @@ Everything that has to do with windows.
 
 (defvar aw-dispatch-alist)
 (defvar popper-group-function)
-(defvar wal/use-perspectives)
 
 (defgroup wal-windows nil
  "Change window settings."
@@ -3476,11 +3475,10 @@ Treat certain buffers and their windows as pop-ups.
 (use-package popper
   :wal-ways nil
   :config
-  (when wal/use-perspectives
-    (setq popper-group-function 'popper-group-by-perspective))
   (popper-mode +1)
   (popper-echo-mode +1)
   :custom
+  (popper-group-function 'popper-group-by-perspective)
   (popper-reference-buffers wal/popper-reference-buffers)
   (popper-display-control 'user)
   (popper-mode-line wal/popper-mode-line)
@@ -4215,11 +4213,6 @@ Keep order.
 
 ;;;; Customization:
 
-(defcustom wal/use-perspectives t
-  "Whether to use perspectives."
-  :type 'boolean
-  :group 'wal-workspace)
-
 (defcustom wal/use-projectile t
   "Whether to use `projectile' over `project'."
   :type 'boolean
@@ -4370,7 +4363,6 @@ The current buffer and Dired buffers are filtered."
     (mapcar #'buffer-name desired)))
 
 (use-package perspective
-  :if wal/use-perspectives
   :init
   (wal/univ persp-switch wal/persp-dispatch)
   :config
@@ -4429,7 +4421,7 @@ The current buffer and Dired buffers are filtered."
    ((persp-created
      persp-killed
      persp-after-rename) . wal/persp-maybe-shorten))
-  :demand)
+  :defer 1)
 #+END_SRC
 
 *** projectile
@@ -5338,7 +5330,7 @@ Uses the same optional SWITCHES."
   :custom
   (dired-listing-switches "-lah --group-directories-first")
   (dired-auto-revert-buffer t)
-  (dired-kill-when-opening-new-dired-buffer (not wal/use-perspectives)) ; New in Emacs 28.
+  (dired-kill-when-opening-new-dired-buffer nil) ; New in Emacs 28.
   :bind
   (:map ctl-x-map
    ("j" . dired-jump)

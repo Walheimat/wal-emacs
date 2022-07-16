@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds `wal/univ` commands to `consult` and `projectile` configurations.
 - Improves (and extends) the `transient` for `consult`.
 
+### Removed
+
+- Package `perspective` is now always enabled, custom variable
+  `wal/use-perspectives` was removed.
+
 ## [1.7.4] - 2021-07-09
 
 ### Added
