@@ -5801,8 +5801,23 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
 #+BEGIN_SRC emacs-lisp
 (use-package smerge-mode
   :config
+  (defhydra wal/smerge (:hint nil :foreign-keys warn)
+    "
+%s(wal/ascii-whale-hydra-offset 12)^_p_^
+%s`wal/ascii-whale Resolve: _u_   _l_.
+%s(wal/ascii-whale-hydra-offset 12)^_n_^
+"
+    ("p" smerge-prev)
+    ("n" smerge-next)
+    ("u" smerge-keep-upper)
+    ("l" smerge-keep-lower)
+    ("a" smerge-keep-all "keep all")
+    ("q" nil "quit"))
+  :general
   (wal/captain :keymaps 'smerge-mode-map
     "m" '(:keymap smerge-basic-map :wk "smerge"))
+  (wal/lieutenant :keymaps 'smerge-mode-map
+    "m" '(wal/smerge/body :wk "smerge"))
   :ensure nil
   :delight " smg")
 #+END_SRC
