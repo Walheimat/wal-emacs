@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `H-u` doubles for `C-u` now.
 - Binds `yas-insert-snippet` in its `transient`.
 - Adds `wal/univ` commands to `consult` and `projectile` configurations.
+- Improves (and extends) the `transient` for `consult`.
 
 ## [1.7.4] - 2021-07-09
 

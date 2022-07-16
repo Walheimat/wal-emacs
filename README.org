@@ -4091,10 +4091,12 @@ Do not ignore hidden files."
   :init
   (wal/univ consult-buffer wal/consult-dispatch)
   :config
+  ;; Integrate into `projectile' and `xref'.
   (when wal/use-projectile
     (setq consult-project-function #'projectile-project-root))
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
+  ;; Customize filter, previews and advise theme changes.
   (wal/append 'consult-buffer-filter
               wal/consult-buffer-filter)
   (consult-customize
@@ -4102,37 +4104,35 @@ Do not ignore hidden files."
    consult--source-project-recent-file
    consult--source-bookmark
    :preview-key (kbd "M-,"))
+  (advice-add
+   #'consult-theme :after
+   #'wal/advise-consult-theme)
+  ;; Bind commands in `transient'.
   (transient-define-prefix wal/consult-dispatch ()
     "Call `consult' functions."
     [["Find"
       ("b" "bookmark" consult-bookmark)
       ("f" "recent" consult-recent-file)]
-     ["Search"
-      ("s" "ripgrep" consult-ripgrep)
-      ("i" "ignored" wal/consult-ripgrep-ignored)
+     ["Locate"
+      ("g" "ripgrep" consult-ripgrep)
       ("l" "locate" consult-locate
        :inapt-if-not (lambda () (executable-find "locate")))]
-     ["Register"
-      ("r" "store" consult-register-store)
-      ("g" "load" consult-register-load)]
-     ["Complete"
-      ("F" "flycheck" consult-flycheck
-        :inapt-if-not (lambda () flycheck-mode))
-      ("R" "register" consult-register)
-      ("B" "bookmark" consult-bookmark)
-      ("M" "macro" consult-kmacro)
-     ]])
-  (advice-add
-    #'consult-theme :after
-    #'wal/advise-consult-theme)
+     ["Do"
+      ("r" "register" wal/consult-register-dispatch)
+      ("m" "macro" consult-kmacro)
+      ("y" "yank" consult-yank-from-kill-ring)]
+     ["Narrow"
+      ("e" "errors (flycheck)" consult-flycheck
+       :inapt-if-not (lambda () flycheck-mode))
+      ("n" "line" consult-line)]])
+  (transient-define-prefix wal/consult-register-dispatch ()
+    "Call register commands."
+    [["Register"
+      ("s" "store" consult-register-store)
+      ("l" "load" consult-register-load)
+      ("n" "complete" consult-register)]])
   :bind
-  (:map bookmark-map
-   ("u" . consult-bookmark)
-   :map kmacro-keymap
-   ("u" . consult-kmacro)
-   :map ctl-x-r-map
-   ("u" . consult-register)
-   :map goto-map
+  (:map goto-map
    ("g" . consult-goto-line)
    ("m" . consult-mark)
    ("M" . consult-global-mark))
