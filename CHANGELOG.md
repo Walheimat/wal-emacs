@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improves (and extends) the `transient` for `consult`.
 - Binds `persp-forget-buffer` in its `transient`; the function
   definitions were shuffled a bit.
+- Keymaps for `kmacro` and `bookmark` are now bound in `wal/captain`.
+- Kubernetes is now user-prefixed (meaning the default is "H-8".
 
 ### Removed
 

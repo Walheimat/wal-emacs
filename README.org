@@ -716,13 +716,7 @@ There are some non-standard control sequences. Anywhere:
   + =C-/= to move it downward
 + =C-?= redoes (as =C-/= undoes).
 
-User-reserved combinations are used for certain command maps:
-
-+ =C-c 8= for =kubernetes=
-+ =C-c m= for =bookmark= and
-+ =C-c k= for =kmacro.=
-
-It's also used for certain dispatches:
+User-reserved combinations are used for certain dispatches:
 
 + =C-c a= for =org-agenda=
 + =C-c d= for =docker=.
@@ -2099,12 +2093,13 @@ Use better commands for macros.
 
 #+BEGIN_SRC emacs-lisp
 (use-package kmacro
-  :bind-keymap
-  ("C-c k" . kmacro-keymap)
   :bind
   (:map kmacro-keymap
    ("k" . kmacro-start-macro-or-insert-counter)
    ("j" . kmacro-end-or-call-macro))
+  :general
+  (wal/captain
+    "k" '(:keymap kmacro-keymap "kmacro"))
   :ensure nil)
 #+END_SRC
 
@@ -2350,11 +2345,13 @@ Leave a bookmark why don't you.
   :custom
   (bookmark-use-annotations t)
   (bookmark-menu-confirm-deletion t)
-  :bind-keymap ("C-c m" . bookmark-map)
   :bind
   (:map bookmark-map
    ("l" . bookmark-bmenu-list)
    ("L" . bookmark-load))
+  :general
+  (wal/captain
+    "b" '(:keymap bookmark-map :wk "bookmark"))
   :ensure nil)
 #+END_SRC
 
@@ -7450,8 +7447,8 @@ Who doesn't like pods and stuff?
   (kubernetes-redraw-frequency 3600)
   (kubernetes-default-overview-view 'deployments)
   (kubernetes-json-mode (if (featurep 'jsonian-mode) 'jsonian-mode 'js-mode))
-  :bind
-  ("C-c 8" . kubernetes-overview)
+  :wal-bind
+  ("8" . kubernetes-overview)
   :ensure nil)
 #+END_SRC
 
