@@ -26,7 +26,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Binds `persp-forget-buffer` in its `transient`; the function
   definitions were shuffled a bit.
 - Keymaps for `kmacro` and `bookmark` are now bound in `wal/captain`.
-- Kubernetes is now user-prefixed (meaning the default is "H-8".
+- Kubernetes is now user-prefixed (meaning the default is `H-8`).
+- Moves non-letter user-prefixed bindings to use `C-c` instead. This
+  was done to both relieve some pinky pressure and potentially free
+  prefixed symbol keys.
+
+### Fixed
+
+- Several invocations of `H-u` call `universal-argument-more` now so
+  it can be used like `C-u`. Previously only one argument was
+  possible.
 
 ### Removed
 
