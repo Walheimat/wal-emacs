@@ -716,10 +716,16 @@ There are some non-standard control sequences. Anywhere:
   + =C-/= to move it downward
 + =C-?= redoes (as =C-/= undoes).
 
-User-reserved combinations are used for certain dispatches:
+User-reserved combinations are used for certain commands and
+dispatches:
 
 + =C-c a= for =org-agenda=
-+ =C-c d= for =docker=.
++ =C-c c= for =beacon-blink=
++ =C-c d= for =docker=
++ =C-c q= to do a =quick-calc= (inserted if called with =C-u=)
++ =C-c r= does a =completion-at-point=
++ =C-c t= for =vterm=
++ =C-c w= toggles pop-ups using =popper=.
 
 *** Meta
 
@@ -731,7 +737,7 @@ There are a few non-standard meta sequences.
 
 Most hyper[fn:9] bindings are quick-access actions:
 
-+ =H-]= highlights the cursor using =beacon=
++ =H-8= calls =kubernetes-overview=
 + =H-i= switches =perspective=
 + =H-j= switches buffer using =consult=
 + =H-k= acts on the current point with =embark= (immediately if called
@@ -740,11 +746,7 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-m= shows version control status using =magit=
 + =H-n= searches project with =rg=
-+ =H-\= opens new =vterm= terminal
 + =H-p= switches projects
-+ =H-<return>= completes at point
-+ =H-== to do a =quick-calc= (inserted if called with =C-u=)
-+ =H-[= toggles pop-ups using =popper=
 + =H-y= expands snippets (in =yas-minor-mode=).
 
 It's also used for some dispatches:
@@ -2367,8 +2369,8 @@ Quick calculations.
 
 #+BEGIN_SRC emacs-lisp
 (use-package calc
-  :wal-bind
-  ("=" . quick-calc)
+  :bind
+  ("C-c q" . quick-calc)
   :ensure nil)
 #+END_SRC
 
@@ -3020,8 +3022,8 @@ This just means increasing duration, delay, size and brightness."
   :custom
   (beacon-blink-when-focused t)
   (beacon-blink-when-window-scrolls nil)
-  :wal-bind
-  ("]" . wal/lighthouse)
+  :bind
+  ("C-c c" . wal/lighthouse)
   :general
   (wal/captain-sink "b" '(beacon-mode :wk "beacon")))
 #+END_SRC
@@ -3493,8 +3495,8 @@ Treat certain buffers and their windows as pop-ups.
   (popper-echo-dispatch-keys '(?a ?s ?d ?f ?g ?q ?w ?e ?r ?t))
   (popper-echo-lines 1)
   (popper-echo-transform-function #'wal/popper-echo-transform)
-  :wal-bind
-  ("[" . popper-toggle-latest)
+  :bind
+  ("C-c w" . popper-toggle-latest)
   :demand
   :after winner)
 #+END_SRC
@@ -3853,8 +3855,8 @@ Alternative.
   (corfu-auto t)
   (corfu-quit-no-match t)
   (corfu-cycle t)
-  :wal-bind
-  ("<return>" . completion-at-point)
+  :bind
+  ("C-c r" . completion-at-point)
   :general
   (wal/captain-sink :keymaps '(prog-mode-map dap-ui-repl-mode-map)
     "c" '(corfu-mode :wk "corfu"))
@@ -5548,8 +5550,8 @@ FORCE-NEW/`universal-argument')."
   :wal-ways nil
   :custom
   (vterm-buffer-name-string (concat wal/vterm-prefix ": %s"))
-  :wal-bind
-  ("\\" . wal/vterm)
+  :bind
+  ("C-c t" . wal/vterm)
   :hook
   ((vterm-mode . wal/vterm-mode)
    (vterm-mode . with-editor-export-git-editor))
