@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Maps `org-next-visible-heading` (and `previous`) to `M-n` and `M-p`
+  respectively.
+
 ### Fixed
 
 - Turning off `org-tree-slide` now only turns on modes that were
