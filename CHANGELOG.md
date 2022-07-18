@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Turning off `org-tree-slide` now only turns on modes that were
+  actually turned off for it. `dimmer-mode` is now also turned off.
+  `beacon-mode` is no longer turned on or off.
+
 ## [1.7.5] - 2021-07-17
 
 Hefty lefty.

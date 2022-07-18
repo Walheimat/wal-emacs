@@ -4907,16 +4907,23 @@ Turn any =org-mode= buffer into a presentation.
       (setq cursor-type nil)
     (setq cursor-type t)))
 
+(defvar wal/org-tree-slide-disabled-modes '())
+
 (defun wal/org-tree-slide-play ()
   "Hook into `org-tree-slide-play'."
   (setq visual-fill-column-width (wal/relative-column-width
                                   wal/org-tree-slide-visual-fill-column-width)
         visual-fill-column-center-text t
         cursor-type nil)
-  (beacon-mode -1)
   (visual-fill-column-mode 1)
   (when (bound-and-true-p org-sticky-header-mode)
+    (setq wal/org-tree-slide-disabled-modes
+      (append wal/org-tree-slide-disabled-modes '(org-sticky-header-mode)))
     (org-sticky-header-mode -1))
+  (when (bound-and-true-p dimmer-mode)
+    (setq wal/org-tree-slide-disabled-modes
+      (append wal/org-tree-slide-disabled-modes '(dimmer-mode)))
+    (dimmer-mode -1))
   (mixed-pitch-mode +1))
 
 (defun wal/org-tree-slide-stop ()
@@ -4924,12 +4931,14 @@ Turn any =org-mode= buffer into a presentation.
   (setq visual-fill-column-width nil
         visual-fill-column-center-text nil
         cursor-type t)
-  (beacon-mode 1)
   (visual-fill-column-mode -1)
   (when (fboundp 'outline-show-all)
     (outline-show-all))
-  (when (fboundp 'org-sticky-header-mode)
+  (when (memq 'org-sticky-header-mode wal/org-tree-slide-disabled-modes)
     (org-sticky-header-mode +1))
+  (when (memq 'dimmer-mode wal/org-tree-slide-disabled-modes)
+    (dimmer-mode +1))
+  (setq wal/org-tree-slide-disabled-modes '())
   (mixed-pitch-mode -1))
 
 (defun wal/org-tree-slide-text-scale ()
