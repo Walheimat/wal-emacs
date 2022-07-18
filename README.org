@@ -4342,8 +4342,12 @@ This only removes `process-kill-buffer-query-function'."
       (persp-switch clicked))))
 
 (defun wal/advise-persp-list-buffers-refresh (fun &rest _r)
-  "Advise FUN `list-buffers--refresh' to only consider perspective buffers."
-  (apply fun (list (seq-filter 'buffer-live-p (persp-current-buffers)))))
+  "Advise FUN `list-buffers--refresh' to only consider perspective buffers.
+
+No filter is applied if called with `universal-argument'."
+  (if (wal/univ-p)
+      (apply fun nil)
+    (apply fun (list (seq-filter 'buffer-live-p (persp-current-buffers))))))
 
 ;; Integration with `consult'.
 

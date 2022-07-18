@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Maps `org-next-visible-heading` (and `previous`) to `M-n` and `M-p`
   respectively.
 
+### Changed
+
+- The advice for `list-buffers--refresh` no longer filters if called
+  with `C-u`.
+
 ### Fixed
 
 - Turning off `org-tree-slide` now only turns on modes that were
