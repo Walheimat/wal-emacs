@@ -1341,11 +1341,16 @@ This shrinks or enlarges the window depending on its position."
   (wal/enlarge-window t))
 
 (defun wal/other-window ()
-  "Switch buffers, open minibuffer or other window."
+  "Switch to other window.
+
+If the minibuffer is active, switch to that. If there's another
+frame, switch to that. Otherwise switch to next buffer."
   (interactive)
   (cond
    ((active-minibuffer-window)
     (switch-to-minibuffer))
+   ((not (equal (next-frame) (selected-frame)))
+    (other-frame 1))
    ((one-window-p)
     (switch-to-buffer nil))
    (t

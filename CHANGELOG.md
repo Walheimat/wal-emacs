@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The advice for `list-buffers--refresh` no longer filters if called
   with `C-u`.
+- Function `wal/other-window` will now call `other-frame` if another
+  frame exists.
 
 ### Fixed
 
