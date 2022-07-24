@@ -1782,6 +1782,39 @@ t, printing optional message ON-DONE."
   (add-to-list 'marginalia-command-categories '(wal/install-expansion-pack . expansion-pack)))
 #+END_SRC
 
+** Hooks
+
+#+BEGIN_SRC emacs-lisp
+(cl-defmacro wal/lang-hook (name docs &body body &key messages lsp tabs &allow-other-keys)
+  "Define a hook function for a language.
+
+This will hook into NAME-hook.
+
+MESSAGES is a list of strings. LSP is either t or nil. TABS is
+either t, nil or a symbol (the indentation function).
+
+The rest of the BODY will be spliced into the lambda."
+  (declare (indent defun) (doc-string 2))
+  (let ((target (intern (concat (symbol-name name) "-hook")))
+        (safe-body (cl-loop for (key val) on body by 'cddr
+                            unless (memq key '(:messages :lsp :tabs))
+                            collect key
+                            and collect val)))
+    `(add-hook
+      ',target
+      (lambda ()
+        ,(when messages
+           `(wal/message-in-a-bottle ,messages))
+        ,(cond ((eq t tabs)
+                `(wal/maybe-enable-tabs))
+               ((not tabs)
+                '(wal/disable-tabs))
+               (t `(wal/maybe-enable-tabs :indent-with ,tabs)))
+        ,@safe-body
+        ,(when lsp
+           '(wal/lsp))))))
+#+END_SRC
+
 ** Footer
 :PROPERTIES:
 :VISIBILITY: folded
@@ -4686,12 +4719,6 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/org-mode ()
-  "Hook into `org-mode'."
-  (wal/message-in-a-bottle '("Organize! Seize the means of production!"))
-  (wal/disable-tabs)
-  (hack-local-variables))
-
 (defun wal/advise-org-export-dispatch (&rest _r)
   "Advise to require `ox-md' before export dispatch."
   (unless (featurep 'ox-md)
@@ -4705,6 +4732,10 @@ This calls `org-content' interactively."
     (org-content level)))
 
 (use-package org
+  :init
+  (wal/lang-hook org-mode
+    "Hook into `org-mode'."
+    :messages '("Organize! Seize the means of production!"))
   :config
   (require 'org-indent) ; TEMP: Getting missing face errors otherwise.
   (define-key org-mode-map (kbd "C-,") nil) ; Remove `org-cycle-agenda-files'.
@@ -4763,9 +4794,7 @@ This calls `org-content' interactively."
     "sa" '(org-show-all :wk "all")
     "sl" '(wal/org-content :wk "level")
     "n" '(org-add-note :wk "add note"))
-  :hook
-  ((org-mode . wal/org-mode)
-   (org-mode . auto-fill-mode))
+  :hook (org-mode . auto-fill-mode)
   :ensure nil)
 #+END_SRC
 
@@ -5819,15 +5848,14 @@ If you want to go back in time and point fingers at the progenitors of doom.
 Syntax highlighting.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/gitignore-mode ()
-  "Hook into `gitignore-mode'."
-  (wal/message-in-a-bottle '("I don't think I know you")))
-
 (use-package git-modes
+  :init
+  (wal/lang-hook gitignore-mode
+    "Hook into `gitignore-mode'."
+    :messages '("I don't think I know you"))
   :mode (("/\\.npmignore\\'" . gitignore-mode)
          (".projectile" . gitignore-mode)
-         ("/\\.dockerignore" . gitignore-mode))
-  :hook (gitignore-mode . wal/gitignore-mode))
+         ("/\\.dockerignore" . gitignore-mode)))
 #+END_SRC
 
 *** smerge-mode
@@ -5945,17 +5973,13 @@ Bitches brew.
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/elixir-mode ()
-  "Hook into `elixir-mode'."
-  (wal/message-in-a-bottle '("Mixin' potions"
-                             "A hex on you"))
-  (wal/disable-tabs)
-  (hack-local-variables)
-  (wal/lsp))
-
 (use-package elixir-mode
   :wal-ways nil
-  :hook (elixir-mode . wal/elixir-mode)
+  :init
+  (wal/lang-hook elxir-mode
+    "Hook into `elixir-mode'."
+    :lsp t
+    :messages '("Mixin' potions" "A hex on you"))
   :ensure nil)
 #+END_SRC
 
@@ -5969,15 +5993,12 @@ I want to be ready for =jai=.
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/c++-mode ()
-  "Hook into `c++-mode'."
-  (wal/message-in-a-bottle '("Make tidy! Make clean!"
-                             "Serenity now!"))
-  (wal/disable-tabs)
-  (hack-local-variables)
-  (wal/lsp))
-
 (use-package cc-mode
+  :init
+  (wal/lang-hook c++-mode
+    "Hook into `c++-mode'."
+    :lsp t
+    :messages '("Make tidy! Make clean!" "Serenity now!"))
   :config
   ;; Eliminates conflicts with `delight'.
   (advice-add 'c-update-modeline :override #'ignore)
@@ -5986,7 +6007,6 @@ I want to be ready for =jai=.
     "S" '(:ignore t :wk "style")
     "Ss" '(c-set-style :wk "set")
     "Sg" '(c-guess-install :wk "guess"))
-  :hook (c++-mode . wal/c++-mode)
   :mode ("\\.h\\'" . c++-mode) ; I don't use C, no need to (often incorrectly) guess.
   :ensure nil)
 #+END_SRC
@@ -6009,23 +6029,20 @@ Consider the lobster.
 Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-server-binary][these instructions]] to download the =rust-analyzer= binary.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/rust-mode ()
-  "Hook into `rust-mode'."
-  (wal/message-in-a-bottle '("Consider the lobster"))
-  (wal/disable-tabs)
-  (hack-local-variables)
-  (wal/lsp))
-
 (use-package rust-mode
   :if (executable-find "cargo")
   :wal-ways nil
+  :init
+  (wal/lang-hook rust-mode
+    "Hook into `rust-mode'."
+    :lsp t
+    :messages '("Consider the lobster"))
   :general
   (wal/major :keymaps 'rust-mode-map :major-modes t
     "c" '(rust-compile :wk "compile")
     "r" '(rust-run :wk "run")
     "t" '(:ignore t :wk "test")
     "tt" '(rust-test :wk "all"))
-  :hook (rust-mode . wal/rust-mode)
   :ensure nil)
 #+END_SRC
 
@@ -6065,17 +6082,14 @@ Hide those details from me.
 Use snake when you can't =make=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/python-mode ()
-  "Hook into `python-mode'."
-  (wal/message-in-a-bottle '("Watch out for snakes!"
-                             "Vegetation, aggravation"))
-  (wal/disable-tabs)
-  (setq-local comment-inline-offset 2)
-  (hack-local-variables)
-  (wal/activate-venv)
-  (wal/lsp))
-
 (use-package python
+  :init
+  (wal/lang-hook python-mode
+    "Hook into `python-mode'."
+    :lsp t
+    :messages '("Watch out for snakes!" "Vegetation, aggravation")
+    (setq-local comment-inline-offset 2)
+    (wal/activate-venv))
   :config
   (with-eval-after-load 'dap-mode
     (require 'dap-python))
@@ -6087,7 +6101,6 @@ Use snake when you can't =make=.
     "Sr" '(python-shell-send-region :wk "region")
     "Sb" '(python-shell-send-buffer :wk "buffer")
     "Sf" '(python-shell-send-file :wk "file"))
-  :hook (python-mode . wal/python-mode)
   :ensure nil)
 #+END_SRC
 
@@ -6232,22 +6245,18 @@ The philosopher's choice.
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/elisp-mode ()
-  "Hook into `emacs-lisp-mode'."
-  (wal/message-in-a-bottle '("So it's just a bunch of lists?"
-                             "List your lambdas"))
-  (wal/disable-tabs)
-  (hack-local-variables)
-  (prettify-symbols-mode)
-  (flycheck-mode 1))
-
 (use-package elisp-mode
+  :init
+  (wal/lang-hook emacs-lisp-mode
+    "Hook into `emacs-lisp-mode'."
+    :messages '("So it's just a bunch of lists?" "List your lambdas")
+    (prettify-symbols-mode)
+    (flycheck-mode 1))
   :general
   (wal/major
     :keymaps '(emacs-lisp-mode-map lisp-interaction-mode-map)
     :major-modes t
     "hc" '(check-parens :wk "check parens"))
-  :hook (emacs-lisp-mode . wal/elisp-mode)
   :ensure nil)
 #+END_SRC
 
@@ -6259,16 +6268,13 @@ The philosopher's choice.
 Get some closure.
 
 #+begin_src emacs-lisp
-(defun wal/clojure-mode ()
-  "Hook into `clojure-mode'."
-  (wal/message-in-a-bottle '("Cider brew"))
-  (wal/disable-tabs)
-  (hack-local-variables)
-  (wal/lsp))
-
 (use-package clojure-mode
  :wal-ways nil
- :hook (clojure-mode . wal/clojure-mode)
+ :init
+ (wal/lang-hook clojure-mode
+   "Hook into `clojure-mode'."
+   :lsp t
+   :messages '("Cider brew"))
  :ensure nil)
 #+end_src
 
@@ -6363,18 +6369,16 @@ Can we have =deno= instead of =node=?
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/js2-mode ()
-  "Hook into `js2-mode'."
-  (wal/message-in-a-bottle '("NaN !== NaN"
-                             "Null falsy values or undefined"))
-  (when (fboundp 'add-node-modules-path)
-    (add-node-modules-path))
-  (hack-local-variables)
-  (wal/maybe-enable-tabs)
-  (wal/lsp))
-
 (use-package js2-mode
   :wal-ways nil
+  :init
+  (wal/lang-hook js2-mode
+    "Hook into `js2-mode'."
+    :messages '("NaN !== NaN" "Null falsy values or undefined")
+    :tabs t
+    :lsp t
+    (when (fboundp 'add-node-modules-path)
+      (add-node-modules-path)))
   :config
   ;; Don't override `xref-find-definitions'.
   (define-key js2-mode-map (kbd "M-.") nil)
@@ -6389,7 +6393,6 @@ Can we have =deno= instead of =node=?
   (:map js2-mode-map
    ("<backtab>" . js2-indent-bounce)) ; `js2-bounce-indent-p' also binds <TAB>.
   :mode "\\.js\\'"
-  :hook (js2-mode . wal/js2-mode)
   :ensure nil)
 #+END_SRC
 
@@ -6401,16 +6404,14 @@ Can we have =deno= instead of =node=?
 Improved editing for JSX files. Extends =js2=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/rjsx-mode ()
-  "Hook into `rjsx-mode'."
-  (wal/message-in-a-bottle
-   '("Extend those ugly JavaScripts of yours!"))
-  (wal/maybe-enable-tabs :indent-with 'js-jsx-indent-line))
-
 (use-package rjsx-mode
   :wal-ways nil
+  :init
+  (wal/lang-hook rjsx-mode
+    "Hook into `rjsx-mode'."
+    :tabs 'js-jsx-indent-line
+    :messages '("Extend those ugly JavaScripts of yours!"))
   :mode "\\.jsx\\'"
-  :hook (rjsx-mode . wal/rjsx-mode)
   :ensure nil)
 #+END_SRC
 
@@ -6422,19 +6423,16 @@ Improved editing for JSX files. Extends =js2=.
 Please use TypeScript.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/typescript-mode ()
-  "Hook into `typescript-mode'."
-  (wal/message-in-a-bottle
-    '("This is any, that is any, everything is any!"))
-  (add-node-modules-path)
-  (hack-local-variables)
-  (wal/maybe-enable-tabs)
-  (wal/lsp))
-
 (use-package typescript-mode
   :wal-ways nil
+  :init
+  (wal/lang-hook typescript-mode
+    "Hook into `typescript-mode'."
+    :lsp t
+    :tabs t
+    :messages '("This is any, that is any, everything is any!")
+    (add-node-modules-path))
   :mode "\\.ts\\'"
-  :hook (typescript-mode . wal/typescript-mode)
   :ensure nil)
 #+END_SRC
 
@@ -6485,17 +6483,13 @@ Ogling new languages.
 Setup for LSP.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/go-mode ()
-  "Hook into `go-mode'."
-  (wal/message-in-a-bottle '("What does Sonic say?"
-                             "Put a golang under your tongue"))
-  (wal/disable-tabs)
-  (hack-local-variables)
-  (wal/lsp))
-
 (use-package go-mode
   :wal-ways nil
-  :hook (go-mode . wal/go-mode)
+  :init
+  (wal/lang-hook go-mode
+    "Hook into `go-mode'."
+    :lsp t
+    :messages '("What does Sonic say?" "Put a golang under your tongue"))
   :ensure nil)
 #+END_SRC
 
@@ -6519,18 +6513,13 @@ Setup for LSP.
 Bash your head in!
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/sh-mode ()
-  "Hook into `sh-mode'."
-  (wal/message-in-a-bottle '("Sh..sh..h.."
-                             "Bash your head in"))
-  (wal/disable-tabs)
-  (hack-local-variables))
-
 (use-package sh-script
+  :init
+  (wal/lang-hook sh-mode
+    :messages '("Sh..sh..h.." "Bash your head in"))
   :custom
   (sh-basic-offset 2)
   (sh-indent-after-continuation nil)
-  :hook (sh-mode . wal/sh-mode)
   :ensure nil)
 #+END_SRC
 
@@ -6615,16 +6604,13 @@ Yes, you need to install *Android Studio* for some reason.
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/dart-mode ()
-  "Hook into `dart-mode'."
-  (wal/message-in-a-bottle '("Bull's eye!"))
-  (wal/disable-tabs)
-  (hack-local-variables)
-  (wal/lsp))
-
 (use-package dart-mode
   :wal-ways nil
-  :hook (dart-mode . wal/dart-mode)
+  :init
+  (wal/lang-hook dart-mode
+    "Hook into `dart-mode'."
+    :lsp t
+    :messages '("Bull's eye!"))
   :ensure nil)
 #+END_SRC
 
@@ -6710,20 +6696,17 @@ It's a =JavaEmacsPackageConfigurationSectionFactory=, mate.
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/java-mode ()
-  "Hook into `java-mode'."
-  (wal/message-in-a-bottle '("Mmmh ... maven"))
-  (wal/disable-tabs)
-  (hack-local-variables)
-  (wal/lsp))
-
 ;; For some reason, this is also defined in `cc-mode'.
 (use-package cc-mode
+  :init
+  (wal/lang-hook java-mode
+    "Hook into `java-mode'."
+    :lsp t
+    :messages '("Mmmh ... maven"))
   :config
   (when wal/use-projectile
     (wal/major :keymaps 'java-mode-map :major-modes t
       "t" '(wal/projectile-test-project :wk "test project")))
-  :hook (java-mode . wal/java-mode)
   :ensure nil)
 #+END_SRC
 
@@ -6770,19 +6753,16 @@ The elephant in the room.
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/php-mode ()
-  "Hook into `php-mode'."
-  (wal/message-in-a-bottle '("Stampy, no!"))
-  (hack-local-variables)
-  (wal/disable-tabs)
-  (wal/lsp))
-
 (use-package php-mode
   :wal-ways nil
+  :init
+  (wal/lang-hook php-mode
+    "Hook into `php-mode'."
+    :lsp t
+    :messages '("Stampy, no!"))
   :config
   (require 'dap-php) ; Run `dap-php-setup'.
   (wdb/side "\\*Php SOE" :height 15)
-  :hook (php-mode . wal/php-mode)
   :ensure nil)
 #+END_SRC
 
@@ -6792,15 +6772,14 @@ The elephant in the room.
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/web-mode ()
-  "Hook into `web-mode'."
-  (wal/message-in-a-bottle '("This is the Internet"))
-  (hack-local-variables)
-  (wal/lsp))
-
 (use-package web-mode
   :wal-ways nil
-  :hook (web-mode . wal/web-mode)
+  :init
+  (wal/lang-hook web-mode
+    "Hook into `web-mode'."
+    :lsp t
+    :tabs t
+    :messages '("This is the Internet"))
   :custom
   (web-mode-comment-style 2)
   :mode ("\\.vue\\'"
@@ -6828,14 +6807,14 @@ Does anyone actually like web development?
 The only way to store strings, JSON.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/jsonian-mode ()
-  "Hook into `jsonian-mode'."
-  (wal/message-in-a-bottle '("JSON ...? JSON?! JSON!!"))
-  (hack-local-variables)
-  (flycheck-mode 1))
-
 (use-package jsonian
   :wal-ways nil
+  :init
+  (wal/lang-hook jsonian-mode
+    "Hook into `jsonian-mode'."
+    :tabs t
+    :messages '("JSON ...? JSON?! JSON!!")
+    (flycheck-mode 1))
   :config
   (jsonian-no-so-long-mode)
   (with-eval-after-load 'flycheck
@@ -6845,7 +6824,6 @@ The only way to store strings, JSON.
     "f" '(jsonian-find :wk "find")
     "e" '(jsonian-edit-string :wk "edit"))
   :mode ("\\.arb\\'" . jsonian-mode)
-  :hook (jsonian-mode . wal/jsonian-mode)
   :after so-long
   :ensure nil)
 #+END_SRC
@@ -6858,19 +6836,15 @@ The only way to store strings, JSON.
 Sometimes things that do as well.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/yaml-mode ()
-  "Hook into command `yaml-mode'."
-  (wal/message-in-a-bottle
-   '("JSON?! ... Ah, thank God it's you, YAML!"))
-  (drag-stuff-mode +1)
-  (wal/disable-tabs)
-  (hack-local-variables)
-  (flycheck-mode +1))
-
 (use-package yaml-mode
   :wal-ways nil
+  :init
+  (wal/lang-hook yaml-mode
+    "Hook into command `yaml-mode'."
+    :messages '("JSON?! ... Ah, thank God it's you, YAML!")
+    (drag-stuff-mode +1)
+    (flycheck-mode +1))
   :mode "\\.tpl\\'" ; Helm templates.
-  :hook (yaml-mode . wal/yaml-mode)
   :ensure nil)
 #+END_SRC
 
@@ -6882,17 +6856,14 @@ Sometimes things that do as well.
 We want quicker suggestions when in CSS modes.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/css-mode ()
-  "Hook into `css-mode'."
-  (wal/message-in-a-bottle
-   '("Centering? It's simple. Here's 15 ways to do it."))
-  (setq-local corfu-auto-delay 0.1)
-  (hack-local-variables)
-  (wal/maybe-enable-tabs)
-  (flycheck-mode +1))
-
 (use-package css-mode
-  :hook (css-mode . wal/css-mode)
+  :init
+  (wal/lang-hook css-mode
+    "Hook into `css-mode'."
+    :tabs t
+    :messages '("Centering? It's simple. Here's 15 ways to do it.")
+    (setq-local corfu-auto-delay 0.1)
+    (flycheck-mode +1))
   :ensure nil)
 #+END_SRC
 
@@ -7446,13 +7417,12 @@ What goes =docker-compose= up, goes =docker-compose= down.
 Make =Dockerfiles= look nice.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/dockerfile-mode ()
-  "Hook into `dockerfile-mode'."
-  (wal/message-in-a-bottle '("Have you ever given?")))
-
 (use-package dockerfile-mode
   :wal-ways nil
-  :hook (dockerfile-mode . wal/dockerfile-mode)
+  :init
+  (wal/lang-hook dockerfile-mode
+    "Hook into `dockerfile-mode'."
+    :messages '("Have you ever given?"))
   :ensure nil)
 #+END_SRC
 

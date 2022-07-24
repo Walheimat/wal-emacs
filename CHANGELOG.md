@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Maps `org-next-visible-heading` (and `previous`) to `M-n` and `M-p`
   respectively.
 - New function `wal/maybe-make-directory` to do just that.
+- New macro `wal/lang-hook`. It controls indentation, fluff messages
+  and whether `lsp-mode` needs to be turned on. This macro replaces
+  all `wal/<mode>-hook` functions.
 
 ### Changed
 
