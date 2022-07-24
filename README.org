@@ -702,8 +702,10 @@ I use many[fn:8] custom keybindings.
   :type 'string
   :group 'wal-key-bindings)
 
-(defcustom wal/sergeant-key "<SPC>"
-  "The senary (or sergeant) leader key."
+;;;;;; Other leaders:
+
+(defcustom wal/roamer "C-c z"
+  "The prefix for `org-roam'."
   :type 'string
   :group 'wal-key-bindings)
 #+END_SRC
@@ -729,7 +731,8 @@ dispatches:
 + =C-c q= to do a =quick-calc= (inserted if called with =C-u=)
 + =C-c r= does a =completion-at-point=
 + =C-c t= for =vterm=
-+ =C-c w= toggles pop-ups using =popper=.
++ =C-c w= toggles pop-ups using =popper=
++ =C-c z= for =org-roam=.
 
 *** Meta
 
@@ -802,7 +805,7 @@ this safer alternative to work for me.
 
 ** Leader Keys
 
-The are six =general= leader keys, each serving its unique purpose by
+The are five =general= leader keys, each serving its unique purpose by
 prefixing (groups of) actions by common context.
 
 *** Prefixes
@@ -835,11 +838,9 @@ minor-mode[fn:11] command maps. The package prefixes are:
 Leader key =lieutenant= (='= by default) is currently used for adjustments
 custom =hydra= and =transient= maps.
 
-Leader key =sergeant= (=<SPC>= by default) is dedicated to =org-roam=.
-
 All leader keys have so-called sinks. The sinks for =major= and =captain=
-toggle major and minor modes, respectively. The sink for =colonel=,
-=lieutenant= and =sergeant= are currently unused.
+toggle major and minor modes, respectively. The sink for =colonel= and
+=lieutenant= are currently unused.
 
 ** Packages
 
@@ -876,17 +877,24 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
                   "C-c w ")))
     (concat prefix user-key)))
 
+(defun wal/general-create-definer (leader)
+  "Create a definer for LEADER with a sink."
+  (let* ((key-sym (intern (format "%s-key" leader)))
+         (key (wal/prefix-user-key (symbol-value key-sym)))
+         (sink (intern (format "%s-sink" leader)))
+         (name (substring (symbol-name leader) 4)))
+    (eval-after-load 'which-key `(which-key-add-key-based-replacements ,key ,name))
+    (eval `(general-create-definer ,leader :prefix ,key))
+    (eval `(wal/create-leader-sink ,sink :definer ,leader :prefix ,key))))
+
 (use-package general
   :config
-  (mapc (lambda (it)
-          (let* ((key-sym (intern (format "%s-key" it)))
-                 (key (wal/prefix-user-key (symbol-value key-sym)))
-                 (sink (intern (format "%s-sink" it)))
-                 (name (substring (symbol-name it) 4)))
-            (eval-after-load 'which-key `(which-key-add-key-based-replacements ,key ,name))
-            (eval `(general-create-definer ,it :prefix ,key))
-            (eval `(wal/create-leader-sink ,sink :definer ,it :prefix ,key))))
-        '(wal/general wal/colonel wal/major wal/captain wal/lieutenant wal/sergeant))
+  (mapc #'wal/general-create-definer
+        '(wal/general wal/colonel wal/major wal/captain wal/lieutenant))
+  ;; We also create the definer for `org-roam'.
+  (general-create-definer wal/roamer :prefix wal/roamer)
+  (eval-after-load 'which-key
+    '(which-key-add-key-based-replacements wal/roamer "roamer"))
   :demand)
 #+END_SRC
 
@@ -4892,7 +4900,7 @@ Trying to organize my thoughts using Zettelkästen.
        :unnarrowed t
        :empty-lines 1)))
   :general
-  (wal/sergeant
+  (wal/roamer
     "c" '(org-roam-capture :wk "capture")
     "f" '(org-roam-node-find :wk "find")
     "w" '(org-roam-refile :wk "refile")
@@ -4900,7 +4908,7 @@ Trying to organize my thoughts using Zettelkästen.
     "g" '(org-roam-graph :wk "graph")
     "d" '(org-roam-dailies-goto-date :wk "dailies")
     "t" '(org-roam-dailies-capture-today :wk "capture today"))
-  (wal/sergeant :keymaps 'org-mode-map :major-modes t
+  (wal/roamer :keymaps 'org-mode-map :major-modes t
     "i" '(org-roam-node-insert :wk "insert node")
     "T" '(org-roam-tag-add :wk "tag"))
   :commands
@@ -4923,7 +4931,7 @@ Fancy UI.
 (use-package org-roam-ui
   :wal-ways nil
   :general
-  (wal/sergeant
+  (wal/roamer
     "v" '(org-roam-ui-mode :wk "ui mode"))
   :after org-roam
   :ensure nil)
@@ -5086,7 +5094,7 @@ If the project root cannot be determined, use
       :empty-lines-before 1)))
   (org-capture-bookmark nil) ; Prevents countless edit buffers since we annotate bookmarks.
   :general
-  (wal/sergeant "o" '(org-capture :wk "org-capture"))
+  (wal/roamer "o" '(org-capture :wk "org-capture"))
   :ensure nil
   :delight " cap")
 #+END_SRC
