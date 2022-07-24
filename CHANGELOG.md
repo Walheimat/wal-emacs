@@ -18,12 +18,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with `C-u`.
 - Function `wal/other-window` will now call `other-frame` if another
   frame exists.
+- Disabling and enabling tabs now already takes care of hacking local
+  variables appropriately (when disabling, only when called
+  non-interactively).
 
 ### Fixed
 
 - Turning off `org-tree-slide` now only turns on modes that were
   actually turned off for it. `dimmer-mode` is now also turned off.
   `beacon-mode` is no longer turned on or off.
+
+### Removed
+
+- The unused `with-mode` keyword was removed from
+  `wal/maybe-enable-tabs`.
 
 ## [1.7.5] - 2021-07-17
 

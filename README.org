@@ -517,26 +517,31 @@ packages.
 Set up an easy way to switch between tabs and spaces for indentation.
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/indent-vars '(python-indent-offset
+                          js-indent-level
+                          css-indent-offset
+                          tab-width
+                          js-encoding-default-indentation
+                          electric-indent-inhibit
+                          indent-tabs-mode))
+
 (defun wal/reset-indent-defaults ()
   "Reset indent defaults.
 Resets all variables that were initially set by
 `wal/set-indent-defaults'."
   (interactive)
-  (mapc (lambda (it)
-          (wal/reset-to-standard it))
-        '(python-indent-offset
-          js-indent-level
-          css-indent-offset
-          electric-indent-inhibit
-          tab-width
-          indent-tabs-mode)))
+  (mapc #'wal/reset-to-standard wal/indent-vars))
 
-(defun wal/disable-tabs ()
+(defun wal/disable-tabs (&optional no-hack)
   "Disable tabs.
 
-Sets variable `indent-tabs-mode' to nil."
-  (interactive)
-  (setq indent-tabs-mode nil))
+Sets variable `indent-tabs-mode' to nil. Will hack local
+variables unless NO-HACK is non-nil (which will be the case when
+called interactively)."
+  (interactive "p")
+  (setq indent-tabs-mode nil)
+  (unless no-hack
+    (hack-local-variables)))
 
 (defun wal/enable-tabs ()
   "Enable tabs.
@@ -545,17 +550,18 @@ Sets tab variable `indent-tabs-mode' to t."
   (interactive)
   (setq indent-tabs-mode t))
 
-(cl-defun wal/maybe-enable-tabs (&key indent-with with-mode)
+(cl-defun wal/maybe-enable-tabs (&key indent-with)
   "Maybe enable tabs.
-Optionally set `indent-line-function' (if allowed) to INDENT-WITH
-and call WITH-MODE after changes."
-  (if wal/prefer-tabs
-      (wal/enable-tabs)
-    (wal/disable-tabs))
+
+Optionally set `indent-line-function' to INDENT-WITH.
+
+This function will call `hack-local-variables'."
+  (hack-local-variables)
   (when indent-with
     (setq-local indent-line-function indent-with))
-  (when with-mode
-    (funcall with-mode)))
+  (if wal/prefer-tabs
+      (wal/enable-tabs)
+    (wal/disable-tabs)))
 
 (defun wal/set-indent-defaults (&optional num)
   "Set indent defaults.
@@ -565,8 +571,8 @@ All offsets are set to `wal/indent-offset' or optionally to NUM."
     (setq-default python-indent-offset offset
                   js-indent-level offset
                   css-indent-offset offset
-                  json-encoding-default-indentation (make-string offset ? )
                   tab-width offset
+                  json-encoding-default-indentation (make-string offset ? )
                   electric-indent-inhibit t
                   indent-tabs-mode wal/prefer-tabs)))
 
