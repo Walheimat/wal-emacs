@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Disabling and enabling tabs now already takes care of hacking local
   variables appropriately (when disabling, only when called
   non-interactively).
+- Use `M-q` for `vertico-quick` (like `corfu-quick`).
 
 ### Fixed
 
