@@ -408,9 +408,7 @@ Make sure that custom directories exist. We want:
 #+BEGIN_SRC emacs-lisp
 (defun wal/maybe-create-directories ()
   "Create directories if they don't exist."
-  (mapc (lambda (it)
-          (unless (file-directory-p it)
-            (make-directory it)))
+  (mapc #'wal/maybe-make-directory
         `(,wal/cache-directory
           ,wal/site-lisp-directory
           ,wal/org-directory
@@ -1127,6 +1125,11 @@ Turning on/off certain major modes switching between =major-mode= and
 Finding files should =mkdir -p= its parents.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/maybe-make-directory (dir)
+  "Create DIR unless it exists."
+  (unless (file-directory-p dir)
+    (make-directory dir)))
+
 ;; Creating parent dirs.
 (defun wal/create-non-existent-directory ()
   "Ask whether to create non-existent directory.
