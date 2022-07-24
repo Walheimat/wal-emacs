@@ -3480,20 +3480,18 @@ Treat certain buffers and their windows as pop-ups.
 #+BEGIN_SRC emacs-lisp
 (defun wal/popper-echo-transform (buffer-name)
   "Transform BUFFER-NAME by truncating certain prefixes."
-  (cond
-   ((string-match "\\*helpful" buffer-name)
-    (concat
-     (substring (replace-regexp-in-string "\\*helpful \\w+\:" "" buffer-name) 0 -1)
-     "/help"))
-   ((string-match "\\* docker-compose \\(up\\|run\\|build\\)\\( --rm\\)?" buffer-name)
-    (concat
-     (substring
-      (replace-regexp-in-string
-       "\\* docker-compose \\(up\\|run\\|build\\)\\( --rm\\)?"
-       "" buffer-name)
-      0 -2)
-     "/dc"))
-   (t buffer-name)))
+  (let ((helpful-re "\\*helpful \\w+\:")
+        (dc-re "\\* docker-compose \\(up\\|run\\|build\\)\\( --rm\\)?"))
+    (cond
+     ((string-match helpful-re buffer-name)
+      (concat
+       (substring (replace-regexp-in-string helpful-re "" buffer-name) 0 -1)
+       "/help"))
+     ((string-match dc-re buffer-name)
+      (concat
+       (substring (replace-regexp-in-string dc-re "" buffer-name) 0 -2)
+       "/dc"))
+     (t buffer-name))))
 
 (use-package popper
   :wal-ways nil
