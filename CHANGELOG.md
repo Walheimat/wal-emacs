@@ -29,8 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `transient` for `consult` now binds
   `wal/consult-ripgrep-ignored` again.
 - The key for `seargent` (`org-roam`) was switched from user-prefixed
-  `<SPC>` to freed `C-c z`. It was also renamed from `wal/sergeant` to
+  `<SPC>` to `C-c c`. It was also renamed from `wal/sergeant` to
   `wal/roamer`.
+- The custom `beacon-blink` now uses `C-c b`.
 
 ### Fixed
 
