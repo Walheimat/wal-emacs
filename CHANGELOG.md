@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and whether `lsp-mode` needs to be turned on. This macro replaces
   (almost) all `wal/<mode>-hook` functions.
 - `C-c s` now calls `consult-line`.
+- The register dispatch has been greatly expanded and renamed.
 
 ### Changed
 
@@ -35,8 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The custom `beacon-blink` now uses `C-c b`.
 - Finding daily file with `org-roam` is now advised to preselect the
   default template.
-- `C-c r` now calls `transient` for `consult-register-*` functions, no
-  longer `completion-at-point`.
+- `C-c r` now calls `transient` for register functions, no longer
+  `completion-at-point`.
 
 ### Fixed
 

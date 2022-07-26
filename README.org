@@ -4176,7 +4176,7 @@ Do not ignore hidden files."
       ("l" "locate" consult-locate
        :inapt-if-not (lambda () (executable-find "locate")))]
      ["Do"
-      ("r" "register" wal/consult-register-dispatch)
+      ("r" "register" wal/register-dispatch)
       ("m" "macro" consult-kmacro)
       ("y" "yank" consult-yank-from-kill-ring)
       ("u" "focus" consult-focus-lines)]
@@ -4184,14 +4184,25 @@ Do not ignore hidden files."
       ("e" "errors (flycheck)" consult-flycheck
        :inapt-if-not (lambda () flycheck-mode))
       ("n" "line" consult-line)]])
-  (transient-define-prefix wal/consult-register-dispatch ()
+  (transient-define-prefix wal/register-dispatch ()
     "Call register commands."
-    [["Register"
-      ("s" "store" consult-register-store)
-      ("l" "load" consult-register-load)
-      ("n" "complete" consult-register)]])
+    [["Store to register"
+      ("s" "store with consult" consult-register-store)
+      ("p" "point" point-to-register)
+      ("w" "window config" window-configuration-to-register)
+      ("n" "number" number-to-register)
+      ("c" "region" copy-to-register
+       :inapt-if-not (lambda () mark-active))]
+     ["Load from register"
+      ("l" "load with consult" consult-register-load)
+      ("i" "insert region" insert-register)
+      ("j" "jump to point" jump-to-register)
+      ("+" "increment number" increment-register)]
+     ["Other"
+      ("r" "complete" consult-register)
+      ("L" "list" list-registers)]])
   :bind
-  (("C-c r" . wal/consult-register-dispatch)
+  (("C-c r" . wal/register-dispatch)
    ("C-c s" . consult-line)
    :map goto-map
    ("g" . consult-goto-line)
@@ -4211,7 +4222,7 @@ Do not ignore hidden files."
   :commands
   (wal/univ-consult-buffer
    wal/consult-dispatch
-   wal/consult-register-dispatch)
+   wal/register-dispatch)
   :demand
   :after vertico)
 #+END_SRC
