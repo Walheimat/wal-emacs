@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `<SPC>` to `C-c c`. It was also renamed from `wal/sergeant` to
   `wal/roamer`.
 - The custom `beacon-blink` now uses `C-c b`.
+- Finding daily file with `org-roam` is now advised to preselect the
+  default template.
 
 ### Fixed
 

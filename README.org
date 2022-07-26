@@ -4869,6 +4869,10 @@ Trying to organize my thoughts using Zettelkästen.
 :END:
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/advise-org-roam-dailies-goto-date (&rest _r)
+  "Advise to preselect default template."
+  (list nil "d"))
+
 (use-package org-roam
   :if (executable-find "sqlite3")
   :wal-ways nil
@@ -4877,6 +4881,8 @@ Trying to organize my thoughts using Zettelkästen.
   :config
   (org-roam-db-autosync-enable)
   (wdb/side 'org-roam-mode :side 'right)
+  (advice-add 'org-roam-dailies-goto-date :filter-args
+    #'wal/advise-org-roam-dailies-goto-date)
   :custom
   (org-roam-directory wal/org-roam-directory)
   (org-roam-dailies-directory wal/org-roam-dailies-directory)
