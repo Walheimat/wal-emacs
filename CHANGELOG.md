@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New function `wal/maybe-make-directory` to do just that.
 - New macro `wal/lang-hook`. It controls indentation, fluff messages
   and whether `lsp-mode` needs to be turned on. This macro replaces
-  all `wal/<mode>-hook` functions.
+  (almost) all `wal/<mode>-hook` functions.
+- `C-c s` now calls `consult-line`.
 
 ### Changed
 
@@ -34,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The custom `beacon-blink` now uses `C-c b`.
 - Finding daily file with `org-roam` is now advised to preselect the
   default template.
+- `C-c r` now calls `transient` for `consult-register-*` functions, no
+  longer `completion-at-point`.
 
 ### Fixed
 

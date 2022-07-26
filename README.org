@@ -730,7 +730,8 @@ dispatches:
 + =C-c c= for =org-roam=
 + =C-c d= for =docker=
 + =C-c q= to do a =quick-calc= (inserted if called with =C-u=)
-+ =C-c r= does a =completion-at-point=
++ =C-c r= to dispatch =consult-register-*= commands
++ =C-c s= to do =consult-line=
 + =C-c t= for =vterm=
 + =C-c w= toggles pop-ups using =popper=.
 
@@ -3907,8 +3908,6 @@ Alternative.
   (corfu-auto t)
   (corfu-quit-no-match t)
   (corfu-cycle t)
-  :bind
-  ("C-c r" . completion-at-point)
   :general
   (wal/captain-sink :keymaps '(prog-mode-map dap-ui-repl-mode-map)
     "c" '(corfu-mode :wk "corfu"))
@@ -4193,7 +4192,9 @@ Do not ignore hidden files."
       ("l" "load" consult-register-load)
       ("n" "complete" consult-register)]])
   :bind
-  (:map goto-map
+  (("C-c r" . wal/consult-register-dispatch)
+   ("C-c s" . consult-line)
+   :map goto-map
    ("g" . consult-goto-line)
    ("m" . consult-mark)
    ("M" . consult-global-mark))
@@ -4208,7 +4209,10 @@ Do not ignore hidden files."
   (general-define-key
    :keymaps 'org-mode-map
    "M-g h" 'consult-org-heading)
-  :commands (wal/univ-consult-buffer wal/consult-dispatch)
+  :commands
+  (wal/univ-consult-buffer
+   wal/consult-dispatch
+   wal/consult-register-dispatch)
   :demand
   :after vertico)
 #+END_SRC
