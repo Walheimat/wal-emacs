@@ -702,13 +702,6 @@ I use many[fn:8] custom keybindings.
   "The quinary (or lieutenant) leader key."
   :type 'string
   :group 'wal-key-bindings)
-
-;;;;;; Other leaders:
-
-(defcustom wal/roamer "C-c c"
-  "The prefix for `org-roam'."
-  :type 'string
-  :group 'wal-key-bindings)
 #+END_SRC
 
 ** Prefix Keys
@@ -891,12 +884,9 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
 
 (use-package general
   :config
-  (mapc #'wal/general-create-definer
-        '(wal/general wal/colonel wal/major wal/captain wal/lieutenant))
-  ;; We also create the definer for `org-roam'.
-  (general-create-definer wal/roamer :prefix wal/roamer)
-  (eval-after-load 'which-key
-    '(which-key-add-key-based-replacements wal/roamer "roamer"))
+  (mapc
+   #'wal/general-create-definer
+   '(wal/general wal/colonel wal/major wal/captain wal/lieutenant))
   :demand)
 #+END_SRC
 
@@ -4905,6 +4895,27 @@ Trying to organize my thoughts using Zettelkästen.
   (wdb/side 'org-roam-mode :side 'right)
   (advice-add 'org-roam-dailies-goto-date :filter-args
     #'wal/advise-org-roam-dailies-goto-date)
+  (transient-define-prefix wal/org-roam ()
+    "Run `org-roam' commands."
+    [["Capture"
+      ("c" "capture" org-roam-capture)
+      ("t" "today" org-roam-dailies-capture-today)
+      ("d" "default" org-capture)]
+     ["Find"
+      ("f" "find" org-roam-node-find)
+      ("d" "find daily" org-roam-dailies-goto-date)]
+     ["Actions"
+      ("b" "buffer" org-roam-buffer-toggle)
+      ("w" "refile" org-roam-refile
+       :inapt-if-not (lambda () (eq major-mode 'org-mode)))
+      ("i" "insert" org-roam-node-insert
+       :inapt-if-not (lambda () (eq major-mode 'org-mode)))
+      ("@" "tag" org-roam-tag-add
+       :inapt-if-not (lambda () (eq major-mode 'org-mode)))]
+     ["Visualization"
+      ("g" "graph" org-roam-graph)
+      ("u" "ui" org-roam-ui-mode
+       :inapt-if-not (lambda () (require 'org-roam-ui nil t)))]])
   :custom
   (org-roam-directory wal/org-roam-directory)
   (org-roam-dailies-directory wal/org-roam-dailies-directory)
@@ -4927,20 +4938,11 @@ Trying to organize my thoughts using Zettelkästen.
                           "#+title: %<%Y-%m-%d>\n")
        :unnarrowed t
        :empty-lines 1)))
-  :general
-  (wal/roamer
-    "c" '(org-roam-capture :wk "capture")
-    "f" '(org-roam-node-find :wk "find")
-    "w" '(org-roam-refile :wk "refile")
-    "b" '(org-roam-buffer-toggle :wk "buffer")
-    "g" '(org-roam-graph :wk "graph")
-    "d" '(org-roam-dailies-goto-date :wk "dailies")
-    "t" '(org-roam-dailies-capture-today :wk "capture today"))
-  (wal/roamer :keymaps 'org-mode-map :major-modes t
-    "i" '(org-roam-node-insert :wk "insert node")
-    "T" '(org-roam-tag-add :wk "tag"))
+  :bind
+  ("C-c c" . wal/org-roam)
   :commands
-  (org-roam-buffer-display-dedicated
+  (wal/org-roam
+   org-roam-buffer-display-dedicated
    org-roam-capture
    org-roam-node-create
    org-roam-node-find
@@ -4958,9 +4960,6 @@ Fancy UI.
 #+BEGIN_SRC emacs-lisp
 (use-package org-roam-ui
   :wal-ways nil
-  :general
-  (wal/roamer
-    "v" '(org-roam-ui-mode :wk "ui mode"))
   :after org-roam
   :ensure nil)
 #+END_SRC
@@ -5121,8 +5120,6 @@ If the project root cannot be determined, use
       "* TODO %?\n\n%F\n\n%i"
       :empty-lines-before 1)))
   (org-capture-bookmark nil) ; Prevents countless edit buffers since we annotate bookmarks.
-  :general
-  (wal/roamer "o" '(org-capture :wk "org-capture"))
   :ensure nil
   :delight " cap")
 #+END_SRC

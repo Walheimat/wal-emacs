@@ -30,9 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use `M-q` for `vertico-quick` (like `corfu-quick`).
 - The `transient` for `consult` now binds
   `wal/consult-ripgrep-ignored` again.
-- The key for `seargent` (`org-roam`) was switched from user-prefixed
-  `<SPC>` to `C-c c`. It was also renamed from `wal/sergeant` to
-  `wal/roamer`.
+- Leader key `seargent` (`org-roam`) was removed. The package now has
+  a `transient` that is bound to `C-c c`.
 - The custom `beacon-blink` now uses `C-c b`.
 - Finding daily file with `org-roam` is now advised to preselect the
   default template.
@@ -51,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The unused `with-mode` keyword was removed from
   `wal/maybe-enable-tabs`.
+- Leader key
 
 ## [1.7.5] - 2021-07-17
 
