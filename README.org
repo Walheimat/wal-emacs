@@ -4829,7 +4829,14 @@ This calls `org-content' interactively."
 :END:
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/advise-org-agenda (&rest _r)
+  "Advise `org-agenda' to just display current day."
+  (list (wal/univ-p) "a"))
+
 (use-package org-agenda
+  :config
+  (advice-add 'org-agenda :filter-args
+    #'wal/advise-org-agenda)
   :custom
   (org-agenda-hide-tags-regexp "^@")
   (org-agenda-span 'day)

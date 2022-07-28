@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   default template.
 - `C-c r` now calls `transient` for register functions, no longer
   `completion-at-point`.
+- Function `org-agenda` is now advised to not prompt and instead go to
+  the day's agenda directly.
 
 ### Fixed
 
