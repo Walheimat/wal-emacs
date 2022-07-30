@@ -657,7 +657,6 @@ I use many[fn:8] custom keybindings.
 (declare-function wal/general "wal-key-bindings.el")
 (declare-function wal/general-sink "wal-key-bindings.el")
 (declare-function wal/lieutenant "wal-key-bindings.el")
-(declare-function wal/major-sink "wal-key-bindings.el")
 (declare-function wal/open-line "wal-func.el")
 (declare-function wal/open-line-above "wal-func.el")
 (declare-function wal/other-window "wal-func.el")
@@ -833,9 +832,8 @@ minor-mode[fn:11] command maps. The package prefixes are:
 Leader key =lieutenant= (='= by default) is currently used for adjustments
 custom =hydra= and =transient= maps.
 
-All leader keys have so-called sinks. The sinks for =major= and =captain=
-toggle major and minor modes, respectively. The sink for =colonel= and
-=lieutenant= are currently unused.
+Some leader keys have so-called sinks for additional commands. The
+sink for =captain= toggles minor modes.
 
 ** Packages
 
@@ -872,6 +870,9 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
                   "C-c w ")))
     (concat prefix user-key)))
 
+(defvar wal/leaders '(wal/general wal/colonel wal/major wal/captain wal/lieutenant))
+(defvar wal/leader-with-sink '(wal/general wal/captain wal/lieutenant))
+
 (defun wal/general-create-definer (leader)
   "Create a definer for LEADER with a sink."
   (let* ((key-sym (intern (format "%s-key" leader)))
@@ -880,13 +881,12 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
          (name (substring (symbol-name leader) 4)))
     (eval-after-load 'which-key `(which-key-add-key-based-replacements ,key ,name))
     (eval `(general-create-definer ,leader :prefix ,key))
-    (eval `(wal/create-leader-sink ,sink :definer ,leader :prefix ,key))))
+    (when (memq leader wal/leader-with-sink)
+      (eval `(wal/create-leader-sink ,sink :definer ,leader :prefix ,key)))))
 
 (use-package general
   :config
-  (mapc
-   #'wal/general-create-definer
-   '(wal/general wal/colonel wal/major wal/captain wal/lieutenant))
+  (mapc #'wal/general-create-definer wal/leaders)
   :demand)
 #+END_SRC
 
@@ -1056,12 +1056,6 @@ Turning on/off certain major modes switching between =major-mode= and
       (fundamental-mode)
       (make-local-variable 'wal/before-fundamental-mode)
       (setq wal/before-fundamental-mode m-mode))))
-
-;; Little EOF joke for ya.
-(wal/major-sink
-  "E" '(lisp-interaction-mode :wk "Elisp")
-  "O" '(org-mode :wk "Org")
-  "F" '(wal/fundamental-mode :wk "Fundamental"))
 #+END_SRC
 
 ** Footer
@@ -2370,12 +2364,8 @@ Let's try to be even more =helpful=.
    ("M" . helpful-macro)
    :map helpful-mode-map
    ("k" . kill-buffer-and-window))
-  :general
-  (wal/major
-    :keymaps '(emacs-lisp-mode-map lisp-interaction-mode-map)
-    :major-modes t
-    "h" '(:ignore t :wk "help")
-    "hp"  '(helpful-at-point :wk "helpful at point")))
+   :demand
+   :after emacs-lisp-mode)
 #+END_SRC
 
 ** Look-Up
@@ -4204,7 +4194,7 @@ Do not ignore hidden files."
   (wal/general
     "st" '(consult-theme :wk "consult theme")
     "fr" '(consult-recent-file :wk "recent"))
-  (wal/major-sink "c" '(consult-mode-command :wk "invoke mode command"))
+  (wal/major "c" '(consult-mode-command :wk "invoke mode command"))
   (wal/captain-sink "u" '(consult-minor-mode-menu :wk "menu"))
   (general-define-key
    :keymaps 'org-mode-map
@@ -4756,6 +4746,29 @@ This calls `org-content' interactively."
   (advice-add
    'org-export-dispatch
    :before #'wal/advise-org-export-dispatch)
+  (transient-define-prefix wal/org ()
+    "Access `org-mode' commands."
+    [["Commands"
+      ("n" "add note" org-add-note)
+      ("e" "edit source" org-edit-src-code
+       :inapt-if-not (lambda () (org-in-src-block-p)))]
+     ["Subtrees"
+      ("s w" "cut" org-cut-subtree
+       :inapt-if-not (lambda () (org-at-heading-p)))
+      ("s y" "paste" org-paste-subtree
+       :inapt-if-not (lambda () (org-at-heading-p)))]
+     ["Visibility"
+      ("v a" "show all" org-show-all)
+      ("v l" "up to level" wal/org-content)
+      ("v h" "sticky header" org-sticky-header-mode)
+      ("v n" "imenu" imenu-list-smart-toggle)]
+     ["Presentation"
+      ("p" "present" org-tree-slide-mode)]
+     ["Footnotes"
+      ("f a" "add" org-footnote-new)
+      ("f n" "normalize" org-footnote-normalize)]
+     ["Transclusion"
+      ("t" "transclusion" wal/org-transclusion)]])
   :custom
   (org-adapt-indentation nil)
   (org-ellipsis "↷")
@@ -4798,16 +4811,8 @@ This calls `org-content' interactively."
    ("M-p" . org-previous-visible-heading)
    ("M-n" . org-next-visible-heading))
   :general
-  (wal/captain-sink :keymaps 'org-mode-map :major-modes t
-    "i" '(org-indent-mode :wk "org-indent"))
   (wal/major :keymaps 'org-mode-map :major-modes t
-    "t" '(:ignore t :wk "subtree")
-    "tw" '(org-cut-subtree :wk "cut subtree")
-    "ty" '(org-paste-subtree :wk "paste subtree")
-    "s" '(:ignore t :wk "show")
-    "sa" '(org-show-all :wk "all")
-    "sl" '(wal/org-content :wk "level")
-    "n" '(org-add-note :wk "add note"))
+    wal/major-key 'wal/org)
   :hook (org-mode . auto-fill-mode)
   :ensure nil)
 #+END_SRC
@@ -5046,9 +5051,6 @@ Turn any =org-mode= buffer into a presentation.
    ("i" . text-scale-increase)
    ("d" . text-scale-decrease)
    ("v" . wal/org-tree-slide-toggle-visibility))
-  :general
-  (wal/major :keymaps 'org-mode-map :major-modes t
-    "p" '(org-tree-slide-mode :wk "present"))
   :hook
   ((org-tree-slide-play . wal/org-tree-slide-play)
    (org-tree-slide-stop . wal/org-tree-slide-stop)
@@ -5079,9 +5081,6 @@ Editing source blocks.
   :bind
   (:map org-src-mode-map
    ("C-c C-c" . org-edit-src-exit))
-  :general
-  (wal/major :keymaps 'org-mode-map :major-modes t
-    "c" '(org-edit-src-code :wk "edit source code"))
   :hook (org-src-mode . wal/org-src-mode)
   :after org
   :ensure nil
@@ -5125,24 +5124,6 @@ If the project root cannot be determined, use
   :delight " cap")
 #+END_SRC
 
-*** org-footnote
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Quick adding and normalizing.
-
-#+BEGIN_SRC emacs-lisp
-(use-package org-footnote
-  :general
-  (wal/major :keymaps 'org-mode-map :major-modes t
-    "f" '(:ignore t :wk "footnotes")
-    "fn" '(org-footnote-new :wk "new")
-    "fo" '(org-footnote-normalize :wk "normalize"))
-  :after org
-  :ensure nil)
-#+END_SRC
-
 *** org-transclusion
 :PROPERTIES:
 :UNNUMBERED: t
@@ -5152,20 +5133,22 @@ Spectral inclusion.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-transclusion
+  :config
+  ;; Not using `org-transclusion-map' as it includes `org-mode-map'.
+  (transient-define-prefix wal/org-transclusion ()
+    "Access `org-transclusion' commands."
+    [["Transclusion commands"
+      ("a" "add" org-transclusion-add)
+      ("A" "add all" org-transclusion-add-all)
+      ("x" "remove" org-transculsion-remove)
+      ("X" "remove all" org-transclusion-remove-all all)
+      ("l" "from link" org-transclusion-make-from-link)
+      ("r" "refresh" org-transclusion-refresh)
+      ("s" "sync start" org-transclusion-live-sync-start)
+      ("S" "sync exit" org-transclusion-live-sync-exit)]])
   :custom
   (org-transclusion-mode-lighter " tra")
-  :general
-  (wal/major :keymaps 'org-mode-map :major-modes t
-    ;; Not using `org-transclusion-map' as it includes `org-mode-map'.
-    "i" '(:ignore t :wk "transclusion")
-    "ia" '(org-transclusion-add :wk "add")
-    "iA" '(org-transclusion-add-all :wk "add all")
-    "ix" '(org-transculsion-remove :wk "remove")
-    "iX" '(org-transclusion-remove-all :wk "remove all")
-    "il" '(org-transclusion-make-from-link :wk "from link")
-    "ir" '(org-transclusion-refresh :wk "refresh")
-    "is" '(org-transclusion-live-sync-start :wk "sync start")
-    "iS" '(org-transclusion-live-sync-exit :wk "sync exit")))
+  :commands wal/org-transclusion)
 #+END_SRC
 
 *** org-refile
@@ -5204,9 +5187,6 @@ Convenient (and less safe) source block interaction.
      (js . t)))
   :custom
   (org-confirm-babel-evalute nil)
-  :general
-  (wal/major :keymaps 'org-mode-map
-    "b" '(:keymap org-babel-map :wk "babel"))
   :ensure nil)
 #+end_src
 
@@ -5349,9 +5329,6 @@ Display current location in a sticky header.
   (org-sticky-header-outline-path-separator " → ")
   (org-sticky-header-show-keyword nil)
   (org-sticky-header-show-priority nil)
-  :general
-  (wal/major :keymaps 'org-mode-map :major-modes t
-    "h" '(org-sticky-header-mode :wk "sticky header"))
   :hook (org-mode . org-sticky-header-mode))
 #+END_SRC
 
@@ -5368,10 +5345,7 @@ Show =imenu= as a list.
   :custom
   (imenu-list-size 0.2)
   (imenu-list-position 'left)
-  (imenu-list-focus-after-activation t)
-  :general
-  (wal/major :keymaps 'org-mode-map :major-modes t
-    "m" '(imenu-list-smart-toggle :wk "imenu list")))
+  (imenu-list-focus-after-activation t))
 #+END_SRC
 
 ** Footer
@@ -5450,8 +5424,7 @@ Uses the same optional SWITCHES."
    ("," . dired-display-file))
   :general
   (wal/colonel :keymaps 'dired-mode-map :major-modes t
-    "q" '(dired-do-query-replace-regexp :wk "replace (dired)"))
-  (wal/major :keymaps 'dired-mode-map :major-modes t
+    "q" '(dired-do-query-replace-regexp :wk "replace (dired)")
     "t" '(dired-create-empty-file :wk "create empty file")
     "v" '(:ignore t :wk "visualization")
     "vi" '(wal/image-dired :wk "show images"))
@@ -5850,9 +5823,6 @@ Review pull/merge requests.
 #+BEGIN_SRC emacs-lisp
 (use-package code-review
   :wal-ways nil
-  :general
-  (wal/major :keymaps 'forge-topic-mode-map
-    "r" '(code-review-forge-pr-at-point :wk "code review"))
   :ensure nil)
 #+END_SRC
 
@@ -6036,11 +6006,14 @@ I want to be ready for =jai=.
   :config
   ;; Eliminates conflicts with `delight'.
   (advice-add 'c-update-modeline :override #'ignore)
+  (transient-define-prefix wal/c++ ()
+    "Access `c++-mode' commands."
+    [["Style"
+      ("s s" "set" c-set-style)
+      ("s g" "guess" c-guess-install)]])
   :general
   (wal/major :keymaps 'c++-mode-map :major-modes t
-    "S" '(:ignore t :wk "style")
-    "Ss" '(c-set-style :wk "set")
-    "Sg" '(c-guess-install :wk "guess"))
+    wal/major-key 'wal/c++)
   :mode ("\\.h\\'" . c++-mode) ; I don't use C, no need to (often incorrectly) guess.
   :ensure nil)
 #+END_SRC
@@ -6071,12 +6044,19 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
     "Hook into `rust-mode'."
     :lsp t
     :messages '("Consider the lobster"))
+  :config
+  (transient-define-prefix wal/rust ()
+    "Access `rust-mode' commands."
+    [["Commands"
+      ("c" "compile" rust-compile)
+      ("r" "run" rust-run)]
+     ["Test"
+      ("t a" "test all" rust-test)
+      ("t c" "current" cargo-process-current-test)
+      ("t f" "file" cargo-process-current-file-tests)]])
   :general
   (wal/major :keymaps 'rust-mode-map :major-modes t
-    "c" '(rust-compile :wk "compile")
-    "r" '(rust-run :wk "run")
-    "t" '(:ignore t :wk "test")
-    "tt" '(rust-test :wk "all"))
+    wal/major-key 'wal/rust)
   :ensure nil)
 #+END_SRC
 
@@ -6088,10 +6068,6 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
 #+BEGIN_SRC emacs-lisp
 (use-package cargo
   :wal-ways nil
-  :general
-  (wal/major :keymaps 'rust-mode-map :major-modes t
-    "tc" '(cargo-process-current-test :wk "current")
-    "tf" '(cargo-process-current-file-tests :wk "file"))
   :demand
   :after rust-mode
   :ensure nil)
@@ -6128,13 +6104,29 @@ Use snake when you can't =make=.
   (with-eval-after-load 'dap-mode
     (require 'dap-python))
   (wdb/side 'inferior-python-mode)
+  (transient-define-prefix wal/python ()
+    "Access `python-mode' commands."
+    [["Inferior shell"
+      ("r" "run shell" run-python)
+      ("i r" "send region" python-shell-send-region)
+      ("i b" "send buffer" python-shell-send-buffer)
+      ("i f" "send file" python-shell-send-file)]
+     ["Commands"
+      ("s" "isort" python-isort-buffer
+       :inapt-if-not (lambda () (fboundp 'python-isort-buffer)))]
+     ["Test"
+      ("t" "pytest" python-pytest-dispatch
+       :inapt-if-not (lambda () (fboundp 'python-pytest-dispatch)))]
+     ["Notebooks"
+      ("e r" "ein run" ein:run)
+      ("e s" "ein stop" ein:stop)]
+     ["Virtual environment"
+      ("v" "activate pyvenv" pyvenv-activate)]
+     ["Poetry"
+      ("p" "poetry" poetry)]])
   :general
   (wal/major :keymaps 'python-mode-map :major-modes t
-    "s" '(run-python :wk "inferior shell")
-    "S" '(:ignore t :wk "send to shell")
-    "Sr" '(python-shell-send-region :wk "region")
-    "Sb" '(python-shell-send-buffer :wk "buffer")
-    "Sf" '(python-shell-send-file :wk "file"))
+    wal/major-key 'wal/python)
   :ensure nil)
 #+END_SRC
 
@@ -6148,9 +6140,8 @@ Sort with =isort=.
 #+begin_src emacs-lisp
 (use-package python-isort
   :wal-ways nil
-  :general
-  (wal/major :keymaps 'python-mode-map :major-modes t
-    "f" '(python-isort-buffer :wk "sort imports"))
+  :demand
+  :after python-mode
   :ensure nil)
 #+end_src
 
@@ -6170,9 +6161,8 @@ Test with =pytest=.
   (:map python-pytest-mode-map
    ("g" . python-pytest-repeat)
    ("q" . quit-window))
-  :general
-  (wal/major :keymaps 'python-mode-map :major-modes t
-    "t" '(python-pytest-dispatch :wk "pytest"))
+  :demand
+  :after python-mode
   :ensure nil)
 #+END_SRC
 
@@ -6186,11 +6176,8 @@ Work with Jupyter notebooks.
 #+BEGIN_SRC emacs-lisp
 (use-package ein
   :wal-ways nil
-  :general
-  (wal/major :keymaps 'python-mode-map :major-modes t
-    "N" '(:ignore t :wk "jupyter notebooks")
-    "Nr" '(ein:run :wk "run")
-    "Ns" '(ein:stop :wk "stop"))
+  :demand
+  :after python-mode
   :ensure nil)
 #+END_SRC
 
@@ -6236,9 +6223,8 @@ Activating =virtualenv= inside of Emacs.
 #+BEGIN_SRC emacs-lisp
 (use-package pyvenv
   :wal-ways nil
-  :general
-  (wal/major :keymaps 'python-mode-map :major-modes t
-    "v" '(pyvenv-activate :wk "activate venv"))
+  :demand
+  :after python-mode
   :ensure nil)
 #+END_SRC
 
@@ -6252,10 +6238,9 @@ Activating =virtualenv= inside of Emacs.
 #+BEGIN_SRC emacs-lisp
 (use-package poetry
   :wal-ways nil
-  :general
-  (wal/major :keymaps 'python-mode-map :major-modes t
-    "p" '(poetry :wk "poetry"))
   :commands (poetry-venv-exist-p)
+  :demand
+  :after python-mode
   :ensure nil)
 #+END_SRC
 
@@ -6273,24 +6258,51 @@ The philosopher's choice.
   :packages (clojure-mode cider))
 #+END_SRC
 
-*** elisp-mode
+*** emacs-lisp-mode
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(use-package elisp-mode
+(use-package emacs-lisp-mode
   :init
   (wal/lang-hook emacs-lisp-mode
     "Hook into `emacs-lisp-mode'."
     :messages '("So it's just a bunch of lists?" "List your lambdas")
     (prettify-symbols-mode)
     (flycheck-mode 1))
+  :config
+  (transient-define-prefix wal/elisp ()
+    [["Utility"
+      ("p" "check parens" check-parens)
+      ("d" "edebug function" edebug-defun)
+      ("h" "helpful" helpful-at-point)]])
   :general
   (wal/major
     :keymaps '(emacs-lisp-mode-map lisp-interaction-mode-map)
     :major-modes t
-    "hc" '(check-parens :wk "check parens"))
+    wal/major-key 'wal/elisp)
+  :ensure nil)
+#+END_SRC
+
+*** lisp-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package lisp-mode
+  :config
+  (transient-define-prefix wal/lisp ()
+    "Access `lisp-mode' actions."
+    [["Slime"
+      ("s" "slime" slime-mode
+       :inapt-if-not (lambda (featurep 'slime)))
+      ("r" "open REPL" slime
+       :inapt-if not (lambda (featurep 'slime)))]])
+  :general
+  (wal/general :keymaps 'lisp-mode-map :major-modes t
+    wal/general-key 'wal/lisp)
   :ensure nil)
 #+END_SRC
 
@@ -6309,6 +6321,17 @@ Get some closure.
    "Hook into `clojure-mode'."
    :lsp t
    :messages '("Cider brew"))
+ :config
+ (transient-define-prefix wal/clojure ()
+   "Access `clojure-mode' commands."
+   [["Cider"
+     ("r" "repl" cider-jack-in
+      :inapt-if-nil (lambda () (featurep 'cider)))
+     ("n" "set namespace" cider-repl-set-ns
+      :inapt-if-nil (lambda () (featurep 'cider)))]])
+ :general
+ (wal/general :keymaps 'clojure-mode-map :major-modes t
+   wal/general-key 'wal/clojure)
  :ensure nil)
 #+end_src
 
@@ -6324,32 +6347,12 @@ Can't have closure without REPL.
   :wal-ways nil
   :config
   (wdb/side 'cider-repl-mode)
-  :general
-  (wal/major :keymaps 'clojure-mode-map :major-modes t
-    "r" '(cider-jack-in :wk "repl"))
-  (wal/major :keymaps 'cider-repl-mode-map :major-modes t
-    "n" '(cider-repl-set-ns :wk "set ns"))
   :custom
   (cider-jack-in-default 'lein)
+  :demand
+  :after clojure-mode
   :ensure nil)
 #+end_src
-
-*** edebug
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Evaluate from the right, =edebug= from the left.
-
-#+BEGIN_SRC emacs-lisp
-(use-package edebug
-  :general
-  (wal/major
-    :keymaps '(emacs-lisp-mode-map lisp-interaction-mode-map)
-    :major-modes t
-    "d" '(edebug-defun :wk "debug function"))
-  :ensure nil)
-#+END_SRC
 
 *** highlight-quoted
 :PROPERTIES:
@@ -6377,11 +6380,8 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
   :config
   (setq inferior-lisp-program "sbcl")
   (slime-setup '(slime-fancy slime-quicklisp slime-asdf))
-  :general
-  (wal/captain-sink :keymaps 'lisp-mode-map :major-modes t
-    "u" '(slime-mode :wk "slime"))
-  (wal/major :keymaps 'slime-mode-map :major-modes t
-    "r" '(slime :wk "open REPL"))
+  :demand
+  :after lisp-mode
   :ensure nil
   :delight " slm")
 #+END_SRC
@@ -6418,6 +6418,11 @@ Can we have =deno= instead of =node=?
   (define-key js2-mode-map (kbd "M-.") nil)
   (with-eval-after-load 'dap-mode
     (require 'dap-node))
+  (transient-define-prefix wal/js ()
+    "Access JS commands."
+    [["Linting"
+      ("p" "prettier" prettier-prettify
+       :inapt-if-not (lambda () (featurep 'prettier)))]])
   :custom
   (js2-show-parse-errors nil)
   (js2-highlight-level 3)
@@ -6426,6 +6431,11 @@ Can we have =deno= instead of =node=?
   :bind
   (:map js2-mode-map
    ("<backtab>" . js2-indent-bounce)) ; `js2-bounce-indent-p' also binds <TAB>.
+  :general
+  (wal/major
+    :keymaps '(js2-mode-map rjsx-mode-map typescript-mode-map)
+    :major-modes t
+    wal/major-key 'wal/js)
   :mode "\\.js\\'"
   :ensure nil)
 #+END_SRC
@@ -6493,9 +6503,8 @@ Prettify your ugly JavaScript.
 #+BEGIN_SRC emacs-lisp
 (use-package prettier
   :wal-ways nil
-  :general
-  (wal/major :keymaps '(js2-mode-map typescript-mode-map) :major-modes t
-    "p" '(prettier-prettify :wk "run prettier"))
+  :demand
+  :after js2-mode
   :ensure nil)
 #+END_SRC
 
@@ -6616,9 +6625,14 @@ Sometimes things that don't do things need to look nice.
 
 (use-package markdown-mode
   :wal-ways nil
+  :config
+  (transient-define-prefix wal/markdown ()
+    "Access `markdown-mode' commands."
+    [["View"
+      ("v" "toggle view" wal/markdown-view)]])
   :general
   (wal/major :keymaps 'markdown-mode-map :major-modes t
-    "v" '(wal/markdown-view :wk "view"))
+    wal/major-key 'wal/markdown)
   :ensure nil)
 #+END_SRC
 
@@ -6694,22 +6708,24 @@ LSP support for Dart.
    'lsp-after-initialize-hook
    #'wal/lsp-dart-set-process-query-on-exit-flag)
   (wdb/side "\\*Flutter" :height 10)
+  (transient-define-prefix wal/flutter ()
+    "Access flutter commands."
+    [["Hot-reloading"
+      ("R" "restart" lsp-dart-dap-flutter-hot-restart)
+      ("r" "reload" lsp-dart-dap-flutter-hot-reload)]
+     ["Test"
+      ("t c" "current" lsp-dart-run-test-at-point)
+      ("t a" "all" lsp-dart-run-all-tests)]
+     ["Devtools"
+      ("d" "open" lsp-dart-open-devtools)
+      ("u" "get service URI" wal/lsp-dart-service-uri)]])
   :custom
   (lsp-dart-flutter-sdk-dir (wal/find-dart-flutter-sdk-dir))
   (lsp-dart-sdk-dir (wal/find-dart-sdk-dir))
   (lsp-dart-dap-use-sdk-debugger nil) ; Run `lsp-dart-dap-setup' once to install debugger.
   :general
-  (wal/major
-    :keymaps 'dart-mode-map
-    :major-modes t
-    "o" '(lsp-dart-show-flutter-outline :wk "show outline")
-    "e" '(lsp-dart-run :wk "run")
-    "R" '(lsp-dart-dap-flutter-hot-restart :wk "restart") ; Exception to mimic default binding.
-    "r" '(lsp-dart-dap-flutter-hot-reload :wk "hot reload")
-    "tc" '(lsp-dart-run-test-at-point :wk "test (current)")
-    "ta" '(lsp-dart-run-all-tests :wk "test (all)")
-    "d" '(lsp-dart-open-devtools :wk "devtools")
-    "u" '(wal/lsp-dart-service-uri :wk "service URI"))
+  (wal/major :keymaps 'dart-mode-map :major-modes t
+    wal/major-key 'wal/flutter)
   :after lsp-mode
   :ensure nil)
 #+END_SRC
@@ -6737,10 +6753,6 @@ It's a =JavaEmacsPackageConfigurationSectionFactory=, mate.
     "Hook into `java-mode'."
     :lsp t
     :messages '("Mmmh ... maven"))
-  :config
-  (when wal/use-projectile
-    (wal/major :keymaps 'java-mode-map :major-modes t
-      "t" '(wal/projectile-test-project :wk "test project")))
   :ensure nil)
 #+END_SRC
 
@@ -6853,10 +6865,14 @@ The only way to store strings, JSON.
   (jsonian-no-so-long-mode)
   (with-eval-after-load 'flycheck
     (jsonian-enable-flycheck))
+  (transient-define-prefix wal/jsonian ()
+    "Access `jsonian-mode' commands."
+    [["Jsonian"
+      ("f" "find" jsonian-find)
+      ("e" "edit" jsonian-edit-string)]])
   :general
   (wal/major :keymaps 'jsonian-mode-map
-    "f" '(jsonian-find :wk "find")
-    "e" '(jsonian-edit-string :wk "edit"))
+    wal/major-key 'wal/jsonian)
   :mode ("\\.arb\\'" . jsonian-mode)
   :after so-long
   :ensure nil)
@@ -8015,8 +8031,9 @@ This will activate minor mode `wal/config-mode'."
           ("g" "group" wal/customize-group)]
          ["Fluff"
           ("w" "toggle animation" wal/ascii-whale-toggle-display)]])
-      (wal/lieutenant :keymaps 'wal/config-mode-map
-        "c" '(wal/config-dispatch :wk "config")))))
+      (general-define-key
+       :keymaps 'wal/config-mode-map
+       "C-c 9" '(wal/config-dispatch :wk "config dispatch")))))
 
 (define-minor-mode wal/config-mode
   "Mode for editing Walheimat's config."

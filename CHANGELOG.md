@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Several `transient`s for various `major-mode`s.
+
+### Changed
+
+- There are no `major-mode`-specific bindings in `wal/major` anymore
+  and it no longer has a sink. Instead the `wal/major-key` calls the
+  mode's `transient`.
+- The dispatch for this config is now bound to `C-c 9` (in its
+  buffer).
+
 ## [1.7.6] - 2021-07-28
 
 Hook, line and syncer.
