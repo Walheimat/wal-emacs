@@ -859,6 +859,14 @@ the sink for and PREFIX is its prefix."
                                          (concat ,suf it)
                                        it)) args))))))
 
+(cl-defmacro wal/major! (fun &rest args)
+  "Define key in `wal/major' definer for to call FUN.
+
+All ARGS are passed to the definer."
+  (declare (indent defun))
+  `(wal/major :major-modes t ,@args
+     ,wal/major-key ',fun))
+
 (defun wal/prefix-user-key (user-key)
   "Prefix USER-KEY.
 
@@ -4811,8 +4819,7 @@ This calls `org-content' interactively."
    ("M-p" . org-previous-visible-heading)
    ("M-n" . org-next-visible-heading))
   :general
-  (wal/major :keymaps 'org-mode-map :major-modes t
-    wal/major-key 'wal/org)
+  (wal/major! wal/org :keymaps 'org-mode-map)
   :hook (org-mode . auto-fill-mode)
   :ensure nil)
 #+END_SRC
@@ -6012,8 +6019,7 @@ I want to be ready for =jai=.
       ("s s" "set" c-set-style)
       ("s g" "guess" c-guess-install)]])
   :general
-  (wal/major :keymaps 'c++-mode-map :major-modes t
-    wal/major-key 'wal/c++)
+  (wal/major! wal/c++ :keymaps 'c++-mode-map)
   :mode ("\\.h\\'" . c++-mode) ; I don't use C, no need to (often incorrectly) guess.
   :ensure nil)
 #+END_SRC
@@ -6055,8 +6061,7 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
       ("t c" "current" cargo-process-current-test)
       ("t f" "file" cargo-process-current-file-tests)]])
   :general
-  (wal/major :keymaps 'rust-mode-map :major-modes t
-    wal/major-key 'wal/rust)
+  (wal/major! wal/rust :keymaps 'rust-mode-map)
   :ensure nil)
 #+END_SRC
 
@@ -6125,8 +6130,7 @@ Use snake when you can't =make=.
      ["Poetry"
       ("p" "poetry" poetry)]])
   :general
-  (wal/major :keymaps 'python-mode-map :major-modes t
-    wal/major-key 'wal/python)
+  (wal/major! wal/python :keymaps 'python-mode-map)
   :ensure nil)
 #+END_SRC
 
@@ -6258,13 +6262,13 @@ The philosopher's choice.
   :packages (clojure-mode cider))
 #+END_SRC
 
-*** emacs-lisp-mode
+*** elisp-mode
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(use-package emacs-lisp-mode
+(use-package elisp-mode
   :init
   (wal/lang-hook emacs-lisp-mode
     "Hook into `emacs-lisp-mode'."
@@ -6276,12 +6280,10 @@ The philosopher's choice.
     [["Utility"
       ("p" "check parens" check-parens)
       ("d" "edebug function" edebug-defun)
-      ("h" "helpful" helpful-at-point)]])
+      ("h" "helpful" helpful-at-point)
+      ("m" "expand macro" emacs-lisp-macroexpand)]])
   :general
-  (wal/major
-    :keymaps '(emacs-lisp-mode-map lisp-interaction-mode-map)
-    :major-modes t
-    wal/major-key 'wal/elisp)
+  (wal/major! wal/elisp :keymaps '(emacs-lisp-mode-map lisp-interaction-mode-map))
   :ensure nil)
 #+END_SRC
 
@@ -6432,10 +6434,7 @@ Can we have =deno= instead of =node=?
   (:map js2-mode-map
    ("<backtab>" . js2-indent-bounce)) ; `js2-bounce-indent-p' also binds <TAB>.
   :general
-  (wal/major
-    :keymaps '(js2-mode-map rjsx-mode-map typescript-mode-map)
-    :major-modes t
-    wal/major-key 'wal/js)
+  (wal/major! wal/js :keymaps '(js2-mode-map rjsx-mode-map typescript-mode-map))
   :mode "\\.js\\'"
   :ensure nil)
 #+END_SRC
@@ -6631,8 +6630,7 @@ Sometimes things that don't do things need to look nice.
     [["View"
       ("v" "toggle view" wal/markdown-view)]])
   :general
-  (wal/major :keymaps 'markdown-mode-map :major-modes t
-    wal/major-key 'wal/markdown)
+  (wal/major! wal/markdown :keymaps 'markdown-mode-map)
   :ensure nil)
 #+END_SRC
 
@@ -6724,8 +6722,7 @@ LSP support for Dart.
   (lsp-dart-sdk-dir (wal/find-dart-sdk-dir))
   (lsp-dart-dap-use-sdk-debugger nil) ; Run `lsp-dart-dap-setup' once to install debugger.
   :general
-  (wal/major :keymaps 'dart-mode-map :major-modes t
-    wal/major-key 'wal/flutter)
+  (wal/major! wal/flutter :keymaps 'dart-mode-map)
   :after lsp-mode
   :ensure nil)
 #+END_SRC
@@ -6871,8 +6868,7 @@ The only way to store strings, JSON.
       ("f" "find" jsonian-find)
       ("e" "edit" jsonian-edit-string)]])
   :general
-  (wal/major :keymaps 'jsonian-mode-map
-    wal/major-key 'wal/jsonian)
+  (wal/major! wal/jsonian :keymaps 'jsonian-mode-map)
   :mode ("\\.arb\\'" . jsonian-mode)
   :after so-long
   :ensure nil)

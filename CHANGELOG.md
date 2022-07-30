@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Several `transient`s for various `major-mode`s.
+- New macro `wal/major!` to more easily bind to `H-. .`.
 
 ### Changed
 
