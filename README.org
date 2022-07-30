@@ -5396,6 +5396,13 @@ Uses the same optional SWITCHES."
   :config
   (put 'dired-find-alternate-file 'disabled nil)
   (define-key dired-mode-map (kbd "C-o") nil) ; Removes `dired-display-file'.
+  (transient-define-prefix wal/dired ()
+    "Access Dired commands."
+    [["Utility"
+      ("q" "query replace" dired-do-query-replace-regexp)
+      ("t" "create empty file" dired-create-empty-file)]
+     ["Other"
+      ("v" "show images" wal/image-dired)]])
   :custom
   (dired-listing-switches "-lah --group-directories-first")
   (dired-auto-revert-buffer t)
@@ -5410,11 +5417,7 @@ Uses the same optional SWITCHES."
    ("." . dired-up-directory) ; Overrides `dired-clean-directory'.
    ("," . dired-display-file))
   :general
-  (wal/colonel :keymaps 'dired-mode-map :major-modes t
-    "q" '(dired-do-query-replace-regexp :wk "replace (dired)")
-    "t" '(dired-create-empty-file :wk "create empty file")
-    "v" '(:ignore t :wk "visualization")
-    "vi" '(wal/image-dired :wk "show images"))
+  (wal/major! wal/dired :keymaps 'dired-mode-map)
   :ensure nil)
 #+END_SRC
 
