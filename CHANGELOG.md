@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The dispatch for this config is now bound to `C-c 9` (in its
   buffer).
 
+### Removed
+
+- Package `explain-pause-mode` was mothballed.
+
 ### Fixed
 
 - `general` binding for `kmacro` command map.
