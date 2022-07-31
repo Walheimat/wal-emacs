@@ -9,16 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Several `transient`s for various `major-mode`s.
+- Several `transient`s for various `major-mode`s and libraries.
 - New macro `wal/major!` to more easily bind to `H-. .`.
+- Commands bound to `wal/colonel` are now described.
 
 ### Changed
 
-- There are no `major-mode`-specific bindings in `wal/major` anymore
-  and it no longer has a sink. Instead the `wal/major-key` calls the
-  mode's `transient`.
+- There are no bindings in `wal/major` anymore that belong to a
+  particular `major-mode`, and it no longer has a sink. Instead the
+  `wal/major-key` calls the mode's `transient` (see above).
 - The dispatch for this config is now bound to `C-c 9` (in its
   buffer).
+- Packages `projectile`, `perspective` and `yasnippet` no longer use
+  `wal/univ` macro. The transients are now bound in `wal/captain`
+  using the same key.
+- Package `lsp-mode` no longer uses `H-h`, the transient is bound in
+  `wal/captain` as well (using `l`).
+- Command maps for `projectile`, `perspective` and `lsp-mode` are now
+  bound using uppercase keys in `wal/captain`.
 
 ### Removed
 
@@ -27,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `general` binding for `kmacro` command map.
+- Package configurations no longer use both `:demand` and `:commands`.
 
 ## [1.7.6] - 2021-07-28
 

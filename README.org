@@ -719,20 +719,25 @@ User-reserved combinations are used for certain commands and
 dispatches:
 
 + =C-c a= for =org-agenda=
-+ =C-c b= for =beacon-blink=
++ =C-c b= for custom =beacon-blink=
 + =C-c c= for =org-roam=
 + =C-c d= for =docker=
++ =C-c k= for =kmacro=
 + =C-c q= to do a =quick-calc= (inserted if called with =C-u=)
-+ =C-c r= to dispatch =consult-register-*= commands
-+ =C-c s= to do =consult-line=
++ =C-c r= for =register=
++ =C-c s= to search with =consult-line=
 + =C-c t= for =vterm=
 + =C-c w= toggles pop-ups using =popper=.
+
+When editing this config:
+
++ =C-c 9= to dispatch related commands.
 
 *** Meta
 
 There are a few non-standard meta sequences.
 
-+ =M-o= does =other-window= (using =crux=).
++ =M-o= does a custom =other-window=.
 
 *** Hyper
 
@@ -752,10 +757,7 @@ Most hyper[fn:9] bindings are quick-access actions:
 
 It's also used for some dispatches:
 
-+ =H-h= for =lsp-mode= (when active)
 + =H-o= for =ace-window=, and if called with =C-u=
-+ =H-i= for =perspective=
-+ =H-j= for =consult=
 + =H-m= for =magit=
 + =H-n= for =rg=.
 
@@ -809,28 +811,37 @@ like loading a theme, finding a library, quitting, as well as opening
 built-in programs like =eshell= and =eww=.
 
 Leader key =colonel= (=;= by default) provides a layer of useful editing
-actions. Where possible, they are grouped by package or concern. The
-prefixes are:
+actions.
+
+They are:
+
++ =d= to duplicate lines with =crux=
++ =q= and =Q= to =query-replace=
++ =v= for =vundo= (visual undo).
+
+Where possible, they are grouped by package or concern. The prefixes
+are:
 
 + =.= for =multiple-cursors=
 + =l= and =r= for =avy= (line and region).
 
 Leader key =major= (=.= by default) is responsible major-mode-specific
-actions.
+actions, mostly through to a =transient= bound to the same key (=.= by
+default).
 
-Leader key =captain= (=/= by default) gives access to global
-minor-mode[fn:11] command maps. The package prefixes are:
+Leader key =captain= (=/= by default) gives access to minor-mode[fn:11]
+command maps and transients. The package prefixes are:
 
 + =f= for =flycheck=
-+ =h= for =projectile=
++ =p= for =projectile=
 + =i= for =perspective=
 + =m= for =smerge=
 + =s= for =flyspell=
-+ =p= for =lsp-mode=
++ =l= for =lsp-mode=
 + =v= for =verb=.
 
-Leader key =lieutenant= (='= by default) is currently used for adjustments
-custom =hydra= and =transient= maps.
+Leader key =lieutenant= (='= by default) is currently used for editor
+adjustments (text and window size) using custom =hydra= maps.
 
 Some leader keys have so-called sinks for additional commands. The
 sink for =captain= toggles minor modes.
@@ -2135,25 +2146,6 @@ Sometimes I need to see whitespace chars.
   :ensure nil)
 #+END_SRC
 
-*** kmacro
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Use better commands for macros.
-
-#+BEGIN_SRC emacs-lisp
-(use-package kmacro
-  :bind
-  (:map kmacro-keymap
-   ("k" . kmacro-start-macro-or-insert-counter)
-   ("j" . kmacro-end-or-call-macro))
-  :general
-  (wal/captain
-    "k" '(:keymap kmacro-keymap :wk "kmacro"))
-  :ensure nil)
-#+END_SRC
-
 *** text-mode
 :PROPERTIES:
 :UNNUMBERED: t
@@ -2204,8 +2196,7 @@ Follow me around.
   :custom
   (follow-mode-line-text " flw")
   :general
-  (wal/captain-sink
-    "o" '(follow-mode :wk "follow"))
+  (wal/captain-sink "o" '(follow-mode :wk "follow"))
   :ensure nil)
 #+end_src
 
@@ -2254,6 +2245,65 @@ Hide blocks.
   (wal/colonel :keymaps 'hs-minor-mode-map
     "h" '(hs-toggle-hiding :wk "toggle hiding"))
   (wal/captain-sink "h" '(hs-minor-mode :wk "hideshow"))
+  :ensure nil)
+#+END_SRC
+
+*** kmacro
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Some people need macros, okay?
+
+#+BEGIN_SRC emacs-lisp
+(use-package kmacro
+  :config
+  (transient-define-prefix wal/kmacro ()
+    "Access `kmacro' commands."
+    [["Macro"
+      ("s" "start (or insert)" kmacro-start-macro-or-insert-counter)
+      ("m" "end (or call)" kmacro-end-or-call-macro)]
+     ["Narrow"
+      ("c" "complete" consult-kmacro
+       :inapt-if-not (lambda () (featurep 'consult)))]])
+  (wal/captain "K" '(:keymap kmacro-keymap :wk "kmacro (map)"))
+  :bind
+  ("C-c k" . wal/kmacro)
+  :ensure nil)
+#+END_SRC
+
+*** register
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+No offender.
+
+#+BEGIN_SRC emacs-lisp
+(use-package register
+  :config
+  (transient-define-prefix wal/register ()
+    "Call register commands."
+    [["Store"
+      ("s" "store with consult" consult-register-store
+       :inapt-if-not (lambda () (featurep 'consult)))
+      ("p" "point" point-to-register)
+      ("w" "window config" window-configuration-to-register)
+      ("n" "number" number-to-register)
+      ("c" "region" copy-to-register
+       :inapt-if-not (lambda () mark-active))]
+     ["Load"
+      ("l" "with consult" consult-register-load
+       :inapt-if-not (lambda () (featurep 'consult)))
+      ("i" "insert region" insert-register)
+      ("j" "jump to point" jump-to-register)
+      ("+" "increment number" increment-register)]
+     ["Other"
+      ("r" "complete" consult-register
+       :inapt-if-not (lambda () (featurep 'consult)))
+      ("L" "list" list-registers)]])
+  :bind
+  ("C-c r" . wal/register)
   :ensure nil)
 #+END_SRC
 
@@ -2353,7 +2403,7 @@ Let's try to be even more =helpful=.
    :map helpful-mode-map
    ("k" . kill-buffer-and-window))
    :demand
-   :after emacs-lisp-mode)
+   :after elisp-mode)
 #+END_SRC
 
 ** Look-Up
@@ -2377,8 +2427,7 @@ Leave a bookmark why don't you.
    ("l" . bookmark-bmenu-list)
    ("L" . bookmark-load))
   :general
-  (wal/captain
-    "b" '(:keymap bookmark-map :wk "bookmark"))
+  (wal/captain "B" '(:keymap bookmark-map :wk "bookmark (map)"))
   :ensure nil)
 #+END_SRC
 
@@ -2563,13 +2612,11 @@ snippets.
 
 #+BEGIN_SRC emacs-lisp
 (use-package yasnippet
-  :init
-  (wal/univ yas-expand wal/yas-dispatch)
   :config
   (define-key yas-minor-mode-map (kbd "<tab>") nil)
   (define-key yas-minor-mode-map (kbd "TAB") nil)
-  (transient-define-prefix wal/yas-dispatch ()
-    "Call `yasnippet' functions."
+  (transient-define-prefix wal/yas ()
+    "Call `yasnippet' commands."
     [["Snippets"
       ("i" "insert" yas-insert-snippet)
       ("v" "visit" yas-visit-snippet-file)
@@ -2577,10 +2624,12 @@ snippets.
   (yas-reload-all)
   :wal-bind
   (:map yas-minor-mode-map
-   ("y" . #'wal/univ-yas-expand))
+   ("y" . yas-expand))
   :general
+  (wal/captain "y" '(wal/yas :wk "yasnippet"))
   (wal/captain-sink "y" '(yas-minor-mode :wk "yasnippet"))
   :hook ((prog-mode org-mode) . yas-minor-mode)
+  :commands (wal/yas)
   :delight " yas")
 
 (use-package yasnippet-snippets
@@ -4042,7 +4091,6 @@ completion actions.
       (projectile-find-file-in-directory . project-file)
       (projectile-recentf . project-file)
       (projectile-switch-project . project-file)
-      (wal/univ-projectile-switch-project . project-file)
       (persp-switch-to-buffer . buffer)
       (persp-kill-buffer* . buffer)))
   :bind
@@ -4114,7 +4162,7 @@ Do not ignore hidden files."
 
 (use-package consult
   :init
-  (wal/univ consult-buffer wal/consult-dispatch)
+  (wal/univ consult-buffer wal/consult)
   :config
   ;; Integrate into `projectile' and `xref'.
   (when wal/use-projectile
@@ -4133,7 +4181,7 @@ Do not ignore hidden files."
    #'consult-theme :after
    #'wal/advise-consult-theme)
   ;; Bind commands in `transient'.
-  (transient-define-prefix wal/consult-dispatch ()
+  (transient-define-prefix wal/consult ()
     "Call `consult' functions."
     [["Find"
       ("b" "bookmark" consult-bookmark)
@@ -4144,34 +4192,16 @@ Do not ignore hidden files."
       ("l" "locate" consult-locate
        :inapt-if-not (lambda () (executable-find "locate")))]
      ["Do"
-      ("r" "register" wal/register-dispatch)
-      ("m" "macro" consult-kmacro)
+      ("r" "register" wal/register)
+      ("m" "macro" wal/kmacro)
       ("y" "yank" consult-yank-from-kill-ring)
       ("u" "focus" consult-focus-lines)]
      ["Narrow"
       ("e" "errors (flycheck)" consult-flycheck
        :inapt-if-not (lambda () flycheck-mode))
       ("n" "line" consult-line)]])
-  (transient-define-prefix wal/register-dispatch ()
-    "Call register commands."
-    [["Store to register"
-      ("s" "store with consult" consult-register-store)
-      ("p" "point" point-to-register)
-      ("w" "window config" window-configuration-to-register)
-      ("n" "number" number-to-register)
-      ("c" "region" copy-to-register
-       :inapt-if-not (lambda () mark-active))]
-     ["Load from register"
-      ("l" "load with consult" consult-register-load)
-      ("i" "insert region" insert-register)
-      ("j" "jump to point" jump-to-register)
-      ("+" "increment number" increment-register)]
-     ["Other"
-      ("r" "complete" consult-register)
-      ("L" "list" list-registers)]])
   :bind
-  (("C-c r" . wal/register-dispatch)
-   ("C-c s" . consult-line)
+  (("C-c s" . consult-line)
    :map goto-map
    ("g" . consult-goto-line)
    ("m" . consult-mark)
@@ -4189,10 +4219,7 @@ Do not ignore hidden files."
    "M-g h" 'consult-org-heading)
   :commands
   (wal/univ-consult-buffer
-   wal/consult-dispatch
-   wal/register-dispatch)
-  :demand
-  :after vertico)
+   wal/consult))
 #+END_SRC
 
 ** Footer
@@ -4421,8 +4448,6 @@ The current buffer and Dired buffers are filtered."
     (mapcar #'buffer-name desired)))
 
 (use-package perspective
-  :init
-  (wal/univ persp-switch wal/persp-dispatch)
   :config
   (advice-add 'persp-kill :around #'wal/advise-persp-kill)
   (advice-add 'persp-format-name :filter-return #'wal/advise-persp-format-name)
@@ -4442,9 +4467,7 @@ The current buffer and Dired buffers are filtered."
                        :state #'consult--buffer-state
                        :items #'wal/consult-persp-dired-buffer-names)
                  t))
-  (wal/captain
-    "i" '(:keymap perspective-map :wk "perspective"))
-  (transient-define-prefix wal/persp-dispatch ()
+  (transient-define-prefix wal/persp ()
     "Call `perspective' functions."
     [["Buffers"
       ("a" "add" persp-add-buffer)
@@ -4455,7 +4478,11 @@ The current buffer and Dired buffers are filtered."
      ["Perspectives"
       ("n" "rename" persp-rename)
       ("k" "kill" persp-kill)
-      ("m" "merge" persp-merge)]])
+      ("m" "merge" persp-merge)]
+     ["Other"
+      ("x" "scratch" wal/switch-to-scratch-buffer)]])
+  (wal/captain
+    "I" '(:keymap perspective-map :wk "perspective (map)"))
   (persp-mode +1)
   ;; Override the override to `perspective-map'.
   (when (< emacs-major-version 28)
@@ -4468,17 +4495,19 @@ The current buffer and Dired buffers are filtered."
   :bind
   (:map persp-mode-map
    ("C-x b" . persp-switch-to-buffer)
-   ("C-x C-b" . persp-buffer-menu)
-   :map perspective-map
-   ("x" . wal/switch-to-scratch-buffer))
+   ("C-x C-b" . persp-buffer-menu))
   :wal-bind
   (:map persp-mode-map
-   ("i" . wal/univ-persp-switch))
+   ("i" . persp-switch))
+  :general
+  (wal/captain
+    "i" '(wal/persp :wk "perspective"))
   :hook
   ((kill-emacs . persp-state-save)
    ((persp-created
      persp-killed
      persp-after-rename) . wal/persp-maybe-shorten))
+  :commands (wal/persp)
   :defer 1)
 #+END_SRC
 
@@ -4525,7 +4554,6 @@ Otherwise treat DEFAULT-CMD normally."
   (advice-add
     'projectile-maybe-read-command :override
     'wal/advise-projectile-maybe-read-command)
-  (wal/univ projectile-switch-project wal/projectile-dispatch)
   :config
   (wal/append 'projectile-globally-ignored-directories
               (nth 0 wal/projectile-ignored))
@@ -4533,9 +4561,7 @@ Otherwise treat DEFAULT-CMD normally."
               (nth 1 wal/projectile-ignored))
   (wal/append 'projectile-globally-ignored-file-suffixes
               (nth 2 wal/projectile-ignored))
-  (wal/captain
-    "p" '(:keymap projectile-command-map :wk "projectile"))
-  (transient-define-prefix wal/projectile-dispatch ()
+  (transient-define-prefix wal/projectile ()
     "Call `projectile' commands."
     [["Command"
       ("c" "compile" projectile-compile-project)
@@ -4556,6 +4582,7 @@ Otherwise treat DEFAULT-CMD normally."
       ("l" "dir-locals" projectile-edit-dir-locals)]
      ["Projects"
       ("o" "switch to open project" projectile-switch-open-project)]])
+  (wal/captain "P" '(:keymap projectile-command-map :wk "projectile (map)"))
   (projectile-mode +1)
   :custom
   (projectile-switch-project-action #'projectile-dired)
@@ -4565,10 +4592,11 @@ Otherwise treat DEFAULT-CMD normally."
   (projectile-enable-caching t)
   :wal-bind
   (("l" . projectile-find-file)
-   ("p" . wal/univ-projectile-switch-project))
+   ("p" . projectile-switch-project))
+  :general
+  (wal/captain "p" '(wal/projectile :wk "projectile"))
   :commands
-  (wal/univ-projectile-switch-project
-   wal/projectile-dispatch
+  (wal/projectile
    projectile-project-root)
   :delight " pjt")
 #+END_SRC
@@ -4909,7 +4937,7 @@ Trying to organize my thoughts using Zettelkästen.
      ["Visualization"
       ("g" "graph" org-roam-graph)
       ("u" "ui" org-roam-ui-mode
-       :inapt-if-not (lambda () (require 'org-roam-ui nil t)))]])
+       :inapt-if-not (lambda () (featurep 'org-roam-ui)))]])
   :custom
   (org-roam-directory wal/org-roam-directory)
   (org-roam-dailies-directory wal/org-roam-dailies-directory)
@@ -4954,6 +4982,7 @@ Fancy UI.
 #+BEGIN_SRC emacs-lisp
 (use-package org-roam-ui
   :wal-ways nil
+  :demand
   :after org-roam
   :ensure nil)
 #+END_SRC
@@ -5877,10 +5906,10 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
     ("l" smerge-keep-lower)
     ("a" smerge-keep-all "keep all")
     ("q" nil "quit"))
+  (wal/captain :keymaps 'smerge-mode-map
+    "M" '(:keymap smerge-basic-map :wk "smerge"))
   :general
   (wal/captain :keymaps 'smerge-mode-map
-    "m" '(:keymap smerge-basic-map :wk "smerge"))
-  (wal/lieutenant :keymaps 'smerge-mode-map
     "m" '(wal/smerge/body :wk "smerge"))
   :ensure nil
   :delight " smg")
@@ -6229,8 +6258,6 @@ Activating =virtualenv= inside of Emacs.
 (use-package poetry
   :wal-ways nil
   :commands (poetry-venv-exist-p)
-  :demand
-  :after python-mode
   :ensure nil)
 #+END_SRC
 
@@ -6263,6 +6290,7 @@ The philosopher's choice.
     (flycheck-mode 1))
   :config
   (transient-define-prefix wal/elisp ()
+    "Access `elisp' commands."
     [["Utility"
       ("p" "check parens" check-parens)
       ("d" "edebug function" edebug-defun)
@@ -6289,8 +6317,8 @@ The philosopher's choice.
       ("r" "open REPL" slime
        :inapt-if not (lambda (featurep 'slime)))]])
   :general
-  (wal/general :keymaps 'lisp-mode-map :major-modes t
-    wal/general-key 'wal/lisp)
+  (wal/major! wal/lisp :keymaps 'common-lisp-mode-map)
+  :commands (wal/lisp)
   :ensure nil)
 #+END_SRC
 
@@ -6318,8 +6346,7 @@ Get some closure.
      ("n" "set namespace" cider-repl-set-ns
       :inapt-if-nil (lambda () (featurep 'cider)))]])
  :general
- (wal/general :keymaps 'clojure-mode-map :major-modes t
-   wal/general-key 'wal/clojure)
+ (wal/major! wal/clojure :keymaps 'clojure-mode-map)
  :ensure nil)
 #+end_src
 
@@ -6956,12 +6983,11 @@ Please let me know when I screwed up. I promise I will learn.
 
 #+BEGIN_SRC emacs-lisp
 (use-package flycheck
-  :config
-  (wal/captain :keymaps 'flycheck-mode-map
-    "f" '(:keymap flycheck-command-map :wk "flycheck"))
   :custom
   (flycheck-mode-line-prefix "fly")
   :general
+  (wal/captain :keymaps 'flycheck-mode-map
+    "f" '(:keymap flycheck-command-map :wk "flycheck"))
   (wal/captain-sink "f" '(flycheck-mode :wk "flycheck"))
   :hook (sh-set-shell . flycheck-mode))
 #+END_SRC
@@ -7126,8 +7152,6 @@ minimum prefixes are reduced."
   (advice-add 'lsp :before #'wal/advise-lsp-to-prevent-multi-root)
   (lsp-enable-which-key-integration t)
   (setq lsp-completion-provider :none) ;; We're using `corfu'.
-  (wal/captain :keymaps 'lsp-mode-map
-    "l" '(:keymap lsp-command-map :wk "lsp"))
   (transient-define-prefix wal/lsp-dispatch ()
     "Call `lsp-mode' functions."
     [["Format"
@@ -7144,14 +7168,16 @@ minimum prefixes are reduced."
       ("d" "definition" lsp-find-definition)
       ("e" "errors" lsp-treemacs-errors-list)
       ("s" "symbol" consult-lsp-file-symbols
-       :inapt-if-not (lambda () (require 'consult-lsp nil 'noerror)))
+       :inapt-if-not (lambda () (featurep 'consult-lsp)))
       ("H" "hierarchy" lsp-treemacs-call-hierarchy)]
      ["Workspace"
       ("R" "restart" lsp-workspace-restart)
       ("Q" "quit" lsp-workspace-shutdown)]])
+  (wal/captain :keymaps 'lsp-mode-map
+    "L" '(:keymap lsp-command-map :wk "lsp"))
   :custom
   (lsp-headerline-breadcrumb-enable nil)
-  (lsp-keymap-prefix (wal/prefix-user-key (concat wal/captain-key " " "l")))
+  (lsp-keymap-prefix (wal/prefix-user-key (concat wal/captain-key " " "L")))
   (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
   (lsp-clients-typescript-log-verbosity "off")
   (lsp-rust-analyzer-cargo-watch-command "clippy")
@@ -7159,9 +7185,9 @@ minimum prefixes are reduced."
   (lsp-signature-function 'lsp-signature-posframe)
   (lsp-signature-auto-activate '(:on-server-request))
   (lsp-keep-workspace-alive nil)
-  :wal-bind
-  (:map lsp-mode-map
-   ("h" . wal/lsp-dispatch))
+  :general
+  (wal/captain :keymaps 'lsp-mode-map
+    "l" '(wal/lsp-dispatch :wk "lsp"))
   :delight
   (lsp-mode " lsp")
   (lsp-lens-mode " lns"))
@@ -7219,10 +7245,10 @@ Debugging using VSCode's DAP (in =lsp-mode=)
   (dap-auto-show-output nil)
   (dap-auto-configure-features '(repl))
   :general
+  (wal/captain :keymaps 'lsp-mode-map
+    "d" '(wal/dap-hydra/body :wk "debug"))
   (wal/captain-sink :keymaps 'lsp-mode-map
     "d" '(dap-mode :wk "dap"))
-  (wal/lieutenant :keymaps 'lsp-mode-map
-    "d" '(wal/dap-hydra/body :wk "debug"))
   :after lsp-mode
   :delight " dap")
 #+END_SRC
@@ -7542,13 +7568,14 @@ Make requests using Org.
 
 (use-package verb
   :wal-ways nil
-  :config
+  :init
   (add-to-list 'org-tag-alist '("verb" . ?v))
   (advice-add 'verb-kill-all-response-buffers :filter-args
     #'wal/advise-verb-to-keep-window)
   (advice-add 'verb-kill-response-buffer-and-window :filter-args
     #'wal/advise-verb-to-keep-window)
-  (transient-define-prefix wal/verb-dispatch ()
+  :config
+  (transient-define-prefix wal/verb ()
     "Dispatch `verb' commands."
     [["Request"
       ("r" "send" verb-send-request-on-point
@@ -7562,18 +7589,19 @@ Make requests using Org.
      ["Variables"
       ("v" "set" verb-set-var)
       ("V" "show" verb-show-vars)]])
+  (wal/captain :keymaps '(verb-mode-map verb-response-body-mode-map)
+    "V" '(:keymap verb-command-map :wk "verb (commands)"))
   :bind
   (:map verb-response-body-mode-map
    ("k" . verb-kill-buffer-and-window)
    ("q" . quit-window))
   :general
-  (wal/captain :keymaps 'verb-mode-map
-    "v" '(:keymap verb-command-map :wk "verb"))
+  (wal/captain :keymaps '(verb-mode-map verb-response-body-mode-map)
+    "v" '(wal/verb :wk "verb"))
   (wal/captain-sink :keymaps 'org-mode-map
     "v" '(verb-mode :wk "verb"))
-  (wal/lieutenant :keymaps '(verb-mode-map verb-response-body-mode-map)
-    "r" '(wal/verb-dispatch :wk "verb"))
   :after org
+  :commands (wal/verb)
   :delight
   (verb-mode " vrb")
   (verb-response-body-mode " vRb"))
