@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal/captain` as well (using `l`).
 - Command maps for `projectile`, `perspective` and `lsp-mode` are now
   bound using uppercase keys in `wal/captain`.
+- Non-minor-mode command maps are bound using their keys.
+- The `hydra` for `winner` as well as `hs-toggle-hiding` were moved to
+  `captain`.
+- Some `:defer` values were removed or reduced.
 
 ### Removed
 

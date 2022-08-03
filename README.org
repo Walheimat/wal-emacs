@@ -729,6 +729,11 @@ dispatches:
 + =C-c t= for =vterm=
 + =C-c w= toggles pop-ups using =popper=.
 
+Some command maps are also bound:
+
++ =C-c B= for =bookmark=
++ =C-c K= for =kmacro=.
+
 When editing this config:
 
 + =C-c 9= to dispatch related commands.
@@ -804,11 +809,16 @@ this safer alternative to work for me.
 The are five =general= leader keys, each serving its unique purpose by
 prefixing (groups of) actions by common context.
 
-*** Prefixes
+Some leader keys have so-called sinks for additional commands. The
+sink for =captain= toggles minor modes.
+
+*** General
 
 Leader key =general= (=,= by default) is responsible for Emacs actions
 like loading a theme, finding a library, quitting, as well as opening
 built-in programs like =eshell= and =eww=.
+
+*** Colonel
 
 Leader key =colonel= (=;= by default) provides a layer of useful editing
 actions.
@@ -825,26 +835,33 @@ are:
 + =.= for =multiple-cursors=
 + =l= and =r= for =avy= (line and region).
 
+*** Major
+
 Leader key =major= (=.= by default) is responsible major-mode-specific
-actions, mostly through to a =transient= bound to the same key (=.= by
+actions, mostly through =transient= bound to the same key (=.= by
 default).
 
+*** Captain
+
 Leader key =captain= (=/= by default) gives access to minor-mode[fn:11]
-command maps and transients. The package prefixes are:
+command maps and transients. Always active:
 
 + =f= for =flycheck=
-+ =p= for =projectile=
-+ =i= for =perspective=
++ =i= for =perspective= (=I= for full command map)
++ =p= for =projectile= (=P= for full command map)
++ =w= for =winner=.
+
+If the respective minor mode is active, it also has:
+
++ =l= for =lsp-mode=
 + =m= for =smerge=
 + =s= for =flyspell=
-+ =l= for =lsp-mode=
 + =v= for =verb=.
+
+*** Lieutenant
 
 Leader key =lieutenant= (='= by default) is currently used for editor
 adjustments (text and window size) using custom =hydra= maps.
-
-Some leader keys have so-called sinks for additional commands. The
-sink for =captain= toggles minor modes.
 
 ** Packages
 
@@ -2247,7 +2264,7 @@ Hide blocks.
 #+BEGIN_SRC emacs-lisp
 (use-package hideshow
   :general
-  (wal/colonel :keymaps 'hs-minor-mode-map
+  (wal/captain :keymaps 'hs-minor-mode-map
     "h" '(hs-toggle-hiding :wk "toggle hiding"))
   (wal/captain-sink "h" '(hs-minor-mode :wk "hideshow"))
   :ensure nil)
@@ -2271,9 +2288,10 @@ Some people need macros, okay?
      ["Narrow"
       ("c" "complete" consult-kmacro
        :inapt-if-not (lambda () (featurep 'consult)))]])
-  (wal/captain "K" '(:keymap kmacro-keymap :wk "kmacro (map)"))
   :bind
   ("C-c k" . wal/kmacro)
+  :bind-keymap
+  ("C-c K" . kmacro-keymap)
   :ensure nil)
 #+END_SRC
 
@@ -2336,9 +2354,8 @@ be gone.
   :custom
   (winner-dont-bind-my-keys t)
   :general
-  (wal/lieutenant
-    "w" '(wal/winner/body :wk "winner"))
-  :defer 3
+  (wal/captain "w" '(wal/winner/body :wk "winner"))
+  :defer 1
   :ensure nil)
 #+END_SRC
 
@@ -2353,7 +2370,7 @@ Execute IO actions asynchronously.
 (use-package async
   :config
   (dired-async-mode 1)
-  :defer 4
+  :demand
   :after dired
   :diminish 'dired-async-mode)
 #+END_SRC
@@ -2431,8 +2448,8 @@ Leave a bookmark why don't you.
   (:map bookmark-map
    ("l" . bookmark-bmenu-list)
    ("L" . bookmark-load))
-  :general
-  (wal/captain "B" '(:keymap bookmark-map :wk "bookmark (map)"))
+  :bind-keymap
+  ("C-c B" . bookmark-map)
   :ensure nil)
 #+END_SRC
 
@@ -2658,7 +2675,6 @@ Drag lines and regions around.
   :general
   (wal/captain-sink "k" '(drag-stuff-mode :wk "drag-stuff"))
   :hook (prog-mode . drag-stuff-mode)
-  :defer 1
   :delight " drg")
 #+END_SRC
 
@@ -2989,7 +3005,7 @@ Show diffs in the fringe (also in =dired= buffers).
   :hook
   ((magit-post-refresh . diff-hl-magit-post-refresh)
    (dired-mode . diff-hl-dired-mode))
-  :defer 2)
+  :defer 1)
 #+END_SRC
 
 *** highlight-numbers
@@ -3157,7 +3173,7 @@ Dim inactive frames.
   (dimmer-mode t)
   :custom
   (dimmer-fraction 0.3)
-  :defer 3
+  :defer 2
   :delight " dmm")
 #+END_SRC
 
@@ -4505,8 +4521,7 @@ The current buffer and Dired buffers are filtered."
   (:map persp-mode-map
    ("i" . persp-switch))
   :general
-  (wal/captain
-    "i" '(wal/persp :wk "perspective"))
+  (wal/captain "i" '(wal/persp :wk "perspective"))
   :hook
   ((kill-emacs . persp-state-save)
    ((persp-created
@@ -7468,7 +7483,6 @@ What goes =docker-compose= up, goes =docker-compose= down.
   (docker-show-status nil)
   :bind
   (("C-c d" . docker))
-  :defer 2
   :ensure nil)
 #+END_SRC
 
