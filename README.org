@@ -909,6 +909,15 @@ All ARGS are passed to the definer."
   `(wal/major :major-modes t ,@args
      ,wal/major-key ',fun))
 
+(cl-defmacro wal/colonel! (key fun mfun &rest args)
+  "Bind FUN to KEY, MFUN in the sink.
+
+All ARGS are passed to both definers."
+  (declare (indent defun))
+  `(progn
+    (wal/colonel ,@args ,key ,fun)
+    (wal/colonel-sink ,@args ,key ,mfun)))
+
 (defun wal/prefix-user-key (user-key)
   "Prefix USER-KEY.
 
@@ -1057,8 +1066,7 @@ Most bindings are declared in individual packages.
  "l" '(add-dir-local-variable :wk "dir-locals")
  "b" '(eww :wk "eww"))
 
-(wal/colonel "q" '(query-replace :wk "replace"))
-(wal/colonel-sink "q" '(query-replace-regexp :wk "regexp replace"))
+(wal/colonel! "q" 'query-replace 'query-replace-regexp)
 
 (wal/captain-sink
   "." '(walled-mode :wk "walled")
@@ -2599,8 +2607,7 @@ Don't you want to edit your buffer in multiple places at once?
   :wal-bind
   ("<mouse-3>" . mc/add-cursor-on-click)
   :general
-  (wal/colonel "." '(mc/mark-all-like-this :wk "mark all like this"))
-  (wal/colonel-sink "." '(mc/edit-ends-of-lines :wk "mark region ends")))
+  (wal/colonel! "." 'mc/mark-all-like-this  'mc/edit-ends-of-lines))
 #+END_SRC
 
 *** expand-region
@@ -2708,10 +2715,9 @@ I guess I can't live without this package.
   ("C-o" . crux-smart-open-line)
   ("C-M-o" . crux-smart-open-line-above)
   :general
-  (wal/colonel "d"
-    '(crux-duplicate-current-line-or-region :wk "duplicate"))
-  (wal/colonel-sink "d"
-  '(crux-duplicate-and-comment-current-line-or-region :wk "duplicate and comment")))
+  (wal/colonel! "d"
+    'crux-duplicate-current-line-or-region
+    'crux-duplicate-and-comment-current-line-or-region))
 #+END_SRC
 
 *** vundo
@@ -3697,18 +3703,13 @@ beginning."
     ("a" . avy-goto-word-0))
   :general
   ;; Lines.
-  (wal/colonel
-    "c" '(avy-copy-line :wk "copy line")
-    "x" '(avy-kill-whole-line :wk "delete line")
-    "m" '(avy-move-line :wk "move line")
-    "w" '(avy-kill-ring-save-whole-line :wk "kill line"))
-  ;; Region.
-  (wal/colonel-sink
-    "c" '(avy-copy-region :wk "copy region")
-    "x" '(avy-kill-region :wk "delete region")
-    "m" '(avy-move-region :wk "move region")
-    "SPC" '(wal/avy-mark-region :wk "mark region")
-    "w" '(avy-kill-ring-save-region :wk "kill region"))
+  (wal/colonel! "c" 'avy-copy-line 'avy-copy-region)
+  (wal/colonel! "x" 'avy-kill-whole-line 'avy-kill-region)
+  (wal/colonel! "m" 'avy-move-line 'avy-move-region)
+  (wal/colonel! "w"
+    'avy-kill-ring-save-whole-line
+    'avy-kill-ring-save-region)
+  (wal/colonel-sink "h" 'wal/avy-mark-region)
   :commands (avy-with))
 #+END_SRC
 
