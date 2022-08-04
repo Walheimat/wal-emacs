@@ -809,8 +809,7 @@ this safer alternative to work for me.
 The are five =general= leader keys, each serving its unique purpose by
 prefixing (groups of) actions by common context.
 
-Some leader keys have so-called sinks for additional commands. The
-sink for =captain= toggles minor modes.
+Some leader keys have so-called sinks for additional commands.
 
 *** General
 
@@ -825,15 +824,27 @@ actions.
 
 They are:
 
-+ =d= to duplicate lines with =crux=
-+ =q= and =Q= to =query-replace=
-+ =v= for =vundo= (visual undo).
++ =c= to copy a line
++ =d= to duplicate lines
++ =m= to move a line
++ =q= to =query-replace=
++ =.= to mark all "like this"
++ =v= for =vundo= (visual undo)
++ =w= to kill a line
++ =x= to delete a line.
 
-Where possible, they are grouped by package or concern. The prefixes
-are:
+The sink for =colonel= provides alternative version of these calls.
 
-+ =.= for =multiple-cursors=
-+ =l= and =r= for =avy= (line and region).
+They are:
+
++ =c= to copy a region
++ =d= to duplicate and comment
++ =m= to move a region
++ =q= to =query-replace-regexp=
++ =SPC= to mark a region
++ =.= to mark all ends in a region
++ =w= to kill a region
++ =x= to delete a region.
 
 *** Major
 
@@ -858,6 +869,8 @@ If the respective minor mode is active, it also has:
 + =s= for =flyspell=
 + =v= for =verb=.
 
+The sink for =captain= toggles minor modes.
+
 *** Lieutenant
 
 Leader key =lieutenant= (='= by default) is currently used for editor
@@ -876,6 +889,7 @@ adjustments (text and window size) using custom =hydra= maps.
 
 NAME is the name of the macro. DEFINER is the definer to create
 the sink for and PREFIX is its prefix."
+  (declare (indent defun))
   (let* ((defname (symbol-name definer))
          (suf (substring prefix -1))
          (wk (upcase (concat (substring defname 4) "!"))))
@@ -907,7 +921,7 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
     (concat prefix user-key)))
 
 (defvar wal/leaders '(wal/general wal/colonel wal/major wal/captain wal/lieutenant))
-(defvar wal/leader-with-sink '(wal/general wal/captain wal/lieutenant))
+(defvar wal/leader-with-sink '(wal/general wal/colonel wal/captain wal/lieutenant))
 
 (defun wal/general-create-definer (leader)
   "Create a definer for LEADER with a sink."
@@ -1043,9 +1057,8 @@ Most bindings are declared in individual packages.
  "l" '(add-dir-local-variable :wk "dir-locals")
  "b" '(eww :wk "eww"))
 
-(wal/colonel
-  "q" '(query-replace :wk "replace")
-  "Q" '(query-replace-regexp :wk "regexp replace"))
+(wal/colonel "q" '(query-replace :wk "replace"))
+(wal/colonel-sink "q" '(query-replace-regexp :wk "regexp replace"))
 
 (wal/captain-sink
   "." '(walled-mode :wk "walled")
@@ -2586,11 +2599,8 @@ Don't you want to edit your buffer in multiple places at once?
   :wal-bind
   ("<mouse-3>" . mc/add-cursor-on-click)
   :general
-  (wal/colonel
-    "." '(:ignore t :wk "mc")
-    ".a" '(mc/mark-all-like-this :wk "all like this")
-    ".b" '(mc/edit-beginnings-of-lines :wk "beginnings (region)")
-    ".e" '(mc/edit-ends-of-lines :wk "ends (region)")))
+  (wal/colonel "." '(mc/mark-all-like-this :wk "mark all like this"))
+  (wal/colonel-sink "." '(mc/edit-ends-of-lines :wk "mark region ends")))
 #+END_SRC
 
 *** expand-region
@@ -2698,8 +2708,10 @@ I guess I can't live without this package.
   ("C-o" . crux-smart-open-line)
   ("C-M-o" . crux-smart-open-line-above)
   :general
-  (wal/colonel
-    "d" '(crux-duplicate-current-line-or-region :wk "duplicate")))
+  (wal/colonel "d"
+    '(crux-duplicate-current-line-or-region :wk "duplicate"))
+  (wal/colonel-sink "d"
+  '(crux-duplicate-and-comment-current-line-or-region :wk "duplicate and comment")))
 #+END_SRC
 
 *** vundo
@@ -3684,20 +3696,19 @@ beginning."
     ("w" . wal/avy-goto-word)
     ("a" . avy-goto-word-0))
   :general
+  ;; Lines.
   (wal/colonel
-    ;; Lines.
-    "l" '(:ignore t :wk "avy (line)")
-    "lc" '(avy-copy-line :wk "copy")
-    "ld" '(avy-kill-whole-line :wk "delete")
-    "lm" '(avy-move-line :wk "move")
-    "lw" '(avy-kill-ring-save-whole-line :wk "kill")
-    ;; Region.
-    "r" '(:ignore t :wk "avy (region)")
-    "rc" '(avy-copy-region :wk "copy")
-    "rd" '(avy-kill-region :wk "delete")
-    "rm" '(avy-move-region :wk "move")
-    "r SPC" '(wal/avy-mark-region :wk "mark")
-    "rw" '(avy-kill-ring-save-region :wk "kill"))
+    "c" '(avy-copy-line :wk "copy line")
+    "x" '(avy-kill-whole-line :wk "delete line")
+    "m" '(avy-move-line :wk "move line")
+    "w" '(avy-kill-ring-save-whole-line :wk "kill line"))
+  ;; Region.
+  (wal/colonel-sink
+    "c" '(avy-copy-region :wk "copy region")
+    "x" '(avy-kill-region :wk "delete region")
+    "m" '(avy-move-region :wk "move region")
+    "SPC" '(wal/avy-mark-region :wk "mark region")
+    "w" '(avy-kill-ring-save-region :wk "kill region"))
   :commands (avy-with))
 #+END_SRC
 

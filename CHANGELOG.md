@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `quick-insert` is bound to `C-q`.
 - `M-q` is now bound to `coruf-quick-exit` in `corfu` map;
   `quick-complete` is bound to `C-q`.
+- Bindings in `colonel` have been re-assigned across it and its
+  re-added `sink`.
 
 ### Removed
 
