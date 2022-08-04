@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `M-q` is now bound to `coruf-quick-exit` in `corfu` map;
   `quick-complete` is bound to `C-q`.
 
+### Removed
+
+- Package `restart-emacs` was mothballed in favor of newly built-in
+  command of the same name.
+
 ## [1.7.7] - 2021-08-03
 
 Viz major.
