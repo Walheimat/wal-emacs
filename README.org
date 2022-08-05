@@ -692,6 +692,11 @@ I use many[fn:8] custom keybindings.
   :type 'string
   :group 'wal-key-bindings)
 
+(defcustom wal/major!-key "m"
+  "The `major-mode'-specific key in `wal/major'."
+  :type 'string
+  :group 'wal-key-bindings)
+
 (defcustom wal/captain-key "/"
   "The quaternary (or captain) leader key."
   :type 'string
@@ -910,7 +915,7 @@ the sink for and PREFIX is its prefix."
 All ARGS are passed to the definer."
   (declare (indent defun))
   `(wal/major :major-modes t ,@args
-     ,wal/major-key ',fun))
+     ,wal/major!-key ',fun))
 
 (cl-defmacro wal/major-mirror! (key fun mfun &rest args)
   "Bind FUN to KEY, MFUN in the sink.
@@ -4209,7 +4214,7 @@ Do not ignore hidden files."
   (wal/general
     "st" '(consult-theme :wk "consult theme")
     "fr" '(consult-recent-file :wk "recent"))
-  (wal/major-mirror! "c" 'consult-mode-command 'consult-minor-mode-command)
+  (wal/major-mirror! "c" 'consult-mode-command 'consult-minor-mode-menu)
   (general-define-key
    :keymaps 'org-mode-map
    "M-g h" 'consult-org-heading)

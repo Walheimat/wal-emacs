@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Responsibilities for `major` and `captain` have changed.
   Buffer-related actions, whether from `major-` or `minor-mode` are
   bound in `major`; global actions in `captain`.
+- The `transient`s for `major-mode`s are now bound in `major` using
+  new variable `wal/major!-key` (default is `m`) to allow for the
+  definer to still have a sink.
 
 ### Removed
 
