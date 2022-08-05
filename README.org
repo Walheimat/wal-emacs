@@ -839,37 +839,40 @@ They are:
 
 + =c= to copy a region
 + =d= to duplicate and comment
++ =h= to mark a region
 + =m= to move a region
 + =q= to =query-replace-regexp=
-+ =SPC= to mark a region
 + =.= to mark all ends in a region
 + =w= to kill a region
 + =x= to delete a region.
 
 *** Major
 
-Leader key =major= (=.= by default) is responsible major-mode-specific
-actions, mostly through =transient= bound to the same key (=.= by
-default).
+Leader key =major= (=.= by default) is responsible for actions that are
+relevant to the current buffer, mostly through a =major-mode=-related
+=transient= bound to the same key (=.= by default).
 
-*** Captain
-
-Leader key =captain= (=/= by default) gives access to minor-mode[fn:11]
-command maps and transients. Always active:
+If the respective buffer-local =minor-mode= is active, the following
+command maps and transients are bound:
 
 + =f= for =flycheck=
-+ =i= for =perspective= (=I= for full command map)
-+ =p= for =projectile= (=P= for full command map)
-+ =w= for =winner=.
-
-If the respective minor mode is active, it also has:
-
 + =l= for =lsp-mode=
 + =m= for =smerge=
 + =s= for =flyspell=
 + =v= for =verb=.
 
-The sink for =captain= toggles minor modes.
+The sink binds their full command maps.
+
+*** Captain
+
+Leader key =captain= (=/= by default) gives access to minor-mode[fn:11]
+command and =transient= maps that are relevant globally. These are:
+
++ =i= for =perspective= (=I= for full command map)
++ =p= for =projectile= (=P= for full command map)
++ =w= for =winner=.
+
+The sink binds related command maps.
 
 *** Lieutenant
 
@@ -909,6 +912,15 @@ All ARGS are passed to the definer."
   `(wal/major :major-modes t ,@args
      ,wal/major-key ',fun))
 
+(cl-defmacro wal/major-mirror! (key fun mfun &rest args)
+  "Bind FUN to KEY, MFUN in the sink.
+
+All ARGS are passed to both definers."
+  (declare (indent defun))
+  `(progn
+    (wal/major ,@args ,key ,fun)
+    (wal/major-sink ,@args ,key ,mfun)))
+
 (cl-defmacro wal/colonel! (key fun mfun &rest args)
   "Bind FUN to KEY, MFUN in the sink.
 
@@ -930,7 +942,7 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
     (concat prefix user-key)))
 
 (defvar wal/leaders '(wal/general wal/colonel wal/major wal/captain wal/lieutenant))
-(defvar wal/leader-with-sink '(wal/general wal/colonel wal/captain wal/lieutenant))
+(defvar wal/leader-with-sink '(wal/general wal/colonel wal/major wal/captain wal/lieutenant))
 
 (defun wal/general-create-definer (leader)
   "Create a definer for LEADER with a sink."
@@ -1067,11 +1079,6 @@ Most bindings are declared in individual packages.
  "b" '(eww :wk "eww"))
 
 (wal/colonel! "q" 'query-replace 'query-replace-regexp)
-
-(wal/captain-sink
-  "." '(walled-mode :wk "walled")
-  "n" '(linum-mode :wk "linum")
-  "a" '(auto-fill-mode :wk "auto-fill"))
 
 (general-define-key
  :keymaps 'ctl-x-x-map
@@ -2178,18 +2185,6 @@ and some external ones.
 
 Sometimes I need to see whitespace chars.
 
-*** whitespace
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-#+BEGIN_SRC emacs-lisp
-(use-package whitespace
-  :general
-  (wal/captain-sink "w" '(whitespace-mode :wk "whitespace"))
-  :ensure nil)
-#+END_SRC
-
 *** text-mode
 :PROPERTIES:
 :UNNUMBERED: t
@@ -2239,8 +2234,6 @@ Follow me around.
 (use-package follow-mode
   :custom
   (follow-mode-line-text " flw")
-  :general
-  (wal/captain-sink "o" '(follow-mode :wk "follow"))
   :ensure nil)
 #+end_src
 
@@ -2288,7 +2281,6 @@ Hide blocks.
   :general
   (wal/captain :keymaps 'hs-minor-mode-map
     "h" '(hs-toggle-hiding :wk "toggle hiding"))
-  (wal/captain-sink "h" '(hs-minor-mode :wk "hideshow"))
   :ensure nil)
 #+END_SRC
 
@@ -2578,6 +2570,8 @@ It's fun to edit things /quickly/.
 ;;; Code:
 
 (declare-function yas-expand "ext:yasnippet.el")
+
+(defvar wal/use-hyper-prefix)
 #+END_SRC
 
 ** Packages
@@ -2648,10 +2642,8 @@ snippets.
   (:map yas-minor-mode-map
    ("y" . yas-expand))
   :general
-  (wal/captain "y" '(wal/yas :wk "yasnippet"))
-  (wal/captain-sink "y" '(yas-minor-mode :wk "yasnippet"))
+  (wal/major :keymaps 'yas-minor-mode-map "y" '(wal/yas :wk "yasnippet"))
   :hook ((prog-mode org-mode) . yas-minor-mode)
-  :commands (wal/yas)
   :delight " yas")
 
 (use-package yasnippet-snippets
@@ -2671,9 +2663,8 @@ Drag lines and regions around.
   :config
   (when wal/use-hyper-prefix
     (setq drag-stuff-modifier 'hyper))
-  (drag-stuff-define-keys)
-  :general
-  (wal/captain-sink "k" '(drag-stuff-mode :wk "drag-stuff"))
+  (when (fboundp 'drag-stuff-define-keys)
+    (drag-stuff-define-keys))
   :hook (prog-mode . drag-stuff-mode)
   :delight " drg")
 #+END_SRC
@@ -3061,8 +3052,6 @@ Show colors colorfully.
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-mode
   :wal-ways nil
-  :general
-  (wal/captain-sink "c" '(rainbow-mode :wk "rainbow"))
   :delight " rbm")
 #+END_SRC
 
@@ -3117,9 +3106,7 @@ This just means increasing duration, delay, size and brightness."
   (beacon-blink-when-focused t)
   (beacon-blink-when-window-scrolls nil)
   :bind
-  ("C-c b" . wal/lighthouse)
-  :general
-  (wal/captain-sink "b" '(beacon-mode :wk "beacon")))
+  ("C-c b" . wal/lighthouse))
 #+END_SRC
 
 *** dimmer
@@ -3267,8 +3254,6 @@ Sometimes the list of minor modes overcrowds the modeline.
                              wal/config-mode
                              verb-mode
                              verb-response-body-mode))
-  :general
-  (wal/captain-sink "m" '(minions-mode :wk "minions"))
   :defer 3)
 #+END_SRC
 
@@ -3359,8 +3344,6 @@ Display emojis[fn:16].
 #+BEGIN_SRC emacs-lisp
 (use-package emojify
   :wal-ways nil
-  :general
-  (wal/captain-sink "e" '(emojify-mode :wk "emojify"))
   :hook (dashboard-mode . emojify-mode))
 #+END_SRC
 
@@ -3940,9 +3923,6 @@ Alternative.
   (corfu-auto t)
   (corfu-quit-no-match t)
   (corfu-cycle t)
-  :general
-  (wal/captain-sink :keymaps '(prog-mode-map dap-ui-repl-mode-map)
-    "c" '(corfu-mode :wk "corfu"))
   :hook (prog-mode . corfu-mode))
 #+END_SRC
 
@@ -4229,8 +4209,7 @@ Do not ignore hidden files."
   (wal/general
     "st" '(consult-theme :wk "consult theme")
     "fr" '(consult-recent-file :wk "recent"))
-  (wal/major "c" '(consult-mode-command :wk "invoke mode command"))
-  (wal/captain-sink "u" '(consult-minor-mode-menu :wk "menu"))
+  (wal/major-mirror! "c" 'consult-mode-command 'consult-minor-mode-command)
   (general-define-key
    :keymaps 'org-mode-map
    "M-g h" 'consult-org-heading)
@@ -4498,8 +4477,8 @@ The current buffer and Dired buffers are filtered."
       ("m" "merge" persp-merge)]
      ["Other"
       ("x" "scratch" wal/switch-to-scratch-buffer)]])
-  (wal/captain
-    "I" '(:keymap perspective-map :wk "perspective (map)"))
+  (wal/captain-sink
+    "i" '(:keymap perspective-map :wk "perspective (map)"))
   (persp-mode +1)
   ;; Override the override to `perspective-map'.
   (when (< emacs-major-version 28)
@@ -4598,7 +4577,7 @@ Otherwise treat DEFAULT-CMD normally."
       ("l" "dir-locals" projectile-edit-dir-locals)]
      ["Projects"
       ("o" "switch to open project" projectile-switch-open-project)]])
-  (wal/captain "P" '(:keymap projectile-command-map :wk "projectile (map)"))
+  (wal/captain-sink "p" '(:keymap projectile-command-map :wk "projectile (map)"))
   (projectile-mode +1)
   :custom
   (projectile-switch-project-action #'projectile-dired)
@@ -5876,9 +5855,6 @@ If you want to go back in time and point fingers at the progenitors of doom.
 #+BEGIN_SRC emacs-lisp
 (use-package git-timemachine
   :wal-ways nil
-  :general
-  (wal/captain-sink :keymaps '(prog-mode-map yaml-mode-map)
-    "t" '(git-timemachine-toggle :wk "git-timemachine"))
   :delight " gtm")
 #+END_SRC
 
@@ -5922,10 +5898,10 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
     ("l" smerge-keep-lower)
     ("a" smerge-keep-all "keep all")
     ("q" nil "quit"))
-  (wal/captain :keymaps 'smerge-mode-map
-    "M" '(:keymap smerge-basic-map :wk "smerge"))
+  (wal/major-sink :keymaps 'smerge-mode-map
+    "m" '(:keymap smerge-basic-map :wk "smerge"))
   :general
-  (wal/captain :keymaps 'smerge-mode-map
+  (wal/major :keymaps 'smerge-mode-map
     "m" '(wal/smerge/body :wk "smerge"))
   :ensure nil
   :delight " smg")
@@ -7002,9 +6978,8 @@ Please let me know when I screwed up. I promise I will learn.
   :custom
   (flycheck-mode-line-prefix "fly")
   :general
-  (wal/captain :keymaps 'flycheck-mode-map
+  (wal/major-sink :keymaps 'flycheck-mode-map
     "f" '(:keymap flycheck-command-map :wk "flycheck"))
-  (wal/captain-sink "f" '(flycheck-mode :wk "flycheck"))
   :hook (sh-set-shell . flycheck-mode))
 #+END_SRC
 
@@ -7016,7 +6991,7 @@ Please let me know when I screwed up. I promise I will learn.
 My spelling is bad. Uses American English for =flyspell=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/flyspell ()
+(defun wal/flyspell (&rest _r)
   "(De-)Activate the appropriate `flyspell' mode."
   (interactive)
   (if flyspell-mode
@@ -7026,6 +7001,8 @@ My spelling is bad. Uses American English for =flyspell=.
       (flyspell-mode))))
 
 (use-package flyspell
+  :config
+  (advice-add #'flyspell-mode :override #'wal/flyspell)
   :custom
   (flyspell-issue-message-flag nil)
   (flyspell-mode-line-string " fsp")
@@ -7034,12 +7011,11 @@ My spelling is bad. Uses American English for =flyspell=.
   (:map flyspell-mode-map
    ("C-." . ispell-word)) ; Replaces `flyspell-auto-correct-word', which is still available via `C-M-i'.
   :general
-  (wal/captain :keymaps 'flyspell-mode-map
+  (wal/major :keymaps 'flyspell-mode-map
     "s" '(:ignore t :wk "flyspell")
     "sb" '(flyspell-buffer :wk "buffer")
     "sr" '(flyspell-region :wk "region")
     "sc" '(ispell-change-dictionary :wk "change dictionary"))
-  (wal/captain-sink "s" '(wal/flyspell :wk "flyspell"))
   :ensure nil)
 #+END_SRC
 
@@ -7189,11 +7165,11 @@ minimum prefixes are reduced."
      ["Workspace"
       ("R" "restart" lsp-workspace-restart)
       ("Q" "quit" lsp-workspace-shutdown)]])
-  (wal/captain :keymaps 'lsp-mode-map
-    "L" '(:keymap lsp-command-map :wk "lsp"))
+  (wal/major-sink :keymaps 'lsp-mode-map
+    "l" '(:keymap lsp-command-map :wk "lsp"))
   :custom
   (lsp-headerline-breadcrumb-enable nil)
-  (lsp-keymap-prefix (wal/prefix-user-key (concat wal/captain-key " " "L")))
+  (lsp-keymap-prefix (wal/prefix-user-key (concat wal/major-key " " wal/major-key " " "l")))
   (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
   (lsp-clients-typescript-log-verbosity "off")
   (lsp-rust-analyzer-cargo-watch-command "clippy")
@@ -7202,8 +7178,7 @@ minimum prefixes are reduced."
   (lsp-signature-auto-activate '(:on-server-request))
   (lsp-keep-workspace-alive nil)
   :general
-  (wal/captain :keymaps 'lsp-mode-map
-    "l" '(wal/lsp-dispatch :wk "lsp"))
+  (wal/major :keymaps 'lsp-mode-map "l" '(wal/lsp-dispatch :wk "lsp"))
   :delight
   (lsp-mode " lsp")
   (lsp-lens-mode " lns"))
@@ -7261,10 +7236,7 @@ Debugging using VSCode's DAP (in =lsp-mode=)
   (dap-auto-show-output nil)
   (dap-auto-configure-features '(repl))
   :general
-  (wal/captain :keymaps 'lsp-mode-map
-    "d" '(wal/dap-hydra/body :wk "debug"))
-  (wal/captain-sink :keymaps 'lsp-mode-map
-    "d" '(dap-mode :wk "dap"))
+  (wal/major :keymaps 'lsp-mode-map "d" '(wal/dap-hydra/body :wk "debug"))
   :after lsp-mode
   :delight " dap")
 #+END_SRC
@@ -7604,17 +7576,15 @@ Make requests using Org.
      ["Variables"
       ("v" "set" verb-set-var)
       ("V" "show" verb-show-vars)]])
-  (wal/captain :keymaps '(verb-mode-map verb-response-body-mode-map)
-    "V" '(:keymap verb-command-map :wk "verb (commands)"))
+  (wal/major-sink :keymaps '(verb-mode-map verb-response-body-mode-map)
+    "v" '(:keymap verb-command-map :wk "verb (commands)"))
   :bind
   (:map verb-response-body-mode-map
    ("k" . verb-kill-buffer-and-window)
    ("q" . quit-window))
   :general
-  (wal/captain :keymaps '(verb-mode-map verb-response-body-mode-map)
+  (wal/major :keymaps '(verb-mode-map verb-response-body-mode-map)
     "v" '(wal/verb :wk "verb"))
-  (wal/captain-sink :keymaps 'org-mode-map
-    "v" '(verb-mode :wk "verb"))
   :after org
   :commands (wal/verb)
   :delight
@@ -7720,9 +7690,6 @@ triggered explicitly.
 #+BEGIN_SRC emacs-lisp
 (use-package typo
   :wal-ways nil
-  :general
-  (wal/captain-sink :keymaps '(text-mode-map org-mode-map) :major-modes t
-    "t" '(typo-mode :wk "typo"))
   :hook (typo-mode . flycheck-mode)
   :delight " typ")
 #+END_SRC

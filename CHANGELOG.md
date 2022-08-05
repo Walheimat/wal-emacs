@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `quick-complete` is bound to `C-q`.
 - Bindings in `colonel` have been re-assigned across it and its
   re-added `sink`.
+- Responsibilities for `major` and `captain` have changed.
+  Buffer-related actions, whether from `major-` or `minor-mode` are
+  bound in `major`; global actions in `captain`.
 
 ### Removed
 
