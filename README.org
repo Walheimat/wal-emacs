@@ -4326,7 +4326,6 @@ shown."
   :type 'integer
   :group 'wal-workspace)
 
-
 (defcustom wal/projectile-ignored
   '(("node_modules" "build" "_build" "android")
     ("yarn.lock" "package.lock" "bundle.js")
@@ -4785,12 +4784,12 @@ This calls `org-content' interactively."
      ["Visibility"
       ("v a" "show all" org-show-all)
       ("v l" "up to level" wal/org-content)
-      ("v h" "sticky header" org-sticky-header-mode)
-      ("v n" "imenu" imenu-list-smart-toggle)]
+      ("v h" "sticky header" org-sticky-header-mode)]
      ["Presentation"
       ("p" "present" org-tree-slide-mode)]
      ["Footnotes"
-      ("f a" "add" org-footnote-new)
+      ("f a" "add" org-footnote-new
+       :inapt-if (lambda () (org-in-src-block-p)))
       ("f n" "normalize" org-footnote-normalize)]
      ["Transclusion"
       ("t" "transclusion" wal/org-transclusion)]])
@@ -5355,22 +5354,6 @@ Display current location in a sticky header.
   (org-sticky-header-show-keyword nil)
   (org-sticky-header-show-priority nil)
   :hook (org-mode . org-sticky-header-mode))
-#+END_SRC
-
-*** imenu-list
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Show =imenu= as a list.
-
-#+BEGIN_SRC emacs-lisp
-(use-package imenu-list
-  :wal-ways nil
-  :custom
-  (imenu-list-size 0.2)
-  (imenu-list-position 'left)
-  (imenu-list-focus-after-activation t))
 #+END_SRC
 
 ** Footer

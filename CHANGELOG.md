@@ -30,10 +30,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   binding already bound commands and instead binding `apropos`,
   `keep-lines` and opening files externally.
 
+### Fixed
+
+- Commands bound in `transient` for `org-mode` are more context-aware.
+
 ### Removed
 
 - Package `restart-emacs` was mothballed in favor of newly built-in
   command of the same name.
+- Package `imenu-list` was mothballed.
 
 ## [1.7.7] - 2021-08-03
 
