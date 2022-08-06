@@ -575,7 +575,7 @@ All offsets are set to `wal/indent-offset' or optionally to NUM."
                   electric-indent-inhibit t
                   indent-tabs-mode wal/prefer-tabs)))
 
-(add-hook 'emacs-startup-hook 'wal/set-indent-defaults)
+(add-hook 'emacs-startup-hook #'wal/set-indent-defaults)
 #+END_SRC
 
 *** Dir Local Indentation
@@ -1302,8 +1302,8 @@ is deleted."
     (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)))
 
 (advice-add
- 'hack-local-variables
- :after #'wal/advise-hack-local-variables)
+ 'hack-local-variables :after
+ #'wal/advise-hack-local-variables)
 
 (defun wal/kill-ring-save-whole-buffer ()
   "Call `kill-ring-save' on the entire buffer."
@@ -1712,8 +1712,8 @@ appropriate hook is chosen for the original call."
            (progn
              (when ,immediately
                (funcall ',func-name))
-             (add-hook 'server-after-make-frame-hook ',func-name))
-         (add-hook 'emacs-startup-hook ',func-name)))))
+             (add-hook 'server-after-make-frame-hook #',func-name))
+         (add-hook 'emacs-startup-hook #',func-name)))))
 #+END_SRC
 
 ** Regions
@@ -2148,7 +2148,7 @@ available candidate from `wal/fixed-fonts'. Does the same for
  "sF" '(wal/select-fixed-font :wk "fixed family")
  "sV" '(wal/select-variable-font :wk "variable family"))
 
-(add-hook 'font-lock-mode-hook 'wal/font-lock)
+(add-hook 'font-lock-mode-hook #'wal/font-lock)
 
 (provide 'wal-fonts)
 
@@ -2698,8 +2698,8 @@ Less intrusive pairing mode than =smartparens=.
 (use-package elec-pair
   :init
   (advice-add
-   'electric-pair-default-inhibit
-   :before-until #'wal/advise-electric-pair-default-inhibit)
+   'electric-pair-default-inhibit :before-until
+   #'wal/advise-electric-pair-default-inhibit)
   :hook (prog-mode . electric-pair-local-mode)
   :ensure nil)
 #+END_SRC
@@ -2908,14 +2908,14 @@ Let's have a dash of board.
   :wal-ways nil
   :init
   (advice-add
-   'dashboard-insert-startupify-lists
-   :around #'wal/advise-dashboard-insert-startupify-lists)
+   'dashboard-insert-startupify-lists :around
+   #'wal/advise-dashboard-insert-startupify-lists)
   (advice-add
-   'dashboard-random-footer
-   :override #'wal/advise-dashboard-random-footer)
+   'dashboard-random-footer :override
+   #'wal/advise-dashboard-random-footer)
   (advice-add
-   'dashboard-setup-startup-hook
-   :before-until #'wal/advise-dashboard-setup-startup-hook)
+   'dashboard-setup-startup-hook :before-until
+   #'wal/advise-dashboard-setup-startup-hook)
   :config
   (setq dashboard-banner-logo-title (wal/describe-config-version))
   :custom
@@ -3163,8 +3163,8 @@ Dim inactive frames.
   :wal-ways nil
   :config
   (advice-add
-   'dimmer-config-change-handler
-   :override 'wal/advise-dimmer-config-change-handler)
+   'dimmer-config-change-handler :override
+   #'wal/advise-dimmer-config-change-handler)
   (dimmer-configure-hydra)
   (dimmer-configure-magit)
   (dimmer-configure-org)
@@ -3308,8 +3308,8 @@ ARGS is a list containing modes and additional ligatures."
   :wal-ways nil
   :config
   (advice-add
-   'ligature-set-ligatures
-   :around #'wal/advise-ligature-set-ligatures)
+   'ligature-set-ligatures :around
+   #'wal/advise-ligature-set-ligatures)
   (ligature-set-ligatures 'clojure-mode '(";;" "->" "->>"))
   (ligature-set-ligatures 'c++-mode '("::" "->"))
   (ligature-set-ligatures 'dart-mode '("=>" "///" ".?" "??"
@@ -3535,8 +3535,8 @@ Ace interacting with (multiple) windows.
                             ;; If this has a description, it doesn't work.
                             (?? aw-show-dispatch-help)))
   (advice-add
-   'aw--switch-buffer
-   :override #'wal/advise-aw--switch-buffer-consult)
+   'aw--switch-buffer :override
+   #'wal/advise-aw--switch-buffer-consult)
   :custom
   (aw-dispatch-always t)
   (aw-keys '(?j ?k ?l ?\; ?u ?i ?o ?p))
@@ -3687,8 +3687,8 @@ beginning."
   :config
   (add-to-list 'avy-dispatch-alist '(?q . wal/avy-action-zip-to-char))
   (advice-add
-   'avy-goto-end-of-line
-   :after #'wal/advise-avy-goto-end-of-line)
+   'avy-goto-end-of-line :after
+   #'wal/advise-avy-goto-end-of-line)
   :custom
   (avy-background t)
   :bind
@@ -4032,8 +4032,8 @@ Provide global option narrowing using the =vertico= family of products.
 (use-package vertico-directory
   :config
   (advice-add
-   'vertico-directory--completing-file-p
-   :around #'wal/advise-vertico-directory--completing-file-p)
+   'vertico-directory--completing-file-p :around
+   #'wal/advise-vertico-directory--completing-file-p)
   :bind
   (:map vertico-map
    ("RET" . vertico-directory-enter)
@@ -4187,9 +4187,7 @@ Do not ignore hidden files."
    consult--source-project-recent-file
    consult--source-bookmark
    :preview-key (kbd "M-,"))
-  (advice-add
-   #'consult-theme :after
-   #'wal/advise-consult-theme)
+  (advice-add 'consult-theme :after #'wal/advise-consult-theme)
   ;; Bind commands in `transient'.
   (transient-define-prefix wal/consult ()
     "Call `consult' functions."
@@ -4557,10 +4555,10 @@ Otherwise treat DEFAULT-CMD normally."
   :init
   (advice-add
     'projectile-find-file :around
-    'wal/advise-projectile-find-file)
+    #'wal/advise-projectile-find-file)
   (advice-add
     'projectile-maybe-read-command :override
-    'wal/advise-projectile-maybe-read-command)
+    #'wal/advise-projectile-maybe-read-command)
   :config
   (wal/append 'projectile-globally-ignored-directories
               (nth 0 wal/projectile-ignored))
@@ -4769,8 +4767,8 @@ This calls `org-content' interactively."
   (require 'org-indent) ; TEMP: Getting missing face errors otherwise.
   (define-key org-mode-map (kbd "C-,") nil) ; Remove `org-cycle-agenda-files'.
   (advice-add
-   'org-export-dispatch
-   :before #'wal/advise-org-export-dispatch)
+   'org-export-dispatch :before
+   #'wal/advise-org-export-dispatch)
   (transient-define-prefix wal/org ()
     "Access `org-mode' commands."
     [["Commands"
@@ -4854,8 +4852,7 @@ This calls `org-content' interactively."
 
 (use-package org-agenda
   :config
-  (advice-add 'org-agenda :filter-args
-    #'wal/advise-org-agenda)
+  (advice-add 'org-agenda :filter-args #'wal/advise-org-agenda)
   :custom
   (org-agenda-hide-tags-regexp "^@")
   (org-agenda-span 'day)
@@ -6971,7 +6968,7 @@ replying to the `JSONRPC' request."
    :project-file "project.godot")
   :config
   (advice-add
-   #'lsp--get-message-type :around
+   'lsp--get-message-type :around
    #'wal/advise-lsp--get-message-type)
   :after projectile
   :ensure nil)
@@ -7791,7 +7788,7 @@ Provide some knowledge of the outside world.
   :config
   (advice-add
    'display-wttr--clean-string :filter-return
-   'wal/advise-display-wttr--clean-string)
+   #'wal/advise-display-wttr--clean-string)
   :custom
   (display-wttr-format "1")
   :ensure nil)
