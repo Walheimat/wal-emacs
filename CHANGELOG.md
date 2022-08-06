@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `transient`s for `major-mode`s are now bound in `major` using
   new variable `wal/major!-key` (default is `m`) to allow for the
   definer to still have a sink.
+- The `transient` for `consult` was slightly improved, no longer
+  binding already bound commands and instead binding `apropos`,
+  `keep-lines` and opening files externally.
 
 ### Removed
 
