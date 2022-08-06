@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added `gdscript-mode` and configuration.
+- Command `server-edit` (`C-x #`) is now bound to `general` (`e e`).
+
 ### Changed
 
 - `M-q` is now bound to `vertico-quick-exit` in `vertico` map;

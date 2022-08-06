@@ -1064,6 +1064,7 @@ Most bindings are declared in individual packages.
   "e" '(:ignore t :wk "Emacs")
   "eq" '(save-buffers-kill-terminal :wk "quit")
   "er" '(restart-emacs :wk "restart")
+  "ee" '(server-edit :wk "edit (done)")
   "f" '(:ignore t :wk "find")
   "fc" '(wal/find-custom-file :wk "custom")
   "fi" '(wal/find-init :wk "init")
@@ -1853,8 +1854,13 @@ t, printing optional message ON-DONE."
 (cl-defmacro wal/lang-hook (name docs &body body &key messages lsp tabs &allow-other-keys)
   "Hook into NAME, describe with DOCS.
 
-MESSAGES is a list of strings. LSP is either t or nil. TABS is
-either t, nil or a symbol (the indentation function).
+MESSAGES is a list of strings.
+
+LSP is either t or nil.
+
+TABS is either nil, t or a symbol. Unless the symbol is `always',
+tabs are enabled using `wal/maybe-enable-tabs', passing it to the
+function as an indentation function.
 
 The rest of the BODY will be spliced into the lambda."
   (declare (indent defun) (doc-string 2))
@@ -1868,7 +1874,9 @@ The rest of the BODY will be spliced into the lambda."
       (lambda ()
         ,(when messages
            `(wal/message-in-a-bottle ,messages))
-        ,(cond ((eq t tabs)
+        ,(cond ((eq 'always tabs)
+                `(wal/enable-tabs))
+               ((eq t tabs)
                 `(wal/maybe-enable-tabs))
                ((not tabs)
                 '(wal/disable-tabs))
@@ -4561,6 +4569,10 @@ Otherwise treat DEFAULT-CMD normally."
               (nth 1 wal/projectile-ignored))
   (wal/append 'projectile-globally-ignored-file-suffixes
               (nth 2 wal/projectile-ignored))
+  (projectile-register-project-type
+   'godot
+   '("project.godot")
+   :project-file "project.godot")
   (transient-define-prefix wal/projectile ()
     "Call `projectile' commands."
     [["Command"
@@ -6933,6 +6945,51 @@ Support for =pug= templates.
 #+BEGIN_SRC emacs-lisp
 (use-package pug-mode
   :wal-ways nil
+  :ensure nil)
+#+END_SRC
+
+** Games
+
+#+BEGIN_SRC emacs-lisp
+(wal/define-expansion-pack games
+  "For game developers."
+  :packages (gdscript-godot))
+#+END_SRC
+
+*** gdscript-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+The engine you've been waiting for.
+
+#+BEGIN_SRC emacs-lisp
+;; Workaround from https://github.com/godotengine/emacs-gdscript-mode#known-issues
+(defun wal/advise-lsp--get-message-type (fun &rest args)
+  "Advise FUN, passing ARGS.
+
+This will ignore the error message resulting from Godot not
+replying to the `JSONRPC' request."
+  (if (string-equal major-mode "gdscript-mode")
+      (let ((json-data (nth 0 args)))
+        (unless (and (string= (gethash "jsonrpc" json-data "") "2.0")
+                     (not (gethash "id" json-data nil))
+                     (not (gethash "method" json-data nil)))
+          (apply fun args)))
+    (apply fun args)))
+
+(use-package gdscript-mode
+  :wal-ways nil
+  :init
+  (wal/lang-hook gdscript-mode
+    "Hook into `gdscript-mode'."
+    :lsp t
+    :tabs always
+    :messages '("I wish you were Estra-gone"))
+  :config
+  (advice-add
+   #'lsp--get-message-type :around
+   #'wal/advise-lsp--get-message-type)
   :ensure nil)
 #+END_SRC
 
