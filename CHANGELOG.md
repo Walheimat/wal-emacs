@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `gdscript-mode` and configuration.
 - Command `server-edit` (`C-x #`) is now bound to `general` (`e e`).
+- Package `base16-theme`.
 
 ### Changed
 
