@@ -51,7 +51,7 @@ Viz major.
 
 - Several `transient`s for various `major-mode`s and libraries. The
   package is now demanded.
-- New macro `wal/major!` to more easily bind to `H-. .`.
+- New macro `wal/major!` to more easily bind to `H-. m`.
 - Commands bound to `wal/colonel` are now described.
 
 ### Changed
