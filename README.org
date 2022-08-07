@@ -7052,14 +7052,12 @@ Please let me know when I screwed up. I promise I will learn.
 My spelling is bad. Uses American English for =flyspell=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/flyspell (&rest _r)
+(defun wal/flyspell ()
   "(De-)Activate the appropriate `flyspell' mode."
   (interactive)
-  (if flyspell-mode
-      (flyspell-mode -1)
-    (if (derived-mode-p 'prog-mode)
-        (flyspell-prog-mode)
-      (flyspell-mode))))
+  (if (derived-mode-p 'prog-mode)
+      (flyspell-prog-mode)
+    (flyspell-mode)))
 
 (use-package flyspell
   :custom
@@ -7070,6 +7068,7 @@ My spelling is bad. Uses American English for =flyspell=.
   (:map flyspell-mode-map
    ("C-." . ispell-word)) ; Replaces `flyspell-auto-correct-word', which is still available via `C-M-i'.
   :general
+  (wal/major "s" #'wal/flyspell :predicate '(lambda () (not flyspell-mode)))
   (wal/major :keymaps 'flyspell-mode-map
     "s" '(:ignore t :wk "flyspell")
     "sb" '(flyspell-buffer :wk "buffer")
