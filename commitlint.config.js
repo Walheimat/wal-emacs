@@ -6,7 +6,7 @@ module.exports = {
 		'scope-case': [2, 'always', ['lower-case', 'kebab-case']],
 		'scope-empty': [1, 'never'],
 		'subject-empty': [2, 'never'],
-		'subject-case': [2, 'always', ['lower-case']],
+		'subject-case': [1, 'always', ['lower-case']],
 		'subject-full-stop': [2, 'never'],
 		'body-empty': [1, 'never'],
 		'body-leading-blank': [2, 'always'],
