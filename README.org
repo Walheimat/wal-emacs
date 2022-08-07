@@ -3950,8 +3950,9 @@ Alternative.
 (use-package corfu
   :custom
   (corfu-auto t)
-  (corfu-quit-no-match t)
   (corfu-cycle t)
+  :config
+  (setq tab-always-indent 'complete)
   :hook (prog-mode . corfu-mode))
 #+END_SRC
 
@@ -4089,9 +4090,9 @@ Fuzzy matches.
 #+BEGIN_SRC emacs-lisp
 (use-package orderless
   :config
-  (setq completion-styles '(orderless)
+  (setq completion-styles '(orderless basic)
         completion-category-defaults nil
-        completion-category-overrides '((file (styles partial-completion))))
+        completion-category-overrides '((file (styles . (partial-completion)))))
   :demand
   :after vertico)
 #+END_SRC
@@ -7190,6 +7191,11 @@ minimum prefixes are reduced."
                 corfu-auto-prefix 1))
   (lsp-deferred))
 
+(defun wal/lsp-completion-with-corfu ()
+  "Advise completion to work better with `corfu' and `orderless'."
+  (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+        completion-styles))
+
 (defun wal/advise-lsp-to-prevent-multi-root (&rest _r)
   "Prevent adding workspace roots from other projects."
   (eval '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))
@@ -7201,8 +7207,6 @@ minimum prefixes are reduced."
   (wal/append 'lsp-file-watch-ignored-directories
               wal/lsp-file-watch-ignored-directories)
   (advice-add 'lsp :before #'wal/advise-lsp-to-prevent-multi-root)
-  (lsp-enable-which-key-integration t)
-  (setq lsp-completion-provider :none) ;; We're using `corfu'.
   (transient-define-prefix wal/lsp-dispatch ()
     "Call `lsp-mode' functions."
     [["Format"
@@ -7226,6 +7230,7 @@ minimum prefixes are reduced."
       ("Q" "quit" lsp-workspace-shutdown)]])
   (wal/major-sink :keymaps 'lsp-mode-map
     "l" '(:keymap lsp-command-map :wk "lsp"))
+  (lsp-enable-which-key-integration t)
   :custom
   (lsp-headerline-breadcrumb-enable nil)
   (lsp-keymap-prefix (wal/prefix-user-key (concat wal/major-key " " wal/major-key " " "l")))
@@ -7236,8 +7241,11 @@ minimum prefixes are reduced."
   (lsp-signature-function 'lsp-signature-posframe)
   (lsp-signature-auto-activate '(:on-server-request))
   (lsp-keep-workspace-alive nil)
+  (lsp-completion-provider :none) ;; We're using `corfu'.
   :general
   (wal/major :keymaps 'lsp-mode-map "l" '(wal/lsp-dispatch :wk "lsp"))
+  :hook
+  (lsp-completion-mode . wal/lsp-completion-with-corfu)
   :delight
   (lsp-mode " lsp")
   (lsp-lens-mode " lns"))
