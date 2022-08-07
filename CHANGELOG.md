@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added `gdscript-mode` and configuration.
-- Command `server-edit` (`C-x #`) is now bound to `general` (`e e`).
+- If a buffer was requested from a server client `C-c C-c` will call
+  `server-edit`.
 - Package `base16-theme`.
 
 ### Changed
