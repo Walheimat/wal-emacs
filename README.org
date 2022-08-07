@@ -6979,15 +6979,16 @@ replying to the `JSONRPC' request."
     :lsp t
     :tabs always
     :messages '("I wish you were Estra-gone"))
-  (projectile-register-project-type
-   'godot
-   '("project.godot")
-   :project-file "project.godot")
+  (when wal/use-projectile
+    (eval-after-load 'projectile
+      '(projectile-register-project-type
+        'godot
+        '("project.godot")
+        :project-file "project.godot")))
   :config
   (advice-add
    'lsp--get-message-type :around
    #'wal/advise-lsp--get-message-type)
-  :after projectile
   :ensure nil)
 #+END_SRC
 
