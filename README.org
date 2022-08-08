@@ -4033,17 +4033,17 @@ Provide global option narrowing using the =vertico= family of products.
   "Record the command which opened the minibuffer."
   (setq-local wal/command this-command))
 
-(defun wal/advise-vertico-directory--completing-file-p (fun &rest r)
+(defun wal/advise-vertico--metadata-get (fun &rest r)
   "Advise FUN using R to exit if we came from `dired-goto-file'."
-  (if (eq wal/command 'dired-goto-file)
+  (if (and (eq (car r) 'category) (eq wal/command 'dired-goto-file))
       nil
     (apply fun r)))
 
 (use-package vertico-directory
   :config
   (advice-add
-   'vertico-directory--completing-file-p :around
-   #'wal/advise-vertico-directory--completing-file-p)
+   'vertico--metadata-get :around
+   #'wal/advise-vertico--metadata-get)
   :bind
   (:map vertico-map
    ("RET" . vertico-directory-enter)

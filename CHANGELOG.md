@@ -41,6 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Commands bound in `transient` for `org-mode` are more context-aware.
 - Fixes `corfu` and `orderless` actually working with `lsp-mode`.
+- Adapts advice for `vertico-directory` to work again after advised
+  function was removed.
 
 ### Removed
 
