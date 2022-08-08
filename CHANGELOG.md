@@ -21,16 +21,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `M-q` is now bound to `coruf-quick-exit` in `corfu` map;
   `quick-complete` is bound to `C-q`.
 - Bindings in `colonel` have been re-assigned across it and its
-  re-added `sink`.
-- Responsibilities for `major` and `captain` have changed.
-  Buffer-related actions, whether from `major-` or `minor-mode` are
-  bound in `major`; global actions in `captain`.
-- The `transient`s for `major-mode`s are now bound in `major` using
-  new variable `wal/major!-key` (default is `m`) to allow for the
-  definer to still have a sink.
+  re-added mirroring `sink`.
+- Responsibilities for `major`, `captain` and `lieutenant` have
+  changed. Buffer-related actions, whether from `major-` or
+  `minor-mode` are bound in `major`; global (or perspective-wide)
+  actions in `captain`. Commands bound to `lieutenant` have been moved
+  to `major`; `lieutenant` is now responsible for command maps. The
+  `transient`s for `major-mode`s are now bound in `major` using new
+  variable `wal/major!-key` (default is `m`) to allow for the definer
+  to still have a sink.
 - The `transient` for `consult` was slightly improved, no longer
   binding already bound commands and instead binding `apropos`,
   `keep-lines` and opening files externally.
+- `C-c c` now does a `completion-at-point`.
+- Commands `popper-toggle-latest` and `wal/org-roam` were moved to
+  `captain`.
 
 ### Fixed
 

@@ -652,11 +652,11 @@ I use many[fn:8] custom keybindings.
 
 ;;; Code:
 
-(declare-function wal/captain-sink "wal-key-bindings.el")
 (declare-function wal/colonel "wal-key-bindings.el")
 (declare-function wal/general "wal-key-bindings.el")
 (declare-function wal/general-sink "wal-key-bindings.el")
 (declare-function wal/lieutenant "wal-key-bindings.el")
+(declare-function wal/major "wal-key-bindings.el")
 (declare-function wal/open-line "wal-func.el")
 (declare-function wal/open-line-above "wal-func.el")
 (declare-function wal/other-window "wal-func.el")
@@ -725,19 +725,13 @@ dispatches:
 
 + =C-c a= for =org-agenda=
 + =C-c b= for custom =beacon-blink=
-+ =C-c c= for =org-roam=
++ =C-c c= does a =completion-at-point=
 + =C-c d= for =docker=
 + =C-c k= for =kmacro=
 + =C-c q= to do a =quick-calc= (inserted if called with =C-u=)
 + =C-c r= for =register=
 + =C-c s= to search with =consult-line=
-+ =C-c t= for =vterm=
-+ =C-c w= toggles pop-ups using =popper=.
-
-Some command maps are also bound:
-
-+ =C-c B= for =bookmark=
-+ =C-c K= for =kmacro=.
++ =C-c t= for =vterm=.
 
 When editing this config:
 
@@ -853,9 +847,10 @@ They are:
 
 *** Major
 
-Leader key =major= (=.= by default) is responsible for actions that are
-relevant to the current buffer, mostly through a =major-mode=-related
-=transient= bound to the same key (=.= by default).
+Leader key =major= (=.= by default) deals with the (buffer-)local context.
+
+It does this mostly through a =major-mode=-related =transient= bound to
+the same key (=.= by default).
 
 If the respective buffer-local =minor-mode= is active, the following
 command maps and transients are bound:
@@ -866,23 +861,29 @@ command maps and transients are bound:
 + =s= for =flyspell=
 + =v= for =verb=.
 
-The sink binds their full command maps.
+It also binds =hydra= commands:
+
++ =o= to resize the window
++ =t= to scale text
++ =v= to scroll the /other/ window.
 
 *** Captain
 
-Leader key =captain= (=/= by default) gives access to minor-mode[fn:11]
-command and =transient= maps that are relevant globally. These are:
+Leader key =captain= (=/= by default) deals with the global context.
 
-+ =i= for =perspective= (=I= for full command map)
-+ =p= for =projectile= (=P= for full command map)
+It gives access to minor-mode[fn:11] commands and =transient= maps that are
+relevant globally (or for the current perspective). These are:
+
++ =c= for =org-roam=
++ =i= for =perspective=
++ =o= for =popper=
++ =p= for =projectile=
 + =w= for =winner=.
-
-The sink binds related command maps.
 
 *** Lieutenant
 
-Leader key =lieutenant= (='= by default) is currently used for editor
-adjustments (text and window size) using custom =hydra= maps.
+Leader key =lieutenant= (='= by default) currently provides access to
+command maps.
 
 ** Packages
 
@@ -917,15 +918,6 @@ All ARGS are passed to the definer."
   `(wal/major :major-modes t ,@args
      ,wal/major!-key ',fun))
 
-(cl-defmacro wal/major-mirror! (key fun mfun &rest args)
-  "Bind FUN to KEY, MFUN in the sink.
-
-All ARGS are passed to both definers."
-  (declare (indent defun))
-  `(progn
-    (wal/major ,@args ,key ,fun)
-    (wal/major-sink ,@args ,key ,mfun)))
-
 (cl-defmacro wal/colonel! (key fun mfun &rest args)
   "Bind FUN to KEY, MFUN in the sink.
 
@@ -947,7 +939,7 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
     (concat prefix user-key)))
 
 (defvar wal/leaders '(wal/general wal/colonel wal/major wal/captain wal/lieutenant))
-(defvar wal/leader-with-sink '(wal/general wal/colonel wal/major wal/captain wal/lieutenant))
+(defvar wal/leader-with-sink '(wal/general wal/colonel))
 
 (defun wal/general-create-definer (leader)
   "Create a definer for LEADER with a sink."
@@ -1026,10 +1018,10 @@ Additional left PADDING can be passed."
     ("n" scroll-other-window)
     ("q" nil "quit")))
 
-(wal/lieutenant
-  "o" '(wal/resize-window/body :wk "resize window")
-  "t" '(wal/text-scale/body :wk "text scale")
-  "v" '(wal/scroll-other-window/body :wk "scroll other window"))
+(wal/major
+ "t" 'wal/text-scale/body
+ "o" 'wal/resize-window/body
+ "v" 'wal/scroll-other-window/body)
 #+END_SRC
 
 *** transient
@@ -1085,6 +1077,8 @@ Most bindings are declared in individual packages.
 
 (wal/colonel! "q" 'query-replace 'query-replace-regexp)
 
+(wal/lieutenant "g" '(:keymap goto-map :wk "goto"))
+
 (general-define-key
  :keymaps 'ctl-x-x-map
  "f" 'wal/find-file-delete-other-windows) ; Replaces `font-lock-update'.
@@ -1109,6 +1103,7 @@ Most bindings are declared in individual packages.
 (global-set-key (kbd "C-?") #'undo-redo)
 (global-set-key (kbd "M-o") #'wal/other-window)
 (global-set-key (kbd "C-;") #'comment-line)
+(global-set-key (kbd "C-c c") #'completion-at-point)
 (global-unset-key (kbd "C-x C-c"))
 #+END_SRC
 
@@ -2321,8 +2316,8 @@ Some people need macros, okay?
        :inapt-if-not (lambda () (featurep 'consult)))]])
   :bind
   ("C-c k" . wal/kmacro)
-  :bind-keymap
-  ("C-c K" . kmacro-keymap)
+  :general
+  (wal/lieutenant "k" '(:keymap kmacro-keymap :wk "kmacro"))
   :ensure nil)
 #+END_SRC
 
@@ -2479,8 +2474,8 @@ Leave a bookmark why don't you.
   (:map bookmark-map
    ("l" . bookmark-bmenu-list)
    ("L" . bookmark-load))
-  :bind-keymap
-  ("C-c B" . bookmark-map)
+  :general
+  (wal/lieutenant "m" '(:keymap bookmark-map :wk "bookmark"))
   :ensure nil)
 #+END_SRC
 
@@ -3599,8 +3594,8 @@ Treat certain buffers and their windows as pop-ups.
   (popper-echo-dispatch-keys '(?a ?s ?d ?f ?g ?q ?w ?e ?r ?t))
   (popper-echo-lines 1)
   (popper-echo-transform-function #'wal/popper-echo-transform)
-  :bind
-  ("C-c w" . popper-toggle-latest)
+  :general
+  (wal/captain :keymaps 'popper-mode-map "o" 'popper-toggle-latest)
   :demand
   :after winner)
 #+END_SRC
@@ -3951,8 +3946,6 @@ Alternative.
   :custom
   (corfu-auto t)
   (corfu-cycle t)
-  :config
-  (setq tab-always-indent 'complete)
   :hook (prog-mode . corfu-mode))
 #+END_SRC
 
@@ -4229,6 +4222,7 @@ Do not ignore hidden files."
   (("C-c s" . consult-line)
    :map goto-map
    ("g" . consult-goto-line)
+   ("h" . consult-org-heading)
    ("m" . consult-mark)
    ("M" . consult-global-mark))
   :wal-bind
@@ -4237,10 +4231,8 @@ Do not ignore hidden files."
   (wal/general
     "st" '(consult-theme :wk "consult theme")
     "fr" '(consult-recent-file :wk "recent"))
-  (wal/major-mirror! "c" 'consult-mode-command 'consult-minor-mode-menu)
-  (general-define-key
-   :keymaps 'org-mode-map
-   "M-g h" 'consult-org-heading)
+  (wal/major "c" 'consult-mode-command)
+  (wal/major "C" 'consult-minor-mode-command)
   :commands
   (wal/univ-consult-buffer
    wal/consult))
@@ -4504,8 +4496,7 @@ The current buffer and Dired buffers are filtered."
       ("m" "merge" persp-merge)]
      ["Other"
       ("x" "scratch" wal/switch-to-scratch-buffer)]])
-  (wal/captain-sink
-    "i" '(:keymap perspective-map :wk "perspective (map)"))
+  (wal/lieutenant "i" '(:keymap perspective-map :wk "perspective"))
   (persp-mode +1)
   ;; Override the override to `perspective-map'.
   (when (< emacs-major-version 28)
@@ -4604,7 +4595,7 @@ Otherwise treat DEFAULT-CMD normally."
       ("l" "dir-locals" projectile-edit-dir-locals)]
      ["Projects"
       ("o" "switch to open project" projectile-switch-open-project)]])
-  (wal/captain-sink "p" '(:keymap projectile-command-map :wk "projectile (map)"))
+  (wal/lieutenant "p" '(:keymap projectile-command-map :wk "projectile"))
   (projectile-mode +1)
   :custom
   (projectile-switch-project-action #'projectile-dired)
@@ -4636,11 +4627,11 @@ Built-in but entirely dependent on either =git= or =hg=.
   :custom
   (project-switch-commands 'project-find-dir)
   (project-vc-ignores wal/project-vc-ignores)
-  :bind-keymap
-  ("C-c p" . project-prefix-map)
   :wal-bind
   (("l" . project-find-file)
    ("p" . project-switch-project))
+  :general
+  (wal/lieutenant "p" '(:keymap project-prefix-map :wk "project"))
   :ensure nil
   :demand)
 #+END_SRC
@@ -4981,8 +4972,8 @@ Trying to organize my thoughts using Zettelkästen.
                           "#+title: %<%Y-%m-%d>\n")
        :unnarrowed t
        :empty-lines 1)))
-  :bind
-  ("C-c c" . wal/org-roam)
+  :general
+  (wal/captain "c" 'wal/org-roam)
   :commands
   (wal/org-roam
    org-roam-buffer-display-dedicated
@@ -5908,11 +5899,11 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
     ("l" smerge-keep-lower)
     ("a" smerge-keep-all "keep all")
     ("q" nil "quit"))
-  (wal/major-sink :keymaps 'smerge-mode-map
-    "m" '(:keymap smerge-basic-map :wk "smerge"))
+  (wal/lieutenant :keymaps 'smerge-mode-map
+    "@" '(:keymap smerge-basic-map :wk "smerge"))
   :general
   (wal/major :keymaps 'smerge-mode-map
-    "m" '(wal/smerge/body :wk "smerge"))
+    "@" '(wal/smerge/body :wk "smerge"))
   :ensure nil
   :delight " smg")
 #+END_SRC
@@ -7039,7 +7030,7 @@ Please let me know when I screwed up. I promise I will learn.
   :custom
   (flycheck-mode-line-prefix "fly")
   :general
-  (wal/major-sink :keymaps 'flycheck-mode-map
+  (wal/lieutenant :keymaps 'flycheck-mode-map
     "f" '(:keymap flycheck-command-map :wk "flycheck"))
   :hook (sh-set-shell . flycheck-mode))
 #+END_SRC
@@ -7137,7 +7128,6 @@ Language servers are awesome. Thanks, Microsoft.
 (declare-function lsp-enable-which-key-integration "ext:lsp-mode.el")
 (declare-function wal/append "wal-func.el")
 (declare-function wal/captain "wal-key-bindings.el")
-(declare-function wal/captain-sink "wal-key-bindings.el")
 (declare-function wdb/side "wal-func.el")
 
 (defvar dap-debug-template-configurations)
@@ -7226,12 +7216,12 @@ minimum prefixes are reduced."
      ["Workspace"
       ("R" "restart" lsp-workspace-restart)
       ("Q" "quit" lsp-workspace-shutdown)]])
-  (wal/major-sink :keymaps 'lsp-mode-map
+  (wal/lieutenant :keymaps 'lsp-mode-map
     "l" '(:keymap lsp-command-map :wk "lsp"))
   (lsp-enable-which-key-integration t)
   :custom
   (lsp-headerline-breadcrumb-enable nil)
-  (lsp-keymap-prefix (wal/prefix-user-key (concat wal/major-key " " wal/major-key " " "l")))
+  (lsp-keymap-prefix (wal/prefix-user-key (concat wal/lieutenant-key " " "l")))
   (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
   (lsp-clients-typescript-log-verbosity "off")
   (lsp-rust-analyzer-cargo-watch-command "clippy")
@@ -7641,8 +7631,8 @@ Make requests using Org.
      ["Variables"
       ("v" "set" verb-set-var)
       ("V" "show" verb-show-vars)]])
-  (wal/major-sink :keymaps '(verb-mode-map verb-response-body-mode-map)
-    "v" '(:keymap verb-command-map :wk "verb (commands)"))
+  (wal/lieutenant :keymaps '(verb-mode-map verb-response-body-mode-map)
+    "v" '(:keymap verb-command-map :wk "verb"))
   :bind
   (:map verb-response-body-mode-map
    ("k" . verb-kill-buffer-and-window)
