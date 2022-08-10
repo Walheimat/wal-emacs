@@ -1077,6 +1077,8 @@ Most bindings are declared in individual packages.
 
 (wal/colonel! "q" 'query-replace 'query-replace-regexp)
 
+(wal/major "w" 'read-only-mode)
+
 (wal/lieutenant "g" '(:keymap goto-map :wk "goto"))
 
 (general-define-key
@@ -1085,12 +1087,12 @@ Most bindings are declared in individual packages.
 
 ;; Dealing with server buffers.
 (general-define-key
- :keymaps 'ctl-x-x-map
- "#" 'server-edit-abort)
+ :predicate 'server-buffer-clients
+ "C-c C-c" 'server-edit)
 
 (general-define-key
  :predicate 'server-buffer-clients
- "C-c C-c" 'server-edit)
+ "C-c C-k" 'server-edit-abort)
 
 ;; Use H-u for C-u.
 (when wal/use-hyper-prefix
@@ -1104,7 +1106,8 @@ Most bindings are declared in individual packages.
 (global-set-key (kbd "M-o") #'wal/other-window)
 (global-set-key (kbd "C-;") #'comment-line)
 (global-set-key (kbd "C-c c") #'completion-at-point)
-(global-unset-key (kbd "C-x C-c"))
+
+(global-unset-key (kbd "C-x C-c")) ;; Unbinds `save-buffers-kill-terminal'.
 #+END_SRC
 
 ** Additional Mode Controls
