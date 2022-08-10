@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixes `corfu` and `orderless` actually working with `lsp-mode`.
 - Adapts advice for `vertico-directory` to work again after advised
   function was removed.
+- Makes `projectile` not pass potentially missing switch to `fd`.
 
 ### Removed
 
