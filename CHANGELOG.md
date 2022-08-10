@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `C-c c` now does a `completion-at-point`.
 - Commands `popper-toggle-latest` and `wal/org-roam` were moved to
   `captain`.
+- Macro `wal/major!` now uses `H-. m`.
 
 ### Fixed
 
@@ -59,7 +60,7 @@ Viz major.
 
 - Several `transient`s for various `major-mode`s and libraries. The
   package is now demanded.
-- New macro `wal/major!` to more easily bind to `H-. m`.
+- New macro `wal/major!` to more easily bind to `H-. .`.
 - Commands bound to `wal/colonel` are now described.
 
 ### Changed
