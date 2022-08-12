@@ -3,8 +3,8 @@
 ;;; Commentary:
 
 ;; This file is a minimal Gmail setup. Be sure to replace the folders
-;; and the email address. You will then neeed to copy the file to any
-;; folder in the `load-path' usig name `site-start.el'.
+;; and the email address. You will then need to copy the file to any
+;; folder in the `load-path' using name `site-start.el'.
 
 ;;; Code:
 

@@ -45,6 +45,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adapts advice for `vertico-directory` to work again after advised
   function was removed.
 - Makes `projectile` not pass potentially missing switch to `fd`.
+- Loading of `mu4e` should work again by removing it from the
+  expansion pack (which would check if it was installed using
+  `package`). The command is now bound to `C-c m`.
 
 ### Removed
 
