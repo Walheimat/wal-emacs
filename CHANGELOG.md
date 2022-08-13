@@ -11,9 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `gdscript-mode` and configuration.
 - If a buffer was requested from a server client `C-c C-c` will call
-  `server-edit`.
-- Package `base16-theme`.
+  `server-edit` and `C-c C-k` will call `server-edit-abort`.
+- Added package `base16-theme`.
 - All packages now set `lexical-binding` to `t`.
+- Added functions from `consult` wiki to clock in on agenda items and
+  to use `thing-at-point` for `consult-line`.
 
 ### Changed
 
