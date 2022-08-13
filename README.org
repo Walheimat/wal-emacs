@@ -100,6 +100,7 @@ evaluate /everything/[fn:6] that follows.
 (defvar use-package-always-ensure)
 (defvar use-package-always-defer)
 (defvar wal/doctor)
+(defvar wal/mini)
 
 (defgroup wal-settings nil
   "Change core settings."
@@ -361,7 +362,7 @@ use the result further down the line."
     (let* ((active (or pred
                        (if (wal/is-expansion-pack name)
                            (not (null (package-installed-p name)))
-                         (or (not wal/minimal)
+                         (or (not (or wal/minimal wal/mini))
                              (not (null (memq name wal/minimal-exclude)))))))
            (body (use-package-process-keywords
                    name
@@ -902,6 +903,8 @@ command maps.
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Allows defining custom prefixes.
 
 #+BEGIN_SRC emacs-lisp
 (cl-defmacro wal/create-leader-sink (name &key definer prefix)
@@ -1561,9 +1564,11 @@ Capture custom command line flags.
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal/doctor nil)
+(defvar wal/mini nil)
 
 (defconst wal/custom-flags
-  '((doctor . "--doctor"))
+  '((doctor . "--doctor")
+    (mini . "--mini"))
   "Alist of custom flags that can be passed to Emacs.")
 
 (defun wal/capture-flag (flag)
@@ -1577,6 +1582,11 @@ Capture custom command line flags.
 ;; turn on `explain-pause-mode'.
 (when (wal/capture-flag 'doctor)
   (setq wal/doctor t))
+
+;; Flag `--mini' will only load packages that are part of the minimal
+;; configuration.
+(when (wal/capture-flag 'mini)
+  (setq wal/mini t))
 #+END_SRC
 
 ** Text Scaling
