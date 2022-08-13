@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - If a buffer was requested from a server client `C-c C-c` will call
   `server-edit`.
 - Package `base16-theme`.
+- All packages now set `lexical-binding` to `t`.
 
 ### Changed
 
