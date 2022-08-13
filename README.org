@@ -3203,6 +3203,8 @@ Pulse on region edits.
 #+BEGIN_SRC emacs-lisp
 (use-package goggles
   :wal-ways nil
+  :custom
+  (goggles-pulse-iterations 20)
   :hook ((prog-mode text-mode) . goggles-mode)
   :delight " ggl")
 #+END_SRC
@@ -3382,8 +3384,7 @@ Display emojis[fn:16].
 :UNNUMBERED: t
 :END:
 
-Since this eats up a lot of CPU, the timer is disabled by default but
-zoning can always be triggered using =C-z=.
+Screen saver, CPU devourer.
 
 #+BEGIN_SRC emacs-lisp
 (use-package zone
@@ -3397,8 +3398,8 @@ zoning can always be triggered using =C-z=.
                        ])
   (when (and (fboundp 'zone-when-idle) wal/zone-when-idle)
     (zone-when-idle wal/zone-timer))
-  :bind
-  ("C-z" . zone) ; Replaces `suspend-frame'.
+  :general
+  (wal/major "0" 'zone)
   :ensure nil)
 #+END_SRC
 
@@ -3542,7 +3543,7 @@ Ace interacting with (multiple) windows.
                             (?v aw-split-window-vert "vertical split")
                             (?f aw-split-window-fair "fair split")
                             (?d aw-delete-window "delete")
-                            (?k wal/aw-delete-window-kill-buffer "kill")
+                            (?x wal/aw-delete-window-kill-buffer "kill")
                             (?o delete-other-windows "delete other")
                             (?c aw-copy-window "copy")
                             (?s aw-swap-window "swap")
@@ -3850,7 +3851,7 @@ using =xref-find-definitions= (=M-.=).
   :config
   (setq dumb-jump-selector 'completing-read)
   :custom
-  (dumb-jump-force-searcher 'ag))
+  (dumb-jump-force-searcher 'rg))
 #+END_SRC
 
 ** Footer
@@ -3999,7 +4000,6 @@ Show docs while selecting.
    ("M-p" . corfu-doc-scroll-down)
    ("M-n" . corfu-doc-scroll-up)
    ("M-d" . corfu-doc-toggle))
-  :demand
   :after corfu)
 #+END_SRC
 

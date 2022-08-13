@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Commands `popper-toggle-latest` and `wal/org-roam` were moved to
   `captain`.
 - Macro `wal/major!` now uses `H-. m`.
+- The effect of `goggles` is more pronounced.
+- Zoning is now bound to `0` in `captain`.
 - Bindings that are not a built-in sub-program were removed from
   `general-sink`.
 
@@ -51,6 +53,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Loading of `mu4e` should work again by removing it from the
   expansion pack (which would check if it was installed using
   `package`). The command is now bound to `C-c m`.
+- Deleting window with `ace-window` now uses `x` (previously `k` was
+  bound which would be used to switch).
+- Package `dumb-jump` now uses `rg`.
 
 ### Removed
 
