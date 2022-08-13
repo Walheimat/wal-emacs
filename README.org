@@ -4016,7 +4016,11 @@ Provide global option narrowing using the =vertico= family of products.
 (use-package vertico
   :config
   (setq enable-recursive-minibuffers t
-        read-extended-command-predicate #'command-completion-default-include-p)
+        read-extended-command-predicate
+        #'command-completion-default-include-p
+        minibuffer-prompt-properties
+        '(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
   (vertico-mode)
   :custom
   (vertico-cycle t)
@@ -4089,7 +4093,7 @@ Fuzzy matches.
   :config
   (setq completion-styles '(orderless basic)
         completion-category-defaults nil
-        completion-category-overrides '((file (styles . (partial-completion)))))
+        completion-category-overrides '((file (styles partial-completion))))
   :demand
   :after vertico)
 #+END_SRC
@@ -4179,6 +4183,17 @@ Do not ignore hidden files."
                (fboundp 'consult--ripgrep-builder))
       (consult--grep "Ripgrep (ignored)" #'consult--ripgrep-builder dir initial))))
 
+(defun wal/consult-line ()
+  "Call consult line using `thing-at-point' (taken from wiki)."
+  (interactive)
+  (consult-line (thing-at-point 'symbol)))
+
+(defun wal/consult-clock-in ()
+  "Clock into an Org agenda heading."
+  (interactive)
+  (save-window-excursion
+    (consult-org-agenda)
+    (org-clock-in)))
 
 (defun wal/advise-consult-theme (theme)
   "Advise to set `wal/active-theme' to THEME."
@@ -4201,6 +4216,10 @@ Do not ignore hidden files."
    consult--source-project-recent-file
    consult--source-bookmark
    :preview-key (kbd "M-,"))
+  (consult-customize
+   wal/consult-clock-in
+   :prompt "Clock in: "
+   :preview-key (kbd "M-."))
   (advice-add 'consult-theme :after #'wal/advise-consult-theme)
   ;; Bind commands in `transient'.
   (transient-define-prefix wal/consult ()
@@ -4218,12 +4237,13 @@ Do not ignore hidden files."
      ["Do"
       ("y" "yank" consult-yank-from-kill-ring)
       ("u" "focus" consult-focus-lines)
-      ("k" "keep" consult-keep-lines)]
+      ("k" "keep" consult-keep-lines)
+      ("c" "clock in" wal/consult-clock-in)]
      ["Narrow"
       ("e" "errors (flycheck)" consult-flycheck
        :inapt-if-not (lambda () flycheck-mode))]])
   :bind
-  (("C-c s" . consult-line)
+  (("C-c s" . wal/consult-line)
    :map goto-map
    ("g" . consult-goto-line)
    ("h" . consult-org-heading)
@@ -4240,7 +4260,9 @@ Do not ignore hidden files."
     "-" 'consult-minor-mode-menu)
   :commands
   (wal/univ-consult-buffer
-   wal/consult))
+   wal/consult
+   wal/consult-line
+   wal/consult-clock-in))
 #+END_SRC
 
 ** Footer
