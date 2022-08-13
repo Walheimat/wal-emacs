@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Commands `popper-toggle-latest` and `wal/org-roam` were moved to
   `captain`.
 - Macro `wal/major!` now uses `H-. m`.
+- Bindings that are not a built-in sub-program were removed from
+  `general-sink`.
 
 ### Fixed
 
