@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Package `typo-mode` is deferred after `text-mode`.
+- Default `org-capture` is bound to `o` in `org-roam` `transient`.
 
 ## [1.7.8] - 2021-08-13
 
