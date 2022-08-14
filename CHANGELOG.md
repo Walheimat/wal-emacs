@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal/minimal` (only loading packages that don't have `:wal-ways` set
   to `nil`).
 
+### Fixed
+
+- Package `typo-mode` is deferred after `text-mode`.
+
 ## [1.7.8] - 2021-08-13
 
 Captain my captain.
