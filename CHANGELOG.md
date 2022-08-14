@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal/minimal` (only loading packages that don't have `:wal-ways` set
   to `nil`).
 
+### Changed
+
+- The default key for the `transient` in `major` is `.` again since
+  the sink is gone.
+
 ### Fixed
 
 - Package `typo-mode` is deferred after `text-mode`.
