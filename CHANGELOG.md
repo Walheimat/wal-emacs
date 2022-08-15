@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `typo-mode` is deferred after `text-mode`.
 - Default `org-capture` is bound to `o` in `org-roam` `transient`.
 - Adds missing `defvar` declarations to allow for dynamic binding.
+- Macro `wal/lang-hook` now consumes passed doc string by producing a
+  full function definition before adding the hook.
 
 ## [1.7.8] - 2021-08-13
 

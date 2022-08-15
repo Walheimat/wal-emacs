@@ -1911,22 +1911,26 @@ The rest of the BODY will be spliced into the lambda."
         (safe-body (cl-loop for (key val) on body by 'cddr
                             unless (memq key '(:messages :lsp :tabs))
                             collect key
-                            and collect val)))
-    `(add-hook
-      ',target
-      (lambda ()
-        ,(when messages
-           `(wal/message-in-a-bottle ,messages))
-        ,(cond ((eq 'always tabs)
-                `(wal/enable-tabs))
-               ((eq t tabs)
-                `(wal/maybe-enable-tabs))
-               ((not tabs)
-                '(wal/disable-tabs))
-               (t `(wal/maybe-enable-tabs :indent-with ,tabs)))
-        ,@safe-body
-        ,(when lsp
-           '(wal/lsp))))))
+                            and collect val))
+        (func-name (intern (concat "wal/" (symbol-name name) "-hook"))))
+    `(progn
+       (defun ,func-name ()
+         ,docs
+         ,(when messages
+            `(wal/message-in-a-bottle ,messages))
+         ,(cond ((eq 'always tabs)
+                 `(wal/enable-tabs))
+                ((eq t tabs)
+                 `(wal/maybe-enable-tabs))
+                ((not tabs)
+                 '(wal/disable-tabs))
+                (t `(wal/maybe-enable-tabs :indent-with ,tabs)))
+         ,@safe-body
+         ,(when lsp
+            '(wal/lsp)))
+       (add-hook
+        ',target
+        ',func-name))))
 #+END_SRC
 
 ** Footer
