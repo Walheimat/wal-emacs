@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds missing `defvar` declarations to allow for dynamic binding.
 - Macro `wal/lang-hook` now consumes passed doc string by producing a
   full function definition before adding the hook.
+- Package `gdscript-mode` is now called that in the expansion pack,
+  not `gdscript-godot`.
 
 ## [1.7.8] - 2021-08-13
 
