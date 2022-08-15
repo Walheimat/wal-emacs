@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Macro `wal-define-expansion-pack` now also accepts passing MELPA
   recipes using key `:recipes`. Recipes and packages are treated
   equally in the `marginalia` annotation.
+- Command `helpful-kill-buffers` is not bound in `help-map` to `C-x`.
 
 ### Changed
 
