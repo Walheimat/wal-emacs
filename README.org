@@ -1530,7 +1530,7 @@ matching files are visited but only the last-visited displayed."
   (interactive
    (find-file-read-args "Find file (deleting other windows): "
                         (confirm-nonexistent-file-or-buffer)))
-  (let ((value (find-file-noselect filename nil nil nil)))
+  (let ((value (find-file-noselect filename nil nil wildcards)))
     (if (listp value)
         (progn
           (setq value (nreverse value))
@@ -1664,8 +1664,8 @@ The bias is the high end unless BIAS-LOW is passed. The number of
 throws are 3 or THROWS."
   (let ((results (list))
         (throws (or throws 3)))
-    (dotimes (i throws)
-      (add-to-list 'results (random limit)))
+    (dotimes (_i throws)
+      (push (random limit) results))
     (if bias-low
         (seq-min results)
       (seq-max results))))
@@ -2825,7 +2825,9 @@ I like nice-looking things.
 (defvar dashboard-buffer-name)
 (defvar dashboard-footer-messages)
 (defvar dimmer-prevent-dimming-predicates)
+(defvar wal/ascii-whale)
 (defvar wal/experimental)
+(defvar wal/emacs-config-default-path)
 (defvar which-key-popup-type)
 
 (defgroup wal-visuals nil
@@ -2933,6 +2935,7 @@ Let's have a dash of board.
 #+BEGIN_SRC emacs-lisp
 (defun wal/advise-dashboard-insert-startupify-lists (fun &rest r)
   "Advise FUN to ignore certain directories, applying R."
+  (defvar recentf-exclude)
   (let ((recentf-exclude wal/recentf-exclude))
     (apply fun r)))
 
@@ -3159,6 +3162,10 @@ Help me find my cursor!
 
 This just means increasing duration, delay, size and brightness."
   (interactive)
+  (defvar beacon-blink-duration)
+  (defvar beacon-blink-delay)
+  (defvar beacon-size)
+  (defvar beacon-color)
   (let ((beacon-blink-duration 0.8)
         (beacon-blink-delay 0.4)
         (beacon-size 60)
@@ -3716,8 +3723,7 @@ If called with `universal-argument', go to LINE-FIRST."
   "Select two lines and mark the region between them."
   (interactive)
   (avy-with wal/avy-mark-region
-    (let* ((initial-window (selected-window))
-           (beg (avy--line))
+    (let* ((beg (avy--line))
            (end (avy--line)))
       (when (> beg end)
         (cl-rotatef beg end))
@@ -3930,9 +3936,10 @@ Complete commands and code.
 (eval-when-compile
   (require 'transient))
 
+(declare-function org-clock-in "ext:org-clock.el")
+(declare-function projectile-project-root "ext:projectile.el")
 (declare-function wdb/ghost "wal-func.el")
 (declare-function wal/append "wal-func.el")
-(declare-function projectile-project-root "ext:projectile.el")
 
 (defvar savehist-additional-variables)
 (defvar xref-show-xrefs-function)
@@ -5313,6 +5320,7 @@ You know the drill. Clock in, clock out.
 
 (defun wal/org-clock-in-from-now ()
   "Force `org-clock-in' without continuous logging."
+  (defvar org-clock-continuously)
   (let ((org-clock-continuously nil))
     (when (fboundp 'org-clock-in)
       (org-clock-in))))
@@ -5328,7 +5336,6 @@ You know the drill. Clock in, clock out.
   (org-clock-in-resume t)
   (org-clock-report-include-clocking-task t)
   (org-clock-out-remove-zero-time-clocks t)
-  (org-clock-into-drawer t)
   (org-clock-heading-function #'wal/org-clock-heading)
   :bind
   (:map goto-map
@@ -5749,6 +5756,7 @@ Set up =eshell=. I like the idea of it but I don't really use it.
 #+BEGIN_SRC emacs-lisp
 (defun wal/advise-eshell/clear (&rest _r)
   "Advise to truncate buffer."
+  (defvar eshell-buffer-maximum-lines)
   (let ((eshell-buffer-maximum-lines 0))
     (when (fboundp 'eshell-truncate-buffer)
       (eshell-truncate-buffer))))
@@ -8135,6 +8143,7 @@ This will activate minor mode `wal/config-mode'."
 (defun wal/checkdoc-packages ()
   "Run `checkdoc-file' on all package files."
   (interactive)
+  (defvar projectile-enable-caching)
   (let ((projectile-enable-caching nil))
     (dolist (it (wal/directory-files wal/emacs-config-package-path))
       (checkdoc-file it))))
