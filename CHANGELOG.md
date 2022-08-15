@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   recipes using key `:recipes`. Recipes and packages are treated
   equally in the `marginalia` annotation.
 - Command `helpful-kill-buffers` is not bound in `help-map` to `C-x`.
+- Configuration and expansion pack for `jakt-mode`.
 
 ### Changed
 
