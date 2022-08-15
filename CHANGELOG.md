@@ -22,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The default key for the `transient` in `major` is `.` again since
   the sink is gone.
+- Bindings using `wal/major!` now set `which-key` replacement string
+  "MAJOR!".
+- Custom `hydra`s are bound passing `which-key` replacement string to
+  make them more readable (for example to have `text-scale` instead of
+  `wal/text-scale/body`).
+- Function `wal/flyspell` also just uses `flyspell` for replacement.
+- Command `dictionary-lookup-definition` is now bound using key `f`.
 
 ### Removed
 

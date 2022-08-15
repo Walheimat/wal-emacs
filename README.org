@@ -930,7 +930,7 @@ the sink for and PREFIX is its prefix."
 All ARGS are passed to the definer."
   (declare (indent defun))
   `(wal/major :major-modes t ,@args
-     ,wal/major!-key ',fun))
+     ,wal/major!-key '(,fun :wk "MAJOR!")))
 
 (cl-defmacro wal/colonel! (key fun mfun &rest args)
   "Bind FUN to KEY, MFUN in the sink.
@@ -1033,9 +1033,9 @@ Additional left PADDING can be passed."
     ("q" nil "quit")))
 
 (wal/major
- "t" 'wal/text-scale/body
- "o" 'wal/resize-window/body
- "v" 'wal/scroll-other-window/body)
+ "t" '(wal/text-scale/body :wk "text-scale")
+ "o" '(wal/resize-window/body :wk "resize-window")
+ "v" '(wal/scroll-other-window/body :wk "scroll-other-window"))
 #+END_SRC
 
 *** transient
@@ -2556,8 +2556,7 @@ Look up words in a word book.
   :custom
   (dictionary-server "dict.org")
   :general
-  (wal/major "D"
-    '(dictionary-lookup-definition :wk "lookup definition"))
+  (wal/major "f" 'dictionary-lookup-definition)
   :ensure nil)
 #+END_SRC
 
@@ -7178,7 +7177,7 @@ My spelling is bad. Uses American English for =flyspell=.
   (:map flyspell-mode-map
    ("C-." . ispell-word)) ; Replaces `flyspell-auto-correct-word', which is still available via `C-M-i'.
   :general
-  (wal/major "s" #'wal/flyspell :predicate '(lambda () (not flyspell-mode)))
+  (wal/major "s" '(wal/flyspell :predicate '(lambda () (not flyspell-mode)) :wk "flyspell"))
   (wal/major :keymaps 'flyspell-mode-map
     "s" '(:ignore t :wk "flyspell")
     "sb" '(flyspell-buffer :wk "buffer")
