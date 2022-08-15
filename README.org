@@ -1787,35 +1787,49 @@ several so-called expansion packs[fn:12].
 Individual languages build this list using macro
 `wal/define-expansion-pack'.")
 
-(cl-defun wal/install-packages (packages &key delete-windows on-done)
+(cl-defun wal/install-packages (packages &key delete-windows)
   "Install all PACKAGES unless already installed.
-Concludes by calling `delete-other-windows' if DELETE-WINDOWS is
-t, printing optional message ON-DONE."
-  (let ((installed (mapcar (lambda (it)
-                             (when (not (package-installed-p it))
-                               (package-install it)))
-                           packages)))
-    (if (and on-done (= 0 (length (seq-filter #'identity installed))))
-        (message "Packages already installed.")
-      (when (and on-done (stringp on-done))
-        (message on-done))))
-  (when delete-windows
-    (delete-other-windows)))
 
-(cl-defmacro wal/define-expansion-pack (name docs &key packages extras)
-  "Define an expansion pack of PACKAGES under NAME documented with DOCS."
+Returns the number of newly installed packages.
+
+Calls `delete-other-windows' if DELETE-WINDOWS is t."
+  (let ((new-packages (seq-filter
+                       (lambda (it) (not (package-installed-p it)))
+                       packages)))
+    (mapc (lambda (it) (package-install it)) new-packages)
+    (when delete-windows
+      (delete-other-windows))
+    (length new-packages)))
+
+(defun wal/install-recipes (recipes)
+  "Install packages from RECIPES using quelpa.
+
+Returns the number of newly installed packages."
+  (let* ((new-packages (seq-filter
+                        (lambda (it) (not (package-installed-p (car it))))
+                        recipes)))
+    (mapc (lambda (it) (quelpa it)) new-packages)
+    (length new-packages)))
+
+(cl-defmacro wal/define-expansion-pack (name docs &key packages extras recipes)
+  "Define an expansion pack of PACKAGES under NAME.
+
+Documented using DOCS.
+
+Optionally provide quelpa RECIPES."
   (declare (indent defun) (doc-string 2))
   `(add-to-list
     'wal/expansion-packs
-    '(,name . (:packages ,packages :extras ,extras :docs ,docs))))
+    '(,name . (:packages ,packages :extras ,extras :docs ,docs :recipes ,recipes))))
 
 (defun wal/is-expansion-pack (pack)
   "Check if PACK is an expansion pack package."
   (let ((packages (seq-reduce (lambda (acc it)
                                 (let* ((pl (cdr it))
                                        (p (plist-get pl :packages))
-                                       (e (plist-get pl :extras)))
-                                  (append acc p e)))
+                                       (e (plist-get pl :extras))
+                                       (r (mapcar #'car (plist-get pl :recipes))))
+                                  (append acc p e r)))
                               wal/expansion-packs
                               '())))
     (memq pack packages)))
@@ -1828,10 +1842,11 @@ t, printing optional message ON-DONE."
          (sym (wal/maybe-intern selection)))
     (pcase sym
       ('all
-       (wal/install-packages extras :on-done "Installed all extras."))
+       (wal/install-packages extras)
+       (message "Installed all extras."))
       (_
-       (wal/install-packages
-        (list sym) :on-done (format "Installed extra '%s'." sym))))))
+       (wal/install-packages (list sym))
+       (message (format "Installed extra '%s'." sym))))))
 
 (defun wal/install-expansion-pack (pack)
   "Install the given expansion PACK."
@@ -1840,14 +1855,18 @@ t, printing optional message ON-DONE."
                           (mapcar (lambda (pack) (car pack)) wal/expansion-packs))))
   (let* ((sym (wal/maybe-intern pack))
          (item (assoc sym wal/expansion-packs))
-         (core-packages (plist-get (cdr item) :packages))
+         (packages (plist-get (cdr item) :packages))
+         (recipes (plist-get (cdr item) :recipes))
          (extras (plist-get (cdr item) :extras)))
-    (if item
-        (progn
-          (wal/install-packages core-packages :on-done (format "Installed expansion pack '%s'." pack))
-          (when (and extras (yes-or-no-p "Want to install an extras?"))
-            (wal/install-expansion-pack-extra item)))
-      (user-error "Unknown pack '%s', check `wal/expansion-packs'" sym))))
+    (if (not item)
+        (user-error "Unknown pack '%s', check `wal/expansion-packs'" sym)
+      (let* ((installed-packages (wal/install-packages packages :delete-windows t))
+             (installed-recipes (wal/install-recipes recipes)))
+        (if (= 0 (+ installed-packages installed-recipes))
+            (message "All core packages/recipes already installed.")
+          (message "Installed expansion pack '%s" pack))
+        (when (and extras (yes-or-no-p "Want to install an extras?"))
+          (wal/install-expansion-pack-extra item))))))
 
 (defun wal/expansion--stringify (package-list)
   "Stringify PACKAGE-LIST."
@@ -1859,11 +1878,13 @@ t, printing optional message ON-DONE."
     "Annotate CANDIDATE expansion pack."
     (let* ((item (assoc (intern candidate) wal/expansion-packs))
            (docs (plist-get (cdr item) :docs))
-           (packages (wal/expansion--stringify (plist-get (cdr item) :packages)))
+           (packages (plist-get (cdr item) :packages))
+           (recipes (mapcar #'car (plist-get (cdr item) :recipes)))
+           (all-packages (wal/expansion--stringify (append packages recipes)))
            (extras (wal/expansion--stringify (plist-get (cdr item) :extras))))
       (marginalia--fields
        (docs :face 'marginalia-documentation :truncate 0.6)
-       (packages :face 'marginalia-value :truncate 0.8)
+       (all-packages :face 'marginalia-value :truncate 0.8)
        (extras :face 'marginalia-value :truncate 0.4))))
 
   (add-to-list 'marginalia-annotator-registry '(expansion-pack wal/annotate-expansion-pack builtin none))

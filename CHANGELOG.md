@@ -12,11 +12,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New custom flag `--mini` that will do the same thing as setting
   `wal/minimal` (only loading packages that don't have `:wal-ways` set
   to `nil`).
+- Macro `wal-define-expansion-pack` now also accepts passing MELPA
+  recipes using key `:recipes`. Recipes and packages are treated
+  equally in the `marginalia` annotation.
 
 ### Changed
 
 - The default key for the `transient` in `major` is `.` again since
   the sink is gone.
+
+### Removed
+
+- Function `wal/install-packages` no longer has key `:on-done` to
+  print a message after completion. This is now expected to be done by
+  the caller.
 
 ### Fixed
 
