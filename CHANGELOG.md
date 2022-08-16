@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command `dictionary-lookup-definition` is now bound using key `f`.
 - Many of the pop-ups are now using `wdb/side` which puts them at the
   bottom.
+- Pop-ups are now grouped using `projectile` or `project` instead of
+  `perspective` which often fails.
 
 ### Removed
 
