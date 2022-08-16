@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal/text-scale/body`).
 - Function `wal/flyspell` also just uses `flyspell` for replacement.
 - Command `dictionary-lookup-definition` is now bound using key `f`.
+- Many of the pop-ups are now using `wdb/side` which puts them at the
+  bottom.
 
 ### Removed
 
