@@ -51,6 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   full function definition before adding the hook.
 - Package `gdscript-mode` is now called that in the expansion pack,
   not `gdscript-godot`.
+- Clocking in using `consult` now switches to the initial perpsective
+  beforehand to avoid cluttering the current one with unrelated
+  buffers.
 
 ## [1.7.8] - 2021-08-13
 

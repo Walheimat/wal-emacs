@@ -3940,13 +3940,16 @@ Complete commands and code.
 ;;; Code:
 
 (eval-when-compile
-  (require 'transient))
+  (require 'transient)
+  (require 'perspective))
 
 (declare-function org-clock-in "ext:org-clock.el")
+(declare-function persp-names "ext:perspective.el")
 (declare-function projectile-project-root "ext:projectile.el")
 (declare-function wdb/ghost "wal-func.el")
 (declare-function wal/append "wal-func.el")
 
+(defvar persp-initial-frame-name)
 (defvar savehist-additional-variables)
 (defvar xref-show-xrefs-function)
 (defvar xref-show-definitions-function)
@@ -4243,11 +4246,19 @@ Do not ignore hidden files."
   (consult-line (thing-at-point 'symbol)))
 
 (defun wal/consult-clock-in ()
-  "Clock into an Org agenda heading."
+  "Clock into an Org agenda heading.
+
+If the initial perspective still exists, switch to that first to
+not pollute the current one."
   (interactive)
-  (save-window-excursion
-    (consult-org-agenda)
-    (org-clock-in)))
+  (if (memq persp-initial-frame-name (persp-names))
+      (with-perspective persp-initial-frame-name
+        (save-window-excursion
+          (consult-org-agenda)
+          (org-clock-in)))
+    (save-window-excursion
+      (consult-org-agenda)
+      (org-clock-in))))
 
 (defun wal/advise-consult-theme (theme)
   "Advise to set `wal/active-theme' to THEME."
