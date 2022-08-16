@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration and expansion pack for `jakt-mode`.
 - Sets `org-cycle-separator-lines` to 1 to avoid cramped look when
   headlines are collapsed.
+- Docker container pop-ups now have a regex for
+  `popper-echo-transform`.
 
 ### Changed
 
