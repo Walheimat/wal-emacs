@@ -3625,8 +3625,8 @@ Treat certain buffers and their windows as pop-ups.
 (defun wal/popper-echo-transform (buffer-name)
   "Transform BUFFER-NAME by truncating certain prefixes."
   (let ((helpful-re "\\*helpful \\w+\:")
-        (dc-re "\\* docker-compose \\(up\\|run\\|build\\)\\( --rm\\)?")
-        (cont-re "\\* docker container \\(?1:logs\\)?\\ ?\\(--tail [[:digit:]]+\\)?\\ \\(?2:\\w+_\\w+_[[:digit:]]+\\)\\ \\*"))
+        (dc-re "\\* docker-compose \\(?1:up\\|run\\|build\\)\\( --rm\\)?\\ \\(?2:\\w+\\)")
+        (cont-re "\\* docker container \\(?1:logs\\|stop\\)?\\ ?\\(--tail [[:digit:]]+\\)?\\ \\(?2:\\w+_\\w+_[[:digit:]]+\\)\\ \\*"))
     (cond
      ((string-match helpful-re buffer-name)
       (concat
@@ -3634,8 +3634,15 @@ Treat certain buffers and their windows as pop-ups.
        "/help"))
      ((string-match dc-re buffer-name)
       (concat
-       (substring (replace-regexp-in-string dc-re "" buffer-name) 0 -2)
-       "/dc"))
+       (with-temp-buffer
+         (insert buffer-name)
+         (beginning-of-buffer)
+         (re-search-forward dc-re nil t)
+         (concat
+           (if (match-string 2) (match-string 2) "")
+           "/dc-"
+           (if (match-string 1) (match-string 1) "")
+           ))))
      ((string-match cont-re buffer-name)
        (with-temp-buffer
          (insert buffer-name)

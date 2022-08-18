@@ -20,7 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sets `org-cycle-separator-lines` to 1 to avoid cramped look when
   headlines are collapsed.
 - Docker container pop-ups now have a regex for
-  `popper-echo-transform`.
+  `popper-echo-transform`; the `docker-compose` one was improved as
+  well.
 
 ### Changed
 
