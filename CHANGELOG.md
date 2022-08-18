@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pop-ups are now grouped using `projectile` or `project` instead of
   `perspective` which often fails.
 - Compilation buffers are now shown in a pop-up. So are `rg` bffers.
+- The `regexp-builder` buffer is filtered by `consult`.
 
 ### Removed
 
