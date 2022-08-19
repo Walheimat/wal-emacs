@@ -49,6 +49,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   uses `quelpa`.
 - The prefix for `org-roam` was changed back to `H-<SPC>`.
 - Only the dailies of `org-roam` are now added to the agenda files.
+- Instead of binding `C-c C-c` and `C-c C-k` to `server-edit` (and
+  `abort`), the default quit action is now `wal/edit-or-kill` that
+  aims to make the right call.
 
 ### Removed
 

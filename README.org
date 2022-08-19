@@ -1066,7 +1066,7 @@ Most bindings are declared in individual packages.
 ;; Additional `general' bindings.
 (wal/general
   "e" '(:ignore t :wk "Emacs")
-  "eq" '(save-buffers-kill-terminal :wk "quit")
+  "eq" '(wal/edit-or-kill :wk "quit (or be done)")
   "er" '(restart-emacs :wk "restart")
   "f" '(:ignore t :wk "find")
   "fc" '(wal/find-custom-file :wk "custom")
@@ -1095,15 +1095,6 @@ Most bindings are declared in individual packages.
 (general-define-key
  :keymaps 'ctl-x-x-map
  "f" 'wal/find-file-delete-other-windows) ; Replaces `font-lock-update'.
-
-;; Dealing with server buffers.
-(general-define-key
- :predicate 'server-buffer-clients
- "C-c C-c" 'server-edit)
-
-(general-define-key
- :predicate 'server-buffer-clients
- "C-c C-k" 'server-edit-abort)
 
 ;; Use H-u for C-u.
 (when wal/use-hyper-prefix
@@ -1177,8 +1168,11 @@ Turning on/off certain major modes switching between =major-mode= and
   (require 'marginalia nil t))
 
 (declare-function marginalia-annotate-binding "ext:marginalia.el")
+(declare-function server-edit "ext:server.el")
+(declare-function server-edit-abort "ext:server.el")
 (declare-function use-package-report "ext:use-package-core.el")
 
+(defvar server-buffer-clients)
 (defvar use-package-compute-statistics)
 
 (defgroup wal-func nil
@@ -1700,6 +1694,23 @@ value is left untouched."
   "Exceute BODY if PACKAGE can be required."
   (declare (indent 1))
   `(when (require ',package nil :no-error) ,@body))
+
+(defun wal/server-edit-p ()
+  "Check if we're (likely) editing from outside of Emacs.
+
+We also make sure we're not in `with-editor-mode' as to not to
+intefere with `magit' and friends."
+  (and server-buffer-clients
+       (not (bound-and-true-p with-editor-mode))))
+
+(defun wal/edit-or-kill (&optional abort)
+  "Quit Emacs or just be done with this buffer.
+
+Optionally ABORT."
+  (interactive "P")
+  (if (wal/server-edit-p)
+      (if abort (server-edit-abort) (server-edit))
+    (save-buffers-kill-terminal)))
 #+END_SRC
 
 ** Setup
