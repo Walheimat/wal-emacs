@@ -761,9 +761,10 @@ Most hyper[fn:9] bindings are quick-access actions:
 
 It's also used for some dispatches:
 
-+ =H-o= for =ace-window=, and if called with =C-u=
 + =H-m= for =magit=
-+ =H-n= for =rg=.
++ =H-n= for =rg=
++ =H-o= for =ace-window=, and if called with =C-u=
++ =H-<SPC>= for =org-roam=.
 
 **** Caps to Hyper
 
@@ -883,7 +884,6 @@ Leader key =captain= (=/= by default) deals with the global context.
 It gives access to minor-mode[fn:11] commands and =transient= maps that are
 relevant globally (or for the current perspective). These are:
 
-+ =c= for =org-roam=
 + =d= for =dashboard=
 + =i= for =perspective=
 + =o= for =popper=
@@ -1613,7 +1613,7 @@ Duplicate items are removed."
   "Edit TARGET alist in-place using VALUES."
   (if (seq-every-p (lambda (it) (assoc (car it) target)) values)
       (seq-each (lambda (it) (map-put! target (car it) (cdr it))) values)
-    (user-error "All keys bust be already present in list")))
+    (user-error "All keys must already be present in list")))
 #+END_SRC
 
 ** Commands
@@ -4800,7 +4800,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   (require 'transient))
   (require 'wal-func (expand-file-name "wal-func.el" "."))
 
-(declare-function org-alert--to-minute "ext:org-alert.el")
+(declare-function org-roam-buffer-p "ext:org-roam.el")
 (declare-function projectile-project-root "ext:projectile.el")
 (declare-function project-root "ext:project.el")
 (declare-function transient-define-prefix "ext:transient.el")
@@ -4811,7 +4811,6 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (declare-function wal/truncate "wal-func.el")
 (declare-function wal/univ-p "wal-func.el")
 
-(defvar org-alert-notify-cutoff)
 (defvar org-global-properties)
 (defvar org-mode-map)
 (defvar text-scale-mode-step)
@@ -4910,7 +4909,9 @@ This calls `org-content' interactively."
     [["Commands"
       ("n" "add note" org-add-note)
       ("e" "edit source" org-edit-src-code
-       :inapt-if-not (lambda () (org-in-src-block-p)))]
+       :inapt-if-not (lambda () (org-in-src-block-p)))
+      ("t" "toggle timestamp" org-toggle-timestamp-type
+       :inapt-if-not (lambda () (org-at-timestamp-p 'inactive)))]
      ["Subtrees"
       ("s w" "cut" org-cut-subtree
        :inapt-if-not (lambda () (org-at-heading-p)))
@@ -4927,7 +4928,7 @@ This calls `org-content' interactively."
        :inapt-if (lambda () (org-in-src-block-p)))
       ("f n" "normalize" org-footnote-normalize)]
      ["Transclusion"
-      ("t" "transclusion" wal/org-transclusion)]])
+      ("c" "transclusion" wal/org-transclusion)]])
   :custom
   (org-adapt-indentation nil)
   (org-ellipsis "↷")
@@ -4937,7 +4938,7 @@ This calls `org-content' interactively."
   (org-startup-folded 'overview)
   (org-directory wal/org-directory)
   (org-default-notes-file (concat org-directory "/notes.org"))
-  (org-agenda-files `(,wal/agenda-tasks-directory ,wal/org-roam-directory))
+  (org-agenda-files '(,wal/agenda-tasks-directory))
   (org-deadline-warning-days 2)
   (org-startup-with-inline-images t)
   ;; Be sure to add archive tag with `org-toggle-archive-tag'.
@@ -5045,9 +5046,15 @@ Trying to organize my thoughts using Zettelkästen.
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-org-roam-dailies-goto-date (&rest _r)
-  "Advise to preselect default template."
-  (list nil "d"))
+(defun wal/maybe-org-roam-refile (&rest args)
+  "Refile using ARGS, but use `org-roam-refile' for its buffers.
+
+If called with `universal-argument', default to `org-roam' in any
+case."
+  (interactive)
+  (if (and (org-roam-buffer-p) (not (wal/univ-p)))
+      (org-roam-refile)
+    (org-refile args)))
 
 (use-package org-roam
   :if (executable-find "sqlite3")
@@ -5057,8 +5064,11 @@ Trying to organize my thoughts using Zettelkästen.
   :config
   (org-roam-db-autosync-enable)
   (wdb/side 'org-roam-mode :side 'right)
-  (advice-add 'org-roam-dailies-goto-date :filter-args
-    #'wal/advise-org-roam-dailies-goto-date)
+  (wal/replace-in-alist org-speed-commands '(("w" . wal/maybe-org-roam-refile)))
+  (add-to-list 'org-speed-commands '("N" . wal/org-clock-in-from-now))
+  (add-to-list 'org-agenda-files (expand-file-name
+                                  org-roam-dailies-directory
+                                  org-roam-directory))
   (transient-define-prefix wal/org-roam ()
     "Run `org-roam' commands."
     [["Capture"
@@ -5091,19 +5101,12 @@ Trying to organize my thoughts using Zettelkästen.
       :unnarrowed t)))
   (org-roam-dailies-capture-templates
     '(("d" "default" entry
-       "* %?\n%U"
+       "* %?\n:PROPERTIES:\n:CREATED_AT: %U\n:TASK: %k\n:END:"
        :target (file+head "%<%Y-%m-%d>.org"
                           "#+title: %<%Y-%m-%d>\n")
-       :unnarrowed t
-       :empty-lines 1)
-      ("a" "active" entry
-       "* TODO %?\n%t"
-       :target (file+head "%<%Y-%m-%d>.org"
-                          "#+title: %<%Y-%m-%d>\n")
-       :unnarrowed t
        :empty-lines 1)))
-  :general
-  (wal/captain "c" 'wal/org-roam)
+  :wal-bind
+  ("<SPC>" . wal/org-roam)
   :commands
   (wal/org-roam
    org-roam-buffer-display-dedicated

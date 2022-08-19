@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docker container pop-ups now have a regex for
   `popper-echo-transform`; the `docker-compose` one was improved as
   well.
+- Speed command for refiling (`w`) in an `org-roam` buffer now uses
+  `org-roam-refile` unless called with `universal-argument`.
+- Binds `org-toggle-timestamp-type` in the mode's `transient`.
+- Capture template for `org-roam` dailies now sets current time
+  (inactive) and task as props.
 
 ### Changed
 
@@ -38,16 +43,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   bottom.
 - Pop-ups are now grouped using `projectile` or `project` instead of
   `perspective` which often fails.
-- Compilation buffers are now shown in a pop-up. So are `rg` bffers.
+- Compilation buffers are now shown in a pop-up. So are `rg` buffers.
 - The `regexp-builder` buffer is filtered by `consult`.
 - Since the package is now available from MELPA, `ligature` no longer
   uses `quelpa`.
+- The prefix for `org-roam` was changed back to `H-<SPC>`.
+- Only the dailies of `org-roam` are now added to the agenda files.
 
 ### Removed
 
 - Function `wal/install-packages` no longer has key `:on-done` to
   print a message after completion. This is now expected to be done by
   the caller.
+- The `org-roam` capture template setting active timestamps was
+  removed; as was the advice to select the default template when going
+  to a date.
 
 ### Fixed
 
@@ -58,7 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   full function definition before adding the hook.
 - Package `gdscript-mode` is now called that in the expansion pack,
   not `gdscript-godot`.
-- Clocking in using `consult` now switches to the initial perpsective
+- Clocking in using `consult` now switches to the initial perspective
   beforehand to avoid cluttering the current one with unrelated
   buffers.
 
