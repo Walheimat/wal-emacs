@@ -2967,11 +2967,11 @@ A collection of status messages."
 Let's have a dash of board.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-dashboard-insert-startupify-lists (fun &rest r)
-  "Advise FUN to ignore certain directories, applying R."
+(defun wal/with-recent-files-excluded (fun &rest args)
+  "Advise FUN to ignore certain directories, applying ARGS."
   (defvar recentf-exclude)
   (let ((recentf-exclude wal/recentf-exclude))
-    (apply fun r)))
+    (apply fun args)))
 
 (defun wal/advise-dashboard-random-footer (&rest _r)
   "Advise to use biased random footer message."
@@ -2987,9 +2987,8 @@ Let's have a dash of board.
 (use-package dashboard
   :wal-ways nil
   :init
-  (advice-add
-   'dashboard-insert-startupify-lists :around
-   #'wal/advise-dashboard-insert-startupify-lists)
+  (advice-add 'dashboard-insert-startupify-lists :around
+   #'wal/with-recent-files-excluded)
   (advice-add
    'dashboard-random-footer :override
    #'wal/advise-dashboard-random-footer)
@@ -3419,8 +3418,9 @@ Font *JetBrains Mono* has the best support for ligatures.
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-ligature-set-ligatures (fun &rest args)
+(defun wal/with-common-ligatures (fun &rest args)
   "Advise FUN to append common ligatures.
+
 ARGS is a list containing modes and additional ligatures."
   (let ((modes (nth 0 args))
         (ligatures (append (nth 1 args) wal/common-ligatures)))
@@ -3429,9 +3429,8 @@ ARGS is a list containing modes and additional ligatures."
 (use-package ligature
   :wal-ways nil
   :config
-  (advice-add
-   'ligature-set-ligatures :around
-   #'wal/advise-ligature-set-ligatures)
+  (advice-add 'ligature-set-ligatures :around
+   #'wal/with-common-ligatures)
   (ligature-set-ligatures 'clojure-mode '(";;" "->" "->>"))
   (ligature-set-ligatures 'c++-mode '("::" "->"))
   (ligature-set-ligatures 'dart-mode '("=>" "///" ".?" "??"
@@ -4170,17 +4169,16 @@ Provide global option narrowing using the =vertico= family of products.
   "Record the command which opened the minibuffer."
   (setq-local wal/command this-command))
 
-(defun wal/advise-vertico--metadata-get (fun &rest r)
-  "Advise FUN using R to exit if we came from `dired-goto-file'."
-  (if (and (eq (car r) 'category) (eq wal/command 'dired-goto-file))
-      nil
-    (apply fun r)))
+(defun wal/with-dired-goto-file-ignored (fun &rest args)
+  "Advise FUN using ARGS to exit if we came from `dired-goto-file'."
+  (unless (and (eq (car args) 'category)
+               (eq wal/command 'dired-goto-file))
+    (apply fun args)))
 
 (use-package vertico-directory
   :config
-  (advice-add
-   'vertico--metadata-get :around
-   #'wal/advise-vertico--metadata-get)
+  (advice-add 'vertico--metadata-get :around
+   #'wal/with-dired-goto-file-ignored)
   :bind
   (:map vertico-map
    ("RET" . vertico-directory-enter)
@@ -4346,7 +4344,7 @@ not pollute the current one."
   "Advise to set `wal/active-theme' to THEME."
   (setq wal/active-theme theme))
 
-(defun wal/with-big-vertico (fun args)
+(defun wal/with-big-vertico (fun &rest args)
   "Call FUN with ARGS but increase the `vertico-count'."
   (defvar vertico-count)
   (let ((vertico-count 20))
@@ -4563,13 +4561,13 @@ Group buffers in workspaces.
 
 ;; Advice.
 
-(defun wal/advise-persp-kill (fun &rest r)
-  "Advises FUN to kill processes without querying, applying R.
+(defun wal/without-querying-for-process-kill (fun &rest args)
+  "Advises FUN to kill processes without querying, applying ARGS.
 
 This only removes `process-kill-buffer-query-function'."
   (let ((kill-buffer-query-functions (delq 'process-kill-buffer-query-function
                                            kill-buffer-query-functions)))
-    (apply fun r)))
+    (apply fun args)))
 
 (defun wal/advise-persp-format-name (&rest args)
   "Truncate non-active perspective name (in ARGS)."
@@ -4601,7 +4599,7 @@ This only removes `process-kill-buffer-query-function'."
           (persp-switch p))
       (persp-switch clicked))))
 
-(defun wal/advise-persp-list-buffers-refresh (fun &rest _r)
+(defun wal/with-persp-buffers-only (fun &rest _args)
   "Advise FUN `list-buffers--refresh' to only consider perspective buffers.
 
 No filter is applied if called with `universal-argument'."
@@ -4646,10 +4644,10 @@ The current buffer and Dired buffers are filtered."
 
 (use-package perspective
   :config
-  (advice-add 'persp-kill :around #'wal/advise-persp-kill)
+  (advice-add 'persp-kill :around #'wal/without-querying-for-process-kill)
   (advice-add 'persp-format-name :filter-return #'wal/advise-persp-format-name)
   (advice-add 'persp-mode-line-click :override #'wal/advise-persp-mode-line-click)
-  (advice-add 'list-buffers--refresh :around #'wal/advise-persp-list-buffers-refresh)
+  (advice-add 'list-buffers--refresh :around #'wal/with-persp-buffers-only)
   (with-eval-after-load 'consult
     (consult-customize
      consult--source-buffer
@@ -4728,10 +4726,10 @@ More robust project management.
            (call-interactively (symbol-function ',(intern projectile-func-name)))
          (call-interactively (symbol-function ',func)))))))
 
-(defun wal/advise-projectile-find-file (func &rest r)
-  "Call FUNC with R or switch project."
+(defun wal/with-projectile-switch (func &rest args)
+  "Call FUNC with ARGS or switch project."
   (if (projectile-project-p)
-      (apply func r)
+      (apply func args)
     (call-interactively 'projectile-switch-project)))
 
 (defun wal/advise-projectile-maybe-read-command (arg default-cmd prompt)
@@ -4744,9 +4742,8 @@ Otherwise treat DEFAULT-CMD normally."
 (use-package projectile
   :if wal/use-projectile
   :init
-  (advice-add
-    'projectile-find-file :around
-    #'wal/advise-projectile-find-file)
+  (advice-add 'projectile-find-file :around
+    #'wal/with-projectile-switch)
   (advice-add
     'projectile-maybe-read-command :override
     #'wal/advise-projectile-maybe-read-command)
@@ -7151,7 +7148,7 @@ The engine you've been waiting for.
 
 #+BEGIN_SRC emacs-lisp
 ;; Workaround from https://github.com/godotengine/emacs-gdscript-mode#known-issues
-(defun wal/advise-lsp--get-message-type (fun &rest args)
+(defun wal/with-json-data-ignored-for-gdscript (fun &rest args)
   "Advise FUN, passing ARGS.
 
 This will ignore the error message resulting from Godot not
@@ -7179,9 +7176,8 @@ replying to the `JSONRPC' request."
         '("project.godot")
         :project-file "project.godot")))
   :config
-  (advice-add
-   'lsp--get-message-type :around
-   #'wal/advise-lsp--get-message-type)
+  (advice-add 'lsp--get-message-type :around
+   #'wal/with-json-data-ignored-for-gdscript)
   :ensure nil)
 #+END_SRC
 

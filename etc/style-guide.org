@@ -111,3 +111,18 @@ s-expression that goes beyond a function call.
     var)
   "Doc string.")
 #+END_SRC
+
+** Advice
+
+Advice functions using =:around= should follow template
+=wal/with-<what-it-does>=.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defun wal/with-big-vertico (fun &rest args)
+  "Call FUN with ARGS but increase the `vertico-count'."
+  (defvar vertico-count)
+  (let ((vertico-count 20))
+    (apply fun args)))
+
+(advice-add 'consult-ripgrep :around #'wal/with-big-vertico)
+#+END_SRC
