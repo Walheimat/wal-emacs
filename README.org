@@ -2973,7 +2973,7 @@ Let's have a dash of board.
   (let ((recentf-exclude wal/recentf-exclude))
     (apply fun args)))
 
-(defun wal/advise-dashboard-random-footer (&rest _r)
+(defun wal/instead-show-biased-random (&rest _args)
   "Advise to use biased random footer message."
   (nth (wal/biased-random (length dashboard-footer-messages)) dashboard-footer-messages))
 
@@ -2989,9 +2989,8 @@ Let's have a dash of board.
   :init
   (advice-add 'dashboard-insert-startupify-lists :around
    #'wal/with-recent-files-excluded)
-  (advice-add
-   'dashboard-random-footer :override
-   #'wal/advise-dashboard-random-footer)
+  (advice-add 'dashboard-random-footer :override
+   #'wal/instead-show-biased-random)
   (advice-add
    'dashboard-setup-startup-hook :before-until
    #'wal/advise-dashboard-setup-startup-hook)
@@ -3251,7 +3250,7 @@ Dim inactive frames.
 
 #+BEGIN_SRC emacs-lisp
 ;; Solution from buzztaiki https://github.com/gonewest818/dimmer.el/issues/49
-(defun wal/advise-dimmer-config-change-handler ()
+(defun wal/instead-force-only-if-predicates-falsy ()
   "Advise to only force process if no predicate is truthy."
   (let ((ignore (cl-some (lambda (f) (and (fboundp f) (funcall f)))
                          dimmer-prevent-dimming-predicates)))
@@ -3284,7 +3283,7 @@ Dim inactive frames.
   :config
   (advice-add
    'dimmer-config-change-handler :override
-   #'wal/advise-dimmer-config-change-handler)
+   #'wal/instead-force-only-if-predicates-falsy)
   (dimmer-configure-hydra)
   (dimmer-configure-magit)
   (dimmer-configure-org)
@@ -3638,7 +3637,7 @@ Ace interacting with (multiple) windows.
   "Call `aw-delete-window' on WINDOW requesting buffer kill."
   (aw-delete-window window t))
 
-(defun wal/advise-aw--switch-buffer-consult (&rest _r)
+(defun wal/instead-call-consult-buffer (&rest _args)
   "Advise `aw--switch-buffer' to use `consult-buffer'."
   (call-interactively 'consult-buffer))
 
@@ -3657,7 +3656,7 @@ Ace interacting with (multiple) windows.
                             (?? aw-show-dispatch-help)))
   (advice-add
    'aw--switch-buffer :override
-   #'wal/advise-aw--switch-buffer-consult)
+   #'wal/instead-call-consult-buffer)
   :custom
   (aw-dispatch-always t)
   (aw-keys '(?j ?k ?l ?\; ?u ?i ?o ?p))
@@ -4589,7 +4588,7 @@ This only removes `process-kill-buffer-query-function'."
         (substring name 0 (min (length name) wal/perspective-truncated-length))
       name)))
 
-(defun wal/advise-persp-mode-line-click (event)
+(defun wal/instead-guess-truncated-perspective (event)
   "Guess perspective from click EVENT and switch."
   (let ((clicked (format "%s" (car (posn-string (event-start event))))))
     (if (eq (length clicked) wal/perspective-truncated-length)
@@ -4646,7 +4645,9 @@ The current buffer and Dired buffers are filtered."
   :config
   (advice-add 'persp-kill :around #'wal/without-querying-for-process-kill)
   (advice-add 'persp-format-name :filter-return #'wal/advise-persp-format-name)
-  (advice-add 'persp-mode-line-click :override #'wal/advise-persp-mode-line-click)
+  (advice-add
+   'persp-mode-line-click :override
+   #'wal/instead-guess-truncated-perspective)
   (advice-add 'list-buffers--refresh :around #'wal/with-persp-buffers-only)
   (with-eval-after-load 'consult
     (consult-customize
@@ -4732,7 +4733,7 @@ More robust project management.
       (apply func args)
     (call-interactively 'projectile-switch-project)))
 
-(defun wal/advise-projectile-maybe-read-command (arg default-cmd prompt)
+(defun wal/instead-only-prompt-if-arg-is-present (arg default-cmd prompt)
   "Advise function to only PROMPT if ARG is provided.
 Otherwise treat DEFAULT-CMD normally."
   (if (and (stringp default-cmd) (not arg))
@@ -4746,7 +4747,7 @@ Otherwise treat DEFAULT-CMD normally."
     #'wal/with-projectile-switch)
   (advice-add
     'projectile-maybe-read-command :override
-    #'wal/advise-projectile-maybe-read-command)
+    #'wal/instead-only-prompt-if-arg-is-present)
   :config
   (wal/append 'projectile-globally-ignored-directories
               (nth 0 wal/projectile-ignored))
@@ -5865,7 +5866,7 @@ end
 Set up =eshell=. I like the idea of it but I don't really use it.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-eshell/clear (&rest _r)
+(defun wal/instead-truncate-buffer (&rest _r)
   "Advise to truncate buffer."
   (defvar eshell-buffer-maximum-lines)
   (let ((eshell-buffer-maximum-lines 0))
@@ -5874,7 +5875,9 @@ Set up =eshell=. I like the idea of it but I don't really use it.
 
 (use-package eshell
   :config
-  (advice-add 'eshell/clear :override #'wal/advise-eshell/clear)
+  (advice-add
+   'eshell/clear :override
+   #'wal/instead-truncate-buffer)
   :general
   (wal/general-sink "e" '(eshell :wk "eshell"))
   :hook
