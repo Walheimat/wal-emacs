@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Binding in `wal/general` to quit now calls `delete-frame` in daemon
   mode.
 
+### Fixed
+
+- Package `org-roam` loads on first call of `wal/org-roam` again;
+  problem was that the `:config` was referencing custom variables not
+  yet set.
+
 ## [1.7.9] - 2021-08-20
 
 Hunt and edit.
