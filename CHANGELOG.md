@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `ef-themes`, configuring it to not mess with org headings.
 - Package `corfu` now uses custom `orderless` dispatch (taken from
   official docs) when editing `lsp-mode` buffer.
+- `recentf-mode` is enabled explicitly.
 
 ### Changed
 
