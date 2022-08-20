@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Capture template for `org-roam` dailies now sets current time
   (inactive) and task as props.
 - Package `ef-themes`, configuring it to not mess with org headings.
+- Package `corfu` now uses custom `orderless` dispatch (taken from
+  official docs) when editing `lsp-mode` buffer.
 
 ### Changed
 

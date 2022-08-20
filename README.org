@@ -4214,8 +4214,18 @@ Provide global option narrowing using the =vertico= family of products.
 Fuzzy matches.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/orderfull-dispatch (word index total)
+  "Fast dispatch taken from `corfu' docs.
+
+Check if WORD length is smaller than 4, INDEX is 0 and TOTAL is 1."
+  (and (= index 0) (= total 1) (length< word 4)
+       `(orderless-regexp . ,(concat "^" (regexp-quote word)))))
+
 (use-package orderless
   :config
+  (orderless-define-completion-style orderfull
+    (orderless-style-dispatchers '(wal/orderfull-dispatch))
+    (orderless-matching-styles '(orderless-literal orderless-regexp)))
   (setq completion-styles '(orderless basic)
         completion-category-defaults nil
         completion-category-overrides '((file (styles partial-completion))))
@@ -7379,7 +7389,8 @@ Unless the associated server is considered slow, delays and
 minimum prefixes are reduced."
   (unless (wal/slow-lsp-p major-mode)
     (setq-local corfu-auto-delay 0.0
-                corfu-auto-prefix 1))
+                corfu-auto-prefix 1
+                completion-styles '(orderfull)))
   (lsp-deferred))
 
 (defun wal/lsp-completion-with-corfu ()
