@@ -1296,7 +1296,7 @@ removed."
 More convenient editing.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-hack-local-variables (&rest _r)
+(defun wal/then-add-delete-trailing-whitespace-hook (&rest _args)
   "Advise to conditionally add before save hook.
 
 When `wal/delete-trailing-whitespace' is t, trailing whitespace
@@ -1306,7 +1306,7 @@ is deleted."
 
 (advice-add
  'hack-local-variables :after
- #'wal/advise-hack-local-variables)
+ #'wal/then-add-delete-trailing-whitespace-hook)
 
 (defun wal/kill-ring-save-whole-buffer ()
   "Call `kill-ring-save' on the entire buffer."
@@ -3812,7 +3812,7 @@ If called with `universal-argument', go to LINE-FIRST."
   (set-mark (point))
   (goto-char pt))
 
-(defun wal/advise-avy-goto-end-of-line (&rest _r)
+(defun wal/then-goto-beginning-for-org-headings (&rest _args)
   "Advise `avy-goto-end-of-line' to go to beginning for `org' headings.
 
 When called with `universal-argument', this also goes to the
@@ -3826,7 +3826,7 @@ beginning."
   (add-to-list 'avy-dispatch-alist '(?q . wal/avy-action-zip-to-char))
   (advice-add
    'avy-goto-end-of-line :after
-   #'wal/advise-avy-goto-end-of-line)
+   #'wal/then-goto-beginning-for-org-headings)
   :custom
   (avy-background t)
   :bind
@@ -4339,7 +4339,7 @@ not pollute the current one."
       (consult-org-agenda)
       (org-clock-in))))
 
-(defun wal/advise-consult-theme (theme)
+(defun wal/then-set-active-theme (theme)
   "Advise to set `wal/active-theme' to THEME."
   (setq wal/active-theme theme))
 
@@ -4370,7 +4370,7 @@ not pollute the current one."
    wal/consult-clock-in
    :prompt "Clock in: "
    :preview-key (kbd "M-."))
-  (advice-add 'consult-theme :after #'wal/advise-consult-theme)
+  (advice-add 'consult-theme :after #'wal/then-set-active-theme)
   (advice-add 'consult-ripgrep :around #'wal/with-big-vertico)
   ;; Bind commands in `transient'.
   (transient-define-prefix wal/consult ()
