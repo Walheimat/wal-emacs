@@ -58,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Instead of binding `C-c C-c` and `C-c C-k` to `server-edit` (and
   `abort`), the default quit action is now `wal/edit-or-kill` that
   aims to make the right call.
+- `lsp-ui-sideline-mode` is no longer enabled by default.
 
 ### Removed
 
