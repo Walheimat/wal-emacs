@@ -7250,6 +7250,9 @@ Please let me know when I screwed up. I promise I will learn.
 ;; Provide fixing packages.
 
 ;;; Code:
+
+(eval-when-compile
+  (require 'flycheck))
 #+END_SRC
 
 ** Packages
@@ -7262,13 +7265,68 @@ Please let me know when I screwed up. I promise I will learn.
 =flycheck= is for all of our linting/code quality needs.
 
 #+BEGIN_SRC emacs-lisp
+(defconst wal/flycheck-file--buffer "*wal-flycheck-file*")
+
+(defun wal/flycheck-file--get-buffer ()
+  "Get a buffer for FILENAME to display errors in."
+  (unless (get-buffer wal/flycheck-file--buffer)
+    (with-current-buffer (get-buffer-create wal/flycheck-file--buffer)
+      (local-set-key "k" 'kill-buffer-and-window)
+      (local-set-key "q" 'quit-window)
+      (setq buffer-read-only t)))
+  (get-buffer wal/flycheck-file--buffer))
+
+(defun wal/flycheck-file--callback (filename &optional defer-display)
+  "Show FILENAME's errors in a distinct buffer.
+
+Unless DEFER-DISPLAY is T, show it."
+  (lambda (_status &optional errors)
+    (let* ((output-buffer (wal/flycheck-file--get-buffer)))
+      (with-current-buffer output-buffer
+        (setq buffer-read-only nil)
+        (goto-char (point-max))
+        (insert (format "Checking file '%s':" filename))
+        (if (null errors)
+            (insert " no errors")
+          (insert "\n"))
+        (seq-do (lambda (err)
+                  (when-let ((err-message (flycheck-error-message err))
+                             (line (flycheck-error-line err)))
+                    (insert (format "line %d: %s\n" line err-message))))
+                errors)
+        (insert "\n")
+        (setq buffer-read-only t)
+        (unless defer-display (display-buffer output-buffer))))))
+
+(defun wal/flycheck-file (file &optional defer-display)
+  "Check FILE with flycheck.
+
+Display it afterwards unless DEFER-DISPLAY is t."
+  (interactive "fSelect file: ")
+  (when (and (fboundp 'flycheck-get-checker-for-buffer)
+             (fboundp 'flycheck-syntax-check-new)
+             (fboundp 'flycheck-compute-working-directory)
+             (fboundp 'flycheck-syntax-check-start))
+    (with-current-buffer (find-file-noselect file)
+      (let ((checker (flycheck-get-checker-for-buffer)))
+        (if checker
+            (let* ((check (flycheck-syntax-check-new
+                           :buffer (current-buffer)
+                           :checker checker
+                           :context nil
+                           :working-directory (flycheck-compute-working-directory checker)))
+                   (callback (wal/flycheck-file--callback (file-name-nondirectory file) defer-display)))
+              (flycheck-syntax-check-start check callback))
+          (user-error "Couldn't determine checker for file"))))))
+
 (use-package flycheck
   :custom
   (flycheck-mode-line-prefix "fly")
   :general
   (wal/lieutenant :keymaps 'flycheck-mode-map
     "f" '(:keymap flycheck-command-map :wk "flycheck"))
-  :hook (sh-set-shell . flycheck-mode))
+  :hook (sh-set-shell . flycheck-mode)
+  :commands (wal/flycheck-file))
 #+END_SRC
 
 *** flyspell
@@ -8097,6 +8155,8 @@ Display code statistics.
 (declare-function posframe-refresh "ext:posframe.el")
 (declare-function posframe-show "ext:posframe.el")
 (declare-function wal/directory-files "init.el")
+(declare-function wal/flycheck-file "wal-fix.el")
+(declare-function wal/flycheck-file--get-buffer "wal-fix.el")
 (declare-function wal/posframe-hidehandler-when-invisible "wal-func.el")
 (declare-function wal/tangle-config "init.el")
 
@@ -8303,6 +8363,18 @@ This will activate minor mode `wal/config-mode'."
     (dolist (it (wal/directory-files wal/emacs-config-package-path))
       (checkdoc-file it))))
 
+(defun wal/flycheck-packages ()
+  "Run `wal/flycheck' on all package files."
+  (interactive)
+  (defvar projectile-enable-caching)
+  (let ((output-buffer (wal/flycheck-file--get-buffer))
+        (projectile-enable-caching nil))
+    (with-current-buffer output-buffer
+      (erase-buffer))
+    (dolist (it (wal/directory-files wal/emacs-config-package-path))
+      (wal/flycheck-file it t))
+    (display-buffer output-buffer)))
+
 (defun wal/config-maybe-create-transient ()
   "Create a `transient' if it doesn't exist yet and bind it."
   (unless (fboundp 'wal/config-dispatch)
@@ -8313,7 +8385,8 @@ This will activate minor mode `wal/config-mode'."
         [["Actions"
           ("t" "tangle" wal/tangle-config)
           ("x" "install expansion pack" wal/install-expansion-pack)
-          ("c" "checkdoc" wal/checkdoc-packages)]
+          ("c" "checkdoc" wal/checkdoc-packages)
+          ("f" "flycheck" wal/flycheck-packages)]
          ["Go to"
           ("h" "heading" consult-org-heading)
           ("d" "packages" wal/dired-packages)]

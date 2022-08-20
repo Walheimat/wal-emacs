@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New function `wal/flycheck-file` to do just that.
+- New function `wal/flycheck-packages` to check all config packages
+  using function above.
+
 ### Changed
 
 - Advising functions using combinator `:around` should now follow
