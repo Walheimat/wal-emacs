@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   preceding item. This also replaces function
   `wal/insert-use-package-keyword`. It is also used to add custom
   `consult` source for Dired earlier.
+- Moving items up and down now bound in `markdown-mode` with `M-{<up>,
+  <down>}`.
 
 ### Changed
 
