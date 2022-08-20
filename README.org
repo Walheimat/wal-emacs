@@ -1593,17 +1593,19 @@ Allow resetting =text-scale=.
 Manipulating lists.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/append (sym seq)
-  "Set list SYM to it with SEQ appended.
+(defun wal/append (target seq)
+  "Set TARGET to it with SEQ appended.
 
 Duplicate items are removed."
-  (set sym (delq nil (delete-dups (append (symbol-value sym) seq)))))
+  (let ((val (symbol-value target)))
+    (set target (delq nil (delete-dups (append val seq))))))
 
 (defun wal/replace-in-alist (target values)
   "Edit TARGET alist in-place using VALUES."
-  (if (seq-every-p (lambda (it) (assoc (car it) target)) values)
-      (seq-each (lambda (it) (map-put! target (car it) (cdr it))) values)
-    (user-error "All keys must already be present in list")))
+  (let ((val (symbol-value target)))
+    (if (seq-every-p (lambda (it) (assoc (car it) val)) values)
+        (seq-each (lambda (it) (map-put! val (car it) (cdr it))) values)
+      (user-error "All keys must already be present in list"))))
 
 (defun wal/insert-after (target preceding item)
   "Insert ITEM in TARGET after PRECEDING."
@@ -5124,7 +5126,7 @@ case."
   :config
   (org-roam-db-autosync-enable)
   (wdb/side 'org-roam-mode :side 'right)
-  (wal/replace-in-alist org-speed-commands '(("w" . wal/maybe-org-roam-refile)))
+  (wal/replace-in-alist 'org-speed-commands '(("w" . wal/maybe-org-roam-refile)))
   (add-to-list 'org-speed-commands '("N" . wal/org-clock-in-from-now))
   (add-to-list 'org-agenda-files (expand-file-name
                                   wal/org-roam-dailies-directory
@@ -5469,7 +5471,7 @@ Set up durations for a 40-hour week.
 (use-package org-duration
   :config
   (wal/replace-in-alist
-    org-duration-units
+    'org-duration-units
     `(("d" . ,(* 60 8))
       ("w" . ,(* 60 8 5))
       ("m" . ,(* 60 8 5 4))
@@ -5488,7 +5490,7 @@ Add some user speed commands.
 #+BEGIN_SRC emacs-lisp
 (use-package org-keys
   :config
-  (wal/replace-in-alist org-speed-commands wal/org-speed-commands)
+  (wal/replace-in-alist 'org-speed-commands wal/org-speed-commands)
   :custom
   (org-use-speed-commands t)
   (org-return-follows-link t)

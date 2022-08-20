@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   pattern `wal/instead-<what-it-does>`.
 - Binding in `wal/general` to quit now calls `delete-frame` in daemon
   mode.
+- All utility functions editing lists now expect a symbol as their
+  first argument.
 
 ### Fixed
 
