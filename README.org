@@ -1062,7 +1062,7 @@ Most bindings are declared in individual packages.
 ;; Additional `general' bindings.
 (wal/general
   "e" '(:ignore t :wk "Emacs")
-  "eq" '(wal/edit-or-kill :wk "quit (or be done)")
+  "eq" '(wal/delete-edit-or-kill :wk "quit")
   "er" '(restart-emacs :wk "restart")
   "f" '(:ignore t :wk "find")
   "fc" '(wal/find-custom-file :wk "custom")
@@ -1707,14 +1707,16 @@ intefere with `magit' and friends."
   (and server-buffer-clients
        (not (bound-and-true-p with-editor-mode))))
 
-(defun wal/edit-or-kill (&optional abort)
-  "Quit Emacs or just be done with this buffer.
-
-Optionally ABORT."
+(defun wal/delete-edit-or-kill (&optional abort)
+  "Delete frame, be done (or ABORT) or kill Emacs."
   (interactive "P")
-  (if (wal/server-edit-p)
-      (if abort (server-edit-abort) (server-edit))
-    (save-buffers-kill-terminal)))
+  (cond
+   ((wal/server-edit-p)
+    (if abort (server-edit-abort) (server-edit)))
+   ((daemonp)
+    (delete-frame))
+   (t
+    (save-buffers-kill-terminal))))
 #+END_SRC
 
 ** Setup
