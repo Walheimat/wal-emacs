@@ -727,6 +727,7 @@ dispatches:
 + =C-c b= for custom =beacon-blink=
 + =C-c c= does a =completion-at-point=
 + =C-c d= for =docker=
++ =C-c g= for =consult-ripgrep=
 + =C-c k= for =kmacro=
 + =C-c m= for =mu4e=
 + =C-c q= to do a =quick-calc= (inserted if called with =C-u=)
@@ -4343,6 +4344,12 @@ not pollute the current one."
   "Advise to set `wal/active-theme' to THEME."
   (setq wal/active-theme theme))
 
+(defun wal/with-big-vertico (fun args)
+  "Call FUN with ARGS but increase the `vertico-count'."
+  (defvar vertico-count)
+  (let ((vertico-count 20))
+    (apply fun args)))
+
 (use-package consult
   :init
   (wal/univ consult-buffer wal/consult)
@@ -4363,6 +4370,7 @@ not pollute the current one."
    :prompt "Clock in: "
    :preview-key (kbd "M-."))
   (advice-add 'consult-theme :after #'wal/advise-consult-theme)
+  (advice-add 'consult-ripgrep :around #'wal/with-big-vertico)
   ;; Bind commands in `transient'.
   (transient-define-prefix wal/consult ()
     "Call `consult' functions."
@@ -4386,6 +4394,7 @@ not pollute the current one."
        :inapt-if-not (lambda () flycheck-mode))]])
   :bind
   (("C-c s" . wal/consult-line)
+   ("C-c g" . consult-ripgrep)
    :map goto-map
    ("g" . consult-goto-line)
    ("h" . consult-org-heading)

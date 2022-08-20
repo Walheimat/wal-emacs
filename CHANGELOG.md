@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `corfu` now uses custom `orderless` dispatch (taken from
   official docs) when editing `lsp-mode` buffer.
 - `recentf-mode` is enabled explicitly.
+- Command `consult-ripgrep` is now bound to `C-c g`; it also uses new
+  advice `wal/with-big-vertico` to increase `vertico-count`.
 
 ### Changed
 
