@@ -84,6 +84,7 @@ evaluate /everything/[fn:6] that follows.
 ;;; Code:
 
 (declare-function wal/bytes-per-mb "wal-func.el")
+(declare-function wal/insert-after "wal-func.el")
 (declare-function wal/install-packages "wal-func.el")
 (declare-function wal/is-expansion-pack "wal-func.el")
 (declare-function wal/maybe-make-directory "wal-func.el")
@@ -274,13 +275,7 @@ Such as package `use-package'.")
 
 *** Extend =use-package=
 
-#+BEGIN_SRC emacs-lisp
-(defun wal/insert-use-package-keyword (keyword preceding)
-  "Insert KEYWORD after PRECEDING keyword into `use-package-keywords'."
-  (let* ((kw use-package-keywords)
-         (remainder (nthcdr (cl-position preceding kw) kw)))
-    (setcdr remainder (cons keyword (cdr remainder)))))
-#+END_SRC
+Get even more juice out of it with custom keywords.
 
 **** =:wal-bind=
 
@@ -335,7 +330,7 @@ are two differences:
 ;; Make sure that functions are autoloaded.
 (defalias 'use-package-autoloads/:wal-bind 'use-package-autoloads-mode)
 
-(wal/insert-use-package-keyword :wal-bind :bind-keymap*)
+(wal/insert-after 'use-package-keywords :bind-keymap* :wal-bind)
 #+END_SRC
 
 **** =:wal-ways=
@@ -371,8 +366,7 @@ use the result further down the line."
       `((when ,active
           ,@body)))))
 
-(wal/insert-use-package-keyword :wal-ways :pin)
-
+(wal/insert-after 'use-package-keywords :pin :wal-ways)
 (add-to-list 'use-package-defaults '(:wal-ways t t))
 #+END_SRC
 
@@ -1610,6 +1604,14 @@ Duplicate items are removed."
   (if (seq-every-p (lambda (it) (assoc (car it) target)) values)
       (seq-each (lambda (it) (map-put! target (car it) (cdr it))) values)
     (user-error "All keys must already be present in list")))
+
+(defun wal/insert-after (target preceding item)
+  "Insert ITEM in TARGET after PRECEDING."
+  (let ((val (symbol-value target)))
+    (if (memq preceding val)
+        (let* ((remainder (nthcdr (cl-position preceding val) val)))
+          (setcdr remainder (cons item (cdr remainder))))
+      (user-error "Can't insert, preceding key not in list"))))
 #+END_SRC
 
 ** Commands
@@ -4654,14 +4656,15 @@ The current buffer and Dired buffers are filtered."
      :name "Perspective Buffer"
      :action #'persp-switch-to-buffer
      :items #'wal/consult-persp-buffer-names)
-    (add-to-list 'consult-buffer-sources
-                 (list :name "Dired"
-                       :narrow ?d
-                       :category 'buffer
-                       :face 'font-lock-keyword-face
-                       :state #'consult--buffer-state
-                       :items #'wal/consult-persp-dired-buffer-names)
-                 t))
+    (wal/insert-after
+     'consult-buffer-sources
+     'consult--source-buffer
+     (list :name "Dired Buffer"
+           :narrow ?d
+           :category 'buffer
+           :face 'font-lock-keyword-face
+           :state #'consult--buffer-state
+           :items #'wal/consult-persp-dired-buffer-names)))
   (transient-define-prefix wal/persp ()
     "Call `perspective' functions."
     [["Buffers"

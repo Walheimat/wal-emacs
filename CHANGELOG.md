@@ -33,6 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `recentf-mode` is enabled explicitly.
 - Command `consult-ripgrep` is now bound to `C-c g`; it also uses new
   advice `wal/with-big-vertico` to increase `vertico-count`.
+- List helper function `wal/insert-after` to insert an element after a
+  preceding item. This also replaces function
+  `wal/insert-use-package-keyword`. It is also used to add custom
+  `consult` source for Dired earlier.
 
 ### Changed
 
