@@ -2241,6 +2241,7 @@ and some external ones.
   (require 'transient))
 
 (declare-function wal/captain "wal-key-bindings.el")
+(declare-function wdb/pop-up "wal-func.el")
 (declare-function wdb/side "wal-func.el")
 (declare-function wdb/direction "wal-func.el")
 (declare-function comint-check-proc "ext:comint.el")
@@ -3408,8 +3409,7 @@ Make the bell visual.
 
 ** Ligatures
 
-Package =ligature= is not yet on MELPA so you'll have to put it in the
-load path.
+Font *JetBrains Mono* has the best support for ligatures.
 
 *** ligature
 :PROPERTIES:
@@ -3688,7 +3688,7 @@ Treat certain buffers and their windows as pop-ups.
       (concat
        (with-temp-buffer
          (insert buffer-name)
-         (beginning-of-buffer)
+         (goto-char (point-min))
          (re-search-forward dc-re nil t)
          (concat
            (if (match-string 2) (match-string 2) "")
@@ -3698,7 +3698,7 @@ Treat certain buffers and their windows as pop-ups.
      ((string-match cont-re buffer-name)
        (with-temp-buffer
          (insert buffer-name)
-         (beginning-of-buffer)
+         (goto-char (point-min))
          (re-search-forward cont-re nil t)
          (concat
            (if (match-string 2) (match-string 2) "")
@@ -7200,6 +7200,7 @@ This mode is currently included in the main repo.
 
 #+BEGIN_SRC emacs-lisp
 (use-package jakt-mode
+  :wal-ways nil
   :mode "\\.jakt\\'"
   :quelpa
   (jakt-mode
