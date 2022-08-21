@@ -15,20 +15,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Advising functions using combinator `:around` should now follow
-  template `wal/with-<what-it-does>`.
-- Advising functions using combinator `:override` should now follow
-  pattern `wal/instead-<what-it-does>`.
+- All used advice combinators now follow a template (detailed in
+  style-guide) instead of just prefixing the advised function with
+  `wal/advise` to the advised.
 - Binding in `wal/general` to quit now calls `delete-frame` in daemon
   mode.
 - All utility functions editing lists now expect a symbol as their
   first argument.
+- Settings are set before activating global modes (needed for
+  `recentf` fix below).
 
 ### Fixed
 
 - Package `org-roam` loads on first call of `wal/org-roam` again;
   problem was that the `:config` was referencing custom variables not
   yet set.
+- Sets `recentf-filename-handlers` to nil so taht
+  `consult--source-project-recent-file` works that doesnt' respect
+  abbreviation.
 
 ## [1.7.9] - 2021-08-20
 
