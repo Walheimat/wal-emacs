@@ -2771,16 +2771,15 @@ Drag lines and regions around.
 Less intrusive pairing mode than =smartparens=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-electric-pair-default-inhibit (&rest _r)
+(defun wal/in-case-of-mc-mode-do-not-default (&rest _args)
   "Advise to inhibit if `multiple-cursors-mode' is t."
-  (when (boundp 'multiple-cursors-mode)
-    multiple-cursors-mode))
+  (bound-and-true-p multiple-cursors-mode))
 
 (use-package elec-pair
   :init
   (advice-add
    'electric-pair-default-inhibit :before-until
-   #'wal/advise-electric-pair-default-inhibit)
+   #'wal/in-case-of-mc-mode-do-not-default)
   :hook (prog-mode . electric-pair-local-mode)
   :ensure nil)
 #+END_SRC
@@ -2981,7 +2980,7 @@ Let's have a dash of board.
   "Advise to use biased random footer message."
   (nth (wal/biased-random (length dashboard-footer-messages)) dashboard-footer-messages))
 
-(defun wal/advise-dashboard-setup-startup-hook ()
+(defun wal/in-case-of-daemonp-add-different-hook ()
   "Setup the dashboard in a daemon-friendly way."
   (when (daemonp)
     (add-hook
@@ -2997,7 +2996,7 @@ Let's have a dash of board.
    #'wal/instead-show-biased-random)
   (advice-add
    'dashboard-setup-startup-hook :before-until
-   #'wal/advise-dashboard-setup-startup-hook)
+   #'wal/in-case-of-daemonp-add-different-hook)
   :config
   (setq dashboard-banner-logo-title (wal/describe-config-version))
   :custom
@@ -4572,7 +4571,7 @@ This only removes `process-kill-buffer-query-function'."
                                            kill-buffer-query-functions)))
     (apply fun args)))
 
-(defun wal/advise-persp-format-name (&rest args)
+(defun wal/apply-truncation-to-non-active (&rest args)
   "Truncate non-active perspective name (in ARGS)."
   (let* ((name (car args))
          (curr-name (persp-current-name))
@@ -4647,12 +4646,18 @@ The current buffer and Dired buffers are filtered."
 
 (use-package perspective
   :config
-  (advice-add 'persp-kill :around #'wal/without-querying-for-process-kill)
-  (advice-add 'persp-format-name :filter-return #'wal/advise-persp-format-name)
+  (advice-add
+   'persp-kill :around
+   #'wal/without-querying-for-process-kill)
+  (advice-add
+   'persp-format-name :filter-return
+   #'wal/apply-truncation-to-non-active)
   (advice-add
    'persp-mode-line-click :override
    #'wal/instead-guess-truncated-perspective)
-  (advice-add 'list-buffers--refresh :around #'wal/with-persp-buffers-only)
+  (advice-add
+   'list-buffers--refresh :around
+   #'wal/with-persp-buffers-only)
   (with-eval-after-load 'consult
     (consult-customize
      consult--source-buffer
@@ -4747,11 +4752,12 @@ Otherwise treat DEFAULT-CMD normally."
 (use-package projectile
   :if wal/use-projectile
   :init
-  (advice-add 'projectile-find-file :around
+  (advice-add
+   'projectile-find-file :around
     #'wal/with-projectile-switch)
   (advice-add
-    'projectile-maybe-read-command :override
-    #'wal/instead-only-prompt-if-arg-is-present)
+   'projectile-maybe-read-command :override
+   #'wal/instead-only-prompt-if-arg-is-present)
   :config
   (wal/append 'projectile-globally-ignored-directories
               (nth 0 wal/projectile-ignored))
@@ -4943,7 +4949,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-org-export-dispatch (&rest _r)
+(defun wal/first-require-ox-md (&rest _args)
   "Advise to require `ox-md' before export dispatch."
   (unless (featurep 'ox-md)
     (require 'ox-md nil t)))
@@ -4965,7 +4971,7 @@ This calls `org-content' interactively."
   (define-key org-mode-map (kbd "C-,") nil) ; Remove `org-cycle-agenda-files'.
   (advice-add
    'org-export-dispatch :before
-   #'wal/advise-org-export-dispatch)
+   #'wal/first-require-ox-md)
   (transient-define-prefix wal/org ()
     "Access `org-mode' commands."
     [["Commands"
@@ -5047,13 +5053,13 @@ This calls `org-content' interactively."
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-org-agenda (&rest _r)
+(defun wal/pick-default-agenda (&rest _args)
   "Advise `org-agenda' to just display current day."
   (list (wal/univ-p) "a"))
 
 (use-package org-agenda
   :config
-  (advice-add 'org-agenda :filter-args #'wal/advise-org-agenda)
+  (advice-add 'org-agenda :filter-args #'wal/pick-default-agenda)
   :custom
   (org-agenda-hide-tags-regexp "^@")
   (org-agenda-span 'day)
@@ -7479,7 +7485,7 @@ minimum prefixes are reduced."
   (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
         completion-styles))
 
-(defun wal/advise-lsp-to-prevent-multi-root (&rest _r)
+(defun wal/first-prevent-adding-other-projects (&rest _args)
   "Prevent adding workspace roots from other projects."
   (eval '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))
 
@@ -7489,7 +7495,7 @@ minimum prefixes are reduced."
   (require 'avy nil t) ; For code lenses to work immediately.
   (wal/append 'lsp-file-watch-ignored-directories
               wal/lsp-file-watch-ignored-directories)
-  (advice-add 'lsp :before #'wal/advise-lsp-to-prevent-multi-root)
+  (advice-add 'lsp :before #'wal/first-prevent-adding-other-projects)
   (transient-define-prefix wal/lsp-dispatch ()
     "Call `lsp-mode' functions."
     [["Format"
@@ -7900,7 +7906,7 @@ I browse, I request.
 Make requests using Org.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-verb-to-keep-window (&rest _rest)
+(defun wal/pick-windows-being-kept (&rest _args)
   "Provide t to `verb-kill-*' functions to keep window."
   (list t))
 
@@ -7908,10 +7914,12 @@ Make requests using Org.
   :wal-ways nil
   :init
   (add-to-list 'org-tag-alist '("verb" . ?v))
-  (advice-add 'verb-kill-all-response-buffers :filter-args
-    #'wal/advise-verb-to-keep-window)
-  (advice-add 'verb-kill-response-buffer-and-window :filter-args
-    #'wal/advise-verb-to-keep-window)
+  (advice-add
+   'verb-kill-all-response-buffers :filter-args
+   #'wal/pick-windows-being-kept)
+  (advice-add
+   'verb-kill-response-buffer-and-window :filter-args
+   #'wal/pick-windows-being-kept)
   :config
   (transient-define-prefix wal/verb ()
     "Dispatch `verb' commands."
@@ -8090,7 +8098,7 @@ triggered explicitly.
 Provide some knowledge of the outside world.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/advise-display-wttr--clean-string (string)
+(defun wal/apply-padding-to-string (string)
   "Advise to pad STRING."
   (concat " " (string-trim string)))
 
@@ -8099,7 +8107,7 @@ Provide some knowledge of the outside world.
   :config
   (advice-add
    'display-wttr--clean-string :filter-return
-   #'wal/advise-display-wttr--clean-string)
+   #'wal/apply-padding-to-string)
   :custom
   (display-wttr-format "1")
   :defer 4
