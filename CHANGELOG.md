@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sets `recentf-filename-handlers` to nil so taht
   `consult--source-project-recent-file` works that doesnt' respect
   abbreviation.
+- Agenda files now get the expanded directory, not the symbol.
 
 ## [1.7.9] - 2021-08-20
 
