@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New function `wal/flycheck-file` to do just that.
 - New function `wal/flycheck-packages` to check all config packages
   using function above.
+- The style guide now requires that package configuration code blocks
+  are structured and ideally have some comments explaining non-obvious
+  statements.
 
 ### Changed
 

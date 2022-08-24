@@ -2438,6 +2438,7 @@ be gone.
 #+BEGIN_SRC emacs-lisp
 (use-package winner
   :config
+  ;; Allow for quicker un- and redoing.
   (defhydra wal/winner (:hint nil)
     "
 %s`wal/ascii-whale Window layout: _u_ndo or _r_edo.
@@ -2445,6 +2446,7 @@ be gone.
     ("u" winner-undo)
     ("r" winner-redo)
     ("q" nil "quit"))
+
   (winner-mode +1)
   :custom
   (winner-dont-bind-my-keys t)
@@ -2726,14 +2728,17 @@ snippets.
 #+BEGIN_SRC emacs-lisp
 (use-package yasnippet
   :config
+  ;; Don't want to get in the way of `completion-at-point'.
   (define-key yas-minor-mode-map (kbd "<tab>") nil)
   (define-key yas-minor-mode-map (kbd "TAB") nil)
+
   (transient-define-prefix wal/yas ()
     "Call `yasnippet' commands."
     [["Snippets"
       ("i" "insert" yas-insert-snippet)
       ("v" "visit" yas-visit-snippet-file)
       ("n" "new" yas-new-snippet)]])
+
   (yas-reload-all)
   :wal-bind
   (:map yas-minor-mode-map
@@ -2760,6 +2765,7 @@ Drag lines and regions around.
   :config
   (when wal/use-hyper-prefix
     (setq drag-stuff-modifier 'hyper))
+
   (when (fboundp 'drag-stuff-define-keys)
     (drag-stuff-define-keys))
   :hook (prog-mode . drag-stuff-mode)
@@ -3237,8 +3243,9 @@ This just means increasing duration, delay, size and brightness."
 (use-package beacon
   :wal-ways nil
   :config
-  (wal/append 'beacon-dont-blink-commands
-              wal/beacon-dont-blink-commands)
+  (wal/append
+   'beacon-dont-blink-commands
+   wal/beacon-dont-blink-commands)
   (add-to-list 'beacon-dont-blink-major-modes 'vterm-mode)
   :custom
   (beacon-blink-when-focused t)
@@ -3290,12 +3297,15 @@ Dim inactive frames.
   (advice-add
    'dimmer-config-change-handler :override
    #'wal/instead-force-only-if-predicates-falsy)
+
+  ;; Integrate with other packages.
   (dimmer-configure-hydra)
   (dimmer-configure-magit)
   (dimmer-configure-org)
   (dimmer-configure-which-key)
   (wal/dimmer-configure-lsp-doc)
   (wal/dimmer-configure-corfu)
+
   (dimmer-mode t)
   :custom
   (dimmer-fraction 0.3)
@@ -3359,6 +3369,7 @@ Refine a couple of major and minor mode names.
   (delight 'compilation-shell-minor-mode " csh" "compile")
   (delight 'auto-fill-function " aff" t)
   (delight 'with-editor-mode " w/e" "with-editor")
+
   ;; Only confuse/delight if allowed.
   (when wal/major-delight
     (delight 'elixir-mode "Homebrew" :major)
@@ -3434,8 +3445,11 @@ ARGS is a list containing modes and additional ligatures."
 (use-package ligature
   :wal-ways nil
   :config
-  (advice-add 'ligature-set-ligatures :around
+  ;; Common ligatures.
+  (advice-add
+   'ligature-set-ligatures :around
    #'wal/with-common-ligatures)
+
   (ligature-set-ligatures 'clojure-mode '(";;" "->" "->>"))
   (ligature-set-ligatures 'c++-mode '("::" "->"))
   (ligature-set-ligatures 'dart-mode '("=>" "///" ".?" "??"
@@ -3504,6 +3518,7 @@ Screen saver, CPU devourer.
                        zone-pgm-rat-race
                        zone-pgm-whack-chars
                        ])
+
   (when (and (fboundp 'zone-when-idle) wal/zone-when-idle)
     (zone-when-idle wal/zone-timer))
   :general
@@ -3649,6 +3664,12 @@ Ace interacting with (multiple) windows.
 
 (use-package ace-window
   :config
+  ;; We want to switch buffers using `consult'.
+  (advice-add
+   'aw--switch-buffer :override
+   #'wal/instead-call-consult-buffer)
+
+  ;; We update the dispatch list after the package is loaded.
   (setq aw-dispatch-alist '((?h aw-split-window-horz "horizontal split")
                             (?v aw-split-window-vert "vertical split")
                             (?f aw-split-window-fair "fair split")
@@ -3660,9 +3681,6 @@ Ace interacting with (multiple) windows.
                             (?b aw-switch-buffer-in-window "buffer")
                             ;; If this has a description, it doesn't work.
                             (?? aw-show-dispatch-help)))
-  (advice-add
-   'aw--switch-buffer :override
-   #'wal/instead-call-consult-buffer)
   :custom
   (aw-dispatch-always t)
   (aw-keys '(?j ?k ?l ?\; ?u ?i ?o ?p))
@@ -3829,7 +3847,10 @@ beginning."
 
 (use-package avy
   :config
+  ;; Extend the dispatch with a way to delete up to a char.
   (add-to-list 'avy-dispatch-alist '(?q . wal/avy-action-zip-to-char))
+
+  ;; Make sure we go to the start of the line for org headings.
   (advice-add
    'avy-goto-end-of-line :after
    #'wal/then-goto-beginning-for-org-headings)
@@ -3946,14 +3967,16 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 :UNNUMBERED: t
 :END:
 
-Replace =isearch=. Important command is =C-o s= to change search style.
+Replaces =isearch=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package ctrlf
   :config
+  ;; Make additional functions cancel `ctrlf'.
   (eval
    `(bind-keys :map ctrlf-minibuffer-mode-map
       ,@(mapcar (lambda (it) (cons `[remap ,it] 'ctrlf-cancel)) wal/ctrlf-cancel-commands)))
+
   (when (fboundp 'ctrlf-mode)
     (ctrlf-mode +1))
   :custom
@@ -3976,10 +3999,9 @@ using =xref-find-definitions= (=M-.=).
 (use-package dumb-jump
   :init
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
-  :config
-  (setq dumb-jump-selector 'completing-read)
   :custom
-  (dumb-jump-force-searcher 'rg))
+  (dumb-jump-force-searcher 'rg)
+  (dumb-jump-selector 'completing-read))
 #+END_SRC
 
 ** Footer
@@ -4148,12 +4170,12 @@ Provide global option narrowing using the =vertico= family of products.
 #+BEGIN_SRC emacs-lisp
 (use-package vertico
   :config
+  ;; Set up minibuffer.
   (setq enable-recursive-minibuffers t
-        read-extended-command-predicate
-        #'command-completion-default-include-p
-        minibuffer-prompt-properties
-        '(read-only t cursor-intangible t face minibuffer-prompt))
+        read-extended-command-predicate #'command-completion-default-include-p
+        minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+
   (vertico-mode)
   :custom
   (vertico-cycle t)
@@ -4182,7 +4204,9 @@ Provide global option narrowing using the =vertico= family of products.
 
 (use-package vertico-directory
   :config
-  (advice-add 'vertico--metadata-get :around
+  ;; We don't want to enter directories when we go to file with Dired.
+  (advice-add
+   'vertico--metadata-get :around
    #'wal/with-dired-goto-file-ignored)
   :bind
   (:map vertico-map
@@ -4230,9 +4254,12 @@ Check if WORD length is smaller than 4, INDEX is 0 and TOTAL is 1."
 
 (use-package orderless
   :config
+  ;; Register a new completion style (used by `lsp-mode').
   (orderless-define-completion-style orderfull
     (orderless-style-dispatchers '(wal/orderfull-dispatch))
     (orderless-matching-styles '(orderless-literal orderless-regexp)))
+
+  ;; Setup basic completion and category defaults/overrides.
   (setq completion-styles '(orderless basic)
         completion-category-defaults nil
         completion-category-overrides '((file (styles partial-completion))))
@@ -4251,18 +4278,20 @@ completion actions.
 #+BEGIN_SRC emacs-lisp
 (use-package marginalia
   :config
-  (marginalia-mode)
+  ;; Map external functions to categories.
   (wal/append
-    'marginalia-command-categories
-    '((projectile-switch-to-buffer . buffer)
-      (projectile-find-file . project-file)
-      (projectile-find-file-other-window . project-file)
-      (projectile-find-dir . project-file)
-      (projectile-find-file-in-directory . project-file)
-      (projectile-recentf . project-file)
-      (projectile-switch-project . project-file)
-      (persp-switch-to-buffer . buffer)
-      (persp-kill-buffer* . buffer)))
+   'marginalia-command-categories
+   '((projectile-switch-to-buffer . buffer)
+     (projectile-find-file . project-file)
+     (projectile-find-file-other-window . project-file)
+     (projectile-find-dir . project-file)
+     (projectile-find-file-in-directory . project-file)
+     (projectile-recentf . project-file)
+     (projectile-switch-project . project-file)
+     (persp-switch-to-buffer . buffer)
+     (persp-kill-buffer* . buffer)))
+
+  (marginalia-mode)
   :bind
   (:map minibuffer-local-map
    ("M-a" . marginalia-cycle))
@@ -4275,14 +4304,17 @@ completion actions.
 :UNNUMBERED: t
 :END:
 
-Do something else with minibuffer candidate.
+Act upon =thing-at-point=, be it in a buffer or minibuffer.
 
 #+BEGIN_SRC emacs-lisp
 (use-package embark
   :init
   (wal/univ embark-act embark-dwim)
   :config
+  ;; No mode-line for collections and completions.
   (wdb/ghost "\\`\\*Embark Collect \\(Live\\|Completions\\)\\*")
+
+  ;; Use `projectile' alternatives when finding files.
   (when wal/use-projectile
     (define-key embark-file-map
                 (kbd "f")
@@ -4290,6 +4322,8 @@ Do something else with minibuffer candidate.
     (define-key embark-file-map
                 (kbd "o")
                 (wal/maybe-use-projectile find-file-other-window)))
+
+  ;; Search using region.
   (define-key embark-region-map
               (kbd "g")
               #'wal/duck-duck-go-region)
@@ -4364,8 +4398,11 @@ not pollute the current one."
     (setq consult-project-function #'projectile-project-root))
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
-  ;; Customize filter, previews and advise theme changes.
+
+  ;; Filter out additional buffers.
   (wal/append 'consult-buffer-filter wal/consult-buffer-filter)
+
+  ;; Customize sources.
   (consult-customize
    consult--source-recent-file
    consult--source-project-recent-file
@@ -4376,8 +4413,14 @@ not pollute the current one."
    wal/consult-clock-in
    :prompt "Clock in: "
    :preview-key (kbd "M-."))
+
+
+  ;; Be sure to set the active them after switching.
   (advice-add 'consult-theme :after #'wal/then-set-active-theme)
+
+  ;; Use a bigger `vertico' when grepping.
   (advice-add 'consult-ripgrep :around #'wal/with-big-vertico)
+
   ;; Bind commands in `transient'.
   (transient-define-prefix wal/consult ()
     "Call `consult' functions."
@@ -4649,18 +4692,27 @@ The current buffer and Dired buffers are filtered."
 
 (use-package perspective
   :config
+  ;; Kill processes of killed perspectives without prompt.
   (advice-add
    'persp-kill :around
    #'wal/without-querying-for-process-kill)
+
+  ;; Truncate inactive perspectives.
   (advice-add
    'persp-format-name :filter-return
    #'wal/apply-truncation-to-non-active)
+
+  ;; Make clicking work despite truncation.
   (advice-add
    'persp-mode-line-click :override
    #'wal/instead-guess-truncated-perspective)
+
+  ;; Refresh the buffer list with filtering intact.
   (advice-add
    'list-buffers--refresh :around
    #'wal/with-persp-buffers-only)
+
+  ;; Customize buffer source, add new one for Dired.
   (with-eval-after-load 'consult
     (consult-customize
      consult--source-buffer
@@ -4676,6 +4728,7 @@ The current buffer and Dired buffers are filtered."
            :face 'font-lock-keyword-face
            :state #'consult--buffer-state
            :items #'wal/consult-persp-dired-buffer-names)))
+
   (transient-define-prefix wal/persp ()
     "Call `perspective' functions."
     [["Buffers"
@@ -4690,11 +4743,15 @@ The current buffer and Dired buffers are filtered."
       ("m" "merge" persp-merge)]
      ["Other"
       ("x" "scratch" wal/switch-to-scratch-buffer)]])
+
+  ;; Register command map.
   (wal/lieutenant "i" '(:keymap perspective-map :wk "perspective"))
-  (persp-mode +1)
-  ;; Override the override to `perspective-map'.
+
+  ;; Override the override to `perspective-map' in older Emacs versions.
   (when (< emacs-major-version 28)
     (define-key persp-mode-map (kbd "C-x x") ctl-x-x-map))
+
+  (persp-mode +1)
   :custom
   (persp-modestring-dividers '("(" ")" "/"))
   (persp-initial-frame-name wal/default-perspective)
@@ -4755,19 +4812,24 @@ Otherwise treat DEFAULT-CMD normally."
 (use-package projectile
   :if wal/use-projectile
   :init
+  ;; Switch to project first if outside a project.
   (advice-add
    'projectile-find-file :around
     #'wal/with-projectile-switch)
+
+  ;; Don't prompt for the command unless we're using `C-u'.
   (advice-add
    'projectile-maybe-read-command :override
    #'wal/instead-only-prompt-if-arg-is-present)
   :config
+  ;; Extend the various ignore lists.
   (wal/append 'projectile-globally-ignored-directories
               (nth 0 wal/projectile-ignored))
   (wal/append 'projectile-globally-ignored-files
               (nth 1 wal/projectile-ignored))
   (wal/append 'projectile-globally-ignored-file-suffixes
               (nth 2 wal/projectile-ignored))
+
   (transient-define-prefix wal/projectile ()
     "Call `projectile' commands."
     [["Command"
@@ -4792,7 +4854,10 @@ Otherwise treat DEFAULT-CMD normally."
        :inapt-if-not (lambda () (featurep 'tokei)))]
      ["Projects"
       ("o" "switch to open project" projectile-switch-open-project)]])
+
+  ;; Register command map.
   (wal/lieutenant "p" '(:keymap projectile-command-map :wk "projectile"))
+
   (projectile-mode +1)
   :custom
   (projectile-switch-project-action #'projectile-dired)
@@ -4970,11 +5035,17 @@ This calls `org-content' interactively."
     "Hook into `org-mode'."
     :messages '("Organize! Seize the means of production!"))
   :config
-  (require 'org-indent) ; TEMP: Getting missing face errors otherwise.
-  (define-key org-mode-map (kbd "C-,") nil) ; Remove `org-cycle-agenda-files'.
+  ;; TEMP: Getting missing face errors otherwise.
+  (require 'org-indent)
+
+  ;; Remove `org-cycle-agenda-files'.
+  (define-key org-mode-map (kbd "C-,") nil)
+
+  ;; Require `ox-md' before calling dispatch as it might not be loaded.
   (advice-add
    'org-export-dispatch :before
    #'wal/first-require-ox-md)
+
   (transient-define-prefix wal/org ()
     "Access `org-mode' commands."
     [["Commands"
@@ -5001,21 +5072,28 @@ This calls `org-content' interactively."
      ["Transclusion"
       ("c" "transclusion" wal/org-transclusion)]])
   :custom
+  ;; Make it look nice and tidy.
   (org-adapt-indentation nil)
   (org-ellipsis "↷")
   (org-hide-emphasis-markers t)
+  (org-startup-with-inline-images t)
+  (org-startup-folded 'overview)
+  (org-cycle-separator-lines 1)
+
+  ;; Logging.
   (org-log-done 'time)
   (org-log-note-clock-out t)
-  (org-startup-folded 'overview)
+  (org-log-into-drawer t)
+
+  ;; Set up directories.
   (org-directory wal/org-directory)
   (org-default-notes-file (concat org-directory "/notes.org"))
   (org-agenda-files `(,wal/agenda-tasks-directory))
-  (org-deadline-warning-days 2)
-  (org-startup-with-inline-images t)
+
   ;; Be sure to add archive tag with `org-toggle-archive-tag'.
   (org-archive-location "::* Archived")
-  ;; Too many clock entries clutter up a heading.
-  (org-log-into-drawer t)
+
+  ;; Adapt keywords, tags and speed commands.
   (org-todo-keywords
    '((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "BLOCKED(b)" "|" "DONE(d)" "CANCELED(c)")))
   (org-tag-alist
@@ -5037,7 +5115,9 @@ This calls `org-content' interactively."
      ("@dev" . ?d)
      ("@bla" . ?b)
      ("@edu" . ?e)))
-  (org-cycle-separator-lines 1)
+
+  ;; Warn late about upcoming deadlines.
+  (org-deadline-warning-days 2)
   :bind
   (:map org-mode-map
    ("M-p" . org-previous-visible-heading)
@@ -5062,7 +5142,10 @@ This calls `org-content' interactively."
 
 (use-package org-agenda
   :config
-  (advice-add 'org-agenda :filter-args #'wal/pick-default-agenda)
+  ;; No need for the dispatch.
+  (advice-add
+   'org-agenda :filter-args
+   #'wal/pick-default-agenda)
   :custom
   (org-agenda-hide-tags-regexp "^@")
   (org-agenda-span 'day)
@@ -5133,13 +5216,17 @@ case."
   :init
   (setq org-roam-v2-ack t)
   :config
-  (org-roam-db-autosync-enable)
+  ;; Show roam buffer on the right.
   (wdb/side 'org-roam-mode :side 'right)
+
+  ;; Refile differently for these files.
   (wal/replace-in-alist 'org-speed-commands '(("w" . wal/maybe-org-roam-refile)))
-  (add-to-list 'org-speed-commands '("N" . wal/org-clock-in-from-now))
+
+  ;; Add todos from the dailies to the agenda.
   (add-to-list 'org-agenda-files (expand-file-name
                                   wal/org-roam-dailies-directory
                                   wal/org-roam-directory))
+
   (transient-define-prefix wal/org-roam ()
     "Run `org-roam' commands."
     [["Capture"
@@ -5161,10 +5248,15 @@ case."
       ("g" "graph" org-roam-graph)
       ("u" "ui" org-roam-ui-mode
        :inapt-if-not (lambda () (featurep 'org-roam-ui)))]])
+
+  (org-roam-db-autosync-enable)
   :custom
+  ;; Setup directories and file names.
   (org-roam-directory wal/org-roam-directory)
   (org-roam-dailies-directory wal/org-roam-dailies-directory)
   (org-roam-extract-new-file-path "${slug}.org")
+
+  ;; Simple capture templates.
   (org-roam-capture-templates
    '(("d" "default" plain "%?"
       :target (file+head "${slug}.org"
@@ -5394,8 +5486,8 @@ Configure refiling headings.
 #+BEGIN_SRC emacs-lisp
 (use-package org-refile
   :custom
+  ;; Allow refiling in same file up to level 3.
   (org-refile-targets
-   ;; Allow refiling in same file up to level 3.
    '((nil . (:maxlevel . 3))))
   :ensure nil)
 #+END_SRC
@@ -5412,6 +5504,7 @@ Convenient (and less safe) source block interaction.
 #+BEGIN_SRC emacs-lisp
 (use-package ob
   :config
+  ;; Load a few more languages.
   (wal/append
    'org-babel-load-languages
    '((shell . t)
@@ -5454,6 +5547,7 @@ You know the drill. Clock in, clock out.
   :init
   (add-to-list 'org-speed-commands '("N" . wal/org-clock-in-from-now))
   :custom
+  ;; We want a continuous, persistent clock.
   (org-clock-idle-time 60)
   (org-clock-continuously t)
   (org-clock-persist t)
@@ -5461,6 +5555,8 @@ You know the drill. Clock in, clock out.
   (org-clock-in-resume t)
   (org-clock-report-include-clocking-task t)
   (org-clock-out-remove-zero-time-clocks t)
+
+  ;; Truncate overly long tasks.
   (org-clock-heading-function #'wal/org-clock-heading)
   :bind
   (:map goto-map
@@ -5479,6 +5575,7 @@ Set up durations for a 40-hour week.
 #+BEGIN_SRC emacs-lisp
 (use-package org-duration
   :config
+  ;; 40h working week, one month of vacation.
   (wal/replace-in-alist
     'org-duration-units
     `(("d" . ,(* 60 8))
@@ -5533,8 +5630,10 @@ Modern look.
 (use-package org-modern
   :wal-ways nil
   :custom
+  ;; Provided by `org-bullets'.
   (org-modern-star nil)
   (org-modern-hide-stars nil)
+
   (org-modern-variable-pitch nil)
   (org-modern-label-border 0.1)
   :hook (org-mode . org-modern-mode)
@@ -5624,8 +5723,9 @@ Uses the same optional SWITCHES."
 
 (use-package dired
   :config
+  ;; We aren't scared of finding alternate files.
   (put 'dired-find-alternate-file 'disabled nil)
-  (define-key dired-mode-map (kbd "C-o") nil) ; Removes `dired-display-file'.
+
   (transient-define-prefix wal/dired ()
     "Access Dired commands."
     [["Utility"
@@ -6109,6 +6209,8 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
     ("l" smerge-keep-lower)
     ("a" smerge-keep-all "keep all")
     ("q" nil "quit"))
+
+  ;; Register command map.
   (wal/lieutenant :keymaps 'smerge-mode-map
     "@" '(:keymap smerge-basic-map :wk "smerge"))
   :general
@@ -6229,8 +6331,9 @@ I want to be ready for =jai=.
     :lsp t
     :messages '("Make tidy! Make clean!" "Serenity now!"))
   :config
-  ;; Eliminates conflicts with `delight'.
+  ;; Eliminate conflicts with `delight'.
   (advice-add 'c-update-modeline :override #'ignore)
+
   (transient-define-prefix wal/c++ ()
     "Access `c++-mode' commands."
     [["Style"
@@ -6324,9 +6427,13 @@ Use snake when you can't =make=.
     (setq-local comment-inline-offset 2)
     (wal/activate-venv))
   :config
+  ;; Load default `dap-mode' templates.
   (with-eval-after-load 'dap-mode
     (require 'dap-python))
+
+  ;; Show inferior shell at the bottom.
   (wdb/side 'inferior-python-mode)
+
   (transient-define-prefix wal/python ()
     "Access `python-mode' commands."
     [["Inferior shell"
@@ -6634,8 +6741,11 @@ Can we have =deno= instead of =node=?
   :config
   ;; Don't override `xref-find-definitions'.
   (define-key js2-mode-map (kbd "M-.") nil)
+
+  ;; Load default `dap-mode' templates.
   (with-eval-after-load 'dap-mode
     (require 'dap-node))
+
   (transient-define-prefix wal/js ()
     "Access JS commands."
     [["Linting"
@@ -6921,12 +7031,14 @@ LSP support for Dart.
   :if (or (executable-find "flutter") (executable-find "dart"))
   :wal-ways nil
   :config
-  (when (fboundp 'lsp-dart-define-key)
-    (lsp-dart-define-key "r" #'lsp-dart-run))
+  ;; Kill process without a prompt.
   (add-hook
    'lsp-after-initialize-hook
    #'wal/lsp-dart-set-process-query-on-exit-flag)
+
+  ;; Display at the bottom.
   (wdb/side "\\*Flutter")
+
   (transient-define-prefix wal/flutter ()
     "Access flutter commands."
     [["Hot-reloading"
@@ -6993,6 +7105,7 @@ LSP integration.
   :custom
   ;; Latest version.
   (lsp-java-jdt-download-url (format wal/jdtls-fs "1.9.0" "202203031534"))
+
   ;; Suggested fix for failing completion.
   (lsp-java-format-on-type-enabled nil)
   (lsp-java-references-code-lens-enabled t)
@@ -7080,9 +7193,11 @@ The only way to store strings, JSON.
     :messages '("JSON ...? JSON?! JSON!!")
     (flycheck-mode 1))
   :config
+  ;; Integrate with `flycheck' and `so-long-mode'.
   (jsonian-no-so-long-mode)
   (with-eval-after-load 'flycheck
     (jsonian-enable-flycheck))
+
   (transient-define-prefix wal/jsonian ()
     "Access `jsonian-mode' commands."
     [["Jsonian"
@@ -7185,6 +7300,8 @@ replying to the `JSONRPC' request."
     :lsp t
     :tabs always
     :messages '("I wish you were Estra-gone"))
+
+  ;; Recognize Godot projects.
   (when wal/use-projectile
     (eval-after-load 'projectile
       '(projectile-register-project-type
@@ -7495,10 +7612,17 @@ minimum prefixes are reduced."
 (use-package lsp-mode
   :wal-ways nil
   :config
-  (require 'avy nil t) ; For code lenses to work immediately.
+  ;; Integrate with other packages.
+  (require 'avy nil t)
+  (lsp-enable-which-key-integration t)
+
+  ;; Additional ignores.
   (wal/append 'lsp-file-watch-ignored-directories
               wal/lsp-file-watch-ignored-directories)
+
+  ;; Don't keep track of multiple projects.
   (advice-add 'lsp :before #'wal/first-prevent-adding-other-projects)
+
   (transient-define-prefix wal/lsp-dispatch ()
     "Call `lsp-mode' functions."
     [["Format"
@@ -7520,20 +7644,27 @@ minimum prefixes are reduced."
      ["Workspace"
       ("R" "restart" lsp-workspace-restart)
       ("Q" "quit" lsp-workspace-shutdown)]])
+
+  ;; Register command map.
   (wal/lieutenant :keymaps 'lsp-mode-map
     "l" '(:keymap lsp-command-map :wk "lsp"))
-  (lsp-enable-which-key-integration t)
   :custom
+  ;; Simplify visuals.
   (lsp-headerline-breadcrumb-enable nil)
-  (lsp-keymap-prefix (wal/prefix-user-key (concat wal/lieutenant-key " " "l")))
-  (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
-  (lsp-clients-typescript-log-verbosity "off")
-  (lsp-rust-analyzer-cargo-watch-command "clippy")
   (lsp-signature-render-documentation nil)
   (lsp-signature-function 'lsp-signature-posframe)
   (lsp-signature-auto-activate '(:on-server-request))
+
+  ;; Play nice with `corfu'.
+  (lsp-completion-provider :none)
+
   (lsp-keep-workspace-alive nil)
-  (lsp-completion-provider :none) ;; We're using `corfu'.
+  (lsp-keymap-prefix (wal/prefix-user-key (concat wal/lieutenant-key " " "l")))
+
+  ;; Individual severs.
+  (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
+  (lsp-clients-typescript-log-verbosity "off")
+  (lsp-rust-analyzer-cargo-watch-command "clippy")
   :general
   (wal/major :keymaps 'lsp-mode-map "l" '(wal/lsp-dispatch :wk "lsp"))
   :hook
@@ -7554,10 +7685,12 @@ Don't clutter things up too much.
 (use-package lsp-ui
   :wal-ways nil
   :custom
+  ;; No sideline stuff.
   (lsp-ui-sideline-enable nil)
-  (lsp-ui-doc-show-with-cursor t)
+
+  ;; Late and smaller docs.
   (lsp-ui-doc-delay 1.0)
-  (lsp-ui-doc-max-height 10) ; Ensures that docs fit.
+  (lsp-ui-doc-max-height 10)
   (lsp-ui-doc-text-scale-level -1)
   :after lsp-mode)
 #+END_SRC
@@ -7573,9 +7706,13 @@ Debugging using VSCode's DAP (in =lsp-mode=)
 (use-package dap-mode
   :wal-ways nil
   :config
+  ;; Show REPL at the bottom.
+  (wdb/side 'dap-ui-repl-mode)
+
+  ;; Activate UI and configure.
   (dap-ui-mode 1)
   (dap-auto-configure-mode)
-  (wdb/side 'dap-ui-repl-mode)
+
   (with-no-warnings
     (defhydra wal/dap-hydra (:hint nil :foreign-keys warn)
       "
@@ -7916,7 +8053,10 @@ Make requests using Org.
 (use-package verb
   :wal-ways nil
   :init
+  ;; Make the tag available.
   (add-to-list 'org-tag-alist '("verb" . ?v))
+
+  ;; Make sure windows are being kept.
   (advice-add
    'verb-kill-all-response-buffers :filter-args
    #'wal/pick-windows-being-kept)
@@ -7938,6 +8078,8 @@ Make requests using Org.
      ["Variables"
       ("v" "set" verb-set-var)
       ("V" "show" verb-show-vars)]])
+
+  ;; Register command map.
   (wal/lieutenant :keymaps '(verb-mode-map verb-response-body-mode-map)
     "r" '(:keymap verb-command-map :wk "verb"))
   :bind
