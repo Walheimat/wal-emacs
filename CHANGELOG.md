@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   first argument.
 - Settings are set before activating global modes (needed for
   `recentf` fix below).
+- Package `vundo` is now bound in `major`. Function `wal/transparency`
+  is now bound in `general`.
 
 ### Fixed
 
