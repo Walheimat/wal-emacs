@@ -7404,6 +7404,18 @@ Please let me know when I screwed up. I promise I will learn.
       (setq buffer-read-only t)))
   (get-buffer wal/flycheck-file--buffer))
 
+(defun wal/flycheck-file--write (message &optional skip-newline)
+  "Write MESSAGE to the file check buffer.
+
+Optionally don't concat a newline char if SKIP-NEWLINE is t."
+  (let ((buf (wal/flycheck-file--get-buffer)))
+    (with-current-buffer buf
+      (setq buffer-read-only nil)
+      (goto-char (point-max))
+      (insert  message)
+      (unless skip-newline (insert "\n"))
+      (setq buffer-read-only t))))
+
 (defun wal/flycheck-file--callback (file buffer &optional defer-display kill-buffer)
   "Show errors in FILE in a distinct buffer.
 
@@ -7413,20 +7425,14 @@ If KILL-BUFFER is t, also kill its BUFFER."
   (lambda (_status &optional errors)
     (let* ((output-buffer (wal/flycheck-file--get-buffer))
            (filename (file-name-nondirectory file)))
-      (with-current-buffer output-buffer
-        (setq buffer-read-only nil)
-        (goto-char (point-max))
-        (insert (format "Checking file '%s':" filename))
-        (if (null errors)
-            (insert " no errors")
-          (insert "\n"))
+      (if (null errors)
+          (wal/flycheck-file--write (format "No errors in'%s'." filename))
+        (wal/flycheck-file--write (format "Errors in file '%s':" filename))
         (seq-do (lambda (err)
                   (when-let ((err-message (flycheck-error-message err))
                              (line (flycheck-error-line err)))
-                    (insert (format "line %d: %s\n" line err-message))))
+                    (wal/flycheck-file--write (format "line %d: %s\n" line err-message))))
                 errors)
-        (insert "\n")
-        (setq buffer-read-only t)
         (unless defer-display (display-buffer output-buffer))
         (when kill-buffer (kill-buffer buffer))))))
 
