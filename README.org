@@ -7404,12 +7404,15 @@ Please let me know when I screwed up. I promise I will learn.
       (setq buffer-read-only t)))
   (get-buffer wal/flycheck-file--buffer))
 
-(defun wal/flycheck-file--callback (filename &optional defer-display)
-  "Show FILENAME's errors in a distinct buffer.
+(defun wal/flycheck-file--callback (file buffer &optional defer-display kill-buffer)
+  "Show errors in FILE in a distinct buffer.
 
-Unless DEFER-DISPLAY is T, show it."
+Unless DEFER-DISPLAY is t, show it.
+
+If KILL-BUFFER is t, also kill its BUFFER."
   (lambda (_status &optional errors)
-    (let* ((output-buffer (wal/flycheck-file--get-buffer)))
+    (let* ((output-buffer (wal/flycheck-file--get-buffer))
+           (filename (file-name-nondirectory file)))
       (with-current-buffer output-buffer
         (setq buffer-read-only nil)
         (goto-char (point-max))
@@ -7424,12 +7427,15 @@ Unless DEFER-DISPLAY is T, show it."
                 errors)
         (insert "\n")
         (setq buffer-read-only t)
-        (unless defer-display (display-buffer output-buffer))))))
+        (unless defer-display (display-buffer output-buffer))
+        (when kill-buffer (kill-buffer buffer))))))
 
-(defun wal/flycheck-file (file &optional defer-display)
+(defun wal/flycheck-file (file &optional defer-display kill-buffer)
   "Check FILE with flycheck.
 
-Display it afterwards unless DEFER-DISPLAY is t."
+Display it afterwards unless DEFER-DISPLAY is t.
+
+If KILL-BUFFER is t, kill the file's buffer."
   (interactive "fSelect file: ")
   (when (and (fboundp 'flycheck-get-checker-for-buffer)
              (fboundp 'flycheck-syntax-check-new)
@@ -7443,7 +7449,7 @@ Display it afterwards unless DEFER-DISPLAY is t."
                            :checker checker
                            :context nil
                            :working-directory (flycheck-compute-working-directory checker)))
-                   (callback (wal/flycheck-file--callback (file-name-nondirectory file) defer-display)))
+                   (callback (wal/flycheck-file--callback file (current-buffer) defer-display kill-buffer)))
               (flycheck-syntax-check-start check callback))
           (user-error "Couldn't determine checker for file"))))))
 
@@ -8529,7 +8535,8 @@ This will activate minor mode `wal/config-mode'."
       (erase-buffer)
       (setq buffer-read-only t))
     (dolist (it (wal/directory-files wal/emacs-config-package-path))
-      (wal/flycheck-file it t))
+      ;; Check the file but defer output and kill the buffers.
+      (wal/flycheck-file it t t))
     (display-buffer output-buffer)))
 
 (defun wal/config-maybe-create-transient ()
