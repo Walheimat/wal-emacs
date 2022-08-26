@@ -454,31 +454,40 @@ packages.
 (setq read-process-output-max wal/read-process-output-max
       echo-keystrokes 0.1
       use-short-answers t ; New in Emacs 28. Otherwise you need an alias.
+
       ;; Undo limits.
       undo-limit (wal/bytes-per-mb 1)
       undo-strong-limit (wal/bytes-per-mb 1.5)
       undo-outer-limit (wal/bytes-per-mb 150)
+
       ;; Mouse.
       mouse-yank-at-point t
+
       ;; Native compilation.
       package-native-compile t
       native-comp-async-report-warnings-errors 'silent
+
       ;; Annoyances.
       disabled-command-function nil
       debugger-bury-or-kill 'kill
       so-long-action 'so-long-minor-mode
+
       ;; Time.
       display-time-format " %H:%M"
       display-time-default-load-average nil
       save-interprogram-paste-before-kill t
+
       ;; Mark ring.
       mark-ring-max 32
       global-mark-ring-max 32
+
       ;; Parentheses.
       show-paren-delay 0.1
       show-paren-context-when-offscreen t ; New in Emacs 29.
+
       ;; Editing.
       backward-delete-char-untabify-method 'hungry
+
       ;; Otherwise source `consult--source-project-recent-file' won't work.
       recentf-filename-handlers nil)
 #+END_SRC
@@ -958,8 +967,13 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
          (key (wal/prefix-user-key (symbol-value key-sym)))
          (sink (intern (format "%s-sink" leader)))
          (name (substring (symbol-name leader) 4)))
+    ;; Queue up `which-key' replacements.
     (eval-after-load 'which-key `(which-key-add-key-based-replacements ,key ,name))
+
+    ;; Create the normal definer.
     (eval `(general-create-definer ,leader :prefix ,key))
+
+    ;; Also create the sink for certain leaders.
     (when (memq leader wal/leader-with-sink)
       (eval `(wal/create-leader-sink ,sink :definer ,leader :prefix ,key)))))
 
@@ -1211,7 +1225,7 @@ should get created."
   (let ((parent-directory (file-name-directory buffer-file-name)))
     (when (and (not (file-exists-p parent-directory))
                (y-or-n-p (format "Create non-existing directory `%s'? " parent-directory)))
-               (make-directory parent-directory t))))
+      (make-directory parent-directory t))))
 
 (add-to-list 'find-file-not-found-functions #'wal/create-non-existent-directory)
 #+END_SRC
@@ -1816,8 +1830,10 @@ Calls `delete-other-windows' if DELETE-WINDOWS is t."
                        (lambda (it) (not (package-installed-p it)))
                        packages)))
     (mapc (lambda (it) (package-install it)) new-packages)
+
     (when delete-windows
       (delete-other-windows))
+
     (length new-packages)))
 
 (defun wal/install-recipes (recipes)
@@ -1828,6 +1844,7 @@ Returns the number of newly installed packages."
                         (lambda (it) (not (package-installed-p (car it))))
                         recipes)))
     (mapc (lambda (it) (quelpa it)) new-packages)
+
     (length new-packages)))
 
 (cl-defmacro wal/define-expansion-pack (name docs &key packages extras recipes)
@@ -1881,15 +1898,20 @@ Optionally provide quelpa RECIPES."
         (user-error "Unknown pack '%s', check `wal/expansion-packs'" sym)
       (let* ((installed-packages (wal/install-packages packages :delete-windows t))
              (installed-recipes (wal/install-recipes recipes)))
+
+        ;; Notify about what happened.
         (if (= 0 (+ installed-packages installed-recipes))
             (message "All core packages/recipes already installed.")
           (message "Installed expansion pack '%s" pack))
+
         (when (and extras (yes-or-no-p "Want to install an extras?"))
           (wal/install-expansion-pack-extra item))))))
 
 (defun wal/expansion--stringify (package-list)
   "Stringify PACKAGE-LIST."
-  (if package-list (string-join (mapcar (lambda (it) (format "%s" it)) package-list) ", ") ""))
+  (if package-list
+      (mapconcat (lambda (it) (format "%s" it)) package-list ", ")
+    ""))
 
 ;; Make completion look nice.
 (with-eval-after-load 'marginalia
@@ -2195,6 +2217,7 @@ available candidate from `wal/fixed-fonts'. Does the same for
              (when (internal-lisp-face-p it)
                (set-face-attribute it nil :inherit 'mode-line)))
            '(mode-line-active mode-line-inactive))
+
      ;; Variable pitch face.
      (set-face-attribute 'variable-pitch nil
                          :font (wal/fonts-candidate wal/variable-fonts t)
@@ -3093,17 +3116,6 @@ Color over configuration from the same author.
 #+BEGIN_SRC emacs-lisp
 (use-package ef-themes
   :wal-ways nil
-  :custom
-  ;; Don't mess with the height of org headings!
-  (ef-themes-height-0 1.0)
-  (ef-themes-height-1 1.0)
-  (ef-themes-height-2 1.0)
-  (ef-themes-height-3 1.0)
-  (ef-themes-height-4 1.0)
-  (ef-themes-height-5 1.0)
-  (ef-themes-height-6 1.0)
-  (ef-themes-height-7 1.0)
-  (ef-themes-height-8 1.0)
   :ensure nil)
 #+END_SRC
 
@@ -3455,7 +3467,7 @@ ARGS is a list containing modes and additional ligatures."
   (ligature-set-ligatures 'dart-mode '("=>" "///" ".?" "??"
                                        "??=" ".."))
   (ligature-set-ligatures 'elixir-mode '("|>" "->" "<-" "=>"
-                                        "::" "<>" "#{" "\\\\"
+                                         "::" "<>" "#{" "\\\\"
                                          "===" "!==" ".."))
   (ligature-set-ligatures 'html-mode '("<!--" "-->"))
   (ligature-set-ligatures 'java-mode '("::" "->"))
@@ -3813,6 +3825,7 @@ If called with `universal-argument', go to LINE-FIRST."
   (interactive "P")
   (when line-first
     (avy-goto-line))
+
   (avy-with avy-goto-word-0
     (avy-jump avy-goto-word-0-regexp
               :beg (line-beginning-position)
@@ -3826,6 +3839,7 @@ If called with `universal-argument', go to LINE-FIRST."
            (end (avy--line)))
       (when (> beg end)
         (cl-rotatef beg end))
+
       (set-mark beg)
       (goto-char end)
       (forward-visible-line 1)
@@ -5330,14 +5344,17 @@ Turn any =org-mode= buffer into a presentation.
         visual-fill-column-center-text t
         cursor-type nil)
   (visual-fill-column-mode 1)
+
   (when (bound-and-true-p org-sticky-header-mode)
     (setq wal/org-tree-slide-disabled-modes
       (append wal/org-tree-slide-disabled-modes '(org-sticky-header-mode)))
     (org-sticky-header-mode -1))
+
   (when (bound-and-true-p dimmer-mode)
     (setq wal/org-tree-slide-disabled-modes
       (append wal/org-tree-slide-disabled-modes '(dimmer-mode)))
     (dimmer-mode -1))
+
   (mixed-pitch-mode +1))
 
 (defun wal/org-tree-slide-stop ()
@@ -5346,13 +5363,18 @@ Turn any =org-mode= buffer into a presentation.
         visual-fill-column-center-text nil
         cursor-type t)
   (visual-fill-column-mode -1)
+
   (when (fboundp 'outline-show-all)
     (outline-show-all))
+
   (when (memq 'org-sticky-header-mode wal/org-tree-slide-disabled-modes)
     (org-sticky-header-mode +1))
+
   (when (memq 'dimmer-mode wal/org-tree-slide-disabled-modes)
     (dimmer-mode +1))
+
   (setq wal/org-tree-slide-disabled-modes '())
+
   (mixed-pitch-mode -1))
 
 (defun wal/org-tree-slide-text-scale ()
@@ -8528,8 +8550,8 @@ This will activate minor mode `wal/config-mode'."
     (dolist (it (wal/directory-files wal/emacs-config-package-path))
       (checkdoc-file it))))
 
-(defun wal/flycheck-packages ()
-  "Run `wal/flycheck' on all package files."
+(defun wal/flycheck-config-packages ()
+  "Run `wal/flycheck' on all config package files."
   (interactive)
   (defvar projectile-enable-caching)
   (let ((output-buffer (wal/flycheck-file--get-buffer))
@@ -8554,7 +8576,7 @@ This will activate minor mode `wal/config-mode'."
           ("t" "tangle" wal/tangle-config)
           ("x" "install expansion pack" wal/install-expansion-pack)
           ("c" "checkdoc" wal/checkdoc-packages)
-          ("f" "flycheck" wal/flycheck-packages)]
+          ("f" "flycheck" wal/flycheck-config-packages)]
          ["Go to"
           ("h" "heading" consult-org-heading)
           ("d" "packages" wal/dired-packages)]

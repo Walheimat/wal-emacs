@@ -10,8 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - New function `wal/flycheck-file` to do just that.
-- New function `wal/flycheck-packages` to check all config packages
-  using function above.
+- New function `wal/flycheck-config-packages` to check all config
+  packages using function above.
 - The style guide now requires that package configuration code blocks
   are structured and ideally have some comments explaining non-obvious
   statements.
@@ -37,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `org-roam` loads on first call of `wal/org-roam` again;
   problem was that the `:config` was referencing custom variables not
   yet set.
-- Sets `recentf-filename-handlers` to nil so taht
+- Sets `recentf-filename-handlers` to nil so that
   `consult--source-project-recent-file` works that doesnt' respect
   abbreviation.
 - Agenda files now get the expanded directory, not the symbol.
