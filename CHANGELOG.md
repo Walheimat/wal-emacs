@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `recentf` fix below).
 - Package `vundo` is now bound in `major`. Function `wal/transparency`
   is now bound in `general`.
+- Helper function `wal/display-buffer-condition` now uses an alist to
+  provide major-mode conditional.
 
 ### Fixed
 
