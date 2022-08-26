@@ -44,6 +44,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   abbreviation.
 - Agenda files now get the expanded directory, not the symbol.
 - Custom exit function should work in `-nw` Emacs sessions.
+- The hook for `python-mode` no longer expects `poetry` to be present
+  and the function to activate the virtual environment no longer
+  pretends to work for non-poetry projects (this addresses a change in
+  that package).
+- A `pyvenv` hook now takes care of setting the correct `lsp-pylsp`
+  variables.
+- Python packages are now correctly demanded.
 
 ## [1.7.9] - 2021-08-20
 
