@@ -8420,10 +8420,15 @@ Animate a swimming whale in a =posframe=.
 (defun wal/ascii-whale-animate ()
   "Animate the ASCII whale."
   (with-current-buffer (get-buffer-create wal/ascii-whale-buffer)
+    ;; Clear.
     (erase-buffer)
+
+    ;; Render current frame.
     (let* ((frame (aref wal/ascii-whale-key-frames wal/ascii-whale-frame-index))
            (colored (propertize frame 'face 'mode-line-highlight)))
       (insert colored)
+
+      ;; Advance to the next frame.
       (setq wal/ascii-whale-frame-index
             (mod
              (1+ wal/ascii-whale-frame-index)
@@ -8432,22 +8437,38 @@ Animate a swimming whale in a =posframe=.
 (defun wal/ascii-whale-setup ()
   "Set up the animated whale."
   (when (featurep 'posframe)
+    ;; Integrate in current window configuration.
     (setq wal/ascii-whale-parent-buffer (current-buffer))
     (add-hook 'kill-buffer-hook #'wal/ascii-whale-clean-up nil t)
     (add-hook 'window-configuration-change-hook #'wal/ascii-whale-display nil t)
+
+    ;; Queue up timer.
     (unless wal/ascii-whale-timer
       (setq wal/ascii-whale-timer (run-with-timer
                                    0
                                    wal/ascii-whale-animation-speed
                                    #'wal/ascii-whale-animate)))
-   (wal/ascii-whale-display)))
+
+    ;; Increase the font size.
+    (with-current-buffer (get-buffer-create wal/ascii-whale-buffer)
+      (face-remap-add-relative 'default :height 240))
+
+    ;; Make sure the first frame is animated before we display.
+    (wal/ascii-whale-animate)
+
+    (wal/ascii-whale-display)))
 
 (defun wal/ascii-whale-clean-up ()
   "Clean up the animation."
+  ;; Cancel and void the timer.
   (when wal/ascii-whale-timer
     (cancel-timer wal/ascii-whale-timer)
     (setq wal/ascii-whale-timer nil))
+
+  ;; Delete the frame.
   (posframe-delete wal/ascii-whale-buffer)
+
+  ;; Remove animation and re-positioning hooks.
   (remove-hook 'kill-buffer-hook #'wal/ascii-whale-clean-up t)
   (remove-hook 'window-configuration-change-hook #'wal/ascii-whale-display t))
 
@@ -8456,7 +8477,6 @@ Animate a swimming whale in a =posframe=.
   (posframe-show
      wal/ascii-whale-buffer
      :position (point)
-     :width 8
      :border-width 6
      :border-color (face-attribute 'mode-line-highlight :background nil t)
      :poshandler 'posframe-poshandler-window-top-right-corner

@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is now bound in `general`.
 - Helper function `wal/display-buffer-condition` now uses an alist to
   provide major-mode conditional.
+- The ASCII whale animation is now bigger and the code for it now is
+  in the new relaxed, unfurled style.
 
 ### Fixed
 
