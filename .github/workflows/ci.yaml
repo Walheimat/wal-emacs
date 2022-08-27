@@ -8,11 +8,19 @@ jobs:
   run-all-tests:
     runs-on: ubuntu-latest
     steps:
-      - name: get-emacs
+      - name: Get Emacs
         uses: purcell/setup-emacs@master
         with:
           version: 28.1
-      - name: setup
-        run: emacs --batch ./templates/init.el
-      - name: test
+
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      - name: Tangle the configuration
+        run: emacs --batch -l $GITHUB_WORKSPACE/setup/wal-setup-ci.el
+
+      - name: Verify packages
+        run: ls -al $GITHUB_WORKSPACE/wal
+
+      - name: Run the tests
         run: ./run-tests
