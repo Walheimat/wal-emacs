@@ -31,8 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is now bound in `general`.
 - Helper function `wal/display-buffer-condition` now uses an alist to
   provide major-mode conditional.
-- The ASCII whale animation is now bigger and the code for it now is
-  in the new relaxed, unfurled style.
+- The ASCII whale animation is now bigger and slightly offset; the
+  code for it now is in the new relaxed, unfurled style.
 
 ### Fixed
 
@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   problem was that the `:config` was referencing custom variables not
   yet set.
 - Sets `recentf-filename-handlers` to nil so that
-  `consult--source-project-recent-file` works that doesnt' respect
+  `consult--source-project-recent-file` works that doesn't respect
   abbreviation.
 - Agenda files now get the expanded directory, not the symbol.
 - Custom exit function should work in `-nw` Emacs sessions.

@@ -8450,6 +8450,26 @@ Animate a swimming whale in a =posframe=.
   (remove-hook 'kill-buffer-hook #'wal/ascii-whale-clean-up t)
   (remove-hook 'window-configuration-change-hook #'wal/ascii-whale-display t))
 
+(defun wal/ascii-whale-poshandler (info)
+  "Position handler for ASCII whale."
+  (let* ((window-left (plist-get info :parent-window-left))
+         (window-top (plist-get info :parent-window-top))
+         (window-width (plist-get info :parent-window-width))
+         (posframe-width (plist-get info :posframe-width))
+
+         ;; Offset the frame, taking both the right fringe as well as
+         ;; the pixel-height of a lien into account.
+         (p-window (plist-get info :parent-window))
+         (p-line-height (with-selected-window p-window (line-pixel-height)))
+         (parent-fringes (window-fringes p-window))
+         (right-fringe (nth 1 parent-fringes ))
+         (offset-x (+ p-line-height right-fringe))
+         (offset-y p-line-height))
+    (cons (- (+ window-left window-width
+                (- 0 posframe-width))
+             offset-x)
+          (+ window-top offset-y))))
+
 (defun wal/ascii-whale-display ()
   "Display the running animation in a posframe."
   (posframe-show
@@ -8457,7 +8477,7 @@ Animate a swimming whale in a =posframe=.
      :position (point)
      :border-width 6
      :border-color (face-attribute 'mode-line-highlight :background nil t)
-     :poshandler 'posframe-poshandler-window-top-right-corner
+     :poshandler 'wal/ascii-whale-poshandler
      :posframe-parent-buffer (or wal/ascii-whale-parent-buffer (current-buffer))
      :hidehandler 'wal/posframe-hidehandler-when-invisible))
 
