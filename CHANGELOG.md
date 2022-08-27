@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - New flage `--deny` to disable setting `use-package-always-ensure` to
   `t`.
+- Adds GitHub CI configuration to run the tests.
 
 ## [1.7.10]
 
