@@ -101,8 +101,8 @@ evaluate /everything/[fn:6] that follows.
 (defvar so-long-action)
 (defvar use-package-always-ensure)
 (defvar use-package-always-defer)
-(defvar wal/doctor)
-(defvar wal/mini)
+(defvar wal/flag-doctor)
+(defvar wal/flag-mini)
 
 (defgroup wal-settings nil
   "Change core settings."
@@ -268,7 +268,7 @@ Such as package `use-package'.")
 (eval-when-compile
   (require 'use-package))
 
-(when wal/doctor
+(when wal/flag-doctor
   (setq use-package-compute-statistics t)
   (when (fboundp 'use-package-report)
     (add-hook 'after-init-hook #'use-package-report)))
@@ -358,7 +358,7 @@ use the result further down the line."
     (let* ((active (or pred
                        (if (wal/is-expansion-pack name)
                            (not (null (package-installed-p name)))
-                         (or (not (or wal/minimal wal/mini))
+                         (or (not (or wal/minimal wal/flag-mini))
                              (not (null (memq name wal/minimal-exclude)))))))
            (body (use-package-process-keywords
                    name
@@ -1565,8 +1565,8 @@ matching files are visited but only the last-visited displayed."
 Capture custom command line flags.
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/doctor nil)
-(defvar wal/mini nil)
+(defvar wal/flag-doctor nil)
+(defvar wal/flag-mini nil)
 
 (defconst wal/custom-flags
   '((doctor . "--doctor")
@@ -1583,12 +1583,12 @@ Capture custom command line flags.
 ;; Flag `--doctor' will set up `use-package' to collect statistics and
 ;; turn on `explain-pause-mode'.
 (when (wal/capture-flag 'doctor)
-  (setq wal/doctor t))
+  (setq wal/flag-doctor t))
 
 ;; Flag `--mini' will only load packages that are part of the minimal
 ;; configuration.
 (when (wal/capture-flag 'mini)
-  (setq wal/mini t))
+  (setq wal/flag-mini t))
 #+END_SRC
 
 ** Text Scaling

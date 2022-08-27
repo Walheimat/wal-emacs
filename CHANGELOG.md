@@ -33,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   provide major-mode conditional.
 - The ASCII whale animation is now bigger and slightly offset; the
   code for it now is in the new relaxed, unfurled style.
+- The two existing flags `mini` and `doctor` now use the prefix
+  `wal/flag`.
 
 ### Fixed
 
