@@ -50,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that package).
 - A `pyvenv` hook now takes care of setting the correct `lsp-pylsp`
   variables.
-- Python packages are now correctly demanded.
+- Python packages are no longer demanded.
 
 ## [1.7.9] - 2021-08-20
 
