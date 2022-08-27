@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The style guide now requires that package configuration code blocks
   are structured and ideally have some comments explaining non-obvious
   statements.
+- New package `lispy` for better paren traversal.
 
 ### Changed
 

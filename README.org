@@ -6581,11 +6581,30 @@ The philosopher's choice.
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack lisp
   "For (common-) Lisp developers using sbcl."
-  :packages (highlight-quoted slime))
+  :packages (lispy highlight-quoted slime))
 
 (wal/define-expansion-pack clojure
   "For Clojure developers using cider with lein."
   :packages (clojure-mode cider))
+#+END_SRC
+
+*** lispy
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Deal with the parens[fn:19].
+
+#+BEGIN_SRC emacs-lisp
+(use-package lispy
+  :wal-ways nil
+  :custom
+  (lispy-compat '(edebug cider magit-blame-mode))
+  :bind
+  (:map lispy-mode-map
+   ("M-o" . nil))
+  :hook ((emacs-lisp-mode clojure-mode) . lispy-mode)
+  :ensure nil)
 #+END_SRC
 
 *** elisp-mode
@@ -7597,7 +7616,7 @@ smaller."
 :END:
 
 =lsp-mode= is the fancy version. You'll have to install some language
-servers yourself[fn:19].
+servers yourself[fn:20].
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/slow-lsp-p (mode)
@@ -8728,4 +8747,6 @@ too old.
 [fn:18] None of the language packages are ensured, meaning you will
 need to install them yourself.
 
-[fn:19] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+[fn:19] Binding reference [[http://oremacs.com/lispy/][here]].
+
+[fn:20] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
