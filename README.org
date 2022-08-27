@@ -343,9 +343,9 @@ with =:wal-ways nil=.
 (defalias 'use-package-normalize/:wal-ways 'use-package-normalize-predicate)
 
 (defun use-package-handler/:wal-ways (name _keyword pred rest state)
-  "Only expand conditionallly.
+  "Only expand conditionally.
 
-The conditions for normla packages are: (1) the PRED is t, (2)
+The conditions for normal packages are: (1) the PRED is t, (2)
 `wal/minimal' is nil or (3) NAME is never excluded.
 
 If NAME is an expansion pack package, the conditions are: (1) the
@@ -918,14 +918,14 @@ NAME is the name of the macro. DEFINER is the definer to create
 the sink for and PREFIX is its prefix."
   (declare (indent defun))
   (let* ((defname (symbol-name definer))
-         (suf (substring prefix -1))
+         (suffix (substring prefix -1))
          (wk (upcase (concat (substring defname 4) "!"))))
     (progn
-      (general-define-key :prefix prefix suf `(:ignore t :wk ,wk))
+      (general-define-key :prefix prefix suffix `(:ignore t :wk ,wk))
       `(defmacro ,name (&rest args)
          `(, ',definer ,@,`(mapcar (lambda (it)
                                      (if (stringp it)
-                                         (concat ,suf it)
+                                         (concat ,suffix it)
                                        it)) args))))))
 
 (cl-defmacro wal/major! (fun &rest args)
@@ -1087,7 +1087,7 @@ Most bindings are declared in individual packages.
   "fw" '(wal/find-config :wk "wal")
   "fp" '(list-processes :wk "processes")
   "s" '(:ignore t :wk "set")
-  "sT" '(wal/transparency :wk "transparency")
+  "sT" '(wal/set-transparency :wk "transparency")
   "p" '(:ignore t :wk "package")
   "pf" '(package-refresh-contents :wk "refresh")
   "pi" '(package-install :wk "install")
@@ -1244,12 +1244,11 @@ Utility functions to configure displaying buffers of a certain type.
   "Display BUFFER in a pop-up.
 The pop-up is a window unless IN-FRAME is t."
   (let ((condition (wal/display-buffer-condition buffer))
-        (dispfun (if in-frame
+        (action (if in-frame
                      'display-buffer-pop-up-frame
                    'display-buffer-pop-up-window)))
     (add-to-list 'display-buffer-alist
-                 `(,condition
-                   (,dispfun)))))
+                 `(,condition (,action)))))
 
 ;; The next two functions make sense for `popper' buffers.
 
@@ -1472,16 +1471,16 @@ Minor mode to dedicate buffers to windows.
 (defun walled-mode--enable ()
   "Dedicate the window to the current buffer."
   (let ((window (selected-window))
-        (bufname (current-buffer)))
-    (set-window-dedicated-p window bufname)
-    (message "Dedicating window to %s" bufname)))
+        (buffer (current-buffer)))
+    (set-window-dedicated-p window buffer)
+    (message "Dedicating window to %s" buffer)))
 
 (defun walled-mode--disable ()
   "Make window no longer dedicated to its buffer."
   (let* ((window (selected-window))
-         (bufname (window-dedicated-p window)))
+         (buffer (window-dedicated-p window)))
     (set-window-dedicated-p window nil)
-    (message "Window no longer dedicated to %s" bufname)))
+    (message "Window no longer dedicated to %s" buffer)))
 #+END_SRC
 
 ** Frames
@@ -1800,10 +1799,11 @@ Show messages without cluttering.
 
 That bottle is just an array of strings."
   (let* ((message-log-max nil) ; Don't clutter.
-         (rand (wal/biased-random (length bottle)))
-         (mess (nth rand bottle))
-         (prop-mess (propertize mess 'face 'italic)))
-    (message (concat wal/ascii-whale " " prop-mess))))
+         (message (nth (wal/biased-random (length bottle)) bottle)))
+    (message (concat
+              wal/ascii-whale
+              " "
+              (propertize message 'face 'italic)))))
 #+END_SRC
 
 ** Expansion Packs
@@ -1835,7 +1835,7 @@ Calls `delete-other-windows' if DELETE-WINDOWS is t."
     (length new-packages)))
 
 (defun wal/install-recipes (recipes)
-  "Install packages from RECIPES using quelpa.
+  "Install packages from RECIPES using `quelpa'.
 
 Returns the number of newly installed packages."
   (let* ((new-packages (seq-filter
@@ -1850,37 +1850,40 @@ Returns the number of newly installed packages."
 
 Documented using DOCS.
 
-Optionally provide quelpa RECIPES."
+Optionally provide `quelpa' RECIPES."
   (declare (indent defun) (doc-string 2))
   `(add-to-list
     'wal/expansion-packs
     '(,name . (:packages ,packages :extras ,extras :docs ,docs :recipes ,recipes))))
 
+(defun wal/expansion-packs ()
+  "Get a list of all expansion packs."
+  (seq-reduce
+   (lambda (acc it)
+     (let* ((package-list (cdr it))
+            (normal (plist-get package-list :packages))
+            (extras (plist-get package-list :extras))
+            (recipes (mapcar #'car (plist-get package-list :recipes))))
+       (append acc normal extras recipes)))
+   wal/expansion-packs '()))
+
 (defun wal/is-expansion-pack (pack)
   "Check if PACK is an expansion pack package."
-  (let ((packages (seq-reduce (lambda (acc it)
-                                (let* ((pl (cdr it))
-                                       (p (plist-get pl :packages))
-                                       (e (plist-get pl :extras))
-                                       (r (mapcar #'car (plist-get pl :recipes))))
-                                  (append acc p e r)))
-                              wal/expansion-packs
-                              '())))
-    (memq pack packages)))
+  (memq pack (wal/expansion-packs)))
 
 (defun wal/install-expansion-pack-extra (pack)
   "Install an or all extras of an expansion for PACK."
   (let* ((extras (plist-get (cdr pack) :extras))
-         (selection (completing-read "Select extra to install: "
-                                     (append extras '(all))))
-         (sym (wal/maybe-intern selection)))
-    (pcase sym
+         (selection (wal/maybe-intern
+                     (completing-read
+                      "Select extra to install: " (append extras '(all))))))
+    (pcase selection
       ('all
        (wal/install-packages extras)
        (message "Installed all extras."))
       (_
-       (wal/install-packages (list sym))
-       (message (format "Installed extra '%s'." sym))))))
+       (wal/install-packages (list selection))
+       (message (format "Installed extra '%s'." selection))))))
 
 (defun wal/install-expansion-pack (pack)
   "Install the given expansion PACK."
@@ -2021,8 +2024,9 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
   :type '(choice symbol (const nil))
   :group 'wal-look)
 
-(defun wal/transparency (&optional value)
+(defun wal/set-transparency (&optional value)
   "Set the transparency of the frame to VALUE.
+
 1 being (almost) completely transparent, 100 being opaque.
 
 This also updates variable `wal/transparency' for the duration of
@@ -2055,7 +2059,7 @@ the session."
      (setq wal/active-theme wal/theme)
      (wal/load-active-theme)))
   :always
-  ((wal/transparency)
+  ((wal/set-transparency)
    (wal/load-active-theme))
   :immediately t)
 
@@ -2503,10 +2507,10 @@ I'd like to kill shells without a process quickly.
 #+BEGIN_SRC emacs-lisp
 (defun wal/dead-shell-p ()
   "Check if the current buffer is a shell or comint buffer with no process."
-  (let ((buf (current-buffer)))
-    (with-current-buffer buf
+  (let ((buffer (current-buffer)))
+    (with-current-buffer buffer
       (and (derived-mode-p 'comint-mode)
-           (not (comint-check-proc buf))))))
+           (not (comint-check-proc buffer))))))
 
 (use-package shell
   :general
@@ -7405,8 +7409,8 @@ Please let me know when I screwed up. I promise I will learn.
   "Write MESSAGE to the file check buffer.
 
 Optionally don't concat a newline char if SKIP-NEWLINE is t."
-  (let ((buf (wal/flycheck-file--get-buffer)))
-    (with-current-buffer buf
+  (let ((buffer (wal/flycheck-file--get-buffer)))
+    (with-current-buffer buffer
       (setq buffer-read-only nil)
       (goto-char (point-max))
       (insert  message)
@@ -8509,15 +8513,15 @@ Minor mode for editing this config.
 This returns the tag and its annotation as propertized strings."
   (interactive)
   (let* ((default-directory wal/emacs-config-default-path)
-         (vers (propertize
-                (string-trim
-                 (shell-command-to-string "git describe --abbrev=0"))
-                'face 'bold))
+         (version (propertize
+                   (string-trim
+                    (shell-command-to-string "git describe --abbrev=0"))
+                   'face 'bold))
          (cat (propertize
                (string-trim
-                (shell-command-to-string (format "git cat-file tag %s" vers)))
+                (shell-command-to-string (format "git cat-file tag %s" version)))
                'face 'italic))
-         (out (concat vers ": " (car (last (string-lines cat))))))
+         (out (concat version ": " (car (last (string-lines cat))))))
     (cond
      (noninteractive out)
      (t (message out)))))
