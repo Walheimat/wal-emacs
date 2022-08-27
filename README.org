@@ -103,6 +103,7 @@ evaluate /everything/[fn:6] that follows.
 (defvar use-package-always-defer)
 (defvar wal/flag-doctor)
 (defvar wal/flag-mini)
+(defvar wal/flag-deny)
 
 (defgroup wal-settings nil
   "Change core settings."
@@ -261,9 +262,10 @@ Such as package `use-package'.")
    (package-refresh-contents)
    (wal/install-packages wal/core-packages :delete-windows t)))
 
-;; Always ensure and defer.
-(setq use-package-always-ensure t
-      use-package-always-defer t)
+;; Always defer, maybe ensure.
+(setq use-package-always-defer t)
+(unless wal/flag-deny
+  (setq use-package-always-ensure t))
 
 (eval-when-compile
   (require 'use-package))
@@ -1566,10 +1568,12 @@ Capture custom command line flags.
 #+BEGIN_SRC emacs-lisp
 (defvar wal/flag-doctor nil)
 (defvar wal/flag-mini nil)
+(defvar wal/flag-deny nil)
 
 (defconst wal/custom-flags
   '((doctor . "--doctor")
-    (mini . "--mini"))
+    (mini . "--mini")
+    (deny . "--deny"))
   "Alist of custom flags that can be passed to Emacs.")
 
 (defun wal/capture-flag (flag)
@@ -1588,6 +1592,10 @@ Capture custom command line flags.
 ;; configuration.
 (when (wal/capture-flag 'mini)
   (setq wal/flag-mini t))
+
+;; Flag `--deny' will prevent `use-package' from ensuring packages.
+(when (wal/capture-flag 'deny)
+  (setq wal/flag-deny t))
 #+END_SRC
 
 ** Text Scaling
