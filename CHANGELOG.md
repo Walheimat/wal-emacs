@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- First test suite for testing list utility in `wal-func`.
 - New function `wal/flycheck-file` to do just that.
 - New function `wal/flycheck-config-packages` to check all config
   packages using function above.
