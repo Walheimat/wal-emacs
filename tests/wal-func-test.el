@@ -49,5 +49,28 @@
     (wal/insert-after 'test-target preceding item)
     (should (equal test-target '(hello darkness my old friend)))))
 
+;;;; Garbage Collction:
+
+(ert-deftest test-wal/bytes-per-mb--floors ()
+  (should (equal 314572 (wal/bytes-per-mb 0.3))))
+
+;;;; Helpers:
+
+(ert-deftest test-wal/truncate--truncates ()
+  (should (string-equal (wal/truncate "This is it" 7) "This...")))
+
+(ert-deftest test-wal/truncate--truncates-without-len ()
+  (should (string-equal (wal/truncate "This is it") "This ...")))
+
+(ert-deftest test-wal/truncate--leaves-as-is-if-below ()
+  (should (string-equal (wal/truncate "This is it" 24) "This is it")))
+
+(defvar test-standard 'standard)
+
+(ert-deftest test-wal/reset-to-standard--resets ()
+  (setq test-standard 'global)
+  (should (equal 'global test-standard))
+  (wal/reset-to-standard 'test-standard)
+  (should (equal nil test-standard)))
 
 ;;; wal-func-test.el ends here

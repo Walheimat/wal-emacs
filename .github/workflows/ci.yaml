@@ -1,18 +1,24 @@
-name: test
+name: Test custom functions
 on:
   push:
     branches:
       - trunk
+      - feature/ci
+    paths:
+      - 'README.org'
+      - 'setup/**'
 
 jobs:
-  run-all-tests:
+  run-tests:
     runs-on: ubuntu-latest
     steps:
+      # Build
       - name: Get Emacs
         uses: purcell/setup-emacs@master
         with:
           version: 28.1
 
+      # Setup
       - name: Check out the repository
         uses: actions/checkout@v3
 
@@ -22,5 +28,6 @@ jobs:
       - name: Verify packages
         run: ls -al $GITHUB_WORKSPACE/wal
 
+      # Use
       - name: Run the tests
         run: ./run-tests
