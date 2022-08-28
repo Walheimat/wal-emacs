@@ -1183,6 +1183,7 @@ Turning on/off certain major modes switching between =major-mode= and
 
 (require 'map)
 
+(declare-function comint-check-proc "ext:comint.el")
 (declare-function marginalia-annotate-binding "ext:marginalia.el")
 (declare-function server-edit "ext:server.el")
 (declare-function server-edit-abort "ext:server.el")
@@ -1745,6 +1746,13 @@ intefere with `magit' and friends."
     (delete-frame))
    (t
     (save-buffers-kill-terminal))))
+
+(defun wal/dead-shell-p ()
+  "Check if the current buffer is a shell or comint buffer with no process."
+  (let ((buffer (current-buffer)))
+    (with-current-buffer buffer
+      (and (derived-mode-p 'comint-mode)
+           (not (comint-check-proc buffer))))))
 #+END_SRC
 
 ** Setup
@@ -2287,10 +2295,10 @@ and some external ones.
   (require 'transient))
 
 (declare-function wal/captain "wal-key-bindings.el")
+(declare-function wal/dead-shell-p "wal-func.el")
 (declare-function wdb/pop-up "wal-func.el")
 (declare-function wdb/side "wal-func.el")
 (declare-function wdb/direction "wal-func.el")
-(declare-function comint-check-proc "ext:comint.el")
 
 (defvar wal/experimental)
 
@@ -2518,13 +2526,6 @@ Execute IO actions asynchronously.
 I'd like to kill shells without a process quickly.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/dead-shell-p ()
-  "Check if the current buffer is a shell or comint buffer with no process."
-  (let ((buffer (current-buffer)))
-    (with-current-buffer buffer
-      (and (derived-mode-p 'comint-mode)
-           (not (comint-check-proc buffer))))))
-
 (use-package shell
   :general
   (general-define-key

@@ -73,4 +73,11 @@
   (wal/reset-to-standard 'test-standard)
   (should (equal nil test-standard)))
 
+(require 'shell)
+
+(ert-deftest test-wal/dead-shell-p ()
+  (with-temp-buffer
+    (shell-mode)
+    (should (wal/dead-shell-p))))
+
 ;;; wal-func-test.el ends here
