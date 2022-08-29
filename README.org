@@ -4975,6 +4975,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (defvar text-scale-mode-step)
 (defvar visual-fill-column-width)
 (defvar visual-fill-column-center-text)
+(defvar wal/agenda-tasks-directory)
 (defvar wal/use-projectile)
 
 (defgroup wal-org nil
@@ -5163,6 +5164,11 @@ This calls `org-content' interactively."
   "Advise `org-agenda' to just display current day."
   (list (wal/univ-p) "a"))
 
+(defun wal/switch-to-tasks ()
+  "Go to task directory with Dired."
+  (interactive)
+  (dired wal/agenda-tasks-directory))
+
 (use-package org-agenda
   :config
   ;; No need for the dispatch.
@@ -5183,6 +5189,7 @@ This calls `org-content' interactively."
      :match "-@unbillable"))
   :bind
   ("C-c a" . org-agenda)
+  ("C-c A" . wal/switch-to-tasks)
   :ensure nil)
 #+END_SRC
 

@@ -9,9 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- New flage `--deny` to disable setting `use-package-always-ensure` to
+- New flag `--deny` to disable setting `use-package-always-ensure` to
   `t`.
-- Adds GitHub CI configuration to run the tests.
+- Adds GitHub CI configuration to run the tests. This uses new custom
+  file `wal-setup-ci` to tangle the config and set the package path
+  using env.
+- `C-c A` now visits the task directory with Dired.
+- Tests for `wal/truncate`, `wal/reset-to-standard` and
+  `wal/dead-shell-p`.
+
+### Changed
+
+- Function `wal/dead-shell-p` was moved to `wal-func`.
+
+### Fixed
+
+- Function `wal/truncate` now defaults to a length of 8 if `max-len`
+  argument isn't provided.
 
 ## [1.7.10]
 
