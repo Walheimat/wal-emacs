@@ -4960,6 +4960,8 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   (require 'wal-func (expand-file-name "wal-func.el" "."))
 
 (declare-function org-roam-buffer-p "ext:org-roam.el")
+(declare-function persp-names "ext:perpectivel.el")
+(declare-function persp-switch "ext:perpectivel.el")
 (declare-function projectile-project-root "ext:projectile.el")
 (declare-function project-root "ext:project.el")
 (declare-function transient-define-prefix "ext:transient.el")
@@ -4972,6 +4974,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 
 (defvar org-global-properties)
 (defvar org-mode-map)
+(defvar persp-initial-frame-name)
 (defvar text-scale-mode-step)
 (defvar visual-fill-column-width)
 (defvar visual-fill-column-center-text)
@@ -5160,21 +5163,15 @@ This calls `org-content' interactively."
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/pick-default-agenda (&rest _args)
-  "Advise `org-agenda' to just display current day."
-  (list (wal/univ-p) "a"))
-
-(defun wal/switch-to-tasks ()
-  "Go to task directory with Dired."
+(defun wal/agenda ()
+  "Go to task directory with Dired and open the agenda."
   (interactive)
-  (dired wal/agenda-tasks-directory))
+  (when (memq persp-initial-frame-name (persp-names))
+    (persp-switch persp-initial-frame-name))
+  (dired wal/agenda-tasks-directory)
+  (org-agenda (wal/univ-p) "a"))
 
 (use-package org-agenda
-  :config
-  ;; No need for the dispatch.
-  (advice-add
-   'org-agenda :filter-args
-   #'wal/pick-default-agenda)
   :custom
   (org-agenda-hide-tags-regexp "^@")
   (org-agenda-span 'day)
@@ -5188,8 +5185,8 @@ This calls `org-content' interactively."
      :emphasize t
      :match "-@unbillable"))
   :bind
-  ("C-c a" . org-agenda)
-  ("C-c A" . wal/switch-to-tasks)
+  ("C-c a" . wal/agenda)
+  :commands (wal/agenda)
   :ensure nil)
 #+END_SRC
 

@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Function `wal/dead-shell-p` was moved to `wal-func`.
+- `C-c a` now switches to initial perspective, opens the tasks
+  directory and then opens the agenda in one go using new function
+  `wal/agenda`. Default `org-agenda` is no longe advised to skip the
+  dispatch.
 
 ### Fixed
 
