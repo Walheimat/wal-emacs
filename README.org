@@ -730,7 +730,7 @@ User-reserved combinations are used for certain commands and
 dispatches:
 
 + =C-c a= for =org-agenda=
-+ =C-c b= for custom =beacon-blink=
++ =C-c b= for a heavy =pulse=
 + =C-c c= does a =completion-at-point=
 + =C-c d= for =docker=
 + =C-c g= for =consult-ripgrep=
@@ -2471,6 +2471,24 @@ No offender.
   :ensure nil)
 #+END_SRC
 
+*** pulse
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Highlight lines.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/lighthouse ()
+  "Do a heavy `pulse-momentary-highlight-one-line'.
+
+This just means increasing duration, delay, size and brightness."
+  (interactive)
+  (defvar pulse-iterations)
+  (let ((pulse-iterations 30))
+    (pulse-momentary-highlight-one-line (point) 'cursor)))
+#+END_SRC
+
 ** Dealing With Emacs
 
 Allow restoring window configurations when Emacs decided they should
@@ -2905,8 +2923,6 @@ I like nice-looking things.
 (declare-function wal/biased-random "wal-func.el")
 (declare-function wal/maybe-intern "wal-func.el")
 
-(defvar beacon-dont-blink-commands)
-(defvar beacon-dont-blink-major-modes)
 (defvar dashboard-buffer-name)
 (defvar dashboard-footer-messages)
 (defvar dimmer-prevent-dimming-predicates)
@@ -2966,15 +2982,6 @@ A collection of status messages."
     wal/ascii-whale)
   "The path to the footer icon."
   :type 'string
-  :group 'wal-visuals)
-
-(defcustom wal/beacon-dont-blink-commands
-  '(tab-to-tab-stop
-    mouse-drag-region
-    mouse-set-region
-    mouse-set-point)
-  "List of additional commands that should not trigger a blink."
-  :type '(repeat symbol)
   :group 'wal-visuals)
 
 (defcustom wal/major-delight t
@@ -3243,43 +3250,6 @@ Show the next possible key presses towards a command.
   (which-key-preserve-window-configuration t)
   (which-key-show-docstrings t)
   :defer 1)
-#+END_SRC
-
-*** beacon
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Help me find my cursor!
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/lighthouse ()
-  "Do a heavy `beacon-blink'.
-
-This just means increasing duration, delay, size and brightness."
-  (interactive)
-  (defvar beacon-blink-duration)
-  (defvar beacon-blink-delay)
-  (defvar beacon-size)
-  (defvar beacon-color)
-  (let ((beacon-blink-duration 0.8)
-        (beacon-blink-delay 0.4)
-        (beacon-size 60)
-        (beacon-color 0.2))
-    (beacon-blink)))
-
-(use-package beacon
-  :wal-ways nil
-  :config
-  (wal/append
-   'beacon-dont-blink-commands
-   wal/beacon-dont-blink-commands)
-  (add-to-list 'beacon-dont-blink-major-modes 'vterm-mode)
-  :custom
-  (beacon-blink-when-focused t)
-  (beacon-blink-when-window-scrolls nil)
-  :bind
-  ("C-c b" . wal/lighthouse))
 #+END_SRC
 
 *** dimmer

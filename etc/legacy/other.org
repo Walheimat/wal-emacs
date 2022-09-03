@@ -1037,6 +1037,40 @@ Replaces =isearch=.
   :defer 2)
 #+END_SRC
 
+** beacon
+
+Help me find my cursor!
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defun wal/lighthouse ()
+  "Do a heavy `beacon-blink'.
+
+This just means increasing duration, delay, size and brightness."
+  (interactive)
+  (defvar beacon-blink-duration)
+  (defvar beacon-blink-delay)
+  (defvar beacon-size)
+  (defvar beacon-color)
+  (let ((beacon-blink-duration 0.8)
+        (beacon-blink-delay 0.4)
+        (beacon-size 60)
+        (beacon-color 0.2))
+    (beacon-blink)))
+
+(use-package beacon
+  :wal-ways nil
+  :config
+  (wal/append
+   'beacon-dont-blink-commands
+   wal/beacon-dont-blink-commands)
+  (add-to-list 'beacon-dont-blink-major-modes 'vterm-mode)
+  :custom
+  (beacon-blink-when-focused t)
+  (beacon-blink-when-window-scrolls nil)
+  :bind
+  ("C-c b" . wal/lighthouse))
+#+END_SRC
+
 * Other Settings
 
 These are other settings that used to be in my config.
