@@ -5087,8 +5087,7 @@ This calls `org-content' interactively."
       ("s y" "paste" org-paste-subtree)]
      ["Visibility"
       ("v a" "show all" org-show-all)
-      ("v l" "up to level" wal/org-content)
-      ("v h" "sticky header" org-sticky-header-mode)]
+      ("v l" "up to level" wal/org-content)]
      ["Presentation"
       ("p" "present" org-tree-slide-mode)
       ("i" "indent" org-indent-mode)]
@@ -5358,11 +5357,6 @@ Turn any =org-mode= buffer into a presentation.
         cursor-type nil)
   (visual-fill-column-mode 1)
 
-  (when (bound-and-true-p org-sticky-header-mode)
-    (setq wal/org-tree-slide-disabled-modes
-      (append wal/org-tree-slide-disabled-modes '(org-sticky-header-mode)))
-    (org-sticky-header-mode -1))
-
   (when (bound-and-true-p dimmer-mode)
     (setq wal/org-tree-slide-disabled-modes
       (append wal/org-tree-slide-disabled-modes '(dimmer-mode)))
@@ -5379,9 +5373,6 @@ Turn any =org-mode= buffer into a presentation.
 
   (when (fboundp 'outline-show-all)
     (outline-show-all))
-
-  (when (memq 'org-sticky-header-mode wal/org-tree-slide-disabled-modes)
-    (org-sticky-header-mode +1))
 
   (when (memq 'dimmer-mode wal/org-tree-slide-disabled-modes)
     (dimmer-mode +1))
@@ -5674,30 +5665,6 @@ Modern look.
   :hook (org-mode . org-modern-mode)
   :ensure nil)
 #+end_src
-
-*** org-sticky-header
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Display current location in a sticky header.
-
-#+BEGIN_SRC emacs-lisp
-(use-package org-sticky-header
-  :wal-ways nil
-  :custom
-  (org-sticky-header-full-path 'full)
-  (org-sticky-header-prefix
-   (concat (all-the-icons-fileicon "org"
-                                   :face 'font-lock-keyword-face
-                                   :height 0.8
-                                   :v-adjust -0.1
-                                   :h-adjust: 0.2) " "))
-  (org-sticky-header-outline-path-separator " → ")
-  (org-sticky-header-show-keyword nil)
-  (org-sticky-header-show-priority nil)
-  :hook (org-mode . org-sticky-header-mode))
-#+END_SRC
 
 ** Footer
 :PROPERTIES:

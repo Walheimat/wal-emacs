@@ -26,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal/agenda`. Default `org-agenda` is no longe advised to skip the
   dispatch.
 
+### Removed
+
+- Package `org-sticky-header` has been mothballed in favor of new
+  segment in `wal-line`.
+
 ### Fixed
 
 - Function `wal/truncate` now defaults to a length of 8 if `max-len`
