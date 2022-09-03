@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Package `org-sticky-header` has been mothballed in favor of new
   segment in `wal-line`.
+- Package `ctrlf` has been mothballed in favor using `consult-line`.
 
 ### Fixed
 

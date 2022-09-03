@@ -3992,31 +3992,6 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
   :commands (wal/univ-rg-project))
 #+END_SRC
 
-*** ctrlf
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Replaces =isearch=.
-
-#+BEGIN_SRC emacs-lisp
-(use-package ctrlf
-  :config
-  ;; Make additional functions cancel `ctrlf'.
-  (eval
-   `(bind-keys :map ctrlf-minibuffer-mode-map
-      ,@(mapcar (lambda (it) (cons `[remap ,it] 'ctrlf-cancel)) wal/ctrlf-cancel-commands)))
-
-  (when (fboundp 'ctrlf-mode)
-    (ctrlf-mode +1))
-  :custom
-  (ctrlf-auto-recenter t)
-  (ctrlf-show-match-count-at-eol nil)
-  (ctrlf-default-search-style 'fuzzy)
-  (ctrlf-alternate-search-style 'regexp)
-  :defer 2)
-#+END_SRC
-
 *** dumb-jump
 :PROPERTIES:
 :UNNUMBERED: t
@@ -4389,10 +4364,12 @@ Do not ignore hidden files."
                (fboundp 'consult--ripgrep-builder))
       (consult--grep "Ripgrep (ignored)" #'consult--ripgrep-builder dir initial))))
 
-(defun wal/consult-line ()
-  "Call consult line using `thing-at-point' (taken from wiki)."
-  (interactive)
-  (consult-line (thing-at-point 'symbol)))
+(defun wal/consult-line (&optional at-point)
+  "Call consult line using `thing-at-point' if AT-POINT is t."
+  (interactive "P")
+  (if at-point
+      (consult-line (thing-at-point 'symbol))
+    (consult-line)))
 
 (defun wal/consult-clock-in ()
   "Clock into an Org agenda heading.
@@ -5899,9 +5876,7 @@ Some common shell commands require an additional =C-c=:
 (defun wal/vterm-mode ()
   "Hook into `vterm-mode'.
 
-This disables `ctrlf-mode' locally and sets the query on exit
-flag to nil for the vterm process."
-  (ctrlf-local-mode -1)
+This sets the query on exit flag to nil for the vterm process."
   (when-let* ((buf (current-buffer))
               (proc (get-buffer-process buf)))
     (set-process-query-on-exit-flag proc nil)))

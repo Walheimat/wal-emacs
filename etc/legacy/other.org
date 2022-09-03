@@ -1015,6 +1015,28 @@ Display current location in a sticky header.
   :hook (org-mode . org-sticky-header-mode))
 #+END_SRC
 
+** ctrlf
+
+Replaces =isearch=.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(use-package ctrlf
+  :config
+  ;; Make additional functions cancel `ctrlf'.
+  (eval
+   `(bind-keys :map ctrlf-minibuffer-mode-map
+      ,@(mapcar (lambda (it) (cons `[remap ,it] 'ctrlf-cancel)) wal/ctrlf-cancel-commands)))
+
+  (when (fboundp 'ctrlf-mode)
+    (ctrlf-mode +1))
+  :custom
+  (ctrlf-auto-recenter t)
+  (ctrlf-show-match-count-at-eol nil)
+  (ctrlf-default-search-style 'fuzzy)
+  (ctrlf-alternate-search-style 'regexp)
+  :defer 2)
+#+END_SRC
+
 * Other Settings
 
 These are other settings that used to be in my config.
