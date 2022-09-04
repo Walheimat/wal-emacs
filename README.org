@@ -1957,7 +1957,7 @@ Optionally provide `quelpa' RECIPES."
 ** Hooks
 
 #+BEGIN_SRC emacs-lisp
-(cl-defmacro wal/lang-hook (name docs &body body &key messages lsp tabs &allow-other-keys)
+(cl-defmacro wal/hook (name docs &body body &key messages lsp tabs &allow-other-keys)
   "Hook into NAME, describe with DOCS.
 
 MESSAGES is a list of strings.
@@ -2292,7 +2292,8 @@ and some external ones.
 ;;; Code:
 
 (eval-when-compile
-  (require 'transient))
+  (require 'transient)
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
 (declare-function wal/captain "wal-key-bindings.el")
 (declare-function wal/dead-shell-p "wal-func.el")
@@ -2319,16 +2320,15 @@ Sometimes I need to see whitespace chars.
 No double spaces in sentences.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/text-mode ()
-  "Hook into `text-mode'."
-  ;; Activate `flyspell-mode' when editing commit messages.
-  (when (string-match "COMMIT_EDITMSG" (buffer-name))
-    (flyspell-mode)))
-
 (use-package text-mode
+  :init
+  (wal/hook text-mode
+    "Hook into `text-mode'."
+    ;; Activate `flyspell-mode' when editing commit messages.
+    (when (string-match "COMMIT_EDITMSG" (buffer-name))
+      (flyspell-mode)))
   :custom
   (sentence-end-double-space nil)
-  :hook (text-mode . wal/text-mode)
   :ensure nil)
 #+END_SRC
 
@@ -4993,7 +4993,7 @@ This calls `org-content' interactively."
 
 (use-package org
   :init
-  (wal/lang-hook org-mode
+  (wal/hook org-mode
     "Hook into `org-mode'."
     :messages '("Organize! Seize the means of production!"))
   :config
@@ -5354,11 +5354,11 @@ Turn any =org-mode= buffer into a presentation.
 Editing source blocks.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/org-src-mode ()
-  "Hook into function `org-src-mode'."
-  (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
-
 (use-package org-src
+  :init
+  (wal/hook org-src-mode ()
+    "Hook into function `org-src-mode'."
+    (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
   :config
   (wal/append 'org-src-lang-modes wal/org-src-lang-modes)
   :custom
@@ -5367,7 +5367,6 @@ Editing source blocks.
   :bind
   (:map org-src-mode-map
    ("C-c C-c" . org-edit-src-exit))
-  :hook (org-src-mode . wal/org-src-mode)
   :after org
   :ensure nil
   :delight " osc")
@@ -5831,14 +5830,6 @@ Some common shell commands require an additional =C-c=:
 #+BEGIN_SRC emacs-lisp
 (defconst wal/vterm-prefix "VTerm")
 
-(defun wal/vterm-mode ()
-  "Hook into `vterm-mode'.
-
-This sets the query on exit flag to nil for the vterm process."
-  (when-let* ((buf (current-buffer))
-              (proc (get-buffer-process buf)))
-    (set-process-query-on-exit-flag proc nil)))
-
 (defun wal/vterm (&optional force-new)
   "Get a `vterm' buffer.
 
@@ -5868,13 +5859,20 @@ FORCE-NEW/`universal-argument')."
 
 (use-package vterm
   :wal-ways nil
+  :init
+  (wal/hook vterm-mode ()
+    "Hook into `vterm-mode'. Ya.
+
+  This sets the query on exit flag to nil for the vterm process."
+    (when-let* ((buf (current-buffer))
+                (proc (get-buffer-process buf)))
+      (set-process-query-on-exit-flag proc nil)))
   :custom
   (vterm-buffer-name-string (concat wal/vterm-prefix ": %s"))
   :bind
   ("C-c t" . wal/vterm)
   :hook
-  ((vterm-mode . wal/vterm-mode)
-   (vterm-mode . with-editor-export-git-editor))
+  (vterm-mode . with-editor-export-git-editor)
   :delight
   (vterm-copy-mode " vcp"))
 #+END_SRC
@@ -6114,7 +6112,7 @@ Syntax highlighting.
 #+BEGIN_SRC emacs-lisp
 (use-package git-modes
   :init
-  (wal/lang-hook gitignore-mode
+  (wal/hook gitignore-mode
     "Hook into `gitignore-mode'."
     :messages '("I don't think I know you"))
   :mode (("/\\.npmignore\\'" . gitignore-mode)
@@ -6242,7 +6240,7 @@ Bitches brew.
 (use-package elixir-mode
   :wal-ways nil
   :init
-  (wal/lang-hook elxir-mode
+  (wal/hook elxir-mode
     "Hook into `elixir-mode'."
     :lsp t
     :messages '("Mixin' potions" "A hex on you"))
@@ -6261,7 +6259,7 @@ I want to be ready for =jai=.
 #+BEGIN_SRC emacs-lisp
 (use-package cc-mode
   :init
-  (wal/lang-hook c++-mode
+  (wal/hook c++-mode
     "Hook into `c++-mode'."
     :lsp t
     :messages '("Make tidy! Make clean!" "Serenity now!"))
@@ -6302,7 +6300,7 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
   :if (executable-find "cargo")
   :wal-ways nil
   :init
-  (wal/lang-hook rust-mode
+  (wal/hook rust-mode
     "Hook into `rust-mode'."
     :lsp t
     :messages '("Consider the lobster"))
@@ -6355,7 +6353,7 @@ Use snake when you can't =make=.
 #+BEGIN_SRC emacs-lisp
 (use-package python
   :init
-  (wal/lang-hook python-mode
+  (wal/hook python-mode
     "Hook into `python-mode'."
     :lsp t
     :messages '("Watch out for snakes!" "Vegetation, aggravation")
@@ -6594,7 +6592,7 @@ Deal with the parens[fn:20].
 #+BEGIN_SRC emacs-lisp
 (use-package elisp-mode
   :init
-  (wal/lang-hook emacs-lisp-mode
+  (wal/hook emacs-lisp-mode
     "Hook into `emacs-lisp-mode'."
     :messages '("So it's just a bunch of lists?" "List your lambdas")
     (prettify-symbols-mode)
@@ -6644,7 +6642,7 @@ Get some closure.
 (use-package clojure-mode
  :wal-ways nil
  :init
- (wal/lang-hook clojure-mode
+ (wal/hook clojure-mode
    "Hook into `clojure-mode'."
    :lsp t
    :messages '("Cider brew"))
@@ -6732,7 +6730,7 @@ Can we have =deno= instead of =node=?
 (use-package js2-mode
   :wal-ways nil
   :init
-  (wal/lang-hook js2-mode
+  (wal/hook js2-mode
     "Hook into `js2-mode'."
     :messages '("NaN !== NaN" "Null falsy values or undefined")
     :tabs t
@@ -6777,7 +6775,7 @@ Improved editing for JSX files. Extends =js2=.
 (use-package rjsx-mode
   :wal-ways nil
   :init
-  (wal/lang-hook rjsx-mode
+  (wal/hook rjsx-mode
     "Hook into `rjsx-mode'."
     :tabs 'js-jsx-indent-line
     :messages '("Extend those ugly JavaScripts of yours!"))
@@ -6796,7 +6794,7 @@ Please use TypeScript.
 (use-package typescript-mode
   :wal-ways nil
   :init
-  (wal/lang-hook typescript-mode
+  (wal/hook typescript-mode
     "Hook into `typescript-mode'."
     :lsp t
     :tabs t
@@ -6855,7 +6853,7 @@ Setup for LSP.
 (use-package go-mode
   :wal-ways nil
   :init
-  (wal/lang-hook go-mode
+  (wal/hook go-mode
     "Hook into `go-mode'."
     :lsp t
     :messages '("What does Sonic say?" "Put a golang under your tongue"))
@@ -6884,7 +6882,7 @@ Bash your head in!
 #+BEGIN_SRC emacs-lisp
 (use-package sh-script
   :init
-  (wal/lang-hook sh-mode
+  (wal/hook sh-mode
     "Hook into `sh-mode'."
     :messages '("Sh..sh..h.." "Bash your head in"))
   :custom
@@ -6985,7 +6983,7 @@ Yes, you need to install *Android Studio* for some reason.
 (use-package dart-mode
   :wal-ways nil
   :init
-  (wal/lang-hook dart-mode
+  (wal/hook dart-mode
     "Hook into `dart-mode'."
     :lsp t
     :messages '("Bull's eye!"))
@@ -7080,7 +7078,7 @@ It's a =JavaEmacsPackageConfigurationSectionFactory=, mate.
 ;; For some reason, this is also defined in `cc-mode'.
 (use-package cc-mode
   :init
-  (wal/lang-hook java-mode
+  (wal/hook java-mode
     "Hook into `java-mode'."
     :lsp t
     :messages '("Mmmh ... maven"))
@@ -7134,7 +7132,7 @@ The elephant in the room.
 (use-package php-mode
   :wal-ways nil
   :init
-  (wal/lang-hook php-mode
+  (wal/hook php-mode
     "Hook into `php-mode'."
     :lsp t
     :messages '("Stampy, no!"))
@@ -7153,7 +7151,7 @@ The elephant in the room.
 (use-package web-mode
   :wal-ways nil
   :init
-  (wal/lang-hook web-mode
+  (wal/hook web-mode
     "Hook into `web-mode'."
     :lsp t
     :tabs t
@@ -7188,7 +7186,7 @@ The only way to store strings, JSON.
 (use-package jsonian
   :wal-ways nil
   :init
-  (wal/lang-hook jsonian-mode
+  (wal/hook jsonian-mode
     "Hook into `jsonian-mode'."
     :tabs t
     :messages '("JSON ...? JSON?! JSON!!")
@@ -7222,7 +7220,7 @@ Sometimes things that do as well.
 (use-package yaml-mode
   :wal-ways nil
   :init
-  (wal/lang-hook yaml-mode
+  (wal/hook yaml-mode
     "Hook into command `yaml-mode'."
     :messages '("JSON?! ... Ah, thank God it's you, YAML!")
     (drag-stuff-mode +1)
@@ -7241,7 +7239,7 @@ We want quicker suggestions when in CSS modes.
 #+BEGIN_SRC emacs-lisp
 (use-package css-mode
   :init
-  (wal/lang-hook css-mode
+  (wal/hook css-mode
     "Hook into `css-mode'."
     :tabs t
     :messages '("Centering? It's simple. Here's 15 ways to do it.")
@@ -7296,7 +7294,7 @@ replying to the `JSONRPC' request."
 (use-package gdscript-mode
   :wal-ways nil
   :init
-  (wal/lang-hook gdscript-mode
+  (wal/hook gdscript-mode
     "Hook into `gdscript-mode'."
     :lsp t
     :tabs always
@@ -7976,7 +7974,7 @@ Make =Dockerfiles= look nice.
 (use-package dockerfile-mode
   :wal-ways nil
   :init
-  (wal/lang-hook dockerfile-mode
+  (wal/hook dockerfile-mode
     "Hook into `dockerfile-mode'."
     :messages '("Have you ever given?"))
   :ensure nil)

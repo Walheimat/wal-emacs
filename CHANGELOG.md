@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dispatch.
 - Packages are now responsible for setting the virtual environment
   path.
+- Macro `wal/lang-hook` is now called `wal/hook` and used for
+  non-language major modes.
 
 ### Removed
 
