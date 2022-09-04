@@ -4081,11 +4081,18 @@ Complete commands and code.
 Alternative.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/corfu-enable-in-minibuffer ()
+  "Enable Corfu in the minibuffer if `completion-at-point' is bound."
+  (when (where-is-internal #'completion-at-point (list (current-local-map)))
+    (corfu-mode +1)))
+
 (use-package corfu
   :custom
   (corfu-auto t)
   (corfu-cycle t)
-  :hook (prog-mode . corfu-mode))
+  :hook
+  ((prog-mode . corfu-mode)
+   (minibuffer-setup . wal/corfu-enable-in-minibuffer)))
 #+END_SRC
 
 *** corfu-quick
