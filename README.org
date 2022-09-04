@@ -6341,8 +6341,8 @@ Hide those details from me.
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack python
   "Virtual environment, isort, poetry and notebook support."
-  :packages (pyvenv python-isort python-pytest poetry)
-  :extras (ein))
+  :packages (pyvenv python-isort python-pytest python-black)
+  :extras (lsp-pyright ein poetry))
 #+END_SRC
 
 *** python
@@ -6377,7 +6377,9 @@ Use snake when you can't =make=.
       ("i f" "send file" python-shell-send-file)]
      ["Commands"
       ("s" "isort" python-isort-buffer
-       :inapt-if-not (lambda () (fboundp 'python-isort-buffer)))]
+       :inapt-if-not (lambda () (fboundp 'python-isort-buffer)))
+      ("b" "black" python-black-buffer
+       :inapt-if-not (lambda () (fboundp 'python-black-buffer)))]
      ["Test"
       ("t" "pytest" python-pytest-dispatch
        :inapt-if-not (lambda () (fboundp 'python-pytest-dispatch)))]
@@ -6387,7 +6389,8 @@ Use snake when you can't =make=.
      ["Virtual environment"
       ("v" "activate pyvenv" pyvenv-activate)]
      ["Poetry"
-      ("p" "poetry" poetry)]])
+      ("p" "poetry" poetry
+       :inapt-if-not (lambda () (featurep 'poetry)))]])
   :general
   (wal/major! wal/python :keymaps 'python-mode-map)
   :ensure nil)
@@ -6468,6 +6471,19 @@ Test with =pytest=.
   (:map python-pytest-mode-map
    ("g" . python-pytest-repeat)
    ("q" . quit-window))
+  :ensure nil)
+#+END_SRC
+
+*** python-black
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Blacken buffers.
+
+#+BEGIN_SRC emacs-lisp
+(use-package python-black
+  :wal-ways nil
   :ensure nil)
 #+END_SRC
 
