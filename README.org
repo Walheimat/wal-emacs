@@ -6393,6 +6393,52 @@ Use snake when you can't =make=.
   :ensure nil)
 #+END_SRC
 
+*** lsp-pyright
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Did Microsoft do the right thing?
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/lsp-pyright-set-venv ()
+  "Set the current virtual environment."
+  (setq-local lsp-pyright-venv-path pyvenv-virtual-env))
+
+(use-package lsp-pyright
+  :wal-ways nil
+  :init
+  (add-hook
+   'pyvenv-post-activate-hooks
+   #'wal/lsp-pyright-set-venv)
+  :demand
+  :after python
+  :ensure nil)
+#+END_SRC
+
+*** lsp-pylsp
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Versatile but increasingly slow language server that supports =jedi=,
+=black=, =mypy=, =flake8=, =pycodestyle=, =pylint= ... the list goes on.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/lsp-pylsp-set-venv ()
+  "Set the current virtual environment."
+  (defvar pyvenv-virtual-env)
+  (setq-local lsp-pylsp-plugins-jedi-environment pyvenv-virtual-env))
+
+;; This package is included in `lsp-mode'.
+(use-package lsp-pylsp
+  :init
+  (add-hook
+   'pyvenv-post-activate-hooks
+   #'wal/lsp-pylsp-set-venv)
+  :ensure nil)
+#+END_SRC
+
 *** python-isort
 :PROPERTIES:
 :UNNUMBERED: t
@@ -6442,13 +6488,6 @@ Work with Jupyter notebooks.
 
 It takes more than one environment to make sense of Python code.
 
-#+BEGIN_SRC emacs-lisp
-(defun wal/configure-lsp-pylsp ()
-  "Configure `lsp-mode' python variables."
-  (defvar pyvenv-virtual-env)
-  (setq-local lsp-pylsp-plugins-jedi-environment pyvenv-virtual-env))
-#+END_SRC
-
 **** pyvenv
 :PROPERTIES:
 :UNNUMBERED: t
@@ -6459,8 +6498,6 @@ Activating =virtualenv= inside of Emacs.
 #+BEGIN_SRC emacs-lisp
 (use-package pyvenv
   :wal-ways nil
-  :config
-  (add-hook 'pyvenv-post-activate-hooks #'wal/configure-lsp-pylsp)
   :ensure nil)
 #+END_SRC
 
