@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `python-black`, available through `transient`.
 - Macro `wal/hook` now allows setting additional ignores for
   `lsp-file-watch-ignored-directories` using key `:lsp-ignores`.
+- Function `wal/in-python-project-p` to check just that.
 
 ### Changed
 
