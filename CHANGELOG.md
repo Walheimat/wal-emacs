@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal/dead-shell-p`.
 - Package `lsp-pyright`; extra for Python expansion pack.
 - Package `python-black`, available through `transient`.
+- Macro `wal/hook` now allows setting additional ignores for
+  `lsp-file-watch-ignored-directories` using key `:lsp-ignores`.
 
 ### Changed
 

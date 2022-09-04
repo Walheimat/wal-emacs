@@ -1957,12 +1957,13 @@ Optionally provide `quelpa' RECIPES."
 ** Hooks
 
 #+BEGIN_SRC emacs-lisp
-(cl-defmacro wal/hook (name docs &body body &key messages lsp tabs &allow-other-keys)
+(cl-defmacro wal/hook (name docs &body body &key messages lsp lsp-ignores tabs &allow-other-keys)
   "Hook into NAME, describe with DOCS.
 
 MESSAGES is a list of strings.
 
-LSP is either t or nil.
+LSP is either t or nil. LSP-IGNORES are additional paths to add
+to `lsp-file-watch-ignored-directories'.
 
 TABS is either nil, t or a symbol. Unless the symbol is `always',
 tabs are enabled using `wal/maybe-enable-tabs', passing it to the
@@ -1972,7 +1973,7 @@ The rest of the BODY will be spliced into the lambda."
   (declare (indent defun) (doc-string 2))
   (let ((target (intern (concat (symbol-name name) "-hook")))
         (safe-body (cl-loop for (key val) on body by 'cddr
-                            unless (memq key '(:messages :lsp :tabs))
+                            unless (memq key '(:messages :lsp :lsp-ignores :tabs))
                             collect key
                             and collect val))
         (func-name (intern (concat "wal/" (symbol-name name) "-hook"))))
@@ -1991,6 +1992,9 @@ The rest of the BODY will be spliced into the lambda."
          ,@safe-body
          ,(when lsp
             '(wal/lsp)))
+       (with-eval-after-load 'lsp-mode
+         (when ,lsp-ignores
+           (wal/append 'lsp-file-watch-ignored-directories ,lsp-ignores)))
        (add-hook
         ',target
         ',func-name))))
@@ -6356,7 +6360,13 @@ Use snake when you can't =make=.
   (wal/hook python-mode
     "Hook into `python-mode'."
     :lsp t
+    :lsp-ignores
+    '("[/\\\\]\\.pytype\\'"
+      "[/\\\\]__pycache__\\'"
+      "[/\\\\]\\.pytest_cache\\'")
+
     :messages '("Watch out for snakes!" "Vegetation, aggravation")
+
     (setq-local comment-inline-offset 2))
   :config
   ;; Load default `dap-mode' templates.
@@ -7082,6 +7092,7 @@ It's a =JavaEmacsPackageConfigurationSectionFactory=, mate.
   (wal/hook java-mode
     "Hook into `java-mode'."
     :lsp t
+    :lsp-ignores '("[/\\\\]\\.gradle\\'")
     :messages '("Mmmh ... maven"))
   :ensure nil)
 #+END_SRC
