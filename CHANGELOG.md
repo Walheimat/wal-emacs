@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Function `wal/truncate` now defaults to a length of 8 if `max-len`
   argument isn't provided.
+- Custom `completion-style` was removed as it was buggy.
 
 ## [1.7.10]
 
