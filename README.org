@@ -6210,6 +6210,7 @@ Let's greet the world[fn:19].
 (declare-function add-node-modules-path "ext:add-node-modules-path.el")
 (declare-function poetry-get-virtualenv "ext:poetry.el")
 (declare-function poetry-venv-exist-p "ext:poetry.el")
+(declare-function projectile-project-root "ext:projectile.el")
 (declare-function wal/biased-random "wal-func.el")
 (declare-function wal/disable-tabs "wal-settings.el")
 (declare-function wdb/side "wal-func.el")
@@ -6429,6 +6430,26 @@ Did Microsoft do the right thing?
   "Set the current virtual environment."
   (defvar pyvenv-virtual-env)
   (setq-local lsp-pyright-venv-path pyvenv-virtual-env))
+
+(defun wal/lsp-pyright-install-stubs ()
+  "Install the pyright stubs."
+  (interactive)
+
+  (unless (wal/in-python-project-p)
+    (user-error "You're not in a Python project!"))
+
+  (when-let* ((dir (projectile-project-root))
+              (stub-dir (expand-file-name "typings" dir)))
+
+    (if (file-directory-p stub-dir)
+        (user-error "Stubs directory already exists!")
+      (make-directory stub-dir))
+
+    (let ((cmd (concat "git clone https://github.com/microsoft/python-type-stubs "
+                       stub-dir))
+          (buffer (get-buffer-create "*Pyright Stubs*")))
+      (display-buffer-in-side-window buffer '((side . bottom)))
+      (async-shell-command cmd buffer))))
 
 (use-package lsp-pyright
   :wal-ways nil
