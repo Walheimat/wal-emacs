@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `C-c A` now visits the task directory with Dired.
 - Tests for `wal/truncate`, `wal/reset-to-standard` and
   `wal/dead-shell-p`.
+- Package `lsp-pyright`; extra for Python expansion pack.
+- Package `python-black`, available through `transient`.
 
 ### Changed
 
@@ -25,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   directory and then opens the agenda in one go using new function
   `wal/agenda`. Default `org-agenda` is no longe advised to skip the
   dispatch.
+- Packages are now responsible for setting the virtual environment
+  path.
 
 ### Removed
 
