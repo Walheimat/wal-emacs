@@ -3390,7 +3390,8 @@ Sometimes the list of minor modes overcrowds the modeline.
                              org-tree-slide-mode
                              wal/config-mode
                              verb-mode
-                             verb-response-body-mode))
+                             verb-response-body-mode
+                             pet-mode))
   :defer 3)
 #+END_SRC
 
@@ -6335,7 +6336,7 @@ Hide those details from me.
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack python
   "Virtual environment, isort, poetry and notebook support."
-  :packages (pyvenv python-isort python-pytest python-black)
+  :packages (pet python-isort python-pytest python-black)
   :extras (lsp-pyright ein poetry))
 #+END_SRC
 
@@ -6370,6 +6371,8 @@ TOML."
 
     :messages '("Watch out for snakes!" "Vegetation, aggravation")
 
+    ;; NEXT: Remove if/when `pet' MR is merged.
+    (setq-local lsp-pylsp-plugins-jedi-environment python-shell-virtualenv-root)
     (setq-local comment-inline-offset 2))
   :config
   ;; Load default `dap-mode' templates.
@@ -6398,7 +6401,8 @@ TOML."
       ("e r" "ein run" ein:run)
       ("e s" "ein stop" ein:stop)]
      ["Virtual environment"
-      ("v" "activate pyvenv" pyvenv-activate)]
+      ("v" "activate pyvenv" pyvenv-activate
+       :inapt-if-not (lambda () (featurep 'pyvenv)))]
      ["Poetry"
       ("p" "poetry" poetry
        :inapt-if-not (lambda () (featurep 'poetry)))]])
@@ -6417,11 +6421,6 @@ TOML."
 Did Microsoft do the right thing?
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/lsp-pyright-set-venv ()
-  "Set the current virtual environment."
-  (defvar pyvenv-virtual-env)
-  (setq-local lsp-pyright-venv-path pyvenv-virtual-env))
-
 (defun wal/lsp-pyright-install-stubs ()
   "Install the pyright stubs."
   (interactive)
@@ -6444,35 +6443,8 @@ Did Microsoft do the right thing?
 
 (use-package lsp-pyright
   :wal-ways nil
-  :init
-  (add-hook
-   'pyvenv-post-activate-hooks
-   #'wal/lsp-pyright-set-venv)
   :demand
   :after python
-  :ensure nil)
-#+END_SRC
-
-*** lsp-pylsp
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Versatile but increasingly slow language server that supports =jedi=,
-=black=, =mypy=, =flake8=, =pycodestyle=, =pylint= ... the list goes on.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/lsp-pylsp-set-venv ()
-  "Set the current virtual environment."
-  (defvar pyvenv-virtual-env)
-  (setq-local lsp-pylsp-plugins-jedi-environment pyvenv-virtual-env))
-
-;; This package is included in `lsp-mode'.
-(use-package lsp-pylsp
-  :init
-  (add-hook
-   'pyvenv-post-activate-hooks
-   #'wal/lsp-pylsp-set-venv)
   :ensure nil)
 #+END_SRC
 
@@ -6538,17 +6510,21 @@ Work with Jupyter notebooks.
 
 It takes more than one environment to make sense of Python code.
 
-**** pyvenv
+**** pet
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Activating =virtualenv= inside of Emacs.
+Takes care[fn:20] of all your virtual environment needs.
 
 #+BEGIN_SRC emacs-lisp
-(use-package pyvenv
+(use-package pet
+  :if (and (executable-find "dasel")
+           (executable-find "sqlite3"))
   :wal-ways nil
-  :ensure nil)
+  :hook (python-mode . pet-mode)
+  :ensure nil
+  :delight " pet")
 #+END_SRC
 
 **** poetry
@@ -6559,23 +6535,8 @@ Activating =virtualenv= inside of Emacs.
 =poetry= is like =npm= for Python, it's why it rhymes.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/poetry-activate-venv ()
-  "Activate venv using poetry.
-
-This also works if the project isn't a poetry project."
-  (interactive)
-  (condition-case err
-      (when-let* ((venv (poetry-venv-exist-p))
-                  (expanded (expand-file-name venv)))
-        (setq-local python-shell-virtualenv-root expanded)
-        (poetry-venv-workon))
-    (error
-     (message "Failed to activate venv: %s" err))))
-
 (use-package poetry
   :wal-ways nil
-  :hook (python-mode . wal/poetry-activate-venv)
-  :commands (poetry-venv-exist-p)
   :ensure nil)
 #+END_SRC
 
@@ -6598,7 +6559,7 @@ The philosopher's choice.
 :UNNUMBERED: t
 :END:
 
-Deal with the parens[fn:20].
+Deal with the parens[fn:21].
 
 #+BEGIN_SRC emacs-lisp
 (use-package lispy
@@ -7628,7 +7589,7 @@ smaller."
 :END:
 
 =lsp-mode= is the fancy version. You'll have to install some language
-servers yourself[fn:21].
+servers yourself[fn:22].
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/slow-lsp-p (mode)
@@ -8761,6 +8722,8 @@ too old.
 [fn:19] None of the language packages are ensured, meaning you will
 need to install them yourself.
 
-[fn:20] Binding reference [[http://oremacs.com/lispy/][here]].
+[fn:20] Currently requires [[https://daseldocs.tomwright.me/installation#manual ][dasel]].
 
-[fn:21] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+[fn:21] Binding reference [[http://oremacs.com/lispy/][here]].
+
+[fn:22] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].

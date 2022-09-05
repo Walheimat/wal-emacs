@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Function `wal/in-python-project-p` to check just that.
 - Function `wal/lsp-pyright-install-stubs` to do just that.
 - Added function from `corfu` README to enable it in minibuffer.
+- Adds package `pet` and uses it to set up virtual environment paths.
 
 ### Changed
 
