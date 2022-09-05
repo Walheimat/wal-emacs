@@ -1198,11 +1198,6 @@ Turning on/off certain major modes switching between =major-mode= and
   "Whether to delete trailing whitespace."
   :type 'boolean
   :group 'wal-func)
-
-(defcustom wal/gc-cons-threshold-in-mb 200
-  "The default `gc-cons-threshold' expressed in MB."
-  :type 'integer
-  :group 'wal-func)
 #+END_SRC
 
 ** Directories
@@ -1505,17 +1500,11 @@ Better(?) garbage collection.
 This function may be used to set variables that expect bytes."
   (floor (* 1024 1024 num)))
 
-(defun wal/minibuffer-setup-hook ()
+(defun wal/increase-gc-cons-threshold ()
   "Increase `gc-cons-threshold' to maximum on minibuffer setup."
-  (setq gc-cons-threshold most-positive-fixnum))
+  (setq gc-cons-threshold (wal/bytes-per-mb 100)))
 
-(defun wal/minibuffer-exit-hook ()
-  "Decrease `gc-cons-threshold' on minibuffer exit."
-  (setq gc-cons-threshold (wal/bytes-per-mb wal/gc-cons-threshold-in-mb)))
-
-(add-hook 'minibuffer-setup-hook #'wal/minibuffer-setup-hook)
-(add-hook 'minibuffer-exit-hook #'wal/minibuffer-exit-hook)
-(add-hook 'emacs-startup-hook #'wal/minibuffer-exit-hook)
+(add-hook 'emacs-startup-hook #'wal/increase-gc-cons-threshold)
 #+END_SRC
 
 ** Files

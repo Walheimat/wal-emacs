@@ -43,6 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   segment in `wal-line`.
 - Package `ctrlf` has been mothballed in favor using `consult-line`.
 - Package `beacon` has been mothballed in favor of using `pulse`.
+- The `gc-cons-threshold` is no longer meddled with when setting up
+  the minibuffer.
 
 ### Fixed
 
