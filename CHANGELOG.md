@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Function `wal/dead-shell-p` was moved to `wal-func`.
 - `C-c a` now switches to initial perspective, opens the tasks
   directory and then opens the agenda in one go using new function
-  `wal/agenda`. Default `org-agenda` is no longe advised to skip the
+  `wal/agenda`. Default `org-agenda` is no longer advised to skip the
   dispatch.
 - Packages are now responsible for setting the virtual environment
   path.
@@ -42,13 +42,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `org-sticky-header` has been mothballed in favor of new
   segment in `wal-line`.
 - Package `ctrlf` has been mothballed in favor using `consult-line`.
-- Package `beacon` has beeen mothballed in favor of using `pulse`.
+- Package `beacon` has been mothballed in favor of using `pulse`.
 
 ### Fixed
 
 - Function `wal/truncate` now defaults to a length of 8 if `max-len`
   argument isn't provided.
 - Custom `completion-style` was removed as it was buggy.
+- Positioning of whale animation while editing the config no longer
+  subtracts the fringe width from the horizontal offset.
 
 ## [1.7.10]
 
