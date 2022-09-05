@@ -51,6 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom `completion-style` was removed as it was buggy.
 - Positioning of whale animation while editing the config no longer
   subtracts the fringe width from the horizontal offset.
+- Variable `read-process-output-max` is set to 1 MB as this is the
+  default max for `/proc/sys/fs/pipe-max-size`. The associated custom
+  variable was removed.
 
 ## [1.7.10]
 
