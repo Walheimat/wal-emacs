@@ -1085,6 +1085,7 @@ Most bindings are declared in individual packages.
   "fp" '(list-processes :wk "processes")
   "s" '(:ignore t :wk "set")
   "sT" '(wal/set-transparency :wk "transparency")
+  "sc" '(wal/set-cursor-type :wk "cursor")
   "p" '(:ignore t :wk "package")
   "pf" '(package-refresh-contents :wk "refresh")
   "pi" '(package-install :wk "install")
@@ -1320,6 +1321,20 @@ is deleted."
   "Call `kill-ring-save' on the entire buffer."
   (interactive)
   (kill-ring-save (point-min) (point-max)))
+
+(defconst wal/cursor-types '(box hollow bar hbar)
+  "Cursor types that can be set using `completing-read'.")
+
+(defun wal/set-cursor-type (&optional reset)
+  "Set the `cursor-type'.
+
+Optionally RESET the type when called with `universal-argument'."
+  (interactive "P")
+  (if reset
+      (setq-local cursor-type t)
+    (let* ((type-string (completing-read "Select cursor type: " wal/cursor-types))
+           (type (intern type-string)))
+      (setq-local cursor-type type))))
 #+END_SRC
 
 ** Windows

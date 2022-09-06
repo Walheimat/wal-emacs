@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds package `pet` and uses it to set up virtual environment paths.
 - Functions to view this changelog and see the diff range since latest
   tag added to the editing transient.
+- Function `wal/set-cursor-type` to do just that, bound in `general`.
 
 ### Changed
 
