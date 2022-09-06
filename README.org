@@ -8516,6 +8516,12 @@ This returns the tag and its annotation as propertized strings."
      (noninteractive out)
      (t (message out)))))
 
+(defun wal/show-config-diff-range ()
+  "Call `magit-diff-range' with the latest tag."
+  (interactive)
+  (let ((version (shell-command-to-string "git describe --abbrev=0")))
+    (magit-diff-range (string-trim version))))
+
 (defun wal/tangle-config-prompt ()
   "Prompt the user to tangle the config.
 If the answer is no, there will be no additional prompt."
@@ -8548,13 +8554,22 @@ This will activate minor mode `wal/config-mode'."
   (interactive)
   (customize-group 'wal t))
 
-(defun wal/dired-packages ()
+(defun wal/dired-config-packages ()
   "Open the packages with Dired."
   (interactive)
   (pop-to-buffer-same-window
     (dired-noselect wal/emacs-config-package-path)))
 
-(defun wal/checkdoc-packages ()
+(defun wal/find-config-changelog ()
+  "Find the the changelog of the config."
+  (interactive)
+  (let* ((root wal/emacs-config-default-path)
+         (changelog (expand-file-name "CHANGELOG.md" root)))
+    (display-buffer-pop-up-window
+     (find-file-noselect changelog)
+     '((side . left)))))
+
+(defun wal/checkdoc-config-packages ()
   "Run `checkdoc-file' on all package files."
   (interactive)
   (defvar projectile-enable-caching)
@@ -8584,16 +8599,17 @@ This will activate minor mode `wal/config-mode'."
     (with-no-warnings
       (transient-define-prefix wal/config-dispatch ()
         "Facilitate the usage of or the working on Walheimat's config."
-        [["Actions"
+        [["Use"
           ("t" "tangle" wal/tangle-config)
           ("x" "install expansion pack" wal/install-expansion-pack)
-          ("c" "checkdoc" wal/checkdoc-packages)
+          ("g" "customize group" wal/customize-group)]
+         ["Check"
+          ("c" "checkdoc" wal/checkdoc-config-packages)
           ("f" "flycheck" wal/flycheck-config-packages)]
-         ["Go to"
-          ("h" "heading" consult-org-heading)
-          ("d" "packages" wal/dired-packages)]
-         ["Customization"
-          ("g" "group" wal/customize-group)]
+         ["View"
+          ("p" "packages" wal/dired-config-packages)
+          ("m" "show changes" wal/show-config-diff-range)
+          ("l" "find changelog" wal/find-config-changelog)]
          ["Fluff"
           ("w" "toggle animation" wal/ascii-whale-toggle-display)]])
       (general-define-key
