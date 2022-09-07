@@ -3414,6 +3414,7 @@ Sometimes the list of minor modes overcrowds the modeline.
                              wal/config-mode
                              verb-mode
                              verb-response-body-mode
+                             lispy-mode
                              pet-mode))
   :defer 3)
 #+END_SRC
@@ -6583,6 +6584,20 @@ The philosopher's choice.
 Deal with the parens[fn:21].
 
 #+BEGIN_SRC emacs-lisp
+(defvar-local wal/lispy-was-disabled-by-mc nil)
+
+(defun wal/lispy-disable-before-mc ()
+  "Disable `lispy-mode' for `multiple-cursors-mode'."
+  (when (bound-and-true-p lispy-mode)
+    (setq-local wal/lispy-was-disabled-by-mc t)
+    (lispy-mode -1)))
+
+(defun wal/lispy-reenable-after-mc ()
+  "Re-enable `lispy-mode' if it was disabled by `mutliple-cursors-mode'."
+  (when wal/lispy-was-disabled-by-mc
+    (setq wal/lispy-was-disabled-by-mc nil)
+    (lispy-mode 1)))
+
 (use-package lispy
   :wal-ways nil
   :custom
@@ -6596,8 +6611,12 @@ Deal with the parens[fn:21].
   :bind
   (:map lispy-mode-map
    ("M-o" . nil))
-  :hook ((emacs-lisp-mode clojure-mode) . lispy-mode)
-  :ensure nil)
+  :hook
+  (((emacs-lisp-mode clojure-mode) . lispy-mode)
+   (multiple-cursors-mode-enabled . wal/lispy-disable-before-mc)
+   (multiple-cursors-mode-disabled . wal/lispy-reenable-after-mc))
+  :ensure nil
+  :delight " '-y")
 #+END_SRC
 
 *** elisp-mode

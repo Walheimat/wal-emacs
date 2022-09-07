@@ -40,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   path.
 - Macro `wal/lang-hook` is now called `wal/hook` and used for
   non-language major modes.
+- Package `lispy` was customized and now respects
+  `multiple-cursors-mode`.
 
 ### Removed
 
