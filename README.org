@@ -1578,26 +1578,29 @@ Capture custom command line flags.
     (deny . "--deny"))
   "Alist of custom flags that can be passed to Emacs.")
 
-(defun wal/capture-flag (flag)
-  "Check for custom FLAG and delete it from the command line arguments."
-  (when-let* ((flag (cdr (assoc flag wal/custom-flags)))
-              (found (member flag command-line-args)))
-    (setq command-line-args (delete flag command-line-args))
-    t))
+(defmacro wal/capture-flag (flag docs)
+  "Check for custom FLAG.
 
-;; Flag `--doctor' will set up `use-package' to collect statistics and
-;; turn on `explain-pause-mode'.
-(when (wal/capture-flag 'doctor)
-  (setq wal/flag-doctor t))
+DOCS will be passed on to `message'.
 
-;; Flag `--mini' will only load packages that are part of the minimal
-;; configuration.
-(when (wal/capture-flag 'mini)
-  (setq wal/flag-mini t))
+This will delete the flag from the command line arguments and set
+the associated variable."
+  (declare (indent defun) (doc-string 2))
+  `(when-let* ((flags wal/custom-flags)
+               (dash-flag (cdr (assoc ',flag flags)))
+               (found (member dash-flag command-line-args)))
+     (message ,docs)
+     (setq command-line-args (delete dash-flag command-line-args))
+     (setq ,(intern (concat "wal/flag-" (symbol-name flag))) t)))
 
-;; Flag `--deny' will prevent `use-package' from ensuring packages.
-(when (wal/capture-flag 'deny)
-  (setq wal/flag-deny t))
+(wal/capture-flag doctor
+  "Will set up `use-package' to collect statistics.")
+
+(wal/capture-flag mini
+  "Will packages that are part of the minimal configuration.")
+
+(wal/capture-flag deny
+  "Will prevent `use-package' from ensuring packages.")
 #+END_SRC
 
 ** Text Scaling

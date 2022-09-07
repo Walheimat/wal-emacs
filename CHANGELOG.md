@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `t`.
 - Adds GitHub CI configuration to run the tests. This uses new custom
   file `wal-setup-ci` to tangle the config and set the package path
-  using env.
+  using `GITHUB_WORKSPACE` environment variable.
 - `C-c A` now visits the task directory with Dired.
 - Tests for `wal/truncate`, `wal/reset-to-standard` and
   `wal/dead-shell-p`.
@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   non-language major modes.
 - Package `lispy` was customized and now respects
   `multiple-cursors-mode`.
+- Function `wal/capture-flag` is now a macro.
 
 ### Removed
 
