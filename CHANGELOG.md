@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.7.11]
+
+Action-backed.
 
 ### Added
 
@@ -14,7 +16,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds GitHub CI configuration to run the tests. This uses new custom
   file `wal-setup-ci` to tangle the config and set the package path
   using `GITHUB_WORKSPACE` environment variable.
-- `C-c A` now visits the task directory with Dired.
 - Tests for `wal/truncate`, `wal/reset-to-standard` and
   `wal/dead-shell-p`.
 - Package `lsp-pyright`; extra for Python expansion pack.
