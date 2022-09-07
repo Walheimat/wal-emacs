@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Functions to view this changelog and see the diff range since latest
   tag added to the editing transient.
 - Function `wal/set-cursor-type` to do just that, bound in `general`.
+- Custom `wal/consult-line` to use `thing-at-point` if called with
+  `C-u`.
 
 ### Changed
 
