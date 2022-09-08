@@ -357,10 +357,12 @@ use the result further down the line."
                            (not (null (package-installed-p name)))
                          (or (not (or wal/minimal wal/flag-mini))
                              (not (null (memq name wal/minimal-exclude)))))))
+
            (body (use-package-process-keywords
                    name
                    rest
                    (use-package-plist-maybe-put state :wal-ways active))))
+
       `((when ,active
           ,@body)))))
 
@@ -566,6 +568,7 @@ This function will call `hack-local-variables'."
 All offsets are set to `wal/indent-offset' or optionally to NUM."
   (interactive "nSet tab width to: ")
   (let ((offset (or num wal/indent-offset)))
+
     (setq-default python-indent-offset offset
                   js-indent-level offset
                   css-indent-offset offset
@@ -916,11 +919,14 @@ Allows defining custom prefixes.
 NAME is the name of the macro. DEFINER is the definer to create
 the sink for and PREFIX is its prefix."
   (declare (indent defun))
+
   (let* ((defname (symbol-name definer))
          (suffix (substring prefix -1))
          (wk (upcase (concat (substring defname 4) "!"))))
+
     (progn
       (general-define-key :prefix prefix suffix `(:ignore t :wk ,wk))
+
       `(defmacro ,name (&rest args)
          `(, ',definer ,@,`(mapcar (lambda (it)
                                      (if (stringp it)
@@ -953,6 +959,7 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
                          (or (daemonp) (display-graphic-p)))
                     "H-"
                   "C-c w ")))
+
     (concat prefix user-key)))
 
 (defvar wal/leaders '(wal/general wal/colonel wal/major wal/captain wal/lieutenant))
@@ -964,6 +971,7 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
          (key (wal/prefix-user-key (symbol-value key-sym)))
          (sink (intern (format "%s-sink" leader)))
          (name (substring (symbol-name leader) 4)))
+
     ;; Queue up `which-key' replacements.
     (eval-after-load 'which-key `(which-key-add-key-based-replacements ,key ,name))
 
@@ -1002,6 +1010,7 @@ These hydras are mapped to =lieutenant= using the following prefixes:
   "Get a string offset for the `wal/ascii-whale'.
 Additional left PADDING can be passed."
   (let ((padd (or padding 0)))
+
     (make-string (+ padd (length wal/ascii-whale)) ? )))
 
 (use-package hydra
@@ -1113,6 +1122,7 @@ Most bindings are declared in individual packages.
 ;; Use H-u for C-u.
 (when wal/use-hyper-prefix
   (let ((prefix (wal/prefix-user-key "u")))
+
     (general-define-key prefix 'universal-argument)
     (general-define-key
      :keymaps 'universal-argument-map
@@ -1139,6 +1149,7 @@ Turning on/off certain major modes switching between =major-mode= and
   "Switch from `major-mode' to `fundamental-mode' and back."
   (interactive)
   (let ((m-mode major-mode))
+
     (if wal/before-fundamental-mode
         (progn
           (funcall wal/before-fundamental-mode)
@@ -1221,6 +1232,7 @@ Finding files should =mkdir -p= its parents.
 If a file is found in a not (yet) existing directory, ask if it
 should get created."
   (let ((parent-directory (file-name-directory buffer-file-name)))
+
     (when (and (not (file-exists-p parent-directory))
                (y-or-n-p (format "Create non-existing directory `%s'? " parent-directory)))
       (make-directory parent-directory t))))
@@ -1247,6 +1259,7 @@ The pop-up is a window unless IN-FRAME is t."
         (action (if in-frame
                      'display-buffer-pop-up-frame
                    'display-buffer-pop-up-window)))
+
     (add-to-list 'display-buffer-alist
                  `(,condition (,action)))))
 
@@ -1260,6 +1273,7 @@ delete other windows, dedicated to the buffer (unless LOOSE),
 available to `other-window' (unless NO-OTHER) 20 (or HEIGHT)
 lines high and visible frames are considered reusable."
   (let ((condition (wal/display-buffer-condition buffer)))
+
     (add-to-list 'display-buffer-alist
                  `(,condition
                    (display-buffer-reuse-window display-buffer-in-side-window)
@@ -1273,6 +1287,7 @@ lines high and visible frames are considered reusable."
   "Display BUFFER in direction.
 The direction is right-most or DIRECTION."
   (let ((condition (wal/display-buffer-condition buffer)))
+
     (add-to-list 'display-buffer-alist
                  `(,condition
                    (display-buffer-reuse-mode-window display-buffer-in-direction)
@@ -1284,6 +1299,7 @@ The direction is right-most or DIRECTION."
 This means there is no display function used and the mode line is
 removed."
   (let ((condition (wal/display-buffer-condition buffer)))
+
     (add-to-list 'display-buffer-alist
                  `(,condition
                    nil
@@ -1292,6 +1308,7 @@ removed."
 (defun wal/display-buffer-reuse-same-window (buffer)
   "Display BUFFER reusing same window."
   (let ((condition (wal/display-buffer-condition buffer)))
+
     (add-to-list 'display-buffer-alist
                  `(,condition
                    (display-buffer-reuse-window display-buffer-same-window)))))
@@ -1338,6 +1355,7 @@ Optionally RESET the type when called with `universal-argument'."
       (setq-local cursor-type t)
     (let* ((type-string (completing-read "Select cursor type: " wal/cursor-types))
            (type (intern type-string)))
+
       (setq-local cursor-type type))))
 #+END_SRC
 
@@ -1361,11 +1379,14 @@ split, split horizontally."
                                      (windows-sharing-edge win 'left))
                                  'hori)
                                 (t nil))))
+
     (delete-other-windows)
+
     (pcase split-direction
       ('vert (split-window-horizontally))
       ('hori (split-window-vertically))
       (_ nil))
+
     (when other-buffer
       (set-window-buffer (next-window) other-buffer))))
 
@@ -1376,6 +1397,7 @@ split, split horizontally."
          (direction (cond ((windows-sharing-edge win 'above) scale-above)
                           ((windows-sharing-edge win 'below) scale-below)
                           (t nil))))
+
     (pcase direction
       ('enlarge (wal/enlarge-window))
       ('shrink (wal/shrink-window))
@@ -1388,6 +1410,7 @@ split, split horizontally."
          (direction (cond ((windows-sharing-edge win 'left) scale-left)
                           ((windows-sharing-edge win 'right) scale-right)
                           (t nil))))
+
     (pcase direction
       ('enlarge (wal/enlarge-window-horizontally))
       ('shrink (wal/shrink-window-horizontally))
@@ -1422,6 +1445,7 @@ This shrinks or enlarges the window depending on its position."
   (interactive)
   (let* ((available (window-min-delta (selected-window) horizontally))
          (chunk (floor (* available 0.2))))
+
     (if horizontally
         (shrink-window-horizontally chunk)
       (shrink-window chunk))))
@@ -1436,6 +1460,7 @@ This shrinks or enlarges the window depending on its position."
   (interactive)
   (let* ((available (window-max-delta (selected-window) horizontally))
          (chunk (floor (* available 0.2))))
+
     (if horizontally
         (enlarge-window-horizontally chunk)
       (enlarge-window chunk))))
@@ -1486,14 +1511,18 @@ Minor mode to dedicate buffers to windows.
   "Dedicate the window to the current buffer."
   (let ((window (selected-window))
         (buffer (current-buffer)))
+
     (set-window-dedicated-p window buffer)
+
     (message "Dedicating window to %s" buffer)))
 
 (defun walled-mode--disable ()
   "Make window no longer dedicated to its buffer."
   (let* ((window (selected-window))
          (buffer (window-dedicated-p window)))
+
     (set-window-dedicated-p window nil)
+
     (message "Window no longer dedicated to %s" buffer)))
 #+END_SRC
 
@@ -1505,6 +1534,7 @@ Each window has a frame.
 (defun wal/posframe-hidehandler-when-invisible (info)
   "Check INFO whether the parent buffer is invisible."
   (when-let ((parent (cdr (plist-get info :posframe-parent-buffer))))
+
     (not (get-buffer-window parent t))))
 #+END_SRC
 
@@ -1540,6 +1570,7 @@ matching files are visited but only the last-visited displayed."
    (find-file-read-args "Find file (deleting other windows): "
                         (confirm-nonexistent-file-or-buffer)))
   (let ((value (find-file-noselect filename nil nil wildcards)))
+
     (if (listp value)
         (progn
           (setq value (nreverse value))
@@ -1547,6 +1578,7 @@ matching files are visited but only the last-visited displayed."
           (mapc 'switch-to-buffer (cdr value))
           value)
       (switch-to-buffer value)
+
       (delete-other-windows))))
 
 (defun wal/find-custom-file ()
@@ -1562,6 +1594,7 @@ matching files are visited but only the last-visited displayed."
          (init-file (cl-find-if
                      'file-exists-p
                      (mapcar 'expand-file-name files))))
+
     (if init-file
         (switch-to-buffer (find-file-noselect (file-truename init-file)))
       (user-error "Couldn't find fish config file"))))
@@ -1593,6 +1626,7 @@ the associated variable."
   `(when-let* ((flags wal/custom-flags)
                (dash-flag (cdr (assoc ',flag flags)))
                (found (member dash-flag command-line-args)))
+
      (message ,docs)
      (setq command-line-args (delete dash-flag command-line-args))
      (setq ,(intern (concat "wal/flag-" (symbol-name flag))) t)))
@@ -1628,11 +1662,13 @@ Manipulating lists.
 
 Duplicate items are removed."
   (let ((val (symbol-value target)))
+
     (set target (delq nil (delete-dups (append val seq))))))
 
 (defun wal/replace-in-alist (target values)
   "Edit TARGET alist in-place using VALUES."
   (let ((val (symbol-value target)))
+
     (if (seq-every-p (lambda (it) (assoc (car it) val)) values)
         (seq-each (lambda (it) (map-put! val (car it) (cdr it))) values)
       (user-error "All keys must already be present in list"))))
@@ -1640,6 +1676,7 @@ Duplicate items are removed."
 (defun wal/insert-after (target preceding item)
   "Insert ITEM in TARGET after PRECEDING."
   (let ((val (symbol-value target)))
+
     (if (memq preceding val)
         (let* ((remainder (nthcdr (cl-position preceding val) val)))
           (setcdr remainder (cons item (cdr remainder))))
@@ -1662,6 +1699,7 @@ Both functions will be called interactively."
   (declare (indent defun))
   (let ((a-name (symbol-name a))
         (b-name (symbol-name b)))
+
     `(defun ,(intern (concat "wal/univ-" a-name)) (&optional call-other)
        ,(concat (format "Call `%s' or `%s' depending on prefix argument."
                         a-name
@@ -1692,8 +1730,10 @@ The bias is the high end unless BIAS-LOW is passed. The number of
 throws are 3 or THROWS."
   (let ((results (list))
         (throws (or throws 3)))
+
     (dotimes (_i throws)
       (push (random limit) results))
+
     (if bias-low
         (seq-min results)
       (seq-max results))))
@@ -1709,6 +1749,7 @@ throws are 3 or THROWS."
 
 Truncates to 8 characters if no MAX-LEN is provided."
   (let ((len (or max-len 8)))
+
     (if (> (length text) len)
         (concat (substring text 0 (max (- len 3) 1)) "...")
       text)))
@@ -1756,6 +1797,7 @@ intefere with `magit' and friends."
 (defun wal/dead-shell-p ()
   "Check if the current buffer is a shell or comint buffer with no process."
   (let ((buffer (current-buffer)))
+
     (with-current-buffer buffer
       (and (derived-mode-p 'comint-mode)
            (not (comint-check-proc buffer))))))
@@ -1778,6 +1820,7 @@ In daemon-mode the function may be called IMMEDIATELY. An
 appropriate hook is chosen for the original call."
   (declare (indent defun) (doc-string 2))
   (let ((func-name (intern (concat "wal/init-setup-" (symbol-name name)))))
+
     `(progn
        (defun ,func-name ()
          ,(format "Do base setup for %s. Do minimal setup on repeats.\n%s" name docs)
@@ -1808,6 +1851,7 @@ Act on regions.
              (end (region-end))
              (str (buffer-substring-no-properties beg end))
              (hex-str (url-hexify-string str)))
+
         (browse-url
          (concat "https://duckduckgo.com/html/?q=" hex-str)))
     (user-error "No active region")))
@@ -1827,6 +1871,7 @@ Show messages without cluttering.
 That bottle is just an array of strings."
   (let* ((message-log-max nil) ; Don't clutter.
          (message (nth (wal/biased-random (length bottle)) bottle)))
+
     (message (concat
               wal/ascii-whale
               " "
@@ -1854,6 +1899,7 @@ Calls `delete-other-windows' if DELETE-WINDOWS is t."
   (let ((new-packages (seq-filter
                        (lambda (it) (not (package-installed-p it)))
                        packages)))
+
     (mapc (lambda (it) (package-install it)) new-packages)
 
     (when delete-windows
@@ -1868,6 +1914,7 @@ Returns the number of newly installed packages."
   (let* ((new-packages (seq-filter
                         (lambda (it) (not (package-installed-p (car it))))
                         recipes)))
+
     (mapc (lambda (it) (quelpa it)) new-packages)
 
     (length new-packages)))
@@ -1891,6 +1938,7 @@ Optionally provide `quelpa' RECIPES."
             (normal (plist-get package-list :packages))
             (extras (plist-get package-list :extras))
             (recipes (mapcar #'car (plist-get package-list :recipes))))
+
        (append acc normal extras recipes)))
    wal/expansion-packs '()))
 
@@ -1904,6 +1952,7 @@ Optionally provide `quelpa' RECIPES."
          (selection (wal/maybe-intern
                      (completing-read
                       "Select extra to install: " (append extras '(all))))))
+
     (pcase selection
       ('all
        (wal/install-packages extras)
@@ -1922,6 +1971,7 @@ Optionally provide `quelpa' RECIPES."
          (packages (plist-get (cdr item) :packages))
          (recipes (plist-get (cdr item) :recipes))
          (extras (plist-get (cdr item) :extras)))
+
     (if (not item)
         (user-error "Unknown pack '%s', check `wal/expansion-packs'" sym)
       (let* ((installed-packages (wal/install-packages packages :delete-windows t))
@@ -1951,6 +2001,7 @@ Optionally provide `quelpa' RECIPES."
            (recipes (mapcar #'car (plist-get (cdr item) :recipes)))
            (all-packages (wal/expansion--stringify (append packages recipes)))
            (extras (wal/expansion--stringify (plist-get (cdr item) :extras))))
+
       (marginalia--fields
        (docs :face 'marginalia-documentation :truncate 0.6)
        (all-packages :face 'marginalia-value :truncate 0.8)
@@ -1978,12 +2029,14 @@ function as an indentation function.
 
 The rest of the BODY will be spliced into the lambda."
   (declare (indent defun) (doc-string 2))
+
   (let ((target (intern (concat (symbol-name name) "-hook")))
         (safe-body (cl-loop for (key val) on body by 'cddr
                             unless (memq key '(:messages :lsp :lsp-ignores :tabs))
                             collect key
                             and collect val))
         (func-name (intern (concat "wal/" (symbol-name name) "-hook"))))
+
     `(progn
        (defun ,func-name ()
          ,docs
@@ -2065,7 +2118,9 @@ This also updates variable `wal/transparency' for the duration of
 the session."
   (interactive "nSet transparency (1-100): ")
   (let ((transparency (min (max (or value wal/transparency) 1) 100)))
+
     (setq wal/transparency transparency)
+
     (if wal/experimental
         (modify-all-frames-parameters `((alpha-background . ,transparency)))
       (modify-all-frames-parameters `((alpha . ,transparency))))))
@@ -2198,7 +2253,9 @@ This has no default value."
   "Set the HEIGHT for fixed fonts."
   (interactive "nSet fixed font height: ")
   (let ((sensible-height (max (min height 200) 80)))
+
     (wal/font-update :height sensible-height '(default fixed-pitch))
+
     (setq wal/fixed-font-height sensible-height)))
 
 (defun wal/select-variable-font (font)
@@ -2211,7 +2268,9 @@ This has no default value."
   "Set the HEIGHT for variable fonts."
   (interactive "nSet variable font height: ")
   (let ((sensible-height (max (min height 200) 80)))
+
     (wal/font-update :height sensible-height '(variable-pitch))
+
     (setq wal/variable-font-height sensible-height)))
 
 (defun wal/available-fonts (fonts)
@@ -2229,6 +2288,7 @@ preferred fonts are available, return the first of those
 instead."
   (let* ((available-fonts (wal/available-fonts fonts))
          (preferred (and prefer (wal/preferred-fonts available-fonts))))
+
     (if preferred
         (car preferred)
       (car available-fonts))))
@@ -2514,6 +2574,7 @@ This just means increasing duration, delay, size and brightness."
   (interactive)
   (defvar pulse-iterations)
   (let ((pulse-iterations 30))
+
     (pulse-momentary-highlight-one-line (point) 'cursor)))
 
 (use-package pulse
@@ -3040,6 +3101,7 @@ A collection of status messages."
   (let ((ext (if (or (daemonp) (display-graphic-p))
                  ".png"
                ".txt")))
+
     (expand-file-name
      (concat "assets/logo" ext)
      wal/emacs-config-default-path))
@@ -3099,7 +3161,9 @@ Let's have a dash of board.
 (defun wal/with-recent-files-excluded (fun &rest args)
   "Advise FUN to ignore certain directories, applying ARGS."
   (defvar recentf-exclude)
+
   (let ((recentf-exclude wal/recentf-exclude))
+
     (apply fun args)))
 
 (defun wal/instead-show-biased-random (&rest _args)
@@ -3357,6 +3421,7 @@ Dim inactive frames.
   "Advise to only force process if no predicate is truthy."
   (let ((ignore (cl-some (lambda (f) (and (fboundp f) (funcall f)))
                          dimmer-prevent-dimming-predicates)))
+
     (unless ignore
       (when (fboundp 'dimmer-process-all)
         (dimmer-process-all t)))))
@@ -3549,6 +3614,7 @@ Font *JetBrains Mono* has the best support for ligatures.
 ARGS is a list containing modes and additional ligatures."
   (let ((modes (nth 0 args))
         (ligatures (append (nth 1 args) wal/common-ligatures)))
+
     (apply fun `(,modes ,ligatures))))
 
 (use-package ligature
@@ -3824,6 +3890,7 @@ Treat certain buffers and their windows as pop-ups.
   (let ((helpful-re "\\*helpful \\w+\:")
         (dc-re "\\* docker-compose \\(?1:up\\|run\\|build\\)\\( --rm\\)?\\ \\(?2:\\w+\\)")
         (cont-re "\\* docker container \\(?1:logs\\|stop\\)?\\ ?\\(--tail [[:digit:]]+\\)?\\ \\(?2:\\w+_\\w+_[[:digit:]]+\\)\\ \\*"))
+
     (cond
      ((string-match helpful-re buffer-name)
       (concat
@@ -3950,6 +4017,7 @@ If called with `universal-argument', go to LINE-FIRST."
   (avy-with wal/avy-mark-region
     (let* ((beg (avy--line))
            (end (avy--line)))
+
       (when (> beg end)
         (cl-rotatef beg end))
 
@@ -4484,6 +4552,7 @@ Do not ignore hidden files."
   (interactive "P")
   (let ((consult-ripgrep-args
          (concat (substring consult-ripgrep-args 0 -1) "--no-ignore .")))
+
     (when (and (fboundp 'consult--grep)
                (fboundp 'consult--ripgrep-builder))
       (consult--grep "Ripgrep (ignored)" #'consult--ripgrep-builder dir initial))))
@@ -4518,6 +4587,7 @@ not pollute the current one."
   "Call FUN with ARGS but increase the `vertico-count'."
   (defvar vertico-count)
   (let ((vertico-count 20))
+
     (apply fun args)))
 
 (use-package consult
@@ -4733,6 +4803,7 @@ Group buffers in workspaces.
 (defun wal/persp-maybe-shorten ()
   "Maybe shorten mode-line string when many perspectives are open."
   (let ((truncated-length (length (mapconcat #'identity (persp-mode-line)))))
+
     (setq persp-modestring-short
         (> truncated-length wal/perspective-shorten-after))))
 
@@ -4744,6 +4815,7 @@ Group buffers in workspaces.
 This only removes `process-kill-buffer-query-function'."
   (let ((kill-buffer-query-functions (delq 'process-kill-buffer-query-function
                                            kill-buffer-query-functions)))
+
     (apply fun args)))
 
 (defun wal/apply-truncation-to-non-active (&rest args)
@@ -4761,6 +4833,7 @@ This only removes `process-kill-buffer-query-function'."
                                 (+ acc (length item)))
                               names
                               0))))
+
     (if (and (> combined-length wal/perspective-truncate-after)
              (not (string-match-p name curr-name)))
         (substring name 0 (min (length name) wal/perspective-truncated-length))
@@ -4769,10 +4842,12 @@ This only removes `process-kill-buffer-query-function'."
 (defun wal/instead-guess-truncated-perspective (event)
   "Guess perspective from click EVENT and switch."
   (let ((clicked (format "%s" (car (posn-string (event-start event))))))
+
     (if (eq (length clicked) wal/perspective-truncated-length)
         (when-let* ((r (concat "^" clicked))
                     (names (persp-names))
                     (p (cl-find-if (lambda (it) (string-match r it)) names)))
+
           (persp-switch p))
       (persp-switch clicked))))
 
@@ -4791,6 +4866,7 @@ No filter is applied if called with `universal-argument'."
 
 The results are filtered using `consult-buffer-filter'"
   (let ((filters (consult--regexp-filter consult-buffer-filter)))
+
     (seq-filter
      (lambda (it) (and (buffer-live-p it)
                        (not (string-match-p filters (buffer-name it)))))
@@ -4807,6 +4883,7 @@ The current buffer and Dired buffers are filtered."
                                 (with-current-buffer it
                                   (not (derived-mode-p 'dired-mode)))))
                    persp-buffers)))
+
     (mapcar #'buffer-name desired)))
 
 (defun wal/consult-persp-dired-buffer-names ()
@@ -4817,6 +4894,7 @@ The current buffer and Dired buffers are filtered."
                      (with-current-buffer it
                        (derived-mode-p 'dired-mode)))
                    persp-buffers)))
+
     (mapcar #'buffer-name desired)))
 
 (use-package perspective
@@ -4923,6 +5001,7 @@ More robust project management.
   "Maybe use the `projectile' variant for FUNC."
   (let* ((func-name (symbol-name func))
          (projectile-func-name (concat "projectile-" func-name)))
+
   `(defun ,(intern (concat "wal/maybe-use-projectile-" func-name)) ()
      ,(format "Use `%s' instead of `%s' if in a project." projectile-func-name func-name)
      (interactive)
@@ -5481,6 +5560,7 @@ Turn any =org-mode= buffer into a presentation.
                         (numberp text-scale-mode-amount))
                    (expt text-scale-mode-step text-scale-mode-amount)
                  1)))
+
     (ceiling (/ width scale))))
 
 (defun wal/org-tree-slide-toggle-visibility ()
@@ -5606,6 +5686,7 @@ If the project root cannot be determined, use
   (let ((proj-root (if wal/use-projectile
                        (projectile-project-root)
                      (project-root (project-current)))))
+
     (expand-file-name "tasks.org" (or proj-root org-directory))))
 
 (use-package org-capture
@@ -5719,12 +5800,14 @@ You know the drill. Clock in, clock out.
   (when (and (fboundp 'org-link-display-format) (fboundp 'org-get-heading))
     (let ((heading (org-link-display-format
 	                (org-no-properties (org-get-heading t t t t)))))
+
       (wal/truncate heading 12))))
 
 (defun wal/org-clock-in-from-now ()
   "Force `org-clock-in' without continuous logging."
   (defvar org-clock-continuously)
   (let ((org-clock-continuously nil))
+
     (when (fboundp 'org-clock-in)
       (org-clock-in))))
 
@@ -5887,8 +5970,10 @@ The mother of all buffers. You don't need no tree views.
 (defun wal/dired-from-home (dirname &optional switches)
   "Find DIRNAME local to HOME directory.
 Uses the same optional SWITCHES."
-  (interactive (let ((default-directory (expand-file-name "~/")))
-                 (dired-read-dir-and-switches "")))
+  (interactive
+    (let ((default-directory (expand-file-name "~/")))
+
+      (dired-read-dir-and-switches "")))
   (pop-to-buffer-same-window (dired-noselect dirname switches)))
 
 (defun wal/image-dired ()
@@ -6122,6 +6207,7 @@ FORCE-NEW/`universal-argument')."
   This sets the query on exit flag to nil for the vterm process."
     (when-let* ((buf (current-buffer))
                 (proc (get-buffer-process buf)))
+
       (set-process-query-on-exit-flag proc nil)))
 
   :custom
@@ -6173,6 +6259,7 @@ Set up =eshell=. I like the idea of it but I don't really use it.
   "Advise to truncate buffer."
   (defvar eshell-buffer-maximum-lines)
   (let ((eshell-buffer-maximum-lines 0))
+
     (when (fboundp 'eshell-truncate-buffer)
       (eshell-truncate-buffer))))
 
@@ -6653,6 +6740,7 @@ TOML."
   (when-let* ((marker (or marker-file "pyproject.toml"))
               (current default-directory)
               (project-directory (locate-dominating-file current marker)))
+
     t))
 
 (use-package python
@@ -6736,6 +6824,7 @@ Did Microsoft do the right thing?
     (let ((cmd (concat "git clone https://github.com/microsoft/python-type-stubs "
                        stub-dir))
           (buffer (get-buffer-create "*Pyright Stubs*")))
+
       (display-buffer-in-side-window buffer '((side . bottom)))
       (async-shell-command cmd buffer))))
 
@@ -7378,17 +7467,20 @@ LSP support for Dart.
   "Find the Dart Flutter SDK directory."
   (when-let* ((flutter-bin (executable-find "flutter"))
               (sdk-dir (string-trim (shell-command-to-string "flutter sdk-path"))))
+
     sdk-dir))
 
 (defun wal/find-dart-sdk-dir ()
   "Find the Dart SDK directory."
   (when-let* ((flutter-sdk-dir (wal/find-dart-flutter-sdk-dir)))
+
     (expand-file-name "bin/cache/dart-sdk" flutter-sdk-dir)))
 
 (defun wal/lsp-dart-set-process-query-on-exit-flag ()
   "Set the query-on-exit flag to nil for the Dart language server."
   (defvar lsp-dart-flutter-daemon-buffer-name)
   (when-let (proc (get-buffer-process lsp-dart-flutter-daemon-buffer-name))
+
     (set-process-query-on-exit-flag proc nil)))
 
 (defun wal/lsp-dart-service-uri ()
@@ -7397,6 +7489,7 @@ LSP support for Dart.
   (condition-case err
       (when (fboundp 'lsp-workspace-get-metadata)
         (let ((uri (lsp-workspace-get-metadata "devtools-vm-service-uri")))
+
           (kill-new uri)
           (message "Service URI (%s) copied to kill ring" uri)))
     (error
@@ -7689,6 +7782,7 @@ This will ignore the error message resulting from Godot not
 replying to the `JSONRPC' request."
   (if (string-equal major-mode "gdscript-mode")
       (let ((json-data (nth 0 args)))
+
         (unless (and (string= (gethash "jsonrpc" json-data "") "2.0")
                      (not (gethash "id" json-data nil))
                      (not (gethash "method" json-data nil)))
@@ -7816,6 +7910,7 @@ Please let me know when I screwed up. I promise I will learn.
 
 Optionally don't concat a newline char if SKIP-NEWLINE is t."
   (let ((buffer (wal/flycheck-file--get-buffer)))
+
     (with-current-buffer buffer
       (setq buffer-read-only nil)
       (goto-char (point-max))
@@ -7832,12 +7927,14 @@ If KILL-BUFFER is t, also kill its BUFFER."
   (lambda (_status &optional errors)
     (let* ((output-buffer (wal/flycheck-file--get-buffer))
            (filename (file-name-nondirectory file)))
+
       (if (null errors)
           (wal/flycheck-file--write (format "No errors in '%s'." filename))
         (wal/flycheck-file--write (format "Errors in file '%s':" filename))
         (seq-do (lambda (err)
                   (when-let ((err-message (flycheck-error-message err))
                              (line (flycheck-error-line err)))
+
                     (wal/flycheck-file--write (format "line %d: %s\n" line err-message))))
                 errors)
         (unless defer-display (display-buffer output-buffer))
@@ -7856,6 +7953,7 @@ If KILL-BUFFER is t, kill the file's buffer."
              (fboundp 'flycheck-syntax-check-start))
     (with-current-buffer (find-file-noselect file)
       (let ((checker (flycheck-get-checker-for-buffer)))
+
         (if checker
             (let* ((check (flycheck-syntax-check-new
                            :buffer (current-buffer)
@@ -7863,6 +7961,7 @@ If KILL-BUFFER is t, kill the file's buffer."
                            :context nil
                            :working-directory (flycheck-compute-working-directory checker)))
                    (callback (wal/flycheck-file--callback file (current-buffer) defer-display kill-buffer)))
+
               (flycheck-syntax-check-start check callback))
           (user-error "Couldn't determine checker for file"))))))
 
@@ -8207,6 +8306,7 @@ there using =C-x C-e=.
                                            'cl-first nil t)
                      cl-rest
                      copy-tree))
+
            (serialized (dap--json-encode args))
            (file-args (find-file-read-args "Find file (deleting other windows): "
                                            (confirm-nonexistent-file-or-buffer)))
@@ -8236,6 +8336,7 @@ For TypeScript compile your =src= with =--sourceMap= or set =sourceMap= to
            (local-root (if build-directory
                            (concat (file-name-directory buffer-file-name) build-directory)
                          (file-name-directory buffer-file-name))))
+
       (dap-register-debug-template
        "attach::node"
        (list :type "node"
@@ -8261,6 +8362,7 @@ Prompts user for NAME of the template and the REMOTE-ROOT."
   (interactive "sName of the template: \nsRemote root: ")
   (wal/try dap-mode
     (let ((mapping `(:localRoot "${workspaceFolder}" :remoteRoot ,remote-root)))
+
       (dap-register-debug-template
        name
        (list :type "python"
@@ -8296,6 +8398,7 @@ Make sure you expose port =9003=.
 #+BEGIN_SRC emacs-lisp :tangle no
 (when (require 'dap-mode nil 'noerror)
   (let ((mapping '(:/var/www/html "${workspaceFolder}")))
+
     (dap-register-debug-template
      "laravel::launch"
      (list
@@ -8863,6 +8966,7 @@ Animate a swimming whale in a =posframe=.
     ;; Render current frame.
     (let* ((frame (aref wal/ascii-whale-key-frames wal/ascii-whale-frame-index))
            (colored (propertize frame 'face 'mode-line-highlight)))
+
       (insert colored)
 
       ;; Advance to the next frame.
@@ -8924,6 +9028,7 @@ INFO contains positioning information."
          (p-line-height (with-selected-window p-window (line-pixel-height)))
          (offset-x p-line-height)
          (offset-y p-line-height))
+
     (cons (- (+ window-left window-width
                 (- 0 posframe-width))
              offset-x)
@@ -8977,6 +9082,7 @@ This returns the tag and its annotation as propertized strings."
                 (shell-command-to-string (format "git cat-file tag %s" version)))
                'face 'italic))
          (out (concat version ": " (car (last (string-lines cat))))))
+
     (cond
      (noninteractive out)
      (t (message out)))))
@@ -8985,6 +9091,7 @@ This returns the tag and its annotation as propertized strings."
   "Call `magit-diff-range' with the latest tag."
   (interactive)
   (let ((version (shell-command-to-string "git describe --abbrev=0")))
+
     (magit-diff-range (string-trim version))))
 
 (defun wal/tangle-config-prompt ()
@@ -8992,6 +9099,7 @@ This returns the tag and its annotation as propertized strings."
 If the answer is no, there will be no additional prompt."
   (interactive)
   (let ((help-form (message "This will update your packages. Restart Emacs afterwards.")))
+
     (if (and wal/tangle-do-prompt (y-or-n-p "Config changed, want to tangle? "))
         (wal/tangle-config)
       (if wal/tangle-do-prompt
@@ -9006,6 +9114,7 @@ If the answer is no, there will be no additional prompt."
 This will activate minor mode `wal/config-mode'."
   (interactive)
   (let ((buf (find-file-noselect wal/readme-config)))
+
     (switch-to-buffer buf)
     (wal/config-mode 1)))
 
@@ -9030,6 +9139,7 @@ This will activate minor mode `wal/config-mode'."
   (interactive)
   (let* ((root wal/emacs-config-default-path)
          (changelog (expand-file-name "CHANGELOG.md" root)))
+
     (display-buffer-pop-up-window
      (find-file-noselect changelog)
      '((side . left)))))
@@ -9039,6 +9149,7 @@ This will activate minor mode `wal/config-mode'."
   (interactive)
   (defvar projectile-enable-caching)
   (let ((projectile-enable-caching nil))
+
     (dolist (it (wal/directory-files wal/emacs-config-package-path))
       (checkdoc-file it))))
 
@@ -9048,6 +9159,7 @@ This will activate minor mode `wal/config-mode'."
   (defvar projectile-enable-caching)
   (let ((output-buffer (wal/flycheck-file--get-buffer))
         (projectile-enable-caching nil))
+
     (with-current-buffer output-buffer
       (setq buffer-read-only nil)
       (erase-buffer)
