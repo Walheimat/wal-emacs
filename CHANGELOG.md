@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - All `use-package` definitions now use a more relaxed style, leaving
   a blank space between sections. Style-guide was updated as well.
+- Guideline for variable definitions changed. Values should always
+  start on the first line.
 
 ## [v1.7.11]
 
