@@ -3,6 +3,17 @@
 To increase readability, I'll try to unify how things are generally
 structured.
 
+** General musings
+
+I'd like to move away from the cramped Lisp I've been writing to
+something I term a "relaxed" style. It's important to let code
+breathe. A blank line can do a lot for readability.
+
+I personally still favor longer functions over a collection of many
+one-use functions. But usually there's a certain flow to a function,
+there's a topography: this is where we are now, this is where we'll
+get to.
+
 ** =use-package=
 
 *** Code after keywords
@@ -15,32 +26,34 @@ clear.
 This mostly applies to =:init= and =:config= blocks but can also make
 sense for long =:custom= and =:bind= blocks.
 
+Keyword =:demand= might skip the =t= if an =:after= immediately follows, in
+that case they should also not be separated by a line.
+
 *** Keyword Order
 
 The order is:
 
-1. Conditional
+1. Include
    1. =if=
    2. =wal-ways=
-2. Configuration
+2. Load
+   1. =ensure=
+   2. =load-path= / =quelpa=
+   3. =defer= or =demand=
+   4. =after=
+   5. =commands=
+   6. =mode=
+   7. =hook=
+3. Configuration
    1. =init=
    2. =config=
-3. Bindings
+   3. =custom=
+4. Bindings
    1. =bind-keymap=
    2. =bind=
    3. =wal-bind=
    4. =general=
-4. Loader order
-   1. =mode=
-   2. =hook=
-   3. =defer= or =demand=
-   4. =after=
-   5. =commands=
-5. Ensuring
-   1. =ensure=
-   2. =ensure-system-package=
-   3. =load-path=
-6. Delighting/Diminishing
+5. Delighting/Diminishing
    1. =delight=
    2. =diminish=
 
