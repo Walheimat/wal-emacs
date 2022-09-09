@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a blank space between sections. Style-guide was updated as well.
 - Guideline for variable definitions changed. Values should always
   start on the first line.
+- `isearch-lazy-count` is now `t`.
 
 ## [v1.7.11]
 
