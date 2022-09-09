@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `isearch-lazy-count` is now `t`.
 - Variable `wal/experimental` was renamed to `wal/modern-emacs`.
 
+### Fixed
+
+- Function `wal/flycheck-file` kills buffers even when there are no
+  errors.
+
 ## [v1.7.11]
 
 Action-backed.
