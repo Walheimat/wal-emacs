@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Guideline for variable definitions changed. Values should always
   start on the first line.
 - `isearch-lazy-count` is now `t`.
+- Variable `wal/experimental` was renamed to `wal/modern-emacs`.
 
 ## [v1.7.11]
 
