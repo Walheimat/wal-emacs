@@ -538,11 +538,13 @@ Resets all variables that were initially set by
 (defun wal/disable-tabs (&optional no-hack)
   "Disable tabs.
 
-Sets variable `indent-tabs-mode' to nil. Will hack local
-variables unless NO-HACK is non-nil (which will be the case when
-called interactively)."
+Sets variable `indent-tabs-mode' to nil.
+
+Will hack local variables unless NO-HACK is non-nil (which will
+be the case when called interactively)."
   (interactive "p")
   (setq indent-tabs-mode nil)
+
   (unless no-hack
     (hack-local-variables)))
 
@@ -560,8 +562,10 @@ Optionally set `indent-line-function' to INDENT-WITH.
 
 This function will call `hack-local-variables'."
   (hack-local-variables)
+
   (when indent-with
     (setq-local indent-line-function indent-with))
+
   (if wal/prefer-tabs
       (wal/enable-tabs)
     (wal/disable-tabs)))
@@ -941,6 +945,7 @@ the sink for and PREFIX is its prefix."
 
 All ARGS are passed to the definer."
   (declare (indent defun))
+
   `(wal/major :major-modes t ,@args
      ,wal/major!-key '(,fun :wk "MAJOR!")))
 
@@ -949,6 +954,7 @@ All ARGS are passed to the definer."
 
 All ARGS are passed to both definers."
   (declare (indent defun))
+
   `(progn
     (wal/colonel ,@args ,key ,fun)
     (wal/colonel-sink ,@args ,key ,mfun)))
@@ -1263,8 +1269,7 @@ The pop-up is a window unless IN-FRAME is t."
                      'display-buffer-pop-up-frame
                    'display-buffer-pop-up-window)))
 
-    (add-to-list 'display-buffer-alist
-                 `(,condition (,action)))))
+    (add-to-list 'display-buffer-alist `(,condition (,action)))))
 
 ;; The next two functions make sense for `popper' buffers.
 
@@ -1630,6 +1635,7 @@ the associated variable."
                (found (member dash-flag command-line-args)))
 
      (message ,docs)
+
      (setq command-line-args (delete dash-flag command-line-args))
      (setq ,(intern (concat "wal/flag-" (symbol-name flag))) t)))
 
@@ -1681,6 +1687,7 @@ Duplicate items are removed."
 
     (if (memq preceding val)
         (let* ((remainder (nthcdr (cl-position preceding val) val)))
+
           (setcdr remainder (cons item (cdr remainder))))
       (user-error "Can't insert, preceding key not in list"))))
 #+END_SRC
@@ -1699,6 +1706,7 @@ function is called with two `C-u' or more.
 
 Both functions will be called interactively."
   (declare (indent defun))
+
   (let ((a-name (symbol-name a))
         (b-name (symbol-name b)))
 
@@ -1715,6 +1723,7 @@ Both functions will be called interactively."
            (call-interactively ',a)
          (setq current-prefix-arg nil)
          (prefix-command-update)
+
          (if call-other
              (call-interactively ',b)
            (call-interactively ',a))))))
