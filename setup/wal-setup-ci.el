@@ -6,21 +6,13 @@
 
 ;;; Code:
 
+(require 'wal-prelude (expand-file-name
+                       "setup/wal-prelude.el"
+                       (getenv "GITHUB_WORKSPACE")) t)
 
-(declare-function org-babel-tangle-file "ext:ob-tangle")
+(let ((source-dir (getenv "GITHUB_WORKSPACE")))
 
-(defvar wal/emacs-config-package-path nil)
-
-(defun wal/tangle-config ()
-  "Tangle the config in a CI environment."
-  (let* ((root-path (getenv "GITHUB_WORKSPACE"))
-         (source-file (expand-file-name "README.org" root-path)))
-    (setq wal/emacs-config-package-path (expand-file-name "wal" root-path))
-    (make-directory wal/emacs-config-package-path)
-    (require 'org)
-    (require 'ob-tangle)
-    (org-babel-tangle-file source-file)))
-
-(wal/tangle-config)
+  (when (fboundp 'wal/bootstrap-config)
+    (wal/bootstrap-config source-dir t)))
 
 ;;; wal-setup-ci.el ends here
