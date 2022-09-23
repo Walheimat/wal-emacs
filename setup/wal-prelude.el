@@ -58,7 +58,11 @@ This will tangle the config if it hasn't been yet.
 
 Unless NO-LOAD is t, this will load the `wal' package."
   (let* ((package-dir (expand-file-name "wal" source-dir))
+         (test-dir (expand-file-name "wal/test" source-dir))
          (created-dir (wal/find-or-create-directory package-dir)))
+
+    ;; Create the test directory.
+    (wal/find-or-create-directory test-dir)
 
     ;; These variables are also used in `wal' package.
     (setq wal/emacs-config-default-path source-dir)

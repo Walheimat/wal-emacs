@@ -1,34 +1,44 @@
-name: Test custom functions
+name: Run tests
 on:
   push:
     branches:
       - trunk
-      - feature/ci
-    paths:
-      - 'README.org'
-      - 'setup/**'
-      - 'tests/**'
+      - feature/cask
+    paths-ignore:
+      - 'assets/**'
+      - 'etc/**'
+      - '.gitignore'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'commitlint.config.js'
 
 jobs:
   run-tests:
     runs-on: ubuntu-latest
     steps:
-      # Build
+      - name: Set environment to allow unsecure commands
+        run: echo "ACTIONS_ALLOW_UNSECURE_COMMANDS=true" >> $GITHUB_ENV
+
       - name: Get Emacs
         uses: purcell/setup-emacs@master
         with:
           version: 28.1
 
-      # Setup
+      - name: Get Cask
+        uses: conao3/setup-cask@master
+        with:
+          version: 0.8.6
+
       - name: Check out the repository
         uses: actions/checkout@v3
 
       - name: Tangle the configuration
-        run: emacs --batch -l $GITHUB_WORKSPACE/setup/wal-setup-ci.el
+        run: emacs --batch -l ./setup/wal-setup-ci.el
 
-      - name: Verify packages
-        run: ls -al $GITHUB_WORKSPACE/wal
+      - name: Install
+        working-directory: ./wal
+        run: cask install
 
-      # Use
-      - name: Run the tests
-        run: ./tests/run-tests
+      - name: Run tests
+        working-directory: ./wal
+        run: cask exec ert-runner
