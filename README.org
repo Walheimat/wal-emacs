@@ -990,6 +990,10 @@ Most bindings are declared in individual packages.
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-func.el" wal/emacs-config-package-path)
 :END:
 
+Custom functionality.
+
+You can find the code coverage [[https://coveralls.io/repos/github/Walheimat/emacs-config/badge.svg][here]].
+
 ** Header
 :PROPERTIES:
 :VISIBILITY: folded
@@ -9360,9 +9364,6 @@ This basically just a giant =require=.
 #+END_SRC
 
 * Additional Package Files
-:PROPERTIES:
-:VISIBILITY: folded
-:END:
 
 This package has a Cask file to set it up as a testable package.
 
@@ -9376,7 +9377,8 @@ This package has a Cask file to set it up as a testable package.
 (source melpa)
 
 (development
- (depends-on "ert-runner"))
+ (depends-on "ert-runner")
+ (depends-on "undercover"))
 
 (package "wal" "1.7.11" "Walheimat's configuration")
 
@@ -9400,6 +9402,11 @@ This package has a Cask file to set it up as a testable package.
 ;; Tests for the custom functionality.
 
 ;;; Code:
+
+(when (require 'undercover nil t)
+  (undercover "*.el"
+              (:report-format 'lcov)
+              (:send-report nil)))
 
 ;; Create a dummy `use-package' definition.
 (defmacro use-package (name &rest args)

@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - trunk
-      - feature/cask
     paths-ignore:
       - 'assets/**'
       - 'etc/**'
@@ -36,10 +35,14 @@ jobs:
       - name: Tangle the configuration
         run: emacs --batch -l ./setup/wal-setup-ci.el
 
-      - name: Install
+      - name: Install and run tests
         working-directory: ./wal
-        run: cask install
+        run: |
+          cask install
+          cask exec ert-runner
 
-      - name: Run tests
-        working-directory: ./wal
-        run: cask exec ert-runner
+      - name: Coverage started
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: ./wal/coverage/lcov.info
