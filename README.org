@@ -114,8 +114,10 @@ functionality is used.
 (defvar native-comp-async-report-warnings-errors)
 (defvar recentf-filename-handlers)
 (defvar so-long-action)
-(defvar use-package-always-ensure)
+(defvar use-package-defaults)
 (defvar use-package-always-defer)
+(defvar use-package-always-ensure)
+(defvar use-package-compute-statistics)
 (defvar wal/flag-doctor)
 (defvar wal/flag-mini)
 (defvar wal/flag-deny)
@@ -242,7 +244,7 @@ bugs).")
      Set `wal/ack-warnings' to t to ignore this warning."))
 #+END_SRC
 
-** Package Archives
+** Packages
 
 Add MELPA to the package archives. Most (if not all) packages will be
 installed from there.
@@ -251,74 +253,21 @@ installed from there.
 (require 'package)
 
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-#+END_SRC
-
-** Core Packages
-
-Before =use-package= macro can be used to configure other packages it
-needs to be installed. We also install optional dependencies to
-diminish and delight minor modes.
-
-#+BEGIN_SRC emacs-lisp
-(defconst wal/core-packages '(diminish
-                              delight
-                              use-package)
-  "Packages to install before using `use-package'.
-Such as package `use-package'.")
-
-;; Try to install. On fail refresh and install again.
-(condition-case nil
-    (wal/install-packages wal/core-packages :delete-windows t)
-  (error
-   (package-refresh-contents)
-   (wal/install-packages wal/core-packages :delete-windows t)))
 
 ;; Always defer, maybe ensure.
 (setq use-package-always-defer t)
 (unless wal/flag-deny
   (setq use-package-always-ensure t))
 
-(eval-when-compile
-  (require 'use-package))
-
 (when wal/flag-doctor
   (setq use-package-compute-statistics t)
   (when (fboundp 'use-package-report)
     (add-hook 'after-init-hook #'use-package-report)))
-#+END_SRC
 
-*** Extend =use-package=
-
-Get even more juice out of it with custom keywords.
-
-#+BEGIN_SRC emacs-lisp
 (wal/insert-after 'use-package-keywords :bind-keymap* :wal-bind)
 
 (wal/insert-after 'use-package-keywords :pin :wal-ways)
 (add-to-list 'use-package-defaults '(:wal-ways t t))
-#+END_SRC
-
-*** quelpa
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Allows installing from other sources (like GitHub) using recipes.
-
-#+BEGIN_SRC emacs-lisp
-(use-package quelpa
-  :demand t
-
-  :custom
-  (quelpa-update-melpa-p nil))
-
-(use-package quelpa-use-package
-  :demand
-  :after quelpa
-
-  :config
-  (when (fboundp 'quelpa-use-package-activate-advice)
-    (quelpa-use-package-activate-advice)))
 #+END_SRC
 
 ** Directories
@@ -2413,6 +2362,91 @@ available candidate from `wal/fixed-fonts'. Does the same for
 (provide 'wal-fonts)
 
 ;;; wal-fonts.el ends here
+#+END_SRC
+
+* External Packages
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle (expand-file-name "wal-external.el" wal/emacs-config-package-path)
+:END:
+
+** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-external.el --- External packages -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Set up installing external packages.
+
+;;; Code:
+
+(eval-when-compile
+  (require 'use-package))
+
+(declare-function wal/install-packages "wal-func.el")
+#+END_SRC
+
+** Packages
+
+*** use-package
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Before =use-package= macro can be used to configure other packages it
+needs to be installed. We also install optional dependencies to
+diminish and delight minor modes.
+
+#+BEGIN_SRC emacs-lisp
+(defconst wal/core-packages '(diminish
+                              delight
+                              use-package)
+  "Packages to install before using `use-package'.
+Such as package `use-package'.")
+
+;; Try to install. On fail refresh and install again.
+(condition-case nil
+    (wal/install-packages wal/core-packages :delete-windows t)
+  (error
+   (package-refresh-contents)
+   (wal/install-packages wal/core-packages :delete-windows t)))
+#+END_SRC
+
+** quelpa
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Allows installing from other sources (like GitHub) using recipes.
+
+#+BEGIN_SRC emacs-lisp
+(use-package quelpa
+  :demand t
+
+  :custom
+  (quelpa-update-melpa-p nil))
+
+(use-package quelpa-use-package
+  :demand
+  :after quelpa
+
+  :config
+  (when (fboundp 'quelpa-use-package-activate-advice)
+    (quelpa-use-package-activate-advice)))
+#+END_SRC
+
+** Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-external)
+
+;;; wal-external.el ends here
 #+END_SRC
 
 * Emacs
@@ -8988,6 +9022,7 @@ Display code statistics.
   :group 'wal-config)
 
 (defconst wal/sub-packages '(wal-func
+                             wal-external
                              wal-settings
                              wal-key-bindings
                              wal-look
