@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `wal-prelude` now provides all functionality to bootstrap
   the configuration. Both the provided `init.el` template and
   `wal-setup-ci.el` use it.
+- A Cask file was added to anticipate the package-ification of the
+  config and to run tests.
+- Tests were added for functions moved out of `wal-settings`.
+- New package `wal-external` was added to hold the code to install the
+  core packages as well as the `quelpa` configuration.
 
 ### Changed
 
@@ -21,11 +26,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   start on the first line.
 - `isearch-lazy-count` is now `t`.
 - Variable `wal/experimental` was renamed to `wal/modern-emacs`.
+- The tests were moved from `test/` to the README configuration.
+- Functions were moved out of `wal-settings` to `wal-func`.
+- Settings were moved out of `wal-func` to `wal-settings`.
+- The style-guide and cheat-sheet were moved to `docs/`.
 
 ### Fixed
 
 - Function `wal/flycheck-file` kills buffers even when there are no
   errors.
+
+### Removed
+
+- The legacy Org files were discarded.
 
 ## [v1.7.11]
 
