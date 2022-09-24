@@ -564,6 +564,7 @@ I use many[fn:9] custom keybindings.
 (declare-function wal/open-line "wal-func.el")
 (declare-function wal/open-line-above "wal-func.el")
 (declare-function wal/other-window "wal-func.el")
+(declare-function wal/prefix-user-key "wal-func.el")
 
 (defvar wal/ascii-whale)
 
@@ -850,18 +851,6 @@ All ARGS are passed to both definers."
     (wal/colonel ,@args ,key ,fun)
     (wal/colonel-sink ,@args ,key ,mfun)))
 
-(defun wal/prefix-user-key (user-key)
-  "Prefix USER-KEY.
-
-The default prefix is the hyper key unless Emacs is not running
-in GUI mode or `wal/use-hyper-prefix' is nil."
-  (let ((prefix (if (and wal/use-hyper-prefix
-                         (or (daemonp) (display-graphic-p)))
-                    "H-"
-                  "C-c w ")))
-
-    (concat prefix user-key)))
-
 (defvar wal/leaders '(wal/general wal/colonel wal/major wal/captain wal/lieutenant))
 (defvar wal/leader-with-sink '(wal/general wal/colonel))
 
@@ -1036,29 +1025,6 @@ Most bindings are declared in individual packages.
 (global-unset-key (kbd "C-x C-c")) ;; Unbinds `save-buffers-kill-terminal'.
 #+END_SRC
 
-** Additional Mode Controls
-
-Turning on/off certain major modes switching between =major-mode= and
-=fundamental-mode=.
-
-#+BEGIN_SRC emacs-lisp
-(defvar wal/before-fundamental-mode nil
-  "The major mode before fundamental was engaged.")
-
-(defun wal/fundamental-mode ()
-  "Switch from `major-mode' to `fundamental-mode' and back."
-  (interactive)
-  (let ((m-mode major-mode))
-
-    (if wal/before-fundamental-mode
-        (progn
-          (funcall wal/before-fundamental-mode)
-          (setq wal/before-fundamental-mode nil))
-      (fundamental-mode)
-      (make-local-variable 'wal/before-fundamental-mode)
-      (setq wal/before-fundamental-mode m-mode))))
-#+END_SRC
-
 ** Footer
 :PROPERTIES:
 :VISIBILITY: folded
@@ -1100,7 +1066,6 @@ Turning on/off certain major modes switching between =major-mode= and
 (declare-function server-edit-abort "ext:server.el")
 (declare-function use-package-error "ext:use-package-core.el")
 (declare-function use-package-report "ext:use-package-core.el")
-(declare-function wal/prefix-user-key "wal-key-bindings.el")
 
 (defvar server-buffer-clients)
 (defvar use-package-compute-statistics)
@@ -1109,6 +1074,7 @@ Turning on/off certain major modes switching between =major-mode= and
 (defvar wal/minimal)
 (defvar wal/minimal-exclude)
 (defvar wal/scratch-persist-file)
+(defvar wal/use-hyper-prefix)
 
 (defgroup wal-func nil
   "Change values used in utility functions."
@@ -1805,6 +1771,18 @@ intefere with `magit' and friends."
     (with-current-buffer buffer
       (and (derived-mode-p 'comint-mode)
            (not (comint-check-proc buffer))))))
+
+(defun wal/prefix-user-key (user-key)
+  "Prefix USER-KEY.
+
+The default prefix is the hyper key unless Emacs is not running
+in GUI mode or `wal/use-hyper-prefix' is nil."
+  (let ((prefix (if (and wal/use-hyper-prefix
+                         (or (daemonp) (display-graphic-p)))
+                    "H-"
+                  "C-c w ")))
+
+    (concat prefix user-key)))
 #+END_SRC
 
 ** Setup
@@ -2137,6 +2115,27 @@ use the result further down the line."
           ,@body)))))
 #+END_SRC
 
+** Additional Mode Controls
+
+Turning on/off certain major modes switching between =major-mode= and
+=fundamental-mode=.
+
+#+BEGIN_SRC emacs-lisp
+(defvar-local wal/before-fundamental-mode nil
+  "The major mode before fundamental was engaged.")
+
+(defun wal/fundamental-mode ()
+  "Switch from `major-mode' to `fundamental-mode' and back."
+  (interactive)
+  (let ((m-mode major-mode))
+
+    (if wal/before-fundamental-mode
+        (progn
+          (funcall wal/before-fundamental-mode)
+          (setq-local wal/before-fundamental-mode nil))
+      (fundamental-mode)
+      (setq-local wal/before-fundamental-mode m-mode))))
+#+END_SRC
 
 ** Footer
 :PROPERTIES:
@@ -9498,6 +9497,19 @@ This package has a Cask file to set it up as a testable package.
         (item 'darkness))
     (wal/insert-after 'test-target preceding item)
     (should (equal test-target '(hello darkness my old friend)))))
+#+END_SRC
+
+*** Additional Mode Controls
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/fundamental-mode--switches ()
+  (with-temp-buffer
+    (emacs-lisp-mode)
+    (wal/fundamental-mode)
+    (should (equal major-mode 'fundamental-mode))
+    (should (equal wal/before-fundamental-mode 'emacs-lisp-mode))
+    (wal/fundamental-mode)
+    (should (equal major-mode 'emacs-lisp-mode))))
 #+END_SRC
 
 *** Footer
