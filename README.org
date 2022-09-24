@@ -9227,9 +9227,15 @@ This will activate minor mode `wal/config-mode'."
   "Run `checkdoc-file' on all package files."
   (interactive)
   (defvar projectile-enable-caching)
-  (let ((projectile-enable-caching nil))
+  (let* ((projectile-enable-caching nil)
+         (package-files (wal/directory-files wal/emacs-config-package-path))
+         (el-files (seq-filter
+                    (lambda (it)
+                      (string-equal (file-name-extension it)
+                                    "el"))
+                    package-files)))
 
-    (dolist (it (wal/directory-files wal/emacs-config-package-path))
+    (dolist (it el-files)
       (checkdoc-file it))))
 
 (defun wal/flycheck-config-packages ()
