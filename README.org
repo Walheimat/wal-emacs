@@ -9322,7 +9322,7 @@ This basically just a giant =require=.
   `(message "Would have loaded %s" ',name))
 #+END_SRC
 
-*** Helper Tests
+*** Helpers
 
 #+BEGIN_SRC emacs-lisp
 (require 'wal-func)
@@ -9374,7 +9374,45 @@ This basically just a giant =require=.
     (should (wal/dead-shell-p))))
 #+END_SRC
 
-*** List Manipulation Tests
+*** Indentation
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/disable-tabs--disables ()
+  (with-temp-buffer
+    (setq-local indent-tabs-mode t)
+    (should (eq indent-tabs-mode t))
+    (wal/disable-tabs)
+    (should (eq indent-tabs-mode nil))))
+
+
+(ert-deftest test-wal/enable-tabs--enables ()
+  (with-temp-buffer
+    (setq-local indent-tabs-mode nil)
+    (should (eq indent-tabs-mode nil))
+    (wal/enable-tabs)
+    (should (eq indent-tabs-mode t))))
+
+
+(ert-deftest test-wal/maybe-enable-tabs--enables-if-tabs-preferred ()
+  (with-temp-buffer
+    (setq-local wal/prefer-tabs t)
+    (wal/maybe-enable-tabs)
+    (should (eq indent-tabs-mode t))))
+
+(ert-deftest test-wal/maybe-enable-tabs--sets-function ()
+  (with-temp-buffer
+    (setq-local wal/prefer-tabs nil)
+    (wal/maybe-enable-tabs :indent-with 'some-fun)
+    (should (eq indent-line-function 'some-fun))))
+
+(ert-deftest test-wal/maybe-enable-tabs--disables-unless-preferred ()
+  (with-temp-buffer
+    (setq-local wal/prefer-tabs nil)
+    (wal/maybe-enable-tabs)
+    (should (eq indent-tabs-mode nil))))
+#+END_SRC
+
+*** Lists
 
 #+BEGIN_SRC emacs-lisp
 (defvar test-target nil)
@@ -9410,7 +9448,6 @@ This basically just a giant =require=.
     (wal/insert-after 'test-target preceding item)
     (should (equal test-target '(hello darkness my old friend)))))
 #+END_SRC
-
 
 *** Footer
 
