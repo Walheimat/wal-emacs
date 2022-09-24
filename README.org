@@ -1694,6 +1694,17 @@ Truncates to 8 characters if no MAX-LEN is provided."
         (concat (substring text 0 (max (- len 3) 1)) "...")
       text)))
 
+(defun wal/pad-string (string &optional right)
+  "Advise to pad STRING.
+
+Padding is on the left unless RIGHT is t."
+  (let ((trimmed (string-trim string))
+        (padding " "))
+
+    (if right
+        (concat trimmed padding)
+      (concat padding trimmed))))
+
 (defun wal/univ-p ()
   "Check if the `current-prefix-arg' is the `universal-argument'.
 
@@ -8836,6 +8847,8 @@ triggered explicitly.
 ;; Provide fluff packages. These are not installed by default.
 
 ;;; Code:
+
+(declare-function wal/pad-string "wal-func.el")
 #+END_SRC
 
 
@@ -8849,10 +8862,6 @@ triggered explicitly.
 Provide some knowledge of the outside world.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/apply-padding-to-string (string)
-  "Advise to pad STRING."
-  (concat " " (string-trim string)))
-
 (use-package display-wttr
   :wal-ways nil
 
@@ -8863,7 +8872,7 @@ Provide some knowledge of the outside world.
   :config
   (advice-add
    'display-wttr--clean-string :filter-return
-   #'wal/apply-padding-to-string)
+   #'wal/pad-string)
 
   :custom
   (display-wttr-format "1"))
@@ -9339,6 +9348,15 @@ This basically just a giant =require=.
   (should (string-equal (wal/truncate "This is it" 24) "This is it")))
 
 
+(ert-deftest test-wal/pad-string--pads ()
+  (let ((test-string "hello"))
+    (should (equal " hello" (wal/pad-string test-string)))))
+
+(ert-deftest test-wal/pad-string--pads-right ()
+  (let ((test-string "hello"))
+    (should (equal "hello " (wal/pad-string test-string t)))))
+
+
 (defvar test-standard 'standard)
 
 (ert-deftest test-wal/reset-to-standard--resets ()
@@ -9393,15 +9411,6 @@ This basically just a giant =require=.
     (should (equal test-target '(hello darkness my old friend)))))
 #+END_SRC
 
-*** Other Tests
-
-#+BEGIN_SRC emacs-lisp
-(require 'wal-fluff)
-
-(ert-deftest test-wal/apply-padding-to-string ()
-  (let ((test-string "hello"))
-    (should (equal " hello" (wal/apply-padding-to-string test-string)))))
-#+END_SRC
 
 *** Footer
 
