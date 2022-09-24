@@ -69,6 +69,11 @@ evaluate /everything/[fn:7] that follows.
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-settings.el" wal/emacs-config-package-path)
 :END:
 
+Set things up.
+
+Confer also the eponymous [[*Functionality][Functionality]] sections if custom
+functionality is used.
+
 ** Header
 :PROPERTIES:
 :VISIBILITY: folded
@@ -88,8 +93,11 @@ evaluate /everything/[fn:7] that follows.
 (declare-function wal/install-packages "wal-func.el")
 (declare-function wal/is-expansion-pack "wal-func.el")
 (declare-function wal/maybe-make-directory "wal-func.el")
+(declare-function wal/persist-scratch "wal-key-bindings.el")
 (declare-function wal/prefix-user-key "wal-key-bindings.el")
+(declare-function wal/rehydrate-scratch "wal-key-bindings.el")
 (declare-function wal/reset-to-standard "wal-func.el")
+(declare-function wal/set-indent-defaults "wal-func.el")
 
 (defvar compilation-scroll-output)
 (defvar global-auto-revert-non-file-buffers)
@@ -275,96 +283,8 @@ Such as package `use-package'.")
 
 Get even more juice out of it with custom keywords.
 
-**** =:wal-bind=
-
-We'll add keyword =:wal-bind= to =use-package= in order to create bindings
-prefixed by =wal/prefix-user-key=.
-
 #+BEGIN_SRC emacs-lisp
-(defun use-package-normalize/:wal-bind (name keyword args)
-  "Normalize NAME, KEYWORD, ARGS.
-
-This normalizer is a copy of the normalizer for `:bind'. There
-are two differences:
-
-1. It prefixes the key strings with `wal/prefix-user-key'.
-2. On recursion it calls this normalizer."
-  (let ((arg args)
-        args*)
-    (while arg
-      (let ((x (car arg)))
-        (cond
-         ((and (consp x)
-               (or (stringp (car x))
-                   (vectorp (car x)))
-               (fboundp 'use-package-recognize-function)
-               (or (use-package-recognize-function (cdr x) t #'stringp)))
-          ;; This is where we deviate from the `:bind' normalizer.
-          (setq args* (nconc args* (list (cons (wal/prefix-user-key (car x)) (cdr x)))))
-          (setq arg (cdr arg)))
-         ((or (and (eq x :map) (symbolp (cadr arg)))
-              (and (eq x :prefix) (stringp (cadr arg)))
-              (and (eq x :prefix-map) (symbolp (cadr arg)))
-              (and (eq x :prefix-docstring) (stringp (cadr arg)))
-              (eq x :filter)
-              (and (eq x :menu-name) (stringp (cadr arg)))
-              (and (eq x :package) (symbolp (cadr arg))))
-          (setq args* (nconc args* (list x (cadr arg))))
-          (setq arg (cddr arg)))
-         ((listp x)
-          (setq args*
-                (nconc args* (use-package-normalize/:wal-bind name keyword x)))
-          (setq arg (cdr arg)))
-         (t
-          (use-package-error
-           (concat (symbol-name name)
-                   " wants arguments acceptable to the `bind-keys' macro,"
-                   " or a list of such values"))))))
-    args*))
-
-;; We can use the same handler as `:bind'.
-(defalias 'use-package-handler/:wal-bind 'use-package-handler/:bind)
-
-;; Make sure that functions are autoloaded.
-(defalias 'use-package-autoloads/:wal-bind 'use-package-autoloads-mode)
-
 (wal/insert-after 'use-package-keywords :bind-keymap* :wal-bind)
-#+END_SRC
-
-**** =:wal-ways=
-
-Certain packages do not belong to a minimal setup, these are tagged
-with =:wal-ways nil=.
-
-#+BEGIN_SRC emacs-lisp
-(defalias 'use-package-normalize/:wal-ways 'use-package-normalize-predicate)
-
-(defun use-package-handler/:wal-ways (name _keyword pred rest state)
-  "Only expand conditionally.
-
-The conditions for normal packages are: (1) the PRED is t, (2)
-`wal/minimal' is nil or (3) NAME is never excluded.
-
-If NAME is an expansion pack package, the conditions are: (1) the
-PRED is t or (2) NAME is installed.
-
-The STATE is updated as well before parsing REST if we want to
-use the result further down the line."
-  (when (and (fboundp 'use-package-process-keywords)
-             (fboundp 'use-package-plist-maybe-put))
-    (let* ((active (or pred
-                       (if (wal/is-expansion-pack name)
-                           (not (null (package-installed-p name)))
-                         (or (not (or wal/minimal wal/flag-mini))
-                             (not (null (memq name wal/minimal-exclude)))))))
-
-           (body (use-package-process-keywords
-                   name
-                   rest
-                   (use-package-plist-maybe-put state :wal-ways active))))
-
-      `((when ,active
-          ,@body)))))
 
 (wal/insert-after 'use-package-keywords :pin :wal-ways)
 (add-to-list 'use-package-defaults '(:wal-ways t t))
@@ -404,16 +324,13 @@ Make sure that custom directories exist. We want:
 + a default directory for notes.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/maybe-create-directories ()
-  "Create directories if they don't exist."
-  (mapc #'wal/maybe-make-directory
-        `(,wal/cache-directory
-          ,wal/site-lisp-directory
-          ,wal/org-directory
-          ,wal/agenda-tasks-directory
-          ,wal/org-roam-directory)))
-
-(add-hook 'emacs-startup-hook #'wal/maybe-create-directories)
+(add-hook 'emacs-startup-hook (lambda ()
+                                (mapc #'wal/maybe-make-directory
+                                      `(,wal/cache-directory
+                                        ,wal/site-lisp-directory
+                                        ,wal/org-directory
+                                        ,wal/agenda-tasks-directory
+                                        ,wal/org-roam-directory))))
 #+END_SRC
 
 ** Site-Lisp
@@ -520,70 +437,6 @@ Any mode that should be on/off no matter what.
 Set up an easy way to switch between tabs and spaces for indentation.
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/indent-vars '(python-indent-offset
-                          js-indent-level
-                          css-indent-offset
-                          tab-width
-                          js-encoding-default-indentation
-                          electric-indent-inhibit
-                          indent-tabs-mode))
-
-(defun wal/reset-indent-defaults ()
-  "Reset indent defaults.
-Resets all variables that were initially set by
-`wal/set-indent-defaults'."
-  (interactive)
-  (mapc #'wal/reset-to-standard wal/indent-vars))
-
-(defun wal/disable-tabs (&optional no-hack)
-  "Disable tabs.
-
-Sets variable `indent-tabs-mode' to nil.
-
-Will hack local variables unless NO-HACK is non-nil (which will
-be the case when called interactively)."
-  (interactive "p")
-  (setq indent-tabs-mode nil)
-
-  (unless no-hack
-    (hack-local-variables)))
-
-(defun wal/enable-tabs ()
-  "Enable tabs.
-
-Sets tab variable `indent-tabs-mode' to t."
-  (interactive)
-  (setq indent-tabs-mode t))
-
-(cl-defun wal/maybe-enable-tabs (&key indent-with)
-  "Maybe enable tabs.
-
-Optionally set `indent-line-function' to INDENT-WITH.
-
-This function will call `hack-local-variables'."
-  (hack-local-variables)
-
-  (when indent-with
-    (setq-local indent-line-function indent-with))
-
-  (if wal/prefer-tabs
-      (wal/enable-tabs)
-    (wal/disable-tabs)))
-
-(defun wal/set-indent-defaults (&optional num)
-  "Set indent defaults.
-All offsets are set to `wal/indent-offset' or optionally to NUM."
-  (interactive "nSet tab width to: ")
-  (let ((offset (or num wal/indent-offset)))
-
-    (setq-default python-indent-offset offset
-                  js-indent-level offset
-                  css-indent-offset offset
-                  tab-width offset
-                  json-encoding-default-indentation (make-string offset ? )
-                  electric-indent-inhibit t
-                  indent-tabs-mode wal/prefer-tabs)))
-
 (add-hook 'emacs-startup-hook #'wal/set-indent-defaults)
 #+END_SRC
 
@@ -593,29 +446,13 @@ Sometimes you have to play using other people's rules. You can run
 =add-dir-local-variable= to do so. Check out the =.dir-locals.el= template
 found in the =/templates= folder for an example using spaces.
 
-** Persistent =*scratch*=
+** Scratch Buffer
 
-Let's keep the scratch contents. This was cribbed from [[https://www.john2x.com/emacs.html][john2x's
-config]].
+Let's keep the scratch contents.
 
 #+BEGIN_SRC emacs-lisp
 ;; Empty scratch message.
 (setq initial-scratch-message "")
-
-(defun wal/persist-scratch ()
-  "Persist contents of *scratch* buffer.
-The contents are stored in `wal/scratch-persist-file'."
-  (with-current-buffer (get-buffer-create "*scratch*")
-    (write-region (point-min) (point-max) wal/scratch-persist-file)))
-
-(defun wal/rehydrate-scratch ()
-  "Re-hydrate scratch buffer (if persisted).
-This overrides the scratch buffer with the content stored in
-`wal/scratch-persist-file'."
-  (when (file-exists-p wal/scratch-persist-file)
-    (with-current-buffer (get-buffer "*scratch*")
-      (delete-region (point-min) (point-max))
-      (insert-file-contents wal/scratch-persist-file))))
 
 (add-hook 'emacs-startup-hook #'wal/rehydrate-scratch)
 (add-hook 'kill-emacs-hook #'wal/persist-scratch)
@@ -1179,7 +1016,7 @@ Turning on/off certain major modes switching between =major-mode= and
 ;;; wal-key-bindings.el ends here
 #+END_SRC
 
-* Utility
+* Functionality
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "wal-func.el" wal/emacs-config-package-path)
 :END:
@@ -1729,6 +1566,98 @@ Both functions will be called interactively."
            (call-interactively ',a))))))
 #+END_SRC
 
+** Scratch Buffer
+
+Make the scratch buffer contents persist between sessions.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/persist-scratch ()
+  "Persist contents of *scratch* buffer.
+The contents are stored in `wal/scratch-persist-file'."
+  (with-current-buffer (get-buffer-create "*scratch*")
+    (write-region (point-min) (point-max) wal/scratch-persist-file)))
+
+(defun wal/rehydrate-scratch ()
+  "Re-hydrate scratch buffer (if persisted).
+This overrides the scratch buffer with the content stored in
+`wal/scratch-persist-file'."
+  (when (file-exists-p wal/scratch-persist-file)
+    (with-current-buffer (get-buffer "*scratch*")
+      (delete-region (point-min) (point-max))
+      (insert-file-contents wal/scratch-persist-file))))
+#+END_SRC
+
+** Indentation
+
+Toggle indentation, allow for automatic acivation from local
+variables.
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/indent-vars '(python-indent-offset
+                          js-indent-level
+                          css-indent-offset
+                          tab-width
+                          js-encoding-default-indentation
+                          electric-indent-inhibit
+                          indent-tabs-mode))
+
+(defun wal/reset-indent-defaults ()
+  "Reset indent defaults.
+Resets all variables that were initially set by
+`wal/set-indent-defaults'."
+  (interactive)
+  (mapc #'wal/reset-to-standard wal/indent-vars))
+
+(defun wal/disable-tabs (&optional no-hack)
+  "Disable tabs.
+
+Sets variable `indent-tabs-mode' to nil.
+
+Will hack local variables unless NO-HACK is non-nil (which will
+be the case when called interactively)."
+  (interactive "p")
+  (setq indent-tabs-mode nil)
+
+  (unless no-hack
+    (hack-local-variables)))
+
+(defun wal/enable-tabs ()
+  "Enable tabs.
+
+Sets tab variable `indent-tabs-mode' to t."
+  (interactive)
+  (setq indent-tabs-mode t))
+
+(cl-defun wal/maybe-enable-tabs (&key indent-with)
+  "Maybe enable tabs.
+
+Optionally set `indent-line-function' to INDENT-WITH.
+
+This function will call `hack-local-variables'."
+  (hack-local-variables)
+
+  (when indent-with
+    (setq-local indent-line-function indent-with))
+
+  (if wal/prefer-tabs
+      (wal/enable-tabs)
+    (wal/disable-tabs)))
+
+(defun wal/set-indent-defaults (&optional num)
+  "Set indent defaults.
+All offsets are set to `wal/indent-offset' or optionally to NUM."
+  (interactive "nSet tab width to: ")
+  (let ((offset (or num wal/indent-offset)))
+
+    (setq-default python-indent-offset offset
+                  js-indent-level offset
+                  css-indent-offset offset
+                  tab-width offset
+                  json-encoding-default-indentation (make-string offset ? )
+                  electric-indent-inhibit t
+                  indent-tabs-mode wal/prefer-tabs)))
+#+END_SRC
+
 ** Helpers
 
 Some more helper functions.
@@ -2070,6 +1999,99 @@ The rest of the BODY will be spliced into the lambda."
         ',target
         ',func-name))))
 #+END_SRC
+
+** Extensions
+
+*** use-package/:wal-bind
+
+We'll add keyword =:wal-bind= to =use-package= in order to create bindings
+prefixed by =wal/prefix-user-key=.
+
+#+BEGIN_SRC emacs-lisp
+(defun use-package-normalize/:wal-bind (name keyword args)
+  "Normalize NAME, KEYWORD, ARGS.
+
+This normalizer is a copy of the normalizer for `:bind'. There
+are two differences:
+
+1. It prefixes the key strings with `wal/prefix-user-key'.
+2. On recursion it calls this normalizer."
+  (let ((arg args)
+        args*)
+    (while arg
+      (let ((x (car arg)))
+        (cond
+         ((and (consp x)
+               (or (stringp (car x))
+                   (vectorp (car x)))
+               (fboundp 'use-package-recognize-function)
+               (or (use-package-recognize-function (cdr x) t #'stringp)))
+          ;; This is where we deviate from the `:bind' normalizer.
+          (setq args* (nconc args* (list (cons (wal/prefix-user-key (car x)) (cdr x)))))
+          (setq arg (cdr arg)))
+         ((or (and (eq x :map) (symbolp (cadr arg)))
+              (and (eq x :prefix) (stringp (cadr arg)))
+              (and (eq x :prefix-map) (symbolp (cadr arg)))
+              (and (eq x :prefix-docstring) (stringp (cadr arg)))
+              (eq x :filter)
+              (and (eq x :menu-name) (stringp (cadr arg)))
+              (and (eq x :package) (symbolp (cadr arg))))
+          (setq args* (nconc args* (list x (cadr arg))))
+          (setq arg (cddr arg)))
+         ((listp x)
+          (setq args*
+                (nconc args* (use-package-normalize/:wal-bind name keyword x)))
+          (setq arg (cdr arg)))
+         (t
+          (use-package-error
+           (concat (symbol-name name)
+                   " wants arguments acceptable to the `bind-keys' macro,"
+                   " or a list of such values"))))))
+    args*))
+
+;; We can use the same handler as `:bind'.
+(defalias 'use-package-handler/:wal-bind 'use-package-handler/:bind)
+
+;; Make sure that functions are autoloaded.
+(defalias 'use-package-autoloads/:wal-bind 'use-package-autoloads-mode)
+#+END_SRC
+
+*** use-package/:wal-ways
+
+Certain packages do not belong to a minimal setup, these are tagged
+with =:wal-ways nil=.
+
+#+BEGIN_SRC emacs-lisp
+(defalias 'use-package-normalize/:wal-ways 'use-package-normalize-predicate)
+
+(defun use-package-handler/:wal-ways (name _keyword pred rest state)
+  "Only expand conditionally.
+
+The conditions for normal packages are: (1) the PRED is t, (2)
+`wal/minimal' is nil or (3) NAME is never excluded.
+
+If NAME is an expansion pack package, the conditions are: (1) the
+PRED is t or (2) NAME is installed.
+
+The STATE is updated as well before parsing REST if we want to
+use the result further down the line."
+  (when (and (fboundp 'use-package-process-keywords)
+             (fboundp 'use-package-plist-maybe-put))
+    (let* ((active (or pred
+                       (if (wal/is-expansion-pack name)
+                           (not (null (package-installed-p name)))
+                         (or (not (or wal/minimal wal/flag-mini))
+                             (not (null (memq name wal/minimal-exclude)))))))
+
+           (body (use-package-process-keywords
+                   name
+                   rest
+                   (use-package-plist-maybe-put state :wal-ways active))))
+
+      `((when ,active
+          ,@body)))))
+#+END_SRC
+
 
 ** Footer
 :PROPERTIES:
@@ -5181,7 +5203,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (declare-function project-root "ext:project.el")
 (declare-function transient-define-prefix "ext:transient.el")
 (declare-function wal/append "wal-func.el")
-(declare-function wal/disable-tabs "wal-settings.el")
+(declare-function wal/disable-tabs "wal-func.el")
 (declare-function wal/message-in-a-bottle "wal-func.el")
 (declare-function wal/replace-in-alist "wal-fun.el")
 (declare-function wal/truncate "wal-func.el")
@@ -6587,12 +6609,12 @@ Let's greet the world[fn:19].
 (declare-function poetry-venv-exist-p "ext:poetry.el")
 (declare-function projectile-project-root "ext:projectile.el")
 (declare-function wal/biased-random "wal-func.el")
-(declare-function wal/disable-tabs "wal-settings.el")
+(declare-function wal/disable-tabs "wal-func.el")
 (declare-function wdb/side "wal-func.el")
 (declare-function wal/install-packages "wal-func.el")
 (declare-function wal/lsp "wal-lsp.el")
 (declare-function wal/major "wal-key-bindings.el")
-(declare-function wal/maybe-enable-tabs "wal-settings.el")
+(declare-function wal/maybe-enable-tabs "wal-func.el")
 (declare-function wal/maybe-intern "wal-func.el")
 (declare-function wal/message-in-a-bottle "wal-func.el")
 
