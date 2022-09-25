@@ -9414,6 +9414,12 @@ This package has a Cask file to set it up as a testable package.
 (defmacro use-package (name &rest args)
   "Message what you would have done."
   `(message "Would have loaded %s" ',name))
+
+(defmacro with-mock (name fun &rest body)
+  "Mock function NAME using FUN."
+  (declare (indent defun))
+  `(cl-letf (((symbol-function ',name) ,fun))
+     ,@body))
 #+END_SRC
 
 *** Helpers
@@ -9600,6 +9606,24 @@ This package has a Cask file to set it up as a testable package.
         (item 'darkness))
     (wal/insert-after 'test-target preceding item)
     (should (equal test-target '(hello darkness my old friend)))))
+#+END_SRC
+
+*** Regions
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/duck-duck-go-region--fails-if-no-region ()
+  :expected-result :failed
+  (wal/duck-duck-go-region))
+
+(ert-deftest test-wal/duck-duck-go-region--succeeds-if-region ()
+  (with-temp-buffer
+    (insert "where is my mind")
+    (set-mark (point-min))
+    (goto-char (point-max))
+    (with-mock browse-url (lambda (url &rest _r) url)
+      (should (string-equal
+               (wal/duck-duck-go-region)
+               "https://duckduckgo.com/html/?q=where%20is%20my%20mind")))))
 #+END_SRC
 
 *** Additional Mode Controls
