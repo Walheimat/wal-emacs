@@ -9611,19 +9611,19 @@ This package has a Cask file to set it up as a testable package.
 *** Regions
 
 #+BEGIN_SRC emacs-lisp
-(ert-deftest test-wal/duck-duck-go-region--fails-if-no-region ()
-  :expected-result :failed
-  (wal/duck-duck-go-region))
-
 (ert-deftest test-wal/duck-duck-go-region--succeeds-if-region ()
   (with-temp-buffer
     (insert "where is my mind")
     (set-mark (point-min))
     (goto-char (point-max))
-    (cl-letf (((symbol-function 'browse-url) (lambda (url &rest _r) url)))
+    (with-mock browse-url (lambda (url &rest _r) url)
       (should (string-equal
                (wal/duck-duck-go-region)
                "https://duckduckgo.com/html/?q=where%20is%20my%20mind")))))
+
+(ert-deftest test-wal/duck-duck-go-region--fails-if-no-region ()
+  :expected-result :failed
+  (wal/duck-duck-go-region))
 #+END_SRC
 
 *** Additional Mode Controls
