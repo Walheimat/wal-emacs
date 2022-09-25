@@ -1393,11 +1393,14 @@ matching files are visited but only the last-visited displayed."
   (interactive)
   (switch-to-buffer (find-file-noselect (file-truename custom-file))))
 
+
+(defconst wal/fish-config-locations '("~/.config/fish/config.fish"
+                                      "~/.config/omf"))
+
 (defun wal/find-fish-config ()
   "Find the fish shell config file."
   (interactive)
-  (let* ((files '("~/.config/fish/config.fish"
-                  "~/.config/omf"))
+  (let* ((files wal/fish-config-locations)
          (init-file (cl-find-if
                      'file-exists-p
                      (mapcar 'expand-file-name files))))
@@ -9413,6 +9416,47 @@ This package has a Cask file to set it up as a testable package.
   (declare (indent defun))
   `(cl-letf (((symbol-function ',name) ,fun))
      ,@body))
+
+(defmacro match-expansion (form &rest value)
+  `(should (pcase (macroexpand-1 ',form)
+             ,@(mapcar #'(lambda (x) (list x t)) value))))
+#+END_SRC
+
+*** Buffer Display
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/display-buffer-condition--passes-strings ()
+  (should (string-equal "testing" (wal/display-buffer-condition "testing"))))
+
+(ert-deftest test-wal/display-buffer-condition--considers-symbols-major-modes ()
+  (should (equal '(major-mode . test-mode) (wal/display-buffer-condition 'test-mode))))
+#+END_SRC
+
+*** Editing
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/kill-ring-save-buffer ()
+  (with-temp-buffer
+    (insert "I hope I don't get killed")
+    (wal/kill-ring-save-whole-buffer)
+    (should (string-equal "I hope I don't get killed" (car kill-ring)))))
+
+(ert-deftest test-wal/set-cursor-type--sets-and-resets ()
+  (with-temp-buffer
+    (with-mock completing-read (lambda (_str _types) "hollow")
+      (wal/set-cursor-type)
+      (should (eq cursor-type 'hollow)))
+    (wal/set-cursor-type t)
+    (should (eq cursor-type t))))
+#+END_SRC
+
+*** Files
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/find-fish-config--errors-if-not-found ()
+  (defvar wal/fish-config-locations)
+  (let ((wal/fish-config-locations '()))
+    (should-error (wal/find-fish-config))))
 #+END_SRC
 
 *** Helpers
@@ -9476,6 +9520,34 @@ This package has a Cask file to set it up as a testable package.
   (cl-letf (((symbol-function 'daemonp) #'ignore)
             (wal/use-hyper-prefix t))
     (should (string-equal (wal/prefix-user-key "k") "C-c w k"))))
+#+END_SRC
+
+*** Setup
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/define-init-setup ()
+  (match-expansion
+    (wal/define-init-setup test
+      "Nothing else."
+      :initial
+      ((message "Hello"))
+      :always
+      ((message "Bye")))
+    `(progn
+       (defun wal/init-setup-test ()
+         "Do base setup for test. Do minimal setup on repeats.\nNothing else."
+         (unless (memq 'test wal/setup-list)
+           (progn
+            (message "Initial setup of '%s'" "test")
+            (message "Hello")
+            (add-to-list 'wal/setup-list 'test)))
+         (message "Bye"))
+      (if (daemonp)
+          (progn
+            (when nil
+              (funcall 'wal/init-setup-test))
+            (add-hook 'server-after-make-frame-hook #'wal/init-setup-test))
+        (add-hook 'emacs-startup-hook #'wal/init-setup-test)))))
 #+END_SRC
 
 *** Scratch Buffer
