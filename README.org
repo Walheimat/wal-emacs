@@ -9492,6 +9492,29 @@ This package has a Cask file to set it up as a testable package.
     (should (windows-sharing-edge (selected-window) 'below))
     (wal/split-window-the-other-way)
     (should (windows-sharing-edge (selected-window) 'right))))
+
+(ert-deftest test-wal/edge ()
+  (with-temp-buffer
+    (save-window-excursion
+      (split-window-vertically)
+      (let ((prev-size (window-size)))
+        (wal/edge-up)
+        (should (> prev-size (window-size)))))
+    (save-window-excursion
+      (split-window-vertically)
+      (let ((prev-size (window-size)))
+        (wal/edge-down)
+        (should (< prev-size (window-size)))))
+    (save-window-excursion
+      (split-window-horizontally)
+      (let ((prev-size (window-size (selected-window) t)))
+        (wal/edge-right)
+        (should (< prev-size (window-size (selected-window) t)))))
+    (save-window-excursion
+      (split-window-horizontally)
+      (let ((prev-size (window-size (selected-window) t)))
+        (wal/edge-left)
+        (should (> prev-size (window-size (selected-window) t)))))))
 #+END_SRC
 
 *** Files
@@ -9715,6 +9738,24 @@ This package has a Cask file to set it up as a testable package.
         (item 'darkness))
     (wal/insert-after 'test-target preceding item)
     (should (equal test-target '(hello darkness my old friend)))))
+#+END_SRC
+
+*** Commands
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/univ ()
+  (match-expansion
+    (wal/univ some-fun other-fun)
+    `(defun wal/univ-some-fun (&optional call-other)
+       "Call `some-fun' or `other-fun' depending on prefix argument.\nNo argument means: call the prior. A single `C-u' means: call the latter. Two or more `C-u' means: call the prior with `universal-argument'."
+       (interactive "P")
+       (if (> (prefix-numeric-value call-other) 4)
+           (call-interactively 'some-fun)
+         (setq current-prefix-arg nil)
+         (prefix-command-update)
+         (if call-other
+             (call-interactively 'other-fun)
+           (call-interactively 'some-fun))))))
 #+END_SRC
 
 *** Regions
