@@ -9422,9 +9422,35 @@ This package has a Cask file to set it up as a testable package.
   `(cl-letf (((symbol-function ',name) ,fun))
      ,@body))
 
+(defmacro with-mock-all (flist &rest body)
+  "Evaluate BODY mocking alist of functions FLIST."
+  (declare (indent defun))
+  `(cl-letf (,@(mapcar (lambda (it) `((symbol-function ',(car it)) ,(cdr it))) flist))
+     ,@body))
+
 (defmacro match-expansion (form &rest value)
   `(should (pcase (macroexpand-1 ',form)
              ,@(mapcar #'(lambda (x) (list x t)) value))))
+#+END_SRC
+
+*** Directories
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/maybe-make-directory ()
+  (let ((temp-dir "/tmp/some-dir"))
+    (wal/maybe-make-directory temp-dir)
+
+    (should (f-directory-p temp-dir))
+    (should-not (wal/maybe-make-directory temp-dir))
+
+    (delete-directory temp-dir)))
+
+(ert-deftest test-wal/create-non-existent-directory ()
+  (let ((temp-dir "/tmp/some-other/dir/"))
+    (with-mock-all ((file-name-directory . (lambda (&rest _r) temp-dir))
+                    (y-or-n-p . (lambda (&rest _r) t))
+                    (make-directory . (lambda (dir _) dir)))
+      (should (string-equal temp-dir (wal/create-non-existent-directory))))))
 #+END_SRC
 
 *** Buffer Display
@@ -9453,6 +9479,19 @@ This package has a Cask file to set it up as a testable package.
       (should (eq cursor-type 'hollow)))
     (wal/set-cursor-type t)
     (should (eq cursor-type t))))
+#+END_SRC
+
+*** Windows
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/split-window-the-other-way ()
+  (with-temp-buffer
+    (split-window-horizontally)
+    (should-not (windows-sharing-edge (selected-window) 'below))
+    (wal/split-window-the-other-way)
+    (should (windows-sharing-edge (selected-window) 'below))
+    (wal/split-window-the-other-way)
+    (should (windows-sharing-edge (selected-window) 'right))))
 #+END_SRC
 
 *** Files
@@ -9695,6 +9734,16 @@ This package has a Cask file to set it up as a testable package.
   (should-error (wal/duck-duck-go-region)))
 #+END_SRC
 
+*** Messages
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/message-in-a-bottle ()
+  (let ((bottle '("Sting is playing bass, yeah")))
+
+    (with-mock message (lambda (message) message)
+      (should (string-equal (wal/message-in-a-bottle bottle) "}< ,.__) Sting is playing bass, yeah")))))
+#+END_SRC
+
 *** Additional Mode Controls
 
 #+BEGIN_SRC emacs-lisp
@@ -9706,6 +9755,48 @@ This package has a Cask file to set it up as a testable package.
     (should (equal wal/before-fundamental-mode 'emacs-lisp-mode))
     (wal/fundamental-mode)
     (should (equal major-mode 'emacs-lisp-mode))))
+#+END_SRC
+
+*** Expansion Packs
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/define-expansion-pack ()
+  (match-expansion
+    (wal/define-expansion-pack test
+      "Tasteful expansion pack."
+      :packages '(pull out of the package)
+      :extras '(prep some ketchup)
+      :recipes '(heat in oven))
+    `(add-to-list
+      'wal/expansion-packs
+      '(test . (:packages '(pull out of the package)
+                :extras '(prep some ketchup)
+                :docs "Tasteful expansion pack."
+                :recipes '(heat in oven))))))
+#+END_SRC
+
+*** Hooks
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/hook ()
+  (match-expansion
+    (wal/hook test
+      "We're just testing."
+      :messages '("Just testing")
+      :lsp t
+      :lsp-ignores '(".ignoramus")
+      :tabs t)
+    `(progn
+       (defun wal/test-hook ()
+         "We're just testing."
+         (wal/message-in-a-bottle '("Just testing"))
+         (wal/maybe-enable-tabs)
+         (wal/lsp))
+       (with-eval-after-load 'lsp-mode
+         (when '(".ignoramus")
+           (wal/append 'lsp-file-watch-ignored-directories
+                       '(".ignoramus"))))
+       (add-hook 'test-hook 'wal/test-hook))))
 #+END_SRC
 
 *** Footer
