@@ -1347,18 +1347,6 @@ Minor mode to dedicate buffers to windows.
     (message "Window no longer dedicated to %s" buffer)))
 #+END_SRC
 
-** Frames
-
-Each window has a frame.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/posframe-hidehandler-when-invisible (info)
-  "Check INFO whether the parent buffer is invisible."
-  (when-let ((parent (cdr (plist-get info :posframe-parent-buffer))))
-
-    (not (get-buffer-window parent t))))
-#+END_SRC
-
 ** Garbage Collection
 
 Better(?) garbage collection.
@@ -9006,7 +8994,6 @@ Display code statistics.
 (declare-function wal/directory-files "init.el")
 (declare-function wal/flycheck-file "wal-fix.el")
 (declare-function wal/flycheck-file--get-buffer "wal-fix.el")
-(declare-function wal/posframe-hidehandler-when-invisible "wal-func.el")
 (declare-function wal/tangle-config "wal-prelude.el")
 
 (defvar wal/emacs-config-default-path)
@@ -9153,6 +9140,12 @@ INFO contains positioning information."
              offset-x)
           (+ window-top offset-y))))
 
+(defun wal/ascii-whale-hidehandler (info)
+  "Check INFO whether the parent buffer is invisible."
+  (when-let ((parent (cdr (plist-get info :posframe-parent-buffer))))
+
+    (not (get-buffer-window parent t))))
+
 (defun wal/ascii-whale-display ()
   "Display the running animation in a posframe."
   (posframe-show
@@ -9162,7 +9155,7 @@ INFO contains positioning information."
      :border-color (face-attribute 'mode-line-highlight :background nil t)
      :poshandler 'wal/ascii-whale-poshandler
      :posframe-parent-buffer (or wal/ascii-whale-parent-buffer (current-buffer))
-     :hidehandler 'wal/posframe-hidehandler-when-invisible))
+     :hidehandler 'wal/ascii-whale-hidehandler))
 
 (defun wal/ascii-whale-toggle-display ()
   "Toggle the animation."
