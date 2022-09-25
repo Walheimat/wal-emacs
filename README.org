@@ -9411,12 +9411,12 @@ This package has a Cask file to set it up as a testable package.
               (:send-report nil)))
 
 ;; Create a dummy `use-package' definition.
-(defmacro use-package (name &rest args)
-  "Message what you would have done."
-  `(message "Would have loaded %s" ',name))
+(defmacro use-package (package-name &rest _args)
+  "Message that PACKAGE-NAME would have been loaded."
+  `(message "Would have loaded %s" ',package-name))
 
 (defmacro with-mock (name fun &rest body)
-  "Mock function NAME using FUN."
+  "Evaluate BODY while mocking function NAME using FUN."
   (declare (indent defun))
   `(cl-letf (((symbol-function ',name) ,fun))
      ,@body))
@@ -9620,7 +9620,7 @@ This package has a Cask file to set it up as a testable package.
     (insert "where is my mind")
     (set-mark (point-min))
     (goto-char (point-max))
-    (with-mock browse-url (lambda (url &rest _r) url)
+    (cl-letf (((symbol-function 'browse-url) (lambda (url &rest _r) url)))
       (should (string-equal
                (wal/duck-duck-go-region)
                "https://duckduckgo.com/html/?q=where%20is%20my%20mind")))))
