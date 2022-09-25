@@ -9466,6 +9466,42 @@ This package has a Cask file to set it up as a testable package.
   (with-temp-buffer
     (shell-mode)
     (should (wal/dead-shell-p))))
+
+
+(ert-deftest test-wal/prefix-user-key ()
+  (defvar wal/use-hyper-prefix)
+  (cl-letf (((symbol-function 'daemonp) #'always)
+            (wal/use-hyper-prefix t))
+    (should (string-equal (wal/prefix-user-key "k") "H-k")))
+
+  (cl-letf (((symbol-function 'daemonp) #'ignore)
+            (wal/use-hyper-prefix t))
+    (should (string-equal (wal/prefix-user-key "k") "C-c w k"))))
+#+END_SRC
+
+*** Scratch Buffer
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/scratch-persist-file (expand-file-name "scratch-persist" default-directory))
+(ert-deftest test-wal/persist-scratch-and-rehydrate ()
+  (with-current-buffer (get-buffer-create "*scratch*")
+    (erase-buffer)
+    (insert "This one's itchy"))
+
+  (wal/persist-scratch)
+
+  (let ((file (find-file-noselect wal/scratch-persist-file)))
+
+    (with-current-buffer file
+      (should (string-equal "This one's itchy" (buffer-string)))))
+
+  (with-current-buffer (get-buffer-create "*scratch*")
+    (erase-buffer)
+    (should (string-equal "" (buffer-string)))
+    (wal/rehydrate-scratch)
+    (should (string-equal "This one's itchy" (buffer-string))))
+
+  (delete-file wal/scratch-persist-file))
 #+END_SRC
 
 *** Indentation
@@ -9504,6 +9540,29 @@ This package has a Cask file to set it up as a testable package.
     (setq-local wal/prefer-tabs nil)
     (wal/maybe-enable-tabs)
     (should (eq indent-tabs-mode nil))))
+
+
+(ert-deftest test-wal/set-indent-defaults ()
+  (setq wal/prefer-tabs nil)
+  (wal/set-indent-defaults 1)
+  (should (eq python-indent-offset 1))
+  (should (string-equal json-encoding-default-indentation " "))
+  (should (eq indent-tabs-mode nil)))
+
+(ert-deftest test-wal/reset-indent-defaults ()
+  (wal/reset-indent-defaults)
+  (should (eq indent-tabs-mode t)))
+#+END_SRC
+
+*** Text Scaling
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/text-scale-reset ()
+  (with-temp-buffer
+    (text-scale-increase 4)
+    (should (eq text-scale-mode-amount 4))
+    (wal/text-scale-reset)
+    (should (eq text-scale-mode-amount 0))))
 #+END_SRC
 
 *** Lists
