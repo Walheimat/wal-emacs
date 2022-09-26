@@ -89,7 +89,8 @@ functionality is used.
 ;;; Code:
 
 (eval-when-compile
-  (require 'marginalia))
+  (require 'marginalia)
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
 (declare-function wal/bytes-per-mb "wal-func.el")
 (declare-function wal/create-non-existent-directory "wal-func.el")
@@ -104,7 +105,6 @@ functionality is used.
 (declare-function wal/rehydrate-scratch "wal-key-bindings.el")
 (declare-function wal/reset-to-standard "wal-func.el")
 (declare-function wal/set-indent-defaults "wal-func.el")
-(declare-function wal/then-add-delete-trailing-whitespace-hook "wal-func.el")
 
 (defvar compilation-scroll-output)
 (defvar global-auto-revert-non-file-buffers)
@@ -398,6 +398,14 @@ Any mode that should be on/off no matter what.
 Advise to maybe add hook to delete trailing whitespace.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/then-add-delete-trailing-whitespace-hook (&rest _args)
+  "Advise to conditionally add before save hook.
+
+When `wal/delete-trailing-whitespace' is t, trailing whitespace
+is deleted."
+  (when wal/delete-trailing-whitespace
+    (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)))
+
 (advice-add
  'hack-local-variables :after
  #'wal/then-add-delete-trailing-whitespace-hook)
@@ -435,6 +443,19 @@ Let's keep the scratch contents.
 
 (add-hook 'emacs-startup-hook #'wal/rehydrate-scratch)
 (add-hook 'kill-emacs-hook #'wal/persist-scratch)
+#+END_SRC
+
+** Command Line
+
+#+BEGIN_SRC emacs-lisp
+(wal/capture-flag doctor
+  "Will set up `use-package' to collect statistics.")
+
+(wal/capture-flag mini
+  "Will packages that are part of the minimal configuration.")
+
+(wal/capture-flag deny
+  "Will prevent `use-package' from ensuring packages.")
 #+END_SRC
 
 ** Minimize Annoyances
@@ -1151,14 +1172,6 @@ removed."
 More convenient editing.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/then-add-delete-trailing-whitespace-hook (&rest _args)
-  "Advise to conditionally add before save hook.
-
-When `wal/delete-trailing-whitespace' is t, trailing whitespace
-is deleted."
-  (when wal/delete-trailing-whitespace
-    (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)))
-
 (defun wal/kill-ring-save-whole-buffer ()
   "Call `kill-ring-save' on the entire buffer."
   (interactive)
@@ -1440,15 +1453,6 @@ the associated variable."
 
      (setq command-line-args (delete dash-flag command-line-args))
      (setq ,(intern (concat "wal/flag-" (symbol-name flag))) t)))
-
-(wal/capture-flag doctor
-  "Will set up `use-package' to collect statistics.")
-
-(wal/capture-flag mini
-  "Will packages that are part of the minimal configuration.")
-
-(wal/capture-flag deny
-  "Will prevent `use-package' from ensuring packages.")
 #+END_SRC
 
 ** Text Scaling
