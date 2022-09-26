@@ -2082,6 +2082,8 @@ Turning on/off certain major modes switching between =major-mode= and
 (defmacro match-expansion (form &rest value)
   `(should (pcase (macroexpand-1 ',form)
              ,@(mapcar #'(lambda (x) (list x t)) value))))
+
+(require 'wal-func)
 #+END_SRC
 
 *** Directories
@@ -2214,6 +2216,20 @@ Turning on/off certain major modes switching between =major-mode= and
       (let ((prev-size (window-size (selected-window) t)))
         (wal/edge-left)
         (should (> prev-size (window-size (selected-window) t)))))))
+
+(ert-deftest test-wal/other-window ()
+  (with-mock-all ((active-minibuffer-window . (lambda () t))
+                  (switch-to-minibuffer . (lambda () 'mini)))
+    (should (equal (wal/other-window) 'mini)))
+  (with-mock-all ((active-minibuffer-window . (lambda () nil))
+                  (next-frame . (lambda () 'other))
+                  (other-frame . (lambda (_) 'frame)))
+    (should (equal (wal/other-window) 'frame)))
+  (with-mock-all ((active-minibuffer-window . (lambda () nil))
+                  (next-frame . (lambda () (selected-frame)))
+                  (one-window-p . (lambda () nil))
+                  (other-window . (lambda (_) 'window)))
+    (should (equal (wal/other-window) 'window))))
 #+END_SRC
 
 *** walled-mode
@@ -2280,7 +2296,13 @@ Turning on/off certain major modes switching between =major-mode= and
 *** Helpers
 
 #+BEGIN_SRC emacs-lisp
-(require 'wal-func)
+(ert-deftest test-wal/biased-random ()
+  (let ((vals '(1 2 3 4)))
+    (with-mock random (lambda (_) (pop vals))
+      (should (eq (wal/biased-random 4) 3))
+
+      (setq vals '(1 2 3 4))
+      (should (eq (wal/biased-random 4 t) 1)))))
 
 (ert-deftest test-wal/bytes-per-mb--floors ()
   (should (equal 314572 (wal/bytes-per-mb 0.3))))
@@ -2312,6 +2334,11 @@ Turning on/off certain major modes switching between =major-mode= and
     (should (equal "hello " (wal/pad-string test-string t)))))
 
 
+(ert-deftest test-wal/univ-p ()
+  (let ((current-prefix-arg '(4)))
+    (should (wal/univ-p))))
+
+
 (defvar test-standard 'standard)
 
 (ert-deftest test-wal/reset-to-standard--resets ()
@@ -2319,6 +2346,39 @@ Turning on/off certain major modes switching between =major-mode= and
   (should (equal 'global test-standard))
   (wal/reset-to-standard 'test-standard)
   (should (equal nil test-standard)))
+
+
+(ert-deftest test-wal/try ()
+  (match-expansion
+    (wal/try test
+     (message "Testing again"))
+    `(when (require 'test nil :no-error)
+       (message "Testing again"))))
+
+
+(ert-deftest test-wal/server-edit-p ()
+  (let ((server-buffer-clients '(test))
+    (should (wal/server-edit-p))))
+  (let ((server-buffer-clients '(test))
+        (with-editor-mode t))
+    (should-not (wal/server-edit-p))))
+
+(ert-deftest test-wal/delete-edit-or-kill ()
+  (with-mock-all ((wal/server-edit-p . (lambda () t))
+                  (server-edit-abort . (lambda () 'abort))
+                  (server-edit . (lambda () 'edit)))
+    (should (equal (wal/delete-edit-or-kill) 'edit))
+    (should (equal (wal/delete-edit-or-kill t) 'abort)))
+
+  (with-mock-all ((wal/server-edit-p . (lambda () nil))
+                  (daemonp . (lambda () t))
+                  (delete-frame . (lambda () 'delete-frame)))
+    (should (equal (wal/delete-edit-or-kill) 'delete-frame)))
+
+  (with-mock-all ((wal/server-edit-p . (lambda () nil))
+                  (daemonp . (lambda () nil))
+                  (save-buffers-kill-terminal . (lambda () 'kill)))
+    (should (equal (wal/delete-edit-or-kill) 'kill))))
 
 
 (require 'shell)
