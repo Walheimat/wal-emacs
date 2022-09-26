@@ -2080,6 +2080,54 @@ Turning on/off certain major modes switching between =major-mode= and
 
 (ert-deftest test-wal/display-buffer-condition--considers-symbols-major-modes ()
   (should (equal '(major-mode . test-mode) (wal/display-buffer-condition 'test-mode))))
+
+(ert-deftest test-wal/display-buffer-in-pop-up ()
+  (let ((display-buffer-alist '()))
+    (wal/display-buffer-in-pop-up 'test-mode)
+    (should (equal
+             (car display-buffer-alist)
+             '((major-mode . test-mode) (display-buffer-pop-up-window))))
+    (setq display-buffer-alist '())
+    (wal/display-buffer-in-pop-up 'test-mode t)
+
+    (should (equal
+             (car display-buffer-alist)
+             '((major-mode . test-mode) (display-buffer-pop-up-frame))))))
+
+(ert-deftest test-wal/display-buffer-in-side-window ()
+  (let ((display-buffer-alist '()))
+    (wal/display-buffer-in-side-window 'test-mode :side 'top :loose nil :no-other t :height 12)
+    (should (equal (car display-buffer-alist)
+                   '((major-mode . test-mode)
+                     (display-buffer-reuse-window display-buffer-in-side-window)
+                     (side . top)
+                     (dedicated . t)
+                     (reusable-frames . visible)
+                     (window-height . 12)
+                     (window-parameters . ((no-other-window . t))))))))
+
+(ert-deftest test-wal/display-buffer-in-direction ()
+  (let ((display-buffer-alist '()))
+    (wal/display-buffer-in-direction 'test-mode 'leftmost)
+    (should (equal (car display-buffer-alist)
+                   '((major-mode . test-mode)
+                     (display-buffer-reuse-mode-window display-buffer-in-direction)
+                     (direction . leftmost))))))
+
+(ert-deftest test-wal/display-buffer-ethereally ()
+  (let ((display-buffer-alist '()))
+    (wal/display-buffer-ethereally 'test-mode)
+    (should (equal (car display-buffer-alist)
+                   '((major-mode . test-mode)
+                     nil
+                     (window-parameters . ((mode-line-format . none))))))))
+
+(ert-deftest wal/display-buffer-reuse-same-window ()
+  (let ((display-buffer-alist '()))
+    (wal/display-buffer-reuse-same-window 'test-mode)
+    (should (equal (car display-buffer-alist)
+                   '((major-mode . test-mode)
+                     (display-buffer-reuse-window display-buffer-same-window))))))
 #+END_SRC
 
 *** Editing
