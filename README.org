@@ -1969,98 +1969,6 @@ The rest of the BODY will be spliced into the lambda."
         ',func-name))))
 #+END_SRC
 
-** Extensions
-
-*** use-package/:wal-bind
-
-We'll add keyword =:wal-bind= to =use-package= in order to create bindings
-prefixed by =wal/prefix-user-key=.
-
-#+BEGIN_SRC emacs-lisp
-(defun use-package-normalize/:wal-bind (name keyword args)
-  "Normalize NAME, KEYWORD, ARGS.
-
-This normalizer is a copy of the normalizer for `:bind'. There
-are two differences:
-
-1. It prefixes the key strings with `wal/prefix-user-key'.
-2. On recursion it calls this normalizer."
-  (let ((arg args)
-        args*)
-    (while arg
-      (let ((x (car arg)))
-        (cond
-         ((and (consp x)
-               (or (stringp (car x))
-                   (vectorp (car x)))
-               (fboundp 'use-package-recognize-function)
-               (or (use-package-recognize-function (cdr x) t #'stringp)))
-          ;; This is where we deviate from the `:bind' normalizer.
-          (setq args* (nconc args* (list (cons (wal/prefix-user-key (car x)) (cdr x)))))
-          (setq arg (cdr arg)))
-         ((or (and (eq x :map) (symbolp (cadr arg)))
-              (and (eq x :prefix) (stringp (cadr arg)))
-              (and (eq x :prefix-map) (symbolp (cadr arg)))
-              (and (eq x :prefix-docstring) (stringp (cadr arg)))
-              (eq x :filter)
-              (and (eq x :menu-name) (stringp (cadr arg)))
-              (and (eq x :package) (symbolp (cadr arg))))
-          (setq args* (nconc args* (list x (cadr arg))))
-          (setq arg (cddr arg)))
-         ((listp x)
-          (setq args*
-                (nconc args* (use-package-normalize/:wal-bind name keyword x)))
-          (setq arg (cdr arg)))
-         (t
-          (use-package-error
-           (concat (symbol-name name)
-                   " wants arguments acceptable to the `bind-keys' macro,"
-                   " or a list of such values"))))))
-    args*))
-
-;; We can use the same handler as `:bind'.
-(defalias 'use-package-handler/:wal-bind 'use-package-handler/:bind)
-
-;; Make sure that functions are autoloaded.
-(defalias 'use-package-autoloads/:wal-bind 'use-package-autoloads-mode)
-#+END_SRC
-
-*** use-package/:wal-ways
-
-Certain packages do not belong to a minimal setup, these are tagged
-with =:wal-ways nil=.
-
-#+BEGIN_SRC emacs-lisp
-(defalias 'use-package-normalize/:wal-ways 'use-package-normalize-predicate)
-
-(defun use-package-handler/:wal-ways (name _keyword pred rest state)
-  "Only expand conditionally.
-
-The conditions for normal packages are: (1) the PRED is t, (2)
-`wal/minimal' is nil or (3) NAME is never excluded.
-
-If NAME is an expansion pack package, the conditions are: (1) the
-PRED is t or (2) NAME is installed.
-
-The STATE is updated as well before parsing REST if we want to
-use the result further down the line."
-  (when (and (fboundp 'use-package-process-keywords)
-             (fboundp 'use-package-plist-maybe-put))
-    (let* ((active (or pred
-                       (if (wal/is-expansion-pack name)
-                           (not (null (package-installed-p name)))
-                         (or (not (or wal/minimal wal/flag-mini))
-                             (not (null (memq name wal/minimal-exclude)))))))
-
-           (body (use-package-process-keywords
-                   name
-                   rest
-                   (use-package-plist-maybe-put state :wal-ways active))))
-
-      `((when ,active
-          ,@body)))))
-#+END_SRC
-
 ** Additional Mode Controls
 
 Turning on/off certain major modes switching between =major-mode= and
@@ -2846,6 +2754,12 @@ available candidate from `wal/fixed-fonts'. Does the same for
   (require 'use-package))
 
 (declare-function wal/install-packages "wal-func.el")
+(declare-function wal/is-expansion-pack "wal-func.el")
+(declare-function wal/prefix-user-key "wal-func.el")
+
+(defvar wal/flag-mini)
+(defvar wal/minimal)
+(defvar wal/minimal-exclude)
 #+END_SRC
 
 ** Packages
@@ -2872,6 +2786,98 @@ Such as package `use-package'.")
   (error
    (package-refresh-contents)
    (wal/install-packages wal/core-packages :delete-windows t)))
+#+END_SRC
+
+*** Extensions
+
+**** use-package/:wal-bind
+
+We'll add keyword =:wal-bind= to =use-package= in order to create bindings
+prefixed by =wal/prefix-user-key=.
+
+#+BEGIN_SRC emacs-lisp
+(defun use-package-normalize/:wal-bind (name keyword args)
+  "Normalize NAME, KEYWORD, ARGS.
+
+This normalizer is a copy of the normalizer for `:bind'. There
+are two differences:
+
+1. It prefixes the key strings with `wal/prefix-user-key'.
+2. On recursion it calls this normalizer."
+  (let ((arg args)
+        args*)
+    (while arg
+      (let ((x (car arg)))
+        (cond
+         ((and (consp x)
+               (or (stringp (car x))
+                   (vectorp (car x)))
+               (fboundp 'use-package-recognize-function)
+               (or (use-package-recognize-function (cdr x) t #'stringp)))
+          ;; This is where we deviate from the `:bind' normalizer.
+          (setq args* (nconc args* (list (cons (wal/prefix-user-key (car x)) (cdr x)))))
+          (setq arg (cdr arg)))
+         ((or (and (eq x :map) (symbolp (cadr arg)))
+              (and (eq x :prefix) (stringp (cadr arg)))
+              (and (eq x :prefix-map) (symbolp (cadr arg)))
+              (and (eq x :prefix-docstring) (stringp (cadr arg)))
+              (eq x :filter)
+              (and (eq x :menu-name) (stringp (cadr arg)))
+              (and (eq x :package) (symbolp (cadr arg))))
+          (setq args* (nconc args* (list x (cadr arg))))
+          (setq arg (cddr arg)))
+         ((listp x)
+          (setq args*
+                (nconc args* (use-package-normalize/:wal-bind name keyword x)))
+          (setq arg (cdr arg)))
+         (t
+          (use-package-error
+           (concat (symbol-name name)
+                   " wants arguments acceptable to the `bind-keys' macro,"
+                   " or a list of such values"))))))
+    args*))
+
+;; We can use the same handler as `:bind'.
+(defalias 'use-package-handler/:wal-bind 'use-package-handler/:bind)
+
+;; Make sure that functions are autoloaded.
+(defalias 'use-package-autoloads/:wal-bind 'use-package-autoloads-mode)
+#+END_SRC
+
+**** use-package/:wal-ways
+
+Certain packages do not belong to a minimal setup, these are tagged
+with =:wal-ways nil=.
+
+#+BEGIN_SRC emacs-lisp
+(defalias 'use-package-normalize/:wal-ways 'use-package-normalize-predicate)
+
+(defun use-package-handler/:wal-ways (name _keyword pred rest state)
+  "Only expand conditionally.
+
+The conditions for normal packages are: (1) the PRED is t, (2)
+`wal/minimal' is nil or (3) NAME is never excluded.
+
+If NAME is an expansion pack package, the conditions are: (1) the
+PRED is t or (2) NAME is installed.
+
+The STATE is updated as well before parsing REST if we want to
+use the result further down the line."
+  (when (and (fboundp 'use-package-process-keywords)
+             (fboundp 'use-package-plist-maybe-put))
+    (let* ((active (or pred
+                       (if (wal/is-expansion-pack name)
+                           (not (null (package-installed-p name)))
+                         (or (not (or wal/minimal wal/flag-mini))
+                             (not (null (memq name wal/minimal-exclude)))))))
+
+           (body (use-package-process-keywords
+                   name
+                   rest
+                   (use-package-plist-maybe-put state :wal-ways active))))
+
+      `((when ,active
+          ,@body)))))
 #+END_SRC
 
 ** quelpa
