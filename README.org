@@ -9847,6 +9847,23 @@ This will activate minor mode `wal/config-mode'."
     (dolist (it el-files)
       (checkdoc-file it))))
 
+(defun wal/check-coverage ()
+  "Check the current coverage for custom functionality."
+  (interactive)
+  (unless (executable-find "cask")
+    (user-error "You need to install `cask' binary."))
+
+  (let* ((dir wal/emacs-config-package-path)
+         (command (format "cd %s && cask exec ert-runner && cat coverage.txt" dir))
+         (result (shell-command-to-string command))
+         (failure (string-match "FAILED" result)))
+
+    (if failure
+        (message (string-trim (substring result failure)))
+      (message "%s" (car (last (seq-filter
+                                (lambda (it) (not (string-empty-p it)))
+                                (split-string result "\n"))))))))
+
 (defun wal/flycheck-config-packages ()
   "Run `wal/flycheck' on all config package files."
   (interactive)
@@ -9885,7 +9902,8 @@ This will activate minor mode `wal/config-mode'."
           ("g" "customize group" wal/customize-group)]
          ["Check"
           ("c" "checkdoc" wal/checkdoc-config-packages)
-          ("f" "flycheck" wal/flycheck-config-packages)]
+          ("f" "flycheck" wal/flycheck-config-packages)
+          ("o" "coverage" wal/check-coverage)]
          ["View"
           ("p" "packages" wal/dired-config-packages)
           ("m" "show changes" wal/show-config-diff-range)
