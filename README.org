@@ -2188,13 +2188,65 @@ Turning on/off certain major modes switching between =major-mode= and
         (should (> prev-size (window-size (selected-window) t)))))))
 #+END_SRC
 
+*** walled-mode
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-walled-mode ()
+  (with-temp-buffer
+    (walled-mode--enable)
+    (should (window-dedicated-p))
+    (walled-mode--disable)
+    (should-not (window-dedicated-p))))
+#+END_SRC
+
 *** Files
 
 #+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/find-file-delete-other-windows ()
+  (let ((test-file "/tmp/some-file")
+        (some-buffer (get-buffer-create "*testing*")))
+    (make-empty-file test-file)
+    (switch-to-buffer some-buffer)
+    (split-window-horizontally)
+    (wal/find-file-delete-other-windows test-file)
+    (should (string-equal (buffer-name) "some-file"))
+    (delete-file test-file)))
+
+(ert-deftest test-wal/find-custom-file ()
+  (let ((custom-file "/tmp/custom.el"))
+    (make-empty-file custom-file)
+    (wal/find-custom-file)
+    (should (string-equal (buffer-name) "custom.el"))
+    (delete-file custom-file)))
+
+(ert-deftest test-wal/find-fish-config ()
+  (let* ((fish-config "/tmp/config.fish")
+         (fish-config-locations `(,fish-config)))
+    (make-empty-file fish-config)
+    (wal/find-fish-config)
+    (should (string-equal (buffer-name) "config.fish"))
+    (delete-file fish-config)))
+
 (ert-deftest test-wal/find-fish-config--errors-if-not-found ()
   (defvar wal/fish-config-locations)
   (let ((wal/fish-config-locations '()))
     (should-error (wal/find-fish-config))))
+#+END_SRC
+
+*** Command Line
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/capture-flag ()
+  (match-expansion
+   (wal/capture-flag some-flag
+     "We need to capture some flag.")
+   `(when-let* ((flags wal/custom-flags)
+                (dash-flag (cdr (assoc 'some-flag flags)))
+                (found (member dash-flag command-line-args)))
+      (message "We need to capture some flag.")
+
+      (setq command-line-args (delete dash-flag command-line-args))
+      (setq wal/flag-some-flag t))))
 #+END_SRC
 
 *** Helpers
