@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests were added for functions moved out of `wal-settings`.
 - New package `wal-external` was added to hold the code to install the
   core packages as well as the `quelpa` configuration.
+- The tests are now covered using `undercover`; this is done in the CI
+  env and can be done locally using new function `wal/check-coverage`.
 
 ### Changed
 
