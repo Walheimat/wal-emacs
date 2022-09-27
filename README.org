@@ -999,10 +999,6 @@ Most bindings are declared in individual packages.
 
 (wal/lieutenant "g" '(:keymap goto-map :wk "goto"))
 
-(general-define-key
- :keymaps 'ctl-x-x-map
- "f" 'wal/find-file-delete-other-windows) ; Replaces `font-lock-update'.
-
 ;; Use H-u for C-u.
 (when wal/use-hyper-prefix
   (let ((prefix (wal/prefix-user-key "u")))
@@ -1387,26 +1383,6 @@ Minor mode to dedicate buffers to windows.
 Handling of files.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/find-file-delete-other-windows (filename &optional wildcards)
-  "Find FILENAME and make its window the only window.
-
-If WILDCARDS is non-nil, FILENAME can include wildcards. All
-matching files are visited but only the last-visited displayed."
-  (interactive
-   (find-file-read-args "Find file (deleting other windows): "
-                        (confirm-nonexistent-file-or-buffer)))
-  (let ((value (find-file-noselect filename nil nil wildcards)))
-
-    (if (listp value)
-        (progn
-          (setq value (nreverse value))
-          (switch-to-buffer (car value))
-          (mapc 'switch-to-buffer (cdr value))
-          value)
-      (switch-to-buffer value)
-
-      (delete-other-windows))))
-
 (defun wal/find-custom-file ()
   "Find the custom file."
   (interactive)
@@ -1952,9 +1928,9 @@ The rest of the BODY will be spliced into the lambda."
          ,docs
          ,(when messages
             `(wal/message-in-a-bottle ,messages))
-         ,(cond ((eq 'always tabs)
+         ,(cond ((equal 'always tabs)
                  `(wal/enable-tabs))
-                ((eq t tabs)
+                ((equal t tabs)
                  `(wal/maybe-enable-tabs))
                 ((not tabs)
                  '(wal/disable-tabs))
@@ -1962,9 +1938,9 @@ The rest of the BODY will be spliced into the lambda."
          ,@safe-body
          ,(when lsp
             '(wal/lsp)))
-       (with-eval-after-load 'lsp-mode
-         (when ,lsp-ignores
-           (wal/append 'lsp-file-watch-ignored-directories ,lsp-ignores)))
+       ,(when (and lsp lsp-ignores)
+          `(with-eval-after-load 'lsp-mode
+             (wal/append 'lsp-file-watch-ignored-directories ,lsp-ignores)))
        (add-hook
         ',target
         ',func-name))))
@@ -2277,16 +2253,6 @@ Turning on/off certain major modes switching between =major-mode= and
 *** Files
 
 #+BEGIN_SRC emacs-lisp
-(ert-deftest test-wal/find-file-delete-other-windows ()
-  (let ((test-file "/tmp/some-file")
-        (some-buffer (get-buffer-create "*testing*")))
-    (make-empty-file test-file)
-    (switch-to-buffer some-buffer)
-    (split-window-horizontally)
-    (wal/find-file-delete-other-windows test-file)
-    (should (string-equal (buffer-name) "some-file"))
-    (delete-file test-file)))
-
 (ert-deftest test-wal/find-custom-file ()
   (let ((custom-file "/tmp/custom.el"))
     (make-empty-file custom-file)
@@ -2756,7 +2722,14 @@ Turning on/off certain major modes switching between =major-mode= and
                     (yes-or-no-p . (lambda (_) nil)))
       (let ((wal/expansion-packs wal/test-packs))
         (call-interactively 'wal/install-expansion-pack)
-        (should (string-equal (car messages) "Installed expansion pack 'two'"))))))
+        (should (string-equal (car messages) "Installed expansion pack 'two'"))))
+    (with-mock-all ((completing-read . (lambda (_m _v) "two"))
+                    (package-installed-p . (lambda (package) nil))
+                    (package-install . (lambda (package) t))
+                    (yes-or-no-p . (lambda (_) t))
+                    (wal/install-expansion-pack-extra . (lambda (_) 'extra)))
+      (let ((wal/expansion-packs wal/test-packs))
+        (should (equal (call-interactively 'wal/install-expansion-pack) 'extra))))))
 
 (ert-deftest test-wal/install-expansion-pack--errors-for-non-existing ()
   (let ((wal/expansion-packs wal/test-packs))
@@ -2772,23 +2745,53 @@ Turning on/off certain major modes switching between =major-mode= and
 #+BEGIN_SRC emacs-lisp
 (ert-deftest test-wal/hook ()
   (match-expansion
-    (wal/hook test
-      "We're just testing."
-      :messages '("Just testing")
-      :lsp t
-      :lsp-ignores '(".ignoramus")
-      :tabs t)
-    `(progn
-       (defun wal/test-hook ()
-         "We're just testing."
-         (wal/message-in-a-bottle '("Just testing"))
-         (wal/maybe-enable-tabs)
-         (wal/lsp))
-       (with-eval-after-load 'lsp-mode
-         (when '(".ignoramus")
-           (wal/append 'lsp-file-watch-ignored-directories
-                       '(".ignoramus"))))
-       (add-hook 'test-hook 'wal/test-hook))))
+   (wal/hook test
+     "We're just testing."
+     :messages '("Just testing")
+     :lsp t
+     :lsp-ignores '(".ignoramus")
+     :tabs t)
+   `(progn
+      (defun wal/test-hook ()
+        "We're just testing."
+        (wal/message-in-a-bottle '("Just testing"))
+        (wal/maybe-enable-tabs)
+        (wal/lsp))
+      (with-eval-after-load 'lsp-mode
+        (wal/append 'lsp-file-watch-ignored-directories
+                    '(".ignoramus")))
+      (add-hook 'test-hook 'wal/test-hook))))
+
+(ert-deftest test-wal/hook--custom-indent ()
+  (match-expansion
+   (wal/hook test
+     "We're just testing."
+     :messages '("Just testing")
+     :lsp t
+     :tabs 'some-fun)
+   `(progn
+      (defun wal/test-hook ()
+        "We're just testing."
+        (wal/message-in-a-bottle '("Just testing"))
+        (wal/maybe-enable-tabs :indent-with 'some-fun)
+        (wal/lsp))
+      nil
+      (add-hook 'test-hook 'wal/test-hook))))
+
+(ert-deftest test-wal/hook--with-tabs ()
+  (match-expansion
+   (wal/hook test
+     "We're just testing."
+     :messages '("Just testing")
+     :lsp nil)
+   `(progn
+      (defun wal/test-hook ()
+        "We're just testing."
+        (wal/message-in-a-bottle '("Just testing"))
+        (wal/disable-tabs)
+        nil)
+      nil
+      (add-hook 'test-hook 'wal/test-hook))))
 #+END_SRC
 
 *** Additional Mode Controls
@@ -2807,12 +2810,31 @@ Turning on/off certain major modes switching between =major-mode= and
 *** Shell Commands
 
 #+BEGIN_SRC emacs-lisp
+;; FIXME: These tests don't really work but succeed.
+
 (ert-deftest test-wal/async-process ()
-  (wal/async-process "echo \"the world is a vampire\""
-    (lambda ()
-      (with-current-buffer (get-buffer-create "*wal-async*")
-        (should (string-match "the world is a vampire" (buffer-string)))))
-    (lambda (_) nil)))
+  (wal/async-process
+   "echo \"the world is a vampire\""
+   (lambda ()
+     (with-current-buffer (get-buffer-create "*wal-async*")
+       (should (string-match "the world is a vampire" (buffer-string)))))
+   (lambda (_) nil)))
+
+(ert-deftest test-wal/async-process--on-lisp-error ()
+  (wal/async-process
+   "echo \"the world is a vampire\""
+   (lambda ()
+     (error "Oops!"))
+   (lambda (m)
+     (should (string-match "Oops!" m)))))
+
+(ert-deftest test-wal/async-process--on-command-error ()
+  (wal/async-process
+   "exit 1"
+   (lambda ()
+     (message "Shouldn't happen"))
+   (lambda (m)
+     (should (string-match "Should!" m)))))
 #+END_SRC
 
 *** Footer
@@ -4995,6 +5017,10 @@ beginning."
    ("l" . avy-goto-end-of-line)
    ("w" . wal/avy-goto-word)
    ("a" . avy-goto-word-0))
+
+  :wal-bind
+  (("[" . avy-goto-char-2-above)
+   ("]" . avy-goto-char-2-below))
 
   :general
   ;; Lines.
