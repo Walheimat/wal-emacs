@@ -2007,66 +2007,6 @@ Turning on/off certain major modes switching between =major-mode= and
 :VISIBILITY: folded
 :END:
 
-*** Helper
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle (expand-file-name "test/test-helper.el" wal/emacs-config-package-path)
-:END:
-
-#+BEGIN_SRC emacs-lisp
-;;; test-helper.el --- Test helpers. -*- lexical-binding: t; -*-
-
-;;; Commentary:
-;;
-;; Helper macros.
-
-;;; Code:
-
-(when (require 'undercover nil t)
-  (cond
-    ((getenv "CI")
-     (undercover "*.el"
-                 (:report-format 'lcov)
-                 (:send-report nil)))
-    ((getenv "COVERAGE_WITH_JSON")
-     (setq undercover-force-coverage t)
-     (undercover "*.el"
-                 (:report-format 'simplecov)
-                 (:report-file "../coverage/.resultset.json")
-                 (:send-report nil)))
-    (t
-     (setq undercover-force-coverage t)
-     (undercover "*.el"
-                 (:report-format 'text)
-                 (:report-file "coverage.txt")
-                 (:send-report nil)))))
-
-;; Create a dummy `use-package' definition.
-(defmacro use-package (package-name &rest _args)
-  "Message that PACKAGE-NAME would have been loaded."
-  `(message "Would have loaded %s" ',package-name))
-
-(defmacro with-mock (name fun &rest body)
-  "Evaluate BODY while mocking function NAME using FUN."
-  (declare (indent defun))
-  `(cl-letf (((symbol-function ',name) ,fun))
-     ,@body))
-
-(defmacro with-mock-all (flist &rest body)
-  "Evaluate BODY mocking alist of functions FLIST."
-  (declare (indent defun))
-  `(cl-letf (,@(mapcar (lambda (it) `((symbol-function ',(car it)) ,(cdr it))) flist))
-     ,@body))
-
-(defmacro match-expansion (form &rest value)
-  "Match expansion of FORM against VALUE."
-  `(should (pcase (macroexpand-1 ',form)
-             ,@(mapcar #'(lambda (x) (list x t)) value))))
-
-(require 'wal-func)
-
-;;; test-helper.el ends here
-#+END_SRC
-
 *** Header
 
 #+BEGIN_SRC emacs-lisp
@@ -10251,6 +10191,68 @@ This package has a Cask file to set it up as a testable package.
 (package-file "wal.el")
 
 (files "*.el")
+#+END_SRC
+
+** Test Helper
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle (expand-file-name "test/test-helper.el" wal/emacs-config-package-path)
+:END:
+
+Provide common test functionality and require the packages.
+
+#+BEGIN_SRC emacs-lisp
+;;; test-helper.el --- Test helpers. -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;;
+;; Helper macros.
+
+;;; Code:
+
+(when (require 'undercover nil t)
+  (cond
+    ((getenv "CI")
+     (undercover "*.el"
+                 (:report-format 'lcov)
+                 (:send-report nil)))
+    ((getenv "COVERAGE_WITH_JSON")
+     (setq undercover-force-coverage t)
+     (undercover "*.el"
+                 (:report-format 'simplecov)
+                 (:report-file "../coverage/.resultset.json")
+                 (:send-report nil)))
+    (t
+     (setq undercover-force-coverage t)
+     (undercover "*.el"
+                 (:report-format 'text)
+                 (:report-file "coverage.txt")
+                 (:send-report nil)))))
+
+;; Create a dummy `use-package' definition.
+(defmacro use-package (package-name &rest _args)
+  "Message that PACKAGE-NAME would have been loaded."
+  `(message "Would have loaded %s" ',package-name))
+
+(defmacro with-mock (name fun &rest body)
+  "Evaluate BODY while mocking function NAME using FUN."
+  (declare (indent defun))
+  `(cl-letf (((symbol-function ',name) ,fun))
+     ,@body))
+
+(defmacro with-mock-all (flist &rest body)
+  "Evaluate BODY mocking alist of functions FLIST."
+  (declare (indent defun))
+  `(cl-letf (,@(mapcar (lambda (it) `((symbol-function ',(car it)) ,(cdr it))) flist))
+     ,@body))
+
+(defmacro match-expansion (form &rest value)
+  "Match expansion of FORM against VALUE."
+  `(should (pcase (macroexpand-1 ',form)
+             ,@(mapcar #'(lambda (x) (list x t)) value))))
+
+(require 'wal-func)
+
+;;; test-helper.el ends here
 #+END_SRC
 
 * Footnotes
