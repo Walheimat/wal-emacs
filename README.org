@@ -1337,45 +1337,21 @@ frame, switch to that. Otherwise switch to next buffer."
     (switch-to-buffer nil))
    (t
     (other-window 1))))
-#+END_SRC
 
-*** walled-mode
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
+(defun wal/l (&optional reverse)
+  "Dedicate the window to the current buffer
 
-Minor mode to dedicate buffers to windows.
-
-#+BEGIN_SRC emacs-lisp
-(define-minor-mode walled-mode
-  "Dedicate the window."
-  :init-value nil
-  :lighter " wld"
-  (cond
-   (noninteractive
-    (setq walled-mode nil))
-   (walled-mode
-    (walled-mode--enable))
-   (t
-    (walled-mode--disable))))
-
-(defun walled-mode--enable ()
-  "Dedicate the window to the current buffer."
+Un-dedicates if REVERSE is t."
+  (interactive "P")
   (let ((window (selected-window))
         (buffer (current-buffer)))
 
+    (if reverse
+        (progn
+         (set-window-dedicated-p window nil)
+         (message "Window no longer dedicated to %s" buffer))
     (set-window-dedicated-p window buffer)
-
-    (message "Dedicating window to %s" buffer)))
-
-(defun walled-mode--disable ()
-  "Make window no longer dedicated to its buffer."
-  (let* ((window (selected-window))
-         (buffer (window-dedicated-p window)))
-
-    (set-window-dedicated-p window nil)
-
-    (message "Window no longer dedicated to %s" buffer)))
+    (message "Dedicating window to %s" buffer))))
 #+END_SRC
 
 ** Files
@@ -2130,63 +2106,85 @@ Turning on/off certain major modes switching between =major-mode= and
 #+BEGIN_SRC emacs-lisp
 (ert-deftest test-wal/split-window-the-other-way ()
   (with-temp-buffer
-    (split-window-horizontally)
-    (should-not (windows-sharing-edge (selected-window) 'below))
-    (wal/split-window-the-other-way)
-    (should (windows-sharing-edge (selected-window) 'below))
-    (wal/split-window-the-other-way)
-    (should (windows-sharing-edge (selected-window) 'right))))
-
-(ert-deftest test-wal/edge ()
-  (with-temp-buffer
+    (save-window-excursion
+      (split-window-horizontally)
+      (wal/split-window-the-other-way)
+      (should (windows-sharing-edge (selected-window) 'below)))
+    (save-window-excursion
+      (split-window-horizontally)
+      (other-window 1)
+      (wal/split-window-the-other-way)
+      (should (windows-sharing-edge (selected-window) 'below)))
     (save-window-excursion
       (split-window-vertically)
-      (let ((prev-size (window-size)))
-        (wal/edge-up)
-        (should (> prev-size (window-size)))))
+      (wal/split-window-the-other-way)
+      (should (windows-sharing-edge (selected-window) 'right)))))
+
+(ert-deftest test-wal/edge--no-edges ()
+  (with-temp-buffer
+    (save-window-excursion
+      (with-mock message (lambda (m &rest _r) m)
+        (should (string-equal "Selected window does not share a vertical edge with another window" (wal/edge-up)))
+        (should (string-equal "Selected window does not share a horizontal edge with another window" (wal/edge-right)))))))
+
+(ert-deftest test-wal/edge-down ()
+  (with-temp-buffer
     (save-window-excursion
       (split-window-vertically)
       (let ((prev-size (window-size)))
         (wal/edge-down)
-        (should (< prev-size (window-size)))))
+        (should (< prev-size (window-size)))))))
+
+(ert-deftest test-wal/edge-up ()
+  (with-temp-buffer
+    (save-window-excursion
+      (split-window-vertically)
+      (other-window 1)
+      (let ((prev-size (window-size)))
+        (wal/edge-up)
+        (should (< prev-size (window-size)))))))
+
+(ert-deftest test-wal/edge-right ()
+  (with-temp-buffer
     (save-window-excursion
       (split-window-horizontally)
       (let ((prev-size (window-size (selected-window) t)))
         (wal/edge-right)
-        (should (< prev-size (window-size (selected-window) t)))))
+        (should (< prev-size (window-size (selected-window) t)))))))
+
+(ert-deftest test-wal/edge-left ()
+  (with-temp-buffer
     (save-window-excursion
       (split-window-horizontally)
+      (other-window 1)
       (let ((prev-size (window-size (selected-window) t)))
         (wal/edge-left)
-        (should (> prev-size (window-size (selected-window) t)))))
-    (save-window-excursion
-      (with-mock message (lambda (m &rest _r) m)
-        (should (string-equal "Selected window does not share a vertical edge with another window" (wal/edge-up)))))))
-
+        (should (< prev-size (window-size (selected-window) t)))))))
 
 (ert-deftest test-wal/other-window ()
   (with-mock-all ((active-minibuffer-window . (lambda () t))
                   (switch-to-minibuffer . (lambda () 'mini)))
-    (should (equal (wal/other-window) 'mini)))
+                 (should (equal (wal/other-window) 'mini)))
   (with-mock-all ((active-minibuffer-window . (lambda () nil))
                   (next-frame . (lambda () 'other))
                   (other-frame . (lambda (_) 'frame)))
-    (should (equal (wal/other-window) 'frame)))
+                 (should (equal (wal/other-window) 'frame)))
   (with-mock-all ((active-minibuffer-window . (lambda () nil))
                   (next-frame . (lambda () (selected-frame)))
                   (one-window-p . (lambda () nil))
                   (other-window . (lambda (_) 'window)))
-    (should (equal (wal/other-window) 'window))))
-#+END_SRC
+                 (should (equal (wal/other-window) 'window)))
+  (with-mock-all ((active-minibuffer-window . (lambda () nil))
+                  (next-frame . (lambda () (selected-frame)))
+                  (one-window-p . (lambda () t))
+                  (switch-to-buffer . (lambda (_) 'buffer)))
+                 (should (equal (wal/other-window) 'buffer))))
 
-*** walled-mode
-
-#+BEGIN_SRC emacs-lisp
-(ert-deftest test-walled-mode ()
+(ert-deftest test-wal/l ()
   (with-temp-buffer
-    (walled-mode--enable)
+    (wal/l)
     (should (window-dedicated-p))
-    (walled-mode--disable)
+    (wal/l t)
     (should-not (window-dedicated-p))))
 #+END_SRC
 
