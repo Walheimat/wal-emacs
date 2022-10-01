@@ -2326,32 +2326,27 @@ Turning on/off certain major modes switching between =major-mode= and
 *** Scratch Buffer
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/scratch-persist-file (expand-file-name "scratch-persist" default-directory))
+
 (ert-deftest test-wal/persist-scratch-and-rehydrate ()
-  (ert-with-temp-file scratch
-    :suffix "-scratch"
-    :text "This one's scratchy"
-    (defvar wal/scratch-persist-file scratch)
+  (with-current-buffer (get-buffer-create "*scratch*")
+    (erase-buffer)
+    (insert "This one's itchy"))
 
-    (let ((file (find-file-noselect wal/scratch-persist-file)))
-      (with-current-buffer file
-        (should (string-equal "This one's scratchy" (buffer-string)))
-        (kill-buffer (current-buffer))))
+  (wal/persist-scratch)
 
-    (with-current-buffer (get-buffer-create "*scratch*")
-      (erase-buffer)
-      (insert "This one's itchy"))
+  (let ((file (find-file-noselect wal/scratch-persist-file)))
 
-    (wal/persist-scratch)
+    (with-current-buffer file
+      (should (string-equal "This one's itchy" (buffer-string)))))
 
-    (let ((file (find-file-noselect wal/scratch-persist-file)))
-      (with-current-buffer file
-        (should (string-equal "This one's itchy" (buffer-string)))))
+  (with-current-buffer (get-buffer-create "*scratch*")
+    (erase-buffer)
+    (should (string-equal "" (buffer-string)))
+    (wal/rehydrate-scratch)
+    (should (string-equal "This one's itchy" (buffer-string))))
 
-    (with-current-buffer (get-buffer-create "*scratch*")
-      (erase-buffer)
-      (should (string-equal "" (buffer-string)))
-      (wal/rehydrate-scratch)
-      (should (string-equal "This one's itchy" (buffer-string))))))
+  (delete-file wal/scratch-persist-file))
 #+END_SRC
 
 *** Indentation
@@ -10323,8 +10318,7 @@ This package has a Cask file to set it up as a testable package.
 
 (development
  (depends-on "ert-runner")
- (depends-on "undercover")
- (depends-on "ert-x"))
+ (depends-on "undercover"))
 
 (package "wal" "1.7.12" "Walheimat's configuration")
 
