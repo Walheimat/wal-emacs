@@ -1971,6 +1971,16 @@ Turning on/off certain major modes switching between =major-mode= and
               (funcall error-callback (error-message-string err))))
          (funcall error-callback (string-trim status))))
      nil t)))
+
+(defun wal/kill-async-process-buffers ()
+  "Kill all async process buffers."
+  (interactive)
+  (dolist (buf (buffer-list))
+    (with-current-buffer buf
+      (when (string-match "^\\*wal-async" (buffer-name))
+        (when-let ((window (get-buffer-window buf)))
+          (delete-window window))
+        (kill-buffer buf)))))
 #+END_SRC
 
 ** Footer
@@ -2316,27 +2326,32 @@ Turning on/off certain major modes switching between =major-mode= and
 *** Scratch Buffer
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/scratch-persist-file (expand-file-name "scratch-persist" default-directory))
-
 (ert-deftest test-wal/persist-scratch-and-rehydrate ()
-  (with-current-buffer (get-buffer-create "*scratch*")
-    (erase-buffer)
-    (insert "This one's itchy"))
+  (ert-with-temp-file scratch
+    :suffix "-scratch"
+    :text "This one's scratchy"
+    (defvar wal/scratch-persist-file scratch)
 
-  (wal/persist-scratch)
+    (let ((file (find-file-noselect wal/scratch-persist-file)))
+      (with-current-buffer file
+        (should (string-equal "This one's scratchy" (buffer-string)))
+        (kill-buffer (current-buffer))))
 
-  (let ((file (find-file-noselect wal/scratch-persist-file)))
+    (with-current-buffer (get-buffer-create "*scratch*")
+      (erase-buffer)
+      (insert "This one's itchy"))
 
-    (with-current-buffer file
-      (should (string-equal "This one's itchy" (buffer-string)))))
+    (wal/persist-scratch)
 
-  (with-current-buffer (get-buffer-create "*scratch*")
-    (erase-buffer)
-    (should (string-equal "" (buffer-string)))
-    (wal/rehydrate-scratch)
-    (should (string-equal "This one's itchy" (buffer-string))))
+    (let ((file (find-file-noselect wal/scratch-persist-file)))
+      (with-current-buffer file
+        (should (string-equal "This one's itchy" (buffer-string)))))
 
-  (delete-file wal/scratch-persist-file))
+    (with-current-buffer (get-buffer-create "*scratch*")
+      (erase-buffer)
+      (should (string-equal "" (buffer-string)))
+      (wal/rehydrate-scratch)
+      (should (string-equal "This one's itchy" (buffer-string))))))
 #+END_SRC
 
 *** Indentation
@@ -2627,10 +2642,11 @@ Turning on/off certain major modes switching between =major-mode= and
         (wal/expansion-packs wal/test-packs))
     (with-mock-all ((package-installed-p . (lambda (p) nil))
                     (package-install . (lambda (p) t))
-                    (message . (lambda (m &rest args) (add-to-list 'messages (format m (car args)))))
                     (completing-read . (lambda (_m _l) 'all)))
-      (wal/install-expansion-pack-extra (nth 2 wal/expansion-packs))
-      (should (string-equal (car messages) "Installed all extras.")))
+
+      (ert-with-message-capture messages
+        (wal/install-expansion-pack-extra (nth 2 wal/expansion-packs))
+        (should (string-match "Installed all extras" messages))))
 
     (with-mock-all ((package-installed-p . (lambda (p) nil))
                     (package-install . (lambda (p) t))
@@ -2780,6 +2796,13 @@ Turning on/off certain major modes switching between =major-mode= and
      (message "Shouldn't happen"))
    (lambda (m)
      (should (string-match "Should!" m)))))
+
+(ert-deftest test-wal/kill-async-process-buffers ()
+  (generate-new-buffer-name "*wal-async*")
+  (generate-new-buffer-name "*wal-async*")
+  (let ((buf-count (length (buffer-list))))
+    (wal/kill-async-process-buffers)
+    (should (> buf-count (length (buffer-list))))))
 #+END_SRC
 
 *** Footer
