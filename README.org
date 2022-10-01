@@ -1069,6 +1069,7 @@ Custom functionality.
 (defvar wal/minimal-exclude)
 (defvar wal/scratch-persist-file)
 (defvar wal/use-hyper-prefix)
+(defvar wal/booting)
 
 (defgroup wal-func nil
   "Change values used in utility functions."
@@ -1686,7 +1687,7 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
 (defmacro wal/on-boot (name &rest body)
   "Only expand BODY on boot."
   (declare (indent defun))
-  (if wal/booting
+  (if (bound-and-true-p wal/booting)
       `(progn ,@body)
     `(message "Ignoring statements in '%s'" ',name)))
 #+END_SRC
@@ -9951,6 +9952,7 @@ Display code statistics.
 (declare-function wal/directory-files "init.el")
 (declare-function wal/flycheck-file "wal-fix.el")
 (declare-function wal/flycheck-file--get-buffer "wal-fix.el")
+(declare-function wal/matches-in-string "wal-func.el")
 (declare-function wal/tangle-config "wal-prelude.el")
 
 (defvar wal/emacs-config-default-path)
@@ -10212,6 +10214,7 @@ This will activate minor mode `wal/config-mode'."
     (display-buffer-pop-up-window
      (find-file-noselect changelog)
      '((side . left)))))
+
 
 (defun wal/checkdoc-config-packages ()
   "Run `checkdoc-file' on all package files."
