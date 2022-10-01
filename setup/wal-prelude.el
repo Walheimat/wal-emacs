@@ -15,6 +15,9 @@
 
 (declare-function org-babel-tangle-file "ob-tangle")
 
+(defvar wal/booting nil
+  "Set to t during bootstrapping.")
+
 (defvar wal/init-error nil
   "Set to the error message if initialization failed.")
 
@@ -73,7 +76,10 @@ Unless NO-LOAD is t, this will load the `wal' package."
 
     (unless no-load
       (condition-case err
-          (load-file (expand-file-name "wal.el" package-dir))
+          (progn
+            (setq wal/booting t)
+            (load-file (expand-file-name "wal.el" package-dir))
+            (setq wal/booting nil))
         (error
          (setq wal/init-error (error-message-string err))
          (delay-warning

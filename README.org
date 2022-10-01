@@ -1682,6 +1682,13 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
                   "C-c w ")))
 
     (concat prefix user-key)))
+
+(defmacro wal/on-boot (name &rest body)
+  "Only expand BODY on boot."
+  (declare (indent defun))
+  (if wal/booting
+      `(progn ,@body)
+    `(message "Ignoring statements in '%s'" ',name)))
 #+END_SRC
 
 ** Setup
@@ -2845,23 +2852,24 @@ the session."
       (enable-theme wal/active-theme))
     (load-theme wal/active-theme t)))
 
-;; Some themes require configuration, so we only load after initialization.
-(wal/define-init-setup visuals
-  "Set up visual frills like theme and transparency."
-  :initial
-  ((if wal/modern-emacs
-       (add-to-list 'default-frame-alist `(alpha-background . ,wal/transparency))
-     (add-to-list 'default-frame-alist `(alpha . ,wal/transparency)))
-   (when wal/theme
-     (setq wal/active-theme wal/theme)
-     (wal/load-active-theme)))
-  :always
-  ((wal/set-transparency)
-   (wal/load-active-theme))
-  :immediately t)
+(wal/on-boot visuals
+  ;; Some themes require configuration, so we only load after initialization.
+  (wal/define-init-setup visuals
+    "Set up visual frills like theme and transparency."
+    :initial
+    ((if wal/modern-emacs
+         (add-to-list 'default-frame-alist `(alpha-background . ,wal/transparency))
+       (add-to-list 'default-frame-alist `(alpha . ,wal/transparency)))
+     (when wal/theme
+       (setq wal/active-theme wal/theme)
+       (wal/load-active-theme)))
+    :always
+    ((wal/set-transparency)
+     (wal/load-active-theme))
+    :immediately t)
 
-;; Mix of old and new.
-(setq frame-title-format '(multiple-frames "%b" ("%b@" system-name)))
+  ;; Mix of old and new.
+  (setq frame-title-format '(multiple-frames "%b" ("%b@" system-name))))
 
 (provide 'wal-look)
 
@@ -2992,12 +3000,15 @@ This has no default value."
   "Functions to run when fonts were updated.")
 
 (defun wal/font-update (attribute value faces)
-  "Set ATTRIBUTE to VALUE for FACES."
-  (mapc (lambda (it)
-    (when (internal-lisp-face-p it)
-      (set-face-attribute it nil attribute value)))
-    faces)
-  (run-hooks 'wal/fonts-updated-hook))
+  "Set ATTRIBUTE to VALUE for FACES.
+
+This returns the made updates."
+  (let ((updates (mapc (lambda (it)
+                         (when (internal-lisp-face-p it)
+                           (set-face-attribute it nil attribute value)))
+                       faces)))
+    (run-hooks 'wal/fonts-updated-hook)
+    updates))
 
 (defun wal/select-fixed-font (font)
   "Select fixed (available) FONT."
@@ -3010,9 +3021,9 @@ This has no default value."
   (interactive "nSet fixed font height: ")
   (let ((sensible-height (max (min height 200) 80)))
 
-    (wal/font-update :height sensible-height '(default fixed-pitch))
+    (setq wal/fixed-font-height sensible-height)
 
-    (setq wal/fixed-font-height sensible-height)))
+    (wal/font-update :height sensible-height '(default fixed-pitch))))
 
 (defun wal/select-variable-font (font)
   "Select variable (available) FONT."
@@ -3025,9 +3036,9 @@ This has no default value."
   (interactive "nSet variable font height: ")
   (let ((sensible-height (max (min height 200) 80)))
 
-    (wal/font-update :height sensible-height '(variable-pitch))
+    (setq wal/variable-font-height sensible-height)
 
-    (setq wal/variable-font-height sensible-height)))
+    (wal/font-update :height sensible-height '(variable-pitch))))
 
 (defun wal/available-fonts (fonts)
   "Filter FONTS down to available fonts."
@@ -3049,49 +3060,110 @@ instead."
         (car preferred)
       (car available-fonts))))
 
-(wal/define-init-setup fonts
-  "Set up fonts for GUI Emacs.
-
-This sets `default' and `fixed-pitch' fonts to the first
-available candidate from `wal/fixed-fonts'. Does the same for
-`variable-pitch' using `wal/variable-fonts'."
-  :initial
-  ((when (or (daemonp) (display-graphic-p))
-     (mapc (lambda (it)
-             (when (internal-lisp-face-p it)
-               (set-face-attribute it nil
-                                   :font (wal/fonts-candidate wal/fixed-fonts t)
-                                   :height wal/fixed-font-height)))
-           '(default fixed-pitch))
-     (mapc (lambda (it)
-             (when (internal-lisp-face-p it)
-               (set-face-attribute it nil :inherit 'mode-line)))
-           '(mode-line-active mode-line-inactive))
-
-     ;; Variable pitch face.
-     (set-face-attribute 'variable-pitch nil
-                         :font (wal/fonts-candidate wal/variable-fonts t)
-                         :height wal/variable-font-height)))
-  :always
-  ((run-hooks 'wal/fonts-updated-hook)))
-
 ;; Slanted and enchanted.
 (defun wal/font-lock ()
   "Set comment face to italic and keyword face to bold."
   (set-face-attribute 'font-lock-comment-face nil :slant 'italic :weight 'normal)
   (set-face-attribute 'font-lock-keyword-face nil :weight 'bold))
 
-(wal/general
- "sf" '(wal/set-fixed-font-height :wk "fixed height")
- "sv" '(wal/set-variable-font-height :wk "variable height")
- "sF" '(wal/select-fixed-font :wk "fixed family")
- "sV" '(wal/select-variable-font :wk "variable family"))
+(wal/on-boot fonts
+ (wal/define-init-setup fonts
+   "Set up fonts for GUI Emacs.
 
-(add-hook 'font-lock-mode-hook #'wal/font-lock)
+This sets `default' and `fixed-pitch' fonts to the first
+available candidate from `wal/fixed-fonts'. Does the same for
+`variable-pitch' using `wal/variable-fonts'."
+   :initial
+   ((when (or (daemonp) (display-graphic-p))
+      (mapc (lambda (it)
+              (when (internal-lisp-face-p it)
+                (set-face-attribute it nil
+                                    :font (wal/fonts-candidate wal/fixed-fonts t)
+                                    :height wal/fixed-font-height)))
+            '(default fixed-pitch))
+      (mapc (lambda (it)
+              (when (internal-lisp-face-p it)
+                (set-face-attribute it nil :inherit 'mode-line)))
+            '(mode-line-active mode-line-inactive))
+
+      ;; Variable pitch face.
+      (set-face-attribute 'variable-pitch nil
+                          :font (wal/fonts-candidate wal/variable-fonts t)
+                          :height wal/variable-font-height)))
+   :always
+   ((run-hooks 'wal/fonts-updated-hook)))
+
+ (wal/general
+   "sf" '(wal/set-fixed-font-height :wk "fixed height")
+   "sv" '(wal/set-variable-font-height :wk "variable height")
+   "sF" '(wal/select-fixed-font :wk "fixed family")
+   "sV" '(wal/select-variable-font :wk "variable family"))
+
+ (add-hook 'font-lock-mode-hook #'wal/font-lock))
 
 (provide 'wal-fonts)
 
 ;;; wal-fonts.el ends here
+#+END_SRC
+
+** Tests
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle (expand-file-name "test/wal-fonts-test.el" wal/emacs-config-package-path)
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-fonts-test.el --- Tests for fonts functionality. -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;;
+;; These tests require a lot of mocking as there won't be an
+;; initialized window system.
+
+;;; Code:
+
+(ert-deftest test-wal/font-update ()
+  (should (equal '(default) (wal/font-update :height 120 '(default)))))
+
+(ert-deftest test-wal/select-fixed-font ()
+  (with-mock completing-read (lambda (_m _) "JetBrains Mono")
+    (let ((updates (call-interactively 'wal/select-fixed-font)))
+      (should (equal updates '(default fixed-pitch))))))
+
+(ert-deftest test-wal/set-fixed-font-height ()
+  (let ((updates (funcall-interactively 'wal/set-fixed-font-height 110)))
+    (should (equal updates '(default fixed-pitch)))
+    (should (eq 110 (face-attribute 'default :height)))
+    (should (eq wal/fixed-font-height 110))))
+
+(ert-deftest test-wal/select-variable-font ()
+  (with-mock completing-read (lambda (_m _) "Roboto")
+    (let ((updates (call-interactively 'wal/select-variable-font)))
+    (should (equal updates '(variable-pitch))))))
+
+(ert-deftest test-wal/set-variable-font-height ()
+  (let ((updates (funcall-interactively 'wal/set-variable-font-height 98)))
+    (should (equal updates '(variable-pitch)))
+    (should (eq 98 (face-attribute 'variable-pitch :height)))
+    (should (eq wal/variable-font-height 98))))
+
+(ert-deftest test-wal/preferred-fonts ()
+  (let ((wal/preferred-fonts '("None" "This One")))
+    (should (equal '("This One") (wal/preferred-fonts '("Not" "This One" "Here"))))))
+
+(ert-deftest test-wal/fonts-candidate ()
+  (with-mock-all ((wal/available-fonts . (lambda (_) '("Two" "One")))
+                  (wal/preferred-fonts . (lambda (_) '("One" "Two"))))
+    (should (string-equal "Two" (wal/fonts-candidate '())))
+    (should (string-equal "One" (wal/fonts-candidate '() t)))))
+
+(ert-deftest test-wal/font-lock ()
+  (with-temp-buffer
+    (wal/font-lock)
+    (should (equal 'italic (face-attribute 'font-lock-comment-face :slant)))
+    (should (equal 'bold (face-attribute 'font-lock-keyword-face :weight)))))
+
+;; wal-fonts-test.el ends here
 #+END_SRC
 
 * External Packages
@@ -10272,6 +10344,8 @@ Provide common test functionality and require the packages.
                  (:report-file "coverage.txt")
                  (:send-report nil)))))
 
+(setq wal/booting nil)
+
 ;; Create a dummy `use-package' definition.
 (defmacro use-package (package-name &rest _args)
   "Message that PACKAGE-NAME would have been loaded."
@@ -10294,8 +10368,11 @@ Provide common test functionality and require the packages.
   `(should (pcase (macroexpand-1 ',form)
              ,@(mapcar #'(lambda (x) (list x t)) value))))
 
+(require 'ert-x)
 (require 'wal-func)
 (require 'wal-look)
+(require 'wal-fluff)
+(require 'wal-fonts)
 
 ;;; test-helper.el ends here
 #+END_SRC
