@@ -1954,12 +1954,16 @@ Turning on/off certain major modes switching between =major-mode= and
 ** Shell Commands
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/async-process (command callback error-callback)
-  "Start async process COMMAND with CALLBACK and ERROR-CALLBACK."
+(defun wal/async-process (command callback error-callback &optional suffix)
+  "Start async process COMMAND with CALLBACK and ERROR-CALLBACK.
+
+Optionally, the buffer is created with SUFFIX."
   (with-current-buffer (compilation-start
                         command t
                         (lambda (&rest _)
-                          (generate-new-buffer-name "*wal-async*")))
+                          (if suffix
+                              (generate-new-buffer-name (concat "*wal-async-" suffix "*"))
+                            (generate-new-buffer-name "*wal-async*"))))
     (view-mode +1)
     (add-hook
      'compilation-finish-functions
@@ -1981,6 +1985,20 @@ Turning on/off certain major modes switching between =major-mode= and
         (when-let ((window (get-buffer-window buf)))
           (delete-window window))
         (kill-buffer buf)))))
+#+END_SRC
+
+** Strings
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/matches-in-string (regexp str)
+  "Return all matches of REGEXP in STR."
+  (let ((matches nil))
+    (with-temp-buffer
+      (insert str)
+      (goto-char (point-min))
+      (while (re-search-forward regexp nil t)
+        (push (match-string 1) matches)))
+    matches))
 #+END_SRC
 
 ** Footer
@@ -2798,6 +2816,15 @@ Turning on/off certain major modes switching between =major-mode= and
   (let ((buf-count (length (buffer-list))))
     (wal/kill-async-process-buffers)
     (should (> buf-count (length (buffer-list))))))
+#+END_SRC
+
+*** Strings
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/matches-in-string ()
+  (let ((str "This 1 string has 3 matches, or is it 2?")
+        (pattern "\\(?1:[[:digit:]]\\)"))
+    (should (equal '("2" "3" "1") (wal/matches-in-string pattern str)))))
 #+END_SRC
 
 *** Footer
@@ -10201,19 +10228,37 @@ This will activate minor mode `wal/config-mode'."
     (dolist (it el-files)
       (checkdoc-file it))))
 
+(defun wal/check-coverage--calculate-coverage ()
+  "Calculate the full coverage."
+  (when-let* ((buf (seq-find (lambda (it) (string-match "-coverage\\*" (buffer-name it))) (buffer-list)))
+              (matches (with-current-buffer buf
+                         (wal/matches-in-string "\\(?1:[[:digit:]]+\\)%" (buffer-string))))
+              (nums (mapcar (lambda (it) (string-to-number it)) matches)))
+    (/ (apply '+ nums) (length nums))))
+
 (defun wal/check-coverage ()
   "Check the current coverage for custom functionality."
   (interactive)
   (unless (executable-find "cask")
     (user-error "You need to install `cask' binary"))
 
-  (let* ((dir wal/emacs-config-package-path)
+  (let* ((suffix "coverage")
+         (dir wal/emacs-config-package-path)
          (command (format "cd %s && cask exec ert-runner && cat coverage.txt" dir)))
+
+    (dolist (buf (buffer-list))
+      (when (string-match "-coverage\\*" (buffer-name buf))
+        (when-let ((window (get-buffer-window buf)))
+          (delete-window window))
+        (kill-buffer buf)))
 
     (wal/async-process
      command
-     (lambda () (message "Tests succeed"))
-     (lambda (str) (message "Tests fail: %s" str)))))
+     (lambda ()
+       (let ((average (wal/check-coverage--calculate-coverage)))
+         (message "Tests succeed: %s" average)))
+     (lambda (str) (message "Tests fail: %s" str))
+     suffix)))
 
 (defun wal/flycheck-config-packages ()
   "Run `wal/flycheck' on all config package files."
