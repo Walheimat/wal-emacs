@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Macro `wal/on-boot` was added to only evaluate a body during
+  bootstrapping through `wal/bootstrap`, controlled by variable
+  `wal/booting` set in `wal/prelude`.
+  - This is used for `wal-fonts` and `wal-look`.
+- Function `wal/kill-async-process-buffers` to do just that; used for
+  coverage check.
+- Function `wal/matches-in-string` to collect all regex matches in a
+  string.
+- Various tests to increase coverage; tests for `wal-look` and
+  `wal-fonts`.
+- Function `avy-goto-word-0-{above,below}` are now bound to `H-[` and
+  `H-}` respectively (previous bindings to the `char` variant were
+  committed by mistake).
+
+### Changed
+
+- Function `wal/async-process` now takes a fourth optional argument to
+  suffix the buffer created.
+- The test helper section was moved to **Additional Package Files**.
+- Function `wal/check-coverage` now calculates the overall coverage.
+
+### Removed
+
+- `walled-mode` was replaced by function `wal/l` that serves the same
+  purpose but is more testable.
+- Various superfluous footnotes.
+
 ## [v1.7.12]
 
 Covert operation.
