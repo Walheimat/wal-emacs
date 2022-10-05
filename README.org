@@ -6084,13 +6084,6 @@ More robust project management.
       (apply func args)
     (call-interactively 'projectile-switch-project)))
 
-(defun wal/instead-only-prompt-if-arg-is-present (arg default-cmd prompt)
-  "Advise function to only PROMPT if ARG is provided.
-Otherwise treat DEFAULT-CMD normally."
-  (if (and (stringp default-cmd) (not arg))
-      default-cmd
-    (projectile-read-command prompt default-cmd)))
-
 (use-package projectile
   :commands
   (wal/projectile
@@ -6103,11 +6096,6 @@ Otherwise treat DEFAULT-CMD normally."
   (advice-add
    'projectile-find-file :around
     #'wal/with-projectile-switch)
-
-  ;; Don't prompt for the command unless we're using `C-u'.
-  (advice-add
-   'projectile-maybe-read-command :override
-   #'wal/instead-only-prompt-if-arg-is-present)
 
   :config
   ;; Extend the various ignore lists.
