@@ -259,10 +259,6 @@ Add MELPA to the package archives. Most (if not all) packages will be
 installed from there.
 
 #+BEGIN_SRC emacs-lisp
-(require 'package)
-
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-
 ;; Always defer, maybe ensure.
 (setq use-package-always-defer t)
 (unless wal/flag-deny
@@ -3236,9 +3232,6 @@ available candidate from `wal/fixed-fonts'. Does the same for
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'use-package))
-
 (declare-function wal/install-packages "wal-func.el")
 (declare-function wal/is-expansion-pack "wal-func.el")
 (declare-function wal/prefix-user-key "wal-func.el")
@@ -3266,12 +3259,19 @@ diminish and delight minor modes.
   "Packages to install before using `use-package'.
 Such as package `use-package'.")
 
+(require 'package)
+
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+
 ;; Try to install. On fail refresh and install again.
 (condition-case nil
     (wal/install-packages wal/core-packages :delete-windows t)
   (error
    (package-refresh-contents)
    (wal/install-packages wal/core-packages :delete-windows t)))
+
+(eval-when-compile
+  (require 'use-package))
 #+END_SRC
 
 *** Extensions
