@@ -19,9 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   string.
 - Various tests to increase coverage; tests for `wal-look` and
   `wal-fonts`.
-- Function `avy-goto-word-0-{above,below}` are now bound to `H-[` and
-  `H-}` respectively (previous bindings to the `char` variant were
-  committed by mistake).
+- Adds `use-package` keyword `:wal-bind-keymap` to do just that.
+- User-prefixed `l` now uses this feature to bind `goto-map`.
+- New custom variable `wal/prefer-rjsx` that is used to hook into
+  `js2-mode` and allows switching to `rjsx-mode` for plain JS files.
+- Remove `M-o` binding from `mhtml-mode`.
 
 ### Changed
 
@@ -29,12 +31,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   suffix the buffer created.
 - The test helper section was moved to **Additional Package Files**.
 - Function `wal/check-coverage` now calculates the overall coverage.
+- The coverage status was moved to section **Package-Like**.
+- Directory `wal/site-lisp-directory` is itself added to the
+  `load-path` again.
+- User-prefixed `h` no calls `projectile-find-file` to free
+  user-prefixed `l`.
+- Various bindings in `goto-map` were added for `avy`.
+- Indentation functions no longer call `hack-local-variables`; this is
+  now done by `wal/hook` macro.
+
+### Fixed
+
+- Package `use-package` is now required after it could have been installed.
+- Adding MELPA and requiring `package` now is odne in the **External
+  Packages** section.
 
 ### Removed
 
 - `walled-mode` was replaced by function `wal/l` that serves the same
   purpose but is more testable.
 - Various superfluous footnotes.
+- `projectile-maybe-read-command` is no longer advised since
+  `universal-argument` is swallowed by `transient`.
 
 ## [v1.7.12]
 
