@@ -1529,18 +1529,12 @@ Toggle indentation, allow for automatic activation from local
 variables.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/disable-tabs (&optional no-hack)
+(defun wal/disable-tabs ()
   "Disable tabs.
 
-Sets variable `indent-tabs-mode' to nil.
-
-Will hack local variables unless NO-HACK is non-nil (which will
-be the case when called interactively)."
+Sets variable `indent-tabs-mode' to nil."
   (interactive "p")
-  (setq indent-tabs-mode nil)
-
-  (unless no-hack
-    (hack-local-variables)))
+  (setq indent-tabs-mode nil))
 
 (defun wal/enable-tabs ()
   "Enable tabs.
@@ -1552,11 +1546,7 @@ Sets tab variable `indent-tabs-mode' to t."
 (cl-defun wal/maybe-enable-tabs (&key indent-with)
   "Maybe enable tabs.
 
-Optionally set `indent-line-function' to INDENT-WITH.
-
-This function will call `hack-local-variables'."
-  (hack-local-variables)
-
+Optionally set `indent-line-function' to INDENT-WITH."
   (when indent-with
     (setq-local indent-line-function indent-with))
 
@@ -1920,6 +1910,7 @@ The rest of the BODY will be spliced into the lambda."
          ,docs
          ,(when messages
             `(wal/message-in-a-bottle ,messages))
+         (hack-local-variables)
          ,(cond ((equal 'always tabs)
                  `(wal/enable-tabs))
                 ((equal t tabs)
@@ -2382,11 +2373,8 @@ Optionally, the buffer is created with SUFFIX."
 (ert-deftest test-wal/disable-tabs--disables ()
   (with-temp-buffer
     (setq-local indent-tabs-mode t)
-    (wal/disable-tabs t)
-    (should (eq indent-tabs-mode nil))
-
-    (with-mock hack-local-variables (lambda () 'hacked)
-      (should (equal 'hacked (wal/disable-tabs))))))
+    (wal/disable-tabs)
+    (should (eq indent-tabs-mode nil))))
 
 
 (ert-deftest test-wal/enable-tabs--enables ()
@@ -2738,6 +2726,7 @@ Optionally, the buffer is created with SUFFIX."
       (defun wal/test-hook ()
         "We're just testing."
         (wal/message-in-a-bottle '("Just testing"))
+        (hack-local-variables)
         (wal/maybe-enable-tabs)
         (wal/lsp))
       (with-eval-after-load 'lsp-mode
@@ -2756,6 +2745,7 @@ Optionally, the buffer is created with SUFFIX."
       (defun wal/test-hook ()
         "We're just testing."
         (wal/message-in-a-bottle '("Just testing"))
+        (hack-local-variables)
         (wal/maybe-enable-tabs :indent-with 'some-fun)
         (wal/lsp))
       nil
@@ -2771,6 +2761,7 @@ Optionally, the buffer is created with SUFFIX."
       (defun wal/test-hook ()
         "We're just testing."
         (wal/message-in-a-bottle '("Just testing"))
+        (hack-local-variables)
         (wal/disable-tabs)
         nil)
       nil
