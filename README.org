@@ -658,11 +658,11 @@ There are a few non-standard meta sequences.
 Most hyper[fn:9] bindings are quick-access actions:
 
 + =H-8= calls =kubernetes-overview=
++ =H-h= finds project file
 + =H-i= switches =perspective=
 + =H-j= switches buffer using =consult=
 + =H-k= acts on the current point with =embark= (immediately if called
   with =C-u=)
-+ =H-l= finds project file
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-m= shows version control status using =magit=
 + =H-n= searches project with =rg=
@@ -675,6 +675,10 @@ It's also used for some dispatches:
 + =H-n= for =rg=
 + =H-o= for =ace-window=, and if called with =C-u=
 + =H-<SPC>= for =org-roam=.
+
+It also provides an alternative bindings for command maps:
+
++ =H-l= for =goto-map=.
 
 **** Caps to Hyper
 
@@ -5069,9 +5073,9 @@ Who needs a mouse.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/avy-goto-word (&optional line-first)
-  "Jump to currently visible word in the current line.
+  "Jump to a word in current line.
 
-If called with `universal-argument', go to LINE-FIRST."
+If LINE-FIRST is t, move to a line first."
   (interactive "P")
   (when line-first
     (avy-goto-line))
@@ -5128,13 +5132,16 @@ beginning."
   :bind
   (:map goto-map
    ("c" . avy-goto-char)           ; Replaces `goto-char'.
-   ("l" . avy-goto-end-of-line)
+   ("l" . avy-goto-line)
+   ("e" . avy-goto-end-of-line)
    ("w" . wal/avy-goto-word)
-   ("a" . avy-goto-word-0))
+   ("s" . avy-goto-subword-1)
+   ("a" . avy-goto-word-0)
+   ("q" . avy-goto-word-0-above)
+   ("z" . avy-goto-word-0-below))
 
-  :wal-bind
-  (("[" . avy-goto-word-0-above)
-   ("]" . avy-goto-word-0-below))
+  :wal-bind-keymap
+  (("l" . goto-map))
 
   :general
   ;; Lines.
@@ -6153,7 +6160,7 @@ More robust project management.
   (projectile-generic-command "fd . -0 --type f --color=never")
 
   :wal-bind
-  (("l" . projectile-find-file)
+  (("h" . projectile-find-file)
    ("p" . projectile-switch-project))
 
   :general
