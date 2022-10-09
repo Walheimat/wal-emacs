@@ -270,6 +270,7 @@ installed from there.
     (add-hook 'after-init-hook #'use-package-report)))
 
 (wal/insert-after 'use-package-keywords :bind-keymap* :wal-bind)
+(wal/insert-after 'use-package-keywords :wal-bind :wal-bind-keymap)
 
 (wal/insert-after 'use-package-keywords :pin :wal-ways)
 (add-to-list 'use-package-defaults '(:wal-ways t t))
@@ -3284,7 +3285,7 @@ We'll add keyword =:wal-bind= to =use-package= in order to create bindings
 prefixed by =wal/prefix-user-key=.
 
 #+BEGIN_SRC emacs-lisp
-(defun use-package-normalize/:wal-bind (name keyword args)
+(defun wal/use-package-normalize-binder (name keyword args)
   "Normalize NAME, KEYWORD, ARGS.
 
 This normalizer is a copy of the normalizer for `:bind'. There
@@ -3325,8 +3326,12 @@ are two differences:
                    " or a list of such values"))))))
     args*))
 
-;; We can use the same handler as `:bind'.
+(defalias 'use-package-normalize/:wal-bind 'wal/use-package-normalize-binder)
+(defalias 'use-package-normalize/:wal-bind-keymap 'wal/use-package-normalize-binder)
+
+;; We can use the same handler as `:bind' and `:bind-keymap'.
 (defalias 'use-package-handler/:wal-bind 'use-package-handler/:bind)
+(defalias 'use-package-handler/:wal-bind-keymap 'use-package-handler/:bind-keymap)
 
 ;; Make sure that functions are autoloaded.
 (defalias 'use-package-autoloads/:wal-bind 'use-package-autoloads-mode)
