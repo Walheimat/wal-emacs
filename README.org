@@ -7657,6 +7657,16 @@ Let's greet the world.
 (defvar js2-mode-map)
 (defvar wal/ascii-whale)
 (defvar wal/use-projectile)
+
+(defgroup wal-lang nil
+  "Change language-specific settings."
+  :group 'wal
+  :tag "Langauge")
+
+(defcustom wal/prefer-rjsx nil
+  "Wheter to prefer `rjsx-mode' over plain `js2-mode' for normal JavaScript files."
+  :group 'wal-lang
+  :type 'boolean)
 #+END_SRC
 
 ** Elixir
@@ -8284,12 +8294,25 @@ Can we have =deno= instead of =node=?
 Improved editing for JSX files. Extends =js2=.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/maybe-use-rjsx ()
+  "If `rjsx-mode' is preferred, safely switch to."
+  (hack-local-variables)
+
+  (when wal/prefer-rjsx
+    (defvar js2-mode-hook)
+    (let ((js2-mode-hook nil))
+
+      (rjsx-mode))))
+
 (use-package rjsx-mode
   :wal-ways nil
 
   :ensure nil
 
   :mode "\\.jsx\\'"
+
+  :hook
+  (js2-mode . wal/maybe-use-rjsx)
 
   :init
   (wal/hook rjsx-mode
