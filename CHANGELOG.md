@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New custom variable `wal/prefer-rjsx` that is used to hook into
   `js2-mode` and allows switching to `rjsx-mode` for plain JS files.
 - Remove `M-o` binding from `mhtml-mode`.
+- Files with ending `.tsx` now also load `typescript-mode`.
+- Built-in packages `mhtml-mode` and `nxml-mode` now have a
+  configuration.
 
 ### Changed
 
@@ -53,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Various superfluous footnotes.
 - `projectile-maybe-read-command` is no longer advised since
   `universal-argument` is swallowed by `transient`.
+- No longer fixes the `jdtls` version.
 
 ## [v1.7.12]
 
