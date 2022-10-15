@@ -6091,7 +6091,7 @@ More robust project management.
   ;; Switch to project first if outside a project.
   (advice-add
    'projectile-find-file :around
-    #'wal/with-projectile-switch)
+   #'wal/with-projectile-switch)
 
   :config
   ;; Extend the various ignore lists.
@@ -6101,6 +6101,14 @@ More robust project management.
               (nth 1 wal/projectile-ignored))
   (wal/append 'projectile-globally-ignored-file-suffixes
               (nth 2 wal/projectile-ignored))
+
+  (transient-define-suffix wal/projectile-maybe-tokei ()
+    "Run `tokei' if it is bound."
+    :key "?"
+    :description "tokei"
+    :inapt-if-not (lambda () (fboundp 'tokei))
+    (interactive)
+    (call-interactively 'tokei))
 
   (transient-define-prefix wal/projectile ()
     "Call `projectile' commands."
@@ -6122,8 +6130,7 @@ More robust project management.
      ["Other"
       ;; The `projectile' variant seems buggy.
       ("l" "add dir local" add-dir-local-variable)
-      ("?" "tokei" tokei
-       :inapt-if-not (lambda () (featurep 'tokei)))]
+      (wal/projectile-maybe-tokei)]
      ["Projects"
       ("o" "switch to open project" projectile-switch-open-project)]])
 
