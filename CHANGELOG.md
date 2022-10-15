@@ -43,6 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Indentation functions no longer call `hack-local-variables`; this is
   now done by `wal/hook` macro.
 - History size for `vterm` was increased tenfold.
+- Custom `hydra` for `dap-mode` now also bind `dap-disconnect` and
+  `dap-ui-repl`.
 
 ### Fixed
 
