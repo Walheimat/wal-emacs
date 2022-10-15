@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - History size for `vterm` was increased tenfold.
 - Custom `hydra` for `dap-mode` now also bind `dap-disconnect` and
   `dap-ui-repl`.
+- Switches back to `traditional` way of displaying `magit`.
 
 ### Fixed
 
