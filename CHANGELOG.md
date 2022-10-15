@@ -52,6 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `use-package` is now required after it could have been installed.
 - Adding MELPA and requiring `package` now is odne in the **External
   Packages** section.
+- Various `transient`s no longer reference potentially undefined
+  commands. They now instead use custom suffixes.
 
 ### Removed
 
