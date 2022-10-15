@@ -7839,6 +7839,30 @@ TOML."
   ;; Show inferior shell at the bottom.
   (wdb/side 'inferior-python-mode)
 
+  (transient-define-suffix wal/python-maybe-poetry ()
+    "Run poetry if it exists."
+    :key "p"
+    :description "poetry"
+    :inapt-if-not (lambda () (fboundp 'poetry))
+    (interactive)
+    (call-interactively 'poetry))
+
+  (transient-define-suffix wal/python-maybe-pyvenv-activate ()
+    "Run `pyvenv-activate' if it exists."
+    :key "v"
+    :description "activate pyvenv"
+    :inapt-if-not (lambda () (fboundp 'pyvenv-activate))
+    (interactive)
+    (call-interactively 'pyvenv-activate))
+
+  (transient-define-suffix wal/python-maybe-ein:run ()
+    "Run `ein:run if it exists."
+    :key "e"
+    :description "ein start"
+    :inapt-if-not (lambda () (fboundp 'ein:run))
+    (interactive)
+    (call-interactively 'ein:run))
+
   (transient-define-prefix wal/python ()
     "Access `python-mode' commands."
     [["Inferior shell"
@@ -7854,15 +7878,10 @@ TOML."
      ["Test"
       ("t" "pytest" python-pytest-dispatch
        :inapt-if-not (lambda () (fboundp 'python-pytest-dispatch)))]
-     ["Notebooks"
-      ("e r" "ein run" ein:run)
-      ("e s" "ein stop" ein:stop)]
-     ["Virtual environment"
-      ("v" "activate pyvenv" pyvenv-activate
-       :inapt-if-not (lambda () (featurep 'pyvenv)))]
-     ["Poetry"
-      ("p" "poetry" poetry
-       :inapt-if-not (lambda () (featurep 'poetry)))]])
+     ["Extensions"
+      (wal/python-maybe-poetry)
+      (wal/python-maybe-pyvenv-activate)
+      (wal/python-maybe-ein:run)]])
 
   :custom
   (python-indent-guess-indent-offset nil)
