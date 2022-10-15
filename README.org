@@ -9282,6 +9282,14 @@ minimum prefixes are reduced."
   ;; Don't keep track of multiple projects.
   (advice-add 'lsp :before #'wal/first-prevent-adding-other-projects)
 
+  (transient-define-suffix wal/lsp-dispatch-maybe-consult-lsp ()
+    "Only run `consult-lsp' if it is bound."
+    :description "symbol"
+    :key "s"
+    :inapt-if-not (lambda () (fboundp 'consult-lsp-file-symbols))
+    (interactive)
+    (call-interactively 'consult-lsp-file-symbols))
+
   (transient-define-prefix wal/lsp-dispatch ()
     "Call `lsp-mode' functions."
     [["Format"
@@ -9297,8 +9305,7 @@ minimum prefixes are reduced."
      ["Go to"
       ("d" "definition" lsp-find-definition)
       ("e" "errors" lsp-treemacs-errors-list)
-      ("s" "symbol" consult-lsp-file-symbols
-       :inapt-if-not (lambda () (featurep 'consult-lsp)))
+      (wal/lsp-dispatch-maybe-consult-lsp)
       ("H" "hierarchy" lsp-treemacs-call-hierarchy)]
      ["Workspace"
       ("R" "restart" lsp-workspace-restart)
