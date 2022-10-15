@@ -6539,6 +6539,14 @@ case."
                                   wal/org-roam-dailies-directory
                                   wal/org-roam-directory))
 
+  (transient-define-suffix wal/org-roam-maybe-ui ()
+    "Run `org-roam-ui' if it is bound."
+    :key "u"
+    :description "ui"
+    :inapt-if-not (lambda () (fboundp 'org-roam-ui-mode))
+    (interactive)
+    (call-interactively 'org-roam-ui-mode))
+
   (transient-define-prefix wal/org-roam ()
     "Run `org-roam' commands."
     [["Capture"
@@ -6558,8 +6566,7 @@ case."
        :inapt-if-not (lambda () (eq major-mode 'org-mode)))]
      ["Visualization"
       ("g" "graph" org-roam-graph)
-      ("u" "ui" org-roam-ui-mode
-       :inapt-if-not (lambda () (featurep 'org-roam-ui)))]])
+      (wal/org-roam-maybe-ui)]])
 
   (org-roam-db-autosync-enable)
 
@@ -6576,11 +6583,11 @@ case."
                          "#+title: ${title}\n")
       :unnarrowed t)))
   (org-roam-dailies-capture-templates
-    '(("d" "default" entry
-       "* %?\n:PROPERTIES:\n:CREATED_AT: %U\n:TASK: %k\n:END:"
-       :target (file+head "%<%Y-%m-%d>.org"
-                          "#+title: %<%Y-%m-%d>\n")
-       :empty-lines 1)))
+   '(("d" "default" entry
+      "* %?\n:PROPERTIES:\n:CREATED_AT: %U\n:TASK: %k\n:END:"
+      :target (file+head "%<%Y-%m-%d>.org"
+                         "#+title: %<%Y-%m-%d>\n")
+      :empty-lines 1)))
 
   :wal-bind
   ("<SPC>" . wal/org-roam))
