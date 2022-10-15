@@ -3571,19 +3571,6 @@ Some people need macros, okay?
 (use-package kmacro
   :ensure nil
 
-  :config
-  (transient-define-prefix wal/kmacro ()
-    "Access `kmacro' commands."
-    [["Macro"
-      ("s" "start (or insert)" kmacro-start-macro-or-insert-counter)
-      ("m" "end (or call)" kmacro-end-or-call-macro)]
-     ["Narrow"
-      ("c" "complete" consult-kmacro
-       :inapt-if-not (lambda () (featurep 'consult)))]])
-
-  :bind
-  ("C-c k" . wal/kmacro)
-
   :general
   (wal/lieutenant "k" '(:keymap kmacro-keymap :wk "kmacro")))
 #+END_SRC
@@ -5732,7 +5719,9 @@ not pollute the current one."
    ("g" . consult-goto-line)
    ("h" . consult-org-heading)
    ("m" . consult-mark)
-   ("M" . consult-global-mark))
+   ("M" . consult-global-mark)
+   :map kmacro-keymap
+   ("u" . consult-kmacro))
 
   :wal-bind
   ("j" . wal/univ-consult-buffer)
