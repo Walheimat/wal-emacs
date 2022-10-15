@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Various bindings in `goto-map` were added for `avy`.
 - Indentation functions no longer call `hack-local-variables`; this is
   now done by `wal/hook` macro.
+- History size for `vterm` was increased tenfold.
 
 ### Fixed
 
