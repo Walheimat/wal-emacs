@@ -7454,6 +7454,14 @@ Forget remembering =git= commands, use =transient=.
   (wal/univ magit-status wal/magit-dispatch)
 
   :config
+  (transient-define-suffix wal/magit-dispatch-maybe-timemachine ()
+    "Maybe run `git-timemachine-toggle' if it is bound."
+    :key "t"
+    :description "time machine"
+    :inapt-if-not (lambda () (fboundp 'git-timemachine-toggle))
+    (interactive)
+    (call-interactively 'git-timemachine-toggle))
+
   (transient-define-prefix wal/magit-dispatch ()
     "Call `magit' commands in a `magit'-y way."
     [["Core"
@@ -7468,8 +7476,7 @@ Forget remembering =git= commands, use =transient=.
      ["Other"
       ("x" "run" magit-run)
       ("c" "clone" magit-clone)
-      ("t" "time machine" git-timemachine-toggle
-       :inapt-if-not (lambda () (featurep 'git-timemachine)))]])
+      (wal/magit-dispatch-maybe-timemachine)]])
 
   :wal-bind
   ("m" . wal/univ-magit-status)
