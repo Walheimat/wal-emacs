@@ -8153,26 +8153,26 @@ Get some closure.
 
 #+begin_src emacs-lisp
 (use-package clojure-mode
- :wal-ways nil
+  :wal-ways nil
 
- :ensure nil
+  :ensure nil
 
- :init
- (wal/hook clojure-mode
-   "Hook into `clojure-mode'."
-   :lsp t
-   :messages '("Cider brew"))
+  :init
+  (wal/hook clojure-mode
+    "Hook into `clojure-mode'."
+    :lsp t
+    :messages '("Cider brew"))
 
- :config
- (transient-define-prefix wal/clojure ()
-   "Access `clojure-mode' commands."
-   [["Cider"
-     ("r" "repl" cider-jack-in
-      :inapt-if-nil (lambda () (featurep 'cider)))
-     ("n" "set namespace" cider-repl-set-ns
-      :inapt-if-nil (lambda () (featurep 'cider)))]])
- :general
- (wal/major! wal/clojure :keymaps 'clojure-mode-map))
+  :config
+  (with-eval-after-load 'cider
+    (transient-define-prefix wal/clojure ()
+      "Access `clojure-mode' commands."
+      [["Cider"
+        ("r" "repl" cider-jack-in)
+        ("n" "set namespace" cider-repl-set-ns)]]))
+
+  :general
+  (wal/major! wal/clojure :keymaps 'clojure-mode-map))
 #+end_src
 
 *** cider
