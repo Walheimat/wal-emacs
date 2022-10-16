@@ -560,6 +560,9 @@ I use many[fn:8] custom keybindings.
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+
 (declare-function wal/colonel "wal-key-bindings.el")
 (declare-function wal/general "wal-key-bindings.el")
 (declare-function wal/general-sink "wal-key-bindings.el")
@@ -946,11 +949,6 @@ Additional left PADDING can be passed."
     ("p" scroll-other-window-down)
     ("n" scroll-other-window)
     ("q" nil "quit")))
-
-(wal/major
- "t" '(wal/text-scale/body :wk "text-scale")
- "o" '(wal/resize-window/body :wk "resize-window")
- "v" '(wal/scroll-other-window/body :wk "scroll-other-window"))
 #+END_SRC
 
 *** transient
@@ -981,52 +979,59 @@ above).
 Most bindings are declared in individual packages.
 
 #+BEGIN_SRC emacs-lisp
-;; Additional `general' bindings.
-(wal/general
-  "e" '(:ignore t :wk "Emacs")
-  "eq" '(wal/delete-edit-or-kill :wk "quit")
-  "er" '(restart-emacs :wk "restart")
-  "f" '(:ignore t :wk "find")
-  "fc" '(wal/find-custom-file :wk "custom")
-  "fi" '(wal/find-init :wk "init")
-  "ff" '(wal/find-fish-config :wk "fish config")
-  "fl" '(find-library :wk "library")
-  "fw" '(wal/find-config :wk "wal")
-  "fp" '(list-processes :wk "processes")
-  "s" '(:ignore t :wk "set")
-  "sT" '(wal/set-transparency :wk "transparency")
-  "sc" '(wal/set-cursor-type :wk "cursor")
-  "p" '(:ignore t :wk "package")
-  "pf" '(package-refresh-contents :wk "refresh")
-  "pi" '(package-install :wk "install")
-  "pl" '(list-packages :wk "list")
-  "pr" '(package-reinstall :wk "re-install")
-  "pd" '(package-delete :wk "delete"))
+(wal/on-boot key-bindings
+  (wal/major
+    "t" '(wal/text-scale/body :wk "text-scale")
+    "o" '(wal/resize-window/body :wk "resize-window")
+    "v" '(wal/scroll-other-window/body :wk "scroll-other-window"))
 
-(wal/general-sink
- "b" '(eww :wk "eww"))
+  ;; Additional `general' bindings.
+  (wal/general
+    "e" '(:ignore t :wk "Emacs")
+    "eq" '(wal/delete-edit-or-kill :wk "quit")
+    "er" '(restart-emacs :wk "restart")
+    "f" '(:ignore t :wk "find")
+    "fc" '(wal/find-custom-file :wk "custom")
+    "fi" '(wal/find-init :wk "init")
+    "ff" '(wal/find-fish-config :wk "fish config")
+    "fl" '(find-library :wk "library")
+    "fw" '(wal/find-config :wk "wal")
+    "fp" '(list-processes :wk "processes")
+    "s" '(:ignore t :wk "set")
+    "sT" '(wal/set-transparency :wk "transparency")
+    "sc" '(wal/set-cursor-type :wk "cursor")
+    "p" '(:ignore t :wk "package")
+    "pf" '(package-refresh-contents :wk "refresh")
+    "pi" '(package-install :wk "install")
+    "pl" '(list-packages :wk "list")
+    "pr" '(package-reinstall :wk "re-install")
+    "pd" '(package-delete :wk "delete"))
 
-(wal/colonel! "q" 'query-replace 'query-replace-regexp)
+  (wal/general-sink
+   "b" '(eww :wk "eww"))
 
-(wal/major "w" 'read-only-mode)
+  (wal/colonel! "q" 'query-replace 'query-replace-regexp)
 
-(wal/lieutenant "g" '(:keymap goto-map :wk "goto"))
+  (wal/major "w" 'read-only-mode)
 
-;; Use H-u for C-u.
-(when wal/use-hyper-prefix
-  (let ((prefix (wal/prefix-user-key "u")))
+  (wal/lieutenant "g" '(:keymap goto-map :wk "goto"))
 
-    (general-define-key prefix 'universal-argument)
-    (general-define-key
-     :keymaps 'universal-argument-map
-     prefix 'universal-argument-more)))
+  ;; Use H-u for C-u.
+  (when wal/use-hyper-prefix
+    (let ((prefix (wal/prefix-user-key "u")))
 
-(global-set-key (kbd "C-?") #'undo-redo)
-(global-set-key (kbd "M-o") #'wal/other-window)
-(global-set-key (kbd "C-;") #'comment-line)
-(global-set-key (kbd "C-c c") #'completion-at-point)
+      (general-define-key prefix 'universal-argument)
+      (general-define-key
+       :keymaps 'universal-argument-map
+       prefix 'universal-argument-more)))
 
-(global-unset-key (kbd "C-x C-c")) ;; Unbinds `save-buffers-kill-terminal'.
+  (global-set-key (kbd "C-?") #'undo-redo)
+  (global-set-key (kbd "M-o") #'wal/other-window)
+  (global-set-key (kbd "C-;") #'comment-line)
+  (global-set-key (kbd "C-c c") #'completion-at-point)
+
+  ;; Unbinds `save-buffers-kill-terminal'.
+  (global-unset-key (kbd "C-x C-c")))
 #+END_SRC
 
 ** Footer
@@ -3232,6 +3237,9 @@ available candidate from `wal/fixed-fonts'. Does the same for
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+
 (declare-function wal/install-packages "wal-func.el")
 (declare-function wal/is-expansion-pack "wal-func.el")
 (declare-function wal/prefix-user-key "wal-func.el")
@@ -3261,17 +3269,18 @@ Such as package `use-package'.")
 
 (require 'package)
 
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(wal/on-boot external
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 
-;; Try to install. On fail refresh and install again.
-(condition-case nil
-    (wal/install-packages wal/core-packages :delete-windows t)
-  (error
-   (package-refresh-contents)
-   (wal/install-packages wal/core-packages :delete-windows t)))
+  ;; Try to install. On fail refresh and install again.
+  (condition-case nil
+      (wal/install-packages wal/core-packages :delete-windows t)
+    (error
+     (package-refresh-contents)
+     (wal/install-packages wal/core-packages :delete-windows t))))
 
 (eval-when-compile
-  (require 'use-package))
+    (require 'use-package))
 #+END_SRC
 
 *** Extensions
@@ -3440,9 +3449,10 @@ external ones.
 
 (defvar wal/modern-emacs)
 
-(wdb/direction 'help-mode)
-(wdb/direction 'shortdoc-mode)
-(wdb/side 'debug-mode)
+(wal/on-boot emacs
+  (wdb/direction 'help-mode)
+  (wdb/direction 'shortdoc-mode)
+  (wdb/side 'debug-mode))
 #+END_SRC
 
 ** Improved Editing
@@ -5277,7 +5287,7 @@ Complete commands and code.
 
 (eval-when-compile
   (require 'transient)
-  (require 'perspective))
+  (require 'perspective nil t))
 
 (declare-function org-clock-in "ext:org-clock.el")
 (declare-function persp-names "ext:perspective.el")

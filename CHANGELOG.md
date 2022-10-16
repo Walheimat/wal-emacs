@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Macro `wal/on-boot` was added to only evaluate a body during
   bootstrapping through `wal/bootstrap`, controlled by variable
   `wal/booting` set in `wal/prelude`.
-  - This is used for `wal-fonts` and `wal-look`.
+- Sub-packages that have side-effect code now use this macro.
 - Function `wal/kill-async-process-buffers` to do just that; used for
   coverage check.
 - Function `wal/matches-in-string` to collect all regex matches in a
