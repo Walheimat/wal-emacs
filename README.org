@@ -5777,6 +5777,9 @@ Keep order.
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'perspective nil t))
+
 (declare-function consult-customize "ext:consult.el")
 (declare-function consult--buffer-state "ext:consult.el")
 (declare-function consult--regexp-filter "ext:consult.el")
@@ -5871,7 +5874,7 @@ shown."
 Group buffers in workspaces.
 
 #+BEGIN_SRC emacs-lisp
-;; Utility for hooks.
+;; Utility
 
 (defun wal/persp-maybe-shorten ()
   "Maybe shorten mode-line string when many perspectives are open."
@@ -5879,6 +5882,18 @@ Group buffers in workspaces.
 
     (setq persp-modestring-short
         (> truncated-length wal/perspective-shorten-after))))
+
+(defun wal/kill-dired-buffers-in-perspective ()
+  "Kill all Dired buffers in the current perspective."
+  (interactive)
+  (with-current-perspective
+    (let ((buffers (buffer-list)))
+      (dolist (it buffers)
+        (with-current-buffer it
+          (when (derived-mode-p 'dired-mode it)
+            (when-let ((window (get-buffer-window it)))
+              (delete-window window))
+            (kill-buffer it)))))))
 
 ;; Advice.
 
