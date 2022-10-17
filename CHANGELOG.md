@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Function `wal/kill-dired-buffers-in-perspective` to do just that.
+- Configuration for the XML language server in `lsp-mode`.
+
+### Changed
+
+- Command to find dailies directory is now bound in `org-roam`'s
+  transient.
+
 ## [v1.7.13]
 
 Give them the boot.
