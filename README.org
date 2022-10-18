@@ -8314,10 +8314,19 @@ Can we have =deno= instead of =node=?
     (require 'dap-node))
 
   (with-eval-after-load 'prettier
+    (transient-define-suffix wal/js-lsp-rename-file ()
+      "Call `lsp-javascript-rename-file' if possible."
+      :key "r"
+      :description "rename file"
+      :inapt-if-not (lambda () (fboundp 'lsp-javascript-rename-file))
+      (interactive)
+      (call-interactively 'lsp-javascript-rename-file))
+
     (transient-define-prefix wal/js ()
       "Access JS commands."
-      [["Linting"
-        ("p" "prettier" prettier-prettify)]]))
+      [["Actions"
+        ("p" "prettier" prettier-prettify)
+        (wal/js-lsp-rename-file)]]))
 
   :custom
   (js2-show-parse-errors nil)
