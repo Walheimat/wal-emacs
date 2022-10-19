@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command to find dailies directory is now bound in `org-roam`'s
   transient.
 
+### Fixed
+
+- Function `org-store-log-note` is now advised to remove agenda
+  buffers from the perspective to avoid cluttering.
+
 ## [v1.7.13]
 
 Give them the boot.

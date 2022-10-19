@@ -5641,12 +5641,11 @@ Do not ignore hidden files."
 If the initial perspective still exists, switch to that first to
 not pollute the current one."
   (interactive)
-  (if (memq persp-initial-frame-name (persp-names))
-      (with-perspective persp-initial-frame-name
-        (save-window-excursion
+  (save-window-excursion
+    (if (memq persp-initial-frame-name (persp-names))
+        (with-perspective persp-initial-frame-name
           (consult-org-agenda)
-          (org-clock-in)))
-    (save-window-excursion
+          (org-clock-in))
       (consult-org-agenda)
       (org-clock-in))))
 
@@ -5800,6 +5799,8 @@ Keep order.
 (defvar consult-buffer-filter)
 (defvar consult-buffer-sources)
 (defvar consult--source-buffer)
+(defvar org-agenda-files)
+(defvar persp-initial-frame-name)
 (defvar persp-modestring-short)
 (defvar projectile-globally-ignored-directories)
 (defvar projectile-globally-ignored-files)
@@ -5947,6 +5948,16 @@ No filter is applied if called with `universal-argument'."
       (apply fun nil)
     (apply fun (list (seq-filter 'buffer-live-p (persp-current-buffers))))))
 
+(defun wal/then-remove-agenda-buffers ()
+  "Remove agenda buffers from the current perspective."
+  (when (and (fboundp 'persp-remove-buffer)
+             (not (string-equal (persp-current-name) persp-initial-frame-name)))
+    (dolist (buf (persp-current-buffers))
+      (when-let* ((name (buffer-file-name buf))
+                  (matches (seq-some (lambda (it) (string-prefix-p it name)) org-agenda-files)))
+
+        (persp-remove-buffer buf)))))
+
 ;; Integration with `consult'.
 
 (defun wal/consult-filtered-persp-buffers ()
@@ -6016,6 +6027,11 @@ The current buffer and Dired buffers are filtered."
   (advice-add
    'list-buffers--refresh :around
    #'wal/with-persp-buffers-only)
+
+  ;; Remove agenda buffers after notes are stored.
+  (advice-add
+   'org-store-log-note :after
+   #'wal/then-remove-agenda-buffers)
 
   ;; Customize buffer source, add new one for Dired.
   (with-eval-after-load 'consult
