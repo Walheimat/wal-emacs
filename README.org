@@ -2879,6 +2879,11 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
   :type '(choice symbol (const nil))
   :group 'wal-look)
 
+(defcustom wal/hidpi nil
+  "Whether the display is considered HiDPI."
+  :type 'boolean
+  :group 'wal-look)
+
 (defun wal/set-transparency (&optional value)
   "Set the transparency of the frame to VALUE.
 
@@ -2915,7 +2920,9 @@ the session."
        (add-to-list 'default-frame-alist `(alpha . ,wal/transparency)))
      (when wal/theme
        (setq wal/active-theme wal/theme)
-       (wal/load-active-theme)))
+       (wal/load-active-theme))
+     (when wal/hidpi
+       (set-fringe-mode 18)))
     :always
     ((wal/set-transparency)
      (wal/load-active-theme))

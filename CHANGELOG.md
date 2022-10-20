@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Function `wal/kill-dired-buffers-in-perspective` to do just that.
 - Configuration for the XML language server in `lsp-mode`.
 - Binds `lsp-javascript-rename-file` in transient for `js2-mode`.
+- New custom variable `wal/hidpi` that signals whether the screen is
+  HiDPI. Setting this to true currently just increases the fringe
+  width.
 
 ### Changed
 
