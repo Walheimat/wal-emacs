@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Command to find dailies directory is now bound in `org-roam`'s
   transient.
+- The recipes for using hyper key were switched since the less risky
+  one indeed does work.
 
 ### Fixed
 

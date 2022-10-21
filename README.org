@@ -690,23 +690,8 @@ I re-bound my =<CAPS>= (caps-lock) key to =Hyper_L= to use the hyper
 bindings above. Therefore, all following keys should be right hand
 keys.
 
-If you use Xorg Display Server, the risky quite[fn:10] way would be to
-edit your =/usr/share/X11/xkb/symbols/pc= file like so:
-
-#+BEGIN_SRC
-...
-// key <CAPS> {    [ Caps_Lock     ]   };
-key <CAPS> {    [ Hyper_L       ]   };
-...
-// modifier_map Lock   { Caps_Lock };
-modifier_map Mod3   { Hyper_L, Hyper_R };
-...
-// modifier_map Mod4   { <HYPR> };
-modifier_map Mod3   { <HYPR> };
-#+END_SRC
-
-A safer alternative might be to create an =.Xmodmap= file in your home
-folder containing the following lines.
+Assuming you use Xorg Display server, create an =.Xmodmap= file in your
+home folder containing the following lines.
 
 #+BEGIN_SRC conf :tangle no
 ! Assign Hyper_L to Caps_Lock
@@ -718,9 +703,32 @@ remove mod4 = Hyper_L
 add mod3 = Hyper_L
 #+END_SRC
 
+Add a =.xinitrc= file (also in your home folder) containing the
+following script:
+
+#+begin_src shell :tangle no
+[[ -f ~/.Xmodmap ]] && xmodmap ~/.Xmodmap
+#+end_src
+
 This assumes that =Hyper_L= was assigned to modifier =Mod4= that's already
-used by =Super_L= and modifier =Mod3= is an empty group. I haven't gotten
-this safer alternative to work for me.
+used by =Super_L= and modifier =Mod3= is an empty group.
+
+***** Unsafe Alternative
+
+A much riskier[fn:10] way, provided the recipe above doesn't work,
+would be to edit your =/usr/share/X11/xkb/symbols/pc= file like so:
+
+#+BEGIN_SRC :tangle no
+...
+// key <CAPS> {    [ Caps_Lock     ]   };
+key <CAPS> {    [ Hyper_L       ]   };
+...
+// modifier_map Lock   { Caps_Lock };
+modifier_map Mod3   { Hyper_L, Hyper_R };
+...
+// modifier_map Mod4   { <HYPR> };
+modifier_map Mod3   { <HYPR> };
+#+END_SRC
 
 ** Leader Keys
 
