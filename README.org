@@ -807,7 +807,7 @@ It also binds some other commands:
 
 Leader key =captain= (=/= by default) deals with the global context.
 
-It gives access to minor-mode[fn:11] commands and =transient= maps that are
+It gives access to minor-mode[fn:11] commands and commands maps that are
 relevant globally (or for the current perspective). These are:
 
 + =d= for =dashboard=
@@ -819,7 +819,7 @@ relevant globally (or for the current perspective). These are:
 *** Lieutenant
 
 Leader key =lieutenant= (='= by default) currently provides access to
-command maps.
+additional command maps.
 
 ** Packages
 
@@ -3613,29 +3613,7 @@ No offender.
   :ensure nil
 
   :config
-  (transient-define-prefix wal/register ()
-    "Call register commands."
-    [["Store"
-      ("s" "store with consult" consult-register-store
-       :inapt-if-not (lambda () (featurep 'consult)))
-      ("p" "point" point-to-register)
-      ("w" "window config" window-configuration-to-register)
-      ("n" "number" number-to-register)
-      ("c" "region" copy-to-register
-       :inapt-if-not (lambda () mark-active))]
-     ["Load"
-      ("l" "with consult" consult-register-load
-       :inapt-if-not (lambda () (featurep 'consult)))
-      ("i" "insert region" insert-register)
-      ("j" "jump to point" jump-to-register)
-      ("+" "increment number" increment-register)]
-     ["Other"
-      ("r" "complete" consult-register
-       :inapt-if-not (lambda () (featurep 'consult)))
-      ("L" "list" list-registers)]])
-
-  :bind
-  ("C-c r" . wal/register))
+  (wal/lieutenant "r" '(:keymap ctl-x-r-map :wk "register")))
 #+END_SRC
 
 *** pulse
@@ -3990,14 +3968,6 @@ snippets.
   ;; Don't want to get in the way of `completion-at-point'.
   (define-key yas-minor-mode-map (kbd "<tab>") nil)
   (define-key yas-minor-mode-map (kbd "TAB") nil)
-
-  (transient-define-prefix wal/yas ()
-    "Call `yasnippet' commands."
-    [["Snippets"
-      ("i" "insert" yas-insert-snippet)
-      ("v" "visit" yas-visit-snippet-file)
-      ("n" "new" yas-new-snippet)]])
-
   (yas-reload-all)
 
   :wal-bind
@@ -4005,7 +3975,11 @@ snippets.
    ("y" . yas-expand))
 
   :general
-  (wal/major :keymaps 'yas-minor-mode-map "y" '(wal/yas :wk "yasnippet"))
+  (wal/major :keymaps 'yas-minor-mode-map
+    "y"  '(:ignore t :wk "yas")
+    "yi" 'yas-insert-snippet
+    "yv" 'yas-visit-snippet-file
+    "yn" 'yas-new-snippet)
 
   :delight " yas")
 
@@ -5715,38 +5689,24 @@ not pollute the current one."
   ;; Use a bigger `vertico' when grepping.
   (advice-add 'consult-ripgrep :around #'wal/with-big-vertico)
 
-  ;; Bind commands in `transient'.
-  (transient-define-prefix wal/consult ()
-    "Call `consult' functions."
-    [["Find"
-      ("m" "bookmark" consult-bookmark)
-      ("f" "recent" consult-recent-file)
-      ("x" "externally" consult-file-externally)
-      ("a" "apropos" consult-apropos)]
-     ["Locate"
-      ("g" "ripgrep" consult-ripgrep)
-      ("G" "ripgrep everything" wal/consult-ripgrep-ignored)
-      ("l" "locate" consult-locate
-       :inapt-if-not (lambda () (executable-find "locate")))]
-     ["Do"
-      ("y" "yank" consult-yank-from-kill-ring)
-      ("u" "focus" consult-focus-lines)
-      ("k" "keep" consult-keep-lines)
-      ("c" "clock in" wal/consult-clock-in)]
-     ["Narrow"
-      ("e" "errors (flycheck)" consult-flycheck
-       :inapt-if-not (lambda () flycheck-mode))]])
-
   :bind
   (("C-c s" . wal/consult-line)
    ("C-c g" . consult-ripgrep)
+   ("C-c i" . wal/consult-clock-in)
+   ("C-c l" . consult-locate)
    :map goto-map
    ("g" . consult-goto-line)
    ("h" . consult-org-heading)
    ("m" . consult-mark)
    ("M" . consult-global-mark)
    :map kmacro-keymap
-   ("u" . consult-kmacro))
+   ("u" . consult-kmacro)
+   :map bookmark-map
+   ("u" . consult-bookmark)
+   :map ctl-x-r-map
+   ("u" . consult-register)
+   ("S" . consult-register-store)
+   ("L" . consult-register-load))
 
   :wal-bind
   ("j" . wal/univ-consult-buffer)
@@ -6066,23 +6026,8 @@ The current buffer and Dired buffers are filtered."
            :state #'consult--buffer-state
            :items #'wal/consult-persp-dired-buffer-names)))
 
-  (transient-define-prefix wal/persp ()
-    "Call `perspective' functions."
-    [["Buffers"
-      ("a" "add" persp-add-buffer)
-      ("s" "set" persp-set-buffer)
-      ("r" "remove" persp-remove-buffer)
-      ("f" "forget" persp-forget-buffer)
-      ("l" "list" persp-buffer-menu)]
-     ["Perspectives"
-      ("n" "rename" persp-rename)
-      ("k" "kill" persp-kill)
-      ("m" "merge" persp-merge)]
-     ["Other"
-      ("x" "scratch" persp-switch-to-scratch-buffer)]])
-
   ;; Register command map.
-  (wal/lieutenant "i" '(:keymap perspective-map :wk "perspective"))
+  (wal/captain "i" '(:keymap perspective-map :wk "perspective"))
 
   ;; Override the override to `perspective-map' in older Emacs versions.
   (when (< emacs-major-version 28)
@@ -6103,10 +6048,7 @@ The current buffer and Dired buffers are filtered."
 
   :wal-bind
   (:map persp-mode-map
-   ("i" . persp-switch))
-
-  :general
-  (wal/captain "i" '(wal/persp :wk "perspective")))
+   ("i" . persp-switch)))
 #+END_SRC
 
 *** projectile
@@ -6159,40 +6101,8 @@ More robust project management.
   (wal/append 'projectile-globally-ignored-file-suffixes
               (nth 2 wal/projectile-ignored))
 
-  (transient-define-suffix wal/projectile-maybe-tokei ()
-    "Run `tokei' if it is bound."
-    :key "?"
-    :description "tokei"
-    :inapt-if-not (lambda () (fboundp 'tokei))
-    (interactive)
-    (call-interactively 'tokei))
-
-  (transient-define-prefix wal/projectile ()
-    "Call `projectile' commands."
-    [["Command"
-      ("c" "compile" projectile-compile-project)
-      ("i" "install" projectile-install-project)
-      ("x" "configure" projectile-configure-project)
-      ("p" "package" projectile-package-project)
-      ("u" "run" projectile-run-project)
-      ("t" "test"  projectile-test-project)]
-     ["Buffers"
-      ("k" "kill" projectile-kill-buffers)
-      ("s" "switch" projectile-switch-to-buffer)]
-     ["Find"
-      ("a" "other file" projectile-find-other-file)
-      ("d" "directory" projectile-find-dir)
-      ("f" "file in directory" projectile-find-file-in-directory)
-      ("r" "recent file" projectile-recentf)]
-     ["Other"
-      ;; The `projectile' variant seems buggy.
-      ("l" "add dir local" add-dir-local-variable)
-      (wal/projectile-maybe-tokei)]
-     ["Projects"
-      ("o" "switch to open project" projectile-switch-open-project)]])
-
   ;; Register command map.
-  (wal/lieutenant "p" '(:keymap projectile-command-map :wk "projectile"))
+  (wal/captain "p" '(:keymap projectile-command-map :wk "projectile"))
 
   (projectile-mode 1)
 
@@ -6208,9 +6118,6 @@ More robust project management.
   :wal-bind
   (("h" . projectile-find-file)
    ("p" . projectile-switch-project))
-
-  :general
-  (wal/captain "p" '(wal/projectile :wk "projectile"))
 
   :delight " pjt")
 #+END_SRC

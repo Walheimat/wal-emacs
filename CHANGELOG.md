@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Function `org-store-log-note` is now advised to remove agenda
   buffers from the perspective to avoid cluttering.
 
+### Removed
+
+- The `transient`s for register, yas, consult, perspective, and
+  projectile.
+
 ## [v1.7.13]
 
 Give them the boot.
