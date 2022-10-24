@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New custom variable `wal/hidpi` that signals whether the screen is
   HiDPI. Setting this to true currently just increases the fringe
   width.
+- Package `jenkinsfile-mode` as an expansion pack.
 
 ### Changed
 
