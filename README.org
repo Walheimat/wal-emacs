@@ -6392,13 +6392,26 @@ This calls `org-content' interactively."
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/agenda ()
-  "Go to task directory with Dired and open the agenda."
-  (interactive)
+(defvar wal/org-agenda-window-configuration nil
+  "The (stored) window configuration for the agenda view.")
+
+(defun wal/agenda (&optional no-restore)
+  "Go to task directory with Dired and open the agenda.
+
+Attempts to restore view unless NO-RESTORE is t."
+  (interactive "P")
   (when (memq persp-initial-frame-name (persp-names))
     (persp-switch persp-initial-frame-name))
-  (dired wal/agenda-tasks-directory)
-  (org-agenda (wal/univ-p) "a"))
+  (let ((wconf wal/org-agenda-window-configuration))
+    (if (and wconf (not no-restore))
+        (condition-case err
+            (set-window-configuration wconf)
+          (error
+           (setq wal/org-agenda-window-configuration nil)
+           (message "Couldn't restore agenda windows, please try again!")))
+      (dired wal/agenda-tasks-directory)
+      (org-agenda (wal/univ-p) "a")
+      (setq wal/org-agenda-window-configuration (current-window-configuration)))))
 
 (use-package org-agenda
   :ensure nil

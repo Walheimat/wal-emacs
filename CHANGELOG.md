@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   transient.
 - The recipes for using hyper key were switched since the less risky
   one indeed does work.
+- Command `wal/agenda` now stores and tries to restore window
+  configuration that is created on first call; can be forced to skip
+  if called with `universal-argument`.
 
 ### Fixed
 
