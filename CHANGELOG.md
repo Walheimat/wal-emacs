@@ -26,11 +26,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command `wal/agenda` now stores and tries to restore window
   configuration that is created on first call; can be forced to skip
   if called with `universal-argument`.
+- Variable `dired-kill-when-opening-new-dired-buffer` is set to `t`
+  again.
 
 ### Fixed
 
 - Function `org-store-log-note` is now advised to remove agenda
   buffers from the perspective to avoid cluttering.
+- Function `wal/insert-after` check if item is already in list before
+  inserting.
 
 ### Removed
 

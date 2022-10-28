@@ -1473,6 +1473,9 @@ Duplicate items are removed."
   "Insert ITEM in TARGET after PRECEDING."
   (let ((val (symbol-value target)))
 
+    (when (memq item val)
+      (user-error "Item is already in target"))
+
     (if (memq preceding val)
         (let* ((remainder (nthcdr (cl-position preceding val) val)))
 
@@ -6012,15 +6015,19 @@ The current buffer and Dired buffers are filtered."
      :name "Perspective Buffer"
      :action #'persp-switch-to-buffer
      :items #'wal/consult-persp-buffer-names)
+
+    (defvar wal/consult-source-dired
+      (list :name "Dired Buffer"
+            :narrow ?d
+            :category 'buffer
+            :face 'font-lock-keyword-face
+            :state #'consult--buffer-state
+            :items #'wal/consult-persp-dired-buffer-names))
+
     (wal/insert-after
      'consult-buffer-sources
      'consult--source-buffer
-     (list :name "Dired Buffer"
-           :narrow ?d
-           :category 'buffer
-           :face 'font-lock-keyword-face
-           :state #'consult--buffer-state
-           :items #'wal/consult-persp-dired-buffer-names)))
+     wal/consult-source-dired))
 
   ;; Register command map.
   (wal/captain "i" '(:keymap perspective-map :wk "perspective"))
@@ -7040,7 +7047,7 @@ Uses the same optional SWITCHES."
   :custom
   (dired-listing-switches "-lah --group-directories-first")
   (dired-auto-revert-buffer t)
-  (dired-kill-when-opening-new-dired-buffer nil) ; New in Emacs 28.
+  (dired-kill-when-opening-new-dired-buffer t) ; New in Emacs 28.
 
   :bind
   (:map ctl-x-map
