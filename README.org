@@ -5194,7 +5194,6 @@ I mostly search.
 ;;; Code:
 
 (declare-function wdb/pop-up "wal-func.el")
-(declare-function wal/univ "wal-func.el")
 
 (defvar wal/active-theme)
 
@@ -5226,16 +5225,11 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 
 #+BEGIN_SRC emacs-lisp
 (use-package rg
-  :commands (wal/univ-rg-project)
-
-  :init
-  (wal/univ rg-project rg-menu)
-
   :config
   (wdb/pop-up "\\*rg\\*\\'")
 
   :wal-bind
-  ("n" . wal/univ-rg-project))
+  ("n" . rg-menu))
 #+END_SRC
 
 *** dumb-jump
@@ -5665,8 +5659,7 @@ not pollute the current one."
 
 (use-package consult
   :commands
-  (wal/univ-consult-buffer
-   wal/consult-line
+  (wal/consult-line
    wal/consult-clock-in)
 
   :config
@@ -7442,10 +7435,7 @@ Forget remembering =git= commands, use =transient=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
-  :commands (wal/univ-magit-status wal/magit-dispatch)
-
-  :init
-  (wal/univ magit-status wal/magit-dispatch)
+  :commands (wal/magit-dispatch)
 
   :config
   (transient-define-suffix wal/magit-dispatch-maybe-timemachine ()
@@ -7459,6 +7449,7 @@ Forget remembering =git= commands, use =transient=.
   (transient-define-prefix wal/magit-dispatch ()
     "Call `magit' commands in a `magit'-y way."
     [["Core"
+      ("m" "status" magit-status)
       ("q" "status (quick)" magit-status-quick)
       ("b" "blame" magit-blame)]
      ["Files"
@@ -7473,7 +7464,7 @@ Forget remembering =git= commands, use =transient=.
       (wal/magit-dispatch-maybe-timemachine)]])
 
   :wal-bind
-  ("m" . wal/univ-magit-status)
+  ("m" . wal/magit-dispatch)
 
   :custom
   (magit-blame-mode-lighter " mbl")
