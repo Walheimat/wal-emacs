@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   if called with `universal-argument`.
 - Variable `dired-kill-when-opening-new-dired-buffer` is set to `t`
   again.
+- Variable `wal/modern-emacs` was replaced by function
+  `wal/modern-emacs-p`.
 
 ### Fixed
 

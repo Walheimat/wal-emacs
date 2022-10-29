@@ -219,12 +219,6 @@ Set some personal info[fn:7].
 Customize start-up.
 
 #+BEGIN_SRC emacs-lisp
-(defconst wal/modern-emacs (> emacs-major-version 28)
-  "Set to t if `emacs-major-version' is 28 or higher.
-
-This variable is used to account for certain features (and
-bugs).")
-
 ;; Load custom file. Create it if it doesn't yet exist.
 (setq custom-file wal/custom-file)
 (unless (file-exists-p custom-file)
@@ -397,7 +391,7 @@ Any mode that should be on/off no matter what.
 (scroll-bar-mode -1)
 
 ;; Emacs 29.
-(when wal/modern-emacs
+(when (wal/modern-emacs-p)
   (pixel-scroll-precision-mode 1))
 #+END_SRC
 
@@ -1105,6 +1099,15 @@ Custom functionality.
   "Whether to delete trailing whitespace."
   :type 'boolean
   :group 'wal-func)
+** Emacs
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/modern-emacs-p ()
+  "Set to t if `emacs-major-version' is 28 or higher.
+
+This variable is used to account for certain features (and
+bugs)."
+  (> emacs-major-version 28))
 #+END_SRC
 
 ** Directories
@@ -2049,6 +2052,17 @@ Optionally, the buffer is created with SUFFIX."
 ;;; Code:
 #+END_SRC
 
+*** Emacs
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/modern-emacs-p ()
+  (let ((emacs-major-version 27))
+    (should-not (wal/modern-emacs-p)))
+
+  (let ((emacs-major-version 29))
+    (should (wal/modern-emacs-p))))
+#+END_SRC
+
 *** Directories
 
 #+BEGIN_SRC emacs-lisp
@@ -2871,8 +2885,6 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 (eval-when-compile
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
-(defvar wal/modern-emacs)
-
 (defgroup wal-look nil
   "Change the look."
   :group 'wal
@@ -2907,7 +2919,7 @@ the session."
 
     (setq wal/transparency transparency)
 
-    (if wal/modern-emacs
+    (if (wal/modern-emacs-p)
         (modify-all-frames-parameters `((alpha-background . ,transparency)))
       (modify-all-frames-parameters `((alpha . ,transparency))))))
 
@@ -2926,7 +2938,7 @@ the session."
   (wal/define-init-setup visuals
     "Set up visual frills like theme and transparency."
     :initial
-    ((if wal/modern-emacs
+    ((if (wal/modern-emacs-p)
          (add-to-list 'default-frame-alist `(alpha-background . ,wal/transparency))
        (add-to-list 'default-frame-alist `(alpha . ,wal/transparency)))
      (when wal/theme
@@ -2963,20 +2975,18 @@ the session."
 ;;; Code:
 
 (ert-deftest test-wal/set-transparency ()
-  (defvar wal/modern-emacs)
-
-  (let ((wal/modern-emacs t))
+  (let ((emacs-major-version 29))
     (funcall-interactively 'wal/set-transparency 90)
     (should (eq 90 wal/transparency))
     (should (eq 90 (cdr (assoc 'alpha-background default-frame-alist)))))
 
-  (let ((wal/modern-emacs t))
+  (let ((emacs-major-version 29))
     (setq wal/transparency 50)
     (funcall-interactively 'wal/set-transparency)
     (should (eq 50 wal/transparency))
     (should (eq 50 (cdr (assoc 'alpha-background default-frame-alist)))))
 
-  (let ((wal/modern-emacs nil))
+  (let ((emacs-major-version 28))
     (funcall-interactively 'wal/set-transparency 90)
     (should (eq 90 wal/transparency))
     (should (eq 90 (cdr (assoc 'alpha default-frame-alist))))))
@@ -3466,8 +3476,6 @@ external ones.
 (declare-function wdb/side "wal-func.el")
 (declare-function wdb/direction "wal-func.el")
 
-(defvar wal/modern-emacs)
-
 (wal/on-boot emacs
   (wdb/direction 'help-mode)
   (wdb/direction 'shortdoc-mode)
@@ -3749,7 +3757,7 @@ Let's try to be even more =helpful=.
 
   :config
   (wdb/direction 'helpful-mode)
-  (when wal/modern-emacs
+  (when (wal/modern-emacs-p)
     (defvar read-symbol-positions-list nil))
 
   :bind
@@ -4115,7 +4123,6 @@ I like nice-looking things.
 (defvar dashboard-footer-messages)
 (defvar dimmer-prevent-dimming-predicates)
 (defvar wal/ascii-whale)
-(defvar wal/modern-emacs)
 (defvar wal/emacs-config-default-path)
 (defvar which-key-popup-type)
 
