@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `nxml-mode`.
 - Command `consult-ripgrep` is now available as a suffix of `rg-menu`
   `transient` using key `u`.
+- All `transient`s have been improved by moving external suffixes to
+  the respective packages.
 
 ### Fixed
 

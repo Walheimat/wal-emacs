@@ -771,17 +771,17 @@ It does this mostly through a =major-mode=-related =transient= bound to
 the same key (=.= by default).
 
 If the respective buffer-local =minor-mode= is active, the following
-command maps and transients are bound:
+command maps are bound
 
 + =f= for =flycheck=
 + =l= for =lsp-mode=
-+ =m= for =smerge=
 + =r= for =verb=
 + =s= for =flyspell=
 + =y= for =yasnippet=.
 
-It also binds =hydra=
+It also binds =hydra= commands:
 
++ =@= for =smerge= (if active)
 + =o= to resize the window
 + =t= to scale text
 + =v= to scroll the /other/ window.
@@ -3861,7 +3861,7 @@ Look up words in a word book.
   (dictionary-server "dict.org")
 
   :general
-  (wal/major "f" 'dictionary-lookup-definition))
+  (wal/major "D" 'dictionary-lookup-definition))
 #+END_SRC
 
 ** Additional Info Display
@@ -5715,9 +5715,15 @@ not pollute the current one."
   ;; Use a bigger `vertico' when grepping.
   (advice-add 'consult-ripgrep :around #'wal/with-big-vertico)
 
-  ;; Create suffix for `rg-menu'.
+  ;; Create suffixes for other transients.
   (with-eval-after-load 'rg-menu
     (transient-append-suffix 'rg-menu "p" '("u" "Using consult" consult-ripgrep)))
+  (with-eval-after-load 'lsp-mode
+    (transient-append-suffix 'wal/lsp-dispatch '(0 3 1)
+      '("s" "symbol" consult-lsp-file-symbols)))
+  (with-eval-after-load 'flycheck
+    (transient-append-suffix 'wal/flycheck '(0 0 1)
+      '("u" "consult" consult-flycheck)))
 
   :bind
   (("C-c s" . wal/consult-line)
@@ -6344,8 +6350,6 @@ This calls `org-content' interactively."
     "Access `org-mode' commands."
     [["Commands"
       ("n" "add note" org-add-note)
-      ("e" "edit source" org-edit-src-code
-       :inapt-if-not (lambda () (org-in-src-block-p)))
       ("t" "toggle timestamp" org-toggle-timestamp-type
        :inapt-if-not (lambda () (org-at-timestamp-p 'inactive)))]
      ["Subtrees"
@@ -6355,15 +6359,10 @@ This calls `org-content' interactively."
      ["Visibility"
       ("v a" "show all" org-show-all)
       ("v l" "up to level" wal/org-content)]
-     ["Presentation"
-      ("p" "present" org-tree-slide-mode)
-      ("i" "indent" org-indent-mode)]
      ["Footnotes"
       ("f a" "add" org-footnote-new
        :inapt-if (lambda () (org-in-src-block-p)))
-      ("f n" "normalize" org-footnote-normalize)]
-     ["Transclusion"
-      ("c" "transclusion" wal/org-transclusion)]])
+      ("f n" "normalize" org-footnote-normalize)]])
 
   :custom
   ;; Make it look nice and tidy.
@@ -6552,14 +6551,6 @@ case."
                                   wal/org-roam-dailies-directory
                                   wal/org-roam-directory))
 
-  (transient-define-suffix wal/org-roam-maybe-ui ()
-    "Run `org-roam-ui' if it is bound."
-    :key "u"
-    :description "ui"
-    :inapt-if-not (lambda () (fboundp 'org-roam-ui-mode))
-    (interactive)
-    (call-interactively 'org-roam-ui-mode))
-
   (transient-define-prefix wal/org-roam ()
     "Run `org-roam' commands."
     [["Capture"
@@ -6573,14 +6564,13 @@ case."
      ["Actions"
       ("b" "buffer" org-roam-buffer-toggle)
       ("w" "refile" org-roam-refile
-       :inapt-if-not (lambda () (eq major-mode 'org-mode)))
+       :inapt-if-not-mode 'org-mode)
       ("i" "insert" org-roam-node-insert
-       :inapt-if-not (lambda () (eq major-mode 'org-mode)))
+       :inapt-if-not-mode 'org-mode)
       ("@" "tag" org-roam-tag-add
-       :inapt-if-not (lambda () (eq major-mode 'org-mode)))]
+       :inapt-if-not-mode 'org-mode)]
      ["Visualization"
-      ("g" "graph" org-roam-graph)
-      (wal/org-roam-maybe-ui)]])
+      ("g" "graph" org-roam-graph)]])
 
   (org-roam-db-autosync-enable)
 
@@ -6617,8 +6607,14 @@ Fancy UI.
 #+BEGIN_SRC emacs-lisp
 (use-package org-roam-ui
   :wal-ways nil
+
   :demand
   :after org-roam
+
+  :config
+  (transient-append-suffix 'wal/org-roam '(0 3 0)
+    '("u" "ui" org-roam-ui-mode))
+
   :ensure nil)
 #+END_SRC
 
@@ -6696,6 +6692,13 @@ Turn any =org-mode= buffer into a presentation.
    (org-tree-slide-stop . wal/org-tree-slide-stop)
    (text-scale-mode . wal/org-tree-slide-text-scale))
 
+  :config
+  ;; Insert new group after "Visibility".
+  (transient-append-suffix 'wal/org '(0 2)
+    ["Presentation"
+     ("p" "present" org-tree-slide-mode)
+     ("i" "indent" org-indent-mode)])
+
   :custom
   (org-tree-slide-never-touch-face t)
   (org-tree-slide-cursor-init nil)
@@ -6737,6 +6740,9 @@ Editing source blocks.
 
   :config
   (wal/append 'org-src-lang-modes wal/org-src-lang-modes)
+
+  (transient-append-suffix 'wal/org '(0 0 1)
+    '("e" "edit source" org-edit-src-code :inapt-if-not (lambda () (org-in-src-block-p))))
 
   :custom
   (org-src-tab-acts-natively nil)
@@ -6813,6 +6819,9 @@ Spectral inclusion.
       ("r" "refresh" org-transclusion-refresh)
       ("s" "sync start" org-transclusion-live-sync-start)
       ("S" "sync exit" org-transclusion-live-sync-exit)]])
+
+  (transient-append-suffix 'wal/org '(0 0 2)
+    '("c" "transclusion" wal/org-transclusion))
 
   :custom
   (org-transclusion-mode-lighter " tra"))
@@ -7465,14 +7474,6 @@ Forget remembering =git= commands, use =transient=.
   :commands (wal/magit-dispatch)
 
   :config
-  (transient-define-suffix wal/magit-dispatch-maybe-timemachine ()
-    "Maybe run `git-timemachine-toggle' if it is bound."
-    :key "t"
-    :description "time machine"
-    :inapt-if-not (lambda () (fboundp 'git-timemachine-toggle))
-    (interactive)
-    (call-interactively 'git-timemachine-toggle))
-
   (transient-define-prefix wal/magit-dispatch ()
     "Call `magit' commands in a `magit'-y way."
     [["Core"
@@ -7487,8 +7488,7 @@ Forget remembering =git= commands, use =transient=.
       ("r" "range" magit-diff-range)]
      ["Other"
       ("x" "run" magit-run)
-      ("c" "clone" magit-clone)
-      (wal/magit-dispatch-maybe-timemachine)]])
+      ("c" "clone" magit-clone)]])
 
   :wal-bind
   ("m" . wal/magit-dispatch)
@@ -7545,6 +7545,10 @@ doom.
 #+BEGIN_SRC emacs-lisp
 (use-package git-timemachine
   :wal-ways nil
+
+  :config
+  (transient-append-suffix 'wal/magit-dispatch #'magit-clone
+    '("t" "time machine" git-timemachine-toggle))
 
   :delight " gtm")
 #+END_SRC
@@ -7861,49 +7865,14 @@ TOML."
   ;; Show inferior shell at the bottom.
   (wdb/side 'inferior-python-mode)
 
-  (transient-define-suffix wal/python-maybe-poetry ()
-    "Run poetry if it exists."
-    :key "p"
-    :description "poetry"
-    :inapt-if-not (lambda () (fboundp 'poetry))
-    (interactive)
-    (call-interactively 'poetry))
-
-  (transient-define-suffix wal/python-maybe-pyvenv-activate ()
-    "Run `pyvenv-activate' if it exists."
-    :key "v"
-    :description "activate pyvenv"
-    :inapt-if-not (lambda () (fboundp 'pyvenv-activate))
-    (interactive)
-    (call-interactively 'pyvenv-activate))
-
-  (transient-define-suffix wal/python-maybe-ein:run ()
-    "Run `ein:run if it exists."
-    :key "e"
-    :description "ein start"
-    :inapt-if-not (lambda () (fboundp 'ein:run))
-    (interactive)
-    (call-interactively 'ein:run))
-
   (transient-define-prefix wal/python ()
     "Access `python-mode' commands."
     [["Inferior shell"
-      ("r" "run shell" run-python)
       ("i r" "send region" python-shell-send-region)
       ("i b" "send buffer" python-shell-send-buffer)
       ("i f" "send file" python-shell-send-file)]
      ["Commands"
-      ("s" "isort" python-isort-buffer
-       :inapt-if-not (lambda () (fboundp 'python-isort-buffer)))
-      ("b" "black" python-black-buffer
-       :inapt-if-not (lambda () (fboundp 'python-black-buffer)))]
-     ["Test"
-      ("t" "pytest" python-pytest-dispatch
-       :inapt-if-not (lambda () (fboundp 'python-pytest-dispatch)))]
-     ["Extensions"
-      (wal/python-maybe-poetry)
-      (wal/python-maybe-pyvenv-activate)
-      (wal/python-maybe-ein:run)]])
+      ("r" "run shell" run-python)]])
 
   :custom
   (python-indent-guess-indent-offset nil)
@@ -7961,6 +7930,13 @@ Sort with =isort=.
 (use-package python-isort
   :ensure nil
 
+  :defer 1
+  :after python
+
+  :config
+  (transient-append-suffix 'wal/python '(0 1 -1)
+    '("s" "isort" python-isort-buffer))
+
   :wal-ways nil)
 #+end_src
 
@@ -7977,8 +7953,14 @@ Test with =pytest=.
 
   :ensure nil
 
+  :defer 2
+  :after python
+
   :config
   (wdb/pop-up python-pytest-buffer-name)
+
+  (transient-append-suffix 'wal/python '(0 1 -1)
+    '("t" "test" python-pytest-dispatch))
 
   :bind
   (:map python-pytest-mode-map
@@ -7997,6 +7979,13 @@ Blacken buffers.
 (use-package python-black
   :wal-ways nil
 
+  :defer 1
+  :after python
+
+  :config
+  (transient-append-suffix 'wal/python '(0 1 -1)
+    '("b" "black" python-black-buffer))
+
   :ensure nil)
 #+END_SRC
 
@@ -8010,6 +7999,13 @@ Work with Jupyter notebooks.
 #+BEGIN_SRC emacs-lisp
 (use-package ein
   :wal-ways nil
+
+  :defer 3
+  :after python
+
+  :config
+  (transient-append-suffix 'wal/python '(0 1 -1)
+    '("e" "ein" ein:run))
 
   :ensure nil)
 #+END_SRC
@@ -8049,8 +8045,30 @@ Takes care[fn:16] of all your virtual environment needs.
 (use-package poetry
   :wal-ways nil
 
+  :after python
+
+  :config
+  (transient-append-suffix 'wal/python '(0 1 -1)
+    '("p" "poetry" poetry))
+
   :ensure nil)
 #+END_SRC
+
+**** pyvenv
+
+#+BEGIN_SRC emacs-lisp
+(use-package pyvenv
+  :wal-ways nil
+
+  :after python
+
+  :config
+  (transient-append-suffix 'wal/python '(0 1 -1)
+    '("v" "activate venv" pyvenv-activate))
+
+  :ensure nil)
+#+END_SRC
+
 
 ** Lisp
 
@@ -8299,20 +8317,11 @@ Can we have =deno= instead of =node=?
   (with-eval-after-load 'dap-mode
     (require 'dap-node))
 
-  (with-eval-after-load 'prettier
-    (transient-define-suffix wal/js-lsp-rename-file ()
-      "Call `lsp-javascript-rename-file' if possible."
-      :key "r"
-      :description "rename file"
-      :inapt-if-not (lambda () (fboundp 'lsp-javascript-rename-file))
-      (interactive)
-      (call-interactively 'lsp-javascript-rename-file))
 
-    (transient-define-prefix wal/js ()
-      "Access JS commands."
-      [["Actions"
-        ("p" "prettier" prettier-prettify)
-        (wal/js-lsp-rename-file)]]))
+  (transient-define-prefix wal/js ()
+    "Access JS commands."
+    [["Actions"
+      ("b" "bounce" js2-indent-bounce)]])
 
   :custom
   (js2-show-parse-errors nil)
@@ -8415,7 +8424,11 @@ Prettify your ugly JavaScript.
   :ensure nil
 
   :demand
-  :after js2-mode)
+  :after js2-mode
+
+  :config
+  (transient-append-suffix 'wal/js '(0 0 0)
+    '("p" "prettier" prettier-prettify)))
 #+END_SRC
 
 ** Go
@@ -9135,12 +9148,24 @@ If KILL-BUFFER is t, kill the file's buffer."
 
   :hook ((sh-set-shell) . flycheck-mode)
 
+  :config
+  (transient-define-prefix wal/flycheck ()
+    "Access `flycheck' commands."
+    [["Go to"
+      ("n" "next error" flycheck-next-error)
+      ("p" "previous error" flycheck-previous-error)]
+     ["Show"
+      ("l" "list" flycheck-list-errors)]])
+
   :custom
   (flycheck-mode-line-prefix "fly")
 
   :general
   (wal/lieutenant :keymaps 'flycheck-mode-map
-    "f" '(:keymap flycheck-command-map :wk "flycheck")))
+    "f" '(:keymap flycheck-command-map :wk "flycheck"))
+
+  (wal/major :keymaps 'flycheck-mode-map
+    "f" '(wal/flycheck :wk "flycheck")))
 #+END_SRC
 
 *** flyspell
@@ -9318,14 +9343,6 @@ minimum prefixes are reduced."
   ;; Don't keep track of multiple projects.
   (advice-add 'lsp :before #'wal/first-prevent-adding-other-projects)
 
-  (transient-define-suffix wal/lsp-dispatch-maybe-consult-lsp ()
-    "Only run `consult-lsp' if it is bound."
-    :description "symbol"
-    :key "s"
-    :inapt-if-not (lambda () (fboundp 'consult-lsp-file-symbols))
-    (interactive)
-    (call-interactively 'consult-lsp-file-symbols))
-
   (transient-define-prefix wal/lsp-dispatch ()
     "Call `lsp-mode' functions."
     [["Format"
@@ -9341,11 +9358,15 @@ minimum prefixes are reduced."
      ["Go to"
       ("d" "definition" lsp-find-definition)
       ("e" "errors" lsp-treemacs-errors-list)
-      (wal/lsp-dispatch-maybe-consult-lsp)
       ("H" "hierarchy" lsp-treemacs-call-hierarchy)]
      ["Workspace"
       ("R" "restart" lsp-workspace-restart)
       ("Q" "quit" lsp-workspace-shutdown)]])
+
+  ;; JavaScript.
+  (with-eval-after-load 'js2-mode
+    (transient-append-suffix 'wal/js '(0 0 -1)
+      '("r" "rename file" lsp-javascript-rename-file)))
 
   ;; Register command map.
   (wal/lieutenant :keymaps 'lsp-mode-map
