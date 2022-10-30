@@ -1932,27 +1932,31 @@ The rest of the BODY will be spliced into the lambda."
         (func-name (intern (concat "wal/" (symbol-name name) "-hook"))))
 
     `(progn
-       (defun ,func-name ()
-         ,docs
-         ,(when messages
-            `(wal/message-in-a-bottle ,messages))
-         (hack-local-variables)
-         ,(cond ((equal 'always tabs)
-                 `(wal/enable-tabs))
-                ((equal t tabs)
-                 `(wal/maybe-enable-tabs))
-                ((not tabs)
-                 '(wal/disable-tabs))
-                (t `(wal/maybe-enable-tabs :indent-with ,tabs)))
-         ,@safe-body
-         ,(when lsp
-            '(wal/lsp)))
-       ,(when (and lsp lsp-ignores)
-          `(with-eval-after-load 'lsp-mode
-             (wal/append 'lsp-file-watch-ignored-directories ,lsp-ignores)))
-       (add-hook
-        ',target
-        ',func-name))))
+       ,@(delete
+          nil
+          `((defun ,func-name ()
+              ,docs
+              ,@(delete
+                 nil
+                 `(,(when messages
+                      `(wal/message-in-a-bottle ,messages))
+                   (hack-local-variables)
+                   ,(cond ((equal 'always tabs)
+                           `(wal/enable-tabs))
+                          ((equal t tabs)
+                           `(wal/maybe-enable-tabs))
+                          ((not tabs)
+                           '(wal/disable-tabs))
+                          (t `(wal/maybe-enable-tabs :indent-with ,tabs)))
+                   ,@safe-body
+                   ,(when lsp
+                      '(wal/lsp)))))
+            ,(when (and lsp lsp-ignores)
+               `(with-eval-after-load 'lsp-mode
+                  (wal/append 'lsp-file-watch-ignored-directories ,lsp-ignores)))
+            (add-hook
+             ',target
+             ',func-name))))))
 #+END_SRC
 
 ** Additional Mode Controls
@@ -2785,7 +2789,6 @@ Optionally, the buffer is created with SUFFIX."
         (hack-local-variables)
         (wal/maybe-enable-tabs :indent-with 'some-fun)
         (wal/lsp))
-      nil
       (add-hook 'test-hook 'wal/test-hook))))
 
 (ert-deftest test-wal/hook--with-tabs ()
@@ -2799,9 +2802,7 @@ Optionally, the buffer is created with SUFFIX."
         "We're just testing."
         (wal/message-in-a-bottle '("Just testing"))
         (hack-local-variables)
-        (wal/disable-tabs)
-        nil)
-      nil
+        (wal/disable-tabs))
       (add-hook 'test-hook 'wal/test-hook))))
 #+END_SRC
 
