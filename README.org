@@ -1908,7 +1908,10 @@ Optionally provide `quelpa' RECIPES."
 ** Hooks
 
 #+BEGIN_SRC emacs-lisp
-(cl-defmacro wal/hook (name docs &body body &key messages lsp lsp-ignores tabs &allow-other-keys)
+(defvar prog-like-hook nil
+  "Commands that should be run for prog-like modes.")
+
+(cl-defmacro wal/hook (name docs &body body &key messages lsp lsp-ignores tabs prog-like &allow-other-keys)
   "Hook into major mode NAME, describe with DOCS.
 
 MESSAGES is a list of strings to randomly choose from and
@@ -1926,7 +1929,7 @@ The rest of the BODY will be spliced into the lambda."
 
   (let ((target (intern (concat (symbol-name name) "-hook")))
         (safe-body (cl-loop for (key val) on body by 'cddr
-                            unless (memq key '(:messages :lsp :lsp-ignores :tabs))
+                            unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like))
                             collect key
                             and collect val))
         (func-name (intern (concat "wal/" (symbol-name name) "-hook"))))
@@ -1950,7 +1953,9 @@ The rest of the BODY will be spliced into the lambda."
                           (t `(wal/maybe-enable-tabs :indent-with ,tabs)))
                    ,@safe-body
                    ,(when lsp
-                      '(wal/lsp)))))
+                      '(wal/lsp))
+                   ,(when prog-like
+                      '(run-hooks 'prog-like-hook)))))
             ,(when (and lsp lsp-ignores)
                `(with-eval-after-load 'lsp-mode
                   (wal/append 'lsp-file-watch-ignored-directories ,lsp-ignores)))
@@ -2803,6 +2808,23 @@ Optionally, the buffer is created with SUFFIX."
         (wal/message-in-a-bottle '("Just testing"))
         (hack-local-variables)
         (wal/disable-tabs))
+      (add-hook 'test-hook 'wal/test-hook))))
+
+(ert-deftest test-wal/hook--prog-like ()
+  (match-expansion
+   (wal/hook test
+     "We're just testing."
+     :messages '("Just testing")
+     :prog-like t
+     (message "hi"))
+   `(progn
+      (defun wal/test-hook ()
+        "We're just testing."
+        (wal/message-in-a-bottle '("Just testing"))
+        (hack-local-variables)
+        (wal/disable-tabs)
+        (message "hi")
+        (run-hooks 'prog-like-hook))
       (add-hook 'test-hook 'wal/test-hook))))
 #+END_SRC
 
@@ -3981,7 +4003,7 @@ snippets.
 
 #+BEGIN_SRC emacs-lisp
 (use-package yasnippet
-  :hook ((prog-mode org-mode) . yas-minor-mode)
+  :hook ((prog-mode org-mode prog-like) . yas-minor-mode)
 
   :config
   ;; Don't want to get in the way of `completion-at-point'.
@@ -4016,7 +4038,7 @@ Drag lines and regions around.
 
 #+BEGIN_SRC emacs-lisp
 (use-package drag-stuff
-  :hook (prog-mode . drag-stuff-mode)
+  :hook ((prog-mode prog-like) . drag-stuff-mode)
 
   :config
   (when wal/use-hyper-prefix
@@ -4043,7 +4065,7 @@ Less intrusive pairing mode than =smartparens=.
 (use-package elec-pair
   :ensure nil
 
-  :hook (prog-mode . electric-pair-local-mode)
+  :hook ((prog-mode prog-like) . electric-pair-local-mode)
 
   :init
   (advice-add
@@ -4405,7 +4427,7 @@ Make numbers stand out.
 (use-package highlight-numbers
   :wal-ways nil
 
-  :hook (prog-mode . highlight-numbers-mode))
+  :hook ((prog-mode prog-like) . highlight-numbers-mode))
 #+END_SRC
 
 *** hl-todo
@@ -4419,7 +4441,7 @@ Highlight =TODO=, =FIXME= etc. in =prog= modes.
 (use-package hl-todo
   :wal-ways nil
 
-  :hook ((prog-mode yaml-mode) . hl-todo-mode)
+  :hook ((prog-mode prog-like) . hl-todo-mode)
 
   :custom
   (hl-todo-highlight-punctuation ":")
@@ -4437,7 +4459,7 @@ Make delimiters stand out.
 (use-package rainbow-delimiters
   :wal-ways nil
 
-  :hook (prog-mode . rainbow-delimiters-mode))
+  :hook ((prog-mode prog-like) . rainbow-delimiters-mode))
 #+END_SRC
 
 *** rainbow-mode
@@ -4691,7 +4713,7 @@ ARGS is a list containing modes and additional ligatures."
 (use-package ligature
   :wal-ways nil
 
-  :hook (prog-mode . ligature-mode)
+  :hook ((prog-mode prog-like) . ligature-mode)
 
   :config
   ;; Common ligatures.
@@ -4706,7 +4728,8 @@ ARGS is a list containing modes and additional ligatures."
   (ligature-set-ligatures 'elixir-mode '("|>" "->" "<-" "=>"
                                          "::" "<>" "#{" "\\\\"
                                          "===" "!==" ".."))
-  (ligature-set-ligatures 'html-mode '("<!--" "-->"))
+  (ligature-set-ligatures 'html-mode '("<!--" "-->" "</" "/>"))
+  (ligature-set-ligatures 'nxml-mode '("<!--" "-->" "</" "/>"))
   (ligature-set-ligatures 'java-mode '("::" "->"))
   (ligature-set-ligatures 'js2-mode '("=>" "!==" "===" "!!"))
   (ligature-set-ligatures 'lisp-data-mode '(";;"))
@@ -5360,7 +5383,7 @@ Alternative.
 
 (use-package corfu
   :hook
-  ((prog-mode . corfu-mode)
+  (((prog-mode prog-like) . corfu-mode)
    (minibuffer-setup . wal/corfu-enable-in-minibuffer))
 
   :custom
@@ -8814,6 +8837,12 @@ The only way to store strings, JSON.
 (use-package mhtml-mode
   :ensure nil
 
+  :init
+  (wal/hook mhtml-mode
+    "Hook into `mhtml-mode'."
+    :lsp t
+    :messages '("Hodge-podge mark-p language"))
+
   :bind
   (:map html-mode-map
    ("M-o" . nil)))
@@ -8833,8 +8862,7 @@ The only way to store strings, JSON.
     "Hook into `nxml-mode'."
     :lsp t
     :messages '("Extreme mark-up language")
-    (hl-todo-mode)
-    (yas-minor-mode)))
+    :prog-like t))
 #+end_src
 
 *** yaml-mode
@@ -8856,7 +8884,7 @@ Sometimes things that do as well.
   (wal/hook yaml-mode
     "Hook into command `yaml-mode'."
     :messages '("JSON?! ... Ah, thank God it's you, YAML!")
-    (drag-stuff-mode 1)
+    :prog-like t
     (flycheck-mode 1)))
 #+END_SRC
 

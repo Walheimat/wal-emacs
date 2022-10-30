@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   HiDPI. Setting this to true currently just increases the fringe
   width.
 - Package `jenkinsfile-mode` as an expansion pack.
+- New option `:prog-like` to `wal/hook` macro. If set to `t`
+  `prog-like-hook` hooks will be run. These include `yas-minor-mode`,
+  `drag-stuff-mode` and similar enhancing modes.
 
 ### Changed
 
@@ -30,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   again.
 - Variable `wal/modern-emacs` was replaced by function
   `wal/modern-emacs-p`.
+- The ligatures for `html-mode` were improved and copied for
+  `nxml-mode`.
 
 ### Fixed
 
