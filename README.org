@@ -10382,26 +10382,51 @@ This will activate minor mode `wal/config-mode'."
 (defun wal/check-coverage ()
   "Check the current coverage for custom functionality."
   (interactive)
-  (unless (executable-find "cask")
-    (user-error "You need to install `cask' binary"))
-
   (let* ((suffix "coverage")
-         (dir wal/emacs-config-package-path)
-         (command (format "cd %s && cask exec ert-runner && cat coverage.txt" dir)))
+         (command "cask exec ert-runner && cat coverage.txt"))
 
-    (dolist (buf (buffer-list))
-      (when (string-match "-coverage\\*" (buffer-name buf))
-        (when-let ((window (get-buffer-window buf)))
-          (delete-window window))
-        (kill-buffer buf)))
-
-    (wal/async-process
+    (wal/coverage--execute
      command
      (lambda ()
        (let ((average (wal/check-coverage--calculate-coverage)))
          (message "Tests succeed: %s" average)))
      (lambda (str) (message "Tests fail: %s" str))
      suffix)))
+
+(defun wal/create-json-coverage ()
+  "Create a JSON report file."
+  (interactive)
+  (let* ((suffix "json-coverage")
+         (command "export COVERAGE_WITH_JSON=true && cask exec ert-runner"))
+
+    (wal/coverage--execute
+     command
+     (lambda () (message "Coverage created"))
+     (lambda (str) (message "Failed to create coverage: %s" str))
+     suffix)))
+
+(defun wal/coverage--execute (command on-succes on-failure buffer-suffix)
+  "Execute coverage command.
+
+Runs COMMAND asynchronously and passes ON-SUCCESS and ON-FAILURE
+handlers.
+
+BUFFER-SUFFIX is a string to make sure existing buffers of that
+name are deleted beforehand."
+  (unless (executable-find "cask")
+    (user-error "You need to install `cask' binary"))
+
+  (let* ((dir wal/emacs-config-package-path)
+         (full-command (concat "cd " dir " && " command))
+         (buffer-name (format "-%s\\*" buffer-suffix)))
+
+    (dolist (buf (buffer-list))
+      (when (string-match buffer-name (buffer-name buf))
+        (when-let ((window (get-buffer-window buf)))
+          (delete-window window))
+        (kill-buffer buf)))
+
+    (wal/async-process full-command on-succes on-failure buffer-suffix)))
 
 (defun wal/flycheck-config-packages ()
   "Run `wal/flycheck' on all config package files."
