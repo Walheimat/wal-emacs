@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `iedit-mode` is now bound in `colonel` using `i`.
 
+### Fixed
+
+- Command `wal/avy-action-zip-to-char` is now called
+  `avy-action-zip-to-char` to not have a garbled help text.
+
 ## [v1.7.14]
 
 Cooled beans.
