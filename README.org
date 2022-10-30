@@ -634,7 +634,6 @@ dispatches:
 + =C-c b= for a heavy =pulse=
 + =C-c c= does a =completion-at-point=
 + =C-c d= for =docker=
-+ =C-c g= for =consult-ripgrep=
 + =C-c m= for =mu4e=
 + =C-c q= to do a =quick-calc= (inserted if called with =C-u=)
 + =C-c s= to search with =consult-line=
@@ -5716,9 +5715,12 @@ not pollute the current one."
   ;; Use a bigger `vertico' when grepping.
   (advice-add 'consult-ripgrep :around #'wal/with-big-vertico)
 
+  ;; Create suffix for `rg-menu'.
+  (with-eval-after-load 'rg-menu
+    (transient-append-suffix 'rg-menu "p" '("u" "Using consult" consult-ripgrep)))
+
   :bind
   (("C-c s" . wal/consult-line)
-   ("C-c g" . consult-ripgrep)
    ("C-c i" . wal/consult-clock-in)
    ("C-c l" . consult-locate)
    :map goto-map

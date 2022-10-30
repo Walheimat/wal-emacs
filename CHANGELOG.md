@@ -35,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal/modern-emacs-p`.
 - The ligatures for `html-mode` were improved and copied for
   `nxml-mode`.
+- Command `consult-ripgrep` is now available as a suffix of `rg-menu`
+  `transient` using key `u`.
 
 ### Fixed
 
