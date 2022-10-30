@@ -10268,6 +10268,8 @@ INFO contains positioning information."
 
 Minor mode for editing this config.
 
+*** Version Info
+
 #+BEGIN_SRC emacs-lisp
 (defvar wal/tangle-do-prompt t
   "Whether to prompt user to tangle config.")
@@ -10304,7 +10306,11 @@ This returns the tag and its annotation as propertized strings."
   (let ((version (shell-command-to-string "git describe --abbrev=0")))
 
     (magit-diff-range (string-trim version))))
+#+END_SRC
 
+*** Tangling
+
+#+BEGIN_SRC emacs-lisp
 (defun wal/tangle-config-prompt ()
   "Prompt the user to tangle the config.
 If the answer is no, there will be no additional prompt."
@@ -10318,7 +10324,11 @@ If the answer is no, there will be no additional prompt."
             (setq-local wal/tangle-do-prompt nil)
             (message "To tangle, call `wal/tangle-config'"))
         (message "Config changed. To tangle, call `wal/tangle-config'")))))
+#+END_SRC
 
+*** Finding
+
+#+BEGIN_SRC emacs-lisp
 (defun wal/find-config ()
   "Find Walheimat's config.
 
@@ -10354,23 +10364,11 @@ This will activate minor mode `wal/config-mode'."
     (display-buffer-pop-up-window
      (find-file-noselect changelog)
      '((side . left)))))
+#+END_SRC
 
+*** Coverage
 
-(defun wal/checkdoc-config-packages ()
-  "Run `checkdoc-file' on all package files."
-  (interactive)
-  (defvar projectile-enable-caching)
-  (let* ((projectile-enable-caching nil)
-         (package-files (wal/directory-files wal/emacs-config-package-path))
-         (el-files (seq-filter
-                    (lambda (it)
-                      (string-equal (file-name-extension it)
-                                    "el"))
-                    package-files)))
-
-    (dolist (it el-files)
-      (checkdoc-file it))))
-
+#+BEGIN_SRC emacs-lisp
 (defun wal/check-coverage--calculate-coverage ()
   "Calculate the full coverage."
   (when-let* ((buf (seq-find (lambda (it) (string-match "-coverage\\*" (buffer-name it))) (buffer-list)))
@@ -10405,7 +10403,7 @@ This will activate minor mode `wal/config-mode'."
      (lambda (str) (message "Failed to create coverage: %s" str))
      suffix)))
 
-(defun wal/coverage--execute (command on-succes on-failure buffer-suffix)
+(defun wal/coverage--execute (command on-success on-failure buffer-suffix)
   "Execute coverage command.
 
 Runs COMMAND asynchronously and passes ON-SUCCESS and ON-FAILURE
@@ -10426,7 +10424,26 @@ name are deleted beforehand."
           (delete-window window))
         (kill-buffer buf)))
 
-    (wal/async-process full-command on-succes on-failure buffer-suffix)))
+    (wal/async-process full-command on-success on-failure buffer-suffix)))
+#+END_SRC
+
+*** Checking
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/checkdoc-config-packages ()
+  "Run `checkdoc-file' on all package files."
+  (interactive)
+  (defvar projectile-enable-caching)
+  (let* ((projectile-enable-caching nil)
+         (package-files (wal/directory-files wal/emacs-config-package-path))
+         (el-files (seq-filter
+                    (lambda (it)
+                      (string-equal (file-name-extension it)
+                                    "el"))
+                    package-files)))
+
+    (dolist (it el-files)
+      (checkdoc-file it))))
 
 (defun wal/flycheck-config-packages ()
   "Run `wal/flycheck' on all config package files."
@@ -10440,6 +10457,8 @@ name are deleted beforehand."
       (erase-buffer)
       (setq buffer-read-only t))
 
+    (display-buffer output-buffer)
+
     (let* ((package-files (wal/directory-files wal/emacs-config-package-path))
            (el-files (seq-filter
                       (lambda (it)
@@ -10449,10 +10468,12 @@ name are deleted beforehand."
 
       (dolist (it el-files)
         ;; Check the file but defer output and kill the buffers.
-        (wal/flycheck-file it t t)))
+        (wal/flycheck-file it t t)))))
+#+END_SRC
 
-    (display-buffer output-buffer)))
+*** Minor Mode
 
+#+BEGIN_SRC emacs-lisp
 (defun wal/config-maybe-create-transient ()
   "Create a `transient' if it doesn't exist yet and bind it."
   (unless (fboundp 'wal/config-dispatch)
