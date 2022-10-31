@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `iedit-mode` is now bound in `colonel` using `i`.
 - Command `wal/vterm-run` to quickly run and display command executed
   in a `vterm` buffer.
+- Package `org-habit` now has a configuration.
 
 ### Removed
 
