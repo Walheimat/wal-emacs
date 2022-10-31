@@ -7220,6 +7220,9 @@ I am convinced that we are in a terminal process.
 (declare-function project-buffers "ext:project.el")
 (declare-function projectile-project-p "ext:projectile.el")
 (declare-function projectile-project-buffers "ext:projectile.el")
+(declare-function vterm-mode "ext:vterm.el")
+(declare-function vterm-send-return "ext:vterm.el")
+(declare-function vterm-send-string "ext:vterm.el")
 (declare-function wal/univ-p "wal-func.el")
 (declare-function wdb/side "wal-func.el")
 
@@ -7257,6 +7260,29 @@ Some common shell commands require an additional =C-c=:
 
 #+BEGIN_SRC emacs-lisp
 (defconst wal/vterm-prefix "VTerm")
+
+(defun wal/vterm-run (cmd &optional action)
+  "Run CMD in `vterm' terminal and switch to it.
+
+Optionally, a buffer display action can be passed of the
+form (FUNCTIONS . ALIST). See `display-buffer' for more
+information."
+  (interactive "sEnter command: ")
+  (unless (executable-find (car (split-string-shell-command cmd)))
+    (user-error (format "Unknown command '%s'" cmd)))
+
+  (let* ((buffer (seq-find
+                  (lambda (it)
+                    (string-match cmd (buffer-name it)))
+                  (buffer-list))))
+
+    (if buffer
+        (display-buffer buffer action)
+      (with-current-buffer (get-buffer-create (format "*vterm-run-%s*" cmd))
+        (vterm-mode)
+        (vterm-send-string cmd)
+        (vterm-send-return)
+        (display-buffer (current-buffer) action)))))
 
 (defun wal/vterm (&optional force-new)
   "Get a `vterm' buffer.

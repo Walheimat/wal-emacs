@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `iedit-mode` is now bound in `colonel` using `i`.
+- Command `wal/vterm-run` to quickly run and display command executed
+  in a `vterm` buffer.
 
 ### Fixed
 
