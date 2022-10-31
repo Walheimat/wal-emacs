@@ -13,10 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command `wal/vterm-run` to quickly run and display command executed
   in a `vterm` buffer.
 - Package `org-habit` now has a configuration.
+- New parameter `lieutenant` in `wal/hook` that will bind function
+  `wal/<mode-name>-dispatch` to the `lieutenant` key. This now the
+  default access to major-mode specific `transient`s.
 
 ### Removed
 
 - Bindings in `lieutenant` were moved to `C-c *` bindings.
+- Macro `wal/major!` has been removed as it's obsoleted by new
+  `lieutenant` bindings.
 
 ### Fixed
 

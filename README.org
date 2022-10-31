@@ -598,11 +598,6 @@ I use many[fn:8] custom keybindings.
   :type 'string
   :group 'wal-key-bindings)
 
-(defcustom wal/major!-key "."
-  "The `major-mode'-specific key in `wal/major'."
-  :type 'string
-  :group 'wal-key-bindings)
-
 (defcustom wal/captain-key "/"
   "The quaternary (or captain) leader key."
   :type 'string
@@ -772,9 +767,6 @@ They are:
 
 Leader key =major= (=.= by default) deals with the (buffer-)local context.
 
-It does this mostly through a =major-mode=-related =transient= bound to
-the same key (=.= by default).
-
 If the respective buffer-local =minor-mode= is active, the following
 command maps are bound
 
@@ -814,7 +806,8 @@ relevant globally (or for the current perspective). These are:
 
 *** Lieutenant
 
-Leader key =lieutenant= (='= by default) is unused.
+Leader key =lieutenant= (='= by default) invokes a dispatch if the
+underlying major-mode has it defined.
 
 ** Packages
 
@@ -846,15 +839,6 @@ the sink for and PREFIX is its prefix."
                                          (concat ,suffix it)
                                        it)) args))))))
 
-(cl-defmacro wal/major! (fun &rest args)
-  "Define key in `wal/major' definer for to call FUN.
-
-All ARGS are passed to the definer."
-  (declare (indent defun))
-
-  `(wal/major :major-modes t ,@args
-     ,wal/major!-key '(,fun :wk "MAJOR!")))
-
 (cl-defmacro wal/colonel! (key fun mfun &rest args)
   "Bind FUN to KEY, MFUN in the sink.
 
@@ -865,7 +849,7 @@ All ARGS are passed to both definers."
     (wal/colonel ,@args ,key ,fun)
     (wal/colonel-sink ,@args ,key ,mfun)))
 
-(defvar wal/leaders '(wal/general wal/colonel wal/major wal/captain wal/lieutenant))
+(defvar wal/leaders '(wal/general wal/colonel wal/major wal/captain))
 (defvar wal/leader-with-sink '(wal/general wal/colonel))
 
 (defun wal/general-create-definer (leader)
@@ -979,6 +963,7 @@ Most bindings are declared in individual packages.
 
 #+BEGIN_SRC emacs-lisp
 (wal/on-boot key-bindings
+
   (wal/major
     "t" '(wal/text-scale/body :wk "text-scale")
     "o" '(wal/resize-window/body :wk "resize-window")
@@ -1029,6 +1014,15 @@ Most bindings are declared in individual packages.
   (global-set-key (kbd "M-o") #'wal/other-window)
   (global-set-key (kbd "C-;") #'comment-line)
   (global-set-key (kbd "C-c c") #'completion-at-point)
+
+  (defun wal/lieutenant? ()
+    "Show message when `wal/lieutenant-key' is not locally bound."
+    (interactive)
+    (let ((key (propertize (wal/prefix-user-key wal/lieutenant-key) 'face 'success))
+          (mode (propertize (symbol-name major-mode) 'face 'success)))
+      (message "Lieutenant (%s) has no binding in %s" key mode)))
+
+  (global-set-key (kbd (wal/prefix-user-key wal/lieutenant-key)) #'wal/lieutenant?)
 
   ;; Unbinds `save-buffers-kill-terminal'.
   (global-unset-key (kbd "C-x C-c")))
@@ -1907,7 +1901,7 @@ Optionally provide `quelpa' RECIPES."
 (defvar prog-like-hook nil
   "Commands that should be run for prog-like modes.")
 
-(cl-defmacro wal/hook (name docs &body body &key messages lsp lsp-ignores tabs prog-like &allow-other-keys)
+(cl-defmacro wal/hook (name docs &body body &key messages lsp lsp-ignores tabs prog-like lieutenant &allow-other-keys)
   "Hook into major mode NAME, describe with DOCS.
 
 MESSAGES is a list of strings to randomly choose from and
@@ -1920,15 +1914,19 @@ TABS is either nil, t or a symbol. Unless the symbol is `always',
 tabs are enabled using `wal/maybe-enable-tabs', passing it to the
 function as an indentation function.
 
+LIEUTENANT is either t or nil. If it is t, a prefixed function
+will be mapped to the lieutenant key.
+
 The rest of the BODY will be spliced into the lambda."
   (declare (indent defun) (doc-string 2))
 
   (let ((target (intern (concat (symbol-name name) "-hook")))
         (safe-body (cl-loop for (key val) on body by 'cddr
-                            unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like))
+                            unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :lieutenant))
                             collect key
                             and collect val))
-        (func-name (intern (concat "wal/" (symbol-name name) "-hook"))))
+        (func-name (intern (concat "wal/" (symbol-name name) "-hook")))
+        (lieutenant-name (intern (concat "wal/" (symbol-name name) "-dispatch"))))
 
     `(progn
        ,@(delete
@@ -1951,7 +1949,9 @@ The rest of the BODY will be spliced into the lambda."
                    ,(when lsp
                       '(wal/lsp))
                    ,(when prog-like
-                      '(run-hooks 'prog-like-hook)))))
+                      '(run-hooks 'prog-like-hook))
+                   ,(when lieutenant
+                      `(local-set-key (kbd (wal/prefix-user-key wal/lieutenant-key)) ',lieutenant-name)))))
             ,(when (and lsp lsp-ignores)
                `(with-eval-after-load 'lsp-mode
                   (wal/append 'lsp-file-watch-ignored-directories ,lsp-ignores)))
@@ -2821,6 +2821,23 @@ Optionally, the buffer is created with SUFFIX."
         (wal/disable-tabs)
         (message "hi")
         (run-hooks 'prog-like-hook))
+      (add-hook 'test-hook 'wal/test-hook))))
+
+(ert-deftest test-wal/hook--lieutenant ()
+  (match-expansion
+   (wal/hook test
+     "We're just testing."
+     :messages '("Just testing")
+     :lieutenant t
+     (message "hi"))
+   `(progn
+      (defun wal/test-hook ()
+        "We're just testing."
+        (wal/message-in-a-bottle '("Just testing"))
+        (hack-local-variables)
+        (wal/disable-tabs)
+        (message "hi")
+        (local-set-key (kbd (wal/prefix-user-key wal/lieutenant-key)) 'wal/test-dispatch))
       (add-hook 'test-hook 'wal/test-hook))))
 #+END_SRC
 
@@ -5732,7 +5749,7 @@ not pollute the current one."
     (transient-append-suffix 'wal/lsp-dispatch '(0 3 1)
       '("s" "symbol" consult-lsp-file-symbols)))
   (with-eval-after-load 'flycheck
-    (transient-append-suffix 'wal/flycheck '(0 0 1)
+    (transient-append-suffix 'wal/flycheck-dispatch '(0 0 1)
       '("u" "consult" consult-flycheck)))
 
   :bind
@@ -6234,8 +6251,8 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 ;;; Code:
 
 (eval-when-compile
-  (require 'transient))
-  (require 'wal-func (expand-file-name "wal-func.el" "."))
+  (require 'transient)
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
 (declare-function org-roam-buffer-p "ext:org-roam.el")
 (declare-function persp-names "ext:perpectivel.el")
@@ -6257,6 +6274,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (defvar visual-fill-column-width)
 (defvar visual-fill-column-center-text)
 (defvar wal/agenda-tasks-directory)
+(defvar wal/lieutenant-key)
 (defvar wal/use-projectile)
 
 (defgroup wal-org nil
@@ -6344,7 +6362,8 @@ This calls `org-content' interactively."
   :init
   (wal/hook org-mode
     "Hook into `org-mode'."
-    :messages '("Organize! Seize the means of production!"))
+    :messages '("Organize! Seize the means of production!")
+    :lieutenant t)
 
   :config
   ;; TEMP: Getting missing face errors otherwise.
@@ -6358,23 +6377,24 @@ This calls `org-content' interactively."
    'org-export-dispatch :before
    #'wal/first-require-ox-md)
 
-  (transient-define-prefix wal/org ()
-    "Access `org-mode' commands."
-    [["Commands"
-      ("n" "add note" org-add-note)
-      ("t" "toggle timestamp" org-toggle-timestamp-type
-       :inapt-if-not (lambda () (org-at-timestamp-p 'inactive)))]
-     ["Subtrees"
-      ("s w" "cut" org-cut-subtree
-       :inapt-if-not (lambda () (org-at-heading-p)))
-      ("s y" "paste" org-paste-subtree)]
-     ["Visibility"
-      ("v a" "show all" org-show-all)
-      ("v l" "up to level" wal/org-content)]
-     ["Footnotes"
-      ("f a" "add" org-footnote-new
-       :inapt-if (lambda () (org-in-src-block-p)))
-      ("f n" "normalize" org-footnote-normalize)]])
+  (with-no-warnings
+    (transient-define-prefix wal/org-mode-dispatch ()
+      "Access `org-mode' commands."
+      [["Commands"
+        ("n" "add note" org-add-note)
+        ("t" "toggle timestamp" org-toggle-timestamp-type
+         :inapt-if-not (lambda () (org-at-timestamp-p 'inactive)))]
+       ["Subtrees"
+        ("s w" "cut" org-cut-subtree
+         :inapt-if-not (lambda () (org-at-heading-p)))
+        ("s y" "paste" org-paste-subtree)]
+       ["Visibility"
+        ("v a" "show all" org-show-all)
+        ("v l" "up to level" wal/org-content)]
+       ["Footnotes"
+        ("f a" "add" org-footnote-new
+         :inapt-if (lambda () (org-in-src-block-p)))
+        ("f n" "normalize" org-footnote-normalize)]]))
 
   :custom
   ;; Make it look nice and tidy.
@@ -6427,10 +6447,7 @@ This calls `org-content' interactively."
   :bind
   (:map org-mode-map
    ("M-p" . org-previous-visible-heading)
-   ("M-n" . org-next-visible-heading))
-
-  :general
-  (wal/major! wal/org :keymaps 'org-mode-map))
+   ("M-n" . org-next-visible-heading)))
 #+END_SRC
 
 ** Agendas
@@ -6544,6 +6561,7 @@ Trying to organize my thoughts using Zettelkästen.
 If called with `universal-argument', default to `org-roam' in any
 case."
   (interactive)
+  (declare-function org-refile "ext:org.el")
   (if (and (org-roam-buffer-p) (not (wal/univ-p)))
       (org-roam-refile)
     (org-refile args)))
@@ -6577,7 +6595,7 @@ case."
                                   wal/org-roam-dailies-directory
                                   wal/org-roam-directory))
 
-  (transient-define-prefix wal/org-roam ()
+  (transient-define-prefix wal/org-roam-dispatch ()
     "Run `org-roam' commands."
     [["Capture"
       ("c" "capture" org-roam-capture)
@@ -6638,7 +6656,7 @@ Fancy UI.
   :after org-roam
 
   :config
-  (transient-append-suffix 'wal/org-roam '(0 3 0)
+  (transient-append-suffix 'wal/org-roam-dispatch '(0 3 0)
     '("u" "ui" org-roam-ui-mode))
 
   :ensure nil)
@@ -6720,7 +6738,7 @@ Turn any =org-mode= buffer into a presentation.
 
   :config
   ;; Insert new group after "Visibility".
-  (transient-append-suffix 'wal/org '(0 2)
+  (transient-append-suffix 'wal/org-mode-dispatch '(0 2)
     ["Presentation"
      ("p" "present" org-tree-slide-mode)
      ("i" "indent" org-indent-mode)])
@@ -6767,7 +6785,7 @@ Editing source blocks.
   :config
   (wal/append 'org-src-lang-modes wal/org-src-lang-modes)
 
-  (transient-append-suffix 'wal/org '(0 0 1)
+  (transient-append-suffix 'wal/org-mode-dispatch '(0 0 1)
     '("e" "edit source" org-edit-src-code :inapt-if-not (lambda () (org-in-src-block-p))))
 
   :custom
@@ -6846,7 +6864,7 @@ Spectral inclusion.
       ("s" "sync start" org-transclusion-live-sync-start)
       ("S" "sync exit" org-transclusion-live-sync-exit)]])
 
-  (transient-append-suffix 'wal/org '(0 0 2)
+  (transient-append-suffix 'wal/org-mode-dispatch '(0 0 2)
     '("c" "transclusion" wal/org-transclusion))
 
   :custom
@@ -7068,7 +7086,12 @@ Run =dired= with =C-x d=.
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+
 (declare-function dired-read-dir-and-switches "ext:dired.el")
+
+(defvar wal/lieutenant-key)
 #+END_SRC
 
 ** Packages
@@ -7098,11 +7121,16 @@ Uses the same optional SWITCHES."
 (use-package dired
   :ensure nil
 
+  :init
+  (wal/hook dired-mode
+    "Hook into `dired-mode'."
+    :lieutenant t)
+
   :config
   ;; We aren't scared of finding alternate files.
   (put 'dired-find-alternate-file 'disabled nil)
 
-  (transient-define-prefix wal/dired ()
+  (transient-define-prefix wal/dired-mode-dispatch ()
     "Access Dired commands."
     [["Utility"
       ("q" "query replace" dired-do-query-replace-regexp)
@@ -7123,10 +7151,7 @@ Uses the same optional SWITCHES."
    ("j" . dired-jump-other-window)
    :map dired-mode-map
    ("." . dired-up-directory) ; Overrides `dired-clean-directory'.
-   ("," . dired-display-file))
-
-  :general
-  (wal/major! wal/dired :keymaps 'dired-mode-map))
+   ("," . dired-display-file)))
 #+END_SRC
 
 *** dired-filter
@@ -7729,6 +7754,7 @@ Let's greet the world.
 
 (defvar js2-mode-map)
 (defvar wal/ascii-whale)
+(defvar wal/lieutenant-key)
 (defvar wal/use-projectile)
 
 (defgroup wal-lang nil
@@ -7790,20 +7816,18 @@ I want to be ready for =jai=.
   (wal/hook c++-mode
     "Hook into `c++-mode'."
     :lsp t
+    :lieutenant t
     :messages '("Make tidy! Make clean!" "Serenity now!"))
 
   :config
   ;; Eliminate conflicts with `delight'.
   (advice-add 'c-update-modeline :override #'ignore)
 
-  (transient-define-prefix wal/c++ ()
+  (transient-define-prefix wal/c++-mode-dispatch ()
     "Access `c++-mode' commands."
     [["Style"
       ("s s" "set" c-set-style)
-      ("s g" "guess" c-guess-install)]])
-
-  :general
-  (wal/major! wal/c++ :keymaps 'c++-mode-map))
+      ("s g" "guess" c-guess-install)]]))
 #+END_SRC
 
 ** Rust
@@ -7834,10 +7858,11 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
   (wal/hook rust-mode
     "Hook into `rust-mode'."
     :lsp t
+    :lieutenant t
     :messages '("Consider the lobster"))
 
   :config
-  (transient-define-prefix wal/rust ()
+  (transient-define-prefix wal/rust-mode-dispatch ()
     "Access `rust-mode' commands."
     [["Commands"
       ("c" "compile" rust-compile)
@@ -7845,9 +7870,7 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
      ["Test"
       ("t a" "test all" rust-test)
       ("t c" "current" cargo-process-current-test)
-      ("t f" "file" cargo-process-current-file-tests)]])
-  :general
-  (wal/major! wal/rust :keymaps 'rust-mode-map))
+      ("t f" "file" cargo-process-current-file-tests)]]))
 #+END_SRC
 
 *** cargo
@@ -7901,6 +7924,7 @@ TOML."
   :init
   (wal/hook python-mode
     "Hook into `python-mode'."
+    :lieutenant t
     :lsp t
     :lsp-ignores
     '("[/\\\\]\\.pytype\\'"
@@ -7919,7 +7943,7 @@ TOML."
   ;; Show inferior shell at the bottom.
   (wdb/side 'inferior-python-mode)
 
-  (transient-define-prefix wal/python ()
+  (transient-define-prefix wal/python-mode-dispatch ()
     "Access `python-mode' commands."
     [["Inferior shell"
       ("i r" "send region" python-shell-send-region)
@@ -7929,10 +7953,7 @@ TOML."
       ("r" "run shell" run-python)]])
 
   :custom
-  (python-indent-guess-indent-offset nil)
-
-  :general
-  (wal/major! wal/python :keymaps 'python-mode-map))
+  (python-indent-guess-indent-offset nil))
 #+END_SRC
 
 *** lsp-pyright
@@ -7988,7 +8009,7 @@ Sort with =isort=.
   :after python
 
   :config
-  (transient-append-suffix 'wal/python '(0 1 -1)
+  (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
     '("s" "isort" python-isort-buffer))
 
   :wal-ways nil)
@@ -8013,7 +8034,7 @@ Test with =pytest=.
   :config
   (wdb/pop-up python-pytest-buffer-name)
 
-  (transient-append-suffix 'wal/python '(0 1 -1)
+  (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
     '("t" "test" python-pytest-dispatch))
 
   :bind
@@ -8037,7 +8058,7 @@ Blacken buffers.
   :after python
 
   :config
-  (transient-append-suffix 'wal/python '(0 1 -1)
+  (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
     '("b" "black" python-black-buffer))
 
   :ensure nil)
@@ -8058,7 +8079,7 @@ Work with Jupyter notebooks.
   :after python
 
   :config
-  (transient-append-suffix 'wal/python '(0 1 -1)
+  (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
     '("e" "ein" ein:run))
 
   :ensure nil)
@@ -8102,7 +8123,7 @@ Takes care[fn:16] of all your virtual environment needs.
   :after python
 
   :config
-  (transient-append-suffix 'wal/python '(0 1 -1)
+  (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
     '("p" "poetry" poetry))
 
   :ensure nil)
@@ -8117,7 +8138,7 @@ Takes care[fn:16] of all your virtual environment needs.
   :after python
 
   :config
-  (transient-append-suffix 'wal/python '(0 1 -1)
+  (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
     '("v" "activate venv" pyvenv-activate))
 
   :ensure nil)
@@ -8198,21 +8219,19 @@ Deal with the parens[fn:17].
   :init
   (wal/hook emacs-lisp-mode
     "Hook into `emacs-lisp-mode'."
+    :lieutenant t
     :messages '("So it's just a bunch of lists?" "List your lambdas")
     (prettify-symbols-mode)
     (flycheck-mode 1))
 
   :config
-  (transient-define-prefix wal/elisp ()
+  (transient-define-prefix wal/emacs-lisp-mode-dispatch ()
     "Access `elisp' commands."
     [["Utility"
       ("p" "check parens" check-parens)
       ("d" "edebug function" edebug-defun)
       ("h" "helpful" helpful-at-point)
-      ("m" "expand macro" emacs-lisp-macroexpand)]])
-
-  :general
-  (wal/major! wal/elisp :keymaps '(emacs-lisp-mode-map lisp-interaction-mode-map)))
+      ("m" "expand macro" emacs-lisp-macroexpand)]]))
 #+END_SRC
 
 *** lisp-mode
@@ -8224,18 +8243,18 @@ Deal with the parens[fn:17].
 (use-package lisp-mode
   :ensure nil
 
-  :commands (wal/lisp)
+  :init
+  (wal/hook common-lisp-mode
+    "hook into `common-lisp-mode'."
+    :lieutenant t)
 
   :config
   (with-eval-after-load 'slime
-    (transient-define-prefix wal/lisp ()
+    (transient-define-prefix wal/common-lisp-mode-dispatch ()
       "Access `slime' actions."
       [["Slime"
         ("s" "slime" slime-mode)
-        ("r" "open REPL" slime)]]))
-
-  :general
-  (wal/major! wal/lisp :keymaps 'common-lisp-mode-map))
+        ("r" "open REPL" slime)]])))
 #+END_SRC
 
 *** clojure-mode
@@ -8255,18 +8274,16 @@ Get some closure.
   (wal/hook clojure-mode
     "Hook into `clojure-mode'."
     :lsp t
+    :lieutenant t
     :messages '("Cider brew"))
 
   :config
   (with-eval-after-load 'cider
-    (transient-define-prefix wal/clojure ()
+    (transient-define-prefix wal/clojure-mode-dispatch ()
       "Access `clojure-mode' commands."
       [["Cider"
         ("r" "repl" cider-jack-in)
-        ("n" "set namespace" cider-repl-set-ns)]]))
-
-  :general
-  (wal/major! wal/clojure :keymaps 'clojure-mode-map))
+        ("n" "set namespace" cider-repl-set-ns)]])))
 #+end_src
 
 *** cider
@@ -8358,6 +8375,7 @@ Can we have =deno= instead of =node=?
   (wal/hook js2-mode
     "Hook into `js2-mode'."
     :messages '("NaN !== NaN" "Null falsy values or undefined")
+    :lieutenant t
     :tabs t
     :lsp t
     (when (fboundp 'add-node-modules-path)
@@ -8372,7 +8390,7 @@ Can we have =deno= instead of =node=?
     (require 'dap-node))
 
 
-  (transient-define-prefix wal/js ()
+  (transient-define-prefix wal/js2-mode-dispatch ()
     "Access JS commands."
     [["Actions"
       ("b" "bounce" js2-indent-bounce)]])
@@ -8385,10 +8403,8 @@ Can we have =deno= instead of =node=?
 
   :bind
   (:map js2-mode-map
-   ("<backtab>" . js2-indent-bounce)) ; `js2-bounce-indent-p' also binds <TAB>.
-
-  :general
-  (wal/major! wal/js :keymaps '(js2-mode-map rjsx-mode-map typescript-mode-map)))
+   ;; `js2-bounce-indent-p' also binds <TAB>.
+   ("<backtab>" . js2-indent-bounce)))
 #+END_SRC
 
 *** rjsx-mode
@@ -8481,7 +8497,7 @@ Prettify your ugly JavaScript.
   :after js2-mode
 
   :config
-  (transient-append-suffix 'wal/js '(0 0 0)
+  (transient-append-suffix 'wal/js2-mode-dispatch '(0 0 0)
     '("p" "prettier" prettier-prettify)))
 #+END_SRC
 
@@ -8613,8 +8629,13 @@ Sometimes things that don't do things need to look nice.
 
   :ensure nil
 
+  :init
+  (wal/hook markdown-mode
+    "Hook into `markdown-mode'."
+    :lieutenant t)
+
   :config
-  (transient-define-prefix wal/markdown ()
+  (transient-define-prefix wal/markdown-mode-dispatch ()
     "Access `markdown-mode' commands."
     [["View"
       ("v" "toggle view" wal/markdown-view)]])
@@ -8622,10 +8643,7 @@ Sometimes things that don't do things need to look nice.
   :bind
   (:map markdown-mode-map
    ("M-<up>" . markdown-move-list-item-up)
-   ("M-<down>" . markdown-move-list-item-down))
-
-  :general
-  (wal/major! wal/markdown :keymaps 'markdown-mode-map))
+   ("M-<down>" . markdown-move-list-item-down)))
 #+END_SRC
 
 ** Flutter
@@ -8653,6 +8671,7 @@ Yes, you need to install *Android Studio* for some reason.
   (wal/hook dart-mode
     "Hook into `dart-mode'."
     :lsp t
+    :lieutenant t
     :messages '("Bull's eye!")))
 #+END_SRC
 
@@ -8713,7 +8732,7 @@ LSP support for Dart.
   ;; Display at the bottom.
   (wdb/side "\\*Flutter")
 
-  (transient-define-prefix wal/flutter ()
+  (transient-define-prefix wal/dart-mode-dispatch ()
     "Access flutter commands."
     [["Hot-reloading"
       ("R" "restart" lsp-dart-dap-flutter-hot-restart)
@@ -8728,10 +8747,8 @@ LSP support for Dart.
   :custom
   (lsp-dart-flutter-sdk-dir (wal/find-dart-flutter-sdk-dir))
   (lsp-dart-sdk-dir (wal/find-dart-sdk-dir))
-  (lsp-dart-dap-use-sdk-debugger nil) ; Run `lsp-dart-dap-setup' once to install debugger.
-
-  :general
-  (wal/major! wal/flutter :keymaps 'dart-mode-map))
+  ;; Run `lsp-dart-dap-setup' once to install debugger.
+  (lsp-dart-dap-use-sdk-debugger nil))
 #+END_SRC
 
 ** Java
@@ -8875,6 +8892,7 @@ The only way to store strings, JSON.
   (wal/hook jsonian-mode
     "Hook into `jsonian-mode'."
     :tabs t
+    :lieutenant t
     :messages '("JSON ...? JSON?! JSON!!")
     (flycheck-mode 1))
 
@@ -8884,14 +8902,11 @@ The only way to store strings, JSON.
   (with-eval-after-load 'flycheck
     (jsonian-enable-flycheck))
 
-  (transient-define-prefix wal/jsonian ()
+  (transient-define-prefix wal/jsonian-mode-dispatch ()
     "Access `jsonian-mode' commands."
     [["Jsonian"
       ("f" "find" jsonian-find)
-      ("e" "edit" jsonian-edit-string)]])
-
-  :general
-  (wal/major! wal/jsonian :keymaps 'jsonian-mode-map))
+      ("e" "edit" jsonian-edit-string)]]))
 #+END_SRC
 
 *** mhtml-mode
@@ -9203,7 +9218,7 @@ If KILL-BUFFER is t, kill the file's buffer."
   :hook ((sh-set-shell) . flycheck-mode)
 
   :config
-  (transient-define-prefix wal/flycheck ()
+  (transient-define-prefix wal/flycheck-dispatch ()
     "Access `flycheck' commands."
     [["Go to"
       ("n" "next error" flycheck-next-error)
@@ -9222,7 +9237,7 @@ If KILL-BUFFER is t, kill the file's buffer."
 
   :general
   (wal/major :keymaps 'flycheck-mode-map
-    "f" '(wal/flycheck :wk "flycheck")))
+    "f" '(wal/flycheck-dispatch :wk "flycheck")))
 #+END_SRC
 
 *** flyspell
@@ -9422,7 +9437,7 @@ minimum prefixes are reduced."
 
   ;; JavaScript.
   (with-eval-after-load 'js2-mode
-    (transient-append-suffix 'wal/js '(0 0 -1)
+    (transient-append-suffix 'wal/js2-mode-dispatch '(0 0 -1)
       '("r" "rename file" lsp-javascript-rename-file)))
 
   (with-eval-after-load 'which-key
