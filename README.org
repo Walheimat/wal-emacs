@@ -561,7 +561,6 @@ I use many[fn:8] custom keybindings.
 (declare-function wal/colonel "wal-key-bindings.el")
 (declare-function wal/general "wal-key-bindings.el")
 (declare-function wal/general-sink "wal-key-bindings.el")
-(declare-function wal/lieutenant "wal-key-bindings.el")
 (declare-function wal/major "wal-key-bindings.el")
 (declare-function wal/open-line "wal-func.el")
 (declare-function wal/open-line-above "wal-func.el")
@@ -627,15 +626,20 @@ There are some non-standard control sequences. Anywhere:
   + =C-/= to move it downward
 + =C-?= redoes (as =C-/= undoes).
 
-User-reserved combinations are used for certain commands and
-dispatches:
+User-reserved combinations are used for certain commands, command maps
+and dispatches:
 
 + =C-c a= for =org-agenda=
 + =C-c b= for a heavy =pulse=
 + =C-c c= does a =completion-at-point=
 + =C-c d= for =docker=
-+ =C-c m= for =mu4e=
++ =C-c f= for =flycheck=
++ =C-c g= for =smerge=
++ =C-c k= for =kmacro=
++ =C-c m= for =bookmark=
++ =C-c p= for =mu4e=
 + =C-c q= to do a =quick-calc= (inserted if called with =C-u=)
++ =C-c r= for =register=
 + =C-c s= to search with =consult-line=
 + =C-c t= for =vterm=.
 
@@ -810,8 +814,7 @@ relevant globally (or for the current perspective). These are:
 
 *** Lieutenant
 
-Leader key =lieutenant= (='= by default) currently provides access to
-additional command maps.
+Leader key =lieutenant= (='= by default) is unused.
 
 ** Packages
 
@@ -897,7 +900,7 @@ All ARGS are passed to both definers."
 Provides a context for related commands that can be (re-)executed in
 quick succession.
 
-These hydras are mapped to =lieutenant= using the following prefixes:
+These hydras are mapped to =major= using the following prefixes:
 
 + =d= for a minimal set of debugging keys using =dap-mode=
 + =o= to resize window
@@ -958,10 +961,6 @@ Additional left PADDING can be passed."
 
 Another nice way of grouping keys.
 
-These following transients are bound in =lieutenant=:
-
-+ =c= to edit this config if =wal/config-mode= is active
-
 Some transients are bound directly, others are =wal/univ= variants (see
 above).
 
@@ -1016,8 +1015,6 @@ Most bindings are declared in individual packages.
   (wal/colonel "i" 'iedit-mode)
 
   (wal/major "w" 'read-only-mode)
-
-  (wal/lieutenant "g" '(:keymap goto-map :wk "goto"))
 
   ;; Use H-u for C-u.
   (when wal/use-hyper-prefix
@@ -3498,7 +3495,6 @@ external ones.
   (require 'transient)
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
-(declare-function wal/lieutenant "wal-key-bindings.el")
 (declare-function wal/dead-shell-p "wal-func.el")
 (declare-function wal/modern-emacs-p "wal-func.el")
 (declare-function wdb/pop-up "wal-func.el")
@@ -3637,8 +3633,12 @@ Some people need macros, okay?
 (use-package kmacro
   :ensure nil
 
-  :general
-  (wal/lieutenant "k" '(:keymap kmacro-keymap :wk "kmacro")))
+  :config
+  (with-eval-after-load 'which-key
+    (which-key-add-key-based-replacements "C-c k" "kmacro"))
+
+  :bind-keymap
+  (("C-c k" . kmacro-keymap)))
 #+END_SRC
 
 *** register
@@ -3653,7 +3653,11 @@ No offender.
   :ensure nil
 
   :config
-  (wal/lieutenant "r" '(:keymap ctl-x-r-map :wk "register")))
+  (with-eval-after-load 'which-key
+    (which-key-add-key-based-replacements "C-c r" "register"))
+
+  :bind-keymap
+  (("C-c r" . ctl-x-r-map)))
 #+END_SRC
 
 *** pulse
@@ -3818,17 +3822,20 @@ Leave a bookmark why don't you.
   :config
   (wdb/side "\\*Bookmark Annotation\\*" :side 'left)
 
+  (with-eval-after-load 'bookmark
+    (which-key-add-key-based-replacements "C-c m" "bookmark"))
+
   :custom
   (bookmark-use-annotations t)
   (bookmark-menu-confirm-deletion t)
 
+  :bind-keymap
+  (("C-c m" . bookmark-map))
+
   :bind
   (:map bookmark-map
    ("l" . bookmark-bmenu-list)
-   ("L" . bookmark-load))
-
-  :general
-  (wal/lieutenant "m" '(:keymap bookmark-map :wk "bookmark")))
+   ("L" . bookmark-load)))
 #+END_SRC
 
 *** calc
@@ -6182,16 +6189,16 @@ Built-in but entirely dependent on either =git= or =hg=.
 
   :demand t
 
+  :config
+  (wal/captain "p" '(:keymap project-prefix-map :wk "project"))
+
   :custom
   (project-switch-commands 'project-find-dir)
   (project-vc-ignores wal/project-vc-ignores)
 
   :wal-bind
   (("l" . project-find-file)
-   ("p" . project-switch-project))
-
-  :general
-  (wal/lieutenant "p" '(:keymap project-prefix-map :wk "project")))
+   ("p" . project-switch-project)))
 #+END_SRC
 
 ** Footer
@@ -7626,13 +7633,15 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
     ("a" smerge-keep-all "keep all")
     ("q" nil "quit"))
 
-  ;; Register command map.
-  (wal/lieutenant :keymaps 'smerge-mode-map
-    "@" '(:keymap smerge-basic-map :wk "smerge"))
+  (with-eval-after-load 'which-key
+    (which-key-add-key-based-replacements "C-c g" "smerge"))
+
+  :bind-keymap
+  (("C-c g" . smerge-basic-map))
 
   :general
   (wal/major :keymaps 'smerge-mode-map
-    "@" '(wal/smerge/body :wk "smerge"))
+    "g" '(wal/smerge/body :wk "smerge"))
 
   :delight " smg")
 #+END_SRC
@@ -9186,13 +9195,16 @@ If KILL-BUFFER is t, kill the file's buffer."
      ["Show"
       ("l" "list" flycheck-list-errors)]])
 
+  (with-eval-after-load 'which-key
+    (which-key-add-key-based-replacements "C-c f" "flycheck"))
+
   :custom
   (flycheck-mode-line-prefix "fly")
 
-  :general
-  (wal/lieutenant :keymaps 'flycheck-mode-map
-    "f" '(:keymap flycheck-command-map :wk "flycheck"))
+  :bind-keymap
+  (("C-c f" . flycheck-command-map))
 
+  :general
   (wal/major :keymaps 'flycheck-mode-map
     "f" '(wal/flycheck :wk "flycheck")))
 #+END_SRC
@@ -9397,9 +9409,8 @@ minimum prefixes are reduced."
     (transient-append-suffix 'wal/js '(0 0 -1)
       '("r" "rename file" lsp-javascript-rename-file)))
 
-  ;; Register command map.
-  (wal/lieutenant :keymaps 'lsp-mode-map
-    "l" '(:keymap lsp-command-map :wk "lsp"))
+  (with-eval-after-load 'which-key
+    (which-key-add-key-based-replacements "C-c l" "lsp"))
 
   :custom
   ;; Simplify visuals.
@@ -9412,7 +9423,7 @@ minimum prefixes are reduced."
   (lsp-completion-provider :none)
 
   (lsp-keep-workspace-alive nil)
-  (lsp-keymap-prefix (wal/prefix-user-key (concat wal/lieutenant-key " " "l")))
+  (lsp-keymap-prefix "C-c l")
 
   ;; Individual severs.
   (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
@@ -9421,6 +9432,9 @@ minimum prefixes are reduced."
   (lsp-xml-format-split-attributes t)
   (lsp-xml-format-space-before-empty-close-tag nil)
   (lsp-xml-format-split-attributes-indent-size 1)
+
+  :bind-keymap
+  (("C-c l" . lsp-command-map))
 
   :general
   (wal/major :keymaps 'lsp-mode-map "l" '(wal/lsp-dispatch :wk "lsp"))
@@ -9892,10 +9906,6 @@ Make requests using Org.
       ("v" "set" verb-set-var)
       ("V" "show" verb-show-vars)]])
 
-  ;; Register command map.
-  (wal/lieutenant :keymaps '(verb-mode-map verb-response-body-mode-map)
-    "r" '(:keymap verb-command-map :wk "verb"))
-
   :bind
   (:map verb-response-body-mode-map
    ("k" . verb-kill-buffer-and-window)
@@ -9942,7 +9952,7 @@ You either need to install =maildir-utils= or build from [[https://github.com/dj
   (mu4e-get-mail-command "offlineimap") ; This one works nicely.
 
   :bind
-  ("C-c m" . mu4e))
+  ("C-c p" . mu4e))
 #+END_SRC
 
 *** smtpmail

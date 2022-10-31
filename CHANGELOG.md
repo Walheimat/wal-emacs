@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command `wal/vterm-run` to quickly run and display command executed
   in a `vterm` buffer.
 
+### Removed
+
+- Bindings in `lieutenant` were moved to `C-c *` bindings.
+
 ### Fixed
 
 - Command `wal/avy-action-zip-to-char` is now called
