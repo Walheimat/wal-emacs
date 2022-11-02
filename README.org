@@ -6468,16 +6468,18 @@ Attempts to restore view unless NO-RESTORE is t."
   (interactive "P")
   (when (memq persp-initial-frame-name (persp-names))
     (persp-switch persp-initial-frame-name))
-  (let ((wconf wal/org-agenda-window-configuration))
-    (if (and wconf (not no-restore))
-        (condition-case nil
-            (set-window-configuration wconf)
-          (error
-           (setq wal/org-agenda-window-configuration nil)
-           (message "Couldn't restore agenda windows, please try again!")))
-      (dired wal/agenda-tasks-directory)
-      (org-agenda (wal/univ-p) "a")
-      (setq wal/org-agenda-window-configuration (current-window-configuration)))))
+  (let* ((wconf wal/org-agenda-window-configuration)
+         (task-buffer-name (car (last (split-string wal/agenda-tasks-directory "/"))))
+                           (buffer-count (seq-count
+                                          (lambda (it) (or (string-equal (buffer-name it) org-agenda-buffer-name)
+                                                      (string-equal (buffer-name it) task-buffer-name)))
+                                          (buffer-list))))
+
+         (if (and wconf (eq buffer-count 2) (not no-restore))
+             (set-window-configuration wconf)
+           (dired wal/agenda-tasks-directory)
+           (org-agenda (wal/univ-p) "a")
+           (setq wal/org-agenda-window-configuration (current-window-configuration)))))
 
 (use-package org-agenda
   :ensure nil
