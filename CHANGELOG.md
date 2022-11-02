@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New parameter `lieutenant` in `wal/hook` that will bind function
   `wal/<mode-name>-dispatch` to the `lieutenant` key. This now the
   default access to major-mode specific `transient`s.
+- `org-super-agenda` now adds a new-line after the final group.
 
 ### Removed
 
