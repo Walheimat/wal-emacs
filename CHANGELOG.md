@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   default access to major-mode specific `transient`s.
 - `org-super-agenda` now adds a new-line after the final group.
 
+### Changed
+
+- `popper` groups by `perspective` again.
+
 ### Removed
 
 - Bindings in `lieutenant` were moved to `C-c *` bindings.
