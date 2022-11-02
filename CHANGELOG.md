@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `popper` groups by `perspective` again.
+- The prefix format for agenda entries now uses breadcrumbs instead.
 
 ### Removed
 
