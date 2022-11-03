@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `popper` groups by `perspective` again.
 - The prefix format for agenda entries now uses breadcrumbs instead.
+- `js2-highlight-level` is now at `1`.
 
 ### Removed
 
@@ -34,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Command `wal/avy-action-zip-to-char` is now called
   `avy-action-zip-to-char` to not have a garbled help text.
+- Sets `js2-mode-show-parse-errors` instead of
+  `js2-show-parse-errors`.
 
 ## [v1.7.14]
 
