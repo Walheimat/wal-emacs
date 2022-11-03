@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal/<mode-name>-dispatch` to the `lieutenant` key. This now the
   default access to major-mode specific `transient`s.
 - `org-super-agenda` now adds a new-line after the final group.
+- `graphql` as a Web extra (implicit also `graphql-mode`).
 
 ### Changed
 
