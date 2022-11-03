@@ -8989,9 +8989,12 @@ We want quicker suggestions when in CSS modes.
   (wal/hook css-mode
     "Hook into `css-mode'."
     :tabs t
+    :lsp t
     :messages '("Centering? It's simple. Here's 15 ways to do it.")
-    (setq-local corfu-auto-delay 0.1)
-    (flycheck-mode 1)))
+    (when (executable-find "stylelint")
+      (add-hook
+       'lsp-after-open-hook
+       (lambda () (setq-local flycheck-checker 'css-stylelint)) nil t))))
 #+END_SRC
 
 *** pug-mode

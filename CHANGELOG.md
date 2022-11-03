@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The prefix format for agenda entries now uses breadcrumbs instead.
 - `js2-highlight-level` is now at `1`.
 - `projectile-per-project-compilation-buffer` is set to `t`.
+- `css-mode` now uses `lsp-mode`; if `stylelint` executable is found,
+  that checker is explicitly selected.
 
 ### Removed
 
