@@ -1901,7 +1901,7 @@ Optionally provide `quelpa' RECIPES."
 (defvar prog-like-hook nil
   "Commands that should be run for prog-like modes.")
 
-(cl-defmacro wal/hook (name docs &body body &key messages lsp lsp-ignores tabs prog-like lieutenant &allow-other-keys)
+(cl-defmacro wal/hook (name docs &body body &key messages lsp lsp-ignores tabs prog-like lieutenant before-save &allow-other-keys)
   "Hook into major mode NAME, describe with DOCS.
 
 MESSAGES is a list of strings to randomly choose from and
@@ -1917,12 +1917,14 @@ function as an indentation function.
 LIEUTENANT is either t or nil. If it is t, a prefixed function
 will be mapped to the lieutenant key.
 
+BEFORE-SAVE is a list of functions to add to `before-save-hook'.
+
 The rest of the BODY will be spliced into the lambda."
   (declare (indent defun) (doc-string 2))
 
   (let ((target (intern (concat (symbol-name name) "-hook")))
         (safe-body (cl-loop for (key val) on body by 'cddr
-                            unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :lieutenant))
+                            unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :lieutenant :before-save))
                             collect key
                             and collect val))
         (func-name (intern (concat "wal/" (symbol-name name) "-hook")))
@@ -1950,6 +1952,8 @@ The rest of the BODY will be spliced into the lambda."
                       '(wal/lsp))
                    ,(when prog-like
                       '(run-hooks 'prog-like-hook))
+                   ,@(when before-save
+                       (seq-map (lambda (it) `(add-hook 'before-save-hook ',it nil t)) before-save))
                    ,(when lieutenant
                       `(local-set-key (kbd (wal/prefix-user-key wal/lieutenant-key)) ',lieutenant-name)))))
             ,(when (and lsp lsp-ignores)
@@ -2838,6 +2842,25 @@ Optionally, the buffer is created with SUFFIX."
         (wal/disable-tabs)
         (message "hi")
         (local-set-key (kbd (wal/prefix-user-key wal/lieutenant-key)) 'wal/test-dispatch))
+      (add-hook 'test-hook 'wal/test-hook))))
+
+
+(ert-deftest test-wal/hook--before-save ()
+  (match-expansion
+   (wal/hook test
+     "We're just testing."
+     :messages '("Just testing")
+     :before-save (test-buffer really-test)
+     (message "hi"))
+   `(progn
+      (defun wal/test-hook ()
+        "We're just testing."
+        (wal/message-in-a-bottle '("Just testing"))
+        (hack-local-variables)
+        (wal/disable-tabs)
+        (message "hi")
+        (add-hook 'before-save-hook 'test-buffer nil t)
+        (add-hook 'before-save-hook 'really-test nil t))
       (add-hook 'test-hook 'wal/test-hook))))
 #+END_SRC
 
@@ -8386,6 +8409,7 @@ Can we have =deno= instead of =node=?
     :lieutenant t
     :tabs t
     :lsp t
+    :before-save (prettier-prettify)
     (when (fboundp 'add-node-modules-path)
       (add-node-modules-path)))
 
