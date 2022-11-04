@@ -9432,6 +9432,12 @@ servers yourself[fn:18].
   "Check if MODE is considered slow."
   (memq mode wal/lsp-slow-modes))
 
+(defun wal/lsp-auto-prefix ()
+  "Get the desired prefix length for `corfu-auto-prefix'.
+
+This is 0 except for modes derived from `js2-mode'."
+  (if (derived-mode-p 'js2-mode) 3 0))
+
 (defun wal/lsp ()
   "Defer LSP setup for the file.
 
@@ -9439,7 +9445,7 @@ Unless the associated server is considered slow, delays and
 minimum prefixes are reduced."
   (unless (wal/slow-lsp-p major-mode)
     (setq-local corfu-auto-delay 0.0
-                corfu-auto-prefix 0
+                corfu-auto-prefix (wal/lsp-auto-prefix)
                 completion-styles '(orderless partial-completion basic)))
   (lsp-deferred))
 
