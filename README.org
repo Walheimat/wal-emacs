@@ -8472,6 +8472,23 @@ Allow accessing a project's =node_modules=.
 Prettify your ugly JavaScript.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/prettier-refresh ()
+  "Force re-loading configuration and apply."
+  (interactive)
+  (when wal/prettier-timer
+    (user-error "Refresh timer already running"))
+
+  (prettier--quit-all-processes)
+
+  (setq wal/prettier-timer
+        (run-with-timer 0.1 0.1
+                        (lambda ()
+                          (when (zerop (hash-table-count prettier-processes))
+                            (cancel-timer wal/prettier-timer)
+                            (setq wal/prettier-timer nil)
+                            (prettier-prettify)
+                            (message "Refresh done"))))))
+
 (use-package prettier
   :wal-ways nil
 
