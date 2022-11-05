@@ -4681,7 +4681,7 @@ Refine a couple of major and minor mode names.
     (delight 'elixir-mode "Homebrew" :major)
     (delight 'c++-mode "*&" :major)
     (delight 'python-mode "Snake" :major)
-    (delight 'js2-mode "NaNsense" :major)
+    (delight 'js-mode "NaNsense" :major)
     (delight 'inferior-python-mode "Bite" :major)))
 
 (use-package diminish)
@@ -4777,7 +4777,7 @@ ARGS is a list containing modes and additional ligatures."
   (ligature-set-ligatures 'html-mode '("<!--" "-->" "</" "/>"))
   (ligature-set-ligatures 'nxml-mode '("<!--" "-->" "</" "/>"))
   (ligature-set-ligatures 'java-mode '("::" "->"))
-  (ligature-set-ligatures 'js2-mode '("=>" "!==" "===" "!!"))
+  (ligature-set-ligatures 'js-mode '("=>" "!==" "===" "!!"))
   (ligature-set-ligatures 'lisp-data-mode '(";;"))
   (ligature-set-ligatures 'php-mode '("::" "=>" "->" "??"
                                       "__" "<>" "!==" "<=>"
@@ -7783,7 +7783,7 @@ Let's greet the world.
 (declare-function wal/maybe-intern "wal-func.el")
 (declare-function wal/message-in-a-bottle "wal-func.el")
 
-(defvar js2-mode-map)
+(defvar js-mode-map)
 (defvar wal/ascii-whale)
 (defvar wal/lieutenant-key)
 (defvar wal/use-projectile)
@@ -7793,8 +7793,9 @@ Let's greet the world.
   :group 'wal
   :tag "Langauge")
 
-(defcustom wal/prefer-rjsx nil
-  "Wheter to prefer `rjsx-mode' over plain `js2-mode' for normal JavaScript files."
+(defcustom wal/force-jsx nil
+  "Whether `js-jsx-syntax' should be set to t whether detection
+succeeds or fails."
   :group 'wal-lang
   :type 'boolean)
 #+END_SRC
@@ -8385,93 +8386,44 @@ Can we have =deno= instead of =node=?
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack javascript
   "For Node.js developers."
-  :packages (js2-mode add-node-modules-path prettier)
-  :extras (rjsx-mode typescript-mode))
+  :packages (add-node-modules-path prettier)
+  :extras (typescript-mode))
 #+END_SRC
 
-*** js2-mode
+*** js-mode
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(use-package js2-mode
+(use-package js-mode
   :wal-ways nil
 
   :ensure nil
 
-  :mode "\\.js\\'"
-
   :init
-  (wal/hook js2-mode
-    "Hook into `js2-mode'."
+  (wal/hook js-mode
+    "Hook into `js-mode'."
     :messages '("NaN !== NaN" "Null falsy values or undefined")
     :lieutenant t
     :tabs t
     :lsp t
-    :before-save (prettier-prettify)
+    (when wal/force-jsx
+      (setq-local js-jsx-syntax t))
     (when (fboundp 'add-node-modules-path)
-      (add-node-modules-path)))
+      (add-node-modules-path))
+    (prettier-mode))
 
   :config
-  ;; Don't override `xref-find-definitions'.
-  (define-key js2-mode-map (kbd "M-.") nil)
-
   ;; Load default `dap-mode' templates.
   (with-eval-after-load 'dap-mode
     (require 'dap-node))
 
 
-  (transient-define-prefix wal/js2-mode-dispatch ()
+  (transient-define-prefix wal/js-mode-dispatch ()
     "Access JS commands."
     [["Actions"
-      ("b" "bounce" js2-indent-bounce)]])
-
-  :custom
-  (js2-mode-show-parse-errors nil)
-  (js2-highlight-level 1)
-  (js2-mode-show-strict-warnings nil)
-  (js2-include-node-externs t)
-
-  :bind
-  (:map js2-mode-map
-   ;; `js2-bounce-indent-p' also binds <TAB>.
-   ("<backtab>" . js2-indent-bounce)))
-#+END_SRC
-
-*** rjsx-mode
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Improved editing for JSX files. Extends =js2=.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/maybe-use-rjsx ()
-  "If `rjsx-mode' is preferred, safely switch to."
-  (hack-local-variables)
-
-  (when wal/prefer-rjsx
-    (defvar js2-mode-hook)
-    (let ((js2-mode-hook nil))
-
-      (rjsx-mode))))
-
-(use-package rjsx-mode
-  :wal-ways nil
-
-  :ensure nil
-
-  :mode "\\.jsx\\'"
-
-  :hook
-  (js2-mode . wal/maybe-use-rjsx)
-
-  :init
-  (wal/hook rjsx-mode
-    "Hook into `rjsx-mode'."
-    :tabs 'js-jsx-indent-line
-    :messages '("Extend those ugly JavaScripts of yours!")))
+      ("c" "context" js-syntactic-context)]]))
 #+END_SRC
 
 *** typescript-mode
@@ -8526,10 +8478,10 @@ Prettify your ugly JavaScript.
   :ensure nil
 
   :demand
-  :after js2-mode
+  :after js-mode
 
   :config
-  (transient-append-suffix 'wal/js2-mode-dispatch '(0 0 0)
+  (transient-append-suffix 'wal/js-mode-dispatch '(0 0 0)
     '("p" "prettier" prettier-prettify)))
 #+END_SRC
 
@@ -9459,8 +9411,8 @@ servers yourself[fn:18].
 (defun wal/lsp-auto-prefix ()
   "Get the desired prefix length for `corfu-auto-prefix'.
 
-This is 0 except for modes derived from `js2-mode'."
-  (if (derived-mode-p 'js2-mode) 3 0))
+This is 0 except for modes derived from `js-mode'."
+  (if (derived-mode-p 'js-mode) 1 0))
 
 (defun wal/lsp ()
   "Defer LSP setup for the file.
@@ -9520,8 +9472,8 @@ minimum prefixes are reduced."
       ("Q" "quit" lsp-workspace-shutdown)]])
 
   ;; JavaScript.
-  (with-eval-after-load 'js2-mode
-    (transient-append-suffix 'wal/js2-mode-dispatch '(0 0 -1)
+  (with-eval-after-load 'js-mode
+    (transient-append-suffix 'wal/js-mode-dispatch '(0 0 -1)
       '("r" "rename file" lsp-javascript-rename-file)))
 
   (with-eval-after-load 'which-key

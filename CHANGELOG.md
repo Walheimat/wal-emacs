@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bindings in `lieutenant` were moved to `C-c *` bindings.
 - Macro `wal/major!` has been removed as it's obsoleted by new
   `lieutenant` bindings.
+- Packages `js2-mode` and `rjsx-mode` were removed in favor of using
+  built-in `js-mode`.
 
 ### Fixed
 
