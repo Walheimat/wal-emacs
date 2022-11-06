@@ -18,8 +18,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   default access to major-mode specific `transient`s.
 - `org-super-agenda` now adds a new-line after the final group.
 - `graphql` as a Web extra (implicit also `graphql-mode`).
-- Parameter `:before-save` to `wal/hook` to add local hooks to
-  `before-save`. Currently only `js2-mode` sets `prettier-prettify`.
 - Command `wal/prettier-refresh` to do just that.
 
 ### Changed
