@@ -35,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `js2-mode`-derived modes when using `lsp-mode`.
 - User-prefixed `l` now activates `ryo-modal` instead of being bound
   to `goto-map`.
+- `lispy` is no longer activated immediately, it is instead bound in
+  `transient`.
 
 ### Removed
 

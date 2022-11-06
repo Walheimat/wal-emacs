@@ -8267,7 +8267,8 @@ The philosopher's choice.
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack lisp
   "For (common-) Lisp developers using sbcl."
-  :packages (lispy highlight-quoted slime))
+  :packages (highlight-quoted slime)
+  :extras (lispy))
 
 (wal/define-expansion-pack clojure
   "For Clojure developers using cider with lein."
@@ -8301,9 +8302,11 @@ Deal with the parens[fn:17].
 
   :ensure nil
 
+  :defer 1
+  :after lisp-mode
+
   :hook
-  (((emacs-lisp-mode clojure-mode) . lispy-mode)
-   (multiple-cursors-mode-enabled . wal/lispy-disable-before-mc)
+  ((multiple-cursors-mode-enabled . wal/lispy-disable-before-mc)
    (multiple-cursors-mode-disabled . wal/lispy-reenable-after-mc))
 
   :custom
@@ -8346,7 +8349,11 @@ Deal with the parens[fn:17].
       ("p" "check parens" check-parens)
       ("d" "edebug function" edebug-defun)
       ("h" "helpful" helpful-at-point)
-      ("m" "expand macro" emacs-lisp-macroexpand)]]))
+      ("m" "expand macro" emacs-lisp-macroexpand)]])
+
+  (with-eval-after-load 'lispy
+    (transient-append-suffix 'wal/emacs-lisp-mode-dispatch '(0 0 -1)
+      '("l" "lispy" lispy-mode))))
 #+END_SRC
 
 *** lisp-mode
