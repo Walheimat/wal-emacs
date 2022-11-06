@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command `wal/prettier-refresh` to do just that.
 - New macro `wal/when-ready` to execute a body using appropriate hook
   after start-up.
+- Package `ryo-modal` to simplify moving.
 
 ### Changed
 
@@ -32,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that checker is explicitly selected.
 - `corfu-auto-prefix` is now 3 for `js2-mode`-derived modes when using
   `lsp-mode`.
+- User-prefixed `l` now activates `ryo-modal` instead of being bound
+  to `goto-map`.
 
 ### Removed
 
