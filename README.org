@@ -9509,11 +9509,9 @@ servers yourself[fn:18].
   "Check if MODE is considered slow."
   (memq mode wal/lsp-slow-modes))
 
-(defun wal/lsp-auto-prefix ()
-  "Get the desired prefix length for `corfu-auto-prefix'.
-
-This is 0 except for modes derived from `js-mode'."
-  (if (derived-mode-p 'js-mode) 1 0))
+(defun wal/lsp-corfu-auto ()
+  "Get the `corfu-auto' values as a list of (DELAY PREFIX)."
+  (if (derived-mode-p 'js-mode) '(0.1 2) '(0.0 0)))
 
 (defun wal/lsp ()
   "Defer LSP setup for the file.
@@ -9521,10 +9519,14 @@ This is 0 except for modes derived from `js-mode'."
 Unless the associated server is considered slow, delays and
 minimum prefixes are reduced."
   (unless (wal/slow-lsp-p major-mode)
-    (setq-local corfu-auto-delay 0.0
-                corfu-auto-prefix (wal/lsp-auto-prefix)
-                completion-styles '(orderless partial-completion basic)))
-  (lsp-deferred))
+    (let* ((values (wal/lsp-corfu-auto))
+           (delay (car values))
+           (prefix (cadr values)))
+
+      (setq-local corfu-auto-delay delay
+                  corfu-auto-prefix prefix)))
+    (setq-local completion-styles '(orderless partial-completion basic))
+    (lsp-deferred))
 
 (defun wal/lsp-completion-with-corfu ()
   "Advise completion to work better with `corfu' and `orderless'."

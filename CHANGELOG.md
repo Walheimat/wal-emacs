@@ -31,8 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `projectile-per-project-compilation-buffer` is set to `t`.
 - `css-mode` now uses `lsp-mode`; if `stylelint` executable is found,
   that checker is explicitly selected.
-- `corfu-auto-prefix` is now 3 for `js2-mode`-derived modes when using
-  `lsp-mode`.
+- `corfu-auto-prefix` is now 2 and `corfu-auto-delay` is 0.2 for
+  `js2-mode`-derived modes when using `lsp-mode`.
 - User-prefixed `l` now activates `ryo-modal` instead of being bound
   to `goto-map`.
 
