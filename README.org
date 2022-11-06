@@ -1712,6 +1712,12 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
 Allow differentiating between initial and repeated setups.
 
 #+BEGIN_SRC emacs-lisp
+(defmacro wal/when-ready (&rest body)
+  "Execute BODY when Emacs is ready."
+  (if (daemonp)
+      `(add-hook 'server-after-make-frame-hook (lambda () ,@body))
+    `(add-hook 'emacs-startup-hook (lambda () ,@body))))
+
 (defvar wal/setup-list '()
   "List of already performed setups.")
 
@@ -2602,6 +2608,16 @@ Optonally, interrupt any running process if INTERRUPT is t."
 *** Setup
 
 #+BEGIN_SRC emacs-lisp
+(ert-deftest test-wal/when-ready ()
+  (with-mock daemonp (lambda () nil)
+    (match-expansion
+      (wal/when-ready (message "No demon ..."))
+      `(add-hook 'emacs-startup-hook (lambda () (message "No demon ...")))))
+  (with-mock daemonp (lambda () t)
+    (match-expansion
+      (wal/when-ready (message "Demon!"))
+      `(add-hook 'server-after-make-frame-hook (lambda () (message "Demon!"))))))
+
 (ert-deftest test-wal/define-init-setup ()
   (match-expansion
     (wal/define-init-setup test

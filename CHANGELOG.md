@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `org-super-agenda` now adds a new-line after the final group.
 - `graphql` as a Web extra (implicit also `graphql-mode`).
 - Command `wal/prettier-refresh` to do just that.
+- New macro `wal/when-ready` to execute a body using appropriate hook
+  after start-up.
 
 ### Changed
 
