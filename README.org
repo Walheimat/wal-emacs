@@ -1060,6 +1060,7 @@ Custom functionality.
 
 ;;; Code:
 
+(require 'compile)
 (require 'map)
 
 (declare-function comint-check-proc "ext:comint.el")
@@ -1989,27 +1990,39 @@ Turning on/off certain major modes switching between =major-mode= and
 ** Shell Commands
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/async-process (command callback error-callback &optional suffix)
+(defun wal/async-process (command callback error-callback &optional interrupt)
   "Start async process COMMAND with CALLBACK and ERROR-CALLBACK.
 
-Optionally, the buffer is created with SUFFIX."
-  (with-current-buffer (compilation-start
-                        command t
-                        (lambda (&rest _)
-                          (if suffix
-                              (generate-new-buffer-name (concat "*wal-async-" suffix "*"))
-                            (generate-new-buffer-name "*wal-async*"))))
-    (view-mode +1)
-    (add-hook
-     'compilation-finish-functions
-     (lambda (_buf status)
+Optonally, interrupt any running process if INTERRUPT is t."
+  (when interrupt (wal/async-process--maybe-interrupt))
+
+  (let ((finalizer (wal/async-process--finalize callback error-callback)))
+
+    (with-current-buffer (compilation-start
+                          command t
+                          #'wal/async-process--buffer-name)
+      (view-mode 1)
+      (add-hook 'compilation-finish-functions finalizer nil t))))
+
+(defun wal/async-process--maybe-interrupt ()
+  "Interrupt process without erroring."
+  (when-let* ((comp-buffer (compilation-find-buffer))
+              (proc (get-buffer-process comp-buffer)))
+    (interrupt-process proc)))
+
+(defun wal/async-process--buffer-name (_mode-name)
+  "Generate a buffer name for MODE-NAME."
+  (generate-new-buffer-name "*wal-async*"))
+
+(defun wal/async-process--finalize (callback error-callback)
+  "Get finalizer that will call CALLBACK or ERROR-CALLBACK."
+  (lambda (_buf status)
        (if (string= "finished\n" status)
            (condition-case err
                (funcall callback)
              (error
               (funcall error-callback (error-message-string err))))
-         (funcall error-callback (string-trim status))))
-     nil t)))
+         (funcall error-callback (string-trim status)))))
 
 (defun wal/kill-async-process-buffers ()
   "Kill all async process buffers."
@@ -2880,37 +2893,45 @@ Optionally, the buffer is created with SUFFIX."
 *** Shell Commands
 
 #+BEGIN_SRC emacs-lisp
-;; FIXME: These tests don't really work but succeed.
+(ert-deftest test-wal/async-process--buffer-name ()
+  (should (string= (wal/async-process--buffer-name major-mode) "*wal-async*")))
+
+(ert-deftest test-wal/async-process--finalize ()
+  (let ((finalizer (wal/async-process--finalize (lambda () (should t))
+                                                (lambda (m) (should (string= m "I am Error"))))))
+    (funcall finalizer nil "finished\n")
+    (funcall finalizer nil "I am Error"))
+
+  (let ((finalizer (wal/async-process--finalize (lambda () (user-error "You are Error"))
+                                                (lambda (m) (should (string= "You are Error" m))))))
+    (funcall finalizer nil "finished\n")))
+
+(ert-deftest test-wal/aysnc-process--maybe-interrupt ()
+  (with-mock-all ((compilation-find-buffer . (lambda () (message "found-buffer") "buffer"))
+                  (get-buffer-process . (lambda (m) (message m)))
+                  (interrupt-process . (lambda (_) (message "interrupted"))))
+    (ert-with-message-capture messages
+      (wal/async-process--maybe-interrupt)
+      (should (string= "found-buffer\nbuffer\ninterrupted\n" messages)))))
 
 (ert-deftest test-wal/async-process ()
-  (wal/async-process
-   "echo \"the world is a vampire\""
-   (lambda ()
-     (with-current-buffer (get-buffer-create "*wal-async*")
-       (should (string-match "the world is a vampire" (buffer-string)))))
-   (lambda (_) nil)))
-
-(ert-deftest test-wal/async-process--on-lisp-error ()
-  (wal/async-process
-   "echo \"the world is a vampire\""
-   (lambda ()
-     (error "Oops!"))
-   (lambda (m)
-     (should (string-match "Oops!" m)))))
-
-(ert-deftest test-wal/async-process--on-command-error ()
-  (wal/async-process
-   "exit 1"
-   (lambda ()
-     (message "Shouldn't happen"))
-   (lambda (m)
-     (should (string-match "Should!" m)))))
+  (with-mock-all ((wal/async-process--maybe-interrupt . (lambda () (message "interrupted")))
+                  (compilation-start . (lambda (c _ _n) (message "compiles") (get-buffer-create "async"))))
+    (ert-with-message-capture messages
+      (wal/async-process
+       "compiles"
+       (lambda () (message "finishes"))
+       (lambda (_m) nil)
+       t)
+      (with-current-buffer "async"
+        (funcall (car compilation-finish-functions) nil "finished\n"))
+      (should (string= "interrupted\ncompiles\nfinishes\n" messages)))))
 
 (ert-deftest test-wal/kill-async-process-buffers ()
-  (generate-new-buffer-name "*wal-async*")
-  (generate-new-buffer-name "*wal-async*")
+  (get-buffer-create (generate-new-buffer-name "*wal-async*"))
+  (get-buffer-create (generate-new-buffer-name "*wal-async*"))
   (let ((buf-count (length (buffer-list))))
-    (wal/kill-async-process-buffers)
+    (call-interactively #'wal/kill-async-process-buffers)
     (should (> buf-count (length (buffer-list))))))
 #+END_SRC
 
@@ -10524,30 +10545,26 @@ This will activate minor mode `wal/config-mode'."
 (defun wal/check-coverage ()
   "Check the current coverage for custom functionality."
   (interactive)
-  (let* ((suffix "coverage")
-         (command "cask exec ert-runner && cat coverage.txt"))
+  (let* ((command "cask exec ert-runner && cat coverage.txt"))
 
     (wal/coverage--execute
      command
      (lambda ()
        (let ((average (wal/check-coverage--calculate-coverage)))
          (message "Tests succeed: %s" average)))
-     (lambda (str) (message "Tests fail: %s" str))
-     suffix)))
+     (lambda (str) (message "Tests fail: %s" str)))))
 
 (defun wal/create-json-coverage ()
   "Create a JSON report file."
   (interactive)
-  (let* ((suffix "json-coverage")
-         (command "export COVERAGE_WITH_JSON=true && cask exec ert-runner"))
+  (let* ((command "export COVERAGE_WITH_JSON=true && cask exec ert-runner"))
 
     (wal/coverage--execute
      command
      (lambda () (message "Coverage created"))
-     (lambda (str) (message "Failed to create coverage: %s" str))
-     suffix)))
+     (lambda (str) (message "Failed to create coverage: %s" str)))))
 
-(defun wal/coverage--execute (command on-success on-failure buffer-suffix)
+(defun wal/coverage--execute (command on-success on-failure)
   "Execute coverage command.
 
 Runs COMMAND asynchronously and passes ON-SUCCESS and ON-FAILURE
@@ -10560,7 +10577,7 @@ name are deleted beforehand."
 
   (let* ((dir wal/emacs-config-package-path)
          (full-command (concat "cd " dir " && " command))
-         (buffer-name (format "-%s\\*" buffer-suffix)))
+         (buffer-name "\\*wal-async\\*"))
 
     (dolist (buf (buffer-list))
       (when (string-match buffer-name (buffer-name buf))
@@ -10568,7 +10585,7 @@ name are deleted beforehand."
           (delete-window window))
         (kill-buffer buf)))
 
-    (wal/async-process full-command on-success on-failure buffer-suffix)))
+    (wal/async-process full-command on-success on-failure t)))
 #+END_SRC
 
 *** Checking
