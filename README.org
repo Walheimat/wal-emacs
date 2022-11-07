@@ -961,15 +961,20 @@ above).
 :END:
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/ryo-reset-cursor-color ()
+  "Reset cursor color after theme change."
+  (setq ryo-modal-default-cursor-color (face-attribute 'cursor :background)
+        ryo-modal-cursor-color (face-attribute 'highlight :background)))
+
 (use-package ryo-modal
   :wal-ways nil
 
   :demand t
 
+  :hook (wal/theme . wal/ryo-reset-cursor-color)
+
   :config
-  (wal/when-ready
-   (setq ryo-modal-cursor-color (face-attribute 'highlight :background)
-         ryo-modal-cursor-type 'hollow))
+  (setq ryo-modal-cursor-type 'hollow)
 
   :wal-bind
   ("l" . ryo-modal-mode))
@@ -3022,13 +3027,17 @@ the session."
 
 (defvar wal/active-theme nil)
 
+(defvar wal/theme-hook nil)
+
 (defun wal/load-active-theme ()
   "Load the currently active theme."
   (interactive)
   (when wal/active-theme
     (when (custom-theme-p wal/active-theme)
       (enable-theme wal/active-theme))
-    (load-theme wal/active-theme t)))
+    (load-theme wal/active-theme t)
+    (run-hooks 'wal/theme-hook)
+    t))
 
 (wal/on-boot visuals
   ;; Some themes require configuration, so we only load after initialization.
@@ -5801,7 +5810,8 @@ not pollute the current one."
 
 (defun wal/then-set-active-theme (theme)
   "Advise to set `wal/active-theme' to THEME."
-  (setq wal/active-theme theme))
+  (setq wal/active-theme theme)
+  (run-hooks 'wal/theme-hook))
 
 (defun wal/with-big-vertico (fun &rest args)
   "Call FUN with ARGS but increase the `vertico-count'."
