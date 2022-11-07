@@ -27,13 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `popper` groups by `perspective` again.
-- The prefix format for agenda entries now uses breadcrumbs instead.
-- `js2-highlight-level` is now at `1`.
 - `projectile-per-project-compilation-buffer` is set to `t`.
 - `css-mode` now uses `lsp-mode`; if `stylelint` executable is found,
   that checker is explicitly selected.
 - `corfu-auto-prefix` is now 2 and `corfu-auto-delay` is 0.2 for
-  `js2-mode`-derived modes when using `lsp-mode`.
+  `js-mode`-derived modes when using `lsp-mode`.
 - User-prefixed `l` now activates `ryo-modal` instead of being bound
   to `goto-map`.
 - `lispy` is no longer activated immediately, it is instead bound in
@@ -51,8 +49,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Command `wal/avy-action-zip-to-char` is now called
   `avy-action-zip-to-char` to not have a garbled help text.
-- Sets `js2-mode-show-parse-errors` instead of
-  `js2-show-parse-errors`.
 
 ## [v1.7.14]
 
