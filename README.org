@@ -8477,7 +8477,7 @@ Can we have =deno= instead of =node=?
 (wal/define-expansion-pack javascript
   "For Node.js developers."
   :packages (add-node-modules-path prettier)
-  :extras (typescript-mode))
+  :extras (typescript-mode jest))
 #+END_SRC
 
 *** js-mode
@@ -8508,7 +8508,6 @@ Can we have =deno= instead of =node=?
   ;; Load default `dap-mode' templates.
   (with-eval-after-load 'dap-mode
     (require 'dap-node))
-
 
   (transient-define-prefix wal/js-mode-dispatch ()
     "Access JS commands."
@@ -8585,12 +8584,31 @@ Prettify your ugly JavaScript.
   :ensure nil
 
   :demand
-  :after js-mode
+  :after js
 
   :config
   (transient-append-suffix 'wal/js-mode-dispatch '(0 0 0)
     '("p" "prettier" prettier-prettify)))
 #+END_SRC
+
+*** jest
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+begin_src emacs-lisp
+(use-package jest
+  :wal-ways nil
+
+  :ensure nil
+
+  :demand
+  :after js
+
+  :config
+  (transient-append-suffix 'wal/js-mode-dispatch '(0 0 -1)
+    '("j" "jest" jest-popup)))
+#+end_src
 
 ** Go
 
