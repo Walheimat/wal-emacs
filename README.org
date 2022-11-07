@@ -5923,6 +5923,7 @@ Keep order.
   (require 'perspective nil t))
 
 (declare-function consult-customize "ext:consult.el")
+(declare-function consult--buffer-query "ext:consult.el")
 (declare-function consult--buffer-state "ext:consult.el")
 (declare-function consult--regexp-filter "ext:consult.el")
 (declare-function persp-current-buffers "ext:perspective.el")
@@ -6103,41 +6104,15 @@ No filter is applied if called with `universal-argument'."
 
 ;; Integration with `consult'.
 
-(defun wal/consult-filtered-persp-buffers ()
-  "Get current perspective's filtered buffers.
-
-The results are filtered using `consult-buffer-filter'"
-  (let ((filters (consult--regexp-filter consult-buffer-filter)))
-
-    (seq-filter
-     (lambda (it) (and (buffer-live-p it)
-                       (not (string-match-p filters (buffer-name it)))))
-     (persp-current-buffers))))
-
-(defun wal/consult-persp-buffer-names ()
-  "Get current perspective's buffer names.
-
-The current buffer and Dired buffers are filtered."
-  (let* ((persp-buffers (wal/consult-filtered-persp-buffers))
-         (current (current-buffer))
-         (desired (seq-filter
-                   (lambda (it) (and (not (eq it current))
-                                (with-current-buffer it
-                                  (not (derived-mode-p 'dired-mode)))))
-                   persp-buffers)))
-
-    (mapcar #'buffer-name desired)))
-
-(defun wal/consult-persp-dired-buffer-names ()
-  "Get current persepective's Dired buffer names."
-  (let* ((persp-buffers (wal/consult-filtered-persp-buffers))
-         (desired (seq-filter
-                   (lambda (it)
-                     (with-current-buffer it
-                       (derived-mode-p 'dired-mode)))
-                   persp-buffers)))
-
-    (mapcar #'buffer-name desired)))
+(defun wal/consult-persp-buffer--query ()
+  "Buffer query for `perspective'."
+  (consult--buffer-query
+    :sort 'visibility
+    :as #'buffer-name
+    :predicate
+    '(lambda (buf) (and (persp-is-current-buffer buf)
+                   (with-current-buffer buf
+                     (not (derived-mode-p 'dired-mode)))))))
 
 (use-package perspective
   :defer 1
@@ -6181,21 +6156,7 @@ The current buffer and Dired buffers are filtered."
     (consult-customize
      consult--source-buffer
      :name "Perspective Buffer"
-     :action #'persp-switch-to-buffer
-     :items #'wal/consult-persp-buffer-names)
-
-    (defvar wal/consult-source-dired
-      (list :name "Dired Buffer"
-            :narrow ?d
-            :category 'buffer
-            :face 'font-lock-keyword-face
-            :state #'consult--buffer-state
-            :items #'wal/consult-persp-dired-buffer-names))
-
-    (wal/insert-after
-     'consult-buffer-sources
-     'consult--source-buffer
-     wal/consult-source-dired))
+     :items #'wal/consult-persp-buffer--query))
 
   ;; Register command map.
   (wal/captain "i" '(:keymap perspective-map :wk "perspective"))
@@ -7202,6 +7163,9 @@ Run =dired= with =C-x d=.
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
 (declare-function dired-read-dir-and-switches "ext:dired.el")
+(declare-function consult--buffer-query "ext:consult.el")
+(declare-function consult--buffer-state "ext:consult.el")
+(declare-function wal/insert-after "wal-func.el")
 
 (defvar wal/lieutenant-key)
 #+END_SRC
@@ -7230,6 +7194,19 @@ Uses the same optional SWITCHES."
   (interactive)
   (image-dired (expand-file-name default-directory)))
 
+(defun wal/consult-dired-buffer--query ()
+  "Get Dired buffer names."
+  (consult--buffer-query
+   :sort 'visibility
+   :as #'buffer-name
+   :predicate
+   '(lambda (buf)
+      (and (with-current-buffer buf
+             (derived-mode-p 'dired-mode))
+           (if (bound-and-true-p persp-mode)
+               (persp-is-current-buffer buf)
+             t)))))
+
 (use-package dired
   :ensure nil
 
@@ -7249,6 +7226,21 @@ Uses the same optional SWITCHES."
       ("t" "create empty file" dired-create-empty-file)]
      ["Other"
       ("v" "show images" wal/image-dired)]])
+
+  (with-eval-after-load 'consult
+    (defvar wal/consult--source-dired-buffer
+      (list :name "Dired Buffer"
+            :narrow ?d
+            :category 'buffer
+            :state #'consult--buffer-state
+            :history 'buffer-name-history
+            :face 'font-lock-keyword-face
+            :items #'wal/consult-dired-buffer--query))
+
+    (wal/insert-after
+     'consult-buffer-sources
+     'consult--source-buffer
+     wal/consult--source-dired-buffer))
 
   :custom
   (dired-listing-switches "-lah --group-directories-first")
