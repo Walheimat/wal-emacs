@@ -5251,12 +5251,16 @@ beginning."
   (setq wal/avy-ryo-buffer (current-buffer)))
 
 (defun wal/avy-ryo-after ()
-  "Exit `ryo-mode' in stored buffer if we moved to a different buffer."
-  (when wal/avy-ryo-buffer
-    (unless (equal wal/avy-ryo-buffer (current-buffer))
-      (with-current-buffer wal/avy-ryo-buffer
+  "Make sure `ryo-modal-mode' is carried to other buffers."
+  (when-let ((prev wal/avy-ryo-buffer)
+             (curr (current-buffer)))
+
+    (unless (equal prev curr)
+      (with-current-buffer prev
         (ryo-modal-mode -1))
-      (setq wal/avy-ryo-buffer nil))))
+
+      (ryo-modal-mode)
+      (setq wal/avy-ryo-buffer curr))))
 
 (use-package avy
   :commands (avy-with)
@@ -5295,14 +5299,12 @@ beginning."
   (wal/colonel-sink "h" 'wal/avy-mark-region)
 
   :ryo
-  ("e" avy-goto-line-above)
-  ("d" avy-goto-line-below)
-  ("s" avy-goto-word-0-above)
-  ("f" avy-goto-word-0-below)
-  ("a" wal/avy-goto-word)
+  ("/" wal/avy-goto-word)
   (:first '(wal/avy-ryo-before) :then '(wal/avy-ryo-after))
-  ("g" avy-goto-line)
-  ("c" avy-goto-char))
+  ("m" avy-goto-line)
+  ("n" avy-goto-end-of-line)
+  ("," avy-goto-word-0)
+  ("." avy-goto-char))
 #+END_SRC
 
 *** mwim
