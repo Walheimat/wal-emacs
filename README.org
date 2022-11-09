@@ -1369,16 +1369,18 @@ This shrinks or enlarges the window depending on its position."
   (interactive)
   (wal/enlarge-window t))
 
-(defun wal/other-window ()
+(defun wal/other-window (&optional prefer-frame)
   "Switch to other window.
 
 If the minibuffer is active, switch to that. If there's another
-frame, switch to that. Otherwise switch to next buffer."
-  (interactive)
+frame, switch to that if PREFER-FRAME is true. Otherwise switch
+to next buffer."
+  (interactive "P")
   (cond
    ((active-minibuffer-window)
     (switch-to-minibuffer))
-   ((not (equal (next-frame) (selected-frame)))
+   ((and (not (equal (next-frame) (selected-frame)))
+         (or prefer-frame (one-window-p)))
     (other-frame 1))
    ((one-window-p)
     (switch-to-buffer nil))
@@ -2299,7 +2301,20 @@ Optonally, interrupt any running process if INTERRUPT is t."
                   (next-frame . (lambda () (selected-frame)))
                   (one-window-p . (lambda () t))
                   (switch-to-buffer . (lambda (_) 'buffer)))
-                 (should (equal (wal/other-window) 'buffer))))
+                 (should (equal (wal/other-window) 'buffer)))
+  (with-mock-all ((active-window-buffer . (lambda () nil))
+                  (next-frame . (lambda () 'other))
+                  (other-frame . (lambda (_) 'frame))
+                  (one-window-p . (lambda () nil))
+                  (other-window . (lambda (_) 'otherw)))
+    (should (equal (wal/other-window t) 'frame))
+    (should (equal (wal/other-window) 'otherw)))
+  (with-mock-all ((active-window-buffer . (lambda () nil))
+                  (next-frame . (lambda () 'other))
+                  (other-frame . (lambda (_) 'frame))
+                  (one-window-p . (lambda () t)))
+    (should (equal (wal/other-window t) 'frame))
+    (should (equal (wal/other-window) 'frame))))
 
 (ert-deftest test-wal/l ()
   (with-temp-buffer
