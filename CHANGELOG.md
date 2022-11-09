@@ -21,8 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command `wal/prettier-refresh` to do just that.
 - New macro `wal/when-ready` to execute a body using appropriate hook
   after start-up.
-- Package `ryo-modal` to simplify moving.
 - Package `jest` as a `javascript` extra.
+- `xah-fly-key`-like `hydra` to move, jump and delete.
 
 ### Changed
 

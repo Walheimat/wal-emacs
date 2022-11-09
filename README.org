@@ -567,8 +567,6 @@ I use many[fn:8] custom keybindings.
 (declare-function wal/other-window "wal-func.el")
 (declare-function wal/prefix-user-key "wal-func.el")
 
-(defvar ryo-modal-default-cursor-color)
-(defvar ryo-modal-cursor-color)
 (defvar wal/ascii-whale)
 
 (defgroup wal-key-bindings nil
@@ -667,12 +665,11 @@ Most hyper[fn:9] bindings are quick-access actions:
 
 It's also used for some dispatches:
 
++ =H-l= for movements, using =mwim= and =avy=
 + =H-m= for =magit=
 + =H-n= for =rg=
 + =H-o= for =ace-window=, and if called with =C-u=
 + =H-<SPC>= for =org-roam=.
-
-=H-l= activates =ryo-modal-mode= for quick movements.
 
 **** Caps to Hyper
 
@@ -935,7 +932,31 @@ Additional left PADDING can be passed."
 "
     ("p" scroll-other-window-down)
     ("n" scroll-other-window)
-    ("q" nil "quit")))
+    ("q" nil "quit"))
+
+  ;; Move similar to `xah-fly-keys'.
+  (defhydra wal/fly (:hint nil :foreign-keys warn)
+    "
+%s`wal/ascii-whale Fly: ✜ _i_ _j_ _k_ _l_, ⇆ _u_ _o_, ⇄ _h_ _;_, ↷ _n_ _m_ _,_ _._ _/_, ⌦ _s_ _f_ _w_ _r_
+"
+    ("j" backward-char)
+    ("l" forward-char)
+    ("i" previous-line)
+    ("k" next-line)
+    ("u" backward-word)
+    ("o" forward-word)
+    ("f" delete-char)
+    ("s" backward-delete-char)
+    ("r" kill-word)
+    ("w" backward-kill-word)
+    ("h" mwim-beginning)
+    (";" mwim-end)
+    ("m" avy-goto-end-of-line)
+    ("n" avy-goto-line)
+    ("," avy-goto-word-0)
+    ("." avy-goto-char)
+    ("/" wal/avy-goto-word)
+    ("q" nil)))
 #+END_SRC
 
 *** transient
@@ -955,31 +976,6 @@ above).
   :custom
   (transient-hide-during-minibuffer-read t)
   (transient-show-popup 0.4))
-#+END_SRC
-
-*** ryo-modal
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/ryo-reset-cursor-color ()
-  "Reset cursor color after theme change."
-  (setq ryo-modal-default-cursor-color (face-attribute 'cursor :background)
-        ryo-modal-cursor-color (face-attribute 'highlight :background)))
-
-(use-package ryo-modal
-  :wal-ways nil
-
-  :demand t
-
-  :hook (wal/theme . wal/ryo-reset-cursor-color)
-
-  :config
-  (setq ryo-modal-cursor-type 'hollow)
-
-  :wal-bind
-  ("l" . ryo-modal-mode))
 #+END_SRC
 
 ** Additional (Un-)Bindings
@@ -1048,6 +1044,8 @@ Most bindings are declared in individual packages.
       (message "Lieutenant (%s) has no binding in %s" key mode)))
 
   (global-set-key (kbd (wal/prefix-user-key wal/lieutenant-key)) #'wal/lieutenant?)
+
+  (global-set-key (kbd (wal/prefix-user-key "l")) #'wal/fly/body)
 
   ;; Unbinds `save-buffers-kill-terminal'.
   (global-unset-key (kbd "C-x C-c")))
@@ -3609,29 +3607,6 @@ external ones.
 
 Sometimes I need to see whitespace chars.
 
-*** simple
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-#+BEGIN_SRC emacs-lisp
-(use-package simple
-  :ensure nil
-
-  :ryo
-  ;; Inspired by `xah-fly-keys'.
-  ("i" previous-line)
-  ("k" next-line)
-  ("j" backward-char)
-  ("l" forward-char)
-  ("o" forward-word)
-  ("u" backward-word)
-  ("n" scroll-down-command)
-  ("p" scroll-up-command)
-
-  ("'" kill-word))
-#+END_SRC
-
 *** text-mode
 :PROPERTIES:
 :UNNUMBERED: t
@@ -4797,8 +4772,7 @@ Sometimes the list of minor modes overcrowds the modeline.
                              verb-mode
                              verb-response-body-mode
                              lispy-mode
-                             pet-mode
-                             ryo-modal-mode)))
+                             pet-mode)))
 #+END_SRC
 
 *** mode-line-bell
@@ -5261,24 +5235,6 @@ beginning."
             (and (eq major-mode 'org-mode) (org-at-heading-p)))
     (goto-char (line-beginning-position))))
 
-(defvar wal/avy-ryo-buffer nil)
-
-(defun wal/avy-ryo-before ()
-  "Store the current buffer in a variable."
-  (setq wal/avy-ryo-buffer (current-buffer)))
-
-(defun wal/avy-ryo-after ()
-  "Make sure `ryo-modal-mode' is carried to other buffers."
-  (when-let ((prev wal/avy-ryo-buffer)
-             (curr (current-buffer)))
-
-    (unless (equal prev curr)
-      (with-current-buffer prev
-        (ryo-modal-mode -1))
-
-      (ryo-modal-mode)
-      (setq wal/avy-ryo-buffer curr))))
-
 (use-package avy
   :commands (avy-with)
 
@@ -5313,15 +5269,7 @@ beginning."
   (wal/colonel! "w"
     'avy-kill-ring-save-whole-line
     'avy-kill-ring-save-region)
-  (wal/colonel-sink "h" 'wal/avy-mark-region)
-
-  :ryo
-  ("/" wal/avy-goto-word)
-  (:first '(wal/avy-ryo-before) :then '(wal/avy-ryo-after))
-  ("m" avy-goto-line)
-  ("n" avy-goto-end-of-line)
-  ("," avy-goto-word-0)
-  ("." avy-goto-char))
+  (wal/colonel-sink "h" 'wal/avy-mark-region))
 #+END_SRC
 
 *** mwim
@@ -5333,13 +5281,12 @@ Move where I want. Useful for comments.
 
 #+BEGIN_SRC emacs-lisp
 (use-package mwim
+  :config
+  (setq wal/fly/docstring (concat wal/fly/docstring ", ⇄ _h_ _;_"))
+  (setq wal/fly/heads (append wal/fly/heads '(("h" mwim-beginning nil :exit nil) (";" mwim-end nil :exit nil))))
   :bind
   (("C-a" . mwim-beginning)
-   ("C-e" . mwim-end))
-
-  :ryo
-  ("h" mwim-beginning)
-  (";" mwim-end))
+   ("C-e" . mwim-end)))
 #+END_SRC
 
 ** Footer
@@ -5910,10 +5857,7 @@ not pollute the current one."
     "fr" '(consult-recent-file :wk "recent"))
   (wal/major
     "+" 'consult-mode-command
-    "-" 'consult-minor-mode-menu)
-
- :ryo
- ("t" consult-org-heading :mode 'org-mode))
+    "-" 'consult-minor-mode-menu))
 #+END_SRC
 
 ** Footer
