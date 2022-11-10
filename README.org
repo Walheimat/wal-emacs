@@ -8866,6 +8866,11 @@ It's a =JavaEmacsPackageConfigurationSectionFactory=, mate.
 LSP integration.
 
 #+begin_src emacs-lisp
+(defun wal/with-bash-shell (fun &rest _args)
+  "Run FUN in bash shell."
+  (let ((shell-file-name "/bin/bash"))
+    (funcall fun)))
+
 (use-package lsp-java
   :wal-ways nil
 
@@ -8873,6 +8878,15 @@ LSP integration.
 
   :config
   (require 'dap-java)
+
+  ;; Use bash shell for JUnit commands.
+  (advice-add
+   'dap-java-run-test-class :around
+   #'wal/with-bash-shell)
+
+  (advice-add
+   'dap-java-run-test-method :around
+   #'wal/with-bash-shell)
 
   :custom
   (lsp-java-format-on-type-enabled nil) ; Suggested fix for failing completion.

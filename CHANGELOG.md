@@ -49,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Command `wal/avy-action-zip-to-char` is now called
   `avy-action-zip-to-char` to not have a garbled help text.
+- Commands `dap-hava-run-test-{class,method}` are now advised to use
+  `bash` shell as `fish` seems to garble the class paths.
 
 ## [v1.7.14]
 
