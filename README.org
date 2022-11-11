@@ -9723,12 +9723,10 @@ Debugging using VSCode's DAP (in =lsp-mode=)
 
   :after lsp-mode
 
-  :config
-  ;; Show REPL at the bottom.
-  (wdb/side 'dap-ui-repl-mode)
+  :hook (dap-terminated . (lambda (_session) (hydra-disable)))
 
+  :config
   ;; Activate UI and configure.
-  (dap-ui-mode 1)
   (dap-auto-configure-mode)
 
   (with-no-warnings
@@ -9741,7 +9739,7 @@ Debugging using VSCode's DAP (in =lsp-mode=)
       ("o" dap-step-out)
       ("c" dap-continue)
       ("d" dap-debug :color blue)
-      ("b" dap-breakpoint-toggle "toggle breakpoint" :color blue)
+      ("b" dap-breakpoint-toggle "toggle breakpoint")
       ("l" dap-go-to-output-buffer "show logs" :color blue)
       ("r" dap-ui-repl "repl" :color blue)
       ("f" dap-hydra "full" :color blue)
@@ -9750,9 +9748,7 @@ Debugging using VSCode's DAP (in =lsp-mode=)
 
   :custom
   (dap-auto-show-output nil)
-  (dap-auto-configure-features '(sessions locals breakpoints))
-
-  (dap-ui-locals-expand-depth 2)
+  (dap-auto-configure-features '(locals breakpoints))
 
   (dap-python-executable "python3")
   (dap-python-debugger 'debugpy)
