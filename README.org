@@ -5487,7 +5487,8 @@ Complete commands and code.
     "\\*vterm"
     "\\*xref"
     "out\\*$"
-    "^magit")
+    "^magit"
+    "server log\\*$")
   "Additional buffers to filter."
   :type '(repeat string)
   :group 'wal-complete)
@@ -8882,6 +8883,7 @@ It's a =JavaEmacsPackageConfigurationSectionFactory=, mate.
     "Hook into `java-mode'."
     :lsp t
     :lsp-ignores '("[/\\\\]\\.gradle\\'")
+    :lieutenant t
     :messages '("Mmmh ... maven")))
 #+END_SRC
 
@@ -8898,10 +8900,35 @@ LSP integration.
   (let ((shell-file-name "/bin/bash"))
     (apply fun args)))
 
+(defvar wal/lsp-java-before nil)
+
+(defun wal/lsp-java-delete-server-log-window (_session)
+  "Delete the window displaying the server logs."
+  (when-let ((pattern "server log\\*")
+             (windows (window-list))
+             (window (seq-find (lambda (it)
+                                 (let* ((buf (window-buffer it))
+                                        (name (buffer-name buf)))
+
+                                   (string-match pattern name)))
+                               windows)))
+
+    (setq wal/lsp-java-before (current-window-configuration))
+    (delete-window window)))
+
+(defun wal/lsp-java-restore-windows (_session)
+  "Restore the window configuration."
+  (when wal/lsp-java-before
+    (set-window-configuration wal/lsp-java-before)
+    (setq wal/lsp-java-before nil)))
+
 (use-package lsp-java
   :wal-ways nil
 
   :ensure nil
+
+  :hook ((dap-session-created . wal/lsp-java-delete-server-log-window)
+         (dap-terminated . wal/lsp-java-restore-windows))
 
   :config
   (require 'dap-java)
@@ -8913,6 +8940,15 @@ LSP integration.
      dap-java-debug-test-method
      dap-java-run-test-class
      dap-java-run-test-method))
+
+  (transient-define-prefix wal/java-mode-dispatch ()
+    "Access `java-mode' commands."
+    [["Debug"
+      ("c" "class" dap-java-debug-test-class)
+      ("m" "method" dap-java-debug-test-method)]
+     ["Run"
+      ("C" "class" dap-java-run-test-class)
+      ("M" "method" dap-java-run-test-method)]])
 
   :custom
   (lsp-java-format-on-type-enabled nil) ; Suggested fix for failing completion.
