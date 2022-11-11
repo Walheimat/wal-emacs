@@ -2076,6 +2076,14 @@ Optonally, interrupt any running process if INTERRUPT is t."
     matches))
 #+END_SRC
 
+** Advice
+
+#+begin_src emacs-lisp
+(defun wal/advise-many (advice combinator advised)
+  "Advise ADVISED using ADVICE and COMBINATOR."
+  (mapc (lambda (it) (advice-add it combinator advice)) advised))
+#+end_src
+
 ** Footer
 :PROPERTIES:
 :VISIBILITY: folded
@@ -2974,6 +2982,28 @@ Optonally, interrupt any running process if INTERRUPT is t."
         (pattern "\\(?1:[[:digit:]]\\)"))
     (should (equal '("2" "3" "1") (wal/matches-in-string pattern str)))))
 #+END_SRC
+
+*** Advice
+
+#+begin_src emacs-lisp
+(ert-deftest test-wal/advise-many ()
+  (defun wal/test-fun-1 (arg1 arg2)
+    "Do something with ARG1 and ARG2."
+    (list arg1 arg2))
+
+  (defun wal/test-fun-2 (arg1 arg2)
+    "Do something with ARG1 and ARG2."
+    (list arg1 arg2))
+
+  (defun wal/test-advice (fun &rest args)
+    "Just call as is."
+    (apply fun args))
+
+  (wal/advise-many #'wal/test-advice :around '(wal/test-fun-1 wal/test-fun-2))
+
+  (should (and (advice--p (advice--symbol-function 'wal/test-fun-1))
+               (advice--p (advice--symbol-function 'wal/test-fun-2)))))
+#+end_src
 
 *** Footer
 
@@ -8866,10 +8896,10 @@ It's a =JavaEmacsPackageConfigurationSectionFactory=, mate.
 LSP integration.
 
 #+begin_src emacs-lisp
-(defun wal/with-bash-shell (fun &rest _args)
+(defun wal/with-bash-shell (fun &rest args)
   "Run FUN in bash shell."
   (let ((shell-file-name "/bin/bash"))
-    (funcall fun)))
+    (apply fun args)))
 
 (use-package lsp-java
   :wal-ways nil
@@ -8880,13 +8910,12 @@ LSP integration.
   (require 'dap-java)
 
   ;; Use bash shell for JUnit commands.
-  (advice-add
-   'dap-java-run-test-class :around
-   #'wal/with-bash-shell)
-
-  (advice-add
-   'dap-java-run-test-method :around
-   #'wal/with-bash-shell)
+  (wal/advise-many
+   'wal/with-bash-shell :around
+   '(dap-java-debug-test-class
+     dap-java-debug-test-method
+     dap-java-run-test-class
+     dap-java-run-test-method))
 
   :custom
   (lsp-java-format-on-type-enabled nil) ; Suggested fix for failing completion.
