@@ -6360,25 +6360,6 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 
 ;;;; Customization:
 
-(defcustom wal/org-super-agenda-groups
-  '((:name "Schedule"
-     :time-grid t)
-    (:name "Unscheduled"
-     :and (:scheduled nil
-           :not (:tag "@intermittent" :todo "BLOCKED")))
-    (:name "Leftovers"
-     :and (:todo ("IN PROGRESS" "WAITING")
-           :scheduled past
-           :not (:tag "@repeated" :tag "@edu")))
-    (:name "Blocked"
-     :todo "BLOCKED")
-    (:name "Habits"
-     :habit t)
-    (:discard (:anything t)))
-  "The super agenda groups."
-  :type '(repeat plist)
-  :group 'wal-org)
-
 (defcustom wal/org-roam-dailies-directory "tagebuch/"
   "The directory for dailies."
   :type 'string
@@ -6387,26 +6368,6 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (defcustom wal/org-tree-slide-visual-fill-column-width 160
   "The base `visual-fill-column-width' for `org-tree-slide' presentations."
   :type 'integer
-  :group 'wal-org)
-
-(defcustom wal/org-src-lang-modes
-  '(("dockerfile" . dockerfile)
-    ("conf" . conf)
-    ("markdown" . markdown)
-    ("fish" . fish))
-  "Additional mappings to add to `org-src-lang-modes'."
-  :type '(repeat
-	      (cons
-	       (string "Language name")
-	       (symbol "Major mode")))
-  :group 'wal-org)
-
-(defcustom wal/org-speed-commands '(("a" . org-archive-subtree)
-                                    ("j" . consult-org-heading))
-  "Changes to `org-speed-commands'."
-  :type '(repeat
-          (cons "Key")
-          (symbol "Command"))
   :group 'wal-org)
 #+END_SRC
 
@@ -6513,9 +6474,12 @@ This calls `org-content' interactively."
      ("@average" . ?2)
      ("@challenge" . ?3)
      ;; Category.
-     ("@dev" . ?d)
-     ("@bla" . ?b)
-     ("@edu" . ?e)))
+     ("@development" . ?d)
+     ("@talk" . ?t)
+     ("@contribution" . ?c)
+     ("@growth" . ?g)
+     ("@education" . ?e)
+     ("@chore" . ?h)))
 
   ;; Warn late about upcoming deadlines.
   (org-deadline-warning-days 2)
@@ -6614,7 +6578,33 @@ Allow for better grouping.
   (org-super-agenda-mode)
 
   :custom
-  (org-super-agenda-groups wal/org-super-agenda-groups)
+  (org-super-agenda-groups
+   '((:name "Schedule" :time-grid t)
+     (:name "Unscheduled"
+      :and (:scheduled nil
+            :not (:tag "@intermittent" :todo "BLOCKED")))
+     (:name "Leftovers"
+      :and (:todo ("IN PROGRESS" "WAITING")
+            :scheduled past
+            :not (:tag "@repeated" :tag "@education")))
+     (:name "Blocked" :todo "BLOCKED")
+     (:name "Education" :and (:habit t :tag "@education"))
+
+     ;; Habits.
+     (:name "Contribution"
+      :and (:habit t
+            :tag "@contribution"))
+     (:name "Growth"
+      :and (:habit t
+            :tag "@growth"))
+     (:name "Chores"
+      :and (:habit t
+            :tag "@chore"))
+     (:name "Other habits"
+            :habit t)
+
+     ;; Discard the rest.
+     (:discard (:anything t))))
   (org-super-agenda-final-group-separator "\n"))
 #+END_SRC
 
@@ -6865,7 +6855,12 @@ Editing source blocks.
     (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
 
   :config
-  (wal/append 'org-src-lang-modes wal/org-src-lang-modes)
+  (wal/append
+   'org-src-lang-modes
+   '(("dockerfile" . dockerfile)
+     ("conf" . conf)
+     ("markdown" . markdown)
+     ("fish" . fish)))
 
   (transient-append-suffix 'wal/org-mode-dispatch '(0 0 1)
     '("e" "edit source" org-edit-src-code :inapt-if-not (lambda () (org-in-src-block-p))))
@@ -7088,7 +7083,10 @@ Add some user speed commands.
   :after org
 
   :config
-  (wal/replace-in-alist 'org-speed-commands wal/org-speed-commands)
+  (wal/replace-in-alist
+   'org-speed-commands
+   '(("a" . org-archive-subtree)
+     ("j" . consult-org-heading)))
 
   :custom
   (org-use-speed-commands t)
