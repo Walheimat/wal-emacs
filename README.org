@@ -767,7 +767,20 @@ They are:
 
 *** Major
 
-Leader key =major= (=/= by default) deals with the (buffer-)local context.
+Leader key =major= (=.= by default) deals with the global context.
+
+It gives access to minor-mode[fn:11] commands and command maps that are
+relevant globally (or for the current perspective). These are:
+
++ =d= for =dashboard=
++ =i= for =perspective=
++ =o= for =popper=
++ =p= for =projectile=
++ =w= for =winner=.
+
+*** Captain
+
+Leader key =captain= (=/= by default) deals with the (buffer-)local context.
 
 If the respective buffer-local =minor-mode= is active, the following
 command maps are bound
@@ -792,19 +805,6 @@ It also binds some other commands:
 + =-= for =consult-minor-mode-menu=
 + =+= for =consult-mode-command=.
 + =w= to toggle =read-only-mode= for buffer.
-
-*** Captain
-
-Leader key =captain= (=.= by default) deals with the global context.
-
-It gives access to minor-mode[fn:11] commands and commands maps that are
-relevant globally (or for the current perspective). These are:
-
-+ =d= for =dashboard=
-+ =i= for =perspective=
-+ =o= for =popper=
-+ =p= for =projectile=
-+ =w= for =winner=.
 
 *** Lieutenant
 
@@ -886,7 +886,7 @@ All ARGS are passed to both definers."
 Provides a context for related commands that can be (re-)executed in
 quick succession.
 
-These hydras are mapped to =major= using the following prefixes:
+These hydras are mapped to =captain= using the following prefixes:
 
 + =d= for a minimal set of debugging keys using =dap-mode=
 + =o= to resize window
@@ -990,7 +990,7 @@ Most bindings are declared in individual packages.
 #+BEGIN_SRC emacs-lisp
 (wal/on-boot key-bindings
 
-  (wal/major
+  (wal/captain
     "t" '(wal/text-scale/body :wk "text-scale")
     "o" '(wal/resize-window/body :wk "resize-window")
     "v" '(wal/scroll-other-window/body :wk "scroll-other-window")
@@ -1025,7 +1025,7 @@ Most bindings are declared in individual packages.
 
   (wal/colonel "i" 'iedit-mode)
 
-  (wal/major "w" 'read-only-mode)
+  (wal/captain "w" 'read-only-mode)
 
   ;; Use H-u for C-u.
   (when wal/use-hyper-prefix
@@ -3749,7 +3749,7 @@ Hide blocks.
   :ensure nil
 
   :general
-  (wal/major :keymaps 'hs-minor-mode-map
+  (wal/captain :keymaps 'hs-minor-mode-map
     "h" '(hs-toggle-hiding :wk "toggle hiding")))
 #+END_SRC
 
@@ -3848,7 +3848,7 @@ be gone.
   (winner-dont-bind-my-keys t)
 
   :general
-  (wal/captain "w" '(wal/winner/body :wk "winner")))
+  (wal/major "w" '(wal/winner/body :wk "winner")))
 #+END_SRC
 
 *** async
@@ -4002,7 +4002,7 @@ Look up words in a word book.
   (dictionary-server "dict.org")
 
   :general
-  (wal/major "D" 'dictionary-lookup-definition))
+  (wal/captain "D" 'dictionary-lookup-definition))
 #+END_SRC
 
 ** Additional Info Display
@@ -4153,7 +4153,7 @@ snippets.
    ("y" . yas-expand))
 
   :general
-  (wal/major :keymaps 'yas-minor-mode-map
+  (wal/captain :keymaps 'yas-minor-mode-map
     "y"  '(:ignore t :wk "yas")
     "yi" 'yas-insert-snippet
     "yv" 'yas-visit-snippet-file
@@ -4245,7 +4245,7 @@ I guess I can't live without this package.
   (vundo---window-max-height 5)
 
   :general
-  (wal/major "/" 'vundo))
+  (wal/captain "/" 'vundo))
 #+END_SRC
 
 ** Footer
@@ -4444,7 +4444,7 @@ Let's have a dash of board.
   (dashboard-agenda-release-buffers t)
 
   :general
-  (wal/captain "d" '(dashboard-refresh-buffer :wk "dashboard")))
+  (wal/major "d" '(dashboard-refresh-buffer :wk "dashboard")))
 #+END_SRC
 
 ** Themes
@@ -4936,7 +4936,7 @@ Screen saver, CPU devourer.
     (zone-when-idle wal/zone-timer))
 
   :general
-  (wal/major "0" 'zone))
+  (wal/captain "0" 'zone))
 #+END_SRC
 
 ** Other
@@ -5172,7 +5172,7 @@ Treat certain buffers and their windows as pop-ups.
   (popper-echo-transform-function #'wal/popper-echo-transform)
 
   :general
-  (wal/captain :keymaps 'popper-mode-map "o" 'popper-toggle-latest))
+  (wal/major :keymaps 'popper-mode-map "o" 'popper-toggle-latest))
 #+END_SRC
 
 ** Footer
@@ -5889,7 +5889,7 @@ not pollute the current one."
   (wal/general
     "st" '(consult-theme :wk "consult theme")
     "fr" '(consult-recent-file :wk "recent"))
-  (wal/major
+  (wal/captain
     "+" 'consult-mode-command
     "-" 'consult-minor-mode-menu))
 #+END_SRC
@@ -5944,7 +5944,7 @@ Keep order.
 (declare-function projectile-project-p "ext:projectile.el")
 (declare-function projectile-read-command "ext:projectile.el")
 (declare-function wal/append "wal-func.el")
-(declare-function wal/captain "wal-key-bindings.el")
+(declare-function wal/major "wal-key-bindings.el")
 (declare-function wal/univ-p "wal-func.el")
 
 (defvar consult-buffer-filter)
@@ -6166,7 +6166,7 @@ No filter is applied if called with `universal-argument'."
      :items #'wal/consult-persp-buffer--query))
 
   ;; Register command map.
-  (wal/captain "i" '(:keymap perspective-map :wk "perspective"))
+  (wal/major "i" '(:keymap perspective-map :wk "perspective"))
 
   ;; Override the override to `perspective-map' in older Emacs versions.
   (when (< emacs-major-version 28)
@@ -6243,7 +6243,7 @@ More robust project management.
               (nth 2 wal/projectile-ignored))
 
   ;; Register command map.
-  (wal/captain "p" '(:keymap projectile-command-map :wk "projectile"))
+  (wal/major "p" '(:keymap projectile-command-map :wk "projectile"))
 
   (projectile-mode 1)
 
@@ -6281,7 +6281,7 @@ Built-in but entirely dependent on either =git= or =hg=.
   :demand t
 
   :config
-  (wal/captain "p" '(:keymap project-prefix-map :wk "project"))
+  (wal/major "p" '(:keymap project-prefix-map :wk "project"))
 
   :custom
   (project-switch-commands 'project-find-dir)
@@ -7638,7 +7638,7 @@ I'm becoming an old git.
 (eval-when-compile
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
-(declare-function wal/captain "wal-key-bindings.el")
+(declare-function wal/major "wal-key-bindings.el")
 (declare-function wal/message-in-a-bottle "wal-lang.el")
 #+END_SRC
 
@@ -7795,7 +7795,7 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
   (("C-c g" . smerge-basic-map))
 
   :general
-  (wal/major :keymaps 'smerge-mode-map
+  (wal/captain :keymaps 'smerge-mode-map
     "g" '(wal/smerge/body :wk "smerge"))
 
   :delight " smg")
@@ -7862,7 +7862,7 @@ Let's greet the world.
 (declare-function wdb/side "wal-func.el")
 (declare-function wal/install-packages "wal-func.el")
 (declare-function wal/lsp "wal-lsp.el")
-(declare-function wal/major "wal-key-bindings.el")
+(declare-function wal/captain "wal-key-bindings.el")
 (declare-function wal/maybe-enable-tabs "wal-func.el")
 (declare-function wal/maybe-intern "wal-func.el")
 (declare-function wal/message-in-a-bottle "wal-func.el")
@@ -9444,7 +9444,7 @@ If KILL-BUFFER is t, kill the file's buffer."
   (("C-c f" . flycheck-command-map))
 
   :general
-  (wal/major :keymaps 'flycheck-mode-map
+  (wal/captain :keymaps 'flycheck-mode-map
     "f" '(wal/flycheck-dispatch :wk "flycheck")))
 #+END_SRC
 
@@ -9476,8 +9476,8 @@ My spelling is bad. Uses American English for =flyspell=.
    ("C-." . ispell-word)) ; Replaces `flyspell-auto-correct-word', which is still available via `C-M-i'.
 
   :general
-  (wal/major "s" '(wal/flyspell :predicate '(lambda () (not flyspell-mode)) :wk "flyspell"))
-  (wal/major :keymaps 'flyspell-mode-map
+  (wal/captain "s" '(wal/flyspell :predicate '(lambda () (not flyspell-mode)) :wk "flyspell"))
+  (wal/captain :keymaps 'flyspell-mode-map
     "s" '(:ignore t :wk "flyspell")
     "sb" '(flyspell-buffer :wk "buffer")
     "sr" '(flyspell-region :wk "region")
@@ -9544,7 +9544,7 @@ Language servers are awesome. Thanks, Microsoft.
 (declare-function dap-register-debug-template "ext:dap-mode.el")
 (declare-function lsp-enable-which-key-integration "ext:lsp-mode.el")
 (declare-function wal/append "wal-func.el")
-(declare-function wal/captain "wal-key-bindings.el")
+(declare-function wal/major "wal-key-bindings.el")
 (declare-function wdb/side "wal-func.el")
 
 (defvar dap-debug-template-configurations)
@@ -9684,7 +9684,7 @@ minimum prefixes are reduced."
   (("C-c l" . lsp-command-map))
 
   :general
-  (wal/major :keymaps 'lsp-mode-map "l" '(wal/lsp-dispatch :wk "lsp"))
+  (wal/captain :keymaps 'lsp-mode-map "l" '(wal/lsp-dispatch :wk "lsp"))
 
   :delight
   (lsp-mode " lsp")
@@ -9760,7 +9760,7 @@ Debugging using VSCode's DAP (in =lsp-mode=)
   (dap-python-debugger 'debugpy)
 
   :general
-  (wal/major :keymaps 'lsp-mode-map "d" '(wal/dap-hydra/body :wk "debug"))
+  (wal/captain :keymaps 'lsp-mode-map "d" '(wal/dap-hydra/body :wk "debug"))
 
   :delight " dap")
 #+END_SRC
@@ -10154,7 +10154,7 @@ Make requests using Org.
    ("q" . quit-window))
 
   :general
-  (wal/major :keymaps '(verb-mode-map verb-response-body-mode-map)
+  (wal/captain :keymaps '(verb-mode-map verb-response-body-mode-map)
     "r" '(wal/verb :wk "verb"))
 
   :delight

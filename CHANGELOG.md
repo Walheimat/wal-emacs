@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to `goto-map`.
 - `lispy` is no longer activated immediately, it is instead bound in
   `transient`.
+- Leader keys `captain` and `major` have been swapped.
+- The default keys for the leader keys has changed.
 
 ### Removed
 
