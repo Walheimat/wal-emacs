@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rising responsibility. This means `colonel` is now `lieutenant`;
   `lieutenant` is `captain`; `captain` is `major`; `major` is
   `colonel`.
+- `which-key` is now displayed in the minibuffer.
 
 ## [v1.8.0]
 
