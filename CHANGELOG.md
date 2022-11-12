@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.8.0]
+
+From hero to zero.
 
 ### Added
 
@@ -33,8 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that checker is explicitly selected.
 - `corfu-auto-prefix` is now 2 and `corfu-auto-delay` is 0.2 for
   `js-mode`-derived modes when using `lsp-mode`.
-- User-prefixed `l` now activates `ryo-modal` instead of being bound
-  to `goto-map`.
 - `lispy` is no longer activated immediately, it is instead bound in
   `transient`.
 - Leader keys `captain` and `major` have been swapped.
