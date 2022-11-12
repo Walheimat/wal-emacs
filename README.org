@@ -738,37 +738,7 @@ built-in programs like =eshell= and =eww=.
 
 *** Colonel
 
-Leader key =colonel= (=;= by default) provides a layer of useful editing
-actions.
-
-They are:
-
-+ =c= to copy a line
-+ =d= to duplicate lines
-+ =i= for =iedit-mode=
-+ =m= to move a line
-+ =q= to =query-replace=
-+ =.= to mark all "like this"
-+ =v= for =vundo= (visual undo)
-+ =w= to kill a line
-+ =x= to delete a line.
-
-The sink for =colonel= provides alternative version of these calls.
-
-They are:
-
-+ =c= to copy a region
-+ =d= to duplicate and comment
-+ =h= to mark a region
-+ =m= to move a region
-+ =q= to =query-replace-regexp=
-+ =.= to mark all ends in a region
-+ =w= to kill a region
-+ =x= to delete a region.
-
-*** Major
-
-Leader key =major= (=.= by default) deals with the global context.
+Leader key =colonel= (=;= by default) deals with the global context.
 
 It gives access to minor-mode[fn:11] commands and command maps that are
 relevant globally (or for the current perspective). These are:
@@ -778,9 +748,9 @@ relevant globally (or for the current perspective). These are:
 + =p= for =projectile=
 + =w= for =winner=.
 
-*** Captain
+*** Major
 
-Leader key =captain= (=/= by default) deals with the (buffer-)local context.
+Leader key =major= (=/= by default) deals with the (buffer-)local context.
 
 If the respective buffer-local =minor-mode= is active, the following
 command maps are bound
@@ -806,10 +776,39 @@ It also binds some other commands:
 + =+= for =consult-mode-command=.
 + =w= to toggle =read-only-mode= for buffer.
 
+*** Captain
+
+Leader key =captain= (=.= by default) invokes a dispatch if the underlying
+major-mode has it defined.
+
 *** Lieutenant
 
-Leader key =lieutenant= (=,= by default) invokes a dispatch if the
-underlying major-mode has it defined.
+Leader key =lieutenant= (=,= by default) provides a layer of useful
+editing actions.
+
+They are:
+
++ =c= to copy a line
++ =d= to duplicate lines
++ =i= for =iedit-mode=
++ =m= to move a line
++ =q= to =query-replace=
++ =.= to mark all "like this"
++ =w= to kill a line
++ =x= to delete a line.
+
+The sink for =lieutenant= provides alternative version of these calls.
+
+They are:
+
++ =c= to copy a region
++ =d= to duplicate and comment
++ =h= to mark a region
++ =m= to move a region
++ =q= to =query-replace-regexp=
++ =.= to mark all ends in a region
++ =w= to kill a region
++ =x= to delete a region.
 
 ** Packages
 
@@ -841,18 +840,18 @@ the sink for and PREFIX is its prefix."
                                          (concat ,suffix it)
                                        it)) args))))))
 
-(cl-defmacro wal/colonel! (key fun mfun &rest args)
+(cl-defmacro wal/lieutenant! (key fun mfun &rest args)
   "Bind FUN to KEY, MFUN in the sink.
 
 All ARGS are passed to both definers."
   (declare (indent defun))
 
   `(progn
-    (wal/colonel ,@args ,key ,fun)
-    (wal/colonel-sink ,@args ,key ,mfun)))
+    (wal/lieutenant ,@args ,key ,fun)
+    (wal/lieutenant-sink ,@args ,key ,mfun)))
 
-(defvar wal/leaders '(wal/general wal/colonel wal/major wal/captain))
-(defvar wal/leader-with-sink '(wal/general wal/colonel))
+(defvar wal/general-leaders '(wal/general wal/colonel wal/major wal/lieutenant))
+(defvar wal/leader-with-sink '(wal/general wal/lieutenant))
 
 (defun wal/general-create-definer (leader)
   "Create a definer for LEADER with a sink."
@@ -875,7 +874,7 @@ All ARGS are passed to both definers."
   :demand t
 
   :config
-  (mapc #'wal/general-create-definer wal/leaders))
+  (mapc #'wal/general-create-definer wal/general-leaders))
 #+END_SRC
 
 *** hydra
@@ -990,7 +989,7 @@ Most bindings are declared in individual packages.
 #+BEGIN_SRC emacs-lisp
 (wal/on-boot key-bindings
 
-  (wal/captain
+  (wal/major
     "t" '(wal/text-scale/body :wk "text-scale")
     "o" '(wal/resize-window/body :wk "resize-window")
     "v" '(wal/scroll-other-window/body :wk "scroll-other-window")
@@ -1021,11 +1020,11 @@ Most bindings are declared in individual packages.
   (wal/general-sink
    "b" '(eww :wk "eww"))
 
-  (wal/colonel! "q" 'query-replace 'query-replace-regexp)
+  (wal/lieutenant! "q" 'query-replace 'query-replace-regexp)
 
-  (wal/colonel "i" 'iedit-mode)
+  (wal/lieutenant "i" 'iedit-mode)
 
-  (wal/captain "w" 'read-only-mode)
+  (wal/major "w" 'read-only-mode)
 
   ;; Use H-u for C-u.
   (when wal/use-hyper-prefix
@@ -1041,14 +1040,14 @@ Most bindings are declared in individual packages.
   (global-set-key (kbd "C-;") #'comment-line)
   (global-set-key (kbd "C-c c") #'completion-at-point)
 
-  (defun wal/lieutenant? ()
-    "Show message when `wal/lieutenant-key' is not locally bound."
+  (defun wal/captain? ()
+    "Show message when `wal/captain-key' is not locally bound."
     (interactive)
-    (let ((key (propertize (wal/prefix-user-key wal/lieutenant-key) 'face 'success))
+    (let ((key (propertize (wal/prefix-user-key wal/captain-key) 'face 'success))
           (mode (propertize (symbol-name major-mode) 'face 'success)))
-      (message "Lieutenant (%s) has no binding in %s" key mode)))
+      (message "Captain (%s) has no binding in %s" key mode)))
 
-  (global-set-key (kbd (wal/prefix-user-key wal/lieutenant-key)) #'wal/lieutenant?)
+  (global-set-key (kbd (wal/prefix-user-key wal/captain-key)) #'wal/captain?)
 
   (global-set-key (kbd (wal/prefix-user-key "l")) #'wal/fly/body)
 
@@ -1937,7 +1936,7 @@ Optionally provide `quelpa' RECIPES."
 (defvar prog-like-hook nil
   "Commands that should be run for prog-like modes.")
 
-(cl-defmacro wal/hook (name docs &body body &key messages lsp lsp-ignores tabs prog-like lieutenant &allow-other-keys)
+(cl-defmacro wal/hook (name docs &body body &key messages lsp lsp-ignores tabs prog-like captain &allow-other-keys)
   "Hook into major mode NAME, describe with DOCS.
 
 MESSAGES is a list of strings to randomly choose from and
@@ -1950,19 +1949,19 @@ TABS is either nil, t or a symbol. Unless the symbol is `always',
 tabs are enabled using `wal/maybe-enable-tabs', passing it to the
 function as an indentation function.
 
-LIEUTENANT is either t or nil. If it is t, a prefixed function
-will be mapped to the lieutenant key.
+CAPTAIN is either t or nil. If it is t, a prefixed function
+will be mapped to the captain key.
 
 The rest of the BODY will be spliced into the lambda."
   (declare (indent defun) (doc-string 2))
 
   (let ((target (intern (concat (symbol-name name) "-hook")))
         (safe-body (cl-loop for (key val) on body by 'cddr
-                            unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :lieutenant))
+                            unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :captain))
                             collect key
                             and collect val))
         (func-name (intern (concat "wal/" (symbol-name name) "-hook")))
-        (lieutenant-name (intern (concat "wal/" (symbol-name name) "-dispatch"))))
+        (captain-name (intern (concat "wal/" (symbol-name name) "-dispatch"))))
 
     `(progn
        ,@(delete
@@ -1986,8 +1985,8 @@ The rest of the BODY will be spliced into the lambda."
                       '(wal/lsp))
                    ,(when prog-like
                       '(run-hooks 'prog-like-hook))
-                   ,(when lieutenant
-                      `(local-set-key (kbd (wal/prefix-user-key wal/lieutenant-key)) ',lieutenant-name)))))
+                   ,(when captain
+                      `(local-set-key (kbd (wal/prefix-user-key wal/captain-key)) ',captain-name)))))
             ,(when (and lsp lsp-ignores)
                `(with-eval-after-load 'lsp-mode
                   (wal/append 'lsp-file-watch-ignored-directories ,lsp-ignores)))
@@ -2907,7 +2906,7 @@ Optonally, interrupt any running process if INTERRUPT is t."
    (wal/hook test
      "We're just testing."
      :messages '("Just testing")
-     :lieutenant t
+     :captain t
      (message "hi"))
    `(progn
       (defun wal/test-hook ()
@@ -2916,7 +2915,7 @@ Optonally, interrupt any running process if INTERRUPT is t."
         (hack-local-variables)
         (wal/disable-tabs)
         (message "hi")
-        (local-set-key (kbd (wal/prefix-user-key wal/lieutenant-key)) 'wal/test-dispatch))
+        (local-set-key (kbd (wal/prefix-user-key wal/captain-key)) 'wal/test-dispatch))
       (add-hook 'test-hook 'wal/test-hook))))
 #+END_SRC
 
@@ -3748,7 +3747,7 @@ Hide blocks.
   :ensure nil
 
   :general
-  (wal/captain :keymaps 'hs-minor-mode-map
+  (wal/major :keymaps 'hs-minor-mode-map
     "h" '(hs-toggle-hiding :wk "toggle hiding")))
 #+END_SRC
 
@@ -3847,7 +3846,7 @@ be gone.
   (winner-dont-bind-my-keys t)
 
   :general
-  (wal/major "w" '(wal/winner/body :wk "winner")))
+  (wal/colonel "w" '(wal/winner/body :wk "winner")))
 #+END_SRC
 
 *** async
@@ -4001,7 +4000,7 @@ Look up words in a word book.
   (dictionary-server "dict.org")
 
   :general
-  (wal/captain "D" 'dictionary-lookup-definition))
+  (wal/major "D" 'dictionary-lookup-definition))
 #+END_SRC
 
 ** Additional Info Display
@@ -4112,7 +4111,7 @@ Don't you want to edit your buffer in multiple places at once?
   ("<mouse-3>" . mc/add-cursor-on-click)
 
   :general
-  (wal/colonel! "." 'mc/mark-all-like-this  'mc/edit-ends-of-lines))
+  (wal/lieutenant! "." 'mc/mark-all-like-this  'mc/edit-ends-of-lines))
 #+END_SRC
 
 *** expand-region
@@ -4152,7 +4151,7 @@ snippets.
    ("y" . yas-expand))
 
   :general
-  (wal/captain :keymaps 'yas-minor-mode-map
+  (wal/major :keymaps 'yas-minor-mode-map
     "y"  '(:ignore t :wk "yas")
     "yi" 'yas-insert-snippet
     "yv" 'yas-visit-snippet-file
@@ -4225,7 +4224,7 @@ I guess I can't live without this package.
   ("C-M-o" . crux-smart-open-line-above)
 
   :general
-  (wal/colonel! "d"
+  (wal/lieutenant! "d"
     'crux-duplicate-current-line-or-region
     'crux-duplicate-and-comment-current-line-or-region))
 #+END_SRC
@@ -4244,7 +4243,7 @@ I guess I can't live without this package.
   (vundo---window-max-height 5)
 
   :general
-  (wal/captain "/" 'vundo))
+  (wal/major "/" 'vundo))
 #+END_SRC
 
 ** Footer
@@ -4428,7 +4427,7 @@ Let's have a dash of board.
   (dashboard-agenda-release-buffers t)
 
   :general
-  (wal/major "d" '(dashboard-refresh-buffer :wk "dashboard")))
+  (wal/colonel "d" '(dashboard-refresh-buffer :wk "dashboard")))
 #+END_SRC
 
 ** Themes
@@ -4933,7 +4932,7 @@ Screen saver, CPU devourer.
     (zone-when-idle wal/zone-timer))
 
   :general
-  (wal/captain "0" 'zone))
+  (wal/major "0" 'zone))
 #+END_SRC
 
 ** Other
@@ -5281,10 +5280,10 @@ beginning."
 
   :general
   ;; Lines.
-  (wal/colonel! "c" 'avy-copy-line 'avy-copy-region)
-  (wal/colonel! "x" 'avy-kill-whole-line 'avy-kill-region)
-  (wal/colonel! "m" 'avy-move-line 'avy-move-region)
-  (wal/colonel! "w"
+  (wal/lieutenant! "c" 'avy-copy-line 'avy-copy-region)
+  (wal/lieutenant! "x" 'avy-kill-whole-line 'avy-kill-region)
+  (wal/lieutenant! "m" 'avy-move-line 'avy-move-region)
+  (wal/lieutenant! "w"
     'avy-kill-ring-save-whole-line
     'avy-kill-ring-save-region)
   (wal/colonel-sink "h" 'wal/avy-mark-region))
@@ -5846,7 +5845,7 @@ not pollute the current one."
   (wal/general
     "st" '(consult-theme :wk "consult theme")
     "fr" '(consult-recent-file :wk "recent"))
-  (wal/captain
+  (wal/major
     "+" 'consult-mode-command
     "-" 'consult-minor-mode-menu))
 #+END_SRC
@@ -5901,7 +5900,7 @@ Keep order.
 (declare-function projectile-project-p "ext:projectile.el")
 (declare-function projectile-read-command "ext:projectile.el")
 (declare-function wal/append "wal-func.el")
-(declare-function wal/major "wal-key-bindings.el")
+(declare-function wal/colonel "wal-key-bindings.el")
 (declare-function wal/univ-p "wal-func.el")
 
 (defvar consult-buffer-filter)
@@ -6103,7 +6102,7 @@ No filter is applied if called with `universal-argument'."
      :items #'wal/consult-persp-buffer--query))
 
   ;; Register command map.
-  (wal/major "i" '(:keymap perspective-map :wk "perspective"))
+  (wal/colonel "i" '(:keymap perspective-map :wk "perspective"))
 
   ;; Override the override to `perspective-map' in older Emacs versions.
   (when (< emacs-major-version 28)
@@ -6180,7 +6179,7 @@ More robust project management.
               '(".min.js" ".js.map"))
 
   ;; Register command map.
-  (wal/major "p" '(:keymap projectile-command-map :wk "projectile"))
+  (wal/colonel "p" '(:keymap projectile-command-map :wk "projectile"))
 
   (projectile-mode 1)
 
@@ -6218,7 +6217,7 @@ Built-in but entirely dependent on either =git= or =hg=.
   :demand t
 
   :config
-  (wal/major "p" '(:keymap project-prefix-map :wk "project"))
+  (wal/colonel "p" '(:keymap project-prefix-map :wk "project"))
 
   :custom
   (project-switch-commands 'project-find-dir)
@@ -6291,7 +6290,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (defvar visual-fill-column-width)
 (defvar visual-fill-column-center-text)
 (defvar wal/agenda-tasks-directory)
-(defvar wal/lieutenant-key)
+(defvar wal/captain-key)
 (defvar wal/use-projectile)
 
 (defgroup wal-org nil
@@ -6341,7 +6340,7 @@ This calls `org-content' interactively."
   (wal/hook org-mode
     "Hook into `org-mode'."
     :messages '("Organize! Seize the means of production!")
-    :lieutenant t)
+    :captain t)
 
   :config
   ;; TEMP: Getting missing face errors otherwise.
@@ -7115,7 +7114,7 @@ Run =dired= with =C-x d=.
 (declare-function consult--buffer-state "ext:consult.el")
 (declare-function wal/insert-after "wal-func.el")
 
-(defvar wal/lieutenant-key)
+(defvar wal/captain-key)
 #+END_SRC
 
 ** Packages
@@ -7161,7 +7160,7 @@ Uses the same optional SWITCHES."
   :init
   (wal/hook dired-mode
     "Hook into `dired-mode'."
-    :lieutenant t)
+    :captain t)
 
   :config
   ;; We aren't scared of finding alternate files.
@@ -7579,7 +7578,7 @@ I'm becoming an old git.
 (eval-when-compile
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
-(declare-function wal/major "wal-key-bindings.el")
+(declare-function wal/colonel "wal-key-bindings.el")
 (declare-function wal/message-in-a-bottle "wal-lang.el")
 #+END_SRC
 
@@ -7736,7 +7735,7 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
   (("C-c g" . smerge-basic-map))
 
   :general
-  (wal/captain :keymaps 'smerge-mode-map
+  (wal/major :keymaps 'smerge-mode-map
     "g" '(wal/smerge/body :wk "smerge"))
 
   :delight " smg")
@@ -7803,7 +7802,7 @@ Let's greet the world.
 (declare-function wdb/side "wal-func.el")
 (declare-function wal/install-packages "wal-func.el")
 (declare-function wal/lsp "wal-lsp.el")
-(declare-function wal/captain "wal-key-bindings.el")
+(declare-function wal/major "wal-key-bindings.el")
 (declare-function wal/maybe-enable-tabs "wal-func.el")
 (declare-function wal/maybe-intern "wal-func.el")
 (declare-function wal/message-in-a-bottle "wal-func.el")
@@ -7811,7 +7810,7 @@ Let's greet the world.
 (defvar js-mode-map)
 (defvar prettier-processes)
 (defvar wal/ascii-whale)
-(defvar wal/lieutenant-key)
+(defvar wal/captain-key)
 (defvar wal/use-projectile)
 
 (defgroup wal-lang nil
@@ -7873,7 +7872,7 @@ I want to be ready for =jai=.
   (wal/hook c++-mode
     "Hook into `c++-mode'."
     :lsp t
-    :lieutenant t
+    :captain t
     :messages '("Make tidy! Make clean!" "Serenity now!"))
 
   :config
@@ -7915,7 +7914,7 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
   (wal/hook rust-mode
     "Hook into `rust-mode'."
     :lsp t
-    :lieutenant t
+    :captain t
     :messages '("Consider the lobster"))
 
   :config
@@ -7981,7 +7980,7 @@ TOML."
   :init
   (wal/hook python-mode
     "Hook into `python-mode'."
-    :lieutenant t
+    :captain t
     :lsp t
     :lsp-ignores
     '("[/\\\\]\\.pytype\\'"
@@ -8279,7 +8278,7 @@ Deal with the parens[fn:17].
   :init
   (wal/hook emacs-lisp-mode
     "Hook into `emacs-lisp-mode'."
-    :lieutenant t
+    :captain t
     :messages '("So it's just a bunch of lists?" "List your lambdas")
     (prettify-symbols-mode)
     (flycheck-mode 1))
@@ -8310,7 +8309,7 @@ Deal with the parens[fn:17].
   :init
   (wal/hook common-lisp-mode
     "hook into `common-lisp-mode'."
-    :lieutenant t)
+    :captain t)
 
   :config
   (with-eval-after-load 'slime
@@ -8338,7 +8337,7 @@ Get some closure.
   (wal/hook clojure-mode
     "Hook into `clojure-mode'."
     :lsp t
-    :lieutenant t
+    :captain t
     :messages '("Cider brew"))
 
   :config
@@ -8437,7 +8436,7 @@ Can we have =deno= instead of =node=?
   (wal/hook js-mode
     "Hook into `js-mode'."
     :messages '("NaN !== NaN" "Null falsy values or undefined")
-    :lieutenant t
+    :captain t
     :tabs t
     :lsp t
     (when wal/force-jsx
@@ -8685,7 +8684,7 @@ Sometimes things that don't do things need to look nice.
   :init
   (wal/hook markdown-mode
     "Hook into `markdown-mode'."
-    :lieutenant t)
+    :captain t)
 
   :config
   (transient-define-prefix wal/markdown-mode-dispatch ()
@@ -8724,7 +8723,7 @@ Yes, you need to install *Android Studio* for some reason.
   (wal/hook dart-mode
     "Hook into `dart-mode'."
     :lsp t
-    :lieutenant t
+    :captain t
     :messages '("Bull's eye!")))
 #+END_SRC
 
@@ -8829,7 +8828,7 @@ It's a =JavaEmacsPackageConfigurationSectionFactory=, mate.
     "Hook into `java-mode'."
     :lsp t
     :lsp-ignores '("[/\\\\]\\.gradle\\'")
-    :lieutenant t
+    :captain t
     :messages '("Mmmh ... maven")))
 #+END_SRC
 
@@ -8994,7 +8993,7 @@ The only way to store strings, JSON.
   (wal/hook jsonian-mode
     "Hook into `jsonian-mode'."
     :tabs t
-    :lieutenant t
+    :captain t
     :messages '("JSON ...? JSON?! JSON!!")
     (flycheck-mode 1))
 
@@ -9384,7 +9383,7 @@ If KILL-BUFFER is t, kill the file's buffer."
   (("C-c f" . flycheck-command-map))
 
   :general
-  (wal/captain :keymaps 'flycheck-mode-map
+  (wal/major :keymaps 'flycheck-mode-map
     "f" '(wal/flycheck-dispatch :wk "flycheck")))
 #+END_SRC
 
@@ -9416,8 +9415,8 @@ My spelling is bad. Uses American English for =flyspell=.
    ("C-." . ispell-word)) ; Replaces `flyspell-auto-correct-word', which is still available via `C-M-i'.
 
   :general
-  (wal/captain "s" '(wal/flyspell :predicate '(lambda () (not flyspell-mode)) :wk "flyspell"))
-  (wal/captain :keymaps 'flyspell-mode-map
+  (wal/major "s" '(wal/flyspell :predicate '(lambda () (not flyspell-mode)) :wk "flyspell"))
+  (wal/major :keymaps 'flyspell-mode-map
     "s" '(:ignore t :wk "flyspell")
     "sb" '(flyspell-buffer :wk "buffer")
     "sr" '(flyspell-region :wk "region")
@@ -9484,7 +9483,7 @@ Language servers are awesome. Thanks, Microsoft.
 (declare-function dap-register-debug-template "ext:dap-mode.el")
 (declare-function lsp-enable-which-key-integration "ext:lsp-mode.el")
 (declare-function wal/append "wal-func.el")
-(declare-function wal/major "wal-key-bindings.el")
+(declare-function wal/colonel "wal-key-bindings.el")
 (declare-function wdb/side "wal-func.el")
 
 (defvar dap-debug-template-configurations)
@@ -9619,7 +9618,7 @@ minimum prefixes are reduced."
   (("C-c l" . lsp-command-map))
 
   :general
-  (wal/captain :keymaps 'lsp-mode-map "l" '(wal/lsp-dispatch :wk "lsp"))
+  (wal/major :keymaps 'lsp-mode-map "l" '(wal/lsp-dispatch :wk "lsp"))
 
   :delight
   (lsp-mode " lsp")
@@ -9695,7 +9694,7 @@ Debugging using VSCode's DAP (in =lsp-mode=)
   (dap-python-debugger 'debugpy)
 
   :general
-  (wal/captain :keymaps 'lsp-mode-map "d" '(wal/dap-hydra/body :wk "debug"))
+  (wal/major :keymaps 'lsp-mode-map "d" '(wal/dap-hydra/body :wk "debug"))
 
   :delight " dap")
 #+END_SRC
@@ -10089,7 +10088,7 @@ Make requests using Org.
    ("q" . quit-window))
 
   :general
-  (wal/captain :keymaps '(verb-mode-map verb-response-body-mode-map)
+  (wal/major :keymaps '(verb-mode-map verb-response-body-mode-map)
     "r" '(wal/verb :wk "verb"))
 
   :delight
