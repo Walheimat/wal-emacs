@@ -1119,7 +1119,6 @@ Custom functionality.
   "Whether to delete trailing whitespace."
   :type 'boolean
   :group 'wal-func)
-
 #+END_SRC
 
 ** Emacs
@@ -4352,21 +4351,6 @@ A collection of status messages."
   :type 'boolean
   :group 'wal-visuals)
 
-(defcustom wal/common-ligatures
-  '(
-    "==" "!=" ">=" "<="        ; Comparison.
-    "+=" "-=" "/=" "%=" "*="   ; Assignment.
-    "||" "&&"                  ; Logical.
-    "/*" "*/" "//" "/**" "**/" ; Comments.
-    "++" "--"                  ; Increment/decrement.
-    ">>=" "<<=" "&=" "|=" "^=" ; Bitwise assignments.
-    "<<" ">>"                  ; Bitwise shifts.
-    "..."                      ; Spread.
-    )
-  "A list of ligatures available in all programming modes."
-  :type '(repeat string)
-  :group 'wal-visuals)
-
 (defcustom wal/zone-when-idle nil
   "Determine whether to zone out when idling."
   :type 'boolean
@@ -4839,6 +4823,19 @@ Font *JetBrains Mono* has the best support for ligatures.
 :END:
 
 #+BEGIN_SRC emacs-lisp
+(defconst wal/common-ligatures
+  '(
+    "==" "!=" ">=" "<="        ; Comparison.
+    "+=" "-=" "/=" "%=" "*="   ; Assignment.
+    "||" "&&"                  ; Logical.
+    "/*" "*/" "//" "/**" "**/" ; Comments.
+    "++" "--"                  ; Increment/decrement.
+    ">>=" "<<=" "&=" "|=" "^=" ; Bitwise assignments.
+    "<<" ">>"                  ; Bitwise shifts.
+    "..."                      ; Spread.
+    )
+  "A list of ligatures available in all programming modes.")
+
 (defun wal/with-common-ligatures (fun &rest args)
   "Advise FUN to append common ligatures.
 
@@ -5010,55 +5007,6 @@ Everything that has to do with windows.
 
 (defvar aw-dispatch-alist)
 (defvar popper-group-function)
-
-(defgroup wal-windows nil
- "Change window settings."
- :group 'wal
- :tag "Windows")
-
-;;;; Customization:
-
-(defcustom wal/popper-reference-buffers
-  '(docker-container-mode
-    "\\*Bookmark Annotation\\*"
-    "\\*org-roam\\*"
-    ;; Compilation and REPL(-like).
-    "\\*poetry-shell\\*"
-    "^\\*docker-compose"
-    "^\\* docker-compose \\(up\\|run\\|build\\)"
-    "^\\*wal-async\\*"
-    dap-ui-repl-mode
-    cider-repl-mode
-    inferior-python-mode
-    python-pytest-mode
-    "\\*rg\\*\\'"
-    compilation-mode
-    ;; Debug(-like).
-    debugger-mode
-    "\\*\\(.+\\)out\\*"
-    "^\\* docker container"
-    ;; Help(-like).
-    helpful-mode
-    help-mode
-    dictionary-mode
-    shortdoc-mode)
-  "Replaces `popper-reference-buffers'."
-  :type '(restricted-sexp
-          :match-alternatives
-          (stringp symbolp functionp consp))
-  :group 'wal-windows)
-
-(defcustom wal/popper-mode-line
-  '(:eval (concat
-           " "
-           (all-the-icons-faicon "fort-awesome"
-                                 :face 'all-the-icons-dsilver
-                                 :height 0.9
-                                 :v-adjust 0.0)
-           " "))
-  "Replaces `popper-mode-line'."
-  :type 'sexp
-  :group 'wal-windows)
 #+END_SRC
 
 ** Packages
@@ -5118,6 +5066,32 @@ Ace interacting with (multiple) windows.
 Treat certain buffers and their windows as pop-ups.
 
 #+BEGIN_SRC emacs-lisp
+(defconst wal/popper-reference-buffers
+  '(docker-container-mode
+    "\\*Bookmark Annotation\\*"
+    "\\*org-roam\\*"
+    ;; Compilation and REPL(-like).
+    "\\*poetry-shell\\*"
+    "^\\*docker-compose"
+    "^\\* docker-compose \\(up\\|run\\|build\\)"
+    "^\\*wal-async\\*"
+    dap-ui-repl-mode
+    cider-repl-mode
+    inferior-python-mode
+    python-pytest-mode
+    "\\*rg\\*\\'"
+    compilation-mode
+    ;; Debug(-like).
+    debugger-mode
+    "\\*\\(.+\\)out\\*"
+    "^\\* docker container"
+    ;; Help(-like).
+    helpful-mode
+    help-mode
+    dictionary-mode
+    shortdoc-mode)
+  "Replaces `popper-reference-buffers'.")
+
 (defun wal/popper-echo-transform (buffer-name)
   "Transform BUFFER-NAME by truncating certain prefixes."
   (let ((helpful-re "\\*helpful \\w+\:")
@@ -5165,7 +5139,13 @@ Treat certain buffers and their windows as pop-ups.
   (popper-group-function 'popper-group-by-perspective)
   (popper-reference-buffers wal/popper-reference-buffers)
   (popper-display-control 'user)
-  (popper-mode-line wal/popper-mode-line)
+  (popper-mode-line '(:eval (concat
+                             " "
+                             (all-the-icons-faicon "fort-awesome"
+                                                   :face 'all-the-icons-dsilver
+                                                   :height 0.9
+                                                   :v-adjust 0.0)
+                             " ")))
   (popper-echo-dispatch-persist nil)
   (popper-echo-dispatch-keys '(?a ?s ?d ?f ?g ?q ?w ?e ?r ?t))
   (popper-echo-lines 1)
@@ -5359,22 +5339,6 @@ I mostly search.
 (declare-function wdb/pop-up "wal-func.el")
 
 (defvar wal/active-theme)
-
-(defgroup wal-find nil
-  "Change settings of search packages."
-  :group 'wal
-  :tag "Finding things")
-
-;;;; Customization:
-
-(defcustom wal/ctrlf-cancel-commands
-  '(ace-window
-    other-window)
-  "Commands that are remapped to `ctrlf-cancel'.
-
-Commands that unfocus the ctrlf minibuffer should quit it."
-  :type '(repeat symbol)
-  :group 'wal-find)
 #+END_SRC
 
 ** Packages
@@ -5461,45 +5425,6 @@ Complete commands and code.
 (defvar xref-show-definitions-function)
 (defvar wal/active-theme)
 (defvar wal/use-projectile)
-
-(defgroup wal-complete nil
-  "Change settings used for completion packages."
-  :group 'wal
-  :tag "Completion")
-
-;;;; Customization:
-
-(defcustom wal/consult-buffer-filter
-  '("\\*Buffer List\\*"
-    "\\*Calendar\\*"
-    "\\*Call Hierarchy\\*"
-    "\\*cider"
-    "\\*compilation"
-    "\\*dap"
-    "\\*dashboard"
-    "\\*docker"
-    "\\* docker"
-    "\\*Flutter"
-    "\\*Flycheck"
-    "\\*Help"
-    "\\*helpful"
-    "\\*HTTP"
-    "\\*info\\*"
-    "\\*lsp"
-    "\\*Messages\\*"
-    "\\*Packages\\*"
-    "\\*poetry"
-    "\\*RE-Builder\\*"
-    "\\*rg"
-    "\\*scratch"
-    "\\*vterm"
-    "\\*xref"
-    "out\\*$"
-    "^magit"
-    "server log\\*$")
-  "Additional buffers to filter."
-  :type '(repeat string)
-  :group 'wal-complete)
 #+END_SRC
 
 ** Inline Completion
@@ -5778,6 +5703,36 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
 Heavy lifting with =consult=.
 
 #+BEGIN_SRC emacs-lisp
+(defconst wal/consult-buffer-filter
+  '("\\*Buffer List\\*"
+    "\\*Calendar\\*"
+    "\\*Call Hierarchy\\*"
+    "\\*cider"
+    "\\*compilation"
+    "\\*dap"
+    "\\*dashboard"
+    "\\*docker"
+    "\\* docker"
+    "\\*Flutter"
+    "\\*Flycheck"
+    "\\*Help"
+    "\\*helpful"
+    "\\*HTTP"
+    "\\*info\\*"
+    "\\*lsp"
+    "\\*Messages\\*"
+    "\\*Packages\\*"
+    "\\*poetry"
+    "\\*RE-Builder\\*"
+    "\\*rg"
+    "\\*scratch"
+    "\\*vterm"
+    "\\*xref"
+    "out\\*$"
+    "^magit"
+    "server log\\*$")
+  "Additional buffers to filter.")
+
 (defun wal/consult-ripgrep-ignored (&optional dir initial)
   "Search for regexp with rg in DIR with INITIAL input.
 Do not ignore hidden files."
@@ -5995,26 +5950,6 @@ shown."
 (defcustom wal/perspective-truncated-length 3
   "The length of a perspective name when truncated."
   :type 'integer
-  :group 'wal-workspace)
-
-(defcustom wal/projectile-ignored
-  '(("node_modules" "build" "_build" "android")
-    ("yarn.lock" "package.lock" "bundle.js")
-    (".min.js" ".js.map"))
-  "Additional directories, files and file suffixes to ignore."
-  :type '(list)
-  :group 'wal-workspace)
-
-(defcustom wal/project-vc-ignores
-  '("node_modules/"
-    "build/"
-    "android/"
-    "*.lock"
-    "bundle.js"
-    "*.min.js"
-    "*.js.map")
-  "Additional directories to ignore."
-  :type '(repeat string)
   :group 'wal-workspace)
 #+END_SRC
 
@@ -6238,11 +6173,11 @@ More robust project management.
   :config
   ;; Extend the various ignore lists.
   (wal/append 'projectile-globally-ignored-directories
-              (nth 0 wal/projectile-ignored))
+              '("node_modules" "build" "_build" "android"))
   (wal/append 'projectile-globally-ignored-files
-              (nth 1 wal/projectile-ignored))
+              '("yarn.lock" "package.lock" "bundle.js"))
   (wal/append 'projectile-globally-ignored-file-suffixes
-              (nth 2 wal/projectile-ignored))
+              '(".min.js" ".js.map"))
 
   ;; Register command map.
   (wal/major "p" '(:keymap projectile-command-map :wk "projectile"))
@@ -6287,7 +6222,13 @@ Built-in but entirely dependent on either =git= or =hg=.
 
   :custom
   (project-switch-commands 'project-find-dir)
-  (project-vc-ignores wal/project-vc-ignores)
+  (project-vc-ignores '("node_modules/"
+                        "build/"
+                        "android/"
+                        "*.lock"
+                        "bundle.js"
+                        "*.min.js"
+                        "*.js.map"))
 
   :wal-bind
   (("l" . project-find-file)
@@ -9563,12 +9504,6 @@ For these modes `corfu' settings will not be adjusted to be
 smaller."
   :type '(repeat symbol)
   :group 'wal-lsp)
-
-(defcustom wal/lsp-file-watch-ignored-directories
-  '("[/\\\\]build\\'" "[/\\\\]vendor\\'")
-  "Additional directories to not monitor."
-  :type '(repeat regexp)
-  :group 'wal-lsp)
 #+END_SRC
 
 ** Packages
@@ -9625,8 +9560,9 @@ minimum prefixes are reduced."
   (lsp-enable-which-key-integration t)
 
   ;; Additional ignores.
-  (wal/append 'lsp-file-watch-ignored-directories
-              wal/lsp-file-watch-ignored-directories)
+  (wal/append
+   'lsp-file-watch-ignored-directories
+   '("[/\\\\]build\\'" "[/\\\\]vendor\\'"))
 
   ;; Don't keep track of multiple projects.
   (advice-add 'lsp :before #'wal/first-prevent-adding-other-projects)

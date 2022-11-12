@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `lieutenant` bindings.
 - Packages `js2-mode` and `rjsx-mode` were removed in favor of using
   built-in `js-mode`.
+- Many `defcustom` variables that weren't particularly useful.
 
 ### Fixed
 
