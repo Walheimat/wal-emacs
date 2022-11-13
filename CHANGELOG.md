@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `lieutenant` is `captain`; `captain` is `major`; `major` is
   `colonel`.
 - `which-key` is now displayed in the minibuffer.
+- Flying `hydra` now binds `undo` and `undo-redo` using keys `d` and
+  `e`.
 
 ## [v1.8.0]
 
