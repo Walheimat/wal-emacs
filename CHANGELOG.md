@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `which-key` is now displayed in the minibuffer.
 - Flying `hydra` now binds `undo` and `undo-redo` using keys `d` and
   `e`.
+- `hydra`s have been reworked to only be on a single line.
 
 ## [v1.8.0]
 

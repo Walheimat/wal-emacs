@@ -888,18 +888,21 @@ quick succession.
 These hydras are mapped to =major= using the following prefixes:
 
 + =d= for a minimal set of debugging keys using =dap-mode=
++ =m= to resolve windows using =smerge=
 + =o= to resize window
 + =t= to scale text
 + =v= to scroll other window
-+ =w= to undo/redo window configurations using =winner=.
+
+One hydra is mapped to =colonel=:
+
++ =o= to undo/redo window configurations using =winner=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/ascii-whale-hydra-offset (&optional padding)
-  "Get a string offset for the `wal/ascii-whale'.
-Additional left PADDING can be passed."
-  (let ((padd (or padding 0)))
+(defvaralias 'w/hs 'wal/hydra-separator)
+(defvar wal/hydra-separator (propertize " ⋰ " 'face 'shadow))
 
-    (make-string (+ padd (length wal/ascii-whale)) ? )))
+(defvaralias 'w/hew 'wal/hydra-emoji-whale)
+(defvar wal/hydra-emoji-whale "🐋")
 
 (use-package hydra
   :demand t)
@@ -908,40 +911,38 @@ Additional left PADDING can be passed."
   ;; Scaling text in buffer.
   (defhydra wal/text-scale (:hint nil)
     "
-%s`wal/ascii-whale Text size: _i_ncrease or _d_ecrease.
+%s`w/hew Text size: _i_ncrease or _d_ecrease %s`w/hs _r_eset
 "
     ("i" text-scale-increase)
     ("d" text-scale-decrease)
-    ("r" wal/text-scale-reset "reset" :color blue)
-    ("q" nil "quit"))
+    ("r" wal/text-scale-reset :color blue)
+    ("q" nil))
 
   ;; Move window splitter or balance windows.
   (defhydra wal/resize-window (:hint nil)
     "
-%s(wal/ascii-whale-hydra-offset 25)^_p_^
-%s`wal/ascii-whale Move window splitter: _b_   _f_.
-%s(wal/ascii-whale-hydra-offset 25)^_n_^
+%s`w/hew Move window splitter: _i_ _j_ _k_ _l_ %s`w/hs _b_alance %s`w/hs _r_e-split
 "
-    ("b" wal/edge-left)
-    ("f" wal/edge-right)
-    ("n" wal/edge-down)
-    ("p" wal/edge-up)
-    ("o" wal/split-window-the-other-way "re-split" :color blue)
-    ("l" balance-windows "balance" :color blue)
-    ("q" nil "quit"))
+    ("j" wal/edge-left)
+    ("l" wal/edge-right)
+    ("k" wal/edge-down)
+    ("i" wal/edge-up)
+    ("r" wal/split-window-the-other-way :color blue)
+    ("b" balance-windows :color blue)
+    ("q" nil))
 
   (defhydra wal/scroll-other-window (:hint nil)
     "
-%s`wal/ascii-whale Scroll other window: u_p_/dow_n_.
+%s`w/hew Scroll other window: u_p_ or dow_n_
 "
     ("p" scroll-other-window-down)
     ("n" scroll-other-window)
-    ("q" nil "quit"))
+    ("q" nil))
 
   ;; Move similar to `xah-fly-keys'.
   (defhydra wal/fly (:hint nil :foreign-keys warn)
     "
-%s`wal/ascii-whale Fly: ✜ _i_ _j_ _k_ _l_ ⇆ _u_ _o_, ⇄ _h_ _;_, ↷ _n_ _m_ _,_ _._ _/_, ⌦ _s_ _f_ _w_ _r_, ⎌ _d_ _e_
+%s`w/hew Fly: ✜ _i_ _j_ _k_ _l_ %s`w/hs ⇆ _u_ _o_ %s`w/hs ⇄ _h_ _;_ %s`w/hs ↷ _n_ _m_ _,_ _._ _/_ %s`w/hs ⌦ _s_ _f_ _w_ _r_ %s`w/hs ⎌ _d_ _e_
 "
     ("j" backward-char)
     ("l" forward-char)
@@ -3836,11 +3837,10 @@ be gone.
   ;; Allow for quicker un- and redoing.
   (defhydra wal/winner (:hint nil)
     "
-%s`wal/ascii-whale Window layout: _u_ndo or _r_edo.
+%s`w/hew Window layout: _u_ndo or _r_edo
 "
     ("u" winner-undo)
-    ("r" winner-redo)
-    ("q" nil "quit"))
+    ("r" winner-redo))
 
   (winner-mode 1)
 
@@ -3848,7 +3848,7 @@ be gone.
   (winner-dont-bind-my-keys t)
 
   :general
-  (wal/colonel "w" '(wal/winner/body :wk "winner")))
+  (wal/colonel "o" '(wal/winner/body :wk "winner")))
 #+END_SRC
 
 *** async
@@ -7719,16 +7719,14 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
   :config
   (defhydra wal/smerge (:hint nil :foreign-keys warn)
     "
-%s(wal/ascii-whale-hydra-offset 12)^_p_^
-%s`wal/ascii-whale Resolve: _u_   _l_.
-%s(wal/ascii-whale-hydra-offset 12)^_n_^
+%s`w/hew Resolve conflict: _u_pper, _l_ower or _a_ll %s`w/hs _n_ext or _p_revious
 "
     ("p" smerge-prev)
     ("n" smerge-next)
     ("u" smerge-keep-upper)
     ("l" smerge-keep-lower)
-    ("a" smerge-keep-all "keep all")
-    ("q" nil "quit"))
+    ("a" smerge-keep-all)
+    ("q" nil))
 
   (with-eval-after-load 'which-key
     (which-key-add-key-based-replacements "C-c g" "smerge"))
@@ -9674,18 +9672,17 @@ Debugging using VSCode's DAP (in =lsp-mode=)
   (with-no-warnings
     (defhydra wal/dap-hydra (:hint nil :foreign-keys warn)
       "
-%s`wal/ascii-whale _d_ebug: _n_ext, _i_n, _o_ut or _c_ontinue.
+%s`w/hew Debug: _n_ext, _i_n, _o_ut or _c_ontinue %s`w/hs _b_reakpoint %s`w/hs start _d_ebugging %s`w/hs _r_epl %s`w/hs disconnec_t_ %s`w/hs _f_ull
 "
       ("n" dap-next)
       ("i" dap-step-in)
       ("o" dap-step-out)
       ("c" dap-continue)
       ("d" dap-debug :color blue)
-      ("b" dap-breakpoint-toggle "toggle breakpoint")
-      ("l" dap-go-to-output-buffer "show logs" :color blue)
-      ("r" dap-ui-repl "repl" :color blue)
-      ("f" dap-hydra "full" :color blue)
-      ("x" dap-disconnect "disconnect" :color blue)
+      ("b" dap-breakpoint-toggle)
+      ("r" dap-ui-repl :color blue)
+      ("f" dap-hydra :color blue)
+      ("t" dap-disconnect :color blue)
       ("q" nil)))
 
   :custom
