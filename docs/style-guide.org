@@ -114,7 +114,7 @@ The order of declarations in subsections is:
 
 ** Variable Definition
 
-The value of a variable should always be (or start) on the first line.
+The value of a variable should aim to be (or start) on the first line.
 
 #+BEGIN_SRC emacs-lisp :tangle no
 (defcustom some-variable "value"
@@ -141,8 +141,19 @@ The value of a variable should always be (or start) on the first line.
 
 ** Advice
 
-Advice functions using =:around= should follow template
-=wal/with{out}-<what-it-does>=.
+Advising functions should follow a common template.
+
+| Combinator     | Template                  |
+|----------------+---------------------------|
+| :after         | wal/then-<do>             |
+| :around        | wal/with{out}-<do>        |
+| :before        | wal/first-<do>            |
+| :before-until  | wal/in-case-of-<sth>-<do> |
+| :filter-args   | wal/pick-<sth>            |
+| :filter-return | wal/apply-<sth>-to-<sth>  |
+| :override      | wal/instead-<do>          |
+
+Example for advising =:around=.
 
 #+BEGIN_SRC emacs-lisp :tangle no
 (defun wal/with-big-vertico (fun &rest args)
@@ -153,21 +164,3 @@ Advice functions using =:around= should follow template
 
 (advice-add 'consult-ripgrep :around #'wal/with-big-vertico)
 #+END_SRC
-
-Advice functions using =:override= should follow template
-=wal/instead-<what-it-does>=.
-
-Advice functions using =:after= should follow template
-=wal/then-<what-it-does>=.
-
-Advice functions using =:before-until= should follow template
-=wal/in-case-of-<something>-<do-this-instead>=.
-
-Advice functions using =:filter-return= should follow template
-=wal/apply-<something>-to-<something>=.
-
-Advice functions using =:before= should follow template
-=wal/first-<what-it-does>=.
-
-Advice functions using =:filter-args= should follow template
-=wal/pick-<something>=.
