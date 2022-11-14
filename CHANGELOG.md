@@ -22,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `scroll-{up,down}-command` are now bound in `wal/fly` using keys `g`
   and `a`.
 
+### Fixed
+
+- Flag capturing in **Settings** section was moved up to make sure
+  flags `doctor` and `deny` are captured before `use-package` is
+  configured.
+
 ## [v1.8.0]
 
 From hero to zero.
