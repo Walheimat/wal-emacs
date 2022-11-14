@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Flying `hydra` now binds `undo` and `undo-redo` using keys `d` and
   `e`.
 - `hydra`s have been reworked to only be on a single line.
+- `flycheck` error list now uses `wdb/side` to show at the bottom
+  instead.
 
 ## [v1.8.0]
 
