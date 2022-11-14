@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `hydra`s have been reworked to only be on a single line.
 - `flycheck` error list now uses `wdb/side` to show at the bottom
   instead.
+- `scroll-{up,down}-command` are now bound in `wal/fly` using keys `g`
+  and `a`.
 
 ## [v1.8.0]
 
