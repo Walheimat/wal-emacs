@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instead.
 - `scroll-{up,down}-command` are now bound in `wal/fly` using keys `g`
   and `a`.
+- `hydra` for `text-resize` now also binds global adjustment; the
+  reset also resets global one.
 
 ### Fixed
 

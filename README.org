@@ -910,10 +910,11 @@ One hydra is mapped to =colonel=:
   ;; Scaling text in buffer.
   (defhydra wal/text-scale (:hint nil)
     "
-%s`w/hew Text size: _i_ncrease or _d_ecrease %s`w/hs _r_eset
+%s`w/hew Text size: _i_ncrease or _d_ecrease %s`w/hs _g_lobal %s`w/hs _r_eset
 "
     ("i" text-scale-increase)
     ("d" text-scale-decrease)
+    ("g" global-text-scale-adjust)
     ("r" wal/text-scale-reset :color blue)
     ("q" nil))
 
@@ -1475,7 +1476,11 @@ Allow resetting =text-scale=.
 (defun wal/text-scale-reset ()
   "Reset `text-scale' level to 0."
   (interactive)
-  (text-scale-set 0))
+  (text-scale-set 0)
+  (when-let ((global global-text-scale-adjust--default-height))
+
+    (setq global-text-scale-adjust--default-height nil)
+    (set-face-attribute 'default nil :height global)))
 #+END_SRC
 
 ** Lists
@@ -2386,6 +2391,12 @@ Optonally, interrupt any running process if INTERRUPT is t."
     (should (eq text-scale-mode-amount 4))
     (wal/text-scale-reset)
     (should (eq text-scale-mode-amount 0))))
+
+(ert-deftest test-wal/text-scale-reset--resets-global-adjustment ()
+  (with-temp-buffer
+    (setq global-text-scale-adjust--default-height 120)
+    (wal/text-scale-reset)
+    (should (not global-text-scale-adjust--default-height))))
 #+END_SRC
 
 *** Lists
