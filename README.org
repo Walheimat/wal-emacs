@@ -1477,7 +1477,8 @@ Allow resetting =text-scale=.
   "Reset `text-scale' level to 0."
   (interactive)
   (text-scale-set 0)
-  (when-let ((global global-text-scale-adjust--default-height))
+  (when-let ((modern (wal/modern-emacs-p))
+             (global global-text-scale-adjust--default-height))
 
     (setq global-text-scale-adjust--default-height nil)
     (set-face-attribute 'default nil :height global)))
@@ -2393,6 +2394,7 @@ Optonally, interrupt any running process if INTERRUPT is t."
     (should (eq text-scale-mode-amount 0))))
 
 (ert-deftest test-wal/text-scale-reset--resets-global-adjustment ()
+  (skip-unless (> 28 emacs-major-version))
   (with-temp-buffer
     (setq global-text-scale-adjust--default-height 120)
     (wal/text-scale-reset)
