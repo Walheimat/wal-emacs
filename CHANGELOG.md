@@ -13,16 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rising responsibility. This means `colonel` is now `lieutenant`;
   `lieutenant` is `captain`; `captain` is `major`; `major` is
   `colonel`.
-- `which-key` is now displayed in the minibuffer.
-- Flying `hydra` now binds `undo` and `undo-redo` using keys `d` and
-  `e`.
+- `which-key` is now displayed in the minibuffer as is `hydra`.
 - `hydra`s have been reworked to only be on a single line.
 - `flycheck` error list now uses `wdb/side` to show at the bottom
   instead.
-- `scroll-{up,down}-command` are now bound in `wal/fly` using keys `g`
-  and `a`.
+- `scroll-{up,down}-command` are now bound in `wal/fly` using keys `,`
+  and `.`.
 - `hydra` for `text-resize` now also binds global adjustment; the
   reset also resets global one.
+- Flying `hydra` bindings have changed to move the `avy` ones to the
+  left hand.
 
 ### Fixed
 
