@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Macro `wal/transient-define-prefix-once` to ensure that
+  re-evaluating macro will not re-define the transient (unless
+  variable `wal/transient-may-redefine` is `t`)
+
 ### Changed
 
 - Leaders have switched places again to have rising ranks mirror

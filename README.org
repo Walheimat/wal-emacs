@@ -1744,6 +1744,20 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
   (if (bound-and-true-p wal/booting)
       `(progn ,@body)
     `(message "Ignoring statements in '%s'" ',name)))
+
+(defvar wal/transient-may-redefine nil)
+
+(defmacro wal/transient-define-prefix-once (name arglist &rest args)
+  "Make sure that prefix NAME called with ARGLIST and ARGS is only defined once."
+  (declare (debug (&define name lambda-list
+                           [&optional lambda-doc]
+                           [&rest keywordp sexp]
+                           [&rest vectorp]
+                           [&optional ("interactive" interactive) def-body]))
+           (indent defun)
+           (doc-string 3))
+  (unless (and (fboundp name) (not wal/transient-may-redefine))
+    `(transient-define-prefix ,name ,arglist ,@args)))
 #+END_SRC
 
 ** Setup
@@ -2670,6 +2684,30 @@ Optonally, interrupt any running process if INTERRUPT is t."
   (cl-letf (((symbol-function 'daemonp) #'ignore)
             (wal/use-hyper-prefix t))
     (should (string-equal (wal/prefix-user-key "k") "C-c w k"))))
+
+(ert-deftest test-wal/transient-define-prefix-once ()
+  (match-expansion
+   (wal/transient-define-prefix-once test-prefix ()
+     "This is a world."
+     [("i" "ignore" ignore)])
+   `(transient-define-prefix test-prefix ()
+      "This is a world."
+      [("i" "ignore" ignore)]))
+  (defun test-prefix () nil)
+  (match-expansion
+   (wal/transient-define-prefix-once test-prefix ()
+     "This is a world."
+     [("i" "ignore" ignore)])
+   `nil)
+  (let ((wal/transient-may-redefine t))
+    (match-expansion
+     (wal/transient-define-prefix-once test-prefix ()
+       "This is a world."
+       [("i" "ignore" ignore)])
+     `(transient-define-prefix test-prefix ()
+        "This is a world."
+        [("i" "ignore" ignore)])))
+  (fmakunbound 'test-prefix))
 #+END_SRC
 
 *** Setup
@@ -6369,7 +6407,7 @@ This calls `org-content' interactively."
    #'wal/first-require-ox-md)
 
   (with-no-warnings
-    (transient-define-prefix wal/org-mode-dispatch ()
+    (wal/transient-define-prefix-once wal/org-mode-dispatch ()
       "Access `org-mode' commands."
       [["Commands"
         ("n" "add note" org-add-note)
@@ -6623,7 +6661,7 @@ case."
                                   wal/org-roam-dailies-directory
                                   wal/org-roam-directory))
 
-  (transient-define-prefix wal/org-roam-dispatch ()
+  (wal/transient-define-prefix-once wal/org-roam-dispatch ()
     "Run `org-roam' commands."
     [["Capture"
       ("c" "capture" org-roam-capture)
@@ -6885,7 +6923,7 @@ Spectral inclusion.
 
   :config
   ;; Not using `org-transclusion-map' as it includes `org-mode-map'.
-  (transient-define-prefix wal/org-transclusion ()
+  (wal/transient-define-prefix-once wal/org-transclusion ()
     "Access `org-transclusion' commands."
     [["Transclusion commands"
       ("a" "add" org-transclusion-add)
@@ -7182,7 +7220,7 @@ Uses the same optional SWITCHES."
   ;; We aren't scared of finding alternate files.
   (put 'dired-find-alternate-file 'disabled nil)
 
-  (transient-define-prefix wal/dired-mode-dispatch ()
+  (wal/transient-define-prefix-once wal/dired-mode-dispatch ()
     "Access Dired commands."
     [["Utility"
       ("q" "query replace" dired-do-query-replace-regexp)
@@ -7618,7 +7656,7 @@ Forget remembering =git= commands, use =transient=.
   :commands (wal/magit-dispatch)
 
   :config
-  (transient-define-prefix wal/magit-dispatch ()
+  (wal/transient-define-prefix-once wal/magit-dispatch ()
     "Call `magit' commands in a `magit'-y way."
     [["Core"
       ("m" "status" magit-status)
@@ -7893,7 +7931,7 @@ I want to be ready for =jai=.
   ;; Eliminate conflicts with `delight'.
   (advice-add 'c-update-modeline :override #'ignore)
 
-  (transient-define-prefix wal/c++-mode-dispatch ()
+  (wal/transient-define-prefix-once wal/c++-mode-dispatch ()
     "Access `c++-mode' commands."
     [["Style"
       ("s s" "set" c-set-style)
@@ -7932,7 +7970,7 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
     :messages '("Consider the lobster"))
 
   :config
-  (transient-define-prefix wal/rust-mode-dispatch ()
+  (wal/transient-define-prefix-once wal/rust-mode-dispatch ()
     "Access `rust-mode' commands."
     [["Commands"
       ("c" "compile" rust-compile)
@@ -8013,7 +8051,7 @@ TOML."
   ;; Show inferior shell at the bottom.
   (wdb/side 'inferior-python-mode)
 
-  (transient-define-prefix wal/python-mode-dispatch ()
+  (wal/transient-define-prefix-once wal/python-mode-dispatch ()
     "Access `python-mode' commands."
     [["Inferior shell"
       ("i r" "send region" python-shell-send-region)
@@ -8298,7 +8336,7 @@ Deal with the parens[fn:17].
     (flycheck-mode 1))
 
   :config
-  (transient-define-prefix wal/emacs-lisp-mode-dispatch ()
+  (wal/transient-define-prefix-once wal/emacs-lisp-mode-dispatch ()
     "Access `elisp' commands."
     [["Utility"
       ("p" "check parens" check-parens)
@@ -8327,7 +8365,7 @@ Deal with the parens[fn:17].
 
   :config
   (with-eval-after-load 'slime
-    (transient-define-prefix wal/common-lisp-mode-dispatch ()
+    (wal/transient-define-prefix-once wal/common-lisp-mode-dispatch ()
       "Access `slime' actions."
       [["Slime"
         ("s" "slime" slime-mode)
@@ -8356,7 +8394,7 @@ Get some closure.
 
   :config
   (with-eval-after-load 'cider
-    (transient-define-prefix wal/clojure-mode-dispatch ()
+    (wal/transient-define-prefix-once wal/clojure-mode-dispatch ()
       "Access `clojure-mode' commands."
       [["Cider"
         ("r" "repl" cider-jack-in)
@@ -8464,7 +8502,7 @@ Can we have =deno= instead of =node=?
   (with-eval-after-load 'dap-mode
     (require 'dap-node))
 
-  (transient-define-prefix wal/js-mode-dispatch ()
+  (wal/transient-define-prefix-once wal/js-mode-dispatch ()
     "Access JS commands."
     [["Actions"
       ("c" "context" js-syntactic-context)]])
@@ -8707,7 +8745,7 @@ Sometimes things that don't do things need to look nice.
     :captain t)
 
   :config
-  (transient-define-prefix wal/markdown-mode-dispatch ()
+  (wal/transient-define-prefix-once wal/markdown-mode-dispatch ()
     "Access `markdown-mode' commands."
     [["View"
       ("v" "toggle view" wal/markdown-view)]])
@@ -8804,7 +8842,7 @@ LSP support for Dart.
   ;; Display at the bottom.
   (wdb/side "\\*Flutter")
 
-  (transient-define-prefix wal/dart-mode-dispatch ()
+  (wal/transient-define-prefix-once wal/dart-mode-dispatch ()
     "Access flutter commands."
     [["Hot-reloading"
       ("R" "restart" lsp-dart-dap-flutter-hot-restart)
@@ -8906,7 +8944,7 @@ LSP integration.
      dap-java-run-test-class
      dap-java-run-test-method))
 
-  (transient-define-prefix wal/java-mode-dispatch ()
+  (wal/transient-define-prefix-once wal/java-mode-dispatch ()
     "Access `java-mode' commands."
     [["Debug"
       ("c" "class" dap-java-debug-test-class)
@@ -9023,7 +9061,7 @@ The only way to store strings, JSON.
   (with-eval-after-load 'flycheck
     (jsonian-enable-flycheck))
 
-  (transient-define-prefix wal/jsonian-mode-dispatch ()
+  (wal/transient-define-prefix-once wal/jsonian-mode-dispatch ()
     "Access `jsonian-mode' commands."
     [["Jsonian"
       ("f" "find" jsonian-find)
@@ -9375,7 +9413,7 @@ If KILL-BUFFER is t, kill the file's buffer."
   :config
   (wdb/side flycheck-error-list-buffer)
 
-  (transient-define-prefix wal/flycheck-dispatch ()
+  (wal/transient-define-prefix-once wal/flycheck-dispatch ()
     "Access `flycheck' commands."
     [["Go to"
       ("n" "next error" flycheck-next-error)
@@ -9587,7 +9625,7 @@ minimum prefixes are reduced."
   ;; Don't keep track of multiple projects.
   (advice-add 'lsp :before #'wal/first-prevent-adding-other-projects)
 
-  (transient-define-prefix wal/lsp-dispatch ()
+  (wal/transient-define-prefix-once wal/lsp-dispatch ()
     "Call `lsp-mode' functions."
     [["Format"
       ("f" "buffer" lsp-format-buffer)
@@ -10088,7 +10126,7 @@ Make requests using Org.
    #'wal/pick-windows-being-kept)
 
   :config
-  (transient-define-prefix wal/verb ()
+  (wal/transient-define-prefix-once wal/verb ()
     "Dispatch `verb' commands."
     [["Request"
       ("r" "send" verb-send-request-on-point
@@ -10731,7 +10769,7 @@ name are deleted beforehand."
   (unless (fboundp 'wal/config-dispatch)
     (require 'transient)
     (with-no-warnings
-      (transient-define-prefix wal/config-dispatch ()
+      (wal/transient-define-prefix-once wal/config-dispatch ()
         "Facilitate the usage of or the working on Walheimat's config."
         [["Use"
           ("t" "tangle" wal/tangle-config)
