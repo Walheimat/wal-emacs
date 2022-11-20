@@ -16,9 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Leaders have switched places again to have rising ranks mirror
-  rising responsibility. This means `colonel` is now `lieutenant`;
-  `lieutenant` is `captain`; `captain` is `major`; `major` is
-  `colonel`.
+  rising responsibility. The custom variables hae been replaced by
+  singular variable `wal/key-reach` that holds a list of keys ordered
+  by how reachable they are.
 - `which-key` is now displayed in the minibuffer as is `hydra`.
 - `hydra`s have been reworked to only be on a single line.
 - `flycheck` error list now uses `wdb/side` to show at the bottom

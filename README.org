@@ -586,31 +586,9 @@ I use many[fn:8] custom keybindings.
   :type 'boolean
   :group 'wal-key-bindings)
 
-;;;;;; American ranks:
-
-(defcustom wal/general-key "'"
-  "The primary (or general) leader key."
-  :type 'string
-  :group 'wal-key-bindings)
-
-(defcustom wal/colonel-key ";"
-  "The secondary (or colonel) leader key."
-  :type 'string
-  :group 'wal-key-bindings)
-
-(defcustom wal/major-key "/"
-  "The tertiary (or major) leader key."
-  :type 'string
-  :group 'wal-key-bindings)
-
-(defcustom wal/captain-key "."
-  "The quaternary (or captain) leader key."
-  :type 'string
-  :group 'wal-key-bindings)
-
-(defcustom wal/lieutenant-key ","
-  "The quinary (or lieutenant) leader key."
-  :type 'string
+(defcustom wal/key-reach '(";" "," "." "/" "'")
+  "List of keys ordered by reachability."
+  :type '(list string string string string string)
   :group 'wal-key-bindings)
 #+END_SRC
 
@@ -725,20 +703,24 @@ modifier_map Mod3   { <HYPR> };
 
 ** Leader Keys
 
-The are five leader keys (four of them =general= leaders), each serving
-its unique purpose by prefixing (groups of) actions by common context.
+There are five leader keys (four of them =general= leaders), each
+serving its unique purpose by prefixing (groups of) actions by common
+context or scope.
+
+By default, their scope matches how reachable they are, i.e. if a key
+is easy to press, it has an inferior scope.
 
 Some leader keys have so-called sinks for additional commands.
 
 *** General
 
-Leader key =general= (='= by default) is responsible for Emacs actions
-like loading a theme, finding a library, quitting, as well as opening
-built-in programs like =eshell= and =eww=.
+Leader key =general= is responsible for Emacs actions like loading a
+theme, finding a library, quitting, as well as opening built-in
+programs like =eshell= and =eww=.
 
 *** Colonel
 
-Leader key =colonel= (=;= by default) deals with the global context.
+Leader key =colonel= deals with the global context.
 
 It gives access to minor-mode[fn:11] commands and command maps that are
 relevant globally (or for the current perspective). These are:
@@ -750,7 +732,7 @@ relevant globally (or for the current perspective). These are:
 
 *** Major
 
-Leader key =major= (=/= by default) deals with the (buffer-)local context.
+Leader key =major= deals with the (buffer-)local context.
 
 If the respective buffer-local =minor-mode= is active, the following
 command maps are bound
@@ -778,13 +760,12 @@ It also binds some other commands:
 
 *** Captain
 
-Leader key =captain= (=.= by default) invokes a dispatch if the underlying
-major-mode has it defined.
+Leader key =captain= invokes a dispatch if the underlying major-mode has
+it defined.
 
 *** Lieutenant
 
-Leader key =lieutenant= (=,= by default) provides a layer of useful
-editing actions.
+Leader key =lieutenant= provides a layer of useful editing actions.
 
 They are:
 
@@ -850,15 +831,15 @@ All ARGS are passed to both definers."
     (wal/lieutenant ,@args ,key ,fun)
     (wal/lieutenant-sink ,@args ,key ,mfun)))
 
-(defvar wal/general-leaders '(wal/general wal/colonel wal/major wal/lieutenant))
+(defvar wal/general-leaders '(wal/lieutenant nil wal/major wal/colonel wal/general))
 (defvar wal/leader-with-sink '(wal/general wal/lieutenant))
 
-(defun wal/general-create-definer (leader)
-  "Create a definer for LEADER with a sink."
-  (let* ((key-sym (intern (format "%s-key" leader)))
-         (key (wal/prefix-user-key (symbol-value key-sym)))
-         (sink (intern (format "%s-sink" leader)))
-         (name (substring (symbol-name leader) 4)))
+(defun wal/general-create-definer (leader idx)
+  "Create a definer for LEADER at IDX with a sink."
+  (when-let* ((sym leader)
+              (key (wal/prefix-user-key (nth idx wal/key-reach)))
+              (sink (intern (format "%s-sink" sym)))
+              (name (substring (symbol-name sym) 4)))
 
     ;; Queue up `which-key' replacements.
     (eval-after-load 'which-key `(which-key-add-key-based-replacements ,key ,name))
@@ -874,7 +855,7 @@ All ARGS are passed to both definers."
   :demand t
 
   :config
-  (mapc #'wal/general-create-definer wal/general-leaders))
+  (seq-do-indexed #'wal/general-create-definer wal/general-leaders))
 #+END_SRC
 
 *** hydra
@@ -1045,8 +1026,10 @@ Most bindings are declared in individual packages.
   (global-set-key (kbd "C-;") #'comment-line)
   (global-set-key (kbd "C-c c") #'completion-at-point)
 
+  (defvar wal/captain-key (nth 1 wal/key-reach))
+
   (defun wal/captain? ()
-    "Show message when `wal/captain-key' is not locally bound."
+    "Show message when captain is not locally bound."
     (interactive)
     (let ((key (propertize (wal/prefix-user-key wal/captain-key) 'face 'success))
           (mode (propertize (symbol-name major-mode) 'face 'success)))
