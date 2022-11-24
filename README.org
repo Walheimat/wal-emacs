@@ -563,7 +563,7 @@ I use many[fn:8] custom keybindings.
 (eval-when-compile
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
-(declare-function wal/colonel "wal-key-bindings.el")
+(declare-function wal/major "wal-key-bindings.el")
 (declare-function wal/general "wal-key-bindings.el")
 (declare-function wal/general-sink "wal-key-bindings.el")
 (declare-function wal/major "wal-key-bindings.el")
@@ -586,7 +586,7 @@ I use many[fn:8] custom keybindings.
   :type 'boolean
   :group 'wal-key-bindings)
 
-(defcustom wal/key-reach '(";" "." "/" "'" ",")
+(defcustom wal/key-reach '(";" "." "/" ",")
   "List of keys ordered by reachability."
   :type '(list string string string string string)
   :group 'wal-key-bindings)
@@ -645,7 +645,8 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-n= searches project with =rg=
 + =H-p= switches projects
 + =H-{[,]}= to toggle and cycle pop-ups using =popper=
-+ =H-y= expands snippets (in =yas-minor-mode=).
++ =H-y= expands snippets (in =yas-minor-mode=)
++ =H-'= to move activate movement modal =wal/fly= (a =hydra=).
 
 It's also used for some dispatches:
 
@@ -720,43 +721,37 @@ programs like =eshell= and =eww=.
 
 *** Colonel
 
-Leader key =colonel= deals with the global context.
-
-It gives access to minor-mode[fn:11] commands and command maps that are
-relevant globally (or for the current perspective). These are:
-
-+ =d= for =dashboard=
-+ =i= for =perspective=
-+ =p= for =projectile=
-+ =w= for =winner=.
+Leader key =colonel= is currently not used.
 
 *** Major
 
-Leader key =major= deals with the (buffer-)local context.
+Leader key =major= deals with the (buffer-, project-, perspective-)local
+context.
 
 If the respective buffer-local =minor-mode= is active, the following
 command maps are bound
 
 + =f= for =flycheck=
++ =-= for =consult-minor-mode-menu=
++ =+= for =consult-mode-command=.
++ =@= for =smerge= (if active)
++ =i= for =perspective=
 + =l= for =lsp-mode=
++ =p= for =projectile=
 + =r= for =verb=
 + =s= for =flyspell=
-+ =y= for =yasnippet=.
++ =w= for =winner=.
++ =y= for =yasnippet=
 
-It also binds =hydra= commands:
+It also binds commands/maps in its sink:
 
-+ =@= for =smerge= (if active)
++ =0= to =zone= out
++ =b= for =dashboard=
++ =d= to look up word definitions
 + =o= to resize the window
 + =t= to scale text
 + =v= to scroll the /other/ window.
-
-It also binds some other commands:
-
-+ =0= to =zone= out
-+ =D= to look up word definitions
-+ =-= for =consult-minor-mode-menu=
-+ =+= for =consult-mode-command=.
-+ =w= to toggle =read-only-mode= for buffer.
++ =w= to toggle =read-only-mode= for buffer
 
 *** Captain
 
@@ -831,8 +826,8 @@ All ARGS are passed to both definers."
     (wal/lieutenant ,@args ,key ,fun)
     (wal/lieutenant-sink ,@args ,key ,mfun)))
 
-(defvar wal/general-leaders '(wal/lieutenant nil wal/major wal/colonel wal/general))
-(defvar wal/leader-with-sink '(wal/general wal/lieutenant))
+(defvar wal/general-leaders '(wal/lieutenant nil wal/major wal/general))
+(defvar wal/leader-with-sink '(wal/general wal/lieutenant wal/major))
 
 (defun wal/general-create-definer (leader idx)
   "Create a definer for LEADER at IDX with a sink."
@@ -925,7 +920,7 @@ One hydra is mapped to =colonel=:
   ;; Move similar to `xah-fly-keys'.
   (defhydra wal/fly (:hint nil :foreign-keys warn)
     "
-%s`w/hew Fly: ✜ _i_ _j_ _k_ _l_ %s`w/hs ⇆ _u_ _o_ %s`w/hs ⇄ _h_ _;_ %s`w/hs ↷ _a_ _s_ _d_ _f_ _g_ %s`w/hs ⇅ _,_ _._
+%s`w/hew Fly: ✜ _i_ _j_ _k_ _l_ %s`w/hs ⇆ _u_ _o_ %s`w/hs ⇄ _h_ _;_ %s`w/hs ⇅ _,_ _._
 "
     ("u" backward-word)
     ("i" previous-line)
@@ -939,12 +934,6 @@ One hydra is mapped to =colonel=:
 
     ("," scroll-up-command)
     ("." scroll-down-command)
-
-    ("a" avy-goto-line)
-    ("s" wal/avy-goto-word)
-    ("d" avy-goto-word-0)
-    ("f" avy-goto-char)
-    ("g" avy-goto-end-of-line)
 
     ("q" nil)))
 #+END_SRC
@@ -973,11 +962,11 @@ Most bindings are declared in individual packages.
 #+BEGIN_SRC emacs-lisp
 (wal/on-boot key-bindings
 
-  (wal/major
+  (wal/major-sink
     "t" '(wal/text-scale/body :wk "text-scale")
     "n" '(display-line-numbers-mode :wk "line numbers"))
 
-  (wal/major
+  (wal/major-sink
     :predicate '(not (one-window-p))
     "o" '(wal/resize-window/body :wk "resize-window")
     "v" '(wal/scroll-other-window/body :wk "scroll-other-window"))
@@ -1010,7 +999,7 @@ Most bindings are declared in individual packages.
 
   (wal/lieutenant "i" 'iedit-mode)
 
-  (wal/major "w" 'read-only-mode)
+  (wal/major-sink "!" 'read-only-mode)
 
   ;; Use H-u for C-u.
   (when wal/use-hyper-prefix
@@ -1037,7 +1026,7 @@ Most bindings are declared in individual packages.
 
   (global-set-key (kbd (wal/prefix-user-key wal/captain-key)) #'wal/captain?)
 
-  (global-set-key (kbd (wal/prefix-user-key "l")) #'wal/fly/body)
+  (global-set-key (kbd (wal/prefix-user-key "'")) #'wal/fly/body)
 
   ;; Unbinds `save-buffers-kill-terminal'.
   (global-unset-key (kbd "C-x C-c")))
@@ -1827,7 +1816,7 @@ That bottle is just an array of strings."
 ** Expansion Packs
 
 Some packages are opt-in (will not be ensured) and belong to one or
-several so-called expansion packs[fn:12].
+several so-called expansion packs[fn:11].
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal/expansion-packs nil
@@ -3879,7 +3868,7 @@ be gone.
   (winner-dont-bind-my-keys t)
 
   :general
-  (wal/colonel "o" '(wal/winner/body :wk "winner")))
+  (wal/major "w" '(wal/winner/body :wk "winner")))
 #+END_SRC
 
 *** async
@@ -4033,7 +4022,7 @@ Look up words in a word book.
   (dictionary-server "dict.org")
 
   :general
-  (wal/major "D" '(dictionary-lookup-definition :wk "dict")))
+  (wal/major-sink "d" '(dictionary-lookup-definition :wk "dict")))
 #+END_SRC
 
 ** Additional Info Display
@@ -4276,7 +4265,7 @@ I guess I can't live without this package.
   (vundo---window-max-height 5)
 
   :general
-  (wal/major "/" 'vundo))
+  (wal/major "u" 'vundo))
 #+END_SRC
 
 ** Footer
@@ -4460,7 +4449,7 @@ Let's have a dash of board.
   (dashboard-agenda-release-buffers t)
 
   :general
-  (wal/colonel "d" '(dashboard-refresh-buffer :wk "dashboard")))
+  (wal/major-sink "b" '(dashboard-refresh-buffer :wk "dashboard")))
 #+END_SRC
 
 ** Themes
@@ -4916,7 +4905,7 @@ ARGS is a list containing modes and additional ligatures."
 :UNNUMBERED: t
 :END:
 
-You need to install the icons yourself[fn:13].
+You need to install the icons yourself[fn:12].
 
 #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons
@@ -4930,7 +4919,7 @@ You need to install the icons yourself[fn:13].
 :UNNUMBERED: t
 :END:
 
-Display emojis[fn:14].
+Display emojis[fn:13].
 
 #+BEGIN_SRC emacs-lisp
 (use-package emojify
@@ -4965,7 +4954,7 @@ Screen saver, CPU devourer.
     (zone-when-idle wal/zone-timer))
 
   :general
-  (wal/major "0" 'zone))
+  (wal/major-sink "0" 'zone))
 #+END_SRC
 
 ** Other
@@ -5243,7 +5232,7 @@ Moving around should be fun.
 Who needs a mouse.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/avy-goto-word (&optional line-first)
+(defun wal/avy-goto-word-in-line (&optional line-first)
   "Jump to a word in current line.
 
 If LINE-FIRST is t, move to a line first."
@@ -5302,14 +5291,14 @@ beginning."
 
   :bind
   (:map goto-map
-   ("c" . avy-goto-char)           ; Replaces `goto-char'.
+   ("c" . avy-goto-char)        ; Replaces `goto-char'.
    ("l" . avy-goto-line)
    ("e" . avy-goto-end-of-line)
-   ("w" . wal/avy-goto-word)
-   ("s" . avy-goto-subword-1)
-   ("a" . avy-goto-word-0)
-   ("q" . avy-goto-word-0-above)
-   ("z" . avy-goto-word-0-below))
+   ("w" . avy-goto-word-0)
+   ("k" . wal/avy-goto-word-in-line))
+
+  :wal-bind-keymap
+  ("l" . goto-map)
 
   :general
   ;; Lines.
@@ -5318,8 +5307,7 @@ beginning."
   (wal/lieutenant! "m" 'avy-move-line 'avy-move-region)
   (wal/lieutenant! "w"
     'avy-kill-ring-save-whole-line
-    'avy-kill-ring-save-region)
-  (wal/colonel-sink "h" 'wal/avy-mark-region))
+    'avy-kill-ring-save-region))
 #+END_SRC
 
 *** mwim
@@ -5933,7 +5921,7 @@ Keep order.
 (declare-function projectile-project-p "ext:projectile.el")
 (declare-function projectile-read-command "ext:projectile.el")
 (declare-function wal/append "wal-func.el")
-(declare-function wal/colonel "wal-key-bindings.el")
+(declare-function wal/major "wal-key-bindings.el")
 (declare-function wal/univ-p "wal-func.el")
 
 (defvar consult-buffer-filter)
@@ -6136,7 +6124,7 @@ No filter is applied if called with `universal-argument'."
      :items #'wal/consult-persp-buffer--query))
 
   ;; Register command map.
-  (wal/colonel "i" '(:keymap perspective-map :wk "perspective"))
+  (wal/major "i" '(:keymap perspective-map :wk "perspective"))
 
   ;; Override the override to `perspective-map' in older Emacs versions.
   (when (< emacs-major-version 28)
@@ -6213,7 +6201,7 @@ More robust project management.
               '(".min.js" ".js.map"))
 
   ;; Register command map.
-  (wal/colonel "p" '(:keymap projectile-command-map :wk "projectile"))
+  (wal/major "p" '(:keymap projectile-command-map :wk "projectile"))
 
   (projectile-mode 1)
 
@@ -6251,7 +6239,7 @@ Built-in but entirely dependent on either =git= or =hg=.
   :demand t
 
   :config
-  (wal/colonel "p" '(:keymap project-prefix-map :wk "project"))
+  (wal/major "p" '(:keymap project-prefix-map :wk "project"))
 
   :custom
   (project-switch-commands 'project-find-dir)
@@ -7384,7 +7372,7 @@ I am convinced that we are in a terminal process.
 :UNNUMBERED: t
 :END:
 
-=vterm= is better[fn:15] than included shells.
+=vterm= is better[fn:14] than included shells.
 
 Some common shell commands require an additional =C-c=:
 
@@ -7614,7 +7602,7 @@ I'm becoming an old git.
 (eval-when-compile
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
-(declare-function wal/colonel "wal-key-bindings.el")
+(declare-function wal/major "wal-key-bindings.el")
 (declare-function wal/message-in-a-bottle "wal-lang.el")
 #+END_SRC
 
@@ -8184,7 +8172,7 @@ It takes more than one environment to make sense of Python code.
 :UNNUMBERED: t
 :END:
 
-Takes care[fn:16] of all your virtual environment needs.
+Takes care[fn:15] of all your virtual environment needs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package pet
@@ -8255,7 +8243,7 @@ The philosopher's choice.
 :UNNUMBERED: t
 :END:
 
-Deal with the parens[fn:17].
+Deal with the parens[fn:16].
 
 #+BEGIN_SRC emacs-lisp
 (defvar-local wal/lispy-was-disabled-by-mc nil)
@@ -9525,7 +9513,7 @@ Language servers are awesome. Thanks, Microsoft.
 (declare-function dap-register-debug-template "ext:dap-mode.el")
 (declare-function lsp-enable-which-key-integration "ext:lsp-mode.el")
 (declare-function wal/append "wal-func.el")
-(declare-function wal/colonel "wal-key-bindings.el")
+(declare-function wal/major "wal-key-bindings.el")
 (declare-function wdb/side "wal-func.el")
 
 (defvar dap-debug-template-configurations)
@@ -9554,7 +9542,7 @@ smaller."
 :END:
 
 =lsp-mode= is the fancy version. You'll have to install some language
-servers yourself[fn:18].
+servers yourself[fn:17].
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/slow-lsp-p (mode)
@@ -10950,24 +10938,24 @@ and other bindings.
 [fn:10] Be careful! If you make a mistake you could render your
 keyboard unusable.
 
-[fn:11] Provided the modes are active.
+[fn:11] Alternate spelling is "expansion pak".
 
-[fn:12] Alternate spelling is "expansion pak".
-
-[fn:13] The =all-the-icons= icons need to be downloaded manually by
+[fn:12] The =all-the-icons= icons need to be downloaded manually by
 running =M-x all-the-icons-install-fonts= and selecting =yes=.
 
 If the installation process should fail for any reason, close Emacs
 and re-run it.
 
-[fn:14] You might have to call =emojify-download-emoji= to download a
+[fn:13] You might have to call =emojify-download-emoji= to download a
 set that supports your emojis.
 
-[fn:15] If you're on an older distro your =libvterm= package might be
+[fn:14] If you're on an older distro your =libvterm= package might be
 too old.
 
-[fn:16] Currently requires [[https://daseldocs.tomwright.me/installation#manual ][dasel]].
+[fn:15] Currently requires [[https://daseldocs.tomwright.me/installation#manual ][dasel]].
 
-[fn:17] Binding reference [[http://oremacs.com/lispy/][here]].
+[fn:16] Binding reference [[http://oremacs.com/lispy/][here]].
 
-[fn:18] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+[fn:17] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+
+[fn:18] Provided the modes are active.
