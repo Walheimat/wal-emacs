@@ -16,19 +16,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Leaders have switched places again to have rising ranks mirror
-  rising responsibility. The custom variables hae been replaced by
+  rising responsibility. The custom variables have been replaced by
   singular variable `wal/key-reach` that holds a list of keys ordered
   by how reachable they are.
-- `which-key` is now displayed in the minibuffer as is `hydra`.
+- Leader `colonel` is currently out of service again; its bindings
+  have been folded into `major`; this required some bindings to change
+  (`vundo` now uses `u`, `winner` uses `w`).
+- Leader `major` now has a sink again.
+- `hydra` is now displayed in the minibuffer.
 - `hydra`s have been reworked to only be on a single line.
 - `flycheck` error list now uses `wdb/side` to show at the bottom
   instead.
 - `scroll-{up,down}-command` are now bound in `wal/fly` using keys `,`
   and `.`.
+- `wal/fly` no longer binds `avy` commands; instead the `goto-map` is
+  now again bound to user-prefixed `l`; the command is now bound to
+  user-prefixed `'`.
 - `hydra` for `text-resize` now also binds global adjustment; the
   reset also resets global one.
-- Flying `hydra` bindings have changed to move the `avy` ones to the
-  left hand.
 
 ### Fixed
 
