@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Default value for `wal/idle-delay` was incresed to **1.6**.
 - Customized leading char face for `ace-window` to be bigger and
   inherit `mode-line-emphasis`.
+- Ligatures are now declared in individual packages.
 
 ## [v1.8.1]
 

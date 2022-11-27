@@ -3651,12 +3651,6 @@ Automatic quick expansion.
 (use-package abbrev
   :ensure nil
 
-  :hook
-  ((elixir-mode) . abbrev-mode)
-
-  :config
-  (define-abbrev-table 'elixir-mode-abbrev-table '(("p" "|>")))
-
   :custom
   (save-abbrevs t)
 
@@ -4823,27 +4817,7 @@ ARGS is a list containing modes and additional ligatures."
   ;; Common ligatures.
   (advice-add
    'ligature-set-ligatures :around
-   #'wal/with-common-ligatures)
-
-  (ligature-set-ligatures 'clojure-mode '(";;" "->" "->>"))
-  (ligature-set-ligatures 'c++-mode '("::" "->"))
-  (ligature-set-ligatures 'dart-mode '("=>" "///" ".?" "??"
-                                       "??=" ".."))
-  (ligature-set-ligatures 'elixir-mode '("|>" "->" "<-" "=>"
-                                         "::" "<>" "#{" "\\\\"
-                                         "===" "!==" ".."))
-  (ligature-set-ligatures 'html-mode '("<!--" "-->" "</" "/>"))
-  (ligature-set-ligatures 'nxml-mode '("<!--" "-->" "</" "/>"))
-  (ligature-set-ligatures 'java-mode '("::" "->"))
-  (ligature-set-ligatures 'js-mode '("=>" "!==" "===" "!!"))
-  (ligature-set-ligatures 'lisp-data-mode '(";;"))
-  (ligature-set-ligatures 'php-mode '("::" "=>" "->" "??"
-                                      "__" "<>" "!==" "<=>"
-                                      "==="))
-  (ligature-set-ligatures 'prolog-mode '(":-"))
-  (ligature-set-ligatures 'python-mode '("->" "__"))
-  (ligature-set-ligatures 'rust-mode '("///" "->" "=>" "::"
-                                       ".." "#[")))
+   #'wal/with-common-ligatures))
 #+END_SRC
 
 ** Icons
@@ -7761,11 +7735,20 @@ Bitches brew.
 
   :ensure nil
 
+  :hook (elixir-mode . abbrev-mode)
+
   :init
   (wal/hook elixir-mode
     "Hook into `elixir-mode'."
     :lsp t
-    :messages '("Mixin' potions" "A hex on you")))
+    :messages '("Mixin' potions" "A hex on you"))
+
+  :config
+  (define-abbrev-table 'elixir-mode-abbrev-table '(("p" "|>")))
+
+  (ligature-set-ligatures 'elixir-mode '("|>" "->" "<-" "=>"
+                                         "::" "<>" "#{" "\\\\"
+                                         "===" "!==" "..")))
 #+END_SRC
 
 ** C/C++
@@ -7799,7 +7782,9 @@ I want to be ready for =jai=.
     "Access `c++-mode' commands."
     [["Style"
       ("s s" "set" c-set-style)
-      ("s g" "guess" c-guess-install)]]))
+      ("s g" "guess" c-guess-install)]])
+
+  (ligature-set-ligatures 'c++-mode '("::" "->")))
 #+END_SRC
 
 ** Rust
@@ -7842,7 +7827,10 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
      ["Test"
       ("t a" "test all" rust-test)
       ("t c" "current" cargo-process-current-test)
-      ("t f" "file" cargo-process-current-file-tests)]]))
+      ("t f" "file" cargo-process-current-file-tests)]])
+
+  (ligature-set-ligatures 'rust-mode '("///" "->" "=>" "::"
+                                       ".." "#[")))
 #+END_SRC
 
 *** cargo
@@ -7923,6 +7911,8 @@ TOML."
       ("i f" "send file" python-shell-send-file)]
      ["Commands"
       ("r" "run shell" run-python)]])
+
+  (ligature-set-ligatures 'python-mode '("->" "__"))
 
   :custom
   (python-indent-guess-indent-offset nil))
@@ -8233,7 +8223,9 @@ Deal with the parens[fn:16].
       "Access `slime' actions."
       [["Slime"
         ("s" "slime" slime-mode)
-        ("r" "open REPL" slime)]])))
+        ("r" "open REPL" slime)]]))
+
+  (ligature-set-ligatures 'lisp-data-mode '(";;")))
 #+END_SRC
 
 *** clojure-mode
@@ -8262,7 +8254,9 @@ Get some closure.
       "Access `clojure-mode' commands."
       [["Cider"
         ("r" "repl" cider-jack-in)
-        ("n" "set namespace" cider-repl-set-ns)]])))
+        ("n" "set namespace" cider-repl-set-ns)]]))
+
+  (ligature-set-ligatures 'clojure-mode '(";;" "->" "->>")))
 #+end_src
 
 *** cider
@@ -8370,6 +8364,8 @@ Can we have =deno= instead of =node=?
     "Access JS commands."
     [["Actions"
       ("c" "context" js-syntactic-context)]])
+
+  (ligature-set-ligatures 'js-mode '("=>" "!==" "===" "!!"))
 
   :bind
   (:map js-mode-map
@@ -8646,7 +8642,11 @@ Yes, you need to install *Android Studio* for some reason.
     "Hook into `dart-mode'."
     :lsp t
     :captain t
-    :messages '("Bull's eye!")))
+    :messages '("Bull's eye!"))
+
+  :config
+  (ligature-set-ligatures 'dart-mode '("=>" "///" ".?" "??"
+                                       "??=" "..")))
 #+END_SRC
 
 *** lsp-dart
@@ -8751,7 +8751,10 @@ It's a =JavaEmacsPackageConfigurationSectionFactory=, mate.
     :lsp t
     :lsp-ignores '("[/\\\\]\\.gradle\\'")
     :captain t
-    :messages '("Mmmh ... maven")))
+    :messages '("Mmmh ... maven"))
+
+  :config
+  (ligature-set-ligatures 'java-mode '("::" "->")))
 #+END_SRC
 
 *** lsp-java
@@ -8853,7 +8856,13 @@ The elephant in the room.
 
   :config
   (require 'dap-php) ; Run `dap-php-setup'.
-  (wdb/side "\\*Php SOE"))
+
+  (wdb/side "\\*Php SOE")
+
+
+  (ligature-set-ligatures 'php-mode '("::" "=>" "->" "??"
+                                      "__" "<>" "!==" "<=>"
+                                      "===")))
 #+END_SRC
 
 *** web-mode
@@ -8947,6 +8956,9 @@ The only way to store strings, JSON.
     :lsp t
     :messages '("Hodge-podge mark-up language"))
 
+  :config
+  (ligature-set-ligatures 'html-mode '("<!--" "-->" "</" "/>"))
+
   :bind
   (:map html-mode-map
    ("M-o" . nil)))
@@ -8966,7 +8978,10 @@ The only way to store strings, JSON.
     "Hook into `nxml-mode'."
     :lsp t
     :messages '("Extreme mark-up language")
-    :prog-like t))
+    :prog-like t)
+
+  :config
+  (ligature-set-ligatures 'nxml-mode '("<!--" "-->" "</" "/>")))
 #+end_src
 
 *** yaml-mode
@@ -9148,6 +9163,21 @@ This mode is currently included in the main repo.
    :url "https://raw.githubusercontent.com/Walheimat/jakt/main/editors/emacs/jakt-mode.el")
 
   :mode "\\.jakt\\'")
+#+END_SRC
+
+** Prolog
+
+*** prolog-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package prolog
+  :ensure nil
+
+  :config
+  (ligature-set-ligatures 'prolog-mode '(":-")))
 #+END_SRC
 
 ** Footer
