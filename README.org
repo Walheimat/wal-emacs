@@ -5981,6 +5981,7 @@ No filter is applied if called with `universal-argument'."
   :hook
   ((kill-emacs . persp-state-save)
    ((persp-created
+     persp-activated
      persp-killed
      persp-switch
      persp-after-rename) . wal/persp-maybe-shorten))
@@ -8732,7 +8733,7 @@ It's a =JavaEmacsPackageConfigurationSectionFactory=, mate.
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack java
   "Java LSP package."
-  :packages (lsp-java))
+  :packages (lsp-java lsp-sonarlint))
 #+END_SRC
 
 *** java-mode
@@ -8825,6 +8826,29 @@ LSP integration.
   (lsp-java-references-code-lens-enabled t)
   (lsp-java-implementations-code-lens-enabled t)
   (lsp-java-signature-help-enabled nil))
+#+end_src
+
+*** lsp-sonarlint
+
+#+begin_src emacs-lisp
+(use-package lsp-sonarlint
+  :ensure nil
+
+  :wal-ways nil
+
+  :demand
+  :after cc-mode)
+
+(use-package lsp-sonarlint-java
+  :ensure nil
+
+  :wal-ways nil
+
+  :demand
+  :after lsp-sonarlint
+
+  :custom
+  (lsp-sonarlint-java-enabled t))
 #+end_src
 
 ** PHP

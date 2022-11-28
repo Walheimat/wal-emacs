@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Package `lsp-sonarlint` as a Java expansion pack.
+
 ### Changed
 
 - Default value for `wal/idle-delay` was incresed to **1.6**.
