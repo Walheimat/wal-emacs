@@ -812,10 +812,26 @@ All ARGS are passed to both definers."
 (defvar wal/general-leaders '(wal/lieutenant nil wal/major wal/general))
 (defvar wal/leader-with-sink '(wal/general wal/lieutenant wal/major))
 
-(defun wal/general-create-definer (leader idx)
-  "Create a definer for LEADER at IDX with a sink."
+(defun wal/key-by-leader (leader)
+  "Get the key for LEADER."
+  (nth (seq-position wal/general-leaders leader) wal/key-reach))
+
+(defun wal/key-combo-for-leader (leader &optional key in-sink)
+  "Get the key combination for LEADER.
+
+ If KEY is non-nil, append it. If IN-SINK is non-nil, infix leader key."
+  (let* ((leader-key (wal/key-by-leader leader))
+         (prefixed (wal/prefix-user-key leader-key)))
+    (if key
+        (if in-sink
+            (concat prefixed " " leader-key " " key)
+          (concat prefixed " " key))
+      prefixed)))
+
+(defun wal/general-create-definer (leader)
+  "Create a definer for LEADER with a sink."
   (when-let* ((sym leader)
-              (key (wal/prefix-user-key (nth idx wal/key-reach)))
+              (key (wal/key-combo-for-leader leader))
               (sink (intern (format "%s-sink" sym)))
               (name (substring (symbol-name sym) 4)))
 
@@ -833,7 +849,7 @@ All ARGS are passed to both definers."
   :demand t
 
   :config
-  (seq-do-indexed #'wal/general-create-definer wal/general-leaders))
+  (seq-do #'wal/general-create-definer wal/general-leaders))
 #+END_SRC
 
 *** hydra
