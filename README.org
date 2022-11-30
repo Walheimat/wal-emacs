@@ -586,22 +586,21 @@ There are some non-standard control sequences. Anywhere:
   + =C-/= to move it downward
 + =C-?= redoes (as =C-/= undoes).
 
-User-reserved combinations are used for certain commands, command maps
-and dispatches:
+User-reserved combinations are used for (mostly built-in) commands
+and command maps:
 
 + =C-c a= for =org-agenda=
 + =C-c b= for a heavy =pulse=
 + =C-c c= does a =completion-at-point=
-+ =C-c d= for =docker=
-+ =C-c f= for =flycheck=
++ =C-c d= opens the =dashboard=
 + =C-c g= for =smerge=
++ =C-c i= to =org-clock-in= with =consult=
 + =C-c k= for =kmacro=
++ =C-c l= to =locate= with =consult=
 + =C-c m= for =bookmark=
-+ =C-c p= for =mu4e=
 + =C-c q= to do a =quick-calc= (inserted if called with =C-u=)
 + =C-c r= for =register=
-+ =C-c s= to search with =consult-line=
-+ =C-c t= for =vterm=.
++ =C-c s= to search with =consult=.
 
 When editing this config:
 
@@ -617,24 +616,21 @@ There are a few non-standard meta sequences.
 
 Most hyper[fn:9] bindings are quick-access actions:
 
-+ =H-8= calls =kubernetes-overview=
 + =H-h= finds project file
 + =H-i= switches =perspective=
 + =H-j= switches buffer using =consult=
 + =H-k= acts on the current point with =embark= (immediately if called
   with =C-u=)
++ =H-m= for =magit-status= (shows full status if called with =C-u=)
 + =H-<mouse3>= adds another =multiple-cursor= at point
-+ =H-n= searches project with =rg=
++ =H-n= searches project with =rg= (=C-u= shows full menu)
 + =H-p= switches projects
++ =H-'= to move activate movement modal =wal/fly= (a =hydra=).
 + =H-{[,]}= to toggle and cycle pop-ups using =popper=
 + =H-y= expands snippets (in =yas-minor-mode=)
-+ =H-'= to move activate movement modal =wal/fly= (a =hydra=).
 
 It's also used for some dispatches:
 
-+ =H-l= for movements, using =mwim= and =avy=
-+ =H-m= for =magit=
-+ =H-n= for =rg=
 + =H-o= for =ace-window=, and if called with =C-u=
 + =H-<SPC>= for =org-roam=.
 
@@ -713,6 +709,8 @@ context.
 If the respective buffer-local =minor-mode= is active, the following
 command maps are bound
 
++ =b= for =dap-mode=
++ =d= for =docker=
 + =f= for =flycheck=
 + =-= for =consult-minor-mode-menu=
 + =+= for =consult-mode-command=.
@@ -722,14 +720,16 @@ command maps are bound
 + =p= for =projectile=
 + =r= for =verb=
 + =s= for =flyspell=
++ =t= for =vterm=
 + =u= for =vundo=
 + =w= for =winner=
-+ =y= for =yasnippet=.
++ =y= for =yasnippet=
++ =@= for =mu4e=
++ =8= for =kubernetes=.
 
 It also binds commands/maps in its sink:
 
 + =0= to =zone= out
-+ =b= for =dashboard=
 + =d= to look up word definitions
 + =o= to resize the window
 + =t= to scale text
@@ -4406,8 +4406,8 @@ Let's have a dash of board.
   (dashboard-agenda-time-string-format "%d/%m/%y")
   (dashboard-agenda-release-buffers t)
 
-  :general
-  (wal/major-sink "b" '(dashboard-refresh-buffer :wk "dashboard")))
+  :bind
+  (("C-c d" . dashboard-refresh-buffer)))
 #+END_SRC
 
 ** Themes
@@ -5307,11 +5307,16 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 
 #+BEGIN_SRC emacs-lisp
 (use-package rg
+  :commands (wal/univ-rg-project)
+
+  :init
+  (wal/univ rg-project rg-menu)
+
   :config
   (wdb/pop-up "\\*rg\\*\\'")
 
   :wal-bind
-  ("n" . rg-menu))
+  ("n" . wal/univ-rg-project))
 #+END_SRC
 
 *** dumb-jump
@@ -5766,9 +5771,6 @@ not pollute the current one."
   (with-eval-after-load 'lsp-mode
     (transient-append-suffix 'wal/lsp-dispatch '(0 3 1)
       '("s" "symbol" consult-lsp-file-symbols)))
-  (with-eval-after-load 'flycheck
-    (transient-append-suffix 'wal/flycheck-dispatch '(0 0 1)
-      '("u" "consult" consult-flycheck)))
 
   :bind
   (("C-c s" . wal/consult-line)
@@ -5786,7 +5788,9 @@ not pollute the current one."
    :map ctl-x-r-map
    ("u" . consult-register)
    ("S" . consult-register-store)
-   ("L" . consult-register-load))
+   ("L" . consult-register-load)
+   :map flycheck-command-map
+   ("u" . consult-flycheck))
 
   :wal-bind
   ("j" . consult-buffer)
@@ -7356,8 +7360,8 @@ FORCE-NEW/`universal-argument')."
   (vterm-buffer-name-string (concat wal/vterm-prefix ": %s"))
   (vterm-max-scrollback 10000)
 
-  :bind
-  ("C-c t" . wal/vterm)
+  :general
+  (wal/major "t" '(wal/vterm :wk "vterm"))
 
   :delight
   (vterm-copy-mode " vcp"))
@@ -7522,7 +7526,10 @@ Forget remembering =git= commands, use =transient=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
-  :commands (wal/magit-dispatch)
+  :commands (wal/magit-dispatch wal/univ-magit-status)
+
+  :init
+  (wal/univ magit-status wal/magit-dispatch)
 
   :config
   (wal/transient-define-prefix-once wal/magit-dispatch ()
@@ -7542,7 +7549,7 @@ Forget remembering =git= commands, use =transient=.
       ("c" "clone" magit-clone)]])
 
   :wal-bind
-  ("m" . wal/magit-dispatch)
+  ("m" . wal/univ-magit-status)
 
   :custom
   (magit-blame-mode-lighter " mbl")
@@ -9326,14 +9333,6 @@ If KILL-BUFFER is t, kill the file's buffer."
   :config
   (wdb/side flycheck-error-list-buffer)
 
-  (wal/transient-define-prefix-once wal/flycheck-dispatch ()
-    "Access `flycheck' commands."
-    [["Go to"
-      ("n" "next error" flycheck-next-error)
-      ("p" "previous error" flycheck-previous-error)]
-     ["Show"
-      ("l" "list" flycheck-list-errors)]])
-
   ;; TEMP: https://github.com/flycheck/flycheck/pull/1944
   (flycheck-define-checker wal/scss-stylelint
     "Same as default but not passing `--syntax' flag."
@@ -9346,18 +9345,10 @@ If KILL-BUFFER is t, kill the file's buffer."
     :predicate flycheck-buffer-nonempty-p
     :modes (scss-mode))
 
-  (with-eval-after-load 'which-key
-    (which-key-add-key-based-replacements "C-c f" "flycheck"))
+  (wal/major "f" '(:keymap flycheck-command-map :wk "flycheck"))
 
   :custom
-  (flycheck-mode-line-prefix "fly")
-
-  :bind-keymap
-  (("C-c f" . flycheck-command-map))
-
-  :general
-  (wal/major :keymaps 'flycheck-mode-map
-    "f" '(wal/flycheck-dispatch :wk "flycheck")))
+  (flycheck-mode-line-prefix "fly"))
 #+END_SRC
 
 *** flyspell
@@ -9521,7 +9512,6 @@ minimum prefixes are reduced."
   :config
   ;; Integrate with other packages.
   (require 'avy nil t)
-  (lsp-enable-which-key-integration t)
 
   ;; Additional ignores.
   (wal/append
@@ -9556,8 +9546,10 @@ minimum prefixes are reduced."
     (transient-append-suffix 'wal/js-mode-dispatch '(0 0 -1)
       '("r" "rename file" lsp-javascript-rename-file)))
 
-  (with-eval-after-load 'which-key
-    (which-key-add-key-based-replacements "C-c l" "lsp"))
+  ;; Command map.
+  (setq lsp-keymap-prefix (wal/key-combo-for-leader 'wal/major "l" t))
+  (lsp-enable-which-key-integration t)
+  (wal/major-sink "l" '(:keymap lsp-command-map :wk "LSP"))
 
   :custom
   ;; Simplify visuals.
@@ -9570,7 +9562,6 @@ minimum prefixes are reduced."
   (lsp-completion-provider :none)
 
   (lsp-keep-workspace-alive nil)
-  (lsp-keymap-prefix "C-c l")
 
   ;; Individual severs.
   (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
@@ -9579,9 +9570,6 @@ minimum prefixes are reduced."
   (lsp-xml-format-split-attributes t)
   (lsp-xml-format-space-before-empty-close-tag nil)
   (lsp-xml-format-split-attributes-indent-size 1)
-
-  :bind-keymap
-  (("C-c l" . lsp-command-map))
 
   :general
   (wal/major :keymaps 'lsp-mode-map "l" '(wal/lsp-dispatch :wk "lsp"))
@@ -9659,7 +9647,7 @@ Debugging using VSCode's DAP (in =lsp-mode=)
   (dap-python-debugger 'debugpy)
 
   :general
-  (wal/major :keymaps 'lsp-mode-map "d" '(wal/dap-hydra/body :wk "debug"))
+  (wal/major :keymaps 'lsp-mode-map "b" '(wal/dap-hydra/body :wk "debug"))
 
   :delight " dap")
 #+END_SRC
@@ -9903,8 +9891,8 @@ What goes =docker-compose= up, goes =docker-compose= down.
   (docker-volume-default-sort-key '("Name"))
   (docker-show-status nil)
 
-  :bind
-  (("C-c d" . docker)))
+  :general
+  (wal/major "d" 'docker))
 #+END_SRC
 
 *** dockerfile-mode
@@ -9955,8 +9943,8 @@ Who doesn't like pods and stuff?
   (kubernetes-default-overview-view 'deployments)
   (kubernetes-json-mode (if (featurep 'jsonian-mode) 'jsonian-mode 'js-mode))
 
-  :wal-bind
-  ("8" . kubernetes-overview))
+  :general
+  (wal/major "8" '(kubernetes-overview :wk "kubernetes")))
 #+END_SRC
 
 ** Jenkins
@@ -10111,8 +10099,8 @@ You either need to install =maildir-utils= or build from [[https://github.com/dj
   (mu4e-compose-dont-reply-to-self t)
   (mu4e-get-mail-command "offlineimap") ; This one works nicely.
 
-  :bind
-  ("C-c p" . mu4e))
+  :general
+  (wal/major "@" 'mu4e))
 #+END_SRC
 
 *** smtpmail
