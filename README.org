@@ -572,6 +572,11 @@ I use many[fn:8] custom keybindings.
   "List of keys ordered by reachability."
   :type '(list string string string string string)
   :group 'wal-key-bindings)
+
+(defcustom wal/dwim-key "M-."
+  "Key sequence used to do what I mean."
+  :type 'key-sequence
+  :group 'wal-key-bindings)
 #+END_SRC
 
 ** Prefix Keys
@@ -939,7 +944,10 @@ above).
 (use-package transient
   :custom
   (transient-hide-during-minibuffer-read t)
-  (transient-show-popup wal/idle-delay))
+  (transient-show-popup wal/idle-delay)
+
+  :config
+  (bind-key wal/dwim-key 'transient-show 'transient-map))
 #+END_SRC
 
 ** Additional (Un-)Bindings
@@ -5415,12 +5423,11 @@ Alternative.
 (use-package corfu-quick
   :ensure nil
 
+  :demand
   :after corfu
 
-  :bind
-  (:map corfu-map
-   ("M-q" . corfu-quick-complete)
-   ("C-q" . corfu-quick-insert)))
+  :config
+  (bind-key wal/dwim-key 'corfu-quick-complete 'corfu-map))
 #+END_SRC
 
 *** corfu-history
@@ -5750,12 +5757,12 @@ not pollute the current one."
    consult--source-recent-file
    consult--source-project-recent-file
    consult--source-bookmark
-   :preview-key (kbd "M-,")
+   :preview-key (kbd wal/dwim-key)
    consult--source-project-recent-file
    :narrow ?r
    wal/consult-clock-in
    :prompt "Clock in: "
-   :preview-key (kbd "M-."))
+   :preview-key (kbd wal/dwim-key))
 
 
   ;; Be sure to set the active them after switching.
