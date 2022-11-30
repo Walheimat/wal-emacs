@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Package `lsp-sonarlint` as a Java expansion pack.
+- Package `lsp-sonarlint` as an LSP expansion pack.
 
 ### Changed
 
@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Customized leading char face for `ace-window` to be bigger and
   inherit `mode-line-emphasis`.
 - Ligatures are now declared in individual packages.
+- External package no longer use `C-c` prefix. Exceptions are
+  functions using `consult` wrappers. They were mostly moved to
+  `major`.
 
 ## [v1.8.1]
 
