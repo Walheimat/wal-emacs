@@ -52,7 +52,9 @@ Returns the path to the directory or nil (if created)."
   (interactive)
   (require 'org)
   (require 'ob-tangle)
-  (org-babel-tangle-file (expand-file-name "README.org" wal/emacs-config-default-path)))
+  (defvar org-confirm-babel-evaluate)
+  (let ((org-confirm-babel-evaluate nil))
+    (org-babel-tangle-file (expand-file-name "README.org" wal/emacs-config-default-path))))
 
 (defun wal/bootstrap-config (source-dir &optional no-load)
   "Bootstrap the configuration in SOURCE-DIR.
