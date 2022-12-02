@@ -5386,6 +5386,7 @@ Complete commands and code.
 
 (defvar savehist-additional-variables)
 (defvar wal/active-theme)
+(defvar wal/dwim-key)
 #+END_SRC
 
 ** Inline Completion
@@ -9235,6 +9236,11 @@ Please let me know when I screwed up. I promise I will learn.
 
 (eval-when-compile
   (require 'flycheck))
+
+(declare-function wdb/side "wal-func.el")
+(declare-function wal/major "wal-key-bindings.el")
+(declare-function flycheck-parse-stylelint "ext:flycheck.el")
+(declare-function flycheck-buffer-nonempty-p "ext:flycheck.el")
 #+END_SRC
 
 ** Packages
@@ -9418,12 +9424,6 @@ Find errors by severity.
 
 Language servers are awesome. Thanks, Microsoft.
 
-#+begin_src emacs-lisp
-(wal/define-expansion-pack lsp
-  "Docker and Kubernetes."
-  :extras (lsp-sonarlint))
-#+end_src
-
 ** Header
 :PROPERTIES:
 :VISIBILITY: folded
@@ -9463,6 +9463,12 @@ smaller."
 #+END_SRC
 
 ** Packages
+
+#+begin_src emacs-lisp
+(wal/define-expansion-pack lsp
+  "Docker and Kubernetes."
+  :extras (lsp-sonarlint))
+#+end_src
 
 *** lsp-mode
 :PROPERTIES:
@@ -10285,6 +10291,9 @@ Display code statistics.
 ;; Require all sub-packages.
 
 ;;; Code:
+
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
 (declare-function posframe-delete "ext:posframe.el")
 (declare-function wal/async-process "wal-func.el")
