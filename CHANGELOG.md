@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - External package no longer use `C-c` prefix. Exceptions are
   functions using `consult` wrappers. They were mostly moved to
   `major`.
+- Leader key `colonel` is now responsible for config-related actions.
+- Map `wal/fly` is now mapped to user-prefixed `f`.
 
 ## [v1.8.1]
 

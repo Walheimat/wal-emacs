@@ -568,7 +568,7 @@ I use many[fn:8] custom keybindings.
   :type 'boolean
   :group 'wal-key-bindings)
 
-(defcustom wal/key-reach '(";" "." "/" ",")
+(defcustom wal/key-reach '(";" "." "/" "'" ",")
   "List of keys ordered by reachability."
   :type '(list string string string string string)
   :group 'wal-key-bindings)
@@ -630,7 +630,6 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-n= searches project with =rg= (=C-u= shows full menu)
 + =H-p= switches projects
-+ =H-'= to move activate movement modal =wal/fly= (a =hydra=).
 + =H-{[,]}= to toggle and cycle pop-ups using =popper=
 + =H-y= expands snippets (in =yas-minor-mode=)
 
@@ -704,7 +703,7 @@ programs like =eshell= and =eww=.
 
 *** Colonel
 
-Leader key =colonel= is currently not used.
+Leader key =colonel= is responsible for this configuration.
 
 *** Major
 
@@ -814,12 +813,12 @@ All ARGS are passed to both definers."
     (wal/lieutenant ,@args ,key ,fun)
     (wal/lieutenant-sink ,@args ,key ,mfun)))
 
-(defvar wal/general-leaders '(wal/lieutenant nil wal/major wal/general))
-(defvar wal/leader-with-sink '(wal/general wal/lieutenant wal/major))
+(defvar wal/leaders '(wal/lieutenant wal/captain wal/major wal/colonel wal/general))
+(defvar wal/general-leaders '(wal/lieutenant wal/major wal/general))
 
 (defun wal/key-by-leader (leader)
   "Get the key for LEADER."
-  (nth (seq-position wal/general-leaders leader) wal/key-reach))
+  (nth (seq-position wal/leaders leader) wal/key-reach))
 
 (defun wal/key-combo-for-leader (leader &optional key in-sink)
   "Get the key combination for LEADER.
@@ -835,10 +834,9 @@ All ARGS are passed to both definers."
 
 (defun wal/general-create-definer (leader)
   "Create a definer for LEADER with a sink."
-  (when-let* ((sym leader)
-              (key (wal/key-combo-for-leader leader))
-              (sink (intern (format "%s-sink" sym)))
-              (name (substring (symbol-name sym) 4)))
+  (let* ((key (wal/key-combo-for-leader leader))
+         (sink (intern (format "%s-sink" leader)))
+         (name (substring (symbol-name leader) 4)))
 
     ;; Queue up `which-key' replacements.
     (eval-after-load 'which-key `(which-key-add-key-based-replacements ,key ,name))
@@ -846,9 +844,8 @@ All ARGS are passed to both definers."
     ;; Create the normal definer.
     (eval `(general-create-definer ,leader :prefix ,key))
 
-    ;; Also create the sink for certain leaders.
-    (when (memq leader wal/leader-with-sink)
-      (eval `(wal/create-leader-sink ,sink :definer ,leader :prefix ,key)))))
+    ;; Also create the sink.
+    (eval `(wal/create-leader-sink ,sink :definer ,leader :prefix ,key))))
 
 (use-package general
   :demand t
@@ -976,7 +973,6 @@ Most bindings are declared in individual packages.
     "fi" '(wal/find-init :wk "init")
     "ff" '(wal/find-fish-config :wk "fish config")
     "fl" '(find-library :wk "library")
-    "fw" '(wal/find-config :wk "wal")
     "fp" '(list-processes :wk "processes")
     "s" '(:ignore t :wk "set")
     "sT" '(wal/set-transparency :wk "transparency")
@@ -989,6 +985,8 @@ Most bindings are declared in individual packages.
     "pd" '(package-delete :wk "delete"))
 
   (wal/general-sink "b" '(eww :wk "eww"))
+
+  (global-set-key (kbd (wal/key-combo-for-leader 'wal/colonel)) #'wal/config-dispatch)
 
   (wal/lieutenant! "q" 'query-replace 'query-replace-regexp)
 
@@ -1010,18 +1008,16 @@ Most bindings are declared in individual packages.
   (global-set-key (kbd "C-;") #'comment-line)
   (global-set-key (kbd "C-c c") #'completion-at-point)
 
-  (defvar wal/captain-key (nth 1 wal/key-reach))
-
   (defun wal/captain? ()
     "Show message when captain is not locally bound."
     (interactive)
-    (let ((key (propertize (wal/prefix-user-key wal/captain-key) 'face 'success))
+    (let ((key (propertize (wal/key-combo-for-leader 'wal/captain)) 'face 'success)
           (mode (propertize (symbol-name major-mode) 'face 'success)))
       (message "Captain (%s) has no binding in %s" key mode)))
 
-  (global-set-key (kbd (wal/prefix-user-key wal/captain-key)) #'wal/captain?)
+  (global-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) #'wal/captain?)
 
-  (global-set-key (kbd (wal/prefix-user-key "'")) #'wal/fly/body)
+  (global-set-key (kbd (wal/prefix-user-key "f")) #'wal/fly/body)
 
   ;; Unbinds `save-buffers-kill-terminal'.
   (global-unset-key (kbd "C-x C-c")))
@@ -1968,7 +1964,7 @@ The rest of the BODY will be spliced into the lambda."
                    ,(when prog-like
                       '(run-hooks 'prog-like-hook))
                    ,(when captain
-                      `(local-set-key (kbd (wal/prefix-user-key wal/captain-key)) ',captain-name)))))
+                      `(local-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) ',captain-name)))))
             ,(when (and lsp lsp-ignores)
                `(with-eval-after-load 'lsp-mode
                   (wal/append 'lsp-file-watch-ignored-directories ,lsp-ignores)))
@@ -6231,7 +6227,6 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (defvar visual-fill-column-width)
 (defvar visual-fill-column-center-text)
 (defvar wal/agenda-tasks-directory)
-(defvar wal/captain-key)
 (defvar wal/use-projectile)
 
 (defgroup wal-org nil
@@ -7056,8 +7051,6 @@ Run =dired= with =C-x d=.
 (declare-function consult--buffer-query "ext:consult.el")
 (declare-function consult--buffer-state "ext:consult.el")
 (declare-function wal/insert-after "wal-func.el")
-
-(defvar wal/captain-key)
 #+END_SRC
 
 ** Packages
@@ -7734,7 +7727,6 @@ Let's greet the world.
 (declare-function wdb/side "wal-func.el")
 
 (defvar prettier-processes)
-(defvar wal/captain-key)
 
 (defgroup wal-lang nil
   "Change language-specific settings."
@@ -10679,30 +10671,24 @@ name are deleted beforehand."
 *** Minor Mode
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/config-maybe-create-transient ()
-  "Create a `transient' if it doesn't exist yet and bind it."
-  (unless (fboundp 'wal/config-dispatch)
-    (require 'transient)
-    (with-no-warnings
-      (wal/transient-define-prefix-once wal/config-dispatch ()
-        "Facilitate the usage of or the working on Walheimat's config."
-        [["Use"
-          ("t" "tangle" wal/tangle-config)
-          ("x" "install expansion pack" wal/install-expansion-pack)
-          ("g" "customize group" wal/customize-group)]
-         ["Check"
-          ("c" "checkdoc" wal/checkdoc-config-packages)
-          ("f" "flycheck" wal/flycheck-config-packages)
-          ("o" "coverage" wal/check-coverage)]
-         ["View"
-          ("p" "packages" wal/dired-config-packages)
-          ("m" "show changes" wal/show-config-diff-range)
-          ("l" "find changelog" wal/find-config-changelog)]
-         ["Fluff"
-          ("w" "toggle animation" wal/ascii-whale-toggle-display)]])
-      (general-define-key
-       :keymaps 'wal/config-mode-map
-       "C-c 9" '(wal/config-dispatch :wk "config dispatch")))))
+(with-eval-after-load 'transient
+  (wal/transient-define-prefix-once wal/config-dispatch ()
+    "Facilitate the usage of or the working on Walheimat's config."
+    [["Use"
+      ("t" "tangle" wal/tangle-config)
+      ("x" "install expansion pack" wal/install-expansion-pack)
+      ("g" "customize group" wal/customize-group)]
+     ["Check"
+      ("c" "checkdoc" wal/checkdoc-config-packages)
+      ("f" "flycheck" wal/flycheck-config-packages)
+      ("o" "coverage" wal/check-coverage)]
+     ["Find"
+      ("'" "config" wal/find-config)
+      ("p" "packages" wal/dired-config-packages)
+      ("m" "show changes" wal/show-config-diff-range)
+      ("l" "find changelog" wal/find-config-changelog)]
+     ["Fluff"
+      ("w" "toggle animation" wal/ascii-whale-toggle-display)]]))
 
 (define-minor-mode wal/config-mode
   "Mode for editing Walheimat's config."
@@ -10710,10 +10696,8 @@ name are deleted beforehand."
   :global nil
   :lighter " wal"
   :keymap wal/config-mode-map
-  (require 'transient nil t)
   (require 'checkdoc nil t)
   (require 'posframe nil t)
-  (wal/config-maybe-create-transient)
   (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t)
   (when wal/config-show-whale-animation
     (wal/ascii-whale-setup)))
