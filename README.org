@@ -990,7 +990,7 @@ Most bindings are declared in individual packages.
   (defun wal/captain? ()
     "Show message when captain is not locally bound."
     (interactive)
-    (let ((key (propertize (wal/key-combo-for-leader 'wal/captain)) 'face 'success)
+    (let ((key (propertize (wal/key-combo-for-leader 'wal/captain) 'face 'success))
           (mode (propertize (symbol-name major-mode) 'face 'success)))
       (message "Captain (%s) has no binding in %s" key mode)))
 
@@ -2952,7 +2952,7 @@ Optonally, interrupt any running process if INTERRUPT is t."
     (funcall finalizer nil "I am Error"))
 
   (let ((finalizer (wal/async-process--finalize (lambda () (user-error "You are Error"))
-                                                (lambda (m) (should (string= "You are Error" m))))))
+                                                (lambda (m) (should (string= "You are Error *temp*" m))))))
     (funcall finalizer nil "finished\n")))
 
 (ert-deftest test-wal/aysnc-process--maybe-interrupt ()
@@ -5314,7 +5314,7 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 
 #+BEGIN_SRC emacs-lisp
 (use-package rg
-  :commands (wal/univ-rg-project)
+  :commands (wal/univ-rg-project rg-menu)
 
   :init
   (wal/univ rg-project rg-menu)
