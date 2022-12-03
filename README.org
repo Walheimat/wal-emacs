@@ -622,7 +622,7 @@ There are a few non-standard meta sequences.
 Most hyper[fn:9] bindings are quick-access actions:
 
 + =H-h= finds project file
-+ =H-i= switches =perspective=
++ =H-i= loads registers using =consult= (stores if called with =C-u=)
 + =H-j= switches buffer using =consult=
 + =H-k= acts on the current point with =embark= (immediately if called
   with =C-u=)
@@ -707,8 +707,7 @@ Leader key =colonel= is responsible for this configuration.
 
 *** Major
 
-Leader key =major= deals with the (buffer-, project-, perspective-)local
-context.
+Leader key =major= deals with the (buffer-, project-)local context.
 
 If the respective buffer-local =minor-mode= is active, the following
 command maps are bound
@@ -719,7 +718,6 @@ command maps are bound
 + =-= for =consult-minor-mode-menu=
 + =+= for =consult-mode-command=.
 + =g= for =smerge= (if active)
-+ =i= for =perspective=
 + =l= for =lsp-mode=
 + =p= for =projectile=
 + =r= for =verb=
@@ -953,6 +951,7 @@ Most bindings are declared in individual packages.
 
 #+BEGIN_SRC emacs-lisp
 (wal/on-boot key-bindings
+  (defvar wal/eye-map (make-sparse-keymap))
 
   (wal/major-sink
     "t" '(wal/text-scale/body :wk "text-scale")
@@ -991,6 +990,8 @@ Most bindings are declared in individual packages.
   (wal/lieutenant! "q" 'query-replace 'query-replace-regexp)
 
   (wal/lieutenant "i" 'iedit-mode)
+
+  (wal/major "i" '(:keymap wal/eye-map :wk "eye"))
 
   (wal/major-sink "!" 'read-only-mode)
 
@@ -3770,6 +3771,11 @@ Some people need macros, okay?
 No offender.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/clear-registers ()
+  "Clear all registers."
+  (interactive)
+  (setq register-alist nil))
+
 (use-package register
   :ensure nil
 
@@ -3778,7 +3784,11 @@ No offender.
     (which-key-add-key-based-replacements "C-c r" "register"))
 
   :bind-keymap
-  (("C-c r" . ctl-x-r-map)))
+  ("C-c r" . ctl-x-r-map)
+
+  :bind
+  (:map ctl-x-r-map
+   ("C-k" . wal/clear-registers)))
 #+END_SRC
 
 *** pulse
@@ -3810,6 +3820,21 @@ This just means increasing duration, delay, size and brightness."
 
 Allow restoring window configurations when Emacs decided they should
 be gone.
+
+*** emacs
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package emacs
+  :ensure nil
+
+  :bind
+  (:map wal/eye-map
+   ("s" . scratch-buffer)
+   ("l" . list-buffers)))
+#+END_SRC
 
 *** winner
 :PROPERTIES:
@@ -5106,7 +5131,7 @@ Treat certain buffers and their windows as pop-ups.
   (popper-echo-mode 1)
 
   :custom
-  (popper-group-function 'popper-group-by-perspective)
+  (popper-group-function 'popper-group-by-projectile)
   (popper-reference-buffers wal/popper-reference-buffers)
   (popper-display-control 'user)
   (popper-mode-line '(:eval (concat
@@ -5377,13 +5402,12 @@ Complete commands and code.
 ;;; Code:
 
 (eval-when-compile
-  (require 'transient)
-  (require 'perspective nil t))
+  (require 'transient))
 
 (declare-function org-clock-in "ext:org-clock.el")
-(declare-function persp-names "ext:perspective.el")
 (declare-function wal/append "wal-func.el")
 
+(defvar consult-register--narrow)
 (defvar savehist-additional-variables)
 (defvar wal/active-theme)
 (defvar wal/dwim-key)
@@ -5596,9 +5620,7 @@ completion actions.
      (projectile-find-dir . project-file)
      (projectile-find-file-in-directory . project-file)
      (projectile-recentf . project-file)
-     (projectile-switch-project . project-file)
-     (persp-switch-to-buffer . buffer)
-     (persp-kill-buffer* . buffer)))
+     (projectile-switch-project . project-file)))
 
   (marginalia-mode)
 
@@ -5704,6 +5726,22 @@ Do not ignore hidden files."
                (fboundp 'consult--ripgrep-builder))
       (consult--grep "Ripgrep (ignored)" #'consult--ripgrep-builder dir initial))))
 
+(defun wal/consult-unregister ()
+  "Remove KEY from the register."
+  (interactive)
+  (let ((key (with-no-warnings
+               (consult--read
+                (consult-register--candidates)
+                :prompt "Unregister: "
+                :category 'multi-category
+                :group (consult--type-group consult-register--narrow)
+                :narrow (consult--type-narrow consult-register--narrow)
+                :sort nil
+                :require-match t
+                :history t ;; disable history
+                :lookup #'consult--lookup-candidate))))
+    (setq register-alist (assoc-delete-all key register-alist))))
+
 (defun wal/consult-line (&optional at-point)
   "Call consult line using `thing-at-point' if AT-POINT is t."
   (interactive "P")
@@ -5712,18 +5750,11 @@ Do not ignore hidden files."
     (consult-line)))
 
 (defun wal/consult-clock-in ()
-  "Clock into an Org agenda heading.
-
-If the initial perspective still exists, switch to that first to
-not pollute the current one."
+  "Clock into an Org agenda heading."
   (interactive)
   (save-window-excursion
-    (if (memq persp-initial-frame-name (persp-names))
-        (with-perspective persp-initial-frame-name
-          (consult-org-agenda)
-          (org-clock-in))
-      (consult-org-agenda)
-      (org-clock-in))))
+    (consult-org-agenda)
+    (org-clock-in)))
 
 (defun wal/then-set-active-theme (theme)
   "Advise to set `wal/active-theme' to THEME."
@@ -5740,7 +5771,12 @@ not pollute the current one."
 (use-package consult
   :commands
   (wal/consult-line
-   wal/consult-clock-in)
+   wal/consult-clock-in
+   wal/consult-unregister
+   wal/univ-consult-register)
+
+  :init
+  (wal/univ consult-register consult-register-store)
 
   :config
   ;; Integrate into `projectile' and `xref'.
@@ -5778,6 +5814,8 @@ not pollute the current one."
     (transient-append-suffix 'wal/lsp-dispatch '(0 3 1)
       '("s" "symbol" consult-lsp-file-symbols)))
 
+  :custom
+  (consult-register-prefix #("/" 0 1 (face consult-key)))
   :bind
   (("C-c s" . wal/consult-line)
    ("C-c i" . wal/consult-clock-in)
@@ -5795,11 +5833,13 @@ not pollute the current one."
    ("u" . consult-register)
    ("S" . consult-register-store)
    ("L" . consult-register-load)
+   ("U" . wal/consult-unregister)
    :map flycheck-command-map
    ("u" . consult-flycheck))
 
   :wal-bind
-  ("j" . consult-buffer)
+  (("j" . consult-buffer)
+   ("i" . wal/univ-consult-register))
 
   :general
   (wal/general
@@ -5842,14 +5882,8 @@ Keep order.
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'perspective nil t))
 
 (declare-function consult--buffer-query "ext:consult.el")
-(declare-function persp-current-name "ext:perspective.el")
-(declare-function persp-names "ext:perspective.el")
-(declare-function persp-mode-line "ext:perspective.el")
-(declare-function persp-switch "ext:perspective.el")
 (declare-function projectile-project-p "ext:projectile.el")
 (declare-function wal/univ-p "wal-func.el")
 
@@ -5866,211 +5900,9 @@ Keep order.
   "Whether to use `projectile' over `project'."
   :type 'boolean
   :group 'wal-workspace)
-
-(defcustom wal/default-perspective "walheimat"
-  "The name of my default perspective."
-  :type 'string
-  :group 'wal-workspace)
-
-(defcustom wal/perspective-truncate-after 20
-  "Name truncation threshold.
-
-If the combined length of names pass it, names of inactive
-perspectives are truncated."
-  :type 'integer
-  :group 'wal-workspace)
-
-(defcustom wal/perspective-shorten-after 20
-  "Shorten threshold.
-
-If the mode-line string passes it, only the active perspective is
-shown."
-  :type 'integer
-  :group 'wal-workspace)
-
-(defcustom wal/perspective-truncated-length 3
-  "The length of a perspective name when truncated."
-  :type 'integer
-  :group 'wal-workspace)
 #+END_SRC
 
 ** Packages
-
-*** perspective
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Group buffers in workspaces.
-
-#+BEGIN_SRC emacs-lisp
-;; Utility
-
-(defun wal/persp-maybe-shorten ()
-  "Maybe shorten mode-line string when many perspectives are open."
-  (let ((truncated-length (length (mapconcat #'identity (persp-mode-line) ""))))
-
-    (setq persp-modestring-short
-        (> truncated-length wal/perspective-shorten-after))))
-
-(defun wal/kill-dired-buffers-in-perspective ()
-  "Kill all Dired buffers in the current perspective."
-  (interactive)
-  (with-current-perspective
-    (let ((buffers (buffer-list)))
-      (dolist (it buffers)
-        (with-current-buffer it
-          (when (derived-mode-p 'dired-mode it)
-            (when-let ((window (get-buffer-window it)))
-              (delete-window window))
-            (kill-buffer it)))))))
-
-;; Advice.
-
-(defun wal/without-querying-for-process-kill (fun &rest args)
-  "Advises FUN to kill processes without querying, applying ARGS.
-
-This only removes `process-kill-buffer-query-function'."
-  (let ((kill-buffer-query-functions (delq 'process-kill-buffer-query-function
-                                           kill-buffer-query-functions)))
-
-    (apply fun args)))
-
-(defun wal/apply-truncation-to-non-active (&rest args)
-  "Truncate non-active perspective name (in ARGS)."
-  (let* ((name (car args))
-         (curr-name (persp-current-name))
-         (names (persp-names))
-         (names-len (length names))
-         (divider-len (if (> 1 names-len)
-                          (+ 1 names-len)
-                        2))
-         (combined-length (+ divider-len
-                             (seq-reduce
-                              (lambda (acc item)
-                                (+ acc (length item)))
-                              names
-                              0))))
-
-    (if (and (> combined-length wal/perspective-truncate-after)
-             (not (string-match-p name curr-name)))
-        (substring name 0 (min (length name) wal/perspective-truncated-length))
-      name)))
-
-(defun wal/instead-guess-truncated-perspective (event)
-  "Guess perspective from click EVENT and switch."
-  (let ((clicked (format "%s" (car (posn-string (event-start event))))))
-
-    (if (eq (length clicked) wal/perspective-truncated-length)
-        (when-let* ((r (concat "^" clicked))
-                    (names (persp-names))
-                    (p (cl-find-if (lambda (it) (string-match r it)) names)))
-
-          (persp-switch p))
-      (persp-switch clicked))))
-
-(defun wal/with-persp-buffers-only (fun &rest _args)
-  "Advise FUN `list-buffers--refresh' to only consider perspective buffers.
-
-No filter is applied if called with `universal-argument'."
-  (if (wal/univ-p)
-      (apply fun nil)
-    (apply fun (list (seq-filter 'buffer-live-p (persp-current-buffers))))))
-
-(defun wal/then-remove-agenda-buffers ()
-  "Remove agenda buffers from the current perspective."
-  (when (and (fboundp 'persp-remove-buffer)
-             (not (string-equal (persp-current-name) persp-initial-frame-name)))
-    (dolist (buf (persp-current-buffers))
-      (when-let* ((name (buffer-file-name buf))
-                  (matches (seq-some (lambda (it) (string-prefix-p it name)) org-agenda-files)))
-
-        (persp-remove-buffer buf)))))
-
-;; Integration with `consult'.
-
-(defun wal/consult-persp-buffer--query ()
-  "Buffer query for `perspective'."
-  (consult--buffer-query
-    :sort 'visibility
-    :as #'buffer-name
-    :predicate
-    '(lambda (buf) (and (persp-is-current-buffer buf)
-                   (with-current-buffer buf
-                     (not (derived-mode-p 'dired-mode)))))))
-
-(use-package perspective
-  :defer 1
-
-  :commands (wal/persp)
-
-  :hook
-  ((kill-emacs . persp-state-save)
-   ((persp-created
-     persp-activated
-     persp-killed
-     persp-switch
-     persp-after-rename) . wal/persp-maybe-shorten))
-
-  :config
-  ;; Kill processes of killed perspectives without prompt.
-  (advice-add
-   'persp-kill :around
-   #'wal/without-querying-for-process-kill)
-
-  ;; Truncate inactive perspectives.
-  (advice-add
-   'persp-format-name :filter-return
-   #'wal/apply-truncation-to-non-active)
-
-  ;; Make clicking work despite truncation.
-  (advice-add
-   'persp-mode-line-click :override
-   #'wal/instead-guess-truncated-perspective)
-
-  ;; Refresh the buffer list with filtering intact.
-  (advice-add
-   'list-buffers--refresh :around
-   #'wal/with-persp-buffers-only)
-
-  ;; Remove agenda buffers after notes are stored.
-  (advice-add
-   'org-store-log-note :after
-   #'wal/then-remove-agenda-buffers)
-
-  ;; Customize buffer source, add new one for Dired.
-  (with-eval-after-load 'consult
-    (consult-customize
-     consult--source-buffer
-     :name "Perspective Buffer"
-     :items #'wal/consult-persp-buffer--query))
-
-  ;; Register command map.
-  (wal/major "i" '(:keymap perspective-map :wk "perspective"))
-
-  ;; Override the override to `perspective-map' in older Emacs versions.
-  (when (< emacs-major-version 28)
-    (define-key persp-mode-map (kbd "C-x x") ctl-x-x-map))
-
-  (persp-mode 1)
-
-  :custom
-  (persp-modestring-dividers '("(" ")" "/"))
-  (persp-initial-frame-name wal/default-perspective)
-  (persp-state-default-file (expand-file-name "persp-persist" wal/cache-directory))
-  (persp-suppress-no-prefix-key-warning t)
-
-  :bind
-  (:map persp-mode-map
-   ("C-x b" . persp-switch-to-buffer)
-   ("C-x C-b" . persp-buffer-menu)
-   :map perspective-map
-   ("l" . persp-list-buffers))
-
-  :wal-bind
-  (:map persp-mode-map
-   ("i" . persp-switch)))
-#+END_SRC
 
 *** projectile
 :PROPERTIES:
@@ -6214,8 +6046,6 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
 (declare-function org-roam-buffer-p "ext:org-roam.el")
-(declare-function persp-names "ext:perpectivel.el")
-(declare-function persp-switch "ext:perpectivel.el")
 (declare-function projectile-project-root "ext:projectile.el")
 (declare-function project-root "ext:project.el")
 (declare-function wal/append "wal-func.el")
@@ -6223,7 +6053,6 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (declare-function wal/truncate "wal-func.el")
 (declare-function wal/univ-p "wal-func.el")
 
-(defvar persp-initial-frame-name)
 (defvar text-scale-mode-step)
 (defvar visual-fill-column-width)
 (defvar visual-fill-column-center-text)
@@ -6385,8 +6214,6 @@ This calls `org-content' interactively."
 
 Attempts to restore view unless NO-RESTORE is t."
   (interactive "P")
-  (when (memq persp-initial-frame-name (persp-names))
-    (persp-switch persp-initial-frame-name))
   (let* ((wconf wal/org-agenda-window-configuration)
          (task-buffer-name (car (last (split-string wal/agenda-tasks-directory "/"))))
                            (buffer-count (seq-count
@@ -7085,11 +6912,8 @@ Uses the same optional SWITCHES."
    :as #'buffer-name
    :predicate
    '(lambda (buf)
-      (and (with-current-buffer buf
-             (derived-mode-p 'dired-mode))
-           (if (bound-and-true-p persp-mode)
-               (persp-is-current-buffer buf)
-             t)))))
+      (with-current-buffer buf
+        (derived-mode-p 'dired-mode)))))
 
 (use-package dired
   :ensure nil

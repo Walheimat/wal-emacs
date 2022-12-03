@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `transient` to show and in `corfu` to `corfu-quick-complete`.
 - `dashboard` is now also shown for daemon.
 - `dashboard` is truncates path beginnings.
+- Keymap `wal/eye` bound to `major` + `i`; binds `list-buffers` and
+  `scratch-buffer`.
 
 ### Changed
 
@@ -26,6 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `major`.
 - Leader key `colonel` is now responsible for config-related actions.
 - Map `wal/fly` is now mapped to user-prefixed `f`.
+- User-prefixed `i` now runs `consult-register`.
+
+### Removed
+
+- Package `perspective` has been mothballed in favor of using
+  registers.
 
 ## [v1.8.1]
 
