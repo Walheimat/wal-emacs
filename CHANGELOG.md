@@ -13,9 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom variable `wal/dwim-key` that is used in `consult` to preview,
   in `transient` to show and in `corfu` to `corfu-quick-complete`.
 - `dashboard` is now also shown for daemon.
-- `dashboard` is truncates path beginnings.
+- `dashboard` truncates path beginnings.
 - Keymap `wal/eye` bound to `major` + `i`; binds `list-buffers` and
   `scratch-buffer`.
+- New macro `setq-unless` to only set a variable if it is not already
+  set as an alternative to mirror `defcustom` variables.
 
 ### Changed
 
@@ -34,6 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Package `perspective` has been mothballed in favor of using
   registers.
+- Various `defcustom` variables were removed or made into local
+  variables.
+- Dailies are no longer part of the agenda.
 
 ## [v1.8.1]
 

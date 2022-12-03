@@ -156,11 +156,6 @@ functionality is used.
   :type 'string
   :group 'wal-settings)
 
-(defcustom wal/custom-file (expand-file-name "custom.el" user-emacs-directory)
-  "Location of the custom file."
-  :type 'string
-  :group 'wal-settings)
-
 (defcustom wal/indent-offset 4
   "The indent offset in spaces."
   :type 'integer
@@ -217,7 +212,9 @@ Customize start-up.
 
 #+BEGIN_SRC emacs-lisp
 ;; Load custom file. Create it if it doesn't yet exist.
-(setq custom-file wal/custom-file)
+
+(setq-unless custom-file (expand-file-name "custom.el" user-emacs-directory))
+
 (unless (file-exists-p custom-file)
   (write-region "" nil custom-file))
 (load custom-file)
@@ -410,6 +407,9 @@ Any mode that should be on/off no matter what.
 Advise to maybe add hook to delete trailing whitespace.
 
 #+BEGIN_SRC emacs-lisp
+(defvar-local wal/delete-trailing-whitespace t
+  "Whether to delete trailing whitespace.")
+
 (defun wal/then-add-delete-trailing-whitespace-hook (&rest _args)
   "Advise to conditionally add before save hook.
 
@@ -1066,18 +1066,6 @@ Custom functionality.
 (defvar wal/prefer-tabs)
 (defvar wal/scratch-persist-file)
 (defvar wal/use-hyper-prefix)
-
-(defgroup wal-func nil
-  "Change values used in utility functions."
-  :group 'wal
-  :tag "Utility")
-
-;;;; Customization:
-
-(defcustom wal/delete-trailing-whitespace t
-  "Whether to delete trailing whitespace."
-  :type 'boolean
-  :group 'wal-func)
 #+END_SRC
 
 ** Emacs
@@ -1712,6 +1700,19 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
            (doc-string 3))
   (unless (and (fboundp name) (not wal/transient-may-redefine))
     `(transient-define-prefix ,name ,arglist ,@args)))
+
+(defmacro setq-unless (&rest pairs)
+  "Set variable/value PAIRS if they're currently nil."
+  (declare (debug setq))
+  (let ((exps nil))
+    (while pairs
+      (let ((sym (car pairs)))
+        (if (and (boundp sym) (symbol-value sym))
+            (progn
+              (pop pairs)
+              (pop pairs))
+          (push `(setq ,(pop pairs) ,(pop pairs)) exps))))
+    `(progn . ,(nreverse exps))))
 #+END_SRC
 
 ** Setup
@@ -2030,7 +2031,9 @@ Optonally, interrupt any running process if INTERRUPT is t."
            (condition-case err
                (funcall callback)
              (error
-              (funcall error-callback (error-message-string err))))
+              (funcall error-callback (concat
+                                       (error-message-string err)
+                                       (buffer-name buf)))))
          (funcall error-callback (string-trim status)))))
 
 (defun wal/kill-async-process-buffers ()
@@ -3629,6 +3632,8 @@ external ones.
 (declare-function wdb/side "wal-func.el")
 (declare-function wdb/direction "wal-func.el")
 
+(defvar wal/eye-map)
+
 (wal/on-boot emacs
   (wdb/direction 'help-mode)
   (wdb/direction 'shortdoc-mode)
@@ -4307,53 +4312,6 @@ I like nice-looking things.
 
 ;;;; Customization:
 
-(defcustom wal/dashboard-footer-messages
-  '("breaching your favorite stupid framework"
-    "I propel myself forward on nothing but flukes"
-    "devout and up the spout"
-    "krill, filter feeders and hit sulphur bottom"
-    "the founder of retiring gentlemen"
-    "the loud keyboard shall vanquish the muscular mouse"
-    "answering all C-calls in sweeping, overflowing song"
-    "infinite whale loop"
-    "from echo location to perimeter expansion"
-    "a mystic of profounder divings"
-    "superior, clear and fine code; but there's little of it"
-    "formed by intertwisting, slanting folds"
-    "a register for distant jets"
-    "the most majestic in affect, the most valuable in commiseration"
-    "unshared, sourceless immensities")
-  "The dashboard footer messages.
-
-A collection of status messages."
-  :type '(repeat string)
-  :group 'wal-visuals)
-
-(defcustom wal/recentf-exclude '("bookmarks\\'" "zettelkasten")
-  "Files the dashboard should not consider recent files."
-  :type '(repeat regexp)
-  :group 'wal-visuals)
-
-(defcustom wal/startup-banner
-  (let ((ext (if (or (daemonp) (display-graphic-p))
-                 ".png"
-               ".txt")))
-
-    (expand-file-name
-     (concat "assets/logo" ext)
-     wal/emacs-config-default-path))
-  "The start-up banner (transformed Emacs logo)."
-  :type 'file
-  :group 'wal-visuals)
-
-(defcustom wal/footer-icon
-  (if (or (daemonp) (display-graphic-p))
-      ":whale:"
-    wal/ascii-whale)
-  "The path to the footer icon."
-  :type 'string
-  :group 'wal-visuals)
-
 (defcustom wal/major-delight t
   "Whether some major modes are delighted beyond reason."
   :type 'boolean
@@ -4384,7 +4342,7 @@ Let's have a dash of board.
   "Advise FUN to ignore certain directories, applying ARGS."
   (defvar recentf-exclude)
 
-  (let ((recentf-exclude wal/recentf-exclude))
+  (let ((recentf-exclude '("bookmarks\\'" "zettelkasten")))
 
     (apply fun args)))
 
@@ -4421,23 +4379,46 @@ Let's have a dash of board.
   (setq dashboard-banner-logo-title (wal/describe-config-version))
 
   :custom
-  (dashboard-startup-banner wal/startup-banner)
-  (dashboard-projects-backend (if wal/use-projectile
-                                  'projectile
-                                'project-el))
   (dashboard-items '((recents . 5)
                      (projects . 3)
                      (bookmarks . 3)))
-  (dashboard-center-content t)
-  (dashboard-set-file-icons t)
-  (dashboard-set-navigator t)
-  (dashboard-footer-icon wal/footer-icon)
-  (dashboard-footer-messages wal/dashboard-footer-messages)
+
+  (dashboard-startup-banner (let ((ext (if (or (daemonp) (display-graphic-p))
+                                           ".png"
+                                         ".txt")))
+                              (expand-file-name
+                               (concat "assets/logo" ext)
+                               wal/emacs-config-default-path)))
+  (dashboard-footer-icon (if (or (daemonp) (display-graphic-p))
+                             ":whale:"
+                           wal/ascii-whale))
+  (dashboard-footer-messages '("breaching your favorite stupid framework"
+                               "I propel myself forward on nothing but flukes"
+                               "devout and up the spout"
+                               "krill, filter feeders and hit sulphur bottom"
+                               "the founder of retiring gentlemen"
+                               "the loud keyboard shall vanquish the muscular mouse"
+                               "answering all C-calls in sweeping, overflowing song"
+                               "infinite whale loop"
+                               "from echo location to perimeter expansion"
+                               "a mystic of profounder divings"
+                               "superior, clear and fine code; but there's little of it"
+                               "formed by intertwisting, slanting folds"
+                               "a register for distant jets"
+                               "the most majestic in affect, the most valuable in commiseration"
+                               "unshared, sourceless immensities"))
+
   (dashboard-week-agenda nil)
   (dashboard-agenda-time-string-format "%d/%m/%y")
   (dashboard-agenda-release-buffers t)
-  (dashboard-path-style 'truncate-beginning)
 
+  (dashboard-center-content t)
+  (dashboard-set-file-icons t)
+  (dashboard-set-navigator t)
+  (dashboard-path-style 'truncate-beginning)
+  (dashboard-projects-backend (if wal/use-projectile
+                                  'projectile
+                                'project-el))
   :bind
   (("C-c d" . dashboard-refresh-buffer)))
 #+END_SRC
@@ -6031,18 +6012,6 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   "Change settings used for org packages."
   :group 'wal
   :tag "Org")
-
-;;;; Customization:
-
-(defcustom wal/org-roam-dailies-directory "tagebuch/"
-  "The directory for dailies."
-  :type 'string
-  :group 'wal-org)
-
-(defcustom wal/org-tree-slide-visual-fill-column-width 160
-  "The base `visual-fill-column-width' for `org-tree-slide' presentations."
-  :type 'integer
-  :group 'wal-org)
 #+END_SRC
 
 ** The Mode Itself
@@ -6336,11 +6305,6 @@ case."
   ;; Refile differently for these files.
   (wal/replace-in-alist 'org-speed-commands '(("w" . wal/maybe-org-roam-refile)))
 
-  ;; Add todos from the dailies to the agenda.
-  (add-to-list 'org-agenda-files (expand-file-name
-                                  wal/org-roam-dailies-directory
-                                  wal/org-roam-directory))
-
   (wal/transient-define-prefix-once wal/org-roam-dispatch ()
     "Run `org-roam' commands."
     [["Capture"
@@ -6367,7 +6331,7 @@ case."
   :custom
   ;; Setup directories and file names.
   (org-roam-directory wal/org-roam-directory)
-  (org-roam-dailies-directory wal/org-roam-dailies-directory)
+  (org-roam-dailies-directory (expand-file-name "tagebuch/" wal/org-roam-directory))
   (org-roam-extract-new-file-path "${slug}.org")
 
   ;; Simple capture templates.
@@ -6439,8 +6403,7 @@ Turn any =org-mode= buffer into a presentation.
 
 (defun wal/org-tree-slide-play ()
   "Hook into `org-tree-slide-play'."
-  (setq visual-fill-column-width (wal/relative-column-width
-                                  wal/org-tree-slide-visual-fill-column-width)
+  (setq visual-fill-column-width (wal/relative-column-width 160)
         visual-fill-column-center-text t
         cursor-type nil)
   (visual-fill-column-mode 1)
@@ -7525,11 +7488,6 @@ Let's greet the world.
   "Change language-specific settings."
   :group 'wal
   :tag "Langauge")
-
-(defcustom wal/force-jsx nil
-  "Whether `js-jsx-syntax' should always be set to t."
-  :group 'wal-lang
-  :type 'boolean)
 #+END_SRC
 
 ** Elixir
@@ -8155,6 +8113,9 @@ Can we have =deno= instead of =node=?
 :END:
 
 #+BEGIN_SRC emacs-lisp
+(defvar-local wal/force-jsx nil
+  "Whether `js-jsx-syntax' should always be set to t.")
+
 (use-package js
   :wal-ways nil
 
