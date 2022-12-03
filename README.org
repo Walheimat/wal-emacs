@@ -5685,36 +5685,6 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
 Heavy lifting with =consult=.
 
 #+BEGIN_SRC emacs-lisp
-(defconst wal/consult-buffer-filter
-  '("\\*Buffer List\\*"
-    "\\*Calendar\\*"
-    "\\*Call Hierarchy\\*"
-    "\\*cider"
-    "\\*compilation"
-    "\\*dap"
-    "\\*dashboard"
-    "\\*docker"
-    "\\* docker"
-    "\\*Flutter"
-    "\\*Flycheck"
-    "\\*Help"
-    "\\*helpful"
-    "\\*HTTP"
-    "\\*info\\*"
-    "\\*lsp"
-    "\\*Messages\\*"
-    "\\*Packages\\*"
-    "\\*poetry"
-    "\\*RE-Builder\\*"
-    "\\*rg"
-    "\\*scratch"
-    "\\*vterm"
-    "\\*xref"
-    "out\\*$"
-    "^magit"
-    "server log\\*$")
-  "Additional buffers to filter.")
-
 (defun wal/consult-ripgrep-ignored (&optional dir initial)
   "Search for regexp with rg in DIR with INITIAL input.
 Do not ignore hidden files."
@@ -5785,9 +5755,6 @@ Do not ignore hidden files."
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
 
-  ;; Filter out additional buffers.
-  (wal/append 'consult-buffer-filter wal/consult-buffer-filter)
-
   ;; Customize sources.
   (consult-customize
    consult--source-recent-file
@@ -5799,7 +5766,6 @@ Do not ignore hidden files."
    wal/consult-clock-in
    :prompt "Clock in: "
    :preview-key (kbd wal/dwim-key))
-
 
   ;; Be sure to set the active them after switching.
   (advice-add 'consult-theme :after #'wal/then-set-active-theme)
@@ -5816,6 +5782,8 @@ Do not ignore hidden files."
 
   :custom
   (consult-register-prefix #("/" 0 1 (face consult-key)))
+  (consult-buffer-filter (list "\\` " "\\`\\*" "\\`magit"))
+
   :bind
   (("C-c s" . wal/consult-line)
    ("C-c i" . wal/consult-clock-in)
