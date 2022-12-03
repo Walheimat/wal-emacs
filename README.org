@@ -953,15 +953,6 @@ Most bindings are declared in individual packages.
 (wal/on-boot key-bindings
   (defvar wal/eye-map (make-sparse-keymap))
 
-  (wal/major-sink
-    "t" '(wal/text-scale/body :wk "text-scale")
-    "n" '(display-line-numbers-mode :wk "line numbers"))
-
-  (wal/major-sink
-    :predicate '(not (one-window-p))
-    "o" '(wal/resize-window/body :wk "resize-window")
-    "v" '(wal/scroll-other-window/body :wk "scroll-other-window"))
-
   ;; Additional `general' bindings.
   (wal/general
     "e" '(:ignore t :wk "Emacs")
@@ -982,18 +973,32 @@ Most bindings are declared in individual packages.
     "pl" '(list-packages :wk "list")
     "pr" '(package-reinstall :wk "re-install")
     "pd" '(package-delete :wk "delete"))
-
   (wal/general-sink "b" '(eww :wk "eww"))
 
   (global-set-key (kbd (wal/key-combo-for-leader 'wal/colonel)) #'wal/config-dispatch)
 
-  (wal/lieutenant! "q" 'query-replace 'query-replace-regexp)
-
-  (wal/lieutenant "i" 'iedit-mode)
-
   (wal/major "i" '(:keymap wal/eye-map :wk "eye"))
-
   (wal/major-sink "!" 'read-only-mode)
+  (wal/major-sink
+    "t" '(wal/text-scale/body :wk "text-scale")
+    "n" '(display-line-numbers-mode :wk "line numbers"))
+  (wal/major-sink
+    :predicate '(not (one-window-p))
+    "o" '(wal/resize-window/body :wk "resize-window")
+    "v" '(wal/scroll-other-window/body :wk "scroll-other-window"))
+
+  (defun wal/captain? ()
+    "Show message when captain is not locally bound."
+    (interactive)
+    (let ((key (propertize (wal/key-combo-for-leader 'wal/captain)) 'face 'success)
+          (mode (propertize (symbol-name major-mode) 'face 'success)))
+      (message "Captain (%s) has no binding in %s" key mode)))
+
+  (global-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) #'wal/captain?)
+
+  (wal/lieutenant! "q" 'query-replace 'query-replace-regexp)
+  (wal/lieutenant "i" 'iedit-mode)
+  (wal/lieutenant "f" 'wal/fly/body)
 
   ;; Use H-u for C-u.
   (when wal/use-hyper-prefix
@@ -1008,17 +1013,6 @@ Most bindings are declared in individual packages.
   (global-set-key (kbd "M-o") #'wal/other-window)
   (global-set-key (kbd "C-;") #'comment-line)
   (global-set-key (kbd "C-c c") #'completion-at-point)
-
-  (defun wal/captain? ()
-    "Show message when captain is not locally bound."
-    (interactive)
-    (let ((key (propertize (wal/key-combo-for-leader 'wal/captain)) 'face 'success)
-          (mode (propertize (symbol-name major-mode) 'face 'success)))
-      (message "Captain (%s) has no binding in %s" key mode)))
-
-  (global-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) #'wal/captain?)
-
-  (global-set-key (kbd (wal/prefix-user-key "f")) #'wal/fly/body)
 
   ;; Unbinds `save-buffers-kill-terminal'.
   (global-unset-key (kbd "C-x C-c")))
