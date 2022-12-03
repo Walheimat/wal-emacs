@@ -29,8 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   functions using `consult` wrappers. They were mostly moved to
   `major`.
 - Leader key `colonel` is now responsible for config-related actions.
-- Map `wal/fly` is now mapped to user-prefixed `f`.
+- Map `wal/fly` is now mapped to user-prefixed `f` and is an amaranth
+  `hydra`.
 - User-prefixed `i` now runs `consult-register`.
+- `hydra`s use `lv` again.
 
 ### Removed
 
