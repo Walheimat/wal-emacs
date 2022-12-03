@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.9.0]
+
+Vague novelty.
 
 ### Added
 
@@ -21,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Default value for `wal/idle-delay` was incresed to **1.6**.
+- Default value for `wal/idle-delay` was increased to **1.6**.
 - Customized leading char face for `ace-window` to be bigger and
   inherit `mode-line-emphasis`.
 - Ligatures are now declared in individual packages.
