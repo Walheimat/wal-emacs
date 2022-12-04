@@ -3748,12 +3748,22 @@ Hide blocks.
 Some people need macros, okay?
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/kmacro (arg)
+  "Toggle kmacro recording with ARG."
+  (interactive "P")
+  (cond
+   (defining-kbd-macro (kmacro-end-macro arg))
+   (t (kmacro-start-macro arg))))
+
 (use-package kmacro
   :ensure nil
 
   :config
   (with-eval-after-load 'which-key
     (which-key-add-key-based-replacements "C-c k" "kmacro"))
+
+  :general
+  (wal/lieutenant "k" '(wal/kmacro :wk "toggle kmacro"))
 
   :bind-keymap
   (("C-c k" . kmacro-keymap)))

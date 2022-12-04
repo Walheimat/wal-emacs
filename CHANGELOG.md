@@ -20,6 +20,8 @@ Vague novelty.
   `scratch-buffer`.
 - New macro `setq-unless` to only set a variable if it is not already
   set as an alternative to mirror `defcustom` variables.
+- New function `wal/kmacro` to start/stop recording; bound to `k` in
+  `lieutenant`.
 
 ### Changed
 
