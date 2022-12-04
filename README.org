@@ -948,8 +948,6 @@ Most bindings are declared in individual packages.
 
 #+BEGIN_SRC emacs-lisp
 (wal/on-boot key-bindings
-  (defvar wal/eye-map (make-sparse-keymap))
-
   ;; Additional `general' bindings.
   (wal/general
     "e" '(:ignore t :wk "Emacs")
@@ -974,7 +972,6 @@ Most bindings are declared in individual packages.
 
   (global-set-key (kbd (wal/key-combo-for-leader 'wal/colonel)) #'wal/config-dispatch)
 
-  (wal/major "i" '(:keymap wal/eye-map :wk "eye"))
   (wal/major-sink "!" 'read-only-mode)
   (wal/major-sink
     "t" '(wal/text-scale/body :wk "text-scale")
@@ -3623,8 +3620,6 @@ external ones.
 (declare-function wdb/side "wal-func.el")
 (declare-function wdb/direction "wal-func.el")
 
-(defvar wal/eye-map)
-
 (wal/on-boot emacs
   (wdb/direction 'help-mode)
   (wdb/direction 'shortdoc-mode)
@@ -3786,11 +3781,7 @@ No offender.
   :ensure nil
 
   :config
-  (with-eval-after-load 'which-key
-    (which-key-add-key-based-replacements "C-c r" "register"))
-
-  :bind-keymap
-  ("C-c r" . ctl-x-r-map)
+  (wal/major "i" '(:keymap ctl-x-r-map :wk "register"))
 
   :bind
   (:map ctl-x-r-map
@@ -3826,21 +3817,6 @@ This just means increasing duration, delay, size and brightness."
 
 Allow restoring window configurations when Emacs decided they should
 be gone.
-
-*** emacs
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-#+BEGIN_SRC emacs-lisp
-(use-package emacs
-  :ensure nil
-
-  :bind
-  (:map wal/eye-map
-   ("s" . scratch-buffer)
-   ("l" . list-buffers)))
-#+END_SRC
 
 *** winner
 :PROPERTIES:

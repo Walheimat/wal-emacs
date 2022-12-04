@@ -16,8 +16,6 @@ Vague novelty.
   in `transient` to show and in `corfu` to `corfu-quick-complete`.
 - `dashboard` is now also shown for daemon.
 - `dashboard` truncates path beginnings.
-- Keymap `wal/eye` bound to `major` + `i`; binds `list-buffers` and
-  `scratch-buffer`.
 - New macro `setq-unless` to only set a variable if it is not already
   set as an alternative to mirror `defcustom` variables.
 - New function `wal/kmacro` to start/stop recording; bound to `k` in
@@ -36,6 +34,8 @@ Vague novelty.
 - Map `wal/fly` is now mapped to user-prefixed `f` and is an amaranth
   `hydra`.
 - User-prefixed `i` now runs `consult-register`.
+- `i` in `lieutenant` now binds `ctl-x-r-map` (register and
+  rectangle).
 - `hydra`s use `lv` again.
 
 ### Removed
