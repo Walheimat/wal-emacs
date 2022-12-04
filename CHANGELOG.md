@@ -43,6 +43,8 @@ Vague novelty.
 - Various `defcustom` variables were removed or made into local
   variables.
 - Dailies are no longer part of the agenda.
+- User-prefixed `y` no longer expands `yasnippet`; instead the default
+  tab expansion was re-enabled.
 
 ## [v1.8.1]
 
