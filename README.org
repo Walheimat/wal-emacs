@@ -5012,31 +5012,18 @@ Ace interacting with (multiple) windows.
 Treat certain buffers and their windows as pop-ups.
 
 #+BEGIN_SRC emacs-lisp
-(defconst wal/popper-reference-buffers
-  '(docker-container-mode
-    "\\*Bookmark Annotation\\*"
-    "\\*org-roam\\*"
-    ;; Compilation and REPL(-like).
-    "\\*poetry-shell\\*"
-    "^\\*docker-compose"
-    "^\\* docker-compose \\(up\\|run\\|build\\)"
-    "^\\*wal-async\\*"
-    dap-ui-repl-mode
-    cider-repl-mode
-    inferior-python-mode
-    python-pytest-mode
-    "\\*rg\\*\\'"
-    compilation-mode
-    ;; Debug(-like).
-    debugger-mode
-    "\\*\\(.+\\)out\\*"
-    "^\\* docker container"
-    ;; Help(-like).
-    helpful-mode
-    help-mode
-    dictionary-mode
-    shortdoc-mode)
-  "Replaces `popper-reference-buffers'.")
+(defun wal/popper-echo-replace (regexp buffer-name &optional prefix)
+  "Search for REGEXP in BUFFER-NAME."
+  (let ((prefix (or prefix "/")))
+
+    (with-temp-buffer
+      (insert buffer-name)
+      (goto-char (point-min))
+      (re-search-forward regexp nil t)
+      (concat
+       (if (match-string 2) (match-string 2) "")
+       prefix
+       (if (match-string 1) (match-string 1) "")))))
 
 (defun wal/popper-echo-transform (buffer-name)
   "Transform BUFFER-NAME by truncating certain prefixes."
@@ -5050,25 +5037,9 @@ Treat certain buffers and their windows as pop-ups.
        (substring (replace-regexp-in-string helpful-re "" buffer-name) 0 -1)
        "/help"))
      ((string-match dc-re buffer-name)
-      (concat
-       (with-temp-buffer
-         (insert buffer-name)
-         (goto-char (point-min))
-         (re-search-forward dc-re nil t)
-         (concat
-           (if (match-string 2) (match-string 2) "")
-           "/dc-"
-           (if (match-string 1) (match-string 1) "")
-           ))))
+      (wal/popper-echo-replace dc-re buffer-name "/dc-"))
      ((string-match cont-re buffer-name)
-       (with-temp-buffer
-         (insert buffer-name)
-         (goto-char (point-min))
-         (re-search-forward cont-re nil t)
-         (concat
-           (if (match-string 2) (match-string 2) "")
-           "/"
-           (if (match-string 1) (match-string 1) ""))))
+      (wal/popper-echo-replace cont-re buffer-name))
      (t buffer-name))))
 
 (use-package popper
@@ -5082,9 +5053,34 @@ Treat certain buffers and their windows as pop-ups.
   (popper-echo-mode 1)
 
   :custom
-  (popper-group-function 'popper-group-by-projectile)
-  (popper-reference-buffers wal/popper-reference-buffers)
   (popper-display-control 'user)
+  (popper-group-function 'popper-group-by-projectile)
+
+  (popper-reference-buffers '(docker-container-mode
+                              "\\*Bookmark Annotation\\*"
+                              "\\*org-roam\\*"
+                              ;; Compilation and REPL(-like).
+                              "\\*poetry-shell\\*"
+                              "^\\*docker-compose"
+                              "^\\* docker-compose \\(up\\|run\\|build\\)"
+                              "^\\*wal-async\\*"
+                              dap-ui-repl-mode
+                              cider-repl-mode
+                              inferior-python-mode
+                              python-pytest-mode
+                              "\\*rg\\*\\'"
+                              compilation-mode
+                              "\\*jest"
+                              ;; Debug(-like).
+                              debugger-mode
+                              "\\*\\(.+\\)out\\*"
+                              "^\\* docker container"
+                              ;; Help(-like).
+                              helpful-mode
+                              help-mode
+                              dictionary-mode
+                              shortdoc-mode))
+
   (popper-mode-line '(:eval (concat
                              " "
                              (all-the-icons-faicon "fort-awesome"
@@ -5092,6 +5088,7 @@ Treat certain buffers and their windows as pop-ups.
                                                    :height 0.9
                                                    :v-adjust 0.0)
                              " ")))
+
   (popper-echo-dispatch-persist nil)
   (popper-echo-dispatch-keys '(?a ?s ?d ?f ?g ?q ?w ?e ?r ?t))
   (popper-echo-lines 1)
