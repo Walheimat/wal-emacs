@@ -37,6 +37,8 @@ Vague novelty.
 - `i` in `lieutenant` now binds `ctl-x-r-map` (register and
   rectangle).
 - `hydra`s use `lv` again.
+- Function `wal/org-agenda` now stores window configuration in a
+  register using char `wal/org-agenda-register-char`.
 
 ### Removed
 
