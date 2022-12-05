@@ -39,6 +39,7 @@ Vague novelty.
 - `hydra`s use `lv` again.
 - Function `wal/org-agenda` now stores window configuration in a
   register using char `wal/org-agenda-register-char`.
+- `wal/lighthouse` is now bound to `C-c p`.
 
 ### Removed
 
