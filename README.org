@@ -5980,6 +5980,11 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   "Change settings used for org packages."
   :group 'wal
   :tag "Org")
+
+(defcustom wal/org-agenda-register-char ?a
+  "The char used to store the agenda window configuration."
+  :group 'wal-org
+  :type 'integer)
 #+END_SRC
 
 ** The Mode Itself
@@ -6111,26 +6116,25 @@ This calls `org-content' interactively."
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/org-agenda-window-configuration nil
-  "The (stored) window configuration for the agenda view.")
-
 (defun wal/agenda (&optional no-restore)
   "Go to task directory with Dired and open the agenda.
 
 Attempts to restore view unless NO-RESTORE is t."
   (interactive "P")
-  (let* ((wconf wal/org-agenda-window-configuration)
+  (let* ((register (get-register wal/org-agenda-register-char))
          (task-buffer-name (car (last (split-string wal/agenda-tasks-directory "/"))))
-                           (buffer-count (seq-count
-                                          (lambda (it) (or (string-equal (buffer-name it) "*Org Agenda*")
-                                                      (string-equal (buffer-name it) task-buffer-name)))
-                                          (buffer-list))))
+         (buffer-count (seq-count
+                        (lambda (it) (or (string-equal (buffer-name it) "*Org Agenda*")
+                                    (string-equal (buffer-name it) task-buffer-name)))
+                        (buffer-list))))
 
-         (if (and wconf (eq buffer-count 2) (not no-restore))
-             (set-window-configuration wconf)
-           (dired wal/agenda-tasks-directory)
-           (org-agenda (wal/univ-p) "a")
-           (setq wal/org-agenda-window-configuration (current-window-configuration)))))
+    (if (and register (eq buffer-count 2) (not no-restore))
+        (jump-to-register wal/org-agenda-register-char)
+
+      (dired wal/agenda-tasks-directory)
+      (org-agenda (wal/univ-p) "a")
+
+      (window-configuration-to-register wal/org-agenda-register-char))))
 
 (use-package org-agenda
   :ensure nil
