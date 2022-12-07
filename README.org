@@ -7704,16 +7704,13 @@ Sort with =isort=.
 
 #+begin_src emacs-lisp
 (use-package python-isort
+  :wal-ways nil
+
   :ensure nil
 
-  :defer 1
-  :after python
-
-  :config
+  :init
   (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
-    '("s" "isort" python-isort-buffer))
-
-  :wal-ways nil)
+    '("s" "isort" python-isort-buffer)))
 #+end_src
 
 *** python-pytest
@@ -7729,14 +7726,14 @@ Test with =pytest=.
 
   :ensure nil
 
-  :defer 2
   :after python
+
+  :init
+  (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
+    '("t" "test" python-pytest-dispatch))
 
   :config
   (wdb/pop-up python-pytest-buffer-name)
-
-  (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
-    '("t" "test" python-pytest-dispatch))
 
   :bind
   (:map python-pytest-mode-map
@@ -7755,14 +7752,13 @@ Blacken buffers.
 (use-package python-black
   :wal-ways nil
 
-  :defer 1
+  :ensure nil
+
   :after python
 
-  :config
+  :init
   (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
-    '("b" "black" python-black-buffer))
-
-  :ensure nil)
+    '("b" "black" python-black-buffer)))
 #+END_SRC
 
 *** ein
@@ -7776,14 +7772,13 @@ Work with Jupyter notebooks.
 (use-package ein
   :wal-ways nil
 
-  :defer 3
+  :ensure nil
+
   :after python
 
-  :config
+  :init
   (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
-    '("e" "ein" ein:run))
-
-  :ensure nil)
+    '("e" "ein" ein:run)))
 #+END_SRC
 
 *** Virtual Envs
@@ -7801,11 +7796,12 @@ Takes care[fn:15] of all your virtual environment needs.
 (use-package pet
   :if (and (executable-find "dasel")
            (executable-find "sqlite3"))
+
   :wal-ways nil
 
-  :hook (python-mode . pet-mode)
-
   :ensure nil
+
+  :hook (python-mode . pet-mode)
 
   :delight " pet")
 #+END_SRC
@@ -7821,13 +7817,13 @@ Takes care[fn:15] of all your virtual environment needs.
 (use-package poetry
   :wal-ways nil
 
+  :ensure nil
+
   :after python
 
-  :config
+  :init
   (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
-    '("p" "poetry" poetry))
-
-  :ensure nil)
+    '("p" "poetry" poetry)))
 #+END_SRC
 
 **** pyvenv
@@ -7838,13 +7834,12 @@ Takes care[fn:15] of all your virtual environment needs.
 
   :after python
 
-  :config
+  :init
   (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
     '("v" "activate venv" pyvenv-activate))
 
   :ensure nil)
 #+END_SRC
-
 
 ** Lisp
 
