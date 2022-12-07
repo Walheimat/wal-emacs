@@ -6127,30 +6127,8 @@ This calls `org-content' interactively."
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/agenda (&optional no-restore)
-  "Go to task directory with Dired and open the agenda.
-
-Attempts to restore view unless NO-RESTORE is t."
-  (interactive "P")
-  (let* ((register (get-register wal/org-agenda-register-char))
-         (task-buffer-name (car (last (split-string wal/agenda-tasks-directory "/"))))
-         (buffer-count (seq-count
-                        (lambda (it) (or (string-equal (buffer-name it) "*Org Agenda*")
-                                    (string-equal (buffer-name it) task-buffer-name)))
-                        (buffer-list))))
-
-    (if (and register (eq buffer-count 2) (not no-restore))
-        (jump-to-register wal/org-agenda-register-char)
-
-      (dired wal/agenda-tasks-directory)
-      (org-agenda (wal/univ-p) "a")
-
-      (window-configuration-to-register wal/org-agenda-register-char))))
-
 (use-package org-agenda
   :ensure nil
-
-  :commands (wal/agenda)
 
   :config
   (wal/replace-in-alist 'org-agenda-prefix-format '((agenda . "  %?-12t%? c%s%b")))
@@ -6169,7 +6147,7 @@ Attempts to restore view unless NO-RESTORE is t."
      :match "-@unbillable"))
 
   :bind
-  ("C-c a" . wal/agenda))
+  ("C-c a" . org-agenda))
 #+END_SRC
 
 *** org-habit

@@ -9,9 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Function `wal/org-agenda` now stores window configuration in a
-  register using char `wal/org-agenda-register-char`.
 - `wal/lighthouse` is now bound to `C-c p`.
+- `wal/agenda` was removed in favor of using the dispatch.
 
 ## [v1.9.0]
 
