@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New ASCII blue whale as the default for the config animation; new
+  custom variable `wal/config-ascii-whale` can be set to `cachalot` to
+  get the old one.
+
 ### Changed
 
 - `wal/lighthouse` is now bound to `C-c p`.
