@@ -598,14 +598,12 @@ and command maps:
 + =C-c c= does a =completion-at-point=
 + =C-c d= opens the =dashboard=
 + =C-c g= for =smerge=
-+ =C-c i= to =org-clock-in= with =consult=
 + =C-c k= for =kmacro=
-+ =C-c l= to =locate= with =consult=
 + =C-c m= for =bookmark=
 + =C-c p= for a heavy =pulse=
 + =C-c q= to do a =quick-calc= (inserted if called with =C-u=)
 + =C-c r= for =register=
-+ =C-c s= to search with =consult=.
++ =C-c s= for =flyspell=.
 
 When editing this config:
 
@@ -716,31 +714,29 @@ Leader key =major= deals with the (buffer-, project-)local context.
 If the respective buffer-local =minor-mode= is active, the following
 command maps are bound
 
++ =8= for =kubernetes=
 + =b= for =dap-mode=
 + =d= for =docker=
 + =f= for =flycheck=
 + =-= for =consult-minor-mode-menu=
 + =+= for =consult-mode-command=
-+ =g= for =smerge= (if active)
++ =@= for =mu4e=
 + =l= for =lsp-mode=
 + =p= for =projectile=
 + =r= for =verb=
-+ =s= for =flyspell=
 + =t= for =vterm=
 + =u= for =vundo=
-+ =w= for =winner=
-+ =y= for =yasnippet=
-+ =@= for =mu4e=
-+ =8= for =kubernetes=.
++ =y= for =yasnippet=.
 
 It also binds commands/maps in its sink:
 
 + =0= to =zone= out
 + =d= to look up word definitions
 + =o= to resize the window
++ =!= to toggle =read-only-mode= for buffer.
 + =t= to scale text
 + =v= to scroll the /other/ window
-+ =w= to toggle =read-only-mode= for buffer.
++ =w= for =winner=
 
 *** Captain
 
@@ -760,6 +756,7 @@ They are:
 + =q= to =query-replace=
 + =s= to open the scratch buffer
 + =.= to mark all "like this"
++ =u= for additional =consult= actions
 + =w= to kill a line
 + =x= to delete a line.
 
@@ -3764,8 +3761,9 @@ Some people need macros, okay?
   (with-eval-after-load 'which-key
     (which-key-add-key-based-replacements "C-c k" "kmacro"))
 
-  :general
-  (wal/lieutenant "k" '(wal/kmacro :wk "toggle kmacro"))
+  :bind
+  (:map kmacro-keymap
+   ("k" . wal/kmacro))
 
   :bind-keymap
   (("C-c k" . kmacro-keymap)))
@@ -3787,15 +3785,15 @@ No offender.
 (use-package register
   :ensure nil
 
-  :config
-  (wal/major "i" '(:keymap ctl-x-r-map :wk "register"))
-
   :custom
   (register-preview-delay wal/idle-delay)
 
   :bind
   (:map ctl-x-r-map
-   ("C-k" . wal/clear-registers)))
+   ("C-k" . wal/clear-registers))
+
+  :bind-keymap
+  (("C-c r" . ctl-x-r-map)))
 #+END_SRC
 
 *** pulse
@@ -3854,7 +3852,7 @@ be gone.
   (winner-dont-bind-my-keys t)
 
   :general
-  (wal/major "w" '(wal/winner/body :wk "winner")))
+  (wal/major-sink "w" '(wal/winner/body :wk "winner")))
 #+END_SRC
 
 *** async
@@ -5708,6 +5706,8 @@ Do not ignore hidden files."
   :init
   (wal/univ consult-register consult-register-store)
 
+  (defvar wal/consult-map (make-sparse-keymap))
+
   :config
   ;; Integrate into `projectile' and `xref'.
   (when wal/use-projectile
@@ -5745,9 +5745,10 @@ Do not ignore hidden files."
   (consult-buffer-filter (list "\\` " "\\`\\*" "\\`magit"))
 
   :bind
-  (("C-c s" . wal/consult-line)
-   ("C-c i" . wal/consult-clock-in)
-   ("C-c l" . consult-locate)
+  (:map wal/consult-map
+   ("s" . wal/consult-line)
+   ("c" . wal/consult-clock-in)
+   ("l" . consult-locate)
    :map goto-map
    ("g" . consult-goto-line)
    ("h" . consult-org-heading)
@@ -5775,7 +5776,8 @@ Do not ignore hidden files."
     "fr" '(consult-recent-file :wk "recent"))
   (wal/major
     "+" 'consult-mode-command
-    "-" 'consult-minor-mode-menu))
+    "-" 'consult-minor-mode-menu)
+  (wal/lieutenant "u" '(:keymap wal/consult-map :wk "consult")))
 #+END_SRC
 
 ** Footer
@@ -7380,12 +7382,12 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
   (with-eval-after-load 'which-key
     (which-key-add-key-based-replacements "C-c g" "smerge"))
 
+  :bind
+  (:map smerge-basic-map
+   ("g" . wal/smerge/body))
+
   :bind-keymap
   (("C-c g" . smerge-basic-map))
-
-  :general
-  (wal/major :keymaps 'smerge-mode-map
-    "g" '(wal/smerge/body :wk "smerge"))
 
   :delight " smg")
 #+END_SRC
@@ -9076,12 +9078,17 @@ My spelling is bad. Uses American English for =flyspell=.
 (defun wal/flyspell ()
   "(De-)Activate the appropriate `flyspell' mode."
   (interactive)
-  (if (derived-mode-p 'prog-mode)
-      (flyspell-prog-mode)
-    (flyspell-mode)))
+  (if flyspell-mode
+      (flyspell-mode -1)
+    (if (derived-mode-p 'prog-mode)
+        (flyspell-prog-mode)
+      (flyspell-mode))))
 
 (use-package flyspell
   :ensure nil
+
+  :init
+  (defvar wal/flyspell-map (make-sparse-keymap))
 
   :custom
   (flyspell-issue-message-flag nil)
@@ -9090,15 +9097,15 @@ My spelling is bad. Uses American English for =flyspell=.
 
   :bind
   (:map flyspell-mode-map
-   ("C-." . ispell-word)) ; Replaces `flyspell-auto-correct-word', which is still available via `C-M-i'.
+   ("C-." . ispell-word)  ; Replaces `flyspell-auto-correct-word', which is still available via `C-M-i'.
+   :map wal/flyspell-map
+   ("s" . wal/flyspell)
+   ("b" . flyspell-buffer)
+   ("r" . flyspell-region)
+   ("c" . ispell-change-dictionary))
 
-  :general
-  (wal/major "s" '(wal/flyspell :predicate '(lambda () (not flyspell-mode)) :wk "flyspell"))
-  (wal/major :keymaps 'flyspell-mode-map
-    "s" '(:ignore t :wk "flyspell")
-    "sb" '(flyspell-buffer :wk "buffer")
-    "sr" '(flyspell-region :wk "region")
-    "sc" '(ispell-change-dictionary :wk "change dictionary")))
+  :bind-keymap
+  (("C-c s" . wal/flyspell-map)))
 #+END_SRC
 
 *** consult-flycheck
