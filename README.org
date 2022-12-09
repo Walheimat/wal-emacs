@@ -10086,15 +10086,20 @@ The order determines the load order as well.")
 Animate a swimming whale in a =posframe=.
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/ascii-cachalot-whale-key-frames ["(__.- >{"
-                                             "(__.' >{"
-                                             "(__.- >{"
-                                             "(__., >{"])
+(defvar wal/ascii-whale--fins (list "-" "'" "-" ","))
 
-(defvar wal/ascii-blue-whale-key-frames ["⎝   ﬞ -    {"
-                                         "⎝   ﬞ '    {"
-                                         "⎝   ﬞ -    {"
-                                         "⎝   ﬞ ,    {"])
+(defun wal/ascii-whale--build-key-frames (pattern)
+  "Build key frames using PATTERN."
+  (seq--into-vector
+   (seq-map (lambda (it)
+              (format pattern it))
+            wal/ascii-whale--fins)))
+
+(defvar wal/ascii-cachalot-whale-key-frames
+  (wal/ascii-whale--build-key-frames "(__.%s >{"))
+
+(defvar wal/ascii-blue-whale-key-frames
+  (wal/ascii-whale--build-key-frames "⎝   ﬞ %s    {"))
 
 (defvar wal/ascii-whale-key-frames nil)
 
