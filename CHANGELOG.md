@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `wal/agenda` was removed in favor of using the dispatch.
 - Default value for `wal/idle-delay` was greatly reduced again to
   **0.8**.
+- `dap-mode` now shows locals and REPL; both buffers' display has been
+  overridden. It also stores and reloads window configurations and
+  re-displays the custom `hydra` when hitting a breakpoint.
+- Consult functions are now defined in own map bound to `u` in
+  `lieutenant`.
 
 ## [v1.9.0]
 

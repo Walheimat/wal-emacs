@@ -8517,35 +8517,10 @@ LSP integration.
   (let ((shell-file-name "/bin/bash"))
     (apply fun args)))
 
-(defvar wal/lsp-java-before nil)
-
-(defun wal/lsp-java-delete-server-log-window (_session)
-  "Delete the window displaying the server logs."
-  (when-let ((pattern "server log\\*")
-             (windows (window-list))
-             (window (seq-find (lambda (it)
-                                 (let* ((buf (window-buffer it))
-                                        (name (buffer-name buf)))
-
-                                   (string-match pattern name)))
-                               windows)))
-
-    (setq wal/lsp-java-before (current-window-configuration))
-    (delete-window window)))
-
-(defun wal/lsp-java-restore-windows (_session)
-  "Restore the window configuration."
-  (when wal/lsp-java-before
-    (set-window-configuration wal/lsp-java-before)
-    (setq wal/lsp-java-before nil)))
-
 (use-package lsp-java
   :wal-ways nil
 
   :ensure nil
-
-  :hook ((dap-session-created . wal/lsp-java-delete-server-log-window)
-         (dap-terminated . wal/lsp-java-restore-windows))
 
   :config
   (require 'dap-java)
@@ -9349,36 +9324,66 @@ Don't clutter things up too much.
 Debugging using VSCode's DAP (in =lsp-mode=)
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/dap-before nil)
+
+(defun wal/dap-terminated (_session)
+  "Disable hydra and restore window configuration."
+  (hydra-disable)
+
+  (when wal/dap-before
+    (set-window-configuration wal/dap-before)))
+
+(defun wal/dap-session-created (&rest _r)
+  "Save window configuration and delete other windows."
+  (setq wal/dap-before (current-window-configuration))
+
+  (delete-other-windows))
+
+(defun wal/dap-stopped (_session)
+  "Re-display the hydra."
+  (wal/dap-hydra/body))
+
 (use-package dap-mode
   :wal-ways nil
 
   :after lsp-mode
 
-  :hook (dap-terminated . (lambda (_session) (hydra-disable)))
+  :hook (dap-session-created . wal/dap-session-created)
 
   :config
   ;; Activate UI and configure.
   (dap-auto-configure-mode)
 
+  (add-hook 'dap-terminated-hook #'wal/dap-terminated t)
+  (add-hook 'dap-stopped-hook #'wal/dap-stopped t)
+
   (with-no-warnings
     (defhydra wal/dap-hydra (:hint nil :foreign-keys warn)
       "
-%s`w/hew Debug: _n_ext, _i_n, _o_ut or _c_ontinue %s`w/hs _b_reakpoint %s`w/hs start _d_ebugging %s`w/hs _r_epl %s`w/hs disconnec_t_ %s`w/hs _f_ull
+%s`w/hew Debug: _n_ext _c_ontinue %s`w/hs _i_n _o_ut
 "
       ("n" dap-next)
       ("i" dap-step-in)
       ("o" dap-step-out)
       ("c" dap-continue)
-      ("d" dap-debug :color blue)
-      ("b" dap-breakpoint-toggle)
-      ("r" dap-ui-repl :color blue)
-      ("f" dap-hydra :color blue)
-      ("t" dap-disconnect :color blue)
+
+      ("s" dap-debug "start" :color blue)
+      ("x" dap-disconnect "disconnect" :color blue)
+      ("b" dap-breakpoint-toggle "breakpoint" :color blue)
+
       ("q" nil)))
+
+  (wal/replace-in-alist
+   'dap-ui-buffer-configurations
+   `((,dap-ui--repl-buffer . ((side . bottom) (slot . 1) (window-height . 10)))
+     (,dap-ui--locals-buffer . ((side . right) (slot . 1)))))
+
+  (wdb/side dap-ui--repl-buffer)
+  (wdb/side dap-ui--locals-buffer :side 'right)
 
   :custom
   (dap-auto-show-output nil)
-  (dap-auto-configure-features '(locals breakpoints))
+  (dap-auto-configure-features '(locals repl))
 
   (dap-python-executable "python3")
   (dap-python-debugger 'debugpy)
