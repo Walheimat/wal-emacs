@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `wal/lighthouse` is now bound to `C-c p`.
 - `wal/agenda` was removed in favor of using the dispatch.
+- Default value for `wal/idle-delay` was greatly reduced again to
+  **0.8**.
 
 ## [v1.9.0]
 
