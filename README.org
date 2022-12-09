@@ -1908,7 +1908,7 @@ Optionally provide `quelpa' RECIPES."
 (defvar prog-like-hook nil
   "Commands that should be run for prog-like modes.")
 
-(cl-defmacro wal/hook (name docs &body body &key messages lsp lsp-ignores tabs prog-like captain &allow-other-keys)
+(cl-defmacro wal/hook (name docs &body body &key messages lsp lsp-ignores tabs prog-like captain corfu &allow-other-keys)
   "Hook into major mode NAME, describe with DOCS.
 
 MESSAGES is a list of strings to randomly choose from and
@@ -1924,12 +1924,14 @@ function as an indentation function.
 CAPTAIN is either t or nil. If it is t, a prefixed function
 will be mapped to the captain key.
 
+CORFU is a list of (IDLE-DELAY PREFIX-LENGTH).
+
 The rest of the BODY will be spliced into the lambda."
   (declare (indent defun) (doc-string 2))
 
   (let ((target (intern (concat (symbol-name name) "-hook")))
         (safe-body (cl-loop for (key val) on body by 'cddr
-                            unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :captain))
+                            unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :captain :corfu))
                             collect key
                             and collect val))
         (func-name (intern (concat "wal/" (symbol-name name) "-hook")))
@@ -1954,7 +1956,9 @@ The rest of the BODY will be spliced into the lambda."
                           (t `(wal/maybe-enable-tabs :indent-with ,tabs)))
                    ,@safe-body
                    ,(when lsp
-                      '(wal/lsp))
+                      (if corfu
+                          `(wal/lsp ',corfu)
+                        '(wal/lsp)))
                    ,(when prog-like
                       '(run-hooks 'prog-like-hook))
                    ,(when captain
@@ -7631,6 +7635,7 @@ TOML."
     "Hook into `python-mode'."
     :captain t
     :lsp t
+    :corfu (0.0 1)
     :lsp-ignores
     '("[/\\\\]\\.pytype\\'"
       "[/\\\\]__pycache__\\'"
@@ -8094,6 +8099,7 @@ Can we have =deno= instead of =node=?
     :captain t
     :tabs t
     :lsp t
+    :corfu (0.1 2)
     (when wal/force-jsx
       (setq-local js-jsx-syntax t))
     (when (fboundp 'add-node-modules-path)
@@ -8764,6 +8770,7 @@ We want quicker suggestions when in CSS modes.
     "Hook into `css-mode'."
     :tabs t
     :lsp t
+    :corfu (0.1 2)
     :messages '("Centering? It's simple. Here's 15 ways to do it.")
     (add-node-modules-path)
     (when (executable-find "stylelint")
@@ -9207,24 +9214,21 @@ servers yourself[fn:17].
   "Check if MODE is considered slow."
   (memq mode wal/lsp-slow-modes))
 
-(defun wal/lsp-corfu-auto ()
-  "Get the `corfu-auto' values as a list of (DELAY PREFIX)."
-  (if (derived-mode-p 'css-mode 'js-mode) '(0.1 2) '(0.0 0)))
-
-(defun wal/lsp ()
+(defun wal/lsp (&optional corfu-values)
   "Defer LSP setup for the file.
 
 Unless the associated server is considered slow, delays and
-minimum prefixes are reduced."
+minimum prefixes are reduced using CORFU-VALUES a list of (DELAY
+PREFIX-LENGTH)."
   (unless (wal/slow-lsp-p major-mode)
-    (let* ((values (wal/lsp-corfu-auto))
+    (let* ((values (or corfu-values (list 0.0 0)))
            (delay (car values))
            (prefix (cadr values)))
 
       (setq-local corfu-auto-delay delay
                   corfu-auto-prefix prefix)))
-    (setq-local completion-styles '(orderless partial-completion basic))
-    (lsp-deferred))
+  (setq-local completion-styles '(orderless partial-completion basic))
+  (lsp-deferred))
 
 (defun wal/lsp-completion-with-corfu ()
   "Advise completion to work better with `corfu' and `orderless'."
