@@ -7381,16 +7381,17 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
   :ensure nil
 
   :config
-  (defhydra wal/smerge (:hint nil :foreign-keys warn)
-    "
+  (with-no-warnings
+    (defhydra wal/smerge (:hint nil :foreign-keys warn)
+      "
 %s`w/hew Resolve conflict: _u_pper, _l_ower or _a_ll %s`w/hs _n_ext or _p_revious
 "
-    ("p" smerge-prev)
-    ("n" smerge-next)
-    ("u" smerge-keep-upper)
-    ("l" smerge-keep-lower)
-    ("a" smerge-keep-all)
-    ("q" nil))
+      ("p" smerge-prev)
+      ("n" smerge-next)
+      ("u" smerge-keep-upper)
+      ("l" smerge-keep-lower)
+      ("a" smerge-keep-all)
+      ("q" nil)))
 
   (with-eval-after-load 'which-key
     (which-key-add-key-based-replacements "C-c g" "smerge"))
@@ -9165,6 +9166,8 @@ Language servers are awesome. Thanks, Microsoft.
 (declare-function dap--completing-read "ext:dap-mode.el")
 (declare-function dap--json-encode "ext:dap-mode.el")
 (declare-function dap-register-debug-template "ext:dap-mode.el")
+(declare-function hydra-disable "ext:hydra.el")
+(declare-function wal/dap-hydra/body "wal-lsp.el")
 
 (defvar dap-debug-template-configurations)
 
@@ -10162,7 +10165,7 @@ Animate a swimming whale in a =posframe=.
        (setq wal/ascii-whale-key-frames wal/ascii-blue-whale-key-frames))
       ('cachalot
        (setq wal/ascii-whale-key-frames wal/ascii-cachalot-whale-key-frames))
-      (_ (user-error "Unknown whale %s" wal/ascii-whale)))
+      (_ (user-error "Unknown whale %s" wal/config-ascii-whale)))
 
     (add-hook 'kill-buffer-hook #'wal/ascii-whale-clean-up nil t)
     (add-hook 'window-configuration-change-hook #'wal/ascii-whale-display nil t)
