@@ -595,19 +595,15 @@ User-reserved combinations are used for (mostly built-in) commands
 and command maps:
 
 + =C-c a= for =org-agenda=
-+ =C-c c= does a =completion-at-point=
 + =C-c d= opens the =dashboard=
 + =C-c g= for =smerge=
++ =C-c i= runs =iedit-mode=
 + =C-c k= for =kmacro=
 + =C-c m= for =bookmark=
 + =C-c p= for a heavy =pulse=
 + =C-c q= to do a =quick-calc= (inserted if called with =C-u=)
 + =C-c r= for =register=
 + =C-c s= for =flyspell=.
-
-When editing this config:
-
-+ =C-c 9= to dispatch related commands.
 
 *** Meta
 
@@ -633,7 +629,7 @@ Most hyper[fn:9] bindings are quick-access actions:
 
 It's also used for some dispatches:
 
-+ =H-o= for =ace-window=, and if called with =C-u=
++ =H-o= for =ace-window=
 + =H-<SPC>= for =org-roam=.
 
 It's also used for a command map:
@@ -703,6 +699,16 @@ Leader key =general= is responsible for Emacs actions like loading a
 theme, finding a library, quitting, as well as opening built-in
 programs like =eshell= and =eww=.
 
+It also binds commands/maps in its sink:
+
++ =0= to =zone= out
++ =d= to look up word definitions
++ =o= to resize the window
++ =!= to toggle =read-only-mode= for buffer
++ =t= to scale text
++ =v= to scroll the /other/ window
++ =w= for =winner=.
+
 *** Colonel
 
 Leader key =colonel= is responsible for this configuration.
@@ -728,16 +734,6 @@ command maps are bound
 + =u= for =vundo=
 + =y= for =yasnippet=.
 
-It also binds commands/maps in its sink:
-
-+ =0= to =zone= out
-+ =d= to look up word definitions
-+ =o= to resize the window
-+ =!= to toggle =read-only-mode= for buffer.
-+ =t= to scale text
-+ =v= to scroll the /other/ window
-+ =w= for =winner=
-
 *** Captain
 
 Leader key =captain= invokes a dispatch if the underlying major-mode has
@@ -753,7 +749,6 @@ They are:
 + =d= to duplicate lines
 + =i= for =iedit-mode=
 + =m= to move a line
-+ =q= to =query-replace=
 + =s= to open the scratch buffer
 + =.= to mark all "like this"
 + =u= for additional =consult= actions
@@ -768,7 +763,6 @@ They are:
 + =d= to duplicate and comment
 + =h= to mark a region
 + =m= to move a region
-+ =q= to =query-replace-regexp=
 + =s= to create new scratch buffer using =crux=
 + =.= to mark all ends in a region
 + =w= to kill a region
@@ -957,6 +951,8 @@ Most bindings are declared in individual packages.
     "e" '(:ignore t :wk "Emacs")
     "eq" '(wal/delete-edit-or-kill :wk "quit")
     "er" '(restart-emacs :wk "restart")
+    "x" '(:ignore t :wk "programs")
+    "xw" 'eww
     "f" '(:ignore t :wk "find")
     "fc" '(wal/find-custom-file :wk "custom")
     "fi" '(wal/find-init :wk "init")
@@ -972,15 +968,14 @@ Most bindings are declared in individual packages.
     "pl" '(list-packages :wk "list")
     "pr" '(package-reinstall :wk "re-install")
     "pd" '(package-delete :wk "delete"))
-  (wal/general-sink "b" '(eww :wk "eww"))
 
   (global-set-key (kbd (wal/key-combo-for-leader 'wal/colonel)) #'wal/config-dispatch)
 
-  (wal/major-sink "!" 'read-only-mode)
-  (wal/major-sink
+  (wal/general-sink "!" 'read-only-mode)
+  (wal/general-sink
     "t" '(wal/text-scale/body :wk "text-scale")
     "n" '(display-line-numbers-mode :wk "line numbers"))
-  (wal/major-sink
+  (wal/general-sink
     :predicate '(not (one-window-p))
     "o" '(wal/resize-window/body :wk "resize-window")
     "v" '(wal/scroll-other-window/body :wk "scroll-other-window"))
@@ -994,8 +989,6 @@ Most bindings are declared in individual packages.
 
   (global-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) #'wal/captain?)
 
-  (wal/lieutenant! "q" 'query-replace 'query-replace-regexp)
-  (wal/lieutenant "i" 'iedit-mode)
   (wal/lieutenant "f" 'wal/fly/body)
 
   ;; Use H-u for C-u.
@@ -1010,7 +1003,8 @@ Most bindings are declared in individual packages.
   (global-set-key (kbd "C-?") #'undo-redo)
   (global-set-key (kbd "M-o") #'wal/other-window)
   (global-set-key (kbd "C-;") #'comment-line)
-  (global-set-key (kbd "C-c c") #'completion-at-point)
+  (global-set-key (kbd "C-c i") #'iedit-mode)
+  (global-set-key (kbd "C-M-i") #'completion-at-point)
 
   ;; Unbinds `save-buffers-kill-terminal'.
   (global-unset-key (kbd "C-x C-c")))
@@ -3856,7 +3850,7 @@ be gone.
   (winner-dont-bind-my-keys t)
 
   :general
-  (wal/major-sink "w" '(wal/winner/body :wk "winner")))
+  (wal/general-sink "w" '(wal/winner/body :wk "winner")))
 #+END_SRC
 
 *** async
@@ -4010,7 +4004,7 @@ Look up words in a word book.
   (dictionary-server "dict.org")
 
   :general
-  (wal/major-sink "d" '(dictionary-lookup-definition :wk "dict")))
+  (wal/general-sink "d" '(dictionary-lookup-definition :wk "dict")))
 #+END_SRC
 
 ** Additional Info Display
@@ -4895,7 +4889,7 @@ Screen saver, CPU devourer.
     (zone-when-idle wal/zone-timer))
 
   :general
-  (wal/major-sink "0" 'zone))
+  (wal/general-sink "0" 'zone))
 #+END_SRC
 
 ** Other
@@ -7156,7 +7150,7 @@ Set up =eshell=. I like the idea of it but I don't really use it.
    #'wal/instead-truncate-buffer)
 
   :general
-  (wal/general-sink "e" '(eshell :wk "eshell")))
+  (wal/general "xe" '(eshell :wk "eshell")))
 #+END_SRC
 
 *** esh-autosuggest
