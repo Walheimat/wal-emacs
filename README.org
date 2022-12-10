@@ -7802,6 +7802,10 @@ It takes more than one environment to make sense of Python code.
 Takes care[fn:15] of all your virtual environment needs.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/otherwise-return-argument (arg)
+  "Return ARG if original function returned nil."
+  arg)
+
 (use-package pet
   :if (and (executable-find "dasel")
            (executable-find "sqlite3"))
@@ -7811,6 +7815,11 @@ Takes care[fn:15] of all your virtual environment needs.
   :ensure nil
 
   :hook (python-mode . pet-mode)
+
+  :config
+  (advice-add
+   'pet-executable-find :after-until
+   #'wal/otherwise-return-argument)
 
   :delight " pet")
 #+END_SRC

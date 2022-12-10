@@ -31,6 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `completion-at-point` is now bound globally using `C-M-i` (like in
   other maps).
 
+### Fixed
+
+- Function `pet-find-executable` is advised to return the argument it
+  was called with if it returns `nil`.
+
 ## [v1.9.0]
 
 Vague novelty.
