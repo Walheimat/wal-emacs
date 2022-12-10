@@ -35,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Function `pet-find-executable` is advised to return the argument it
   was called with if it returns `nil`.
+- Adds new function `wal/aw-delete-other-windows` to
+  `delete-other-windows` while ignoring window parameters.
 
 ## [v1.9.0]
 
