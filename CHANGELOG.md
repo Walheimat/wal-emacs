@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - User-prefixed `i` is now bound to `consult-register-load`;
   `consult-register` is still available via `ctl-x-r-map`.
+- Function `wal/message-in-a-bottle` now uses the blue whale as a
+  default (although any other string may optionally be passed.
 
 ## [v1.9.1]
 

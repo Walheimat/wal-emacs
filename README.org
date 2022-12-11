@@ -1781,15 +1781,19 @@ Show messages without cluttering.
 (defconst wal/ascii-whale (propertize "}< ,.__)" 'face 'mode-line-emphasis)
   "A small, highlighted ASCII whale.")
 
-(defun wal/message-in-a-bottle (bottle)
+(defconst wal/ascii-blue-whale (propertize "}    , ﬞ   ⎠" 'face 'mode-line-emphasis)
+  "A small, highlighted ASCII blue whale.")
+
+(defun wal/message-in-a-bottle (bottle &optional whale)
   "Randomly display a message from the given BOTTLE.
 
 That bottle is just an array of strings."
   (let* ((message-log-max nil) ; Don't clutter.
-         (message (nth (wal/biased-random (length bottle)) bottle)))
+         (message (nth (wal/biased-random (length bottle)) bottle))
+         (whale (or whale wal/ascii-blue-whale)))
 
     (message (concat
-              wal/ascii-whale
+              whale
               " "
               (propertize message 'face 'italic)))))
 #+END_SRC
@@ -2728,11 +2732,17 @@ Optonally, interrupt any running process if INTERRUPT is t."
 *** Messages
 
 #+BEGIN_SRC emacs-lisp
-(ert-deftest test-wal/message-in-a-bottle ()
+(ert-deftest test-wal/message-in-a-bottle--shows-blue-whale ()
   (let ((bottle '("Sting is playing bass, yeah")))
 
     (with-mock message (lambda (message) message)
-      (should (string-equal (wal/message-in-a-bottle bottle) "}< ,.__) Sting is playing bass, yeah")))))
+      (should (string-equal (wal/message-in-a-bottle bottle) "}    , ﬞ   ⎠ Sting is playing bass, yeah")))))
+
+(ert-deftest test-wal/message-in-a-bottle--shows-passed-string ()
+  (let ((bottle '("Sting is playing bass, yeah")))
+
+    (with-mock message (lambda (message) message)
+      (should (string-equal (wal/message-in-a-bottle bottle wal/ascii-whale) "}< ,.__) Sting is playing bass, yeah")))))
 #+END_SRC
 
 *** Expansion Packs
