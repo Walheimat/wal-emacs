@@ -956,9 +956,10 @@ Most bindings are declared in individual packages.
     "f" '(:ignore t :wk "find")
     "fc" '(wal/find-custom-file :wk "custom")
     "fi" '(wal/find-init :wk "init")
-    "ff" '(wal/find-fish-config :wk "fish config")
     "fl" '(find-library :wk "library")
-    "fp" '(list-processes :wk "processes")
+    "l" '(:ignore t :wk "list")
+    "lp" '(list-processes :wk "processes")
+    "lt" '(list-timers :wk "timers")
     "s" '(:ignore t :wk "set")
     "sT" '(wal/set-transparency :wk "transparency")
     "sc" '(wal/set-cursor-type :wk "cursor")
@@ -972,9 +973,11 @@ Most bindings are declared in individual packages.
   (global-set-key (kbd (wal/key-combo-for-leader 'wal/colonel)) #'wal/config-dispatch)
 
   (wal/general-sink "!" 'read-only-mode)
+
   (wal/general-sink
     "t" '(wal/text-scale/body :wk "text-scale")
     "n" '(display-line-numbers-mode :wk "line numbers"))
+
   (wal/general-sink
     :predicate '(not (one-window-p))
     "o" '(wal/resize-window/body :wk "resize-window")
@@ -989,7 +992,16 @@ Most bindings are declared in individual packages.
 
   (global-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) #'wal/captain?)
 
-  (wal/lieutenant "f" 'wal/fly/body)
+  (wal/lieutenant "f" '(wal/fly/body :wk "fly"))
+
+  (defvar wal/misc-map (make-sparse-keymap))
+
+  (wal/lieutenant "," '(:keymap wal/misc-map :wk "misc"))
+
+  (general-define-key
+   :keymaps 'wal/misc-map
+   :wk-full-keys nil
+   "f" '(wal/find-fish-config :wk "find fish"))
 
   ;; Use H-u for C-u.
   (when wal/use-hyper-prefix
