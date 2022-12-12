@@ -630,7 +630,7 @@ Most hyper[fn:9] bindings are quick-access actions:
 It's also used for some dispatches:
 
 + =H-o= for =ace-window=
-+ =H-<SPC>= for =org-roam=.
++ =H-y= for =org-roam=.
 
 It's also used for a command map:
 
@@ -993,6 +993,7 @@ Most bindings are declared in individual packages.
   (global-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) #'wal/captain?)
 
   (wal/lieutenant "f" '(wal/fly/body :wk "fly"))
+  (wal/lieutenant "<SPC>" '(wal/push-mark :wk "push mark"))
 
   (defvar wal/misc-map (make-sparse-keymap))
 
@@ -2074,6 +2075,23 @@ Optonally, interrupt any running process if INTERRUPT is t."
   "Advise ADVISED using ADVICE and COMBINATOR."
   (mapc (lambda (it) (advice-add it combinator advice)) advised))
 #+end_src
+
+** Mark
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/push-mark (&optional clear-marks)
+  "Set mark at where point is without activating it.
+If CLEAR-MARKS is t, clear the mark ring."
+  (interactive "P")
+  (let ((mark (mark t)))
+
+    (when (or (null mark) (/= mark (point)))
+      (when clear-marks
+        (setq-local mark-ring nil))
+
+      (push-mark)
+      (message "Mark set"))))
+#+END_SRC
 
 ** Footer
 :PROPERTIES:
@@ -6357,7 +6375,7 @@ case."
       :empty-lines 1)))
 
   :wal-bind
-  ("<SPC>" . wal/org-roam-dispatch))
+  ("y" . wal/org-roam-dispatch))
 #+END_SRC
 
 *** org-roam-ui

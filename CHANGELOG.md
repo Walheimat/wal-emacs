@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Function `wal/push-mark` that pushes a mark without activating it.
+  Bound to `<SPC>` in `lieutenant.
+
 ### Changed
 
 - User-prefixed `i` is now bound to `consult-register-load`;
@@ -14,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Function `wal/message-in-a-bottle` now uses the blue whale as a
   default (although any other string may optionally be passed.
 - Font functions now display the current font height/family.
+- `wal/org-roam-dispatch` is now bound to user-prefixed `y`.
 
 ## [v1.9.1]
 
