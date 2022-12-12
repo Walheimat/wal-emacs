@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   default (although any other string may optionally be passed.
 - Font functions now display the current font height/family.
 - `wal/org-roam-dispatch` is now bound to user-prefixed `y`.
+- Help-like buffers are now displayed using `wdb/pop-up` instead of
+  `wdb/direction`. Some side-buffers are no longer targetable by
+  `other-window`.
 
 ## [v1.9.1]
 

@@ -3673,12 +3673,11 @@ external ones.
 (declare-function wal/modern-emacs-p "wal-func.el")
 (declare-function wdb/pop-up "wal-func.el")
 (declare-function wdb/side "wal-func.el")
-(declare-function wdb/direction "wal-func.el")
 
 (wal/on-boot emacs
-  (wdb/direction 'help-mode)
-  (wdb/direction 'shortdoc-mode)
-  (wdb/side 'debug-mode))
+  (wdb/pop-up 'help-mode)
+  (wdb/pop-up 'shortdoc-mode)
+  (wdb/side 'debug-mode :no-other t))
 #+END_SRC
 
 ** Improved Editing
@@ -3976,7 +3975,7 @@ Let's try to be even more =helpful=.
   :after elisp-mode
 
   :config
-  (wdb/direction 'helpful-mode)
+  (wdb/pop-up 'helpful-mode)
   (when (wal/modern-emacs-p)
     (defvar read-symbol-positions-list nil))
 
@@ -4007,7 +4006,7 @@ Leave a bookmark why don't you.
   :ensure nil
 
   :config
-  (wdb/side "\\*Bookmark Annotation\\*" :side 'left)
+  (wdb/side "\\*Bookmark Annotation\\*" :side 'left :no-other t)
 
   (with-eval-after-load 'bookmark
     (which-key-add-key-based-replacements "C-c m" "bookmark"))
@@ -4052,7 +4051,7 @@ Look up words in a word book.
   :ensure nil
 
   :config
-  (wdb/direction "^\\*Dictionary")
+  (wdb/pop-up "^\\*Dictionary")
 
   :custom
   (dictionary-server "dict.org")
@@ -6327,7 +6326,7 @@ case."
 
   :config
   ;; Show roam buffer on the right.
-  (wdb/side 'org-roam-mode :side 'right)
+  (wdb/side org-roam-buffer :side 'right :no-other t)
 
   ;; Refile differently for these files.
   (wal/replace-in-alist 'org-speed-commands '(("w" . wal/maybe-org-roam-refile)))
@@ -9444,8 +9443,8 @@ Debugging using VSCode's DAP (in =lsp-mode=)
    `((,dap-ui--repl-buffer . ((side . bottom) (slot . 1) (window-height . 10)))
      (,dap-ui--locals-buffer . ((side . right) (slot . 1)))))
 
-  (wdb/side dap-ui--repl-buffer)
-  (wdb/side dap-ui--locals-buffer :side 'right)
+  (wdb/side dap-ui--repl-buffer :no-other t)
+  (wdb/side dap-ui--locals-buffer :side 'right :no-other t)
 
   :custom
   (dap-auto-show-output nil)
@@ -9687,8 +9686,8 @@ What goes =docker-compose= up, goes =docker-compose= down.
 
   :config
   (wdb/side "\\*docker-containers\\*" :side 'top :height 15)
-  (wdb/side "^\\* docker container")
-  (wdb/side "^\\* docker-compose")
+  (wdb/pop-up "^\\* docker container")
+  (wdb/pop-up "^\\* docker-compose")
 
   :custom
   (docker-run-async-with-buffer-function 'docker-run-async-with-buffer-shell)
