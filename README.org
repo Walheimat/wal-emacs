@@ -3265,18 +3265,25 @@ This returns the made updates."
                          (when (internal-lisp-face-p it)
                            (set-face-attribute it nil attribute value)))
                        faces)))
+
     (run-hooks 'wal/fonts-updated-hook)
     updates))
 
 (defun wal/select-fixed-font (font)
   "Select fixed (available) FONT."
   (interactive
-   (list (completing-read "Select font: " (wal/available-fonts wal/fixed-fonts))))
+   (list
+    (completing-read
+     (format "Select fixed font (current: %s): " (face-attribute 'fixed-pitch :family))
+     (wal/available-fonts wal/fixed-fonts))))
   (wal/font-update :font font '(default fixed-pitch)))
 
 (defun wal/set-fixed-font-height (&optional height)
   "Set the HEIGHT for fixed fonts."
-  (interactive "nSet fixed font height: ")
+  (interactive
+   (list
+    (read-number
+     (format "Set fixed font height (currently: %s): " wal/fixed-font-height))))
   (let ((sensible-height (max (min height 300) 80)))
 
     (setq wal/fixed-font-height sensible-height)
@@ -3286,12 +3293,18 @@ This returns the made updates."
 (defun wal/select-variable-font (font)
   "Select variable (available) FONT."
   (interactive
-   (list (completing-read "Select font: " (wal/available-fonts wal/variable-fonts))))
+   (list
+    (completing-read
+     (format "Select variable font (current: %s): " (face-attribute 'variable-pitch :family))
+     (wal/available-fonts wal/variable-fonts))))
   (wal/font-update :font font '(variable-pitch)))
 
 (defun wal/set-variable-font-height (&optional height)
   "Set the HEIGHT for variable fonts."
-  (interactive "nSet variable font height: ")
+  (interactive
+   (list
+    (read-number
+     (format "Set variable font height (currently: %s): " wal/variable-font-height))))
   (let ((sensible-height (max (min height 300) 80)))
 
     (setq wal/variable-font-height sensible-height)
