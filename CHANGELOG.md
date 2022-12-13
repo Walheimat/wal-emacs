@@ -23,6 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Help-like buffers are now displayed using `wdb/pop-up` instead of
   `wdb/direction`. Some side-buffers are no longer targetable by
   `other-window`.
+- `popper` no longer groups.
+- `transient` for config prefixes checkers with `c`.
+- `wal/config-ascii-whale` uses different border thicknesses for
+  different whales.
+- Messages buffer is now using `wdb/pop-up` and is considered a
+  `popper` pop-up.
+- `help-mode` buffers are no longer pop-ups.
 
 ## [v1.9.1]
 

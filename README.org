@@ -513,10 +513,11 @@ Make completions look nice.
   (add-to-list 'marginalia-command-categories '(wal/install-expansion-pack . expansion-pack)))
 #+END_SRC
 
-** Shell Commands
+** Buffer Display
 
 #+BEGIN_SRC emacs-lisp
 (wdb/side "^\\*wal-async\\*")
+(wdb/pop-up "^\\*Messages\\*")
 #+END_SRC
 
 ** Footer
@@ -951,18 +952,23 @@ Most bindings are declared in individual packages.
     "e" '(:ignore t :wk "Emacs")
     "eq" '(wal/delete-edit-or-kill :wk "quit")
     "er" '(restart-emacs :wk "restart")
+
     "x" '(:ignore t :wk "programs")
     "xw" 'eww
+
     "f" '(:ignore t :wk "find")
     "fc" '(wal/find-custom-file :wk "custom")
     "fi" '(wal/find-init :wk "init")
     "fl" '(find-library :wk "library")
+
     "l" '(:ignore t :wk "list")
     "lp" '(list-processes :wk "processes")
     "lt" '(list-timers :wk "timers")
+
     "s" '(:ignore t :wk "set")
     "sT" '(wal/set-transparency :wk "transparency")
     "sc" '(wal/set-cursor-type :wk "cursor")
+
     "p" '(:ignore t :wk "package")
     "pf" '(package-refresh-contents :wk "refresh")
     "pi" '(package-install :wk "install")
@@ -988,6 +994,7 @@ Most bindings are declared in individual packages.
     (interactive)
     (let ((key (propertize (wal/key-combo-for-leader 'wal/captain) 'face 'success))
           (mode (propertize (symbol-name major-mode) 'face 'success)))
+
       (message "Captain (%s) has no binding in %s" key mode)))
 
   (global-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) #'wal/captain?)
@@ -1400,6 +1407,7 @@ DOCS will be passed on to `message'.
 This will delete the flag from the command line arguments and set
 the associated variable."
   (declare (indent defun) (doc-string 2))
+
   `(when-let* ((flags wal/custom-flags)
                (dash-flag (cdr (assoc ',flag flags)))
                (found (member dash-flag command-line-args)))
@@ -1638,6 +1646,7 @@ value is left untouched."
 (defmacro wal/try (package &rest body)
   "Exceute BODY if PACKAGE can be required."
   (declare (indent 1))
+
   `(when (require ',package nil :no-error) ,@body))
 
 (defun wal/server-edit-p ()
@@ -1682,6 +1691,7 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
 (defmacro wal/on-boot (name &rest body)
   "Only expand BODY in NAME on boot."
   (declare (indent defun))
+
   (if (bound-and-true-p wal/booting)
       `(progn ,@body)
     `(message "Ignoring statements in '%s'" ',name)))
@@ -1703,9 +1713,12 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
 (defmacro setq-unless (&rest pairs)
   "Set variable/value PAIRS if they're currently nil."
   (declare (debug setq))
+
   (let ((exps nil))
+
     (while pairs
       (let ((sym (car pairs)))
+
         (if (and (boundp sym) (symbol-value sym))
             (progn
               (pop pairs)
@@ -1736,6 +1749,7 @@ The INITIAL setup is only run once. The ALWAYS one on every call.
 In daemon-mode the function may be called IMMEDIATELY. An
 appropriate hook is chosen for the original call."
   (declare (indent defun) (doc-string 2))
+
   (let ((func-name (intern (concat "wal/init-setup-" (symbol-name name)))))
 
     `(progn
@@ -1788,7 +1802,10 @@ Show messages without cluttering.
 (defun wal/message-in-a-bottle (bottle &optional whale)
   "Randomly display a message from the given BOTTLE.
 
-That bottle is just an array of strings."
+That bottle is just an array of strings.
+
+WHALE is the string used to prefix the message with or the blue
+whale by default."
   (let* ((message-log-max nil) ; Don't clutter.
          (message (nth (wal/biased-random (length bottle)) bottle))
          (whale (or whale wal/ascii-blue-whale)))
@@ -1847,6 +1864,7 @@ Documented using DOCS.
 
 Optionally provide `quelpa' RECIPES."
   (declare (indent defun) (doc-string 2))
+
   `(add-to-list
     'wal/expansion-packs
     '(,name . (:packages ,packages :extras ,extras :docs ,docs :recipes ,recipes))))
@@ -5087,7 +5105,9 @@ Treat certain buffers and their windows as pop-ups.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/popper-echo-replace (regexp buffer-name &optional prefix)
-  "Search for REGEXP in BUFFER-NAME."
+  "Search for REGEXP in BUFFER-NAME
+
+If no PREFIX is given, a slash is pre-pended to the first match."
   (let ((prefix (or prefix "/")))
 
     (with-temp-buffer
@@ -5128,7 +5148,6 @@ Treat certain buffers and their windows as pop-ups.
 
   :custom
   (popper-display-control 'user)
-  (popper-group-function 'popper-group-by-projectile)
 
   (popper-reference-buffers '(docker-container-mode
                               "\\*Bookmark Annotation\\*"
@@ -5150,9 +5169,9 @@ Treat certain buffers and their windows as pop-ups.
                               debugger-mode
                               "\\*\\(.+\\)out\\*"
                               "^\\* docker container"
+                              "\\*Messages\\*"
                               ;; Help(-like).
                               helpful-mode
-                              help-mode
                               dictionary-mode
                               shortdoc-mode))
 
@@ -6303,6 +6322,7 @@ If called with `universal-argument', default to `org-roam' in any
 case."
   (interactive)
   (declare-function org-refile "ext:org.el")
+
   (if (and (org-roam-buffer-p) (not (wal/univ-p)))
       (org-roam-refile)
     (org-refile args)))
@@ -10284,7 +10304,7 @@ INFO contains positioning information."
   (posframe-show
      wal/ascii-whale-buffer
      :position (point)
-     :border-width 6
+     :border-width (pcase wal/config-ascii-whale ('blue 12) ('cachalot 6) (t 6))
      :border-color (face-attribute 'mode-line-highlight :background nil t)
      :poshandler 'wal/ascii-whale-poshandler
      :posframe-parent-buffer (or wal/ascii-whale-parent-buffer (current-buffer))
@@ -10512,11 +10532,11 @@ name are deleted beforehand."
       ("x" "install expansion pack" wal/install-expansion-pack)
       ("g" "customize group" wal/customize-group)]
      ["Check"
-      ("c" "checkdoc" wal/checkdoc-config-packages)
-      ("f" "flycheck" wal/flycheck-config-packages)
-      ("o" "coverage" wal/check-coverage)]
+      ("c d" "checkdoc" wal/checkdoc-config-packages)
+      ("c f" "flycheck" wal/flycheck-config-packages)
+      ("c o" "coverage" wal/check-coverage)]
      ["Find"
-      ("'" "config" wal/find-config)
+      ("f" "config" wal/find-config)
       ("p" "packages" wal/dired-config-packages)
       ("m" "show changes" wal/show-config-diff-range)
       ("l" "find changelog" wal/find-config-changelog)]
@@ -10628,12 +10648,14 @@ Provide common test functionality and require the packages.
 (defmacro with-mock (name fun &rest body)
   "Evaluate BODY while mocking function NAME using FUN."
   (declare (indent defun))
+
   `(cl-letf (((symbol-function ',name) ,fun))
      ,@body))
 
 (defmacro with-mock-all (flist &rest body)
   "Evaluate BODY mocking alist of functions FLIST."
   (declare (indent defun))
+
   `(cl-letf (,@(mapcar (lambda (it) `((symbol-function ',(car it)) ,(cdr it))) flist))
      ,@body))
 
