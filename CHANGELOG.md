@@ -10,7 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Function `wal/push-mark` that pushes a mark without activating it.
-  Bound to `<SPC>` in `lieutenant.
+  Bound to `<SPC>` in `lieutenant`.
+- Command `org-agenda-list` is now advised to find the tasks directory
+  and store the windwo configuration using custom variable
+  `wal/org-agenda-register-char`.
 
 ### Changed
 
