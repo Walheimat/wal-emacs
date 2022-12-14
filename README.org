@@ -1010,7 +1010,8 @@ Most bindings are declared in individual packages.
   (general-define-key
    :keymaps 'wal/misc-map
    :wk-full-keys nil
-   "f" '(wal/find-fish-config :wk "find fish"))
+   "f" '(wal/find-fish-config :wk "find fish")
+   "b" '(wal/kill-some-file-buffers :wk "kill file buffers"))
 
   ;; Use H-u for C-u.
   (when wal/use-hyper-prefix
@@ -1186,6 +1187,17 @@ removed."
 (defalias 'wdb/direction 'wal/display-buffer-in-direction)
 (defalias 'wdb/ghost 'wal/display-buffer-ethereally)
 (defalias 'wdb/same 'wal/display-buffer-reuse-same-window)
+#+END_SRC
+
+** Buffer Hygiene
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/kill-some-file-buffers ()
+  "Kill some buffers associated with files."
+  (interactive)
+  (let ((file-buffers (seq-filter (lambda (it) (buffer-file-name it)) (buffer-list))))
+
+    (kill-some-buffers file-buffers)))
 #+END_SRC
 
 ** Editing
@@ -2240,6 +2252,25 @@ If CLEAR-MARKS is t, clear the mark ring."
                      (display-buffer-reuse-window display-buffer-same-window))))))
 #+END_SRC
 
+*** Buffer Hygiene
+
+#+BEGIN_SRC emacs-lisp
+(ert-deftest wal/kill-some-file-buffers ()
+  (let ((killed-buffers nil))
+
+    (wal/with-temp-file "to-be-killed"
+      (with-mock kill-buffer-ask (lambda (b) (setq killed-buffers (append killed-buffers `(,b))))
+
+        (find-file-noselect wal/tmp-file)
+
+        (get-buffer-create "killer-buffer")
+
+        (wal/kill-some-file-buffers))
+
+        (should-not (memq (get-buffer "killer-buffer") killed-buffers))
+        (should (memq (get-buffer "to-be-killed") killed-buffers)))))
+#+END_SRC
+
 *** Editing
 
 #+BEGIN_SRC emacs-lisp
@@ -2362,19 +2393,16 @@ If CLEAR-MARKS is t, clear the mark ring."
 
 #+BEGIN_SRC emacs-lisp
 (ert-deftest test-wal/find-custom-file ()
-  (let ((custom-file "/tmp/custom.el"))
-    (make-empty-file custom-file)
-    (wal/find-custom-file)
-    (should (string-equal (buffer-name) "custom.el"))
-    (delete-file custom-file)))
+  (wal/with-temp-file "custom.el"
+    (let ((custom-file wal/tmp-file))
+      (wal/find-custom-file)
+      (should (string-equal (buffer-name) "custom.el")))))
 
 (ert-deftest test-wal/find-fish-config ()
-  (let* ((fish-config "/tmp/config.fish")
-         (wal/fish-config-locations `(,fish-config)))
-    (make-empty-file fish-config)
-    (wal/find-fish-config)
-    (should (string-equal (buffer-name) "config.fish"))
-    (delete-file fish-config)))
+  (wal/with-temp-file "config.fish"
+    (let ((wal/fish-config-locations `(,wal/tmp-file)))
+      (wal/find-fish-config)
+      (should (string-equal (buffer-name) "config.fish")))))
 
 (ert-deftest test-wal/find-fish-config--errors-if-not-found ()
   (defvar wal/fish-config-locations)
@@ -2486,27 +2514,28 @@ If CLEAR-MARKS is t, clear the mark ring."
 *** Scratch Buffer
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/scratch-persist-file (expand-file-name "scratch-persist" default-directory))
+(defvar wal/scratch-persist-file nil)
 
 (ert-deftest test-wal/persist-scratch-and-rehydrate ()
-  (with-current-buffer (get-buffer-create "*scratch*")
-    (erase-buffer)
-    (insert "This one's itchy"))
+  (wal/with-temp-file "scratch"
+    (let ((wal/scratch-persist-file wal/tmp-file))
 
-  (wal/persist-scratch)
+      (with-current-buffer (get-buffer-create "*scratch*")
+        (erase-buffer)
+        (insert "This one's itchy"))
 
-  (let ((file (find-file-noselect wal/scratch-persist-file)))
+      (wal/persist-scratch)
 
-    (with-current-buffer file
-      (should (string-equal "This one's itchy" (buffer-string)))))
+      (let ((file (find-file-noselect wal/scratch-persist-file)))
 
-  (with-current-buffer (get-buffer-create "*scratch*")
-    (erase-buffer)
-    (should (string-equal "" (buffer-string)))
-    (wal/rehydrate-scratch)
-    (should (string-equal "This one's itchy" (buffer-string))))
+        (with-current-buffer file
+          (should (string-equal "This one's itchy" (buffer-string)))))
 
-  (delete-file wal/scratch-persist-file))
+      (with-current-buffer (get-buffer-create "*scratch*")
+        (erase-buffer)
+        (should (string-equal "" (buffer-string)))
+        (wal/rehydrate-scratch)
+        (should (string-equal "This one's itchy" (buffer-string)))))))
 #+END_SRC
 
 *** Indentation
@@ -10677,6 +10706,25 @@ Provide common test functionality and require the packages.
   "Match expansion of FORM against VALUE."
   `(should (pcase (macroexpand-1 ',form)
              ,@(mapcar #'(lambda (x) (list x t)) value))))
+
+(defmacro wal/with-temp-file (filename &rest body)
+  "Create and discard a file.
+
+FILENAME is the name of the file, BODY the form to execute while
+the file is alive.
+
+The associated file buffer is also killed."
+  (declare (indent defun))
+
+  (let ((tmp-file (expand-file-name filename "/tmp")))
+
+    `(progn
+       (let ((wal/tmp-file ,tmp-file))
+         (make-empty-file ,tmp-file)
+         ,@body
+         (kill-buffer (get-file-buffer ,tmp-file))
+         (delete-file ,tmp-file)
+         (message "deleted %s" ,tmp-file)))))
 
 (require 'ert-x)
 (require 'wal-func)

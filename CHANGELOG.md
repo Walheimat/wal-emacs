@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command `org-agenda-list` is now advised to find the tasks directory
   and store the windwo configuration using custom variable
   `wal/org-agenda-register-char`.
+- Command `wal/kill-some-file-buffers` to run `kill-some-buffers` on
+  buffers associated with files. Bound to `b` in `wal/misc-map`.
 
 ### Changed
 
