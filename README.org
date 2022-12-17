@@ -3160,6 +3160,12 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
   :type 'boolean
   :group 'wal-look)
 
+(defun wal/transparency--param ()
+  "Get the transparency parameter for this Emacs version."
+  (if (wal/modern-emacs-p)
+      'alpha-background
+    'alpha))
+
 (defun wal/set-transparency (&optional value)
   "Set the transparency of the frame to VALUE.
 
@@ -3168,13 +3174,12 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 This also updates variable `wal/transparency' for the duration of
 the session."
   (interactive "nSet transparency (1-100): ")
-  (let ((transparency (min (max (or value wal/transparency) 1) 100)))
+  (let ((transparency (min (max (or value wal/transparency) 1) 100))
+        (param (wal/transparency--param)))
 
     (setq wal/transparency transparency)
 
-    (if (wal/modern-emacs-p)
-        (modify-all-frames-parameters `((alpha-background . ,transparency)))
-      (modify-all-frames-parameters `((alpha . ,transparency))))))
+    (modify-all-frames-parameters `((,param . ,transparency)))))
 
 (defvar wal/active-theme nil)
 
@@ -3195,12 +3200,12 @@ the session."
   (wal/define-init-setup visuals
     "Set up visual frills like theme and transparency."
     :initial
-    ((if (wal/modern-emacs-p)
-         (add-to-list 'default-frame-alist `(alpha-background . ,wal/transparency))
-       (add-to-list 'default-frame-alist `(alpha . ,wal/transparency)))
+    ((add-to-list 'default-frame-alist `(,(wal/transparency--param) . ,wal/transparency))
+
      (when wal/theme
        (setq wal/active-theme wal/theme)
        (wal/load-active-theme))
+
      (when wal/hidpi
        (set-fringe-mode 18)))
     :always
