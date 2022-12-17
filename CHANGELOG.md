@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal/org-agenda-register-char`.
 - Command `wal/kill-some-file-buffers` to run `kill-some-buffers` on
   buffers associated with files. Bound to `b` in `wal/misc-map`.
+- Function `wal/java-test-dwim` that uses `transient` switches to call
+  the right elisp command.
 
 ### Changed
 

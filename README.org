@@ -556,7 +556,11 @@ I use many[fn:8] custom keybindings.
 (eval-when-compile
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
+(defvar transient-current-command)
+
 (declare-function wal/prefix-user-key "wal-func.el")
+(declare-function transient-args "ext:transient.el")
+(declare-function transient-arg-value "ext:transient.el")
 
 (defgroup wal-key-bindings nil
   "Change key bindings settings."
@@ -933,6 +937,12 @@ Some transients are bound directly, others are =wal/univ= variants (see
 above).
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/transient-grab (arg)
+  "Grab argument ARG from current command."
+  (transient-arg-value
+   (format "--%s=" arg)
+   (transient-args transient-current-command)))
+
 (use-package transient
   :custom
   (transient-hide-during-minibuffer-read t)
@@ -7575,6 +7585,7 @@ Let's greet the world.
 
 (declare-function prettier--quit-all-processes "ext:prettier.el")
 (declare-function projectile-project-root "ext:projectile.el")
+(declare-function wal/transient-grab "wal-key-bindings.el")
 (declare-function wdb/side "wal-func.el")
 
 (defvar prettier-processes)
@@ -8646,6 +8657,17 @@ LSP integration.
   (let ((shell-file-name "/bin/bash"))
     (apply fun args)))
 
+(defun wal/java-test-dwim ()
+  "Run or debug test or class depending on ARGS."
+  (interactive)
+  (let* ((mode (wal/transient-grab "mode"))
+         (scope (wal/transient-grab "scope"))
+         (fun (intern (format "dap-java-%s-test-%s" mode scope))))
+
+    (transient-set)
+
+    (call-interactively fun)))
+
 (use-package lsp-java
   :wal-ways nil
 
@@ -8664,12 +8686,13 @@ LSP integration.
 
   (wal/transient-define-prefix-once wal/java-mode-dispatch ()
     "Access `java-mode' commands."
-    [["Run"
-      ("c" "class" dap-java-run-test-class)
-      ("m" "method" dap-java-run-test-method)]
-     ["Debug"
-      ("C" "class" dap-java-debug-test-class)
-      ("M" "method" dap-java-debug-test-method)]])
+    :value '("--mode=run" "--scope=method")
+
+    ["Test"
+     ("m" "mode" "--mode=" :choices (run debug) :always-read t)
+     ("s" "scope" "--scope=" :choices (class method) :always-read t)
+     ""
+     ("t" "test" wal/java-test-dwim)])
 
   :custom
   (lsp-java-format-on-type-enabled nil) ; Suggested fix for failing completion.
