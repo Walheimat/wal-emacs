@@ -622,7 +622,8 @@ There are a few non-standard meta sequences.
 Most hyper[fn:9] bindings are quick-access actions:
 
 + =H-h= finds project file
-+ =H-i= loads registers using =consult= (stores if called with =C-u=)
++ =H-i= loads registers
++ =H-u= stores registers
 + =H-j= switches buffer using =consult=
 + =H-k= acts on the current point with =embark= (immediately if called
   with =C-u=)
@@ -637,10 +638,9 @@ It's also used for some dispatches:
 + =H-o= for =ace-window=
 + =H-y= for =org-roam=.
 
-It's also used for two command maps:
+It's also used for a command map:
 
-+ =H-l= for =goto-map=
-+ =H-u= for a custom =consult= map.
++ =H-l= for =goto-map=.
 
 **** Caps to Hyper
 
@@ -755,7 +755,6 @@ They are:
 + =m= to move a line
 + =s= to open the scratch buffer (or create with =C-u=)
 + =.= to mark all "like this"
-+ =u= for additional =consult= actions
 + =w= to kill a line
 + =x= to delete a line.
 
@@ -5790,13 +5789,13 @@ Do not ignore hidden files."
   :commands
   (wal/consult-line
    wal/consult-clock-in
-   wal/consult-unregister
-   wal/univ-consult-register)
+   wal/univ-consult-mark
+   wal/consult-unregister)
 
   :init
-  (wal/univ consult-register-load consult-register-store)
+  (wal/univ consult-mark consult-global-mark)
 
-  (defvar wal/consult-map (make-sparse-keymap))
+  (defvar wal/ctl-x-c-map (make-sparse-keymap))
 
   :config
   ;; Integrate into `projectile' and `xref'.
@@ -5830,16 +5829,6 @@ Do not ignore hidden files."
     (transient-append-suffix 'wal/lsp-dispatch '(0 3 1)
       '("s" "symbol" consult-lsp-file-symbols)))
 
-  (general-define-key
-   :keymaps 'wal/consult-map
-   :wk-full-keys nil
-   "s" '(wal/consult-line :wk "search")
-   "f" '(consult-focus-lines :wk "focus")
-   "c" '(wal/consult-clock-in :wk "clock in")
-   "?" '(consult-locate :wk "locate")
-   "i" '(consult-register :wk "register")
-   "r" '(consult-recent-file :wk "recent file"))
-
   :custom
   (consult-buffer-filter (list "\\` " "\\`\\*" "\\`magit"))
 
@@ -5847,33 +5836,36 @@ Do not ignore hidden files."
   (:map goto-map
    ("g" . consult-goto-line)
    ("h" . consult-org-heading)
-   ("m" . consult-mark)
-   ("M" . consult-global-mark)
+   ("<SPC>" . wal/univ-consult-mark)
    :map kmacro-keymap
-   ("u" . consult-kmacro)
+   ("c" . consult-kmacro)
    :map bookmark-map
-   ("u" . consult-bookmark)
+   ("c" . consult-bookmark)
    :map ctl-x-r-map
-   ("u" . consult-register)
-   ("U" . wal/consult-unregister)
-   :map flycheck-command-map
-   ("u" . consult-flycheck))
+   ("c" . consult-register)
+   ("C" . clear-rectangle)
+   ("u" . wal/consult-unregister)
+   :map wal/ctl-x-c-map
+   ("s" . wal/consult-line)
+   ("f" . consult-focus-lines)
+   ("C-f" . consult-recent-file)
+   ("c" . wal/consult-clock-in)
+   ("l" . consult-locate))
 
   :wal-bind
   (("j" . consult-buffer)
-   ("i" . wal/univ-consult-register-load))
+   ("i" . consult-register-load)
+   ("u" . consult-register-store))
 
-  :wal-bind-keymap
-  (("u" . wal/consult-map))
+  :bind-keymap
+  ("C-x c" . wal/ctl-x-c-map)
 
   :general
   (wal/general
     "st" '(consult-theme :wk "consult theme"))
   (wal/major
     "+" 'consult-mode-command
-    "-" 'consult-minor-mode-menu)
-
-  (wal/lieutenant "u" '(:keymap wal/consult-map :wk "consult")))
+    "-" 'consult-minor-mode-menu))
 #+END_SRC
 
 ** Footer
@@ -9178,10 +9170,14 @@ Find errors by severity.
   :defer 2
   :after (consult flycheck)
 
+  :bind
+  (:map flycheck-command-map
+   ("b" . flycheck-buffer)) ;; Uses c.
+
   :general
   (general-define-key
     :keymaps 'flycheck-command-map
-    "u" '(consult-flycheck :wk "consult flycheck")))
+    "c" '(consult-flycheck :wk "consult flycheck")))
 #+END_SRC
 
 ** Footer
