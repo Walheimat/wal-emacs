@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `yasnippet` was removed in favor of `tempel`.
 - Package `vundo`.
 - Package `org-transclusion`.
+- Package `crux`.
 
 ## [v1.9.1]
 

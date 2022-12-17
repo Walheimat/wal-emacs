@@ -750,10 +750,10 @@ Leader key =lieutenant= provides a layer of useful editing actions.
 They are:
 
 + =c= to copy a line
-+ =d= to duplicate lines
++ =d= to duplicate lines (in Emacs 29)
 + =i= for =iedit-mode=
 + =m= to move a line
-+ =s= to open the scratch buffer
++ =s= to open the scratch buffer (or create with =C-u=)
 + =.= to mark all "like this"
 + =u= for additional =consult= actions
 + =w= to kill a line
@@ -764,10 +764,9 @@ The sink for =lieutenant= provides alternative version of these calls.
 They are:
 
 + =c= to copy a region
-+ =d= to duplicate and comment
++ =d= to dwim-duplicate
 + =h= to mark a region
 + =m= to move a region
-+ =s= to create new scratch buffer using =crux=
 + =.= to mark all ends in a region
 + =w= to kill a region
 + =x= to delete a region.
@@ -1014,6 +1013,11 @@ Most bindings are declared in individual packages.
   (defvar wal/misc-map (make-sparse-keymap))
 
   (wal/lieutenant "," '(:keymap wal/misc-map :wk "misc"))
+
+  (when (wal/modern-emacs-p)
+    (wal/lieutenant! "d" 'duplicate-line 'duplicate-dwim))
+
+  (wal/lieutenant "s" '(wal/scratch-buffer :wk "scratch buffer"))
 
   (general-define-key
    :keymaps 'wal/misc-map
@@ -1523,6 +1527,15 @@ Both functions will be called interactively."
 Make the scratch buffer contents persist between sessions.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/scratch-buffer (&optional create)
+  "Switch to the scratch buffer."
+  (interactive "P")
+  (let ((buf (if create
+                 (generate-new-buffer "*scratch*")
+               (get-buffer-create "*scratch"))))
+
+    (switch-to-buffer buf)))
+
 (defun wal/persist-scratch ()
   "Persist contents of *scratch* buffer.
 The contents are stored in `wal/scratch-persist-file'."
@@ -4305,33 +4318,6 @@ Less intrusive pairing mode than =smartparens=.
   (advice-add
    'electric-pair-default-inhibit :before-until
    #'wal/in-case-of-mc-mode-do-not-default))
-#+END_SRC
-
-*** crux
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-I guess I can't live without this package.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/scratch-buffer ()
-  "Switch to the scratch buffer."
-  (interactive)
-  (switch-to-buffer (get-buffer-create "*scratch*")))
-
-(use-package crux
-  :bind
-  ("C-k" . crux-smart-kill-line)
-  ("M-k" . crux-kill-line-backwards)
-  ("C-o" . crux-smart-open-line)
-  ("C-M-o" . crux-smart-open-line-above)
-
-  :general
-  (wal/lieutenant! "d"
-    'crux-duplicate-current-line-or-region
-    'crux-duplicate-and-comment-current-line-or-region)
-  (wal/lieutenant! "s" 'wal/scratch-buffer 'crux-create-scratch-buffer))
 #+END_SRC
 
 ** Footer
