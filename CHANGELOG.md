@@ -40,7 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `help-mode` buffers are no longer pop-ups.
 - The bindings for commands from the `consult` package have changed.
   The main change is that `c` is used instead of `u` in foreign maps.
-  - User-prefixed `u` now binds `consult-register-store`.
+- User-prefixed `u` now binds `consult-register-store`.
+- `org-roam` is now bound in `major` to `r`; `verb` to `v`.
 
 ### Removed
 
