@@ -737,8 +737,7 @@ command maps are bound
 + =p= for =projectile=
 + =r= for =verb=
 + =t= for =vterm=
-+ =u= for =vundo=
-+ =y= for =yasnippet=.
++ =u= for =vundo=.
 
 *** Captain
 
@@ -4232,7 +4231,7 @@ One thing that can be a bit tricky is selecting regions, not anymore.
    ("C-<" . er/contract-region)))
 #+END_SRC
 
-*** yasnippet
+*** tempel
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -4241,29 +4240,29 @@ Don't reduce the boilerplate, reduce your involvement in it with
 snippets.
 
 #+BEGIN_SRC emacs-lisp
-(use-package yasnippet
-  :hook ((prog-mode org-mode prog-like) . yas-minor-mode)
+(defun wal/tempel-setup-capf ()
+  "Make sure `tempel-complete' runs first."
+  (let* ((current completion-at-point-functions)
+         (prepended (cons #'tempel-complete current))
+         (final (delete-dups prepended)))
 
-  :config
-  (yas-reload-all)
+     (setq-local completion-at-point-functions final)))
 
-  :wal-bind
-  (:map yas-minor-mode-map
-   ("<tab>" . yas-expand))
+(use-package tempel
+  :hook ((prog-mode prog-like org-mode) . wal/tempel-setup-capf)
 
-  :general
-  (wal/major :keymaps 'yas-minor-mode-map
-    "y"  '(:ignore t :wk "yas")
-    "yi" 'yas-insert-snippet
-    "yv" 'yas-visit-snippet-file
-    "yn" 'yas-new-snippet)
+  :custom
+  (tempel-trigger-prefix ">")
+  (tempel-mark (propertize ">" 'face 'mode-line-highlight))
 
-  :delight " yas")
-
-(use-package yasnippet-snippets
-  :demand
-  :after yasnippet)
-#+END_SRC
+  :bind
+  (:map tempel-map
+   ("M-k" . tempel-kill)
+   ("M-a" . tempel-beginning)
+   ("M-e" . tempel-end)
+   ("M-n" . tempel-next)
+   ("M-p" . tempel-previous)))
+   #+END_SRC
 
 *** drag-stuff
 :PROPERTIES:
@@ -5508,7 +5507,7 @@ Alternative.
 
 (use-package corfu
   :hook
-  (((prog-mode prog-like) . corfu-mode)
+  (((org-mode prog-mode prog-like) . corfu-mode)
    (minibuffer-setup . wal/corfu-enable-in-minibuffer))
 
   :custom
@@ -9307,6 +9306,7 @@ Language servers are awesome. Thanks, Microsoft.
 (declare-function dap-register-debug-template "ext:dap-mode.el")
 (declare-function hydra-disable "ext:hydra.el")
 (declare-function wal/dap-hydra/body "wal-lsp.el")
+(declare-function wal/tempel-setup-capf "wal-edit.el")
 
 (defvar dap-debug-template-configurations)
 
@@ -9364,7 +9364,9 @@ PREFIX-LENGTH)."
 (defun wal/lsp-completion-with-corfu ()
   "Advise completion to work better with `corfu' and `orderless'."
   (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
-        completion-styles))
+        completion-styles)
+
+  (wal/tempel-setup-capf))
 
 (defun wal/first-prevent-adding-other-projects (&rest _args)
   "Prevent adding workspace roots from other projects."

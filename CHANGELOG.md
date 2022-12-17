@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   buffers associated with files. Bound to `b` in `wal/misc-map`.
 - Function `wal/java-test-dwim` that uses `transient` switches to call
   the right elisp command.
+- Package `tempel`, replacing `yasnippet`.
 
 ### Changed
 
@@ -37,6 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Messages buffer is now using `wdb/pop-up` and is considered a
   `popper` pop-up.
 - `help-mode` buffers are no longer pop-ups.
+
+### Removed
+
+- Package `yasnippet` was removed in favor of `tempel`.
 
 ## [v1.9.1]
 
