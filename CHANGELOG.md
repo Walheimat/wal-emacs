@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All consult bindings were moved to renamed keymap `wal/consult-map`
   that uses `wal/consult-key` for its binding. This key is also used
   in the `rg` and `lsp` transients.
+- Dispatch `org-roam` was moved to user-prefixed `]`.
 
 ### Removed
 
