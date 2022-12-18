@@ -42,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The main change is that `c` is used instead of `u` in foreign maps.
 - User-prefixed `u` now binds `consult-register-store`.
 - `org-roam` is now bound in `major` to `r`; `verb` to `v`.
+- User-prefixed `l` now calls `wal/avy-goto-line` that goes to end by
+  default and to egnning if called with `C-u`. Those two actions are
+  no longer bound in `goto-map`.
 
 ### Removed
 

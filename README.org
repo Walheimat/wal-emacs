@@ -627,6 +627,7 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-j= switches buffer
 + =H-k= acts on the current point with =embark= (immediately if called
   with =C-u=)
++ =H-l= to jump to line with =avy= (beginning of line if called with =C-u=)
 + =H-m= for =magit-status= (shows full status if called with =C-u=)
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-n= searches project with =rg= (=C-u= shows full menu)
@@ -636,10 +637,6 @@ Most hyper[fn:9] bindings are quick-access actions:
 It's also used for a dispatch:
 
 + =H-o= for =ace-window=.
-
-It's also used for a command map:
-
-+ =H-l= for =goto-map=.
 
 **** Caps to Hyper
 
@@ -5272,6 +5269,13 @@ If LINE-FIRST is t, move to a line first."
               :beg (line-beginning-position)
               :end (line-end-position))))
 
+(defun wal/avy-goto-line (&optional beginning)
+  "Go to line or BEGINNING of line."
+  (interactive "P")
+  (if beginning
+      (avy-goto-line)
+    (avy-goto-end-of-line)))
+
 (defun wal/avy-mark-region ()
   "Select two lines and mark the region between them."
   (interactive)
@@ -5319,14 +5323,12 @@ beginning."
   :bind
   (:map goto-map
    ("c" . avy-goto-char)        ; Replaces `goto-char'.
-   ("l" . avy-goto-line)
-   ("e" . avy-goto-end-of-line)
    ("w" . avy-goto-word-0)
    ("s" . avy-goto-whitespace-end)
    ("k" . wal/avy-goto-word-in-line))
 
-  :wal-bind-keymap
-  ("l" . goto-map)
+  :wal-bind
+  ("l" . wal/avy-goto-line)
 
   :general
   ;; Lines.
