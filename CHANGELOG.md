@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   beginning of line.
 - Command `popper-toggle-latest` is now bound to user-prefixed `\`.
 - User-prefixed `]` no longer binds `popper-cycle`.
+- Prefix for `tempel` is now `,,` to avoid clashes in langauges that
+  use `>`.
 
 ## [v1.9.2]
 
