@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prefix for `tempel` is now `,,` to avoid clashes in langauges that
   use `>`.
 
+### Removed
+
+- Package `mode-line-bell`.
+
 ## [v1.9.2]
 
 Good trim.
