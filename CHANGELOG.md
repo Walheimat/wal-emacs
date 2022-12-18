@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `wal/avy-goto-line` now uses `mwim-beginning` when going to
   beginning of line.
+- Command `popper-toggle-latest` is now bound to user-prefixed `\`.
+- User-prefixed `]` no longer binds `popper-cycle`.
 
 ## [v1.9.2]
 
