@@ -5,14 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.9.2]
+
+Good trim.
 
 ### Added
 
 - Function `wal/push-mark` that pushes a mark without activating it.
   Bound to `<SPC>` in `lieutenant`.
 - Command `org-agenda-list` is now advised to find the tasks directory
-  and store the windwo configuration using custom variable
+  and store the window configuration using custom variable
   `wal/org-agenda-register-char`.
 - Command `wal/kill-some-file-buffers` to run `kill-some-buffers` on
   buffers associated with files. Bound to `b` in `wal/misc-map`.
@@ -43,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - User-prefixed `u` now binds `consult-register-store`.
 - `org-roam` is now bound in `major` to `r`; `verb` to `v`.
 - User-prefixed `l` now calls `wal/avy-goto-line` that goes to end by
-  default and to egnning if called with `C-u`. Those two actions are
+  default and to beginning if called with `C-u`. Those two actions are
   no longer bound in `goto-map`.
 
 ### Removed
