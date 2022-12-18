@@ -632,11 +632,15 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-n= searches project with =rg= (=C-u= shows full menu)
 + =H-p= switches projects
 + =H-=\= to toggle pop-ups using =popper=
-+ =H-u= stores registers.
++ =H-u= stores registers
 
 It's also used for a dispatch:
 
 + =H-o= for =ace-window=.
+
+It's also used for a command map:
+
++ =H-[= binds map for =consult=.
 
 **** Caps to Hyper
 
@@ -5453,6 +5457,18 @@ Complete commands and code.
 (defvar savehist-additional-variables)
 (defvar wal/active-theme)
 (defvar wal/dwim-key)
+
+;;; Customization:
+
+(defgroup wal-complete nil
+  "Change completion settings."
+  :group 'wal
+  :tag "Completion")
+
+(defcustom wal/consult-key "["
+  "The key used for `consult'."
+  :type 'key-sequence
+  :group 'wal-complete)
 #+END_SRC
 
 ** Inline Completion
@@ -5790,7 +5806,14 @@ Do not ignore hidden files."
   :init
   (wal/univ consult-mark consult-global-mark)
 
-  (defvar wal/ctl-x-c-map (make-sparse-keymap))
+  (defvar wal/consult-map (make-sparse-keymap))
+
+  (bind-key (wal/prefix-user-key wal/consult-key)
+            #'(lambda nil
+                (interactive)
+                (use-package-autoload-keymap 'wal/consult-map 'consult nil)))
+
+  (bind-key wal/consult-key 'consult-goto-line 'goto-map)
 
   :config
   ;; Integrate into `projectile' and `xref'.
@@ -5819,50 +5842,41 @@ Do not ignore hidden files."
 
   ;; Create suffixes for other transients.
   (with-eval-after-load 'rg-menu
-    (transient-append-suffix 'rg-menu "p" '("u" "Using consult" consult-ripgrep)))
+    (transient-append-suffix 'rg-menu "p" `(,wal/consult-key "Using consult" consult-ripgrep)))
   (with-eval-after-load 'lsp-mode
     (transient-append-suffix 'wal/lsp-dispatch '(0 3 1)
-      '("s" "symbol" consult-lsp-file-symbols)))
+      `(,wal/consult-key "symbol" consult-lsp-file-symbols)))
+  (with-eval-after-load 'org
+    (transient-append-suffix 'wal/org-mode-dispatch "o"
+      `(,wal/consult-key "go to heading" consult-org-heading)))
 
-  (which-key-add-key-based-replacements "C-x c" "consult")
+  (which-key-add-key-based-replacements
+    (wal/prefix-user-key wal/consult-key)
+    '(nil . "consult"))
 
   :custom
   (consult-buffer-filter (list "\\` " "\\`\\*" "\\`magit"))
 
   :bind
-  (:map goto-map
-   ("g" . consult-goto-line)
-   ("h" . consult-org-heading)
+  (:map wal/consult-map
    ("<SPC>" . wal/univ-consult-mark)
-   :map kmacro-keymap
-   ("c" . consult-kmacro)
-   :map bookmark-map
-   ("c" . consult-bookmark)
-   :map ctl-x-r-map
-   ("c" . consult-register)
-   ("C" . clear-rectangle)
-   ("u" . wal/consult-unregister)
-   :map wal/ctl-x-c-map
-   ("s" . wal/consult-line)
-   ("f" . consult-focus-lines)
-   ("C-f" . consult-recent-file)
    ("c" . wal/consult-clock-in)
-   ("l" . consult-locate))
+   ("f" . consult-focus-lines)
+   ("k" . consult-kmacro)
+   ("l" . consult-locate)
+   ("m" . consult-bookmark)
+   ("r" . consult-register)
+   ("u" . wal/consult-unregister)
+   ("s" . wal/consult-line)
+   ("t" . consult-theme)
+   ("C-f" . consult-recent-file)
+   ("+" . consult-mode-command)
+   ("-" . consult-minor-mode-menu))
 
   :wal-bind
   (("j" . consult-buffer)
    ("i" . consult-register-load)
-   ("u" . consult-register-store))
-
-  :bind-keymap
-  ("C-x c" . wal/ctl-x-c-map)
-
-  :general
-  (wal/general
-    "st" '(consult-theme :wk "consult theme"))
-  (wal/major
-    "+" 'consult-mode-command
-    "-" 'consult-minor-mode-menu))
+   ("u" . consult-register-store)))
 #+END_SRC
 
 ** Footer
