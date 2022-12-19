@@ -622,7 +622,7 @@ There are a few non-standard meta sequences.
 Most hyper[fn:9] bindings are quick-access actions:
 
 + =H-h= finds project file
-+ =H-i= loads registers using =consult=
++ =H-i= loads registers using =consult= (stores when called with =C-u=)
 + =H-j= switches buffer
 + =H-k= acts on the current point with =embark= (immediately if called
   with =C-u=)
@@ -631,8 +631,7 @@ Most hyper[fn:9] bindings are quick-access actions:
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-n= searches project with =rg= (=C-u= shows full menu)
 + =H-p= switches projects
-+ =H-=\= to toggle pop-ups using =popper=
-+ =H-u= stores registers.
++ =H-=\= to toggle pop-ups using =popper=.
 
 It's also used for two dispatches:
 
@@ -5829,10 +5828,12 @@ Do not ignore hidden files."
   (wal/consult-line
    wal/consult-clock-in
    wal/univ-consult-mark
+   wal/univ-consult-register-load
    wal/consult-unregister)
 
   :init
   (wal/univ consult-mark consult-global-mark)
+  (wal/univ consult-register-load consult-register-store)
 
   (defvar wal/consult-map (make-sparse-keymap))
 
@@ -5903,9 +5904,8 @@ Do not ignore hidden files."
 
   :wal-bind
   (("j" . consult-buffer)
-   ("i" . consult-register-load)
-   ("u" . consult-register-store)))
-#+END_SRC
+   ("i" . wal/univ-consult-register-load)))
+   #+END_SRC
 
 ** Footer
 :PROPERTIES:

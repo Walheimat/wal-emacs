@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that uses `wal/consult-key` for its binding. This key is also used
   in the `rg` and `lsp` transients.
 - Dispatch `org-roam` was moved to user-prefixed `]`.
+- User-prefixed `i` now loads and stores register using `wal/univ`.
 
 ### Removed
 
