@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Package `mode-line-bell`.
 
+### Fixed
+
+- `multiple-cursors` now disables (and re-enables) `corfu-auto` when
+  entering/exiting.
+
 ## [v1.9.2]
 
 Good trim.
