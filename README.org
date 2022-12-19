@@ -4230,6 +4230,7 @@ It's fun to edit things /quickly/.
 
 ;;; Code:
 
+(defvar corfu-auto)
 (defvar wal/use-hyper-prefix)
 #+END_SRC
 
@@ -4243,13 +4244,36 @@ It's fun to edit things /quickly/.
 Don't you want to edit your buffer in multiple places at once?
 
 #+BEGIN_SRC emacs-lisp
+(defvar-local wal/mc-disabled nil)
+
+(defun wal/before-mc ()
+  "Disable modes for `multiple-cursors-mode'."
+  (when (bound-and-true-p lispy-mode)
+    (lispy-mode -1)
+    (add-to-list 'wal/mc-disabled 'lispy))
+
+  (when corfu-auto
+    (add-to-list 'wal/mc-disabled 'corfu-auto)
+    (setq corfu-auto nil)))
+
+(defun wal/after-mc ()
+  "Toggle modes disabled by `mutliple-cursors-mode'."
+  (when (memq 'lispy wal/mc-disabled)
+    (lispy-mode 1))
+
+  (when (memq 'corfu-auto wal/mc-disabled)
+    (setq-local corfu-auto t))
+
+  (setq-local wal/mc-disabled nil))
+
 (use-package multiple-cursors
   :init
   ;; Since the map is `nil', using `:bind' would fail.
   (setq mc/keymap (make-sparse-keymap))
 
-  :custom
-  (mc/always-run-for-all t)
+  :hook
+  ((multiple-cursors-mode-enabled . wal/before-mc)
+   (multiple-cursors-mode-disabled . wal/after-mc))
 
   :bind
   (("C-." . mc/mark-next-like-this)
@@ -7617,7 +7641,8 @@ I want to be ready for =jai=.
       ("s s" "set" c-set-style)
       ("s g" "guess" c-guess-install)]])
 
-  (ligature-set-ligatures 'c++-mode '("::" "->")))
+  (ligature-set-ligatures 'c++-mode '("::" "->"))
+  (ligature-set-ligatures 'c-mode '("->")))
 #+END_SRC
 
 ** Rust
@@ -7970,20 +7995,6 @@ The philosopher's choice.
 Deal with the parens[fn:16].
 
 #+BEGIN_SRC emacs-lisp
-(defvar-local wal/lispy-was-disabled-by-mc nil)
-
-(defun wal/lispy-disable-before-mc ()
-  "Disable `lispy-mode' for `multiple-cursors-mode'."
-  (when (bound-and-true-p lispy-mode)
-    (setq-local wal/lispy-was-disabled-by-mc t)
-    (lispy-mode -1)))
-
-(defun wal/lispy-reenable-after-mc ()
-  "Re-enable `lispy-mode' if it was disabled by `mutliple-cursors-mode'."
-  (when wal/lispy-was-disabled-by-mc
-    (setq wal/lispy-was-disabled-by-mc nil)
-    (lispy-mode 1)))
-
 (use-package lispy
   :wal-ways nil
 
@@ -7991,10 +8002,6 @@ Deal with the parens[fn:16].
 
   :defer 1
   :after lisp-mode
-
-  :hook
-  ((multiple-cursors-mode-enabled . wal/lispy-disable-before-mc)
-   (multiple-cursors-mode-disabled . wal/lispy-reenable-after-mc))
 
   :custom
   (lispy-compat '(edebug cider magit-blame-mode))
