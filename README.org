@@ -4315,12 +4315,11 @@ snippets.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/tempel-setup-capf ()
-  "Make sure `tempel-complete' is run first."
+  "Prepend `tempel-complete'."
   (let* ((current completion-at-point-functions)
-         (prepended (cons #'tempel-complete current))
-         (final (delete-dups prepended)))
+         (prepended (cons #'tempel-complete current)))
 
-     (setq-local completion-at-point-functions final)))
+     (setq-local completion-at-point-functions prepended)))
 
 (use-package tempel
   :hook ((prog-mode prog-like org-mode) . wal/tempel-setup-capf)
@@ -9327,9 +9326,7 @@ PREFIX-LENGTH)."
 (defun wal/lsp-completion-with-corfu ()
   "Advise completion to work better with `corfu' and `orderless'."
   (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
-        completion-styles)
-
-  (wal/tempel-setup-capf))
+        completion-styles))
 
 (defun wal/first-prevent-adding-other-projects (&rest _args)
   "Prevent adding workspace roots from other projects."
