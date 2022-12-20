@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Command `wal/kill-some-popups` to do just that.
+- Template function `wal/tempel-comment` using `c`.
+- List function `wal/list-from` to create a list using an element as
+  its first element.
 
 ### Changed
 
@@ -24,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `rg` and `lsp` transients.
 - Dispatch `org-roam` was moved to user-prefixed `]`.
 - User-prefixed `i` now loads and stores register using `wal/univ`.
+- The `tempel-path` is extended by templates provided in
+  `templates/tempel.eld`.
 
 ### Removed
 

@@ -1483,6 +1483,18 @@ Duplicate items are removed."
 
           (setcdr remainder (cons item (cdr remainder))))
       (user-error "Can't insert, preceding key not in list"))))
+
+(defun wal/list-from (target item)
+  "Create a list from TARGET appending ITEM.
+
+If TARGET already is a list ITEM is appended. Duplicates are
+removed."
+  (let ((val (symbol-value target)))
+    (cond
+     ((listp val)
+      (delq nil (delete-dups (append val `(,item)))))
+     (t
+      (list val item)))))
 #+END_SRC
 
 ** Commands
@@ -2505,6 +2517,18 @@ If CLEAR-MARKS is t, clear the mark ring."
         (item 'hello-again))
 
     (should-error (wal/insert-after 'test-target preceding item) :type 'user-error)))
+
+(ert-deftest test-wal/list-from--builds-list-if-element ()
+  (let ((test-target "testing"))
+    (should (equal '("testing" "again") (wal/list-from 'test-target "again")))))
+
+(ert-deftest test-wal/list-from--appends-if-list ()
+  (let ((test-target '("testing")))
+    (should (equal '("testing" "again") (wal/list-from 'test-target "again")))))
+
+(ert-deftest test-wal/list-from--deletes-duplicates ()
+  (let ((test-target '("testing" "again")))
+    (should (equal '("testing" "again") (wal/list-from 'test-target "again")))))
 #+END_SRC
 
 *** Commands
@@ -4230,7 +4254,7 @@ It's fun to edit things /quickly/.
 
 ;;; Code:
 
-(defvar corfu-auto)
+(defvar corfu-mode)
 (defvar wal/use-hyper-prefix)
 #+END_SRC
 
@@ -4321,10 +4345,22 @@ snippets.
 
      (setq-local completion-at-point-functions prepended)))
 
+(defun wal/tempel-comment (elt)
+  "Comment the element ELT according to mode."
+  (when (eq (car-safe elt) 'c)
+    (let ((cs (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start)))
+      (concat cs (cadr elt)))))
+
 (use-package tempel
   :hook ((prog-mode prog-like org-mode) . wal/tempel-setup-capf)
 
   :custom
+  (tempel-user-elements '(wal/tempel-comment))
+  (tempel-path (wal/list-from
+                'tempel-path
+                (expand-file-name
+                 "templates/tempel.eld"
+                 wal/emacs-config-default-path)))
   (tempel-trigger-prefix ",,")
   (tempel-mark (propertize ">" 'face 'mode-line-highlight))
 
@@ -4335,7 +4371,7 @@ snippets.
    ("M-e" . tempel-end)
    ("M-n" . tempel-next)
    ("M-p" . tempel-previous)))
-   #+END_SRC
+#+END_SRC
 
 *** drag-stuff
 :PROPERTIES:
@@ -5076,6 +5112,9 @@ Everything that has to do with windows.
 ;;; Code:
 
 (declare-function aw-delete-window "ext:ace-window.el")
+
+(defvar popper-buried-popup-alist)
+(defvar popper-group-function)
 #+END_SRC
 
 ** Packages
