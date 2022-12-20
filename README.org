@@ -5183,6 +5183,34 @@ If no PREFIX is given, a slash is pre-pended to the first match."
       (wal/popper-echo-replace cont-re buffer-name))
      (t buffer-name))))
 
+(defvar wal/spared-popups '("\\*Messages\\*"))
+
+(defun wal/popper--spared-p (buffer)
+  "Check if BUFFER should be spared."
+  (let* ((name (buffer-name buffer))
+         (spared (seq-some (lambda (it) (string-match-p it name)) wal/spared-popups)))
+    (message "Checking if %s should be spared" name)
+    (when spared (message "Spared %s" name))))
+
+(defun wal/kill-some-popups ()
+  "Query for killing some popups."
+  (interactive)
+  (let* ((group (when popper-group-function
+                  (funcall popper-group-function)))
+         (buried (thread-last (alist-get group popper-buried-popup-alist nil nil 'equal)
+                              (mapcar #'cdr)
+                              (cl-remove-if-not #'buffer-live-p)
+                              (cl-remove-if #'wal/popper--spared-p)
+                              (delete-dups))))
+
+    (when buried
+      (kill-some-buffers buried))
+
+    (setf (alist-get group popper-buried-popup-alist nil nil 'equal)
+          (cl-remove-if-not
+           (lambda (it) (buffer-live-p (cdr it)))
+           (alist-get group popper-buried-popup-alist nil nil 'equal)))))
+
 (use-package popper
   :wal-ways nil
 
@@ -5238,7 +5266,11 @@ If no PREFIX is given, a slash is pre-pended to the first match."
 
   :wal-bind
   (:map popper-mode-map
-   ("\\" . popper-toggle-latest)))
+   ("\\" . popper-toggle-latest))
+
+  :general
+  (general-define-key :keymaps 'wal/misc-map :wk-full-keys nil
+   "\\" '(wal/kill-some-popups :wk "kill popups")))
 #+END_SRC
 
 ** Footer

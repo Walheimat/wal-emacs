@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Command `wal/kill-some-popups` to do just that.
+
 ### Changed
 
 - `wal/avy-goto-line` now uses `mwim-beginning` when going to
