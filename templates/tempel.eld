@@ -41,3 +41,12 @@ org-mode
   ":PROPERTIES:" n
  ":STYLE: habit" n
  ":END:" n n)
+
+(source
+ "#+BEGIN_SRC " p n q n
+ "#+END_SRC" :post (org-edit-src-code))
+
+;; Local Variables:
+;; mode: lisp-data
+;; outline-regexp: "[a-z]"
+;; End:
