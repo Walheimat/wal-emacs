@@ -10511,11 +10511,11 @@ This will activate minor mode `wal/config-mode'."
 #+BEGIN_SRC emacs-lisp
 (defun wal/check-coverage--calculate-coverage ()
   "Calculate the full coverage."
-  (when-let* ((buf (seq-find (lambda (it) (string-match "-coverage\\*" (buffer-name it))) (buffer-list)))
+  (when-let* ((buf (seq-find (lambda (it) (string-match "-async\\*" (buffer-name it))) (buffer-list)))
               (matches (with-current-buffer buf
                          (wal/matches-in-string "\\(?1:[[:digit:]]+\\)%" (buffer-string))))
               (nums (mapcar (lambda (it) (string-to-number it)) matches)))
-    (/ (apply '+ nums) (length nums))))
+    (format "%s%%" (/ (apply '+ nums) (length nums)))))
 
 (defun wal/check-coverage ()
   "Check the current coverage for custom functionality."
@@ -10526,7 +10526,7 @@ This will activate minor mode `wal/config-mode'."
      command
      (lambda ()
        (let ((average (wal/check-coverage--calculate-coverage)))
-         (message "Tests succeed: %s" average)))
+         (message "All tests succeeded. Coverage: %s" average)))
      (lambda (str) (message "Tests fail: %s" str)))))
 
 (defun wal/create-json-coverage ()
