@@ -4296,27 +4296,25 @@ It's fun to edit things /quickly/.
 Don't you want to edit your buffer in multiple places at once?
 
 #+BEGIN_SRC emacs-lisp
-(defvar-local wal/mc-disabled nil)
+(defvar wal/mc-conflicting-modes '(lispy-mode corfu-mode)
+  "Modes that are in conflict with `multiple-cursors-mode'.")
+
+(defvar-local wal/mc-disabled nil
+  "Modes that were disabled before entering `multiple-cursors-mode'.")
 
 (defun wal/before-mc ()
-  "Disable modes for `multiple-cursors-mode'."
-  (when (bound-and-true-p lispy-mode)
-    (lispy-mode -1)
-    (add-to-list 'wal/mc-disabled 'lispy))
-
-  (when corfu-mode
-    (add-to-list 'wal/mc-disabled 'corfu)
-    (corfu-mode -1)))
+  "Disable conflicting modes before entering mode."
+  (seq-each
+   (lambda (it)
+     (when (and (boundp it) (symbol-value it))
+       (setq wal/mc-disabled (append wal/mc-disabled `(,it)))
+       (eval `(,it -1))))
+   wal/mc-conflicting-modes))
 
 (defun wal/after-mc ()
-  "Toggle modes disabled by `mutliple-cursors-mode'."
-  (when (memq 'lispy wal/mc-disabled)
-    (lispy-mode 1))
-
-  (when (memq 'corfu wal/mc-disabled)
-    (corfu-mode 1))
-
-  (setq-local wal/mc-disabled nil))
+  "Re-enable modes that were disabled before exiting."
+  (seq-each (lambda (it) (eval `(,it 1))) wal/mc-disabled)
+  (setq wal/mc-disabled nil))
 
 (use-package multiple-cursors
   :init
