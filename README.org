@@ -1379,24 +1379,29 @@ Un-dedicates if REVERSE is t."
 (defun wal/kwim ()
   "Kill what I mean.
 
+If there's an active region, kill it.
+
 If we're at the (actual) end or (actual) beginning of a line,
 kill the whole line, otherwise kill forward."
   (interactive)
-  (let ((p-before (point))
-        (p-end nil)
-        (p-beg nil))
+  (if (region-active-p)
+      (kill-region nil nil t)
 
-    (save-excursion
-      (mwim-end)
-      (setq p-end (point))
+    (let ((p-before (point))
+          (p-end nil)
+          (p-beg nil))
 
-      (mwim-beginning)
-      (setq p-beg (point)))
+      (save-excursion
+        (mwim-end)
+        (setq p-end (point))
 
-    (if (and (/= p-before p-beg) (/= p-before p-end))
-        (kill-line)
-      (kill-whole-line)
-      (mwim-beginning))))
+        (mwim-beginning)
+        (setq p-beg (point)))
+
+      (if (and (/= p-before p-beg) (/= p-before p-end))
+          (kill-line)
+        (kill-whole-line)
+        (mwim-beginning)))))
 #+END_SRC
 
 ** Files
