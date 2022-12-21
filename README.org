@@ -7817,7 +7817,7 @@ TOML."
     "Hook into `python-mode'."
     :captain t
     :lsp t
-    :corfu (0.0 1)
+    :corfu (0.1 1)
     :lsp-ignores
     '("[/\\\\]\\.pytype\\'"
       "[/\\\\]__pycache__\\'"
@@ -9381,6 +9381,8 @@ servers yourself[fn:17].
   "Check if MODE is considered slow."
   (memq mode wal/lsp-slow-modes))
 
+(defvar wal/lsp-corfu-values '(0.1 0))
+
 (defun wal/lsp (&optional corfu-values)
   "Defer LSP setup for the file.
 
@@ -9388,7 +9390,7 @@ Unless the associated server is considered slow, delays and
 minimum prefixes are reduced using CORFU-VALUES a list of (DELAY
 PREFIX-LENGTH)."
   (unless (wal/slow-lsp-p major-mode)
-    (let* ((values (or corfu-values (list 0.0 0)))
+    (let* ((values (or corfu-values wal/lsp-corfu-values))
            (delay (car values))
            (prefix (cadr values)))
 
