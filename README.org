@@ -1032,7 +1032,7 @@ Most bindings are declared in individual packages.
   (global-set-key (kbd "C-M-i") #'completion-at-point)
 
   ;; Replaces `kill-sexp'.
-  (global-set-key (kbd "C-M-k") #'kill-whole-line)
+  (global-set-key (kbd "C-k") #'wal/kwim)
 
   ;; Unbinds `save-buffers-kill-terminal'.
   (global-unset-key (kbd "C-x C-c")))
@@ -1375,6 +1375,28 @@ Un-dedicates if REVERSE is t."
          (message "Window no longer dedicated to %s" buffer))
     (set-window-dedicated-p window buffer)
     (message "Dedicating window to %s" buffer))))
+
+(defun wal/kwim ()
+  "Kill what I mean.
+
+If we're at the (actual) end or (actual) beginning of a line,
+kill the whole line, otherwise kill forward."
+  (interactive)
+  (let ((p-before (point))
+        (p-end nil)
+        (p-beg nil))
+
+    (save-excursion
+      (mwim-end)
+      (setq p-end (point))
+
+      (mwim-beginning)
+      (setq p-beg (point)))
+
+    (if (and (/= p-before p-beg) (/= p-before p-end))
+        (kill-line)
+      (kill-whole-line)
+      (mwim-beginning))))
 #+END_SRC
 
 ** Files
@@ -4257,7 +4279,10 @@ It's fun to edit things /quickly/.
 
 ;;; Code:
 
+(declare-function wal/list-from "wal-func.el")
+
 (defvar corfu-mode)
+(defvar wal/emacs-config-default-path)
 (defvar wal/use-hyper-prefix)
 #+END_SRC
 

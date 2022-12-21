@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Template function `wal/tempel-comment` using `c`.
 - List function `wal/list-from` to create a list using an element as
   its first element.
+- New command `wal/kwim` to kill forward or whole line depending on
+  the position of point in the line using `mwim`; it is now bound to
+  `C-k`.
 
 ### Changed
 
