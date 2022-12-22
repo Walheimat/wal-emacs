@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New command `wal/kwim` to kill forward or whole line depending on
   the position of point in the line using `mwim`; it is now bound to
   `C-k`.
+- New command `wal/org-clock-take-note` to take a note for the
+  currently clocked task. Bound to `t` in `wal/misc-map`.
 
 ### Changed
 

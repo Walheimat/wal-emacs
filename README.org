@@ -6861,6 +6861,13 @@ You know the drill. Clock in, clock out.
     (when (fboundp 'org-clock-in)
       (org-clock-in))))
 
+(defun wal/org-clock-take-note ()
+  "Take a note for the currently clocked-in entry."
+  (interactive)
+  (save-window-excursion
+    (org-clock-goto)
+    (org-add-note)))
+
 (use-package org-clock
   :ensure nil
 
@@ -6868,6 +6875,12 @@ You know the drill. Clock in, clock out.
 
   :init
   (add-to-list 'org-speed-commands '("N" . wal/org-clock-in-from-now))
+
+  :config
+  (with-eval-after-load 'which-key
+    (which-key-add-key-based-replacements
+      (wal/key-combo-for-leader 'wal/lieutenant ", t")
+      "take note"))
 
   :custom
   ;; We want a continuous, persistent clock.
@@ -6884,7 +6897,9 @@ You know the drill. Clock in, clock out.
 
   :bind
   (:map goto-map
-    ("t" . org-clock-goto)))
+   ("t" . org-clock-goto)
+   :map wal/misc-map
+   ("t" . wal/org-clock-take-note)))
 #+END_SRC
 
 *** org-duration
