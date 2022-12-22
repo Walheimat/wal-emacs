@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `C-k`.
 - New command `wal/org-clock-take-note` to take a note for the
   currently clocked task. Bound to `t` in `wal/misc-map`.
+- Binds `H-|` to `popper-cycle`.
 
 ### Changed
 
