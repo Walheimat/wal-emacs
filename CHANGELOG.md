@@ -38,6 +38,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Package `mode-line-bell`.
+- `C-;` is no longer bound in favor of using `C-x C-;`.
+- Binding `M-o` is no longer bound to `wal/other-window`; this command
+  now overrides `other-window` by binding `C-x o`.
 
 ### Fixed
 
