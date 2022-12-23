@@ -3427,47 +3427,41 @@ This returns the made updates."
     (run-hooks 'wal/fonts-updated-hook)
     updates))
 
+(defun wal/read-sensible-font-height (type)
+  "Read a sensible font height for TYPE."
+  (let* ((prev (symbol-value (intern (format "wal/%s-font-height" type))))
+         (num (read-number (format "Set %s font (currently: %s): " type prev))))
+    (list (max (min num 300) 80))))
+
+(defun wal/read-font (type)
+  "Read a font for TYPE."
+  (let* ((name (intern (format "%s-pitch" type)))
+         (prev (face-attribute name :family))
+         (fonts (symbol-value (intern (format "wal/%s-fonts" type))))
+         (font (completing-read (format "Select %s font (current: %s) " type prev) (wal/available-fonts fonts))))
+    (list font)))
+
 (defun wal/select-fixed-font (font)
   "Select fixed (available) FONT."
-  (interactive
-   (list
-    (completing-read
-     (format "Select fixed font (current: %s): " (face-attribute 'fixed-pitch :family))
-     (wal/available-fonts wal/fixed-fonts))))
+  (interactive (wal/read-font 'fixed))
   (wal/font-update :font font '(default fixed-pitch)))
 
 (defun wal/set-fixed-font-height (&optional height)
   "Set the HEIGHT for fixed fonts."
-  (interactive
-   (list
-    (read-number
-     (format "Set fixed font height (currently: %s): " wal/fixed-font-height))))
-  (let ((sensible-height (max (min height 300) 80)))
-
-    (setq wal/fixed-font-height sensible-height)
-
-    (wal/font-update :height sensible-height '(default fixed-pitch))))
+  (interactive (wal/read-sensible-font-height 'fixed))
+  (setq wal/fixed-font-height height)
+  (wal/font-update :height height '(default fixed-pitch)))
 
 (defun wal/select-variable-font (font)
   "Select variable (available) FONT."
-  (interactive
-   (list
-    (completing-read
-     (format "Select variable font (current: %s): " (face-attribute 'variable-pitch :family))
-     (wal/available-fonts wal/variable-fonts))))
+  (interactive (wal/read-font 'variable))
   (wal/font-update :font font '(variable-pitch)))
 
 (defun wal/set-variable-font-height (&optional height)
   "Set the HEIGHT for variable fonts."
-  (interactive
-   (list
-    (read-number
-     (format "Set variable font height (currently: %s): " wal/variable-font-height))))
-  (let ((sensible-height (max (min height 300) 80)))
-
-    (setq wal/variable-font-height sensible-height)
-
-    (wal/font-update :height sensible-height '(variable-pitch))))
+  (interactive (wal/read-sensible-font-height 'variable))
+  (setq wal/variable-font-height height)
+  (wal/font-update :height height '(variable-pitch)))
 
 (defun wal/available-fonts (fonts)
   "Filter FONTS down to available fonts."
