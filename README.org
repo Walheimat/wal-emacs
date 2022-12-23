@@ -1216,6 +1216,35 @@ Optionally RESET the type when called with `universal-argument'."
            (type (intern type-string)))
 
       (setq-local cursor-type type))))
+
+(defun wal/kwim ()
+  "Kill what I mean.
+
+If there's an active region, kill it.
+
+If we're at the (actual) end or (actual) beginning of a line,
+kill the whole line, otherwise kill forward."
+  (interactive)
+  (let ((end-fun (if (fboundp 'mwim-end) 'mwim-end 'end-of-line))
+        (beg-fun (if (fboundp 'mwim-beginning) 'mwim-beginning 'beginning-of-line)))
+    (if (region-active-p)
+        (kill-region nil nil t)
+
+      (let ((p-before (point))
+            (p-end nil)
+            (p-beg nil))
+
+        (save-excursion
+          (funcall end-fun)
+          (setq p-end (point))
+
+          (funcall beg-fun)
+          (setq p-beg (point)))
+
+        (if (and (/= p-before p-beg) (/= p-before p-end))
+            (kill-line)
+          (kill-whole-line)
+          (funcall beg-fun))))))
 #+END_SRC
 
 ** Windows
@@ -1361,33 +1390,6 @@ Un-dedicates if REVERSE is t."
          (message "Window no longer dedicated to %s" buffer))
     (set-window-dedicated-p window buffer)
     (message "Dedicating window to %s" buffer))))
-
-(defun wal/kwim ()
-  "Kill what I mean.
-
-If there's an active region, kill it.
-
-If we're at the (actual) end or (actual) beginning of a line,
-kill the whole line, otherwise kill forward."
-  (interactive)
-  (if (region-active-p)
-      (kill-region nil nil t)
-
-    (let ((p-before (point))
-          (p-end nil)
-          (p-beg nil))
-
-      (save-excursion
-        (mwim-end)
-        (setq p-end (point))
-
-        (mwim-beginning)
-        (setq p-beg (point)))
-
-      (if (and (/= p-before p-beg) (/= p-before p-end))
-          (kill-line)
-        (kill-whole-line)
-        (mwim-beginning)))))
 #+END_SRC
 
 ** Files
@@ -2329,6 +2331,28 @@ If CLEAR-MARKS is t, clear the mark ring."
       (should (eq cursor-type 'hollow)))
     (wal/set-cursor-type t)
     (should (eq cursor-type t))))
+
+(ert-deftest test-wal/kwim--kills-forward-in-line ()
+  (with-temp-buffer
+    (insert "I hope I don't get killed")
+    (goto-char 7)
+    (wal/kwim)
+    (should (equal (buffer-string) "I hope"))))
+
+(ert-deftest test-wal/kwim--kills-line-at-end ()
+  (with-temp-buffer
+    (insert "This is a nice line\nThis will stay")
+    (goto-char 0)
+    (end-of-line)
+    (wal/kwim)
+    (should (equal (buffer-string) "This will stay"))))
+
+(ert-deftest test-wal/kwim--kills-line-at-beg ()
+  (with-temp-buffer
+    (insert "This is a nice line\nThis will stay")
+    (goto-char 0)
+    (wal/kwim)
+    (should (equal (buffer-string) "This will stay"))))
 #+END_SRC
 
 *** Windows
