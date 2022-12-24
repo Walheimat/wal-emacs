@@ -861,17 +861,6 @@ quick succession.
 (use-package hydra)
 
 (with-no-warnings
-  ;; Scaling text in buffer.
-  (defhydra wal/text-scale (:hint nil)
-    "
-%s`w/hew Text size: _i_ncrease or _d_ecrease %s`w/hs _g_lobal %s`w/hs _r_eset
-"
-    ("i" text-scale-increase)
-    ("d" text-scale-decrease)
-    ("g" global-text-scale-adjust :color blue)
-    ("r" wal/text-scale-reset :color blue)
-    ("q" nil))
-
   (defhydra wal/scroll-other-window (:hint nil)
     "
 %s`w/hew Scroll other window: u_p_ or dow_n_
@@ -1357,22 +1346,6 @@ the associated variable."
 
      (setq command-line-args (delete dash-flag command-line-args))
      (setq ,(intern (concat "wal/flag-" (symbol-name flag))) t)))
-#+END_SRC
-
-** Text Scaling
-
-Allow resetting =text-scale=.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/text-scale-reset ()
-  "Reset `text-scale' level to 0."
-  (interactive)
-  (text-scale-set 0)
-  (when-let ((modern (wal/modern-emacs-p))
-             (global global-text-scale-adjust--default-height))
-
-    (setq global-text-scale-adjust--default-height nil)
-    (set-face-attribute 'default nil :height global)))
 #+END_SRC
 
 ** Lists
@@ -2360,24 +2333,6 @@ If CLEAR-MARKS is t, clear the mark ring."
 
       (setq command-line-args (delete dash-flag command-line-args))
       (setq wal/flag-some-flag t))))
-#+END_SRC
-
-*** Text Scaling
-
-#+BEGIN_SRC emacs-lisp
-(ert-deftest test-wal/text-scale-reset ()
-  (with-temp-buffer
-    (text-scale-increase 4)
-    (should (eq text-scale-mode-amount 4))
-    (wal/text-scale-reset)
-    (should (eq text-scale-mode-amount 0))))
-
-(ert-deftest test-wal/text-scale-reset--resets-global-adjustment ()
-  (skip-unless (> 28 emacs-major-version))
-  (with-temp-buffer
-    (setq global-text-scale-adjust--default-height 120)
-    (wal/text-scale-reset)
-    (should (not global-text-scale-adjust--default-height))))
 #+END_SRC
 
 *** Lists
