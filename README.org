@@ -872,19 +872,6 @@ quick succession.
     ("r" wal/text-scale-reset :color blue)
     ("q" nil))
 
-  ;; Move window splitter or balance windows.
-  (defhydra wal/resize-window (:hint nil)
-    "
-%s`w/hew Move window splitter: _i_ _j_ _k_ _l_ %s`w/hs _b_alance %s`w/hs _r_e-split
-"
-    ("j" wal/edge-left)
-    ("l" wal/edge-right)
-    ("k" wal/edge-down)
-    ("i" wal/edge-up)
-    ("r" wal/split-window-the-other-way :color blue)
-    ("b" balance-windows :color blue)
-    ("q" nil))
-
   (defhydra wal/scroll-other-window (:hint nil)
     "
 %s`w/hew Scroll other window: u_p_ or dow_n_
@@ -1277,86 +1264,6 @@ split, split horizontally."
 
     (when other-buffer
       (set-window-buffer (next-window) other-buffer))))
-
-(defun wal/edge (scale-above scale-below)
-  "Move the window splitter using SCALE-ABOVE and SCALE-BELOW."
-  (interactive)
-  (let* ((win (selected-window))
-         (direction (cond ((windows-sharing-edge win 'above) scale-above)
-                          ((windows-sharing-edge win 'below) scale-below)
-                          (t nil))))
-
-    (pcase direction
-      ('enlarge (wal/enlarge-window))
-      ('shrink (wal/shrink-window))
-      (_ (message "Selected window does not share a vertical edge with another window")))))
-
-(defun wal/edge-horizontally (scale-left scale-right)
-  "Move the window splitter using SCALE-LEFT and SCALE-RIGHT."
-  (interactive)
-  (let* ((win (selected-window))
-         (direction (cond ((windows-sharing-edge win 'left) scale-left)
-                          ((windows-sharing-edge win 'right) scale-right)
-                          (t nil))))
-
-    (pcase direction
-      ('enlarge (wal/enlarge-window-horizontally))
-      ('shrink (wal/shrink-window-horizontally))
-      (_ (message "Selected window does not share a horizontal edge with another window")))))
-
-(defun wal/edge-left ()
-  "Move the splitter of the selected window left.
-This shrinks or enlarges the window depending on its position."
-  (interactive)
-  (wal/edge-horizontally 'enlarge 'shrink))
-
-(defun wal/edge-right ()
-  "Move the splitter of the selected window right.
-This shrinks or enlarges the window depending on its position."
-  (interactive)
-  (wal/edge-horizontally 'shrink 'enlarge))
-
-(defun wal/edge-up ()
-  "Move the splitter of the selected window up.
-This shrinks or enlarges the window depending on its position."
-  (interactive)
-  (wal/edge 'enlarge 'shrink))
-
-(defun wal/edge-down ()
-  "Move the splitter of the selected window down.
-This shrinks or enlarges the window depending on its position."
-  (interactive)
-  (wal/edge 'shrink 'enlarge))
-
-(defun wal/shrink-window (&optional horizontally)
-  "Shrink the selected window (HORIZONTALLY)."
-  (interactive)
-  (let* ((available (window-min-delta (selected-window) horizontally))
-         (chunk (floor (* available 0.2))))
-
-    (if horizontally
-        (shrink-window-horizontally chunk)
-      (shrink-window chunk))))
-
-(defun wal/shrink-window-horizontally ()
-  "Shrink the selected window horizontally."
-  (interactive)
-  (wal/shrink-window t))
-
-(defun wal/enlarge-window (&optional horizontally)
-  "Enlarge the selected window (HORIZONTALLY)."
-  (interactive)
-  (let* ((available (window-max-delta (selected-window) horizontally))
-         (chunk (floor (* available 0.2))))
-
-    (if horizontally
-        (enlarge-window-horizontally chunk)
-      (enlarge-window chunk))))
-
-(defun wal/enlarge-window-horizontally ()
-  "Enlarge the selected window horizontally."
-  (interactive)
-  (wal/enlarge-window t))
 
 (defun wal/other-window (&optional prefer-frame)
   "Switch to other window.
@@ -2377,47 +2284,6 @@ If CLEAR-MARKS is t, clear the mark ring."
       (split-window-vertically)
       (wal/split-window-the-other-way)
       (should (windows-sharing-edge (selected-window) 'right)))))
-
-(ert-deftest test-wal/edge--no-edges ()
-  (with-temp-buffer
-    (save-window-excursion
-      (with-mock message (lambda (m &rest _r) m)
-        (should (string-equal "Selected window does not share a vertical edge with another window" (wal/edge-up)))
-        (should (string-equal "Selected window does not share a horizontal edge with another window" (wal/edge-right)))))))
-
-(ert-deftest test-wal/edge-down ()
-  (with-temp-buffer
-    (save-window-excursion
-      (split-window-vertically)
-      (let ((prev-size (window-size)))
-        (wal/edge-down)
-        (should (< prev-size (window-size)))))))
-
-(ert-deftest test-wal/edge-up ()
-  (with-temp-buffer
-    (save-window-excursion
-      (split-window-vertically)
-      (other-window 1)
-      (let ((prev-size (window-size)))
-        (wal/edge-up)
-        (should (< prev-size (window-size)))))))
-
-(ert-deftest test-wal/edge-right ()
-  (with-temp-buffer
-    (save-window-excursion
-      (split-window-horizontally)
-      (let ((prev-size (window-size (selected-window) t)))
-        (wal/edge-right)
-        (should (< prev-size (window-size (selected-window) t)))))))
-
-(ert-deftest test-wal/edge-left ()
-  (with-temp-buffer
-    (save-window-excursion
-      (split-window-horizontally)
-      (other-window 1)
-      (let ((prev-size (window-size (selected-window) t)))
-        (wal/edge-left)
-        (should (< prev-size (window-size (selected-window) t)))))))
 
 (ert-deftest test-wal/other-window ()
   (with-mock-all ((active-minibuffer-window . (lambda () t))
