@@ -46,6 +46,13 @@ org-mode
  "#+BEGIN_SRC " p n q n
  "#+END_SRC" :post (org-edit-src-code))
 
+conf-mode
+
+(box
+ "#" (make-string (+ 2 (length title)) ?#) "#" n
+ "# " (s title) " #" n
+ "#" (make-string (+ 2 (length title)) ?#) "#")
+
 ;; Local Variables:
 ;; mode: lisp-data
 ;; outline-regexp: "[a-z]"
