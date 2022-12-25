@@ -1,0 +1,48 @@
+#+TITLE: Caps to Hyper
+
+* XServer
+
+Assuming you use Xorg Display server, create an =.Xmodmap= file in your
+home folder containing the following lines.
+
+#+BEGIN_SRC conf :tangle no
+! Assign Hyper_L to Caps_Lock
+keycode 66 = Hyper_L
+! Remove caps lock
+remove lock = Caps_Lock
+! Set hyper to mod3 from mod4
+remove mod4 = Hyper_L
+add mod3 = Hyper_L
+#+END_SRC
+
+Add a script (also in your home folder) containing the following
+command and call it during start-up.
+
+#+begin_src shell :tangle no
+[[ -f ~/.Xmodmap ]] && xmodmap ~/.Xmodmap
+#+end_src
+
+This assumes that =Hyper_L= was assigned to modifier =Mod4= that's already
+used by =Super_L= and modifier =Mod3= is an empty group.
+
+* Unsafe Alternative
+
+A much riskier[fn:1] way, provided the recipe above doesn't work,
+would be to edit your =/usr/share/X11/xkb/symbols/pc= file like so:
+
+#+BEGIN_SRC :tangle no
+...
+// key <CAPS> {    [ Caps_Lock     ]   };
+key <CAPS> {    [ Hyper_L       ]   };
+...
+// modifier_map Lock   { Caps_Lock };
+modifier_map Mod3   { Hyper_L, Hyper_R };
+...
+// modifier_map Mod4   { <HYPR> };
+modifier_map Mod3   { <HYPR> };
+#+END_SRC
+
+* Footnotes
+
+[fn:1] Be careful! If you make a mistake you could render your
+keyboard unusable.
