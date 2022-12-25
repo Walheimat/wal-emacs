@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `hydra` that bound them.
 - Package `dimmer`.
 - Package `drag-stuff`.
+- Package `highlight-quoted` (lisp extra).
+- Package `highlight-number`.
 
 ### Fixed
 
