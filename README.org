@@ -105,7 +105,6 @@ functionality is used.
 (declare-function wal/create-non-existent-directory "wal-func.el")
 (declare-function wal/expansion--stringify "wal-func.el")
 (declare-function wal/insert-after "wal-func.el")
-(declare-function wal/maybe-make-directory "wal-func.el")
 (declare-function wal/modern-emacs-p "wal-func.el")
 (declare-function wal/persist-scratch "wal-key-bindings.el")
 (declare-function wal/rehydrate-scratch "wal-key-bindings.el")
@@ -292,7 +291,7 @@ Also create non-existing directories while finding files.
 
 #+BEGIN_SRC emacs-lisp
 (add-hook 'emacs-startup-hook (lambda ()
-                                (mapc #'wal/maybe-make-directory
+                                (mapc (lambda (it) (make-directory it t))
                                       `(,wal/cache-directory
                                         ,wal/site-lisp-directory
                                         ,wal/org-directory
@@ -1067,11 +1066,6 @@ This will return a truthy value vor any version above 27."
 Finding files should =mkdir -p= its parents.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/maybe-make-directory (dir)
-  "Create DIR unless it exists."
-  (unless (file-directory-p dir)
-    (make-directory dir)))
-
 ;; Creating parent dirs.
 (defun wal/create-non-existent-directory ()
   "Ask whether to create non-existent directory.
@@ -2102,15 +2096,6 @@ If CLEAR-MARKS is t, clear the mark ring."
 *** Directories
 
 #+BEGIN_SRC emacs-lisp
-(ert-deftest test-wal/maybe-make-directory ()
-  (let ((temp-dir "/tmp/some-dir"))
-    (wal/maybe-make-directory temp-dir)
-
-    (should (f-directory-p temp-dir))
-    (should-not (wal/maybe-make-directory temp-dir))
-
-    (delete-directory temp-dir)))
-
 (ert-deftest test-wal/create-non-existent-directory ()
   (let ((temp-dir "/tmp/some-other/dir/"))
     (with-mock-all ((file-name-directory . (lambda (&rest _r) temp-dir))
