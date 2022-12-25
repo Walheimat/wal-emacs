@@ -6,6 +6,8 @@
 
 ;;; Code:
 
+(require 'ert-x)
+
 (when (require 'undercover nil t)
   (cond
     ((getenv "CI")
@@ -25,7 +27,7 @@
                  (:report-file "coverage.txt")
                  (:send-report nil)))))
 
-(setq wal/booting nil)
+(defvar wal/booting nil)
 
 ;; Create a dummy `use-package' definition.
 (defmacro use-package (package-name &rest _args)
@@ -72,11 +74,5 @@ The associated file buffer is also killed."
 
 (when (getenv "CI")
   (add-to-list 'load-path (expand-file-name "wal" (getenv "GITHUB_WORKSPACE"))))
-
-(require 'ert-x)
-(require 'wal-func)
-(require 'wal-look)
-(require 'wal-fluff)
-(require 'wal-fonts)
 
 ;;; test-helper.el ends here

@@ -6,6 +6,8 @@
 
 ;;; Code:
 
+(require 'wal-func nil t)
+
 (ert-deftest test-wal/modern-emacs-p ()
   (let ((emacs-major-version 27))
     (should-not (wal/modern-emacs-p)))

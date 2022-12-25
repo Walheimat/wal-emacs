@@ -6,6 +6,8 @@
 
 ;;; Code:
 
+(require 'wal-look nil t)
+
 (ert-deftest test-wal/set-transparency ()
   (let ((emacs-major-version 29))
     (funcall-interactively 'wal/set-transparency 90)

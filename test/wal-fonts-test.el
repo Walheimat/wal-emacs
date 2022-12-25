@@ -7,6 +7,8 @@
 
 ;;; Code:
 
+(require 'wal-fonts nil t)
+
 (ert-deftest test-wal/font-update ()
   (should (equal '(default) (wal/font-update :height 120 '(default)))))
 
