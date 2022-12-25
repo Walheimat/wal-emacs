@@ -8988,6 +8988,8 @@ Animate a swimming whale in a =posframe=.
 
 (defun wal/ascii-whale-setup ()
   "Set up the animated whale."
+  (require 'posframe nil t)
+
   (when (featurep 'posframe)
     ;; Integrate in current window configuration.
     (setq wal/ascii-whale-parent-buffer (current-buffer))
@@ -9150,10 +9152,14 @@ If the answer is no, there will be no additional prompt."
 
 This will activate minor mode `wal/config-mode'."
   (interactive)
+
   (let ((buf (find-file-noselect wal/readme-config)))
 
     (switch-to-buffer buf)
-    (wal/config-mode 1)))
+    (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t)
+
+    (when wal/config-show-whale-animation
+      (wal/ascii-whale-setup))))
 
 (defun wal/find-init ()
   "Find and switch to the `user-init-file'."
@@ -9244,6 +9250,9 @@ name are deleted beforehand."
 (defun wal/checkdoc-config-packages ()
   "Run `checkdoc-file' on all package files."
   (interactive)
+
+  (require 'checkdoc nil t)
+
   (defvar projectile-enable-caching)
   (let* ((projectile-enable-caching nil)
          (package-files (wal/directory-files wal/emacs-config-package-path))
@@ -9282,7 +9291,7 @@ name are deleted beforehand."
         (wal/flycheck-file it t t)))))
 #+END_SRC
 
-*** Minor Mode
+*** Transient
 
 #+BEGIN_SRC emacs-lisp
 (with-eval-after-load 'transient
@@ -9304,18 +9313,6 @@ name are deleted beforehand."
       ("d" "show diff" wal/show-config-diff-range)]
      ["Fluff"
       ("w" "toggle animation" wal/ascii-whale-toggle-display)]]))
-
-(define-minor-mode wal/config-mode
-  "Mode for editing Walheimat's config."
-  :init-value nil
-  :global nil
-  :lighter " wal"
-  :keymap wal/config-mode-map
-  (require 'checkdoc nil t)
-  (require 'posframe nil t)
-  (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t)
-  (when wal/config-show-whale-animation
-    (wal/ascii-whale-setup)))
 #+END_SRC
 
 ** Loading
