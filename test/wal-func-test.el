@@ -701,6 +701,10 @@
   (should (string-equal (wal/expansion--stringify '(one two three)) "one, two, three"))
   (should (string-empty-p (wal/expansion--stringify '()))))
 
+(ert-deftest test-wal/prog-like ()
+  (with-mock run-hooks (lambda (it) it)
+    (should (equal (wal/prog-like) 'prog-like-hook))))
+
 (ert-deftest test-wal/hook ()
   (match-expansion
    (wal/hook test
