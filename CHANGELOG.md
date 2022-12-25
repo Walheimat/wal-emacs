@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   now overrides `other-window` by binding `C-x o`.
 - The window splitter movement functions `wal/edge-*` as well as the
   `hydra` that bound them.
+- Package `dimmer`.
 
 ### Fixed
 

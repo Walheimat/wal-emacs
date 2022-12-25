@@ -4305,7 +4305,6 @@ I like nice-looking things.
 (declare-function wal/biased-random "wal-func.el")
 
 (defvar dashboard-footer-messages)
-(defvar dimmer-prevent-dimming-predicates)
 (defvar wal/ascii-whale)
 (defvar wal/emacs-config-default-path)
 
@@ -4621,70 +4620,6 @@ Show the next possible key presses towards a command.
   (which-key-show-docstrings t)
   (which-key-preserve-window-configuration t)
   (which-key-show-early-on-C-h t))
-#+END_SRC
-
-*** dimmer
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Dim inactive frames.
-
-#+BEGIN_SRC emacs-lisp
-;; Solution from buzztaiki https://github.com/gonewest818/dimmer.el/issues/49
-(defun wal/instead-force-only-if-predicates-falsy ()
-  "Advise to only force process if no predicate is truthy."
-  (let ((ignore (cl-some (lambda (f) (and (fboundp f) (funcall f)))
-                         dimmer-prevent-dimming-predicates)))
-
-    (unless ignore
-      (when (fboundp 'dimmer-process-all)
-        (dimmer-process-all t)))))
-
-(defun wal/lsp-ui-doc-frame-p ()
-  "Check if buffer is a lsp-ui-doc frame buffer."
-  (string-match-p "\\` \\*lsp-ui-doc" (buffer-name)))
-
-(defun wal/dimmer-configure-lsp-doc ()
-  "Convenience settings for lsp-doc users."
-  (add-to-list
-   'dimmer-prevent-dimming-predicates
-   #'wal/lsp-ui-doc-frame-p))
-
-(defun wal/corfu-frame-p ()
-  "Check if the buffer is a corfu frame buffer."
-  (string-match-p "\\` \\*corfu" (buffer-name)))
-
-(defun wal/dimmer-configure-corfu ()
-  "Convenience settings for corfu users."
-  (add-to-list
-   'dimmer-prevent-dimming-predicates
-   #'wal/corfu-frame-p))
-
-(use-package dimmer
-  :wal-ways nil
-
-  :defer 3
-
-  :config
-  (advice-add
-   'dimmer-config-change-handler :override
-   #'wal/instead-force-only-if-predicates-falsy)
-
-  ;; Integrate with other packages.
-  (dimmer-configure-hydra)
-  (dimmer-configure-magit)
-  (dimmer-configure-org)
-  (dimmer-configure-which-key)
-  (wal/dimmer-configure-lsp-doc)
-  (wal/dimmer-configure-corfu)
-
-  (dimmer-mode t)
-
-  :custom
-  (dimmer-fraction 0.6)
-
-  :delight " dmm")
 #+END_SRC
 
 *** goggles
@@ -6467,11 +6402,6 @@ Turn any =org-mode= buffer into a presentation.
         cursor-type nil)
   (visual-fill-column-mode 1)
 
-  (when (bound-and-true-p dimmer-mode)
-    (setq wal/org-tree-slide-disabled-modes
-      (append wal/org-tree-slide-disabled-modes '(dimmer-mode)))
-    (dimmer-mode -1))
-
   (mixed-pitch-mode 1))
 
 (defun wal/org-tree-slide-stop ()
@@ -6483,9 +6413,6 @@ Turn any =org-mode= buffer into a presentation.
 
   (when (fboundp 'outline-show-all)
     (outline-show-all))
-
-  (when (memq 'dimmer-mode wal/org-tree-slide-disabled-modes)
-    (dimmer-mode 1))
 
   (setq wal/org-tree-slide-disabled-modes '())
 
