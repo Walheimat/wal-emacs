@@ -5,12 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.9.3]
+
+Time killer.
 
 ### Added
 
 - Command `wal/kill-some-popups` to do just that.
-- Template function `wal/tempel-comment` using `c`.
+- Template function `wal/tempel-comment` using `c` used in new
+  templates.
 - List function `wal/list-from` to create a list using an element as
   its first element.
 - New command `wal/kwim` to kill forward or whole line depending on
@@ -22,15 +25,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `wal/avy-goto-line` now uses `mwim-beginning` when going to
+- `wal/avy-goto-line` now uses `beginning-of-line-text` when going to
   beginning of line.
 - Command `popper-toggle-latest` is now bound to user-prefixed `\`.
-- User-prefixed `]` no longer binds `popper-cycle`.
-- Prefix for `tempel` is now `,,` to avoid clashes in langauges that
+- User-prefixed `]` no longer binds `popper-cycle` (see below).
+- Prefix for `tempel` is now `,,` to avoid clashes in languages that
   use `>`.
 - All consult bindings were moved to renamed keymap `wal/consult-map`
-  that uses `wal/consult-key` for its binding. This key is also used
-  in the `rg` and `lsp` transients.
+  that uses `wal/consult-key` for its binding (`[` by default). This
+  key is also used in the `rg` and `lsp` transients.
 - Dispatch `org-roam` was moved to user-prefixed `]`.
 - User-prefixed `i` now loads and stores register using `wal/univ`.
 - The `tempel-path` is extended by templates provided in
@@ -51,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `multiple-cursors` now disables (and re-enables) `corfu-auto` when
+- `multiple-cursors` now disables (and re-enables) `corfu-mode` when
   entering/exiting.
 
 ## [v1.9.2]
