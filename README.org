@@ -883,8 +883,8 @@ quick succession.
     ("l" forward-char)
     ("k" next-line)
 
-    ("h" mwim-beginning)
-    (";" mwim-end)
+    ("h" beginning-of-line)
+    (";" end-of-line)
 
     ("," scroll-up-command)
     ("." scroll-down-command)
@@ -1202,28 +1202,29 @@ Optionally RESET the type when called with `universal-argument'."
 If there's an active region, kill it.
 
 If we're at the (actual) end or (actual) beginning of a line,
-kill the whole line, otherwise kill forward."
+kill the whole line, otherwise kill forward.
+
+If a whole line is killed, move to the beginning of text on the
+next line."
   (interactive)
-  (let ((end-fun (if (fboundp 'mwim-end) 'mwim-end 'end-of-line))
-        (beg-fun (if (fboundp 'mwim-beginning) 'mwim-beginning 'beginning-of-line)))
 
-    (if (region-active-p)
-        (kill-region nil nil t)
-      (let ((p-before (point))
-            (p-end nil)
-            (p-beg nil))
+  (if (region-active-p)
+      (kill-region nil nil t)
+    (let ((p-before (point))
+          (p-end nil)
+          (p-beg nil))
 
-        (save-excursion
-          (funcall end-fun)
-          (setq p-end (point))
+      (save-excursion
+        (end-of-line)
+        (setq p-end (point))
 
-          (funcall beg-fun)
-          (setq p-beg (point)))
+        (beginning-of-line)
+        (setq p-beg (point)))
 
-        (if (and (/= p-before p-beg) (/= p-before p-end))
-            (kill-line)
-          (kill-whole-line)
-          (funcall beg-fun))))))
+      (if (and (/= p-before p-beg) (/= p-before p-end))
+          (kill-line)
+        (kill-whole-line)
+        (beginning-of-line-text)))))
 #+END_SRC
 
 ** Windows
@@ -5137,7 +5138,7 @@ If LINE-FIRST is t, move to a line first."
   (if beginning
       (progn
         (avy-goto-line)
-        (mwim-beginning))
+        (beginning-of-line-text))
     (avy-goto-end-of-line)))
 
 (defun wal/avy-mark-region ()
@@ -5202,20 +5203,6 @@ beginning."
   (wal/lieutenant! "w"
     'avy-kill-ring-save-whole-line
     'avy-kill-ring-save-region))
-#+END_SRC
-
-*** mwim
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Move where I want. Useful for comments.
-
-#+BEGIN_SRC emacs-lisp
-(use-package mwim
-  :bind
-  (("C-a" . mwim-beginning)
-   ("C-e" . mwim-end)))
 #+END_SRC
 
 ** Footer
