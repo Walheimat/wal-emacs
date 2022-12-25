@@ -474,6 +474,8 @@ Let's keep the scratch contents.
 ;; Empty scratch message.
 (setq initial-scratch-message "")
 
+(setq wal/scratch-persist wal/scratch-persist-file)
+
 (add-hook 'emacs-startup-hook #'wal/rehydrate-scratch)
 (add-hook 'kill-emacs-hook #'wal/persist-scratch)
 #+END_SRC
@@ -1449,20 +1451,25 @@ If CREATE is t, do and use that instead."
 
     (switch-to-buffer buf)))
 
+(defvar wal/scratch-persist nil)
+
 (defun wal/persist-scratch ()
   "Persist contents of *scratch* buffer.
-The contents are stored in `wal/scratch-persist-file'."
-  (with-current-buffer (get-buffer-create "*scratch*")
-    (write-region (point-min) (point-max) wal/scratch-persist-file)))
+
+The contents are stored in `wal/scratch-persist' if non-nil."
+  (when wal/scratch-persist
+   (with-current-buffer (get-buffer-create "*scratch*")
+     (write-region (point-min) (point-max) wal/scratch-persist))))
 
 (defun wal/rehydrate-scratch ()
   "Re-hydrate scratch buffer (if persisted).
+
 This overrides the scratch buffer with the content stored in
-`wal/scratch-persist-file'."
-  (when (file-exists-p wal/scratch-persist-file)
+`wal/scratch-persist' if non-nil."
+  (when (file-exists-p wal/scratch-persist)
     (with-current-buffer (get-buffer "*scratch*")
       (delete-region (point-min) (point-max))
-      (insert-file-contents wal/scratch-persist-file))))
+      (insert-file-contents wal/scratch-persist))))
 #+END_SRC
 
 ** Indentation
@@ -2409,8 +2416,6 @@ If CLEAR-MARKS is t, clear the mark ring."
 *** Scratch Buffer
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/scratch-persist-file nil)
-
 (ert-deftest test-wal/scratch-buffer ()
   (with-mock switch-to-buffer (lambda (n) (buffer-name n))
     (should (equal (wal/scratch-buffer) "*scratch*"))
@@ -2419,7 +2424,7 @@ If CLEAR-MARKS is t, clear the mark ring."
 
 (ert-deftest test-wal/persist-scratch-and-rehydrate ()
   (wal/with-temp-file "scratch"
-    (let ((wal/scratch-persist-file wal/tmp-file))
+    (let ((wal/scratch-persist wal/tmp-file))
 
       (with-current-buffer (get-buffer-create "*scratch*")
         (erase-buffer)
@@ -2427,7 +2432,7 @@ If CLEAR-MARKS is t, clear the mark ring."
 
       (wal/persist-scratch)
 
-      (let ((file (find-file-noselect wal/scratch-persist-file)))
+      (let ((file (find-file-noselect wal/scratch-persist)))
 
         (with-current-buffer file
           (should (string-equal "This one's itchy" (buffer-string)))))
