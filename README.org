@@ -1166,7 +1166,7 @@ removed."
 (defun wal/kill-some-file-buffers ()
   "Kill some buffers associated with files."
   (interactive)
-  (let ((file-buffers (seq-filter (lambda (it) (buffer-file-name it)) (buffer-list))))
+  (let ((file-buffers (seq-filter #'buffer-file-name (buffer-list))))
 
     (kill-some-buffers file-buffers)))
 #+END_SRC
@@ -1206,9 +1206,9 @@ kill the whole line, otherwise kill forward."
   (interactive)
   (let ((end-fun (if (fboundp 'mwim-end) 'mwim-end 'end-of-line))
         (beg-fun (if (fboundp 'mwim-beginning) 'mwim-beginning 'beginning-of-line)))
+
     (if (region-active-p)
         (kill-region nil nil t)
-
       (let ((p-before (point))
             (p-end nil)
             (p-beg nil))
