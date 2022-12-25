@@ -8150,7 +8150,8 @@ Don't clutter things up too much.
 :UNNUMBERED: t
 :END:
 
-Debugging using VSCode's DAP (in =lsp-mode=)
+Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
+[[file:docs/debug-templates.org][templates]].
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal/dap-before nil)
@@ -8259,136 +8260,6 @@ Some more linting.
   :demand
   :after lsp-mode)
 #+end_src
-
-** Debug Templates
-
-Put these templates in a file in your project root, and evaluate them
-there using =C-x C-e=.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/dap-create-launch-json-from-template ()
-  "Create and write a VSCode launch configuration using a template."
-  (interactive)
-  (wal/try dap-mode
-    (let* ((args (-> (dap--completing-read "Select template: "
-                                           dap-debug-template-configurations
-                                           'cl-first nil t)
-                     cl-rest
-                     copy-tree))
-
-           (serialized (dap--json-encode args))
-           (file-args (find-file-read-args "Find file (deleting other windows): "
-                                           (confirm-nonexistent-file-or-buffer)))
-           (filename (car file-args)))
-      (with-temp-buffer
-        (insert serialized)
-        (json-pretty-print-buffer)
-        (write-region (buffer-string) nil filename)))))
-#+END_SRC
-
-*** Node.js
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-This for attaching to a remote host (Docker container) using =nodemon=.
-
-For TypeScript compile your =src= with =--sourceMap= or set =sourceMap= to
-=true= in your =tsconfig.json=.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-(when (require 'dap-mode nil 'noerror)
-  (progn
-    (let* ((use-source-maps t)          ; Turn off if not needed.
-           (build-directory "build")    ; Set to `nil' if this isn't transpiled JavaScript.
-           (remote-root "/usr/src/app") ; If this is running remotely.
-           (local-root (if build-directory
-                           (concat (file-name-directory buffer-file-name) build-directory)
-                         (file-name-directory buffer-file-name))))
-
-      (dap-register-debug-template
-       "attach::node"
-       (list :type "node"
-             :request "attach"
-             :sourceMaps use-source-maps
-             :remoteRoot remote-root
-             :localRoot local-root
-             :port 9229)))))
-#+END_SRC
-
-*** Python
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Attach to running process.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/dap-register-debugpy-template (name remote-root)
-  "Create template for debugpy.
-
-Prompts user for NAME of the template and the REMOTE-ROOT."
-  (interactive "sName of the template: \nsRemote root: ")
-  (wal/try dap-mode
-    (let ((mapping `(:localRoot "${workspaceFolder}" :remoteRoot ,remote-root)))
-
-      (dap-register-debug-template
-       name
-       (list :type "python"
-             :request "attach"
-             :connect (list :host "localhost" :port 5678)
-             :pathMappings (vector mapping))))))
-#+END_SRC
-
-*** Flutter
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Debugging without sound null safety.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-(when (require 'dap-mode nil 'noerror)
-  (dap-register-debug-template
-   "flutter::unsound"
-   (list
-    :type "flutter"
-    :program "lib/main.dart"
-    :args '("--no-sound-null-safety"))))
-#+END_SRC
-
-*** Laravel
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Make sure you expose port =9003=.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-(when (require 'dap-mode nil 'noerror)
-  (let ((mapping '(:/var/www/html "${workspaceFolder}")))
-
-    (dap-register-debug-template
-     "laravel::launch"
-     (list
-      :type "php"
-      :request "launch"
-      :port 9003
-      :pathMappings mapping))))
-#+END_SRC
-
-**** XDebug Config
-
-Put the following into your =php.ini=.
-
-#+BEGIN_SRC conf
-[XDebug]
-xdebug.start_with_request = yes
-xdebug.show_local_vars = on
-xdebug.discover_client_host = true
-xdebug.client_host = 0.0.0.0
-xdebug.client_port = 9003
-#+END_SRC
 
 ** Footer
 :PROPERTIES:
