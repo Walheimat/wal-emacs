@@ -1370,20 +1370,21 @@ Duplicate items are removed."
 
     (if (seq-every-p (lambda (it) (assoc (car it) val)) values)
         (seq-each (lambda (it) (map-put! val (car it) (cdr it))) values)
-      (user-error "All keys must already be present in list"))))
+      (let ((keys (mapcar #'car values)))
+        (user-error "All keys %s must already be present in %s" keys target)))))
 
 (defun wal/insert-after (target preceding item)
   "Insert ITEM in TARGET after PRECEDING."
   (let ((val (symbol-value target)))
 
     (when (memq item val)
-      (user-error "Item is already in target"))
+      (user-error "Can't insert after %s: %s is already in target %s" preceding item target))
 
     (if (memq preceding val)
         (let* ((remainder (nthcdr (cl-position preceding val) val)))
 
           (setcdr remainder (cons item (cdr remainder))))
-      (user-error "Can't insert, preceding key not in list"))))
+      (user-error "Can't insert after %s as it is not in %s" preceding target))))
 
 (defun wal/list-from (target item)
   "Create a list from TARGET appending ITEM.
