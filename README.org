@@ -1049,11 +1049,17 @@ Custom functionality.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/modern-emacs-p ()
-  "Set to t if `emacs-major-version' is 28 or higher.
+  "Check if we're using a modern version of Emacs.
 
-This variable is used to account for certain features (and
-bugs)."
-  (> emacs-major-version 28))
+This will return a truthy value vor any version above 27."
+  (cond
+   ((> emacs-major-version 29)
+    'bleeding)
+   ((> emacs-major-version 28)
+    'modern)
+   ((> emacs-major-version 27)
+    'current)
+   (t nil)))
 #+END_SRC
 
 ** Directories
@@ -3087,7 +3093,7 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 
 (defun wal/transparency--param ()
   "Get the transparency parameter for this Emacs version."
-  (if (wal/modern-emacs-p)
+  (if (equal (wal/modern-emacs-p) 'modern)
       'alpha-background
     'alpha))
 
