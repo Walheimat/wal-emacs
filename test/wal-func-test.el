@@ -522,24 +522,46 @@
       (wal/when-ready (message "Demon!"))
       `(add-hook 'server-after-make-frame-hook (lambda () (message "Demon!"))))))
 
+(defvar wal/test-setq-a nil)
+(defvar wal/test-setq-b nil)
+
+(ert-deftest test-setq-unless--only-sets-falsy ()
+  (let ((wal/test-setq-a nil)
+        (wal/test-setq-b "hello"))
+    (match-expansion
+     (setq-unless wal/test-setq-a "this"
+                  wal/test-setq-b "but not this")
+     `(progn
+        (setq wal/test-setq-a "this")))))
+
+(ert-deftest test-setq-unless--sets-unset ()
+  (let ((wal/test-setq-a "hi")
+        (wal/test-setq-b nil))
+    (match-expansion
+     (setq-unless wal/test-setq-b "this"
+                  wal/test-setq-d "unknown")
+     `(progn
+        (setq wal/test-setq-b "this")
+        (setq wal/test-setq-d "unknown")))))
+
 (ert-deftest test-wal/define-init-setup ()
   (match-expansion
-    (wal/define-init-setup test
-      "Nothing else."
-      :initial
-      ((message "Hello"))
-      :always
-      ((message "Bye"))
-      :immediately t)
-    `(progn
-       (defun wal/init-setup-test ()
-         "Do base setup for test. Do minimal setup on repeats.\nNothing else."
-         (unless (memq 'test wal/setup-list)
-           (progn
+   (wal/define-init-setup test
+     "Nothing else."
+     :initial
+     ((message "Hello"))
+     :always
+     ((message "Bye"))
+     :immediately t)
+   `(progn
+      (defun wal/init-setup-test ()
+        "Do base setup for test. Do minimal setup on repeats.\nNothing else."
+        (unless (memq 'test wal/setup-list)
+          (progn
             (message "Initial setup of '%s'" "test")
             (message "Hello")
             (add-to-list 'wal/setup-list 'test)))
-         (message "Bye"))
+        (message "Bye"))
       (if (daemonp)
           (progn
             (when t
