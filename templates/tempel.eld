@@ -53,6 +53,17 @@ conf-mode
  "# " (s title) " #" n
  "#" (make-string (+ 2 (length title)) ?#) "#")
 
+emacs-lisp-mode
+
+(package
+ ";;; " (s name) ".el --- " (s descr) " -*- lexical-binding: t; -*-" n n
+ ";;; Commentary:" n
+ ";;" n
+ ";; " (s comm) n n
+ ";;; Code:" n n
+ q n n
+ ";;; " name ".el ends here")
+
 ;; Local Variables:
 ;; mode: lisp-data
 ;; outline-regexp: "[a-z]"
