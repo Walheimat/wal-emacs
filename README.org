@@ -611,7 +611,8 @@ the sink for and PREFIX is its prefix."
          `(, ',definer ,@,`(mapcar (lambda (it)
                                      (if (stringp it)
                                          (concat ,suffix it)
-                                       it)) args))))))
+                                       it))
+                                   args))))))
 
 (cl-defmacro wal/lieutenant! (key fun mfun &rest args)
   "Bind FUN to KEY, MFUN in the sink.
@@ -680,35 +681,6 @@ quick succession.
 (defvar wal/hydra-emoji-whale "🐋")
 
 (use-package hydra)
-
-(with-no-warnings
-  (defhydra wal/scroll-other-window (:hint nil)
-    "
-%s`w/hew Scroll other window: u_p_ or dow_n_
-"
-    ("p" scroll-other-window-down)
-    ("n" scroll-other-window)
-    ("q" nil))
-
-  ;; Move similar to `xah-fly-keys'.
-  (defhydra wal/fly (:hint nil :foreign-keys warn)
-    "
-%s`w/hew Fly: ✜ _i_ _j_ _k_ _l_ %s`w/hs ⇆ _u_ _o_ %s`w/hs ⇄ _h_ _;_ %s`w/hs ⇅ _,_ _._
-"
-    ("u" backward-word)
-    ("i" previous-line)
-    ("o" forward-word)
-    ("j" backward-char)
-    ("l" forward-char)
-    ("k" next-line)
-
-    ("h" beginning-of-line)
-    (";" end-of-line)
-
-    ("," scroll-up-command)
-    ("." scroll-down-command)
-
-    ("q" nil)))
 #+END_SRC
 
 *** transient
@@ -743,6 +715,36 @@ Most bindings are declared in individual packages.
 
 #+BEGIN_SRC emacs-lisp
 (wal/on-boot key-bindings
+  ;; Create some `hydra's.
+  (with-no-warnings
+    (defhydra wal/scroll-other-window (:hint nil)
+      "
+%s`w/hew Scroll other window: u_p_ or dow_n_
+"
+      ("p" scroll-other-window-down)
+      ("n" scroll-other-window)
+      ("q" nil))
+
+    ;; Move similar to `xah-fly-keys'.
+    (defhydra wal/fly (:hint nil :foreign-keys warn)
+      "
+%s`w/hew Fly: ✜ _i_ _j_ _k_ _l_ %s`w/hs ⇆ _u_ _o_ %s`w/hs ⇄ _h_ _;_ %s`w/hs ⇅ _,_ _._
+"
+      ("u" backward-word)
+      ("i" previous-line)
+      ("o" forward-word)
+      ("j" backward-char)
+      ("l" forward-char)
+      ("k" next-line)
+
+      ("h" beginning-of-line)
+      (";" end-of-line)
+
+      ("," scroll-up-command)
+      ("." scroll-down-command)
+
+      ("q" nil)))
+
   ;; Additional `general' bindings.
   (wal/general
     "e" '(:ignore t :wk "Emacs")
@@ -2224,9 +2226,9 @@ diminish and delight minor modes.
   "Packages to install before using `use-package'.
 Such as package `use-package'.")
 
-(require 'package)
-
 (wal/on-boot external
+  (require 'package)
+
   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 
   ;; Try to install. On fail refresh and install again.
@@ -2237,7 +2239,7 @@ Such as package `use-package'.")
      (wal/install-packages wal/core-packages :delete-windows t))))
 
 (eval-when-compile
-    (require 'use-package))
+    (require 'use-package nil t))
 #+END_SRC
 
 *** Extensions
@@ -3710,22 +3712,22 @@ If no PREFIX is given, a slash is pre-pended to the first match."
        prefix
        (if (match-string 1) (match-string 1) "")))))
 
+(defvar wal/pe-helpful-re "\\*helpful \\w+\: ")
+(defvar wal/pe-dc-re "\\* docker-compose \\(?1:up\\|run\\|build\\)\\( --rm\\)?\\ \\(?2:\\w+\\)")
+(defvar wal/pe-cont-re "\\* docker container \\(?1:logs\\|stop\\)?\\ ?\\(--tail [[:digit:]]+\\)?\\ \\(?2:\\w+_\\w+_[[:digit:]]+\\)\\ \\*")
+
 (defun wal/popper-echo-transform (buffer-name)
   "Transform BUFFER-NAME by truncating certain prefixes."
-  (let ((helpful-re "\\*helpful \\w+\:")
-        (dc-re "\\* docker-compose \\(?1:up\\|run\\|build\\)\\( --rm\\)?\\ \\(?2:\\w+\\)")
-        (cont-re "\\* docker container \\(?1:logs\\|stop\\)?\\ ?\\(--tail [[:digit:]]+\\)?\\ \\(?2:\\w+_\\w+_[[:digit:]]+\\)\\ \\*"))
-
-    (cond
-     ((string-match helpful-re buffer-name)
-      (concat
-       (substring (replace-regexp-in-string helpful-re "" buffer-name) 0 -1)
-       "/help"))
-     ((string-match dc-re buffer-name)
-      (wal/popper-echo-replace dc-re buffer-name "/dc-"))
-     ((string-match cont-re buffer-name)
-      (wal/popper-echo-replace cont-re buffer-name))
-     (t buffer-name))))
+  (cond
+   ((string-match wal/pe-helpful-re buffer-name)
+    (concat
+     (substring (replace-regexp-in-string wal/pe-helpful-re "" buffer-name) 0 -1)
+     "/help"))
+   ((string-match wal/pe-dc-re buffer-name)
+    (wal/popper-echo-replace wal/pe-dc-re buffer-name "/dc-"))
+   ((string-match wal/pe-cont-re buffer-name)
+    (wal/popper-echo-replace wal/pe-cont-re buffer-name))
+   (t buffer-name)))
 
 (defvar wal/spared-popups '("\\*Messages\\*"))
 
@@ -3733,8 +3735,7 @@ If no PREFIX is given, a slash is pre-pended to the first match."
   "Check if BUFFER should be spared."
   (let* ((name (buffer-name buffer))
          (spared (seq-some (lambda (it) (string-match-p it name)) wal/spared-popups)))
-    (message "Checking if %s should be spared" name)
-    (when spared (message "Spared %s" name))))
+    spared))
 
 (defun wal/kill-some-popups ()
   "Query for killing some popups."
@@ -3853,7 +3854,7 @@ Moving around should be fun.
 ;;; Code:
 
 (eval-when-compile
-  (require 'avy))
+  (require 'avy nil t))
 
 (declare-function avy--line "ext:avy.el")
 (declare-function avy-jump "ext:avy.el")
@@ -5490,15 +5491,17 @@ Uses the same optional SWITCHES."
   (interactive)
   (image-dired (expand-file-name default-directory)))
 
+(defun wal/dired-buffer-p (buffer)
+  "Check if buffer is a dired buffer."
+  (with-current-buffer buffer
+    (derived-mode-p 'dired-mode)))
+
 (defun wal/consult-dired-buffer--query ()
   "Get Dired buffer names."
   (consult--buffer-query
    :sort 'visibility
    :as #'buffer-name
-   :predicate
-   '(lambda (buf)
-      (with-current-buffer buf
-        (derived-mode-p 'dired-mode)))))
+   :predicate #'wal/dired-buffer-p))
 
 (use-package dired
   :ensure nil
@@ -7111,7 +7114,7 @@ LSP support for Dart.
           (kill-new uri)
           (message "Service URI (%s) copied to kill ring" uri)))
     (error
-      (message "Couldn't get service URI: %s" err))))
+      (message "Couldn't get service URI: %s" (error-message-string err)))))
 
 (use-package lsp-dart
   :if (or (executable-find "flutter") (executable-find "dart"))
@@ -7621,12 +7624,14 @@ Please let me know when I screwed up. I promise I will learn.
 ;;; Code:
 
 (eval-when-compile
-  (require 'flycheck))
+  (require 'flycheck nil t))
 
 (declare-function wdb/side "wal-func.el")
 (declare-function wal/major "wal-key-bindings.el")
 (declare-function flycheck-parse-stylelint "ext:flycheck.el")
 (declare-function flycheck-buffer-nonempty-p "ext:flycheck.el")
+
+(defvar wal/consult-map)
 #+END_SRC
 
 ** Packages
@@ -7647,6 +7652,13 @@ Please let me know when I screwed up. I promise I will learn.
     (with-current-buffer (get-buffer-create wal/flycheck-file--buffer)
       (view-mode 1)))
   (get-buffer wal/flycheck-file--buffer))
+
+(defun wal/flycheck-file--erase ()
+  "Erase the flycheck buffer."
+  (with-current-buffer (wal/flycheck-file--get-buffer)
+    (setq buffer-read-only nil)
+    (erase-buffer)
+    (setq buffer-read-only t)))
 
 (defun wal/flycheck-file--write (message &optional skip-newline)
   "Write MESSAGE to the file check buffer.
@@ -8841,9 +8853,8 @@ This will activate minor mode `wal/config-mode'."
   (let* ((root wal/emacs-config-default-path)
          (changelog (expand-file-name "CHANGELOG.md" root)))
 
-    (display-buffer-pop-up-window
-     (find-file-noselect changelog)
-     '((side . left)))))
+    (pop-to-buffer-same-window
+     (find-file-noselect changelog))))
 #+END_SRC
 
 *** Coverage
@@ -8899,6 +8910,16 @@ name are deleted beforehand."
 *** Checking
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/package-files ()
+  "Get the package files."
+  (let* ((package-files (wal/directory-files wal/emacs-config-package-path))
+         (el-files (seq-filter
+                    (lambda (it)
+                      (string-equal (file-name-extension it)
+                                    "el"))
+                    package-files)))
+    el-files))
+
 (defun wal/checkdoc-config-packages ()
   "Run `checkdoc-file' on all package files."
   (interactive)
@@ -8906,15 +8927,9 @@ name are deleted beforehand."
   (require 'checkdoc nil t)
 
   (defvar projectile-enable-caching)
-  (let* ((projectile-enable-caching nil)
-         (package-files (wal/directory-files wal/emacs-config-package-path))
-         (el-files (seq-filter
-                    (lambda (it)
-                      (string-equal (file-name-extension it)
-                                    "el"))
-                    package-files)))
+  (let ((projectile-enable-caching nil))
 
-    (dolist (it el-files)
+    (dolist (it (wal/package-files))
       (checkdoc-file it))))
 
 (defun wal/flycheck-config-packages ()
@@ -8924,23 +8939,12 @@ name are deleted beforehand."
   (let ((output-buffer (wal/flycheck-file--get-buffer))
         (projectile-enable-caching nil))
 
-    (with-current-buffer output-buffer
-      (setq buffer-read-only nil)
-      (erase-buffer)
-      (setq buffer-read-only t))
-
+    (wal/flycheck-file--erase)
     (display-buffer output-buffer)
 
-    (let* ((package-files (wal/directory-files wal/emacs-config-package-path))
-           (el-files (seq-filter
-                      (lambda (it)
-                        (string-equal (file-name-extension it)
-                                      "el"))
-                      package-files)))
-
-      (dolist (it el-files)
-        ;; Check the file but defer output and kill the buffers.
-        (wal/flycheck-file it t t)))))
+    (dolist (it (wal/package-files))
+      ;; Check the file but defer output and kill the buffers.
+      (wal/flycheck-file it t t))))
 #+END_SRC
 
 *** Transient

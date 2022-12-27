@@ -1,4 +1,4 @@
-;;; wal-test.el --- Tests for custom functionality. -*- lexical-binding: t; -*-
+;;; wal-func-test.el --- Tests for custom functionality. -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;;
@@ -885,4 +885,4 @@
       (should (eq (mark t) 40))
       (should (eq (length mark-ring) 1)))))
 
-;;; wal-test.el ends here
+;;; wal-func-test.el ends here

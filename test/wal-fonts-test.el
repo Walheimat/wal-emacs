@@ -2,8 +2,7 @@
 
 ;;; Commentary:
 ;;
-;; These tests require a lot of mocking as there won't be an
-;; initialized window system.
+;; Tests custom functions.
 
 ;;; Code:
 
@@ -18,10 +17,11 @@
       (should (equal updates '(default fixed-pitch))))))
 
 (ert-deftest test-wal/set-fixed-font-height ()
-  (let ((updates (funcall-interactively 'wal/set-fixed-font-height 110)))
-    (should (equal updates '(default fixed-pitch)))
-    (should (eq 110 (face-attribute 'default :height)))
-    (should (eq wal/fixed-font-height 110))))
+  (with-mock wal/read-sensible-font-height (lambda (_) (list 110))
+    (let ((updates (call-interactively 'wal/set-fixed-font-height)))
+      (should (equal updates '(default fixed-pitch)))
+      (should (eq 110 (face-attribute 'default :height)))
+      (should (eq wal/fixed-font-height 110)))))
 
 (ert-deftest test-wal/select-variable-font ()
   (with-mock completing-read (lambda (_m _) "Roboto")
@@ -29,10 +29,11 @@
     (should (equal updates '(variable-pitch))))))
 
 (ert-deftest test-wal/set-variable-font-height ()
-  (let ((updates (funcall-interactively 'wal/set-variable-font-height 98)))
-    (should (equal updates '(variable-pitch)))
-    (should (eq 98 (face-attribute 'variable-pitch :height)))
-    (should (eq wal/variable-font-height 98))))
+  (with-mock wal/read-sensible-font-height (lambda (_) (list 98))
+    (let ((updates (call-interactively 'wal/set-variable-font-height)))
+      (should (equal updates '(variable-pitch)))
+      (should (eq 98 (face-attribute 'variable-pitch :height)))
+      (should (eq wal/variable-font-height 98)))))
 
 (ert-deftest test-wal/preferred-fonts ()
   (let ((wal/preferred-fonts '("None" "This One")))
@@ -50,4 +51,4 @@
     (should (equal 'italic (face-attribute 'font-lock-comment-face :slant)))
     (should (equal 'bold (face-attribute 'font-lock-keyword-face :weight)))))
 
-;; wal-fonts-test.el ends here
+;;; wal-fonts-test.el ends here

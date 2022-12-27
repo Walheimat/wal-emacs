@@ -2,7 +2,7 @@
 
 ;;; Commentary:
 ;;
-;; Helper macros.
+;; Helper macros and functions.
 
 ;;; Code:
 
@@ -29,6 +29,18 @@
 
 (defvar wal/booting nil)
 
+(defun wal/rf (a &rest _r)
+  "Return first argument passed A."
+  a)
+
+(defun wal/ra (&rest r)
+  "Return all arguments R."
+  r)
+
+(defun wal/rt (&rest _r)
+  "Return symbol `testing'."
+  'testing)
+
 ;; Create a dummy `use-package' definition.
 (defmacro use-package (package-name &rest _args)
   "Message that PACKAGE-NAME would have been loaded."
@@ -40,6 +52,18 @@
 
   `(cl-letf (((symbol-function ',name) ,fun))
      ,@body))
+
+(defmacro with-default-mock (name &rest body)
+  "Evaluate BODY while mocking function NAME using default mock."
+  (declare (indent defun))
+
+  `(with-mock ,name 'wal/ra ,@body))
+
+(defmacro with-rf-mock (name &rest body)
+  "Evaluate BODY while mocking function NAME returning first argument."
+  (declare (indent defun))
+
+  `(with-mock ,name 'wal/rf ,@body))
 
 (defmacro with-mock-all (flist &rest body)
   "Evaluate BODY mocking alist of functions FLIST."
@@ -67,12 +91,25 @@ The associated file buffer is also killed."
     `(progn
        (let ((wal/tmp-file ,tmp-file))
          (make-empty-file ,tmp-file)
-         ,@body
-         (kill-buffer (get-file-buffer ,tmp-file))
-         (delete-file ,tmp-file)
-         (message "deleted %s" ,tmp-file)))))
+         (condition-case err
+             (progn
+               ,@body
+               (kill-buffer (get-file-buffer ,tmp-file))
+               (delete-file ,tmp-file)
+               (message "Deleted %s" ,tmp-file))
+           (error
+            (delete-file ,tmp-file)
+            (error "Deleted %s after error: %s" ,tmp-file err)))))))
 
-(when (getenv "CI")
-  (add-to-list 'load-path (expand-file-name "wal" (getenv "GITHUB_WORKSPACE"))))
+(defvar wal/emacs-config-default-path)
+(defvar wal/emacs-config-package-path)
+
+(let* ((source-dir (or (getenv "GITHUB_WORKSPACE") default-directory))
+       (package-dir (expand-file-name "wal" source-dir)))
+  (message "Setting source dir to %s, package dir to %s" source-dir package-dir)
+  (when (getenv "CI")
+    (add-to-list 'load-path package-dir))
+  (setq wal/emacs-config-default-path source-dir
+        wal/emacs-config-package-path package-dir))
 
 ;;; test-helper.el ends here
