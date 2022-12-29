@@ -8890,14 +8890,8 @@ name are deleted beforehand."
   (unless (executable-find "cask")
     (user-error "You need to install `cask' binary"))
 
-  (let ((buffer-name "\\*wal-async\\*")
+  (let ((buffer-name "*wal-async*")
         (full-command (concat "cd " wal/emacs-config-default-path " && " command)))
-
-    (dolist (buf (buffer-list))
-      (when (string-match buffer-name (buffer-name buf))
-        (when-let ((window (get-buffer-window buf)))
-          (delete-window window))
-        (kill-buffer buf)))
 
     (wal/async-process full-command on-success on-failure t)))
 #+END_SRC
