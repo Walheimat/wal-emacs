@@ -8595,36 +8595,6 @@ Display code statistics.
   :type '(choice (const :tag "Blue whale" blue)
                  (const :tag "Cachalot" cachalot))
   :group 'wal-config)
-
-(defconst wal/sub-packages '(wal-func
-                             wal-external
-                             wal-settings
-                             wal-key-bindings
-                             wal-look
-                             wal-fonts
-                             ;; The following packages are optional.
-                             wal-emacs
-                             wal-edit
-                             wal-movement
-                             wal-find
-                             wal-complete
-                             wal-workspace
-                             wal-windows
-                             wal-org
-                             wal-dired
-                             wal-terminal
-                             wal-vc
-                             wal-visuals
-                             wal-lang
-                             wal-fix
-                             wal-lsp
-                             wal-devops
-                             wal-web
-                             wal-writing
-                             wal-fluff)
-  "List of sub-packages that will be loaded.
-
-The order determines the load order as well.")
 #+END_SRC
 
 ** Lovable Things
@@ -8785,9 +8755,6 @@ Minor mode for editing this config.
 (defvar wal/config-mode-map (make-sparse-keymap)
   "Map for `wal/config-mode'.")
 
-(defconst wal/readme-config (expand-file-name "README.org" wal/emacs-config-default-path)
-  "The path to Walheimat's config.")
-
 (defun wal/describe-config-version ()
   "Describe the config's version.
 
@@ -8843,7 +8810,7 @@ If the answer is no, there will be no additional prompt."
 This will activate minor mode `wal/config-mode'."
   (interactive)
 
-  (let ((buf (find-file-noselect wal/readme-config)))
+  (let ((buf (find-file-noselect (expand-file-name "README.org" wal/emacs-config-default-path))))
 
     (switch-to-buffer buf)
     (add-hook 'after-revert-hook #'wal/tangle-config-prompt nil t)
@@ -9011,18 +8978,6 @@ name are deleted beforehand."
       ("d" "show diff" wal/show-config-diff-range)]
      ["Fluff"
       ("w" "toggle animation" wal/ascii-whale-toggle-display)]]))
-#+END_SRC
-
-** Loading
-
-This basically just a giant =require=.
-
-#+BEGIN_SRC emacs-lisp
-(when (boundp 'wal/emacs-config-package-path)
-  (add-to-list 'load-path wal/emacs-config-package-path))
-
-(dolist (it wal/sub-packages)
-  (require it nil t))
 #+END_SRC
 
 ** Footer
