@@ -15,6 +15,37 @@
 
 (declare-function org-babel-tangle-file "ob-tangle")
 
+(defconst wal/packages '(wal
+                         wal-func
+                         wal-external
+                         wal-settings
+                         wal-key-bindings
+                         wal-look
+                         wal-fonts
+                         ;; The following packages are optional.
+                         wal-emacs
+                         wal-edit
+                         wal-movement
+                         wal-find
+                         wal-complete
+                         wal-workspace
+                         wal-windows
+                         wal-org
+                         wal-dired
+                         wal-terminal
+                         wal-vc
+                         wal-visuals
+                         wal-lang
+                         wal-fix
+                         wal-lsp
+                         wal-devops
+                         wal-web
+                         wal-writing
+                         wal-fluff)
+  "List of sub-packages that will be loaded.
+
+The order determines the load order as well.")
+
 (defvar wal/booting nil
   "Set to t during bootstrapping.")
 
@@ -63,11 +94,7 @@ This will tangle the config if it hasn't been yet.
 
 Unless NO-LOAD is t, this will load the `wal' package."
   (let* ((package-dir (expand-file-name "wal" source-dir))
-         (test-dir (expand-file-name "wal/test" source-dir))
          (created-dir (wal/find-or-create-directory package-dir)))
-
-    ;; Create the test directory.
-    (wal/find-or-create-directory test-dir)
 
     ;; These variables are also used in `wal' package.
     (setq wal/emacs-config-default-path source-dir)
@@ -80,7 +107,11 @@ Unless NO-LOAD is t, this will load the `wal' package."
       (condition-case err
           (progn
             (setq wal/booting t)
-            (load-file (expand-file-name "wal.el" package-dir))
+
+            (add-to-list 'load-path wal/emacs-config-package-path)
+            (dolist (it wal/packages)
+              (require it nil t))
+
             (setq wal/booting nil))
         (error
          (setq wal/init-error (error-message-string err))

@@ -2,7 +2,7 @@
 
 ;;; Commentary:
 ;;
-;; Tests for the look functionality.
+;; Tests for custom functions.
 
 ;;; Code:
 
