@@ -3871,18 +3871,18 @@ Moving around should be fun.
 Who needs a mouse.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/avy-goto-word-in-line (&optional line-first)
-  "Jump to a word in current line.
+(defun wal/avy-goto-word (&optional in-line)
+  "Jump to a word.
 
-If LINE-FIRST is t, move to a line first."
+If IN-LINE is t, jump to word in line in the current window."
   (interactive "P")
-  (when line-first
-    (avy-goto-line))
 
-  (avy-with avy-goto-word-0
-    (avy-jump avy-goto-word-0-regexp
-              :beg (line-beginning-position)
-              :end (line-end-position))))
+  (if in-line
+      (avy-with avy-goto-word-0
+        (avy-jump avy-goto-word-0-regexp
+                  :beg (line-beginning-position)
+                  :end (line-end-position)))
+    (avy-goto-word-0 t)))
 
 (defun wal/avy-goto-line (&optional beginning)
   "Go to line or BEGINNING of line."
@@ -3941,11 +3941,11 @@ beginning."
   (:map goto-map
    ("c" . avy-goto-char)        ; Replaces `goto-char'.
    ("w" . avy-goto-word-0)
-   ("s" . avy-goto-whitespace-end)
-   ("k" . wal/avy-goto-word-in-line))
+   ("s" . avy-goto-whitespace-end))
 
   :wal-bind
   ("l" . wal/avy-goto-line)
+  ("u" . wal/avy-goto-word)
 
   :general
   ;; Lines.
