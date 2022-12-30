@@ -2874,7 +2874,7 @@ It's fun to edit things /quickly/.
 Don't you want to edit your buffer in multiple places at once?
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/mc-conflicting-modes '(lispy-mode corfu-mode)
+(defvar wal/mc-conflicting-modes '(paredit-mode corfu-mode)
   "Modes that are in conflict with `multiple-cursors-mode'.")
 
 (defvar-local wal/mc-disabled nil
@@ -3446,7 +3446,7 @@ Sometimes the list of minor modes overcrowds the modeline.
                              wal/config-mode
                              verb-mode
                              verb-response-body-mode
-                             lispy-mode
+                             paredit-mode
                              pet-mode)))
 #+END_SRC
 
@@ -6557,22 +6557,22 @@ The philosopher's choice.
 (wal/define-expansion-pack lisp
   "For (common-) Lisp developers using sbcl."
   :packages (slime)
-  :extras (lispy))
+  :extras (paredit))
 
 (wal/define-expansion-pack clojure
   "For Clojure developers using cider with lein."
   :packages (clojure-mode cider))
 #+END_SRC
 
-*** lispy
+*** paredit
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Deal with the parens[fn:15].
+Deal with the parens.
 
 #+BEGIN_SRC emacs-lisp
-(use-package lispy
+(use-package paredit
   :wal-ways nil
 
   :ensure nil
@@ -6580,20 +6580,10 @@ Deal with the parens[fn:15].
   :defer 1
   :after lisp-mode
 
+  :hook (lisp-data-mode . paredit-mode)
+
   :custom
-  (lispy-compat '(edebug cider magit-blame-mode))
-  (lispy-comment-use-single-semicolon t)
-  (lispy-completion-method 'default)
-  (lispy-imenu-function 'consult-imenu)
-  (lispy-visit-method (if wal/use-projectile
-                          'projectile
-                        'ffip))
-
-  :bind
-  (:map lispy-mode-map
-   ("M-o" . nil))
-
-  :delight " '-y")
+  (paredit-lighter " par"))
 #+END_SRC
 
 *** elisp-mode
@@ -6622,9 +6612,9 @@ Deal with the parens[fn:15].
       ("h" "helpful" helpful-at-point)
       ("m" "expand macro" emacs-lisp-macroexpand)]])
 
-  (with-eval-after-load 'lispy
+  (with-eval-after-load 'paredit
     (transient-append-suffix 'wal/emacs-lisp-mode-dispatch '(0 0 -1)
-      '("l" "lispy" lispy-mode))))
+      '("p" "paredit" paredit-mode))))
 #+END_SRC
 
 *** lisp-mode
@@ -7878,7 +7868,7 @@ smaller."
 :END:
 
 =lsp-mode= is the fancy version. You'll have to install some language
-servers yourself[fn:16].
+servers yourself[fn:15].
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/slow-lsp-p (mode)
@@ -9049,6 +9039,4 @@ too old.
 
 [fn:14] Currently requires [[https://daseldocs.tomwright.me/installation#manual ][dasel]].
 
-[fn:15] Binding reference [[http://oremacs.com/lispy/][here]].
-
-[fn:16] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+[fn:15] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].

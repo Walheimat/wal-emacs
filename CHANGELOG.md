@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Packages are now loaded from `wal/bootstrap-config` which is part of
   `wal-prelude` instead of doing it in `wal` package.
 
+### Removed
+
+- `lispy` in favor of `paredit`.
+
 ## [v1.9.3]
 
 Time killer.
