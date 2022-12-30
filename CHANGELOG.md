@@ -7,10 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Around 120 additional tests for (almost) all packages. There are no
+  tests for the settings package as all it does is set things.
+
 ### Changed
 
 - Tests, test helper and `cask` were moved out of the configuration
   into project root.
+- `consult-flycheck` is now bound in `wal/consult-map`.
+- User-prefixed `u` now binds new function `wal/avy-goto-word` that
+  replaces `wal/avy-goto-word-in-line`.
+- Packages are now loaded from `wal/bootstrap-config` which is part of
+  `wal-prelude` instead of doing it in `wal` package.
 
 ## [v1.9.3]
 
