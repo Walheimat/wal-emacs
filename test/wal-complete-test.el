@@ -52,11 +52,11 @@
 
 (ert-deftest test-wal/consult-line ()
   (with-mock consult-line (lambda (&optional i _) i)
-    (should-not (wal/consult-line))
+    (should-not (wal/consult-line t))
     (with-temp-buffer
       (insert "hello")
       (goto-char 1)
-      (should (string-equal (wal/consult-line t) "hello")))))
+      (should (string-equal (wal/consult-line) "hello")))))
 
 (ert-deftest test-wal/consult-clock-in ()
   (let ((out nil))

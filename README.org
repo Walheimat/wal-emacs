@@ -4386,12 +4386,14 @@ Do not ignore hidden files."
                 :lookup #'consult--lookup-candidate))))
     (setq register-alist (assoc-delete-all key register-alist))))
 
-(defun wal/consult-line (&optional at-point)
-  "Call consult line using `thing-at-point' if AT-POINT is t."
+(defun wal/consult-line (&optional not-at-point)
+  "Call `consult-line' using `thing-at-point'.
+
+If NOT-AT-POINT is t, call `consult-line' normally."
   (interactive "P")
-  (if at-point
-      (consult-line (thing-at-point 'symbol))
-    (consult-line)))
+  (if not-at-point
+      (consult-line)
+    (consult-line (thing-at-point 'symbol))))
 
 (defun wal/consult-clock-in ()
   "Clock into an Org agenda heading."
@@ -4425,12 +4427,10 @@ Do not ignore hidden files."
   (wal/univ consult-register-load consult-register-store)
 
   (defvar wal/consult-map (make-sparse-keymap))
-
   (bind-key (wal/prefix-user-key wal/consult-key)
             #'(lambda nil
                 (interactive)
                 (use-package-autoload-keymap 'wal/consult-map 'consult nil)))
-
   (bind-key wal/consult-key 'consult-goto-line 'goto-map)
 
   :config
@@ -4468,9 +4468,10 @@ Do not ignore hidden files."
     (transient-append-suffix 'wal/org-mode-dispatch "o"
       `(,wal/consult-key "go to heading" consult-org-heading)))
 
-  (which-key-add-key-based-replacements
-    (wal/prefix-user-key wal/consult-key)
-    '(nil . "consult"))
+  (with-eval-after-load 'which-key
+    (which-key-add-key-based-replacements
+      (wal/prefix-user-key wal/consult-key)
+      '(nil . "consult")))
 
   :custom
   (consult-buffer-filter (list "\\` " "\\`\\*" "\\`magit"))
@@ -4631,6 +4632,16 @@ More robust project management.
 Built-in but entirely dependent on either =git= or =hg=.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/with-project-bounded-compilation (fun &rest args)
+  "Run FUN applying args.
+
+Makes sure this is done with `compilation-save-buffers-predicate'
+set to filter by project buffers."
+  (let* ((buffers (project-buffers (project-current)))
+         (pred (lambda () (memq (current-buffer) buffers)))
+         (compilation-save-buffers-predicate pred))
+    (apply fun args)))
+
 (use-package project
   :if (not wal/use-projectile)
 
@@ -4638,11 +4649,17 @@ Built-in but entirely dependent on either =git= or =hg=.
 
   :demand t
 
+  :init
+  (advice-add
+   'project-compile :around
+   #'wal/with-project-bounded-compilation)
+
   :config
   (wal/major "p" '(:keymap project-prefix-map :wk "project"))
 
   :custom
   (project-switch-commands 'project-find-dir)
+  (project-vc-extra-root-markers '("pom.xml" "package.json"))
   (project-vc-ignores '("node_modules/"
                         "build/"
                         "android/"
@@ -4652,7 +4669,7 @@ Built-in but entirely dependent on either =git= or =hg=.
                         "*.js.map"))
 
   :wal-bind
-  (("l" . project-find-file)
+  (("h" . project-find-file)
    ("p" . project-switch-project)))
 #+END_SRC
 
@@ -5220,7 +5237,8 @@ If the project root cannot be determined, use
 `wal/org-directory'. as destination."
   (let ((proj-root (if wal/use-projectile
                        (projectile-project-root)
-                     (project-root (project-current)))))
+                     (when-let ((current (project-current)))
+                       (project-root current)))))
 
     (expand-file-name "tasks.org" (or proj-root org-directory))))
 
@@ -6577,13 +6595,9 @@ Deal with the parens.
 
   :ensure nil
 
-  :defer 1
-  :after lisp-mode
-
   :hook (lisp-data-mode . paredit-mode)
 
-  :custom
-  (paredit-lighter " par"))
+  :delight " par")
 #+END_SRC
 
 *** elisp-mode
@@ -8229,6 +8243,7 @@ Who doesn't like pods and stuff?
 #+BEGIN_SRC emacs-lisp
 (use-package kubernetes
   :if (executable-find "kubectl")
+
   :wal-ways nil
 
   :ensure nil
@@ -8469,9 +8484,6 @@ triggered explicitly.
 #+BEGIN_SRC emacs-lisp
 (use-package typo
   :wal-ways nil
-
-  :defer 3
-  :after text-mode
 
   :hook (typo-mode . flycheck-mode)
 
@@ -8851,8 +8863,12 @@ This will activate minor mode `wal/config-mode'."
 #+BEGIN_SRC emacs-lisp
 (defun wal/check-coverage--calculate-coverage ()
   "Calculate the full coverage."
-  (when-let* ((buf (seq-find (lambda (it) (string-match "-async\\*" (buffer-name it))) (buffer-list)))
-              (matches (with-current-buffer buf
+  (when-let* ((buffers (seq-filter (lambda (it) (string-match "\\*wal-async" (buffer-name it))) (buffer-list)))
+              (compare (lambda (a b)
+                         (> (string-to-number (substring (buffer-name a) -2 -1))
+                            (string-to-number (substring (buffer-name b) -2 -1)))))
+              (latest (car (seq-sort compare buffers)))
+              (matches (with-current-buffer latest
                          (wal/matches-in-string "\\(?1:[[:digit:]]+\\)%" (buffer-string))))
               (nums (mapcar (lambda (it) (string-to-number it)) matches)))
     (format "%s%%" (/ (apply '+ nums) (length nums)))))
@@ -8942,10 +8958,11 @@ name are deleted beforehand."
 (with-eval-after-load 'transient
   (transient-define-prefix wal/config-dispatch ()
     "Facilitate the usage of or the working on Walheimat's config."
-    [["Use"
+    [["Do"
       ("t" "tangle" wal/tangle-config)
       ("x" "install expansion pack" wal/install-expansion-pack)
-      ("g" "customize group" wal/customize-group)]
+      ("g" "customize group" wal/customize-group)
+      ("d" "show diff" wal/show-config-diff-range)]
      ["Check"
       ("c d" "checkdoc" wal/checkdoc-config-packages)
       ("c f" "flycheck" wal/flycheck-config-packages)
@@ -8956,8 +8973,6 @@ name are deleted beforehand."
       ("f p" "packages" wal/dired-config-packages)
       ("f l" "changelog" wal/find-config-changelog)
       ("f t" "tests" wal/dired-config-tests)]
-     ["Show"
-      ("d" "show diff" wal/show-config-diff-range)]
      ["Fluff"
       ("w" "toggle animation" wal/ascii-whale-toggle-display)]]))
 #+END_SRC
