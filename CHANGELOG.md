@@ -13,9 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `project-compile` but store the previously used command in a hash
   table using the project as the key.
 
+### Changed
+
+- `use-package-always-ensure` is no longer set to `t` by default.
+  Instead, new flag `wal/flag-ensure` can be set with `--ensure`.
+
 ### Removed
 
 - Package `projectile` in favor of using built-in `project`.
+- Custom flag `wal/flag-deny`.
 
 ## [v1.9.4]
 

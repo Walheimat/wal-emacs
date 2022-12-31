@@ -250,8 +250,8 @@ Customize start-up.
 (wal/capture-flag mini
   "Will packages that are part of the minimal configuration.")
 
-(wal/capture-flag deny
-  "Will prevent `use-package' from ensuring packages.")
+(wal/capture-flag ensure
+  "Will set up `use-package' to ensure packages.")
 #+END_SRC
 
 ** Packages
@@ -262,7 +262,8 @@ installed from there.
 #+BEGIN_SRC emacs-lisp
 ;; Always defer, maybe ensure.
 (setq use-package-always-defer t)
-(unless wal/flag-deny
+
+(when wal/flag-ensure
   (setq use-package-always-ensure t))
 
 (when wal/flag-doctor
@@ -1147,11 +1148,11 @@ Capture custom command line flags.
 #+BEGIN_SRC emacs-lisp
 (defvar wal/flag-doctor nil)
 (defvar wal/flag-mini nil)
-(defvar wal/flag-deny nil)
+(defvar wal/flag-ensure nil)
 
 (defconst wal/custom-flags '((doctor . "--doctor")
                              (mini . "--mini")
-                             (deny . "--deny"))
+                             (ensure . "--ensure"))
   "Alist of custom flags that can be passed to Emacs.")
 
 (defmacro wal/capture-flag (flag docs)
