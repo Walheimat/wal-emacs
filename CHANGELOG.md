@@ -5,12 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.9.4]
+
+Sweet toot.
 
 ### Added
 
 - Around 120 additional tests for (almost) all packages. There are no
   tests for the settings package as all it does is set things.
+- `project-compile` is now advised to only save buffers that are part
+  of the current project.
+- Command `wal/dired-config-tests` to open the tests directory with
+  Dired.
 
 ### Changed
 
@@ -21,10 +27,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   replaces `wal/avy-goto-word-in-line`.
 - Packages are now loaded from `wal/bootstrap-config` which is part of
   `wal-prelude` instead of doing it in `wal` package.
+- Various sections from `README.org` now have their own document under
+  `docs`.
+- `wal/consult-line` now uses `thing-at-point` unless called with
+  `C-u`.
 
 ### Removed
 
 - `lispy` in favor of `paredit`.
+- Custom minor mode `wal/config-mode` that was used for editing the
+  config (the functionality is now provided by `wal/config-dispatch`).
+
+### Fixed
+
+- Using `project` over `projectile` should now work with `wal-line`.
 
 ## [v1.9.3]
 
