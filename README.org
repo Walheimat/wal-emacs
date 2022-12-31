@@ -3152,9 +3152,7 @@ Let's have a dash of board.
   (dashboard-set-file-icons t)
   (dashboard-set-navigator t)
   (dashboard-path-style 'truncate-beginning)
-  (dashboard-projects-backend (if wal/use-projectile
-                                  'projectile
-                                'project-el))
+  (dashboard-projects-backend 'project-el)
   (dashboard-image-banner-max-height (if wal/hidpi 0 300))
 
   :bind
@@ -4285,17 +4283,6 @@ completion actions.
   :after vertico
 
   :config
-  ;; Map external functions to categories.
-  (wal/append
-   'marginalia-command-categories
-   '((projectile-switch-to-buffer . buffer)
-     (projectile-find-file . project-file)
-     (projectile-find-file-other-window . project-file)
-     (projectile-find-dir . project-file)
-     (projectile-find-file-in-directory . project-file)
-     (projectile-recentf . project-file)
-     (projectile-switch-project . project-file)))
-
   (marginalia-mode)
 
   :bind
@@ -4322,15 +4309,6 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
   :config
   ;; No mode-line for collections and completions.
   (wdb/ghost "\\`\\*Embark Collect \\(Live\\|Completions\\)\\*")
-
-  ;; Use `projectile' alternatives when finding files.
-  (when wal/use-projectile
-    (define-key embark-file-map
-                (kbd "f")
-                (wal/maybe-use-projectile find-file))
-    (define-key embark-file-map
-                (kbd "o")
-                (wal/maybe-use-projectile find-file-other-window)))
 
   ;; Search using region.
   (define-key embark-region-map
@@ -4434,9 +4412,7 @@ If NOT-AT-POINT is t, call `consult-line' normally."
   (bind-key wal/consult-key 'consult-goto-line 'goto-map)
 
   :config
-  ;; Integrate into `projectile' and `xref'.
-  (when wal/use-projectile
-    (setq consult-project-function #'projectile-project-root))
+  ;; Integrate with `xref'.
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
 
@@ -4531,7 +4507,6 @@ Keep order.
 
 
 (declare-function consult--buffer-query "ext:consult.el")
-(declare-function projectile-project-p "ext:projectile.el")
 (declare-function wal/univ-p "wal-func.el")
 
 (defvar org-agenda-files)
@@ -4540,89 +4515,9 @@ Keep order.
   "Change settings used for workspace packages."
   :group 'wal
   :tag "Workspace")
-
-;;;; Customization:
-
-(defcustom wal/use-projectile t
-  "Whether to use `projectile' over `project'."
-  :type 'boolean
-  :group 'wal-workspace)
 #+END_SRC
 
 ** Packages
-
-*** projectile
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-More robust project management.
-
-#+BEGIN_SRC emacs-lisp
-(defmacro wal/maybe-use-projectile (func)
-  "Maybe use the `projectile' variant for FUNC."
-  (let* ((func-name (symbol-name func))
-         (projectile-func-name (concat "projectile-" func-name)))
-
-  `(defun ,(intern (concat "wal/maybe-use-projectile-" func-name)) ()
-     ,(format "Use `%s' instead of `%s' if in a project." projectile-func-name func-name)
-     (interactive)
-     (with-demoted-errors "%s"
-       (require 'projectile)
-       (if (projectile-project-p)
-           (call-interactively (symbol-function ',(intern projectile-func-name)))
-         (call-interactively (symbol-function ',func)))))))
-
-(defun wal/with-projectile-switch (func &rest args)
-  "Call FUNC with ARGS or switch project."
-  (if (projectile-project-p)
-      (apply func args)
-    (call-interactively 'projectile-switch-project)))
-
-(use-package projectile
-  :commands
-  (wal/projectile
-   projectile-project-root)
-
-  :if wal/use-projectile
-
-  :init
-  ;; Switch to project first if outside a project.
-  (advice-add
-   'projectile-find-file :around
-   #'wal/with-projectile-switch)
-
-  :config
-  ;; Extend the various ignore lists.
-  (wal/append 'projectile-globally-ignored-directories
-              '("node_modules" "build" "_build" "android"))
-  (wal/append 'projectile-globally-ignored-files
-              '("yarn.lock" "package.lock" "bundle.js"))
-  (wal/append 'projectile-globally-ignored-file-suffixes
-              '(".min.js" ".js.map"))
-
-  ;; Register command map.
-  (wal/major "p" '(:keymap projectile-command-map :wk "projectile"))
-
-  (projectile-mode 1)
-
-  :custom
-  (projectile-switch-project-action #'projectile-dired)
-  (projectile-sort-order 'recentf)
-  ;; Allow finding files that are ignored by `.gitignore'.
-  (projectile-indexing-method 'hybrid)
-  (projectile-enable-caching t)
-  (projectile-per-project-compilation-buffer t)
-  ;; TEMP: Currently passing missing switch "--strip-cwd-prefix".
-  (projectile-generic-command "fd . -0 --type f --color=never")
-
-  :wal-bind
-  (:map projectile-mode-map
-   ("h" . projectile-find-file)
-   ("p" . projectile-switch-project))
-
-  :delight " pjt")
-#+END_SRC
 
 *** project
 :PROPERTIES:
@@ -4643,23 +4538,16 @@ set to filter by project buffers."
     (apply fun args)))
 
 (use-package project
-  :if (not wal/use-projectile)
-
   :ensure nil
-
-  :demand t
 
   :init
   (advice-add
    'project-compile :around
    #'wal/with-project-bounded-compilation)
 
-  :config
-  (wal/major "p" '(:keymap project-prefix-map :wk "project"))
-
   :custom
   (project-switch-commands 'project-find-dir)
-  (project-vc-extra-root-markers '("pom.xml" "package.json"))
+  (project-vc-extra-root-markers '("pom.xml" "package.json" "project.godot"))
   (project-vc-ignores '("node_modules/"
                         "build/"
                         "android/"
@@ -4709,7 +4597,6 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
 (declare-function org-roam-buffer-p "ext:org-roam.el")
-(declare-function projectile-project-root "ext:projectile.el")
 (declare-function project-root "ext:project.el")
 (declare-function wal/append "wal-func.el")
 (declare-function wal/replace-in-alist "wal-fun.el")
@@ -4721,7 +4608,6 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (defvar visual-fill-column-center-text)
 (defvar wal/agenda-tasks-directory)
 (defvar wal/misc-map)
-(defvar wal/use-projectile)
 
 (defgroup wal-org nil
   "Change settings used for org packages."
@@ -5235,10 +5121,8 @@ Capture templates.
 
 If the project root cannot be determined, use
 `wal/org-directory'. as destination."
-  (let ((proj-root (if wal/use-projectile
-                       (projectile-project-root)
-                     (when-let ((current (project-current)))
-                       (project-root current)))))
+  (let ((proj-root (when-let ((current (project-current)))
+                     (project-root current))))
 
     (expand-file-name "tasks.org" (or proj-root org-directory))))
 
@@ -5683,13 +5567,9 @@ I am convinced that we are in a terminal process.
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
 (declare-function project-buffers "ext:project.el")
-(declare-function projectile-project-p "ext:projectile.el")
-(declare-function projectile-project-buffers "ext:projectile.el")
 (declare-function vterm-mode "ext:vterm.el")
 (declare-function vterm-send-return "ext:vterm.el")
 (declare-function vterm-send-string "ext:vterm.el")
-
-(defvar wal/use-projectile)
 #+END_SRC
 
 ** Packages
@@ -5753,12 +5633,8 @@ buffer if one doesn't exist yet (unless called with
 FORCE-NEW/`universal-argument')."
   (interactive "P")
   (if-let* ((cont (and (not force-new)
-                       (if wal/use-projectile
-                           (projectile-project-p)
-                         (project-current))))
-            (buffers (if wal/use-projectile
-                         (projectile-project-buffers)
-                       (project-buffers (project-current))))
+                       (project-current)))
+            (buffers (project-buffers (project-current)))
             (project-vterm
              (cl-find-if
               #'(lambda (it)
@@ -6056,7 +5932,6 @@ Syntax highlighting.
 #+BEGIN_SRC emacs-lisp
 (use-package git-modes
   :mode (("/\\.npmignore\\'" . gitignore-mode)
-         (".projectile" . gitignore-mode)
          ("/\\.dockerignore" . gitignore-mode))
 
   :init
@@ -6154,7 +6029,6 @@ Let's greet the world.
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
 (declare-function prettier--quit-all-processes "ext:prettier.el")
-(declare-function projectile-project-root "ext:projectile.el")
 (declare-function wal/transient-grab "wal-key-bindings.el")
 (declare-function wdb/side "wal-func.el")
 
@@ -6387,7 +6261,8 @@ Did Microsoft do the right thing?
   (unless (wal/in-python-project-p)
     (user-error "You're not in a Python project!"))
 
-  (when-let* ((dir (projectile-project-root))
+  (when-let* ((cur (project-current))
+              (dir (project-root cur))
               (stub-dir (expand-file-name "typings" dir)))
 
     (if (file-directory-p stub-dir)
@@ -7531,14 +7406,6 @@ replying to the `JSONRPC' request."
     :lsp t
     :tabs always
     :messages '("I wish you were Estra-gone"))
-
-  ;; Recognize Godot projects.
-  (when wal/use-projectile
-    (eval-after-load 'projectile
-      '(projectile-register-project-type
-        'godot
-        '("project.godot")
-        :project-file "project.godot")))
 
   :config
   (advice-add 'lsp--get-message-type :around
@@ -8931,18 +8798,13 @@ name are deleted beforehand."
 
   (require 'checkdoc nil t)
 
-  (defvar projectile-enable-caching)
-  (let ((projectile-enable-caching nil))
-
-    (dolist (it (wal/package-files))
-      (checkdoc-file it))))
+  (dolist (it (wal/package-files))
+    (checkdoc-file it)))
 
 (defun wal/flycheck-config-packages ()
   "Run `wal/flycheck' on all config package files."
   (interactive)
-  (defvar projectile-enable-caching)
-  (let ((output-buffer (wal/flycheck-file--get-buffer))
-        (projectile-enable-caching nil))
+  (let ((output-buffer (wal/flycheck-file--get-buffer)))
 
     (wal/flycheck-file--erase)
     (display-buffer output-buffer)

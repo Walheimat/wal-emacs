@@ -17,7 +17,7 @@
     (should-error (wal/lsp-pyright-install-stubs) :type 'user-error))
 
   (with-mock-all ((wal/in-python-project-p . #'always)
-                  (projectile-project-root . (lambda () default-directory))
+                  (project-root . (lambda () default-directory))
                   (display-buffer-in-side-bffer . #'wal/rf)
                   (async-shell-command . #'wal/rf))
     (make-directory "typings")
