@@ -32,11 +32,13 @@
       (should (string-equal "test" (gethash "/tmp/cmd" (plist-get wal/project-commands 'test)))))))
 
 (ert-deftest test-wal/project-test ()
-  (with-mock wal/project-command #'wal/ra
-    (should (equal (list 'test "Test project: ") (wal/project-test)))))
+  (with-mock-history (wal/project-command)
+    (wal/project-test)
+    (was-called-with wal/project-command '(test "Test project: "))))
 
 (ert-deftest test-wal/project-install ()
-  (with-mock wal/project-command #'wal/ra
-    (should (equal (list 'install "Install project: ") (wal/project-install)))))
+  (with-mock-history (wal/project-command)
+    (wal/project-install)
+    (was-called-with wal/project-command '(install "Install project: "))))
 
 ;;; wal-workspace-test.el ends here

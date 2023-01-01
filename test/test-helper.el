@@ -53,6 +53,27 @@
   `(cl-letf (((symbol-function ',name) ,fun))
      ,@body))
 
+(defvar wal/mock-history nil)
+
+(defmacro with-mock-history (flist &rest body)
+  "Evaluate BODY mocking list of functions FLIST.
+
+The arguments passed to the mocked functions will be recorded in
+a hash table."
+  (declare (indent defun))
+
+  `(cl-letf ((wal/mock-history (make-hash-table :test 'equal))
+             ,@(mapcar (lambda (it)
+                         `((symbol-function ',it)
+                           (lambda (&rest r)
+                             (puthash ',it r wal/mock-history))))
+                       flist))
+     ,@body))
+
+(defmacro was-called-with (fun expected)
+  "Check if FUN was called with EXPECTED."
+  `(should (equal (gethash ',fun wal/mock-history) ,expected)))
+
 (defmacro with-default-mock (name &rest body)
   "Evaluate BODY while mocking function NAME using default mock."
   (declare (indent defun))
