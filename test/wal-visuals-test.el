@@ -21,8 +21,9 @@
     (should (equal 'server-after-make-frame-hook (wal/in-case-of-daemonp-add-different-hook)))))
 
 (ert-deftest test-wal/with-common-ligatures ()
+  (defvar wal/common-ligatures)
   (let ((fun #'wal/ra)
         (wal/common-ligatures '("?")))
-    (should (equal '((test-mode) ("?")) (wal/with-common-ligatures fun '(test-mode))))))
+    (should (equal '((test-mode) ("!" "?")) (wal/with-common-ligatures fun '(test-mode) '("!"))))))
 
 ;;; wal-visuals-test.el ends here

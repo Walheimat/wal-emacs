@@ -26,9 +26,9 @@
   (with-mock-all ((package-installed-p . #'ignore)
                   (use-package-plist-maybe-put . #'plist-put)
                   (use-package-process-keywords . #'wal/ra))
-    (with-mock wal/is-expansion-pack #'always
+    (with-mock wal/expansion-pack-p #'always
       (should (equal '((when nil name nil (:wal-ways nil))) (use-package-handler/:wal-ways 'name nil nil nil nil))))
-    (with-mock wal/is-expansion-pack #'ignore
+    (with-mock wal/expansion-pack-p #'ignore
       (defvar wal/minimal)
       (defvar wal/flag-mini)
       (defvar wal/minimal-exclude)

@@ -104,6 +104,7 @@ functionality is used.
 (declare-function wal/bytes-per-mb "wal-func.el")
 (declare-function wal/create-non-existent-directory "wal-func.el")
 (declare-function wal/expansion--stringify "wal-func.el")
+(declare-function wal/expansion-pack--parts "wal-func.el")
 (declare-function wal/insert-after "wal-func.el")
 (declare-function wal/modern-emacs-p "wal-func.el")
 (declare-function wal/persist-scratch "wal-key-bindings.el")
@@ -498,16 +499,14 @@ Make completions look nice.
   (defun wal/annotate-expansion-pack (candidate)
     "Annotate CANDIDATE expansion pack."
     (let* ((item (assoc (intern candidate) wal/expansion-packs))
-           (docs (plist-get (cdr item) :docs))
-           (packages (plist-get (cdr item) :packages))
-           (recipes (mapcar #'car (plist-get (cdr item) :recipes)))
-           (all-packages (wal/expansion--stringify (append packages recipes)))
-           (extras (wal/expansion--stringify (plist-get (cdr item) :extras))))
+           (parts (wal/expansion-pack--parts item)))
 
-      (marginalia--fields
-       (docs :face 'marginalia-documentation :truncate 0.6)
-       (all-packages :face 'marginalia-value :truncate 0.8)
-       (extras :face 'marginalia-value :truncate 0.4))))
+      (cl-destructuring-bind (packages extras recipes docs) parts
+
+        (marginalia--fields
+         (docs :face 'marginalia-documentation :truncate 0.6)
+         ((wal/expansion--stringify (append packages recipes)) :face 'marginalia-value :truncate 0.8)
+         ((wal/expansion--stringify extras) :face 'marginalia-value :truncate 0.4)))))
 
   (add-to-list 'marginalia-annotator-registry '(expansion-pack wal/annotate-expansion-pack builtin none))
   (add-to-list 'marginalia-command-categories '(wal/install-expansion-pack . expansion-pack)))
@@ -1638,19 +1637,30 @@ Optionally provide `quelpa' RECIPES."
     'wal/expansion-packs
     '(,name . (:packages ,packages :extras ,extras :docs ,docs :recipes ,recipes))))
 
+(defun wal/expansion-pack--parts (pack)
+  "Get the parts from expansion pack PACK.
+
+Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
+  (let ((p (cdr pack)))
+    (list
+     (plist-get p :packages)
+     (plist-get p :extras)
+     (mapcar #'car (plist-get p :recipes))
+     (plist-get p :docs))))
+
+(wal/expansion-pack--parts (nth 5 wal/expansion-packs))
+
 (defun wal/expansion-packs ()
   "Get a list of all expansion packs."
   (seq-reduce
    (lambda (acc it)
-     (let* ((package-list (cdr it))
-            (normal (plist-get package-list :packages))
-            (extras (plist-get package-list :extras))
-            (recipes (mapcar #'car (plist-get package-list :recipes))))
-
-       (append acc normal extras recipes)))
+     (cl-destructuring-bind
+         (packages extras recipes _)
+         (wal/expansion-pack--parts it)
+       (append acc packages extras recipes)))
    wal/expansion-packs '()))
 
-(defun wal/is-expansion-pack (pack)
+(defun wal/expansion-pack-p (pack)
   "Check if PACK is an expansion pack package."
   (memq pack (wal/expansion-packs)))
 
@@ -1674,24 +1684,26 @@ Optionally provide `quelpa' RECIPES."
   (interactive
    (list (completing-read "Select pack to install: "
                           (mapcar (lambda (pack) (car pack)) wal/expansion-packs))))
+
   (let* ((sym (wal/maybe-intern pack))
-         (item (assoc sym wal/expansion-packs))
-         (packages (plist-get (cdr item) :packages))
-         (recipes (plist-get (cdr item) :recipes))
-         (extras (plist-get (cdr item) :extras)))
+         (item (assoc sym wal/expansion-packs)))
 
-    (if (not item)
-        (user-error "Unknown pack '%s', check `wal/expansion-packs'" sym)
-      (let* ((installed-packages (wal/install-packages packages :delete-windows t))
-             (installed-recipes (wal/install-recipes recipes)))
+    (cl-destructuring-bind
+        (packages extras recipes _)
+        (wal/expansion-pack--parts item)
 
-        ;; Notify about what happened.
-        (if (= 0 (+ installed-packages installed-recipes))
-            (message "All core packages/recipes already installed.")
-          (message "Installed expansion pack '%s'" pack))
+      (if (not item)
+          (user-error "Unknown pack '%s', check `wal/expansion-packs'" sym)
+        (let* ((installed-packages (wal/install-packages packages :delete-windows t))
+               (installed-recipes (wal/install-recipes recipes)))
 
-        (when (and extras (yes-or-no-p "Want to install an extras?"))
-          (wal/install-expansion-pack-extra item))))))
+          ;; Notify about what happened.
+          (if (= 0 (+ installed-packages installed-recipes))
+              (message "All core packages/recipes already installed.")
+            (message "Installed expansion pack '%s'" pack))
+
+          (when (and extras (yes-or-no-p "Want to install an extras?"))
+            (wal/install-expansion-pack-extra item)))))))
 
 (defun wal/expansion--stringify (package-list)
   "Stringify PACKAGE-LIST."
@@ -2202,7 +2214,7 @@ available candidate from `wal/fixed-fonts'. Does the same for
 (eval-when-compile
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
-(declare-function wal/is-expansion-pack "wal-func.el")
+(declare-function wal/expansion-pack-p "wal-func.el")
 (declare-function wal/prefix-user-key "wal-func.el")
 
 (defvar wal/minimal)
@@ -2325,7 +2337,7 @@ use the result further down the line."
   (when (and (fboundp 'use-package-process-keywords)
              (fboundp 'use-package-plist-maybe-put))
     (let* ((active (or pred
-                       (if (wal/is-expansion-pack name)
+                       (if (wal/expansion-pack-p name)
                            (not (null (package-installed-p name)))
                          (or (not (or wal/minimal wal/flag-mini))
                              (not (null (memq name wal/minimal-exclude)))))))
@@ -3476,10 +3488,8 @@ Font *JetBrains Mono* has the best support for ligatures.
   "Advise FUN to append common ligatures.
 
 ARGS is a list containing modes and additional ligatures."
-  (let ((modes (nth 0 args))
-        (ligatures (append (nth 1 args) wal/common-ligatures)))
-
-    (apply fun `(,modes ,ligatures))))
+  (cl-destructuring-bind (modes ligatures) args
+    (apply fun `(,modes ,(append ligatures wal/common-ligatures)))))
 
 (use-package ligature
   :wal-ways nil
@@ -4508,8 +4518,11 @@ Keep order.
 
 
 (declare-function consult--buffer-query "ext:consult.el")
+(declare-function project-buffers "ext:project.el")
+(declare-function project-root "ext:project.el")
 (declare-function wal/univ-p "wal-func.el")
 
+(defvar compilation-save-buffers-predicate)
 (defvar org-agenda-files)
 
 (defgroup wal-workspace nil
@@ -7807,13 +7820,12 @@ Unless the associated server is considered slow, delays and
 minimum prefixes are reduced using CORFU-VALUES a list of (DELAY
 PREFIX-LENGTH)."
   (unless (wal/slow-lsp-p major-mode)
-    (let* ((values (or corfu-values wal/lsp-corfu-values))
-           (delay (car values))
-           (prefix (cadr values)))
-
+    (cl-destructuring-bind (delay prefix) (or corfu-values wal/lsp-corfu-values)
       (setq-local corfu-auto-delay delay
                   corfu-auto-prefix prefix)))
+
   (setq-local completion-styles '(orderless partial-completion basic))
+
   (lsp-deferred))
 
 (defun wal/lsp-completion-with-corfu ()
@@ -8485,6 +8497,7 @@ Display code statistics.
 (declare-function wal/async-process "wal-func.el")
 (declare-function wal/directory-files "init.el")
 (declare-function wal/flycheck-file "wal-fix.el")
+(declare-function wal/flycheck-file--erase "wal-fix.el")
 (declare-function wal/flycheck-file--get-buffer "wal-fix.el")
 (declare-function wal/matches-in-string "wal-func.el")
 (declare-function wal/tangle-config "wal-prelude.el")
@@ -8797,7 +8810,7 @@ This will activate minor mode `wal/config-mode'."
 (defun wal/create-json-coverage ()
   "Create a JSON report file."
   (interactive)
-  (let* ((command "export COVERAGE_WITH_JSON=true && cask exec ert-runner"))
+  (let ((command "export COVERAGE_WITH_JSON=true && cask exec ert-runner"))
 
     (wal/coverage--execute
      command
@@ -8815,8 +8828,7 @@ name are deleted beforehand."
   (unless (executable-find "cask")
     (user-error "You need to install `cask' binary"))
 
-  (let ((buffer-name "*wal-async*")
-        (full-command (concat "cd " wal/emacs-config-default-path " && " command)))
+  (let ((full-command (concat "cd " wal/emacs-config-default-path " && " command)))
 
     (wal/async-process full-command on-success on-failure t)))
 #+END_SRC

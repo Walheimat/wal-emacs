@@ -633,9 +633,9 @@
   (let ((wal/expansion-packs wal/test-packs))
     (should (equal (wal/expansion-packs) '(one two twofer three-mode)))))
 
-(ert-deftest test-wal/is-expansion-pack ()
+(ert-deftest test-wal/expansion-pack-p ()
   (let ((wal/expansion-packs wal/test-packs))
-    (should (wal/is-expansion-pack 'three-mode))))
+    (should (wal/expansion-pack-p 'three-mode))))
 
 
 (ert-deftest test-wal/install-expansion-pack-extra ()
