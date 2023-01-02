@@ -59,20 +59,44 @@
   "Evaluate BODY mocking list of functions FLIST.
 
 The arguments passed to the mocked functions will be recorded in
-a hash table."
+a hash table.
+
+Each item in FLIST can either be a function symbol or a cons cell
+of shape (FUNCTION . MOCK-IMPLEMENTATION). The return value is
+either the argument list or the result of the mock
+implementation."
   (declare (indent defun))
 
   `(cl-letf ((wal/mock-history (make-hash-table :test 'equal))
              ,@(mapcar (lambda (it)
-                         `((symbol-function ',it)
-                           (lambda (&rest r)
-                             (puthash ',it r wal/mock-history))))
+                         (cond
+                          ((consp it)
+                           (let ((fun (car it))
+                                 (instead (cdr it)))
+                             `((symbol-function ',fun)
+                               (lambda (&rest r)
+                                 (puthash ',fun r wal/mock-history)
+                                 (apply ,instead r)))))
+                           (t
+                            `((symbol-function ',it)
+                              (lambda (&rest r)
+                                (puthash ',it r wal/mock-history))))))
                        flist))
      ,@body))
 
 (defmacro was-called-with (fun expected)
   "Check if FUN was called with EXPECTED."
   `(should (equal (gethash ',fun wal/mock-history) ,expected)))
+
+(defmacro was-called (fun)
+  "Check if mocked FUN was called."
+  `(let ((actual (gethash ',fun wal/mock-history 'not-called)))
+     (should-not (equal 'not-called actual))))
+
+(defmacro was-not-called (fun)
+  "Check if mocked FUN was not called."
+  `(let ((actual (gethash ',fun wal/mock-history 'not-called)))
+     (should (equal 'not-called actual))))
 
 (defmacro with-default-mock (name &rest body)
   "Evaluate BODY while mocking function NAME using default mock."

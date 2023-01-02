@@ -59,11 +59,10 @@
       (should (string-equal (wal/consult-line) "hello")))))
 
 (ert-deftest test-wal/consult-clock-in ()
-  (let ((out nil))
-    (with-mock-all ((consult-org-agenda . (lambda (&rest _) (add-to-list 'out 'consult)))
-                    (org-clock-in . (lambda (&rest _) (add-to-list 'out 'org))))
-      (wal/consult-clock-in)
-      (should (equal out '(org consult))))))
+  (with-mock-history (consult-org-agenda org-clock-in)
+    (wal/consult-clock-in)
+    (was-called consult-org-agenda)
+    (was-called org-clock-in)))
 
 (ert-deftest test-wal/then-set-active-theme ()
   (let ((out nil)
