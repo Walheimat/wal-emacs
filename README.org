@@ -4728,19 +4728,19 @@ This calls `org-content' interactively."
         ("t" "toggle timestamp" org-toggle-timestamp-type
          :inapt-if-not (lambda () (org-at-timestamp-p 'inactive)))
         ("o" "order list" org-sort
-         :inapt-if-not (lambda () (org-at-item-p)))]
+         :inapt-if-not org-at-item-p)]
        ["Subtrees"
         ("s w" "cut" org-cut-subtree
-         :inapt-if-not (lambda () (org-at-heading-p)))
+         :inapt-if-not org-at-heading-p)
         ("s y" "paste" org-paste-subtree)]
        ["Visibility"
         ("v a" "show all" org-show-all)
         ("v l" "up to level" wal/org-content)]
        ["Footnotes"
         ("f a" "add" org-footnote-new
-         :inapt-if (lambda () (org-in-src-block-p)))
+         :inapt-if org-in-src-block-p)
         ("f d" "dwim" org-footnote-action
-         :inapt-if (lambda () (org-in-src-block-p)))
+         :inapt-if org-in-src-block-p)
         ("f n" "normalize" org-footnote-normalize)]]))
 
   :custom
@@ -5150,7 +5150,8 @@ Editing source blocks.
      ("fish" . fish)))
 
   (transient-append-suffix 'wal/org-mode-dispatch '(0 0 1)
-    '("e" "edit source" org-edit-src-code :inapt-if-not (lambda () (org-in-src-block-p))))
+    '("e" "edit source" org-edit-src-code
+      :inapt-if-not org-in-src-block-p))
 
   :custom
   (org-src-tab-acts-natively nil)
