@@ -8,18 +8,19 @@
 
 (require 'wal-dired nil t)
 
-(ert-deftest test-wal/dired-from-home ()
-  (let ((out nil)
-        (cur (current-buffer)))
-    (with-mock-all ((dired-read-dir-and-switches . (lambda (s) (add-to-list 'out s)))
-                    (dired-noselect . (lambda (&rest _r) cur)))
-      (call-interactively 'wal/dired-from-home)
-      (should (equal cur (current-buffer)))
-      (should (equal out '(""))))))
+(ert-deftest tes-wal/dired-from-home ()
+  (with-mock-history ((dired-read-dir-and-switches . (lambda (&rest _) (list  "/tmp")))
+                      (dired-noselect . (lambda (&rest _) "/tmp/test"))
+                      pop-to-buffer-same-window)
+
+    (call-interactively 'wal/dired-from-home)
+
+    (was-called-with dired-noselect (list "/tmp" nil))
+    (was-called-with pop-to-buffer-same-window (list "/tmp/test"))))
 
 (ert-deftest test-wal/image-dired ()
   (with-mock image-dired (lambda (x) x)
-    (should (string-equal (expand-file-name default-directory) (wal/image-dired)))))
+             (should (string-equal (expand-file-name default-directory) (wal/image-dired)))))
 
 (ert-deftest test-wal/dired-buffer-p ()
   (with-temp-buffer

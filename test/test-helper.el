@@ -71,12 +71,10 @@ implementation."
              ,@(mapcar (lambda (it)
                          (cond
                           ((consp it)
-                           (let ((fun (car it))
-                                 (instead (cdr it)))
-                             `((symbol-function ',fun)
-                               (lambda (&rest r)
-                                 (puthash ',fun r wal/mock-history)
-                                 (apply ,instead r)))))
+                           `((symbol-function ',(car it))
+                             (lambda (&rest r)
+                               (puthash ',(car it) r wal/mock-history)
+                               (apply #',(cdr it) r))))
                            (t
                             `((symbol-function ',it)
                               (lambda (&rest r)
