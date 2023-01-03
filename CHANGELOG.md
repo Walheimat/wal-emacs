@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Commands `wal/project-test` and `wal/project-install` that work like
   `project-compile` but store the previously used command in a hash
   table using the project as the key.
+- More robust mocking tools.
 
 ### Changed
 
