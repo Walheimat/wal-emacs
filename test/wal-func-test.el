@@ -17,16 +17,24 @@
 
 (ert-deftest test-wal/create-non-existent-directory ()
   (let ((temp-dir "/tmp/some-other/dir/"))
-    (with-mock-all ((file-name-directory . (lambda (&rest _r) temp-dir))
-                    (y-or-n-p . (lambda (&rest _r) t))
-                    (make-directory . (lambda (dir _) dir)))
-      (should (string-equal temp-dir (wal/create-non-existent-directory))))))
+
+    (with-mock ((file-name-directory . (lambda (&rest _r) temp-dir))
+                (y-or-n-p . #'always)
+                make-directory)
+
+      (wal/create-non-existent-directory)
+
+      (was-called-with make-directory (list temp-dir t)))))
 
 (ert-deftest test-wal/create-non-existent-directory--aborts ()
   (let ((temp-dir "/tmp/some-other/dir/"))
+
     (make-directory temp-dir t)
-    (with-mock file-name-directory (lambda (&rest _r) temp-dir)
+
+    (with-mock ((file-name-directory . (lambda (&rest _r) temp-dir)))
+
       (should-not (wal/create-non-existent-directory)))
+
     (delete-directory temp-dir)))
 
 (ert-deftest test-wal/display-buffer-condition--passes-strings ()
@@ -40,11 +48,14 @@
 
 (ert-deftest test-wal/display-buffer-in-pop-up ()
   (let ((display-buffer-alist '()))
+
     (wal/display-buffer-in-pop-up 'test-mode)
+
     (should (equal
              (car display-buffer-alist)
              '((major-mode . test-mode) (display-buffer-pop-up-window))))
     (setq display-buffer-alist '())
+
     (wal/display-buffer-in-pop-up 'test-mode t)
 
     (should (equal
@@ -53,7 +64,9 @@
 
 (ert-deftest test-wal/display-buffer-in-side-window ()
   (let ((display-buffer-alist '()))
+
     (wal/display-buffer-in-side-window 'test-mode :side 'top :loose nil :no-other t :height 12)
+
     (should (equal (car display-buffer-alist)
                    '((major-mode . test-mode)
                      (display-buffer-reuse-window display-buffer-in-side-window)
@@ -65,7 +78,9 @@
 
 (ert-deftest test-wal/display-buffer-in-direction ()
   (let ((display-buffer-alist '()))
+
     (wal/display-buffer-in-direction 'test-mode 'leftmost)
+
     (should (equal (car display-buffer-alist)
                    '((major-mode . test-mode)
                      (display-buffer-reuse-mode-window display-buffer-in-direction)
@@ -73,7 +88,9 @@
 
 (ert-deftest test-wal/display-buffer-ethereally ()
   (let ((display-buffer-alist '()))
+
     (wal/display-buffer-ethereally 'test-mode)
+
     (should (equal (car display-buffer-alist)
                    '((major-mode . test-mode)
                      nil
@@ -81,45 +98,52 @@
 
 (ert-deftest wal/display-buffer-reuse-same-window ()
   (let ((display-buffer-alist '()))
+
     (wal/display-buffer-reuse-same-window 'test-mode)
+
     (should (equal (car display-buffer-alist)
                    '((major-mode . test-mode)
                      (display-buffer-reuse-window display-buffer-same-window))))))
 
 (ert-deftest wal/kill-some-file-buffers ()
-  (let ((killed-buffers nil))
+  (wal/with-temp-file "to-be-killed"
+    (with-mock kill-buffer-ask
 
-    (wal/with-temp-file "to-be-killed"
-      (with-mock kill-buffer-ask (lambda (b) (setq killed-buffers (append killed-buffers `(,b))))
+      (find-file-noselect wal/tmp-file)
 
-        (find-file-noselect wal/tmp-file)
+      (get-buffer-create "killer-buffer")
 
-        (get-buffer-create "killer-buffer")
+      (wal/kill-some-file-buffers)
 
-        (wal/kill-some-file-buffers))
-
-        (should-not (memq (get-buffer "killer-buffer") killed-buffers))
-        (should (memq (get-buffer "to-be-killed") killed-buffers)))))
+      (was-called-with kill-buffer-ask (list (get-buffer "to-be-killed"))))))
 
 (ert-deftest test-wal/kill-ring-save-buffer ()
   (with-temp-buffer
     (insert "I hope I don't get killed")
+
     (wal/kill-ring-save-whole-buffer)
+
     (should (string-equal "I hope I don't get killed" (car kill-ring)))))
 
 (ert-deftest test-wal/set-cursor-type--sets-and-resets ()
   (with-temp-buffer
-    (with-mock completing-read (lambda (_str _types) "hollow")
+    (with-mock ((completing-read . (lambda (&rest _) "hollow")))
+
       (wal/set-cursor-type)
+
       (should (eq cursor-type 'hollow)))
+
     (wal/set-cursor-type t)
+
     (should (eq cursor-type t))))
 
 (ert-deftest test-wal/kwim--kills-forward-in-line ()
   (with-temp-buffer
     (insert "I hope I don't get killed")
     (goto-char 7)
+
     (wal/kwim)
+
     (should (equal (buffer-string) "I hope"))))
 
 (ert-deftest test-wal/kwim--kills-line-at-end ()
@@ -127,14 +151,18 @@
     (insert "This is a nice line\nThis will stay")
     (goto-char 0)
     (end-of-line)
+
     (wal/kwim)
+
     (should (equal (buffer-string) "This will stay"))))
 
 (ert-deftest test-wal/kwim--kills-line-at-beg ()
   (with-temp-buffer
     (insert "This is a nice line\nThis will stay")
     (goto-char 0)
+
     (wal/kwim)
+
     (should (equal (buffer-string) "This will stay"))))
 
 (ert-deftest test-wal/split-window-the-other-way ()
@@ -142,71 +170,95 @@
     (save-window-excursion
       (split-window-horizontally)
       (wal/split-window-the-other-way)
+
       (should (windows-sharing-edge (selected-window) 'below)))
     (save-window-excursion
       (split-window-horizontally)
       (other-window 1)
       (wal/split-window-the-other-way)
+
       (should (windows-sharing-edge (selected-window) 'below)))
     (save-window-excursion
       (split-window-vertically)
       (wal/split-window-the-other-way)
+
       (should (windows-sharing-edge (selected-window) 'right)))))
 
 (ert-deftest test-wal/other-window ()
-  (with-mock-all ((active-minibuffer-window . (lambda () t))
-                  (switch-to-minibuffer . (lambda () 'mini)))
-                 (should (equal (wal/other-window) 'mini)))
-  (with-mock-all ((active-minibuffer-window . (lambda () nil))
-                  (next-frame . (lambda () 'other))
-                  (other-frame . (lambda (_) 'frame)))
-                 (should (equal (wal/other-window) 'frame)))
-  (with-mock-all ((active-minibuffer-window . (lambda () nil))
-                  (next-frame . (lambda () (selected-frame)))
-                  (one-window-p . (lambda () nil))
-                  (other-window . (lambda (_) 'window)))
-                 (should (equal (wal/other-window) 'window)))
-  (with-mock-all ((active-minibuffer-window . (lambda () nil))
-                  (next-frame . (lambda () (selected-frame)))
-                  (one-window-p . (lambda () t))
-                  (switch-to-buffer . (lambda (_) 'buffer)))
-                 (should (equal (wal/other-window) 'buffer)))
-  (with-mock-all ((active-window-buffer . (lambda () nil))
-                  (next-frame . (lambda () 'other))
-                  (other-frame . (lambda (_) 'frame))
-                  (one-window-p . (lambda () nil))
-                  (other-window . (lambda (_) 'otherw)))
+  (with-mock ((active-minibuffer-window . #'always)
+              (switch-to-minibuffer . (lambda () 'mini)))
+
+    (should (equal (wal/other-window) 'mini)))
+
+  (with-mock ((active-minibuffer-window . #'ignore)
+              (next-frame . (lambda () 'other))
+              (other-frame . (lambda (_) 'frame)))
+
+    (should (equal (wal/other-window) 'frame)))
+
+  (with-mock ((active-minibuffer-window . #'ignore)
+              (next-frame . (lambda () (selected-frame)))
+              (one-window-p . #'ignore)
+              (other-window . (lambda (_) 'window)))
+
+    (should (equal (wal/other-window) 'window)))
+
+  (with-mock ((active-minibuffer-window . #'ignore)
+              (next-frame . (lambda () (selected-frame)))
+              (one-window-p . #'always)
+              (switch-to-buffer . (lambda (_) 'buffer)))
+
+    (should (equal (wal/other-window) 'buffer)))
+
+  (with-mock ((active-window-buffer . #'ignore)
+              (next-frame . (lambda () 'other))
+              (other-frame . (lambda (_) 'frame))
+              (one-window-p . #'ignore)
+              (other-window . (lambda (_) 'otherw)))
+
     (should (equal (wal/other-window t) 'frame))
     (should (equal (wal/other-window) 'otherw)))
-  (with-mock-all ((active-window-buffer . (lambda () nil))
-                  (next-frame . (lambda () 'other))
-                  (other-frame . (lambda (_) 'frame))
-                  (one-window-p . (lambda () t)))
+
+  (with-mock ((active-window-buffer . (lambda () nil))
+              (next-frame . (lambda () 'other))
+              (other-frame . (lambda (_) 'frame))
+              (one-window-p . (lambda () t)))
+
     (should (equal (wal/other-window t) 'frame))
     (should (equal (wal/other-window) 'frame))))
 
 (ert-deftest test-wal/l ()
   (with-temp-buffer
     (wal/l)
+
     (should (window-dedicated-p))
+
     (wal/l t)
+
     (should-not (window-dedicated-p))))
 
 (ert-deftest test-wal/find-custom-file ()
   (wal/with-temp-file "custom.el"
+
     (let ((custom-file wal/tmp-file))
+
       (wal/find-custom-file)
+
       (should (string-equal (buffer-name) "custom.el")))))
 
 (ert-deftest test-wal/find-fish-config ()
   (wal/with-temp-file "config.fish"
+
     (let ((wal/fish-config-locations `(,wal/tmp-file)))
+
       (wal/find-fish-config)
+
       (should (string-equal (buffer-name) "config.fish")))))
 
 (ert-deftest test-wal/find-fish-config--errors-if-not-found ()
   (defvar wal/fish-config-locations)
   (let ((wal/fish-config-locations '()))
+
     (should-error (wal/find-fish-config) :type 'user-error)))
 
 (ert-deftest test-wal/capture-flag ()
@@ -228,6 +280,7 @@
         (sequence '(d e f)))
 
     (wal/append 'test-target sequence)
+
     (should (equal test-target '(a b c d e f)))))
 
 (ert-deftest test-wal/append--removes-duplicates ()
@@ -235,6 +288,7 @@
         (sequence '(c d a)))
 
     (wal/append 'test-target sequence)
+
     (should (equal test-target '(a b c d)))))
 
 (ert-deftest test-wal/replace-in-alist--replaces ()
@@ -242,6 +296,7 @@
         (values '((b . "heimat"))))
 
     (wal/replace-in-alist 'test-target values)
+
     (should (equal test-target '((a . "whale") (b . "heimat"))))))
 
 (ert-deftest test-wal/replace-in-alist--refuses-new-keys ()
@@ -268,34 +323,39 @@
 
 (ert-deftest test-wal/list-from--builds-list-if-element ()
   (let ((test-target "testing"))
+
     (should (equal '("testing" "again") (wal/list-from 'test-target "again")))))
 
 (ert-deftest test-wal/list-from--appends-if-list ()
   (let ((test-target '("testing")))
+
     (should (equal '("testing" "again") (wal/list-from 'test-target "again")))))
 
 (ert-deftest test-wal/list-from--deletes-duplicates ()
   (let ((test-target '("testing" "again")))
+
     (should (equal '("testing" "again") (wal/list-from 'test-target "again")))))
 
 (ert-deftest test-wal/univ ()
   (match-expansion
-    (wal/univ some-fun other-fun)
-    `(defun wal/univ-some-fun (&optional call-other)
-       "Call `some-fun' or `other-fun' depending on prefix argument.\nNo argument means: call the prior. A single `C-u' means: call the latter. Two or more `C-u' means: call the prior with `universal-argument'."
-       (interactive "P")
-       (if (> (prefix-numeric-value call-other) 4)
-           (call-interactively 'some-fun)
-         (setq current-prefix-arg nil)
-         (prefix-command-update)
-         (if call-other
-             (call-interactively 'other-fun)
-           (call-interactively 'some-fun))))))
+   (wal/univ some-fun other-fun)
+   `(defun wal/univ-some-fun (&optional call-other)
+      "Call `some-fun' or `other-fun' depending on prefix argument.\nNo argument means: call the prior. A single `C-u' means: call the latter. Two or more `C-u' means: call the prior with `universal-argument'."
+      (interactive "P")
+      (if (> (prefix-numeric-value call-other) 4)
+          (call-interactively 'some-fun)
+        (setq current-prefix-arg nil)
+        (prefix-command-update)
+        (if call-other
+            (call-interactively 'other-fun)
+          (call-interactively 'some-fun))))))
 
 (ert-deftest test-wal/scratch-buffer ()
-  (with-mock switch-to-buffer (lambda (n) (buffer-name n))
+  (with-mock ((switch-to-buffer . (lambda (n) (buffer-name n))))
+
     (should (equal (wal/scratch-buffer) "*scratch*"))
     (should (equal (wal/scratch-buffer t) "*scratch*<2>")))
+
   (kill-buffer "*scratch*<2>"))
 
 (ert-deftest test-wal/persist-scratch-and-rehydrate ()
@@ -311,18 +371,24 @@
       (let ((file (find-file-noselect wal/scratch-persist)))
 
         (with-current-buffer file
+
           (should (string-equal "This one's itchy" (buffer-string)))))
 
       (with-current-buffer (get-buffer-create "*scratch*")
         (erase-buffer)
+
         (should (string-equal "" (buffer-string)))
+
         (wal/rehydrate-scratch)
+
         (should (string-equal "This one's itchy" (buffer-string)))))))
 
 (ert-deftest test-wal/disable-tabs--disables ()
   (with-temp-buffer
     (setq-local indent-tabs-mode t)
+
     (wal/disable-tabs)
+
     (should (eq indent-tabs-mode nil))))
 
 
@@ -330,26 +396,34 @@
   (with-temp-buffer
     (setq-local indent-tabs-mode nil)
     (should (eq indent-tabs-mode nil))
+
     (wal/enable-tabs)
+
     (should (eq indent-tabs-mode t))))
 
 
 (ert-deftest test-wal/maybe-enable-tabs--enables-if-tabs-preferred ()
   (with-temp-buffer
     (setq-local wal/prefer-tabs t)
+
     (wal/maybe-enable-tabs)
+
     (should (eq indent-tabs-mode t))))
 
 (ert-deftest test-wal/maybe-enable-tabs--sets-function ()
   (with-temp-buffer
     (setq-local wal/prefer-tabs nil)
+
     (wal/maybe-enable-tabs :indent-with 'some-fun)
+
     (should (eq indent-line-function 'some-fun))))
 
 (ert-deftest test-wal/maybe-enable-tabs--disables-unless-preferred ()
   (with-temp-buffer
     (setq-local wal/prefer-tabs nil)
+
     (wal/maybe-enable-tabs)
+
     (should (eq indent-tabs-mode nil))))
 
 
@@ -358,6 +432,7 @@
   (setq wal/prefer-tabs nil)
 
   (wal/set-indent-defaults 1)
+
   (should (eq python-indent-offset 1))
   (should (eq js-indent-level 1))
   (should (eq css-indent-offset 1))
@@ -365,7 +440,9 @@
   (should (string-equal json-encoding-default-indentation " "))
   (should electric-indent-inhibit)
   (should-not indent-tabs-mode)
+
   (wal/set-indent-defaults)
+
   (should (eq python-indent-offset 6))
   (should (eq js-indent-level 6))
   (should (eq css-indent-offset 6))
@@ -376,10 +453,13 @@
 
 (ert-deftest test-wal/biased-random ()
   (let ((vals '(1 2 3 4)))
-    (with-mock random (lambda (_) (pop vals))
+
+    (with-mock ((random . (lambda (_) (pop vals))))
+
       (should (eq (wal/biased-random 4) 3))
 
       (setq vals '(1 2 3 4))
+
       (should (eq (wal/biased-random 4 t) 1)))))
 
 
@@ -406,15 +486,18 @@
 
 (ert-deftest test-wal/pad-string--pads ()
   (let ((test-string "hello"))
+
     (should (equal " hello" (wal/pad-string test-string)))))
 
 (ert-deftest test-wal/pad-string--pads-right ()
   (let ((test-string "hello"))
+
     (should (equal "hello " (wal/pad-string test-string t)))))
 
 
 (ert-deftest test-wal/univ-p ()
   (let ((current-prefix-arg '(4)))
+
     (should (wal/univ-p))))
 
 
@@ -422,51 +505,65 @@
 
 (ert-deftest test-wal/reset-to-standard--resets ()
   (setq test-standard 'global)
+
   (should (equal 'global test-standard))
+
   (wal/reset-to-standard 'test-standard)
+
   (should (equal nil test-standard))
   (should-error (wal/reset-to-standard 'test-standard t) :type 'user-error)
+
   (with-temp-buffer
     (setq-local test-standard 'local)
+
     (wal/reset-to-standard 'test-standard t)
+
     (should (equal nil test-standard))))
 
 (ert-deftest test-wal/try ()
   (match-expansion
-    (wal/try test
+   (wal/try test
      (message "Testing again"))
-    `(when (require 'test nil :no-error)
-       (message "Testing again"))))
+   `(when (require 'test nil :no-error)
+      (message "Testing again"))))
 
 
 (ert-deftest test-wal/server-edit-p ()
   (defvar server-buffer-clients)
   (defvar with-editor-mode)
-  (let ((server-buffer-clients '(test))
-    (should (wal/server-edit-p))))
+  (let ((server-buffer-clients '(test)))
+
+    (should (wal/server-edit-p)))
+
   (let ((server-buffer-clients '(test))
         (with-editor-mode t))
+
     (should-not (wal/server-edit-p)))
+
   (let ((server-buffer-clients '(test))
         (with-editor-mode nil))
+
     (should (wal/server-edit-p))))
 
 
 (ert-deftest test-wal/delete-edit-or-kill ()
-  (with-mock-all ((wal/server-edit-p . (lambda () t))
-                  (server-edit-abort . (lambda () 'abort))
-                  (server-edit . (lambda () 'edit)))
+  (with-mock ((wal/server-edit-p . #'always)
+              (server-edit-abort . (lambda () 'abort))
+              (server-edit . (lambda () 'edit)))
+
     (should (equal (wal/delete-edit-or-kill) 'edit))
     (should (equal (wal/delete-edit-or-kill t) 'abort)))
 
-  (with-mock-all ((wal/server-edit-p . (lambda () nil))
-                  (daemonp . (lambda () t))
-                  (delete-frame . (lambda () 'delete-frame)))
+  (with-mock ((wal/server-edit-p . #'ignore)
+              (daemonp . #'always)
+              (delete-frame . (lambda () 'delete-frame)))
+
     (should (equal (wal/delete-edit-or-kill) 'delete-frame)))
 
-  (with-mock-all ((wal/server-edit-p . (lambda () nil))
-                  (daemonp . (lambda () nil))
-                  (save-buffers-kill-terminal . (lambda () 'kill)))
+  (with-mock ((wal/server-edit-p . #'ignore)
+              (daemonp . #'ignore)
+              (save-buffers-kill-terminal . (lambda () 'kill)))
+
     (should (equal (wal/delete-edit-or-kill) 'kill))))
 
 
@@ -475,6 +572,7 @@
 (ert-deftest test-wal/dead-shell-p ()
   (with-temp-buffer
     (shell-mode)
+
     (should (wal/dead-shell-p))))
 
 
@@ -482,10 +580,12 @@
   (defvar wal/use-hyper-prefix)
   (cl-letf (((symbol-function 'daemonp) #'always)
             (wal/use-hyper-prefix t))
+
     (should (string-equal (wal/prefix-user-key "k") "H-k")))
 
   (cl-letf (((symbol-function 'daemonp) #'ignore)
             (wal/use-hyper-prefix t))
+
     (should (string-equal (wal/prefix-user-key "k") "C-c w k"))))
 
 (ert-deftest test-wal/transient-define-prefix-once ()
@@ -496,6 +596,7 @@
    `(transient-define-prefix test-prefix ()
       "This is a world."
       [("i" "ignore" ignore)]))
+
   (defun test-prefix () nil)
   (match-expansion
    (wal/transient-define-prefix-once test-prefix ()
@@ -513,14 +614,17 @@
   (fmakunbound 'test-prefix))
 
 (ert-deftest test-wal/when-ready ()
-  (with-mock daemonp (lambda () nil)
+  (with-mock ((daemonp . #'ignore))
+
     (match-expansion
-      (wal/when-ready (message "No demon ..."))
-      `(add-hook 'emacs-startup-hook (lambda () (message "No demon ...")))))
-  (with-mock daemonp (lambda () t)
+     (wal/when-ready (message "No demon ..."))
+     `(add-hook 'emacs-startup-hook (lambda () (message "No demon ...")))))
+
+  (with-mock ((daemonp . #'always))
+
     (match-expansion
-      (wal/when-ready (message "Demon!"))
-      `(add-hook 'server-after-make-frame-hook (lambda () (message "Demon!"))))))
+     (wal/when-ready (message "Demon!"))
+     `(add-hook 'server-after-make-frame-hook (lambda () (message "Demon!"))))))
 
 (defvar wal/test-setq-a nil)
 (defvar wal/test-setq-b nil)
@@ -537,6 +641,7 @@
 (ert-deftest test-setq-unless--sets-unset ()
   (let ((wal/test-setq-a "hi")
         (wal/test-setq-b nil))
+
     (match-expansion
      (setq-unless wal/test-setq-b "this"
                   wal/test-setq-d "unknown")
@@ -574,7 +679,7 @@
     (insert "where is my mind")
     (set-mark (point-min))
     (goto-char (point-max))
-    (with-mock browse-url (lambda (url &rest _r) url)
+    (with-mock ((browse-url . (lambda (url &rest _r) url)))
       (should (string-equal
                (wal/duck-duck-go-region)
                "https://duckduckgo.com/html/?q=where%20is%20my%20mind")))))
@@ -585,40 +690,44 @@
 (ert-deftest test-wal/message-in-a-bottle--shows-blue-whale ()
   (let ((bottle '("Sting is playing bass, yeah")))
 
-    (with-mock message (lambda (message) message)
+    (with-mock ((message . #'wal/rf))
+
       (should (string-equal (wal/message-in-a-bottle bottle) "}    , ﬞ   ⎠ Sting is playing bass, yeah")))))
 
 (ert-deftest test-wal/message-in-a-bottle--shows-passed-string ()
   (let ((bottle '("Sting is playing bass, yeah")))
 
-    (with-mock message (lambda (message) message)
+    (with-mock ((message . #'wal/rf))
+
       (should (string-equal (wal/message-in-a-bottle bottle wal/ascii-whale) "}< ,.__) Sting is playing bass, yeah")))))
 
 (ert-deftest test-wal/install-packages ()
-  (with-mock-all ((package-install . (lambda (package) package))
-                  (package-installed-p . (lambda (package) (memq package '(three)))))
+  (with-mock ((package-install . #'wal/rf)
+              (package-installed-p . (lambda (package) (memq package '(three)))))
+
     (should (eq 2 (wal/install-packages '(one two) :delete-windows t)))
     (should (eq 1 (wal/install-packages '(three four))))))
 
 (ert-deftest test-wal/install-recipes ()
-  (with-mock-all ((quelpa . (lambda (package) package))
-                  (package-installed-p . (lambda (package) (memq package '(three)))))
+  (with-mock ((quelpa . #'wal/rf)
+              (package-installed-p . (lambda (package) (memq package '(three)))))
+
     (should (eq 2 (wal/install-recipes '((one rest) (two rest)))))
     (should (eq 1 (wal/install-recipes '((three rest) (four reset)))))))
 
 (ert-deftest test-wal/define-expansion-pack ()
   (match-expansion
-    (wal/define-expansion-pack test
-      "Tasteful expansion pack."
-      :packages '(pull out of the package)
-      :extras '(prep some ketchup)
-      :recipes '(heat in oven))
-    `(add-to-list
-      'wal/expansion-packs
-      '(test . (:packages '(pull out of the package)
-                :extras '(prep some ketchup)
-                :docs "Tasteful expansion pack."
-                :recipes '(heat in oven))))))
+   (wal/define-expansion-pack test
+     "Tasteful expansion pack."
+     :packages '(pull out of the package)
+     :extras '(prep some ketchup)
+     :recipes '(heat in oven))
+   `(add-to-list
+     'wal/expansion-packs
+     '(test . (:packages '(pull out of the package)
+                         :extras '(prep some ketchup)
+                         :docs "Tasteful expansion pack."
+                         :recipes '(heat in oven))))))
 
 (defvar wal/test-packs '((one :packages
                               (one)
@@ -631,70 +740,87 @@
 
 (ert-deftest test-wal/expansion-packs ()
   (let ((wal/expansion-packs wal/test-packs))
+
     (should (equal (wal/expansion-packs) '(one two twofer three-mode)))))
 
 (ert-deftest test-wal/expansion-pack-p ()
   (let ((wal/expansion-packs wal/test-packs))
+
     (should (wal/expansion-pack-p 'three-mode))))
 
 
 (ert-deftest test-wal/install-expansion-pack-extra ()
   (let ((messages '())
         (wal/expansion-packs wal/test-packs))
-    (with-mock-all ((package-installed-p . (lambda (p) nil))
-                    (package-install . (lambda (p) t))
-                    (completing-read . (lambda (_m _l) 'all)))
+
+    (with-mock ((package-installed-p . #'ignore)
+                (package-install . #'always)
+                (completing-read . (lambda (_m _l) 'all)))
 
       (ert-with-message-capture messages
         (wal/install-expansion-pack-extra (nth 2 wal/expansion-packs))
+
         (should (string-match "Installed all extras" messages))))
 
-    (with-mock-all ((package-installed-p . (lambda (p) nil))
-                    (package-install . (lambda (p) t))
-                    (message . (lambda (m &rest args) (add-to-list 'messages (format m (car args)))))
-                    (completing-read . (lambda (_m _l) 'twofer)))
+    (with-mock ((package-installed-p . #'ignore)
+                (package-install . #'always)
+                (message . (lambda (m &rest args) (add-to-list 'messages (format m (car args)))))
+                (completing-read . (lambda (_m _l) 'twofer)))
+
       (wal/install-expansion-pack-extra (nth 2 wal/expansion-packs))
+
       (should (string-equal (car messages) "Installed extra 'twofer'.")))))
 
 (ert-deftest test-wal/install-expansion-pack ()
   (let ((messages '()))
-    (with-mock-all ((completing-read . (lambda (_m _v) "one"))
-                    (package-installed-p . (lambda (package) nil))
-                    (package-install . (lambda (package) t))
-                    (message . (lambda (m &rest args) (add-to-list 'messages (format m (car args))))))
+    (with-mock ((completing-read . (lambda (_m _v) "one"))
+                (package-installed-p . #'ignore)
+                (package-install . #'always)
+                (message . (lambda (m &rest args) (add-to-list 'messages (format m (car args))))))
+
       (let ((wal/expansion-packs wal/test-packs))
+
         (call-interactively 'wal/install-expansion-pack)
+
         (should (string-equal (car messages) "Installed expansion pack 'one'"))))))
 
 (ert-deftest test-wal/install-expansion-pack--installed-already ()
   (let ((messages '()))
-    (with-mock-all ((completing-read . (lambda (_m _v) "one"))
-                    (package-installed-p . (lambda (package) t))
-                    (message . (lambda (m &rest args) (add-to-list 'messages (format m (car args))))))
+    (with-mock ((completing-read . (lambda (_m _v) "one"))
+                (package-installed-p . #'always)
+                (message . (lambda (m &rest args) (add-to-list 'messages (format m (car args))))))
       (let ((wal/expansion-packs wal/test-packs))
+
         (call-interactively 'wal/install-expansion-pack)
+
         (should (string-equal (car messages) "All core packages/recipes already installed."))))))
 
 (ert-deftest test-wal/install-expansion-pack--with-extras ()
   (let ((messages '()))
-    (with-mock-all ((completing-read . (lambda (_m _v) "two"))
-                    (package-installed-p . (lambda (package) nil))
-                    (package-install . (lambda (package) t))
-                    (message . (lambda (m &rest args) (add-to-list 'messages (format m (car args)))))
-                    (yes-or-no-p . (lambda (_) nil)))
+    (with-mock ((completing-read . (lambda (_m _v) "two"))
+                (package-installed-p . #'ignore)
+                (package-install . #'always)
+                (message . (lambda (m &rest args) (add-to-list 'messages (format m (car args)))))
+                (yes-or-no-p . #'ignore))
+
       (let ((wal/expansion-packs wal/test-packs))
         (call-interactively 'wal/install-expansion-pack)
+
         (should (string-equal (car messages) "Installed expansion pack 'two'"))))
-    (with-mock-all ((completing-read . (lambda (_m _v) "two"))
-                    (package-installed-p . (lambda (package) nil))
-                    (package-install . (lambda (package) t))
-                    (yes-or-no-p . (lambda (_) t))
-                    (wal/install-expansion-pack-extra . (lambda (_) 'extra)))
+
+    (with-mock ((completing-read . (lambda (_m _v) "two"))
+                (package-installed-p . #'ignore)
+                (package-install . #'always)
+                (yes-or-no-p . #'always)
+                (wal/install-expansion-pack-extra . (lambda (_) 'extra)))
+
       (let ((wal/expansion-packs wal/test-packs))
+
         (should (equal (call-interactively 'wal/install-expansion-pack) 'extra))))))
 
 (ert-deftest test-wal/install-expansion-pack--errors-for-non-existing ()
   (let ((wal/expansion-packs wal/test-packs))
+
     (should-error (wal/install-expansion-pack 'four))))
 
 (ert-deftest test-wal/expansion--stringify ()
@@ -702,7 +828,8 @@
   (should (string-empty-p (wal/expansion--stringify '()))))
 
 (ert-deftest test-wal/prog-like ()
-  (with-mock run-hooks (lambda (it) it)
+  (with-mock ((run-hooks . #'wal/rf))
+
     (should (equal (wal/prog-like) 'prog-like-hook))))
 
 (ert-deftest test-wal/hook ()
@@ -793,9 +920,12 @@
   (with-temp-buffer
     (emacs-lisp-mode)
     (wal/fundamental-mode)
+
     (should (equal major-mode 'fundamental-mode))
     (should (equal wal/before-fundamental-mode 'emacs-lisp-mode))
+
     (wal/fundamental-mode)
+
     (should (equal major-mode 'emacs-lisp-mode))))
 
 (ert-deftest test-wal/async-process--buffer-name ()
@@ -812,16 +942,17 @@
     (funcall finalizer nil "finished\n")))
 
 (ert-deftest test-wal/aysnc-process--maybe-interrupt ()
-  (with-mock-all ((compilation-find-buffer . (lambda () (message "found-buffer") "buffer"))
-                  (get-buffer-process . (lambda (m) (message m)))
-                  (interrupt-process . (lambda (_) (message "interrupted"))))
+  (with-mock ((compilation-find-buffer . (lambda () (message "found-buffer") "buffer"))
+              (get-buffer-process . (lambda (m) (message m)))
+              (interrupt-process . (lambda (_) (message "interrupted"))))
+
     (ert-with-message-capture messages
       (wal/async-process--maybe-interrupt)
       (should (string= "found-buffer\nbuffer\ninterrupted\n" messages)))))
 
 (ert-deftest test-wal/async-process ()
-  (with-mock-all ((wal/async-process--maybe-interrupt . (lambda () (message "interrupted")))
-                  (compilation-start . (lambda (c _ _n) (message "compiles") (get-buffer-create "async"))))
+  (with-mock ((wal/async-process--maybe-interrupt . (lambda () (message "interrupted")))
+              (compilation-start . (lambda (c _ _n) (message "compiles") (get-buffer-create "async"))))
     (ert-with-message-capture messages
       (wal/async-process
        "compiles"
@@ -835,13 +966,16 @@
 (ert-deftest test-wal/kill-async-process-buffers ()
   (get-buffer-create (generate-new-buffer-name "*wal-async*"))
   (get-buffer-create (generate-new-buffer-name "*wal-async*"))
+
   (let ((buf-count (length (buffer-list))))
+
     (call-interactively #'wal/kill-async-process-buffers)
     (should (> buf-count (length (buffer-list))))))
 
 (ert-deftest test-wal/matches-in-string ()
   (let ((str "This 1 string has 3 matches, or is it 2?")
         (pattern "\\(?1:[[:digit:]]\\)"))
+
     (should (equal '("2" "3" "1") (wal/matches-in-string pattern str)))))
 
 (ert-deftest test-wal/advise-many ()
@@ -863,25 +997,34 @@
                (advice--p (advice--symbol-function 'wal/test-fun-2)))))
 
 (ert-deftest test-wal/push-mark ()
-  (with-mock message #'ignore
+  (with-mock message
     (with-temp-buffer
       (insert "testing")
       (goto-char (point-max))
       (wal/push-mark)
+
       (should (eq (mark t) 8))
+
       (call-interactively 'wal/push-mark)
+
       (should (eq (mark t) 8))
+
       (insert " still testing")
       (goto-char (point-max))
       (wal/push-mark)
       (insert " and still testing")
       (goto-char (point-max))
+
       (should (eq (length mark-ring) 1))
+
       (goto-char (+ 1 (point-min)))
       (wal/push-mark)
+
       (should (eq (length mark-ring) 2))
+
       (goto-char (point-max))
       (funcall-interactively 'wal/push-mark t)
+
       (should (eq (mark t) 40))
       (should (eq (length mark-ring) 1)))))
 

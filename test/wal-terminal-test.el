@@ -12,37 +12,52 @@
   (should-error (wal/vterm-run "asdf") :type 'user-error))
 
 (ert-deftest test-wal/vterm-run--displays-existing-buffer ()
-  (with-mock-all ((display-buffer . #'wal/ra)
-                  (buffer-list . (lambda (&optional _) '("*vterm-run-test")))
-                  (buffer-name . #'wal/rf))
-    (should (equal '("*vterm-run-test" nil) (wal/vterm-run "test")))))
+  (let ((buf (get-buffer-create "*vterm-run-test")))
+    (with-mock (display-buffer
+                (buffer-list . (lambda (&optional _) (list buf))))
+
+      (wal/vterm-run "test")
+
+      (was-called-with display-buffer (list buf nil)))))
 
 (ert-deftest test-wal/vterm-run--sends-command ()
-  (let ((out nil))
-    (with-mock-all ((buffer-list . #'ignore)
-                    (vterm-mode . #'ignore)
-                    (vterm-send-string . (lambda (x) (add-to-list 'out x)))
-                    (vterm-send-return . #'ignore)
-                    (display-buffer . #'ignore))
-      (wal/vterm-run "test")
-      (should (equal '("test") out)))))
+  (with-mock ((buffer-list . #'ignore)
+              vterm-mode
+              vterm-send-string
+              vterm-send-return
+              display-buffer)
+    (wal/vterm-run "test")
+
+    (let ((buf (get-buffer "*vterm-run-test*")))
+
+      (was-called-with display-buffer (list buf nil))
+      (was-called vterm-mode)
+      (was-called-with vterm-send-string "test")
+      (was-called vterm-send-return))))
 
 (ert-deftest test-wal/vterm--calls-vterm-outside-project ()
-  (with-mock-all ((project-current . #'ignore)
-                  (vterm . (lambda (&optional _) 'vterm)))
-    (should (equal 'vterm (wal/vterm)))))
+  (with-mock ((project-current . #'ignore) vterm)
+
+    (wal/vterm)
+
+    (was-called vterm)))
 
 (ert-deftest test-wal/vterm--checks-project-buffers ()
   (with-temp-buffer
     (setq-local major-mode 'vterm-mode)
     (rename-buffer "VTerm: test")
-    (with-mock-all ((project-current . #'always)
-                    (project-buffers . (lambda (_) (list (current-buffer))))
-                    (switch-to-buffer . #'wal/ra))
-      (should (equal (list (current-buffer)) (wal/vterm))))))
+    (with-mock ((project-current . #'always)
+                (project-buffers . (lambda (_) (list (current-buffer))))
+                switch-to-buffer)
+
+      (wal/vterm)
+
+      (was-called-with switch-to-buffer (list (current-buffer))))))
 
 (ert-deftest test-wal/instead-truncate-buffer ()
-  (with-mock eshell-truncate-buffer (lambda () 'truncate)
-    (should (equal 'truncate (wal/instead-truncate-buffer)))))
+  (with-mock eshell-truncate-buffer
+    (wal/instead-truncate-buffer)
+
+    (was-called eshell-truncate-buffer)))
 
 ;;; wal-terminal-test.el ends here

@@ -11,36 +11,61 @@
 (ert-deftest test-wal/ascii-whale-animate ()
   (let ((wal/ascii-whale-key-frames ["testing"])
         (wal/ascii-whale-frame-index 0))
+
     (wal/ascii-whale-animate)
+
     (with-current-buffer (get-buffer-create wal/ascii-whale-buffer)
       (should (string-equal "testing" (buffer-string))))))
 
 (ert-deftest test-wal/ascii-whale-setup--fails-for-unknown-whale ()
-  (with-mock-all ((featurep . #'always))
+  (with-mock ((featurep . #'always))
+
     (let ((wal/config-ascii-whale 'testing))
+
       (should-error (wal/ascii-whale-setup) :type 'user-error))))
 
 (ert-deftest test-wal/ascii-whale-setup ()
-  (with-mock-all ((featurep . #'always)
-                  (add-hook . #'ignore)
-                  (run-with-timer . #'wal/ra)
-                  (wal/ascii-whale-animate . #'ignore)
-                  (wal/ascii-whale-display . #'wal/rt))
+  (with-mock (featurep
+              add-hook
+              run-with-timer
+              wal/ascii-whale-animate
+              wal/ascii-whale-display)
+
     (let ((wal/ascii-whale-animation-speed 8))
-      (should (equal 'testing (wal/ascii-whale-setup)))
-      (should (eq (nth 1 wal/ascii-whale-timer) 8)))
+
+      (wal/ascii-whale-setup)
+
+      (was-called-with featurep (list 'posframe))
+      (was-called-nth-with add-hook (list 'kill-buffer-hook #'wal/ascii-whale-clean-up nil t) 0)
+      (was-called-nth-with add-hook (list 'window-configuration-change-hook #'wal/ascii-whale-display nil t) 1)
+
+
+      (was-called-with run-with-timer (list 0 8 #'wal/ascii-whale-animate))
+      (was-called wal/ascii-whale-animate)
+      (was-called wal/ascii-whale-display))
+
+    (wal/clear-mocks)
+
     (let ((wal/config-ascii-whale 'cachalot))
-      (should (equal 'testing (wal/ascii-whale-setup))))))
+
+      (wal/ascii-whale-setup)
+
+      (was-called wal/ascii-whale-display))))
 
 (ert-deftest test-wal/ascii-whale-clean-up ()
-  (let ((wal/ascii-whale-timer 'timer)
-        (out nil))
-    (with-mock-all ((cancel-timer . (lambda (x) (push x out)))
-                    (posframe-delete . (lambda (x) (push x out)))
-                    (remove-hook . #'ignore))
+  (let ((wal/ascii-whale-timer 'timer))
+
+    (with-mock (cancel-timer
+                posframe-delete
+                remove-hook)
+
       (wal/ascii-whale-clean-up)
+
       (should-not wal/ascii-whale-timer)
-      (should (equal (list wal/ascii-whale-buffer 'timer) out)))))
+      (was-called-with cancel-timer (list 'timer))
+      (was-called-with posframe-delete wal/ascii-whale-buffer)
+      (was-called-nth-with remove-hook (list 'kill-buffer-hook #'wal/ascii-whale-clean-up t) 0)
+      (was-called-nth-with remove-hook (list 'window-configuration-change-hook #'wal/ascii-whale-display t) 1))))
 
 (ert-deftest test-wal/ascii-whale-poshandler ()
   (let ((result (wal/ascii-whale-poshandler `(:parent-window-left 4
@@ -48,157 +73,221 @@
                                               :parent-window-width 8
                                               :posframe-width 2
                                               :parent-window ,(selected-window)))))
+
     (should (equal '(9 . 5) result))))
 
 (ert-deftest test-wal/ascii-whale-hidehandler ()
-  (with-mock get-buffer-window #'ignore
+  (with-mock ((get-buffer-window . #'ignore))
+
     (should (wal/ascii-whale-hidehandler '(:posframe-parent-buffer '(nil nil))))))
 
 (ert-deftest test-wal/ascii-whale-display ()
-  (with-mock posframe-show #'wal/rf
-    (should (equal wal/ascii-whale-buffer (wal/ascii-whale-display)))))
+  (let ((wal/ascii-whale-parent-buffer 'parent))
+    (with-mock (posframe-show (point . (lambda () 0)) (face-attribute . #'wal/rf))
+
+      (wal/ascii-whale-display)
+
+      (was-called-with posframe-show (list wal/ascii-whale-buffer
+                                           :position 0
+                                           :border-width 12
+                                           :border-color 'mode-line-highlight
+                                           :poshandler 'wal/ascii-whale-poshandler
+                                           :posframe-parent-buffer 'parent
+                                           :hidehandler 'wal/ascii-whale-hidehandler)))))
 
 (ert-deftest test-wal/ascii-whale-toggle-display ()
-  (with-mock-all ((wal/ascii-whale-clean-up . (lambda () 'clean))
-                  (wal/ascii-whale-setup . (lambda () 'setup)))
+  (with-mock (wal/ascii-whale-clean-up wal/ascii-whale-setup)
+
     (let ((wal/ascii-whale-timer t))
-      (should (equal 'clean (wal/ascii-whale-toggle-display))))
+
+      (wal/ascii-whale-toggle-display)
+
+      (was-called wal/ascii-whale-clean-up)
+      (was-not-called wal/ascii-whale-setup))
+
+    (wal/clear-mocks)
+
     (let ((wal/ascii-whale-timer nil))
-      (should (equal 'setup (wal/ascii-whale-toggle-display))))))
+
+      (wal/ascii-whale-toggle-display)
+
+      (was-called wal/ascii-whale-setup)
+      (was-not-called wal/ascii-whale-clean-up))))
 
 (ert-deftest test-wal/describe-config-version ()
   (defvar wal/emacs-config-default-path)
   (let ((out '("1.0.0" "test everything" "1.0.1" "letting the world know"))
         (wal/emacs-config-default-path "~"))
-    (with-mock-all ((shell-command-to-string . (lambda (_) (pop out)))
-                    (message . #'wal/rf))
+    (with-mock ((shell-command-to-string . (lambda (_) (pop out)))
+                (message . #'wal/rf))
+
       (should (equal "1.0.0: test everything" (wal/describe-config-version)))
+
       (let ((noninteractive nil))
+
         (should (equal "1.0.1: letting the world know" (wal/describe-config-version)))))))
 
 (ert-deftest test-wal/show-config-diff-range ()
-  (with-mock-all ((shell-command-to-string . (lambda (_) " testing "))
-                  (magit-diff-range . #'wal/rf))
+  (with-mock ((shell-command-to-string . (lambda (_) " testing "))
+              (magit-diff-range . #'wal/rf))
+
     (should (string-equal "testing" (wal/show-config-diff-range)))))
 
 (ert-deftest test-wal/tangle-config-prompt ()
-  (with-mock-all ((wal/tangle-do-prompt . #'always)
-                  (y-or-n-p . #'always)
-                  (wal/tangle-config . #'wal/rt))
+  (with-mock ((wal/tangle-do-prompt . #'always)
+              (y-or-n-p . #'always)
+              (wal/tangle-config . #'wal/rt))
+
     (let ((wal/tangle-do-prompt t))
+
       (should (equal 'testing (wal/tangle-config-prompt))))))
 
 (ert-deftest test-wal/tangle-config-prompt--after ()
-  (let ((out nil))
-    (with-mock-all ((wal/tangle-do-prompt . #'always)
-                    (y-or-n-p . #'ignore)
-                    (wal/tangle-config . #'wal/rt)
-                    (message . (lambda (x) (setq out x))))
-      (let ((wal/tangle-do-prompt t))
-        (wal/tangle-config-prompt)
-        (should (string-equal "To tangle, call `wal/tangle-config'" out))
-        (should-not wal/tangle-do-prompt)
-        (setq out nil)
-        (wal/tangle-config-prompt)
-        (should (string-equal "Config changed. To tangle, call `wal/tangle-config'" out))))))
+  (with-mock ((wal/tangle-do-prompt . #'always)
+              (y-or-n-p . #'ignore)
+              (wal/tangle-config . #'wal/rt)
+              message)
+
+    (let ((wal/tangle-do-prompt t))
+
+      (wal/tangle-config-prompt)
+
+      (was-called-with message "To tangle, call `wal/tangle-config'")
+      (should-not wal/tangle-do-prompt)
+
+      (wal/clear-mocks)
+      (wal/tangle-config-prompt)
+
+      (was-called-with message "Config changed. To tangle, call `wal/tangle-config'"))))
 
 (ert-deftest test-wal/find-config ()
   (defvar wal/emacs-config-default-path)
   (defvar wal/config-show-whale-animation)
-  (let ((out nil)
-        (wal/config-show-whale-animation t))
-    (with-mock-all ((add-hook . (lambda (_ x &rest _) (setq out x)))
-                    (wal/ascii-whale-setup . #'wal/rt))
-      (should (equal 'testing (wal/find-config)))
-      (should (equal 'wal/tangle-config-prompt out)))))
+  (let ((wal/config-show-whale-animation t))
+
+    (with-mock (add-hook wal/ascii-whale-setup)
+
+      (wal/find-config)
+
+      (was-called-with add-hook (list 'after-revert-hook #'wal/tangle-config-prompt nil t))
+      (was-called wal/ascii-whale-setup))))
 
 (ert-deftest test-wal/find-config-changelog ()
   (wal/find-config-changelog)
+
   (should (string-equal "CHANGELOG.md" (buffer-name))))
 
 (ert-deftest test-wal/check-coverage--calculate-coverage ()
   (with-temp-buffer
     (rename-buffer "*wal-async*")
     (insert "wal-windows : Percent 50% [Relevant: 40 Covered: 20 Missed: 20]\nwal-windows : Percent 40% [Relevant: 20 Covered: 8 Missed: 12]")
+
     (should (string-equal "45%" (wal/check-coverage--calculate-coverage)))))
 
 (ert-deftest test-wal/find-init ()
-  (with-mock file-truename (lambda (_) wal/emacs-config-default-path)
+  (with-mock ((file-truename . (lambda (_) wal/emacs-config-default-path)))
+
     (wal/find-init)
+
     (should (string-equal (buffer-name) "emacs-config"))))
 
 (ert-deftest test-wal/customize-group ()
-  (with-mock customize-group #'wal/rf
-    (should (equal 'wal (wal/customize-group)))))
+  (with-mock customize-group
+
+    (wal/customize-group)
+
+    (was-called-with customize-group (list 'wal t))))
 
 (ert-deftest test-wal/dired-config-packages ()
   (wal/dired-config-packages)
+
   (should (string-equal (buffer-name) "wal")))
 
 (ert-deftest test-wal/dired-config-tests ()
   (wal/dired-config-tests)
+
   (should (string-equal (buffer-name) "test")))
 
 (ert-deftest test-wal/check-coverage ()
-  (with-mock-all ((wal/coverage--execute . #'wal/ra)
-                  (wal/check-coverage--calculate-coverage . #'wal/rt)
-                  (message . #'wal/ra))
-    (let ((res (wal/check-coverage)))
-      (should (string-equal "cask exec ert-runner && cat coverage.txt" (nth 0 res)))
-      (should (equal '("All tests succeeded. Coverage: %s" testing) (funcall (nth 1 res))))
-      (should (equal '("Tests fail: %s" "No they don't") (apply (nth 2 res) '("No they don't")))))))
+  (with-mock (wal/coverage--execute
+              (wal/check-coverage--calculate-coverage . #'wal/rt)
+              message)
+
+    (cl-destructuring-bind (cmd succ fail) (wal/check-coverage)
+
+      (should (string-equal "cask exec ert-runner && cat coverage.txt" cmd))
+      (should (equal '("All tests succeeded. Coverage: %s" testing) (funcall succ)))
+      (should (equal '("Tests fail: %s" "No they don't") (apply fail '("No they don't")))))))
 
 (ert-deftest test-wal/create-json-coverage ()
-  (with-mock-all ((wal/coverage--execute . #'wal/ra)
-                  (message . #'wal/ra))
-    (let ((res (wal/create-json-coverage)))
-      (should (string-equal "export COVERAGE_WITH_JSON=true && cask exec ert-runner" (nth 0 res)))
-      (should (equal '("Coverage created") (funcall (nth 1 res))))
-      (should (equal '("Failed to create coverage: %s" "No you didn't") (apply (nth 2 res) '("No you didn't")))))))
+  (with-mock (wal/coverage--execute message)
+    (cl-destructuring-bind (cmd succ fail) (wal/create-json-coverage)
+
+      (should (string-equal "export COVERAGE_WITH_JSON=true && cask exec ert-runner" cmd))
+      (should (equal '("Coverage created") (funcall succ)))
+      (should (equal '("Failed to create coverage: %s" "No you didn't") (apply fail '("No you didn't")))))))
 
 (ert-deftest test-wal/coverage--execute--fails-without-cask ()
-  (with-mock executable-find #'ignore
+  (with-mock ((executable-find . #'ignore))
+
     (should-error (wal/coverage--execute nil nil nil))))
 
 (ert-deftest test-wal/coverage--execute ()
   (defvar wal/emacs-config-default-path)
   (let ((wal/emacs-config-default-path "/tmp"))
-    (with-mock-all ((wal/async-process . #'wal/ra))
 
-      (should (equal '("cd /tmp && test" success failure t) (wal/coverage--execute "test" 'success 'failure))))))
+    (with-mock (wal/async-process)
+
+      (wal/coverage--execute "test" 'success 'failure)
+
+      (was-called-with wal/async-process '("cd /tmp && test" success failure t)) )))
 
 (ert-deftest test-wal/package-files ()
   (let* ((dir "/tmp/package")
          (file "/tmp/package/test.el")
          (other-file "/tmp/package/test.txt")
          (clean (lambda () (delete-directory dir t))))
+
     (make-directory dir)
     (make-empty-file file)
     (make-empty-file other-file)
+
     (condition-case nil
-        (with-mock wal/directory-files (lambda (_) (list file))
+        (with-mock ((wal/directory-files . (lambda (_) (list file))))
+
           (should (equal (list file) (wal/package-files)))
+
           (funcall clean))
       (error
        (funcall clean)))))
 
 (ert-deftest test-wal/checkdoc-config-packages ()
   (defvar wal/emacs-config-package-path)
-  (let* ((out nil)
-         (in '("/tmp/one" "/tmp/two")))
-    (with-mock-all ((require . #'ignore)
-                    (wal/package-files . (lambda () in))
-                    (checkdoc-file . (lambda (x) (push x out))))
+  (let* ((in '("/tmp/one" "/tmp/two")))
+
+    (with-mock (require
+                (wal/package-files . (lambda () in))
+                checkdoc-file)
+
       (wal/checkdoc-config-packages)
-      (should (equal (reverse in) out)))))
+
+      (was-called-with require (list 'checkdoc nil t))
+
+      (was-called-nth-with checkdoc-file (list "/tmp/one") 0)
+      (was-called-nth-with checkdoc-file (list "/tmp/two") 1))))
 
 (ert-deftest test-wal/flycheck-config-packages ()
-  (let ((out nil)
-        (in '("/tmp/one" "/tmp/two")))
-    (with-mock-all ((display-buffer . #'ignore)
-                    (wal/package-files . (lambda () in))
-                    (wal/flycheck-file . (lambda (x _ _) (push x out))))
+  (let ((in '("/tmp/one" "/tmp/two")))
+    (with-mock (display-buffer
+                (wal/package-files . (lambda () in))
+                wal/flycheck-file--erase
+                wal/flycheck-file)
+
       (wal/flycheck-config-packages)
-      (should (equal (reverse in) out)))))
+
+      (was-called wal/flycheck-file--erase)
+      (was-called display-buffer)
+      (was-called-nth-with wal/flycheck-file (list "/tmp/one" t t) 0)
+      (was-called-nth-with wal/flycheck-file (list "/tmp/two" t t) 1))))
 
 ;;; wal-test.el ends here

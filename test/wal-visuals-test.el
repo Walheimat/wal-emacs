@@ -16,14 +16,17 @@
   (should (equal "Testing" (wal/instead-show-biased-random))))
 
 (ert-deftest test-wal/in-case-of-daemonp-add-different-hook ()
-  (with-mock-all ((daemonp . #'always)
-                  (add-hook . #'wal/rf))
-    (should (equal 'server-after-make-frame-hook (wal/in-case-of-daemonp-add-different-hook)))))
+  (with-mock ((daemonp . #'always) add-hook)
+
+    (wal/in-case-of-daemonp-add-different-hook)
+
+    (was-called-with add-hook (list 'server-after-make-frame-hook #'dashboard-insert-startupify-lists))))
 
 (ert-deftest test-wal/with-common-ligatures ()
   (defvar wal/common-ligatures)
   (let ((fun #'wal/ra)
         (wal/common-ligatures '("?")))
+
     (should (equal '((test-mode) ("!" "?")) (wal/with-common-ligatures fun '(test-mode) '("!"))))))
 
 ;;; wal-visuals-test.el ends here

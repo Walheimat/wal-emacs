@@ -9,16 +9,24 @@
 (require 'wal-windows nil t)
 
 (ert-deftest test-wal/aw-delete-window-kill-buffer ()
-  (with-default-mock aw-delete-window
-    (should (equal '(window t) (wal/aw-delete-window-kill-buffer 'window)))))
+  (with-mock aw-delete-window
+    (wal/aw-delete-window-kill-buffer 'window)
+
+    (was-called-with aw-delete-window (list 'window t))))
 
 (ert-deftest test-wal/instead-call-consult-buffer ()
-  (with-default-mock call-interactively
-    (should (equal '(consult-buffer) (wal/instead-call-consult-buffer)))))
+  (with-mock call-interactively
+
+    (wal/instead-call-consult-buffer)
+
+    (was-called-with call-interactively (list 'consult-buffer))))
 
 (ert-deftest test-wal/aw-delete-other-windows ()
-  (with-rf-mock delete-other-windows
-    (should (equal 'window (wal/aw-delete-other-windows 'window)))))
+  (with-mock delete-other-windows
+
+    (wal/aw-delete-other-windows 'window)
+
+    (was-called-with delete-other-windows (list 'window))))
 
 (ert-deftest test-wal/popper-echo-transform ()
   (should (string-match "testing/help" (wal/popper-echo-transform "*helpful variable: testing*")))
@@ -28,20 +36,24 @@
 
 (ert-deftest test-wal/popper--spared-p ()
   (let ((wal/spared-popups '("testing")))
-    (with-rf-mock buffer-name
+
+    (with-mock ((buffer-name . #'wal/rf))
+
       (should (wal/popper--spared-p "testing"))
       (should-not (wal/popper--spared-p "dying")))))
 
 (ert-deftest test-wal/kill-some-popups ()
   (defvar popper-group-function)
   (defvar popper-buried-popup-alist '((nil . ((nil . "testing") (nil . "dying")))))
-  (let ((out nil)
-        (popper-group-function #'ignore)
+  (let ((popper-group-function #'ignore)
         (wal/spared-popups '("testing")))
-    (with-mock-all ((buffer-live-p . #'always)
-                    (kill-some-buffers . (lambda (x) (add-to-list 'out x)))
-                    (buffer-name . #'wal/rf))
+
+    (with-mock ((buffer-live-p . #'always)
+                kill-some-buffers
+                (buffer-name . #'wal/rf))
+
       (wal/kill-some-popups)
-      (should (equal '(("dying")) out)))))
+
+      (was-called-with kill-some-buffers (list (list "dying"))))))
 
 ;;; wal-windows-test.el ends here

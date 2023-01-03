@@ -10,22 +10,22 @@
 
 (when (require 'undercover nil t)
   (cond
-    ((getenv "CI")
-     (undercover "wal/*.el"
-                 (:report-format 'lcov)
-                 (:send-report nil)))
-    ((getenv "COVERAGE_WITH_JSON")
-     (setq undercover-force-coverage t)
-     (undercover "wal/*.el"
-                 (:report-format 'simplecov)
-                 (:report-file "./coverage/.resultset.json")
-                 (:send-report nil)))
-    (t
-     (setq undercover-force-coverage t)
-     (undercover "wal/*.el"
-                 (:report-format 'text)
-                 (:report-file "coverage.txt")
-                 (:send-report nil)))))
+   ((getenv "CI")
+    (undercover "wal/*.el"
+                (:report-format 'lcov)
+                (:send-report nil)))
+   ((getenv "COVERAGE_WITH_JSON")
+    (setq undercover-force-coverage t)
+    (undercover "wal/*.el"
+                (:report-format 'simplecov)
+                (:report-file "./coverage/.resultset.json")
+                (:send-report nil)))
+   (t
+    (setq undercover-force-coverage t)
+    (undercover "wal/*.el"
+                (:report-format 'text)
+                (:report-file "coverage.txt")
+                (:send-report nil)))))
 
 (defvar wal/booting nil)
 
@@ -46,7 +46,7 @@
   "Message that PACKAGE-NAME would have been loaded."
   `(message "Would have loaded %s" ',package-name))
 
-(defmacro with-mock (name fun &rest body)
+(defmacro with-mock-old (name fun &rest body)
   "Evaluate BODY while mocking function NAME using FUN."
   (declare (indent defun))
 
@@ -55,36 +55,55 @@
 
 (defvar wal/mock-history nil)
 
-(defmacro with-mock-history (flist &rest body)
-  "Evaluate BODY mocking list of functions FLIST.
+(defmacro with-mock (to-mock &rest body)
+  "Evaluate BODY mocking list of function(s) TO-MOCK.
+
+TO-MOCK maybe be a single item or a list of items.
 
 The arguments passed to the mocked functions will be recorded in
-a hash table.
+a hash table. Repeated calls with append results.
 
-Each item in FLIST can either be a function symbol or a cons cell
-of shape (FUNCTION . MOCK-IMPLEMENTATION). The return value is
-either the argument list or the result of the mock
+Each item in TO-MOCK can either be a function symbol or a cons
+cell of shape (FUNCTION . MOCK-IMPLEMENTATION). The return value
+is either the argument list or the result of the mock
 implementation."
   (declare (indent defun))
 
-  `(cl-letf ((wal/mock-history (make-hash-table :test 'equal))
-             ,@(mapcar (lambda (it)
-                         (cond
-                          ((consp it)
-                           `((symbol-function ',(car it))
-                             (lambda (&rest r)
-                               (puthash ',(car it) r wal/mock-history)
-                               (apply #',(cdr it) r))))
+  `(cl-letf* ((wal/mock-history (make-hash-table :test 'equal))
+              (remember (lambda (fun args)
+                          (let* ((prev (gethash fun wal/mock-history))
+                                 (val (if prev (push args prev) (list args))))
+                            (puthash fun val wal/mock-history)
+                            args)))
+              ,@(mapcar (lambda (it)
+                          (cond
+                           ((consp it)
+                            `((symbol-function ',(car it))
+                              (lambda (&rest r)
+                                (interactive)
+                                (apply remember (list ',(car it) r))
+                                (apply ,(cdr it) r))))
                            (t
                             `((symbol-function ',it)
                               (lambda (&rest r)
-                                (puthash ',it r wal/mock-history))))))
-                       flist))
+                                (interactive)
+                                (apply remember (list ',it r)))))))
+                        (if (listp to-mock) to-mock (list to-mock))))
      ,@body))
+
+(defun wal/clear-mocks ()
+  "Clear mock history."
+  (setq wal/mock-history (make-hash-table :test 'equal)))
 
 (defmacro was-called-with (fun expected)
   "Check if FUN was called with EXPECTED."
-  `(should (equal (gethash ',fun wal/mock-history) ,expected)))
+  (let ((safe-exp (if (listp expected) expected `(list ,expected))))
+    `(should (equal ,safe-exp (car (gethash ',fun wal/mock-history))))))
+
+(defmacro was-called-nth-with (fun expected index)
+  "Check if FUN was called with EXPECTED on the INDEX-th call."
+  (let ((safe-exp (if (listp expected) expected `(list ,expected))))
+    `(should (equal ,safe-exp (nth ,index (reverse (gethash ',fun wal/mock-history)))))))
 
 (defmacro was-called (fun)
   "Check if mocked FUN was called."
@@ -95,25 +114,6 @@ implementation."
   "Check if mocked FUN was not called."
   `(let ((actual (gethash ',fun wal/mock-history 'not-called)))
      (should (equal 'not-called actual))))
-
-(defmacro with-default-mock (name &rest body)
-  "Evaluate BODY while mocking function NAME using default mock."
-  (declare (indent defun))
-
-  `(with-mock ,name 'wal/ra ,@body))
-
-(defmacro with-rf-mock (name &rest body)
-  "Evaluate BODY while mocking function NAME returning first argument."
-  (declare (indent defun))
-
-  `(with-mock ,name 'wal/rf ,@body))
-
-(defmacro with-mock-all (flist &rest body)
-  "Evaluate BODY mocking alist of functions FLIST."
-  (declare (indent defun))
-
-  `(cl-letf (,@(mapcar (lambda (it) `((symbol-function ',(car it)) ,(cdr it))) flist))
-     ,@body))
 
 (defmacro match-expansion (form &rest value)
   "Match expansion of FORM against VALUE."
