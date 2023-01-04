@@ -18,8 +18,8 @@
 (defconst wal/packages '(wal
                          wal-func
                          wal-external
-                         wal-settings
                          wal-key-bindings
+                         wal-settings
                          wal-look
                          wal-fonts
                          ;; The following packages are optional.

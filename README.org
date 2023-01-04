@@ -519,6 +519,130 @@ Make completions look nice.
 (wdb/pop-up "^\\*Messages\\*")
 #+END_SRC
 
+** Key Bindings
+
+#+BEGIN_SRC emacs-lisp
+;; Create `transient' for config package.
+(with-no-warnings
+  (transient-define-prefix wal/config-dispatch ()
+    "Facilitate the usage of or the working on Walheimat's config."
+    [["Do"
+      ("t" "tangle" wal/tangle-config)
+      ("x" "install expansion pack" wal/install-expansion-pack)
+      ("g" "customize group" wal/customize-group)
+      ("d" "show diff" wal/show-config-diff-range)]
+     ["Check"
+      ("c d" "checkdoc" wal/checkdoc-config-packages)
+      ("c f" "flycheck" wal/flycheck-config-packages)
+      ("c o" "coverage" wal/check-coverage)
+      ("c j" "JSON coverage" wal/create-json-coverage)]
+     ["Find"
+      ("f c" "config" wal/find-config)
+      ("f p" "packages" wal/dired-config-packages)
+      ("f l" "changelog" wal/find-config-changelog)
+      ("f t" "tests" wal/dired-config-tests)]
+     ["Fluff"
+      ("w" "toggle animation" wal/ascii-whale-toggle-display)]])
+
+  ;; Create some `hydra's.
+  (defhydra wal/scroll-other-window (:hint nil)
+    "
+%s`w/hew Scroll other window: u_p_ or dow_n_
+"
+    ("p" scroll-other-window-down)
+    ("n" scroll-other-window)
+    ("q" nil))
+
+  ;; Move similar to `xah-fly-keys'.
+  (defhydra wal/fly (:hint nil :foreign-keys warn)
+    "
+%s`w/hew Fly: ✜ _i_ _j_ _k_ _l_ %s`w/hs ⇆ _u_ _o_ %s`w/hs ⇄ _h_ _;_ %s`w/hs ⇅ _,_ _._
+"
+    ("u" backward-word)
+    ("i" previous-line)
+    ("o" forward-word)
+    ("j" backward-char)
+    ("l" forward-char)
+    ("k" next-line)
+
+    ("h" beginning-of-line)
+    (";" end-of-line)
+
+    ("," scroll-up-command)
+    ("." scroll-down-command)
+
+    ("q" nil))
+
+  ;; Additional `general' bindings.
+  (wal/general
+    "e" '(:ignore t :wk "Emacs")
+    "eq" '(wal/delete-edit-or-kill :wk "quit")
+    "er" '(restart-emacs :wk "restart")
+
+    "x" '(:ignore t :wk "programs")
+    "xw" 'eww
+
+    "f" '(:ignore t :wk "find")
+    "fc" '(wal/find-custom-file :wk "custom")
+    "fi" '(wal/find-init :wk "init")
+    "fl" '(find-library :wk "library")
+
+    "l" '(:ignore t :wk "list")
+    "lp" '(list-processes :wk "processes")
+    "lt" '(list-timers :wk "timers")
+
+    "s" '(:ignore t :wk "set")
+    "sT" '(wal/set-transparency :wk "transparency")
+    "sc" '(wal/set-cursor-type :wk "cursor")
+
+    "p" '(:ignore t :wk "package")
+    "pf" '(package-refresh-contents :wk "refresh")
+    "pi" '(package-install :wk "install")
+    "pl" '(list-packages :wk "list")
+    "pr" '(package-reinstall :wk "re-install")
+    "pd" '(package-delete :wk "delete"))
+
+  (global-set-key (kbd (wal/key-combo-for-leader 'wal/colonel)) #'wal/config-dispatch)
+
+  (wal/general-sink
+   "t" '(wal/text-scale/body :wk "text-scale")
+   "n" '(display-line-numbers-mode :wk "line numbers"))
+
+  (wal/general-sink
+   :predicate '(not (one-window-p))
+   "o" '(wal/resize-window/body :wk "resize-window")
+   "v" '(wal/scroll-other-window/body :wk "scroll-other-window"))
+
+  (global-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) #'wal/captain?)
+
+  (wal/lieutenant "f" '(wal/fly/body :wk "fly"))
+  (wal/lieutenant "<SPC>" '(wal/push-mark :wk "push mark"))
+
+  (defvar wal/misc-map (make-sparse-keymap))
+
+  (wal/lieutenant "," '(:keymap wal/misc-map :wk "misc"))
+
+  (when (wal/modern-emacs-p)
+    (wal/lieutenant! "d" 'duplicate-line 'duplicate-dwim))
+
+  (wal/lieutenant "s" '(wal/scratch-buffer :wk "scratch buffer"))
+
+  (general-define-key
+   :keymaps 'wal/misc-map
+   :wk-full-keys nil
+   "f" '(wal/find-fish-config :wk "find fish")
+   "b" '(wal/kill-some-file-buffers :wk "kill file buffers"))
+
+  (global-set-key (kbd "C-x o") #'wal/other-window)
+  (global-set-key (kbd "C-M-i") #'completion-at-point)
+
+  ;; Replaces `kill-sexp'.
+  (global-set-key (kbd "C-k") #'wal/kwim)
+
+  ;; Unbinds `save-buffers-kill-terminal'.
+  (global-unset-key (kbd "C-x C-c")))
+#+END_SRC
+
 ** Footer
 :PROPERTIES:
 :VISIBILITY: folded
@@ -658,6 +782,14 @@ All ARGS are passed to both definers."
     ;; Also create the sink.
     (eval `(wal/create-leader-sink ,sink :definer ,leader :prefix ,key))))
 
+(defun wal/captain? ()
+  "Show message when captain is not locally bound."
+  (interactive)
+  (let ((key (propertize (wal/key-combo-for-leader 'wal/captain) 'face 'success))
+        (mode (propertize (symbol-name major-mode) 'face 'success)))
+
+    (message "Captain (%s) has no binding in %s" key mode)))
+
 (use-package general
   :demand t
 
@@ -703,124 +835,12 @@ above).
 (use-package transient
   :custom
   (transient-hide-during-minibuffer-read t)
-  (transient-show-popup wal/idle-delay)
 
   :config
-  (bind-key wal/dwim-key 'transient-show 'transient-map))
-#+END_SRC
+  (bind-key wal/dwim-key 'transient-show 'transient-map)
 
-** Additional (Un-)Bindings
-
-Most bindings are declared in individual packages.
-
-#+BEGIN_SRC emacs-lisp
-(wal/on-boot key-bindings
-  ;; Create some `hydra's.
-  (with-no-warnings
-    (defhydra wal/scroll-other-window (:hint nil)
-      "
-%s`w/hew Scroll other window: u_p_ or dow_n_
-"
-      ("p" scroll-other-window-down)
-      ("n" scroll-other-window)
-      ("q" nil))
-
-    ;; Move similar to `xah-fly-keys'.
-    (defhydra wal/fly (:hint nil :foreign-keys warn)
-      "
-%s`w/hew Fly: ✜ _i_ _j_ _k_ _l_ %s`w/hs ⇆ _u_ _o_ %s`w/hs ⇄ _h_ _;_ %s`w/hs ⇅ _,_ _._
-"
-      ("u" backward-word)
-      ("i" previous-line)
-      ("o" forward-word)
-      ("j" backward-char)
-      ("l" forward-char)
-      ("k" next-line)
-
-      ("h" beginning-of-line)
-      (";" end-of-line)
-
-      ("," scroll-up-command)
-      ("." scroll-down-command)
-
-      ("q" nil)))
-
-  ;; Additional `general' bindings.
-  (wal/general
-    "e" '(:ignore t :wk "Emacs")
-    "eq" '(wal/delete-edit-or-kill :wk "quit")
-    "er" '(restart-emacs :wk "restart")
-
-    "x" '(:ignore t :wk "programs")
-    "xw" 'eww
-
-    "f" '(:ignore t :wk "find")
-    "fc" '(wal/find-custom-file :wk "custom")
-    "fi" '(wal/find-init :wk "init")
-    "fl" '(find-library :wk "library")
-
-    "l" '(:ignore t :wk "list")
-    "lp" '(list-processes :wk "processes")
-    "lt" '(list-timers :wk "timers")
-
-    "s" '(:ignore t :wk "set")
-    "sT" '(wal/set-transparency :wk "transparency")
-    "sc" '(wal/set-cursor-type :wk "cursor")
-
-    "p" '(:ignore t :wk "package")
-    "pf" '(package-refresh-contents :wk "refresh")
-    "pi" '(package-install :wk "install")
-    "pl" '(list-packages :wk "list")
-    "pr" '(package-reinstall :wk "re-install")
-    "pd" '(package-delete :wk "delete"))
-
-  (global-set-key (kbd (wal/key-combo-for-leader 'wal/colonel)) #'wal/config-dispatch)
-
-  (wal/general-sink
-    "t" '(wal/text-scale/body :wk "text-scale")
-    "n" '(display-line-numbers-mode :wk "line numbers"))
-
-  (wal/general-sink
-    :predicate '(not (one-window-p))
-    "o" '(wal/resize-window/body :wk "resize-window")
-    "v" '(wal/scroll-other-window/body :wk "scroll-other-window"))
-
-  (defun wal/captain? ()
-    "Show message when captain is not locally bound."
-    (interactive)
-    (let ((key (propertize (wal/key-combo-for-leader 'wal/captain) 'face 'success))
-          (mode (propertize (symbol-name major-mode) 'face 'success)))
-
-      (message "Captain (%s) has no binding in %s" key mode)))
-
-  (global-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) #'wal/captain?)
-
-  (wal/lieutenant "f" '(wal/fly/body :wk "fly"))
-  (wal/lieutenant "<SPC>" '(wal/push-mark :wk "push mark"))
-
-  (defvar wal/misc-map (make-sparse-keymap))
-
-  (wal/lieutenant "," '(:keymap wal/misc-map :wk "misc"))
-
-  (when (wal/modern-emacs-p)
-    (wal/lieutenant! "d" 'duplicate-line 'duplicate-dwim))
-
-  (wal/lieutenant "s" '(wal/scratch-buffer :wk "scratch buffer"))
-
-  (general-define-key
-   :keymaps 'wal/misc-map
-   :wk-full-keys nil
-   "f" '(wal/find-fish-config :wk "find fish")
-   "b" '(wal/kill-some-file-buffers :wk "kill file buffers"))
-
-  (global-set-key (kbd "C-x o") #'wal/other-window)
-  (global-set-key (kbd "C-M-i") #'completion-at-point)
-
-  ;; Replaces `kill-sexp'.
-  (global-set-key (kbd "C-k") #'wal/kwim)
-
-  ;; Unbinds `save-buffers-kill-terminal'.
-  (global-unset-key (kbd "C-x C-c")))
+  (with-eval-after-load 'wal-settings
+    (setq transient-show-popup wal/idle-delay)))
 #+END_SRC
 
 ** Footer
@@ -3101,6 +3121,8 @@ Let's have a dash of board.
   "Setup the dashboard in a daemon-friendly way."
   (require 'all-the-icons nil t)
   (when (daemonp)
+    (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
+
     (add-hook
      'server-after-make-frame-hook
      #'dashboard-insert-startupify-lists)))
@@ -3111,8 +3133,6 @@ Let's have a dash of board.
   :hook (after-init . dashboard-setup-startup-hook)
 
   :init
-  (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
-
   (advice-add
    'dashboard-insert-startupify-lists :around
    #'wal/with-recent-files-excluded)
@@ -8882,31 +8902,6 @@ name are deleted beforehand."
 
     (dolist (it (wal/package-files))
       (wal/flycheck-file it t t))))
-#+END_SRC
-
-*** Transient
-
-#+BEGIN_SRC emacs-lisp
-(with-eval-after-load 'transient
-  (transient-define-prefix wal/config-dispatch ()
-    "Facilitate the usage of or the working on Walheimat's config."
-    [["Do"
-      ("t" "tangle" wal/tangle-config)
-      ("x" "install expansion pack" wal/install-expansion-pack)
-      ("g" "customize group" wal/customize-group)
-      ("d" "show diff" wal/show-config-diff-range)]
-     ["Check"
-      ("c d" "checkdoc" wal/checkdoc-config-packages)
-      ("c f" "flycheck" wal/flycheck-config-packages)
-      ("c o" "coverage" wal/check-coverage)
-      ("c j" "JSON coverage" wal/create-json-coverage)]
-     ["Find"
-      ("f c" "config" wal/find-config)
-      ("f p" "packages" wal/dired-config-packages)
-      ("f l" "changelog" wal/find-config-changelog)
-      ("f t" "tests" wal/dired-config-tests)]
-     ["Fluff"
-      ("w" "toggle animation" wal/ascii-whale-toggle-display)]]))
 #+END_SRC
 
 ** Footer

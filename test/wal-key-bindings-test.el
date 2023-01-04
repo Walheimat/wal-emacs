@@ -57,12 +57,22 @@
     (was-called-nth-with eval (list '(general-create-definer wal/tester :prefix "C-t")) 0)
     (was-called-nth-with eval (list '(wal/create-leader-sink wal/tester-sink :definer wal/tester :prefix "C-t")) 1)))
 
+(ert-deftest test-wal/captain? ()
+  (with-mock (message (wal/key-combo-for-leader . (lambda (&rest _) "C-t")))
+
+    (with-temp-buffer
+      (text-mode)
+
+      (wal/captain?)
+
+      (was-called-with message (list "Captain (%s) has no binding in %s" "C-t" "text-mode")))))
+
 (ert-deftest test-wal/transient-grab ()
   (defvar transient-current-command)
   (let ((transient-current-command "test"))
     (with-mock((transient-arg-value . #'concat)
                (transient-args . #'wal/rf))
 
-      (should (string-equal "--testing=test" (wal/transient-grab "testing"))))))
+              (should (string-equal "--testing=test" (wal/transient-grab "testing"))))))
 
 ;;; wal-key-bindings-test.el ends here
