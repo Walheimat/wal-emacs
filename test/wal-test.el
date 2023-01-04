@@ -182,7 +182,7 @@
     (rename-buffer "*wal-async*")
     (insert "wal-windows : Percent 50% [Relevant: 40 Covered: 20 Missed: 20]\nwal-windows : Percent 40% [Relevant: 20 Covered: 8 Missed: 12]")
 
-    (should (string-equal "45%" (wal/check-coverage--calculate-coverage)))))
+    (should (string-equal "46.67%" (wal/check-coverage--calculate-coverage)))))
 
 (ert-deftest test-wal/find-init ()
   (with-mock ((file-truename . (lambda (_) wal/emacs-config-default-path)))

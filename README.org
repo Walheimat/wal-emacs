@@ -8782,17 +8782,33 @@ This will activate minor mode `wal/config-mode'."
 *** Coverage
 
 #+BEGIN_SRC emacs-lisp
+(defun wal/check-coverage--add (buf type)
+  "Add all numbers of TYPE in buffer BUF."
+  (let* ((regex (concat type ": \\(?1:[[:digit:]]+\\)"))
+         (content (with-current-buffer buf (buffer-string)))
+         (numbers (wal/matches-in-string regex content)))
+
+    (apply '+ (mapcar #'string-to-number numbers))))
+
+(defun wal/check-coverage--buffer-number (buf)
+  "Get the count of BUF."
+  (let* ((regex "<\\(?1:[[:digit:]]+\\)>")
+         (content (with-current-buffer buf (buffer-string)))
+         (numbers (wal/matches-in-string regex content))
+         (number (car-safe numbers)))
+    (if number (string-to-number number) 0)))
+
 (defun wal/check-coverage--calculate-coverage ()
   "Calculate the full coverage."
   (when-let* ((buffers (seq-filter (lambda (it) (string-match "\\*wal-async" (buffer-name it))) (buffer-list)))
               (compare (lambda (a b)
-                         (> (string-to-number (substring (buffer-name a) -2 -1))
-                            (string-to-number (substring (buffer-name b) -2 -1)))))
+                         (> (wal/check-coverage--buffer-number a)
+                            (wal/check-coverage--buffer-number b))))
               (latest (car (seq-sort compare buffers)))
-              (matches (with-current-buffer latest
-                         (wal/matches-in-string "\\(?1:[[:digit:]]+\\)%" (buffer-string))))
-              (nums (mapcar (lambda (it) (string-to-number it)) matches)))
-    (format "%s%%" (/ (apply '+ nums) (length nums)))))
+              (relevant (wal/check-coverage--add latest "Relevant"))
+              (covered (wal/check-coverage--add latest "Covered")))
+
+    (format "%.2f%%" (* 100 (/ (float covered) relevant)))))
 
 (defun wal/check-coverage ()
   "Check the current coverage for custom functionality."

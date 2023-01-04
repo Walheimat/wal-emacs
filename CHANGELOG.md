@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `projectile` in favor of using built-in `project`.
 - Custom flag `wal/flag-deny`.
 
+### Fixed
+
+- Coverage calculation now calculates covered / relevant lines.
+- Coverage can be calculated for buffers with count greater than 9.
+
 ## [v1.9.4]
 
 Sweet toot.
