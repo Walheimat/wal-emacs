@@ -15,7 +15,8 @@
                 (:report-format 'lcov)
                 (:send-report nil)))
    ((getenv "COVERAGE_WITH_JSON")
-    (setq undercover-force-coverage t)
+    (setq undercover-force-coverage t
+          undercover--merge-report nil)
     (undercover "wal/*.el"
                 (:report-format 'simplecov)
                 (:report-file "./coverage/.resultset.json")
