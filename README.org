@@ -2100,19 +2100,22 @@ This has no default value."
   "Set ATTRIBUTE to VALUE for FACES.
 
 This returns the made updates."
-  (let ((updates (mapc (lambda (it)
-                         (when (internal-lisp-face-p it)
-                           (set-face-attribute it nil attribute value)))
-                       faces)))
+  (mapc (lambda (it)
+          (when (internal-lisp-face-p it)
+            (set-face-attribute it nil attribute value)))
+        faces)
 
-    (run-hooks 'wal/fonts-updated-hook)
-    updates))
+  (run-hooks 'wal/fonts-updated-hook))
 
 (defun wal/read-sensible-font-height (type)
   "Read a sensible font height for TYPE."
   (let* ((prev (symbol-value (intern (format "wal/%s-font-height" type))))
          (num (read-number (format "Set %s font (currently: %s): " type prev))))
     (list (max (min num 300) 80))))
+
+(defun wal/available-fonts (fonts)
+  "Filter FONTS down to available fonts."
+  (seq-filter (lambda (it) (find-font (font-spec :name it))) fonts))
 
 (defun wal/read-font (type)
   "Read a font for TYPE."
@@ -2127,26 +2130,22 @@ This returns the made updates."
   (interactive (wal/read-font 'fixed))
   (wal/font-update :font font '(default fixed-pitch)))
 
+(defun wal/select-variable-font (font)
+  "Select variable (available) FONT."
+  (interactive (wal/read-font 'variable))
+  (wal/font-update :font font '(variable-pitch)))
+
 (defun wal/set-fixed-font-height (&optional height)
   "Set the HEIGHT for fixed fonts."
   (interactive (wal/read-sensible-font-height 'fixed))
   (setq wal/fixed-font-height height)
   (wal/font-update :height height '(default fixed-pitch)))
 
-(defun wal/select-variable-font (font)
-  "Select variable (available) FONT."
-  (interactive (wal/read-font 'variable))
-  (wal/font-update :font font '(variable-pitch)))
-
 (defun wal/set-variable-font-height (&optional height)
   "Set the HEIGHT for variable fonts."
   (interactive (wal/read-sensible-font-height 'variable))
   (setq wal/variable-font-height height)
   (wal/font-update :height height '(variable-pitch)))
-
-(defun wal/available-fonts (fonts)
-  "Filter FONTS down to available fonts."
-  (seq-filter (lambda (it) (find-font (font-spec :name it))) fonts))
 
 (defun wal/preferred-fonts (fonts)
   "Filter FONTS down to preferred fonts."

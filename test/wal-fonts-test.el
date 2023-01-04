@@ -9,57 +9,98 @@
 (require 'wal-fonts nil t)
 
 (ert-deftest test-wal/font-update ()
-  (should (equal '(default) (wal/font-update :height 120 '(default)))))
+  (with-mock set-face-attribute
+    (wal/font-update :height 120 '(default))
 
-(ert-deftest test-wal/select-fixed-font ()
-  (with-mock ((completing-read . (lambda (_m _) "JetBrains Mono")))
+    (was-called-with set-face-attribute (list 'default nil :height 120))))
 
-    (let ((updates (call-interactively 'wal/select-fixed-font)))
+(ert-deftest test-wal/read-sensible-font-height ()
+  (let ((wal/fixed-font-height 121)
+        (varying nil))
 
-      (should (equal updates '(default fixed-pitch))))))
+    (with-mock ((read-number . (lambda (&rest _) varying)))
 
-(ert-deftest test-wal/set-fixed-font-height ()
-  (with-mock ((wal/read-sensible-font-height . (lambda (_) (list 110))))
+      (setq varying 301)
 
-    (let ((updates (call-interactively 'wal/set-fixed-font-height)))
+      (should  (equal (list 300) (wal/read-sensible-font-height 'fixed)))
+      (was-called-with read-number "Set fixed font (currently: 121): ")
 
-      (should (equal updates '(default fixed-pitch)))
-      (should (eq 110 (face-attribute 'default :height)))
-      (should (eq wal/fixed-font-height 110)))))
+      (wal/clear-mocks)
 
-(ert-deftest test-wal/select-variable-font ()
-  (with-mock ((completing-read . (lambda (_m _) "Roboto")))
+      (setq varying 79)
+      (should (equal (list 80) (wal/read-sensible-font-height 'fixed)))
 
-    (let ((updates (call-interactively 'wal/select-variable-font)))
+      (wal/clear-mocks)
 
-      (should (equal updates '(variable-pitch))))))
+      (setq varying 177)
+      (should (equal (list 177) (wal/read-sensible-font-height 'fixed))))))
 
-(ert-deftest test-wal/set-variable-font-height ()
-  (with-mock ((wal/read-sensible-font-height . (lambda (_) (list 98))))
+(ert-deftest test-wal/available-fonts ()
+  (with-mock (font-spec
+              (find-font . (lambda (specs) (string-equal "TestFont" (nth 1 specs)))))
 
-    (let ((updates (call-interactively 'wal/set-variable-font-height)))
+    (should (equal (list "TestFont") (wal/available-fonts '("Mononoki" "TestFont" "Arial"))))
+    (was-called-n-times find-font 3)
+    (was-called-n-times font-spec 3)
+    (was-called-nth-with font-spec (list :name "Arial") 2)))
 
-      (should (equal updates '(variable-pitch)))
-      (should (eq 98 (face-attribute 'variable-pitch :height)))
-      (should (eq wal/variable-font-height 98)))))
+(ert-deftest test-wal/read-font ()
+  (let ((wal/fixed-fonts '("TestFont" "OtherFont")))
+
+    (with-mock ((completing-read . (lambda (&rest _) "TestFont"))
+                (face-attribute . (lambda (&rest _) "SomeFont"))
+                (wal/available-fonts . (lambda (&rest _) wal/fixed-fonts)))
+
+      (should (equal (list "TestFont") (wal/read-font 'fixed)))
+      (was-called-with completing-read (list "Select fixed font (current: SomeFont) " wal/fixed-fonts)))))
+
+(ert-deftest test-wal/select-fixed-or-variable-font ()
+  (with-mock ((wal/read-font . (lambda (&rest _) (list "TestFont"))) wal/font-update)
+
+    (call-interactively 'wal/select-fixed-font)
+
+    (was-called-with wal/font-update (list :font "TestFont" '(default fixed-pitch)))
+
+    (call-interactively 'wal/select-variable-font)
+
+    (was-called-with wal/font-update (list :font "TestFont" '(variable-pitch)))))
+
+(ert-deftest test-wal/set-fixed-or-variable-font-height ()
+  (with-mock ((wal/read-sensible-font-height . (lambda (&rest _) (list 101)))
+              wal/font-update)
+
+    (call-interactively 'wal/set-fixed-font-height)
+
+    (was-called-with wal/font-update (list :height 101 '(default fixed-pitch)))
+    (wal/clear-mocks)
+
+    (call-interactively 'wal/set-variable-font-height)
+
+    (was-called-with wal/font-update (list :height 101 '(variable-pitch)))))
 
 (ert-deftest test-wal/preferred-fonts ()
-  (let ((wal/preferred-fonts '("None" "This One")))
+  (let ((wal/preferred-fonts '("PreferredFont" "NiceFont" "TestableFont")))
 
-    (should (equal '("This One") (wal/preferred-fonts '("Not" "This One" "Here"))))))
+    (should (equal (list "TestableFont" "PreferredFont") (wal/preferred-fonts (list "CruelFont" "TestableFont" "WaningFont" "PreferredFont"))))))
 
 (ert-deftest test-wal/fonts-candidate ()
-  (with-mock ((wal/available-fonts . (lambda (_) '("Two" "One")))
-              (wal/preferred-fonts . (lambda (_) '("One" "Two"))))
+  (with-mock ((wal/available-fonts . (lambda (_) (list "TestFont")))
+              (wal/preferred-fonts . (lambda (_) (list "ZestFont"))))
 
-    (should (string-equal "Two" (wal/fonts-candidate '())))
-    (should (string-equal "One" (wal/fonts-candidate '() t)))))
+    (should (equal "TestFont" (wal/fonts-candidate (list "TestFont" "ZestFont"))))
+    (was-not-called wal/preferred-fonts)
+
+    (wal/clear-mocks)
+
+    (should (equal "ZestFont" (wal/fonts-candidate (list "TestFont" "ZestFont") t)))
+    (was-called wal/preferred-fonts)))
 
 (ert-deftest test-wal/font-lock ()
-  (with-temp-buffer
+  (with-mock set-face-attribute
+
     (wal/font-lock)
 
-    (should (equal 'italic (face-attribute 'font-lock-comment-face :slant)))
-    (should (equal 'bold (face-attribute 'font-lock-keyword-face :weight)))))
+    (was-called-nth-with set-face-attribute (list 'font-lock-comment-face nil :slant 'italic :weight 'normal) 0)
+    (was-called-nth-with set-face-attribute (list 'font-lock-keyword-face nil :weight 'bold) 1)))
 
 ;;; wal-fonts-test.el ends here

@@ -115,6 +115,10 @@ implementation."
   `(let ((actual (gethash ',fun wal/mock-history 'not-called)))
      (should (equal 'not-called actual))))
 
+(defmacro was-called-n-times (fun expected)
+  "Check if mocked FUN was called EXPECTED times."
+  `(should (equal ,expected (length (gethash ',fun wal/mock-history)))))
+
 (defmacro match-expansion (form &rest value)
   "Match expansion of FORM against VALUE."
   `(should (pcase (macroexpand-1 ',form)
