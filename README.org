@@ -8791,10 +8791,11 @@ This will activate minor mode `wal/config-mode'."
 
 (defun wal/check-coverage--buffer-number (buf)
   "Get the count of BUF."
-  (let* ((regex "<\\(?1:[[:digit:]]+\\)>")
-         (content (with-current-buffer buf (buffer-string)))
+  (let* ((regex "\\(?1:[[:digit:]]+\\)")
+         (content (with-current-buffer buf (buffer-name)))
          (numbers (wal/matches-in-string regex content))
          (number (car-safe numbers)))
+
     (if number (string-to-number number) 0)))
 
 (defun wal/check-coverage--calculate-coverage ()
@@ -8803,7 +8804,8 @@ This will activate minor mode `wal/config-mode'."
               (compare (lambda (a b)
                          (> (wal/check-coverage--buffer-number a)
                             (wal/check-coverage--buffer-number b))))
-              (latest (car (seq-sort compare buffers)))
+              (filtered (seq-sort compare buffers))
+              (latest (car filtered))
               (relevant (wal/check-coverage--add latest "Relevant"))
               (covered (wal/check-coverage--add latest "Covered")))
 
@@ -8872,13 +8874,13 @@ name are deleted beforehand."
 (defun wal/flycheck-config-packages ()
   "Run `wal/flycheck' on all config package files."
   (interactive)
+
   (let ((output-buffer (wal/flycheck-file--get-buffer)))
 
     (wal/flycheck-file--erase)
     (display-buffer output-buffer)
 
     (dolist (it (wal/package-files))
-      ;; Check the file but defer output and kill the buffers.
       (wal/flycheck-file it t t))))
 #+END_SRC
 

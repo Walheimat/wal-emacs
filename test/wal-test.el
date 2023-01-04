@@ -179,10 +179,12 @@
 
 (ert-deftest test-wal/check-coverage--calculate-coverage ()
   (with-temp-buffer
-    (rename-buffer "*wal-async*")
-    (insert "wal-windows : Percent 50% [Relevant: 40 Covered: 20 Missed: 20]\nwal-windows : Percent 40% [Relevant: 20 Covered: 8 Missed: 12]")
+    (rename-buffer "*wal-async*<2>")
 
-    (should (string-equal "46.67%" (wal/check-coverage--calculate-coverage)))))
+    (with-mock ((buffer-list . (lambda () (list (get-buffer-create "*wal-async*") (get-buffer-create "*wal-async*<1>") (current-buffer)))))
+      (insert "wal-windows : Percent 50% [Relevant: 40 Covered: 20 Missed: 20]\nwal-windows : Percent 40% [Relevant: 20 Covered: 8 Missed: 12]")
+
+      (should (string-equal "46.67%" (wal/check-coverage--calculate-coverage))))))
 
 (ert-deftest test-wal/find-init ()
   (with-mock ((file-truename . (lambda (_) wal/emacs-config-default-path)))
@@ -283,7 +285,7 @@
                 wal/flycheck-file--erase
                 wal/flycheck-file)
 
-      (wal/flycheck-config-packages)
+      (call-interactively 'wal/flycheck-config-packages)
 
       (was-called wal/flycheck-file--erase)
       (was-called display-buffer)
