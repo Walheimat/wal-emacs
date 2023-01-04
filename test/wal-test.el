@@ -46,14 +46,15 @@
 
     (wal/clear-mocks)
 
-    (let ((wal/config-ascii-whale 'cachalot))
+    (let ((wal/config-ascii-whale 'cachalot)
+          (wal/ascii-whale-timer 'exists))
 
       (wal/ascii-whale-setup)
 
       (was-called wal/ascii-whale-display))))
 
 (ert-deftest test-wal/ascii-whale-clean-up ()
-  (let ((wal/ascii-whale-timer 'timer))
+   (let ((wal/ascii-whale-timer 'timer))
 
     (with-mock (cancel-timer
                 posframe-delete
@@ -65,7 +66,13 @@
       (was-called-with cancel-timer (list 'timer))
       (was-called-with posframe-delete wal/ascii-whale-buffer)
       (was-called-nth-with remove-hook (list 'kill-buffer-hook #'wal/ascii-whale-clean-up t) 0)
-      (was-called-nth-with remove-hook (list 'window-configuration-change-hook #'wal/ascii-whale-display t) 1))))
+      (was-called-nth-with remove-hook (list 'window-configuration-change-hook #'wal/ascii-whale-display t) 1)
+
+      (wal/clear-mocks)
+
+      (wal/ascii-whale-clean-up)
+
+      (was-not-called cancel-timer))))
 
 (ert-deftest test-wal/ascii-whale-poshandler ()
   (let ((result (wal/ascii-whale-poshandler `(:parent-window-left 4
@@ -93,6 +100,20 @@
                                            :border-color 'mode-line-highlight
                                            :poshandler 'wal/ascii-whale-poshandler
                                            :posframe-parent-buffer 'parent
+                                           :hidehandler 'wal/ascii-whale-hidehandler))
+
+      (wal/clear-mocks)
+
+      (setq wal/ascii-whale-parent-buffer nil)
+
+      (wal/ascii-whale-display)
+
+      (was-called-with posframe-show (list wal/ascii-whale-buffer
+                                           :position 0
+                                           :border-width 12
+                                           :border-color 'mode-line-highlight
+                                           :poshandler 'wal/ascii-whale-poshandler
+                                           :posframe-parent-buffer (current-buffer)
                                            :hidehandler 'wal/ascii-whale-hidehandler)))))
 
 (ert-deftest test-wal/ascii-whale-toggle-display ()
