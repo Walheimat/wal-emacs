@@ -9,11 +9,17 @@
 (require 'wal-func nil t)
 
 (ert-deftest test-wal/modern-emacs-p ()
-  (let ((emacs-major-version 27))
-    (should-not (wal/modern-emacs-p)))
+  (let ((emacs-major-version 30))
+    (should (wal/modern-emacs-p)))
 
   (let ((emacs-major-version 29))
-    (should (wal/modern-emacs-p))))
+    (should (wal/modern-emacs-p)))
+
+  (let ((emacs-major-version 28))
+    (should (wal/modern-emacs-p)))
+
+  (let ((emacs-major-version 27))
+    (should-not (wal/modern-emacs-p))))
 
 (ert-deftest test-wal/create-non-existent-directory ()
   (let ((temp-dir "/tmp/some-other/dir/"))
@@ -74,7 +80,21 @@
                      (dedicated . t)
                      (reusable-frames . visible)
                      (window-height . 12)
-                     (window-parameters . ((no-other-window . t))))))))
+                     (window-parameters . ((no-other-window . t))))))
+
+    (setq display-buffer-list '())
+
+    (wal/display-buffer-in-side-window 'test-mode :loose t)
+
+    (should (equal (car display-buffer-alist)
+                   '((major-mode . test-mode)
+                     (display-buffer-reuse-window display-buffer-in-side-window)
+                     (side . bottom)
+                     (dedicated)
+                     (reusable-frames . visible)
+                     (window-height . 10)
+                     (window-parameters . ((no-other-window))))))
+    ))
 
 (ert-deftest test-wal/display-buffer-in-direction ()
   (let ((display-buffer-alist '()))
@@ -164,6 +184,14 @@
     (wal/kwim)
 
     (should (equal (buffer-string) "This will stay"))))
+
+
+(ert-deftest test-wal/kwim--kills-region-if-active ()
+  (with-mock ((region-active-p . #'always) kill-region)
+    (with-temp-buffer
+      (wal/kwim))
+
+    (was-called-with kill-region (list nil nil t))))
 
 (ert-deftest test-wal/split-window-the-other-way ()
   (with-temp-buffer
@@ -313,6 +341,13 @@
 
     (wal/insert-after 'test-target preceding item)
     (should (equal test-target '(hello darkness my old friend)))))
+
+(ert-deftest test-wal/insert-after--errors-if-key-already-in-list ()
+  (let ((test-target '(hello darkness my old friend))
+        (preceding 'darkness)
+        (item 'my))
+
+    (should-error (wal/insert-after 'test-target preceding item))))
 
 (ert-deftest test-wal/insert-after--errors-if-key-not-in-list ()
   (let ((test-target '(hello my old friend))
@@ -587,6 +622,21 @@
             (wal/use-hyper-prefix t))
 
     (should (string-equal (wal/prefix-user-key "k") "C-c w k"))))
+
+(ert-deftest test-wal/on-boot ()
+  (let ((wal/booting t))
+    (match-expansion
+     (wal/on-boot test
+       (setq wal/is-testing t))
+     `(progn
+        (setq wal/is-testing t))))
+
+  (let ((wal/booting nil))
+
+    (match-expansion
+     (wal/on-boot test
+       (setq wal/is-testing t))
+     `(message "Ignoring statements in '%s'" 'test))))
 
 (ert-deftest test-wal/transient-define-prefix-once ()
   (match-expansion
@@ -868,6 +918,22 @@
         (wal/lsp))
       (add-hook 'test-hook 'wal/test-hook))))
 
+(ert-deftest test-wal/hook--enable-indent ()
+  (match-expansion
+   (wal/hook test
+     "We're just testing."
+     :messages '("Just testing")
+     :lsp t
+     :tabs always)
+   `(progn
+      (defun wal/test-hook ()
+        "We're just testing."
+        (wal/message-in-a-bottle '("Just testing"))
+        (hack-local-variables)
+        (wal/enable-tabs)
+        (wal/lsp))
+      (add-hook 'test-hook 'wal/test-hook))))
+
 (ert-deftest test-wal/hook--with-tabs ()
   (match-expansion
    (wal/hook test
@@ -916,6 +982,24 @@
         (local-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) 'wal/test-dispatch))
       (add-hook 'test-hook 'wal/test-hook))))
 
+(ert-deftest test-wal/hook--corfu ()
+  (match-expansion
+   (wal/hook test
+     "We're just testing."
+     :messages '("Just testing")
+     :lsp t
+     :corfu (0.2 4)
+     (message "hi"))
+   `(progn
+      (defun wal/test-hook ()
+        "We're just testing."
+        (wal/message-in-a-bottle '("Just testing"))
+        (hack-local-variables)
+        (wal/disable-tabs)
+        (message "hi")
+        (wal/lsp '(0.2 4)))
+      (add-hook 'test-hook 'wal/test-hook))))
+
 (ert-deftest test-wal/fundamental-mode--switches ()
   (with-temp-buffer
     (emacs-lisp-mode)
@@ -932,14 +1016,33 @@
   (should (string= (wal/async-process--buffer-name major-mode) "*wal-async*")))
 
 (ert-deftest test-wal/async-process--finalize ()
-  (let ((finalizer (wal/async-process--finalize (lambda () (should t))
-                                                (lambda (m) (should (string= m "I am Error"))))))
-    (funcall finalizer nil "finished\n")
-    (funcall finalizer nil "I am Error"))
+  (with-temp-buffer
+    (rename-buffer "*async-finalize-test*")
 
-  (let ((finalizer (wal/async-process--finalize (lambda () (user-error "You are Error"))
-                                                (lambda (m) (should (string= "You are Error *temp*" m))))))
-    (funcall finalizer nil "finished\n")))
+      (with-mock (delete-window delete-other-windows)
+
+        (let ((finalizer (wal/async-process--finalize #'delete-window #'delete-other-windows)))
+
+          (apply finalizer (list (current-buffer) "finished\n"))
+
+          (was-called delete-window)
+          (was-not-called delete-other-window)
+          (wal/clear-mocks)))
+
+      (with-mock ((delete-window . (lambda () (error "Oops"))) delete-other-windows)
+
+        (let ((finalizer (wal/async-process--finalize #'delete-window #'delete-other-windows)))
+
+          (apply finalizer (list (current-buffer) "finished\n"))
+
+          (was-called delete-window)
+          (was-called-with delete-other-windows "Oops*async-finalize-test*")
+          (wal/clear-mocks)
+
+          (apply finalizer (list (current-buffer) "something else "))
+
+          (was-not-called delete-window)
+          (was-called-with delete-other-windows "something else")))))
 
 (ert-deftest test-wal/aysnc-process--maybe-interrupt ()
   (with-mock ((compilation-find-buffer . (lambda () (message "found-buffer") "buffer"))
@@ -970,7 +1073,16 @@
   (let ((buf-count (length (buffer-list))))
 
     (call-interactively #'wal/kill-async-process-buffers)
-    (should (> buf-count (length (buffer-list))))))
+    (should (> buf-count (length (buffer-list)))))
+
+
+  (with-mock ((buffer-list . (lambda () (list (get-buffer-create (generate-new-buffer-name "*wal-async*")))))
+              (get-buffer-window . (lambda (_) 'window))
+              delete-window)
+
+    (wal/kill-async-process-buffers)
+
+    (was-called-with delete-window (list 'window))))
 
 (ert-deftest test-wal/matches-in-string ()
   (let ((str "This 1 string has 3 matches, or is it 2?")
