@@ -2905,7 +2905,7 @@ It's fun to edit things /quickly/.
 Don't you want to edit your buffer in multiple places at once?
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/mc-conflicting-modes '(paredit-mode corfu-mode)
+(defvar wal/mc-conflicting-modes '(lispy-mode corfu-mode)
   "Modes that are in conflict with `multiple-cursors-mode'.")
 
 (defvar-local wal/mc-disabled nil
@@ -3476,7 +3476,7 @@ Sometimes the list of minor modes overcrowds the modeline.
                              wal/config-mode
                              verb-mode
                              verb-response-body-mode
-                             paredit-mode
+                             lispy-mode
                              pet-mode)))
 #+END_SRC
 
@@ -6526,14 +6526,14 @@ The philosopher's choice.
 (wal/define-expansion-pack lisp
   "For (common-) Lisp developers using sbcl."
   :packages (slime)
-  :extras (paredit))
+  :extras (lispy))
 
 (wal/define-expansion-pack clojure
   "For Clojure developers using cider with lein."
   :packages (clojure-mode cider))
 #+END_SRC
 
-*** paredit
+*** lispy
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -6541,14 +6541,22 @@ The philosopher's choice.
 Deal with the parens.
 
 #+BEGIN_SRC emacs-lisp
-(use-package paredit
+(use-package lispy
   :wal-ways nil
 
   :ensure nil
 
-  :hook (lisp-data-mode . paredit-mode)
+  :hook (lisp-data-mode . lispy-mode)
 
-  :delight " par")
+  :bind
+  (:map lispy-mode-map
+   ("i" . special-lispy-up)
+   ("k" . special-lispy-down)
+   ("j" . special-lispy-left)
+   ("l" . special-lispy-right)
+   ("h" . special-lispy-tab))
+
+  :delight " '-y")
 #+END_SRC
 
 *** elisp-mode
@@ -6577,9 +6585,9 @@ Deal with the parens.
       ("h" "helpful" helpful-at-point)
       ("m" "expand macro" emacs-lisp-macroexpand)]])
 
-  (with-eval-after-load 'paredit
+  (with-eval-after-load 'lispy
     (transient-append-suffix 'wal/emacs-lisp-mode-dispatch '(0 0 -1)
-      '("p" "paredit" paredit-mode))))
+      '("l" "lispy" lispy-mode))))
 #+END_SRC
 
 *** lisp-mode

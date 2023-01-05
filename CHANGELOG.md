@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Package `projectile` in favor of using built-in `project`.
 - Custom flag `wal/flag-deny`.
+- Package `paredit` for `lispy` (undoing recent switch).
 
 ### Fixed
 
