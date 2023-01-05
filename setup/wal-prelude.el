@@ -81,11 +81,30 @@ Returns the path to the directory or nil (if created)."
 (defun wal/tangle-config ()
   "Tangle the config."
   (interactive)
+
   (require 'org)
   (require 'ob-tangle)
   (defvar org-confirm-babel-evaluate)
+
   (let ((org-confirm-babel-evaluate nil))
+
     (org-babel-tangle-file (expand-file-name "README.org" wal/emacs-config-default-path))))
+
+(defun wal/load-config (&optional package-dir)
+  "Load the config from PACKAGE-DIR."
+  (interactive)
+
+  (let ((dir (or package-dir
+                 wal/emacs-config-package-path
+                 default-directory)))
+
+    (setq wal/booting t)
+
+    (add-to-list 'load-path dir)
+    (dolist (it wal/packages)
+      (require it nil t))
+
+    (setq wal/booting nil)))
 
 (defun wal/bootstrap-config (source-dir &optional no-load)
   "Bootstrap the configuration in SOURCE-DIR.
@@ -105,14 +124,7 @@ Unless NO-LOAD is t, this will load the `wal' package."
 
     (unless no-load
       (condition-case err
-          (progn
-            (setq wal/booting t)
-
-            (add-to-list 'load-path wal/emacs-config-package-path)
-            (dolist (it wal/packages)
-              (require it nil t))
-
-            (setq wal/booting nil))
+          (wal/load-config)
         (error
          (setq wal/init-error (error-message-string err))
          (delay-warning
