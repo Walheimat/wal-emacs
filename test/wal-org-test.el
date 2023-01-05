@@ -40,22 +40,24 @@
         (was-called-with window-configuration-to-register (list ?t))))))
 
 (ert-deftest test-wal/maybe-org-roam-refile ()
-  (with-mock ((org-roam-buffer-p . #'always)
-              (wal/univ-p . #'ignore)
-              org-roam-refile
-              org-refile)
+  (defvar org-roam-directory)
+  (defvar org-agenda-files)
 
-    (wal/maybe-org-roam-refile)
+  (let ((org-agenda-files '("/tmp/agenda"))
+        (org-roam-directory "/tmp/roam"))
 
-    (was-called org-roam-refile)
-    (was-not-called org-refile))
+    (with-mock ((org-roam-buffer-p . #'always)
+                (wal/univ-p . #'ignore)
+                (org-refile . (lambda (&rest _) org-agenda-files)))
 
-  (with-mock ((org-roam-buffer-p . #'ignore)
-              org-refile)
+      (should (equal '("/tmp/roam") (wal/maybe-org-roam-refile)))
+      (was-called org-refile))
 
-    (wal/maybe-org-roam-refile)
+    (with-mock ((org-roam-buffer-p . #'ignore)
+                (org-refile . (lambda (&rest _) org-agenda-files)))
 
-    (was-called org-refile)))
+      (should (equal '("/tmp/agenda") (wal/maybe-org-roam-refile)))
+      (was-called org-refile))))
 
 (ert-deftest test-wal/relative-column-width ()
   (defvar text-scale-mode-amount nil)
