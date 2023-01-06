@@ -19,12 +19,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `use-package-always-ensure` is no longer set to `t` by default.
   Instead, new flag `wal/flag-ensure` can be set with `--ensure`.
+- `corfu` is now turned on in `eshell`.
+- The map for `wal/general` was flattened. Both `eshell` and `eww` can
+  be accessed directly.
+- Exit command `wal/delete-edit-or-kill` is now bound to `C-x C-c`
+  (the default binding).
 
 ### Removed
 
 - Package `projectile` in favor of using built-in `project`.
 - Custom flag `wal/flag-deny`.
 - Package `paredit` for `lispy` (undoing recent switch).
+- Packages `esh-autosuggest` and `eshell-prompt-extras`.
+- Binding of command `restart-emacs`.
+- `hydra` to scroll other window.
 
 ### Fixed
 

@@ -544,15 +544,6 @@ Make completions look nice.
      ["Fluff"
       ("w" "toggle animation" wal/ascii-whale-toggle-display)]])
 
-  ;; Create some `hydra's.
-  (defhydra wal/scroll-other-window (:hint nil)
-    "
-%s`w/hew Scroll other window: u_p_ or dow_n_
-"
-    ("p" scroll-other-window-down)
-    ("n" scroll-other-window)
-    ("q" nil))
-
   ;; Move similar to `xah-fly-keys'.
   (defhydra wal/fly (:hint nil :foreign-keys warn)
     "
@@ -575,12 +566,7 @@ Make completions look nice.
 
   ;; Additional `general' bindings.
   (wal/general
-    "e" '(:ignore t :wk "Emacs")
-    "eq" '(wal/delete-edit-or-kill :wk "quit")
-    "er" '(restart-emacs :wk "restart")
-
-    "x" '(:ignore t :wk "programs")
-    "xw" 'eww
+    "w" 'eww
 
     "f" '(:ignore t :wk "find")
     "fc" '(wal/find-custom-file :wk "custom")
@@ -604,14 +590,7 @@ Make completions look nice.
 
   (global-set-key (kbd (wal/key-combo-for-leader 'wal/colonel)) #'wal/config-dispatch)
 
-  (wal/general-sink
-   "t" '(wal/text-scale/body :wk "text-scale")
-   "n" '(display-line-numbers-mode :wk "line numbers"))
-
-  (wal/general-sink
-   :predicate '(not (one-window-p))
-   "o" '(wal/resize-window/body :wk "resize-window")
-   "v" '(wal/scroll-other-window/body :wk "scroll-other-window"))
+  (wal/general "n" '(display-line-numbers-mode :wk "line numbers"))
 
   (global-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) #'wal/captain?)
 
@@ -639,8 +618,8 @@ Make completions look nice.
   ;; Replaces `kill-sexp'.
   (global-set-key (kbd "C-k") #'wal/kwim)
 
-  ;; Unbinds `save-buffers-kill-terminal'.
-  (global-unset-key (kbd "C-x C-c")))
+  ;; Replaces `save-buffers-kill-terminal'.
+  (global-set-key (kbd "C-x C-c") #'wal/delete-edit-or-kill))
 #+END_SRC
 
 ** Footer
@@ -2662,7 +2641,7 @@ be gone.
   (winner-dont-bind-my-keys t)
 
   :general
-  (wal/general-sink "w" '(wal/winner/body :wk "winner")))
+  (wal/general "o" '(wal/winner/body :wk "winner")))
 #+END_SRC
 
 *** async
@@ -2814,7 +2793,7 @@ Look up words in a word book.
   (dictionary-server "dict.org")
 
   :general
-  (wal/general-sink "d" '(dictionary-lookup-definition :wk "dict")))
+  (wal/general "d" '(dictionary-lookup-definition :wk "dict")))
 #+END_SRC
 
 ** Additional Info Display
@@ -3574,7 +3553,7 @@ Screen saver, CPU devourer.
     (zone-when-idle wal/zone-timer))
 
   :general
-  (wal/general-sink "0" 'zone))
+  (wal/general "0" 'zone))
 #+END_SRC
 
 ** Other
@@ -4130,7 +4109,7 @@ Alternative.
 
 (use-package corfu
   :hook
-  (((org-mode prog-mode prog-like) . corfu-mode)
+  (((org-mode prog-mode prog-like eshell-mode) . corfu-mode)
    (minibuffer-setup . wal/corfu-enable-in-minibuffer))
 
   :custom
@@ -5773,9 +5752,7 @@ end
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack eshell
   "Make eshell feel like a feature-complete shell."
-  :packages (esh-autosuggest
-             eshell-prompt-extras
-             eshell-syntax-highlighting))
+  :packages (eshell-syntax-highlighting))
 #+END_SRC
 
 *** eshell
@@ -5807,40 +5784,7 @@ Set up =eshell=. I like the idea of it but I don't really use it.
    #'wal/instead-truncate-buffer)
 
   :general
-  (wal/general "xe" '(eshell :wk "eshell")))
-#+END_SRC
-
-*** esh-autosuggest
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-#+BEGIN_SRC emacs-lisp
-(use-package esh-autosuggest
-  :wal-ways nil
-
-  :ensure nil
-
-  :hook (eshell-mode . esh-autosuggest-mode))
-#+END_SRC
-
-*** eshell-prompt-extras
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-#+BEGIN_SRC emacs-lisp
-(use-package eshell-prompt-extras
-  :wal-ways nil
-
-  :ensure nil
-
-  :demand
-  :after eshell
-
-  :config
-  (setq eshell-highlight-prompt nil
-        eshell-prompt-function 'epe-theme-lambda))
+  (wal/general "e" '(eshell :wk "eshell")))
 #+END_SRC
 
 *** eshell-syntax-highlighting
