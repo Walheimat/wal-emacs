@@ -61,7 +61,7 @@
 TO-MOCK maybe be a single item or a list of items.
 
 The arguments passed to the mocked functions will be recorded in
-a hash table. Repeated calls with append results.
+a hash table. Repeated calls will append results.
 
 Each item in TO-MOCK can either be a function symbol or a cons
 cell of shape (FUNCTION . MOCK-IMPLEMENTATION). The return value

@@ -457,6 +457,7 @@ Set up an easy way to switch between tabs and spaces for indentation[fn:8].
 Resets all variables that were initially set by
 `wal/set-indent-defaults'."
   (interactive)
+
   (mapc #'wal/reset-to-standard wal/indent-vars))
 
 (add-hook 'emacs-startup-hook #'wal/set-indent-defaults)
@@ -740,6 +741,7 @@ All ARGS are passed to both definers."
  If KEY is non-nil, append it. If IN-SINK is non-nil, infix leader key."
   (let* ((leader-key (wal/key-by-leader leader))
          (prefixed (wal/prefix-user-key leader-key)))
+
     (if key
         (if in-sink
             (concat prefixed " " leader-key " " key)
@@ -764,6 +766,7 @@ All ARGS are passed to both definers."
 (defun wal/captain? ()
   "Show message when captain is not locally bound."
   (interactive)
+
   (let ((key (propertize (wal/key-combo-for-leader 'wal/captain) 'face 'success))
         (mode (propertize (symbol-name major-mode) 'face 'success)))
 
@@ -987,6 +990,7 @@ removed."
 (defun wal/kill-some-file-buffers ()
   "Kill some buffers associated with files."
   (interactive)
+
   (let ((file-buffers (seq-filter #'buffer-file-name (buffer-list))))
 
     (kill-some-buffers file-buffers)))
@@ -1000,6 +1004,7 @@ More convenient editing.
 (defun wal/kill-ring-save-whole-buffer ()
   "Call `kill-ring-save' on the entire buffer."
   (interactive)
+
   (kill-ring-save (point-min) (point-max)))
 
 (defconst wal/cursor-types '(box hollow bar hbar)
@@ -1010,6 +1015,7 @@ More convenient editing.
 
 Optionally RESET the type when called with `universal-argument'."
   (interactive "P")
+
   (if reset
       (setq-local cursor-type t)
     (let* ((type-string (completing-read "Select cursor type: " wal/cursor-types))
@@ -1059,6 +1065,7 @@ This is inspired by [[https://github.com/purcell/emacs.d/blob/master][purcell's 
 This means if horizontally split, split vertically; if vertically
 split, split horizontally."
   (interactive)
+
   (let* ((other-buffer (and (next-window) (window-buffer (next-window))))
          (win (selected-window))
          (split-direction (cond ((or (windows-sharing-edge win 'above)
@@ -1086,6 +1093,7 @@ If the minibuffer is active, switch to that. If there's another
 frame, switch to that if PREFER-FRAME is true. Otherwise switch
 to next buffer."
   (interactive "P")
+
   (cond
    ((active-minibuffer-window)
     (switch-to-minibuffer))
@@ -1102,6 +1110,7 @@ to next buffer."
 
 Un-dedicates if REVERSE is t."
   (interactive "P")
+
   (let ((window (selected-window))
         (buffer (current-buffer)))
 
@@ -1121,6 +1130,7 @@ Handling of files.
 (defun wal/find-custom-file ()
   "Find the custom file."
   (interactive)
+
   (switch-to-buffer (find-file-noselect (file-truename custom-file))))
 
 
@@ -1130,6 +1140,7 @@ Handling of files.
 (defun wal/find-fish-config ()
   "Find the fish shell config file."
   (interactive)
+
   (let* ((files wal/fish-config-locations)
          (init-file (cl-find-if
                      'file-exists-p
@@ -1193,6 +1204,7 @@ Duplicate items are removed."
     (if (seq-every-p (lambda (it) (assoc (car it) val)) values)
         (seq-each (lambda (it) (map-put! val (car it) (cdr it))) values)
       (let ((keys (mapcar #'car values)))
+
         (user-error "All keys %s must already be present in %s" keys target)))))
 
 (defun wal/insert-after (target preceding item)
@@ -1214,6 +1226,7 @@ Duplicate items are removed."
 If TARGET already is a list ITEM is appended. Duplicates are
 removed."
   (let ((val (symbol-value target)))
+
     (cond
      ((listp val)
       (delq nil (delete-dups (append val `(,item)))))
@@ -1268,6 +1281,7 @@ Make the scratch buffer contents persist between sessions.
 
 If CREATE is t, do and use that instead."
   (interactive "P")
+
   (let ((buf (if create
                  (generate-new-buffer "*scratch*")
                (get-buffer-create "*scratch*"))))
@@ -1306,6 +1320,7 @@ variables.
 
 Sets variable `indent-tabs-mode' to nil."
   (interactive "p")
+
   (setq indent-tabs-mode nil))
 
 (defun wal/enable-tabs ()
@@ -1313,6 +1328,7 @@ Sets variable `indent-tabs-mode' to nil."
 
 Sets tab variable `indent-tabs-mode' to t."
   (interactive)
+
   (setq indent-tabs-mode t))
 
 (cl-defun wal/maybe-enable-tabs (&key indent-with)
@@ -1330,6 +1346,7 @@ Optionally set `indent-line-function' to INDENT-WITH."
   "Set indent defaults.
 All offsets are set to `wal/indent-offset' or optionally to NUM."
   (interactive "nSet tab width to: ")
+
   (let ((offset (or num wal/indent-offset)))
 
     (setq-default python-indent-offset offset
@@ -1428,6 +1445,7 @@ intefere with `magit' and friends."
 (defun wal/delete-edit-or-kill (&optional abort)
   "Delete frame, be done (or ABORT) or kill Emacs."
   (interactive "P")
+
   (cond
    ((wal/server-edit-p)
     (if abort (server-edit-abort) (server-edit)))
@@ -1545,6 +1563,7 @@ Act on regions.
 (defun wal/duck-duck-go-region ()
   "Query duckduckgo with active region."
   (interactive)
+
   (if mark-active
       (let* ((beg (region-beginning))
              (end (region-end))
@@ -1642,6 +1661,7 @@ Optionally provide `quelpa' RECIPES."
 
 Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
   (let ((p (cdr pack)))
+
     (list
      (plist-get p :packages)
      (plist-get p :extras)
@@ -1797,6 +1817,7 @@ Turning on/off certain major modes switching between =major-mode= and
 (defun wal/fundamental-mode ()
   "Switch from `major-mode' to `fundamental-mode' and back."
   (interactive)
+
   (let ((m-mode major-mode))
 
     (if wal/before-fundamental-mode
@@ -1849,6 +1870,7 @@ Optonally, interrupt any running process if INTERRUPT is t."
 (defun wal/kill-async-process-buffers ()
   "Kill all async process buffers."
   (interactive)
+
   (dolist (buf (buffer-list))
     (with-current-buffer buf
       (when (string-match "^\\*wal-async" (buffer-name))
@@ -1863,6 +1885,7 @@ Optonally, interrupt any running process if INTERRUPT is t."
 (defun wal/matches-in-string (regexp str)
   "Return all matches of REGEXP in STR."
   (let ((matches nil))
+
     (with-temp-buffer
       (insert str)
       (goto-char (point-min))
@@ -1886,6 +1909,7 @@ Optonally, interrupt any running process if INTERRUPT is t."
   "Set mark at where point is without activating it.
 If CLEAR-MARKS is t, clear the mark ring."
   (interactive "P")
+
   (let ((mark (mark t)))
 
     (when (or (null mark) (/= mark (point)))
@@ -1964,6 +1988,7 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 This also updates variable `wal/transparency' for the duration of
 the session."
   (interactive "nSet transparency (1-100): ")
+
   (let ((transparency (min (max (or value wal/transparency) 1) 100))
         (param (wal/transparency--param)))
 
@@ -1978,6 +2003,7 @@ the session."
 (defun wal/load-active-theme ()
   "Load the currently active theme."
   (interactive)
+
   (when wal/active-theme
     (load-theme wal/active-theme t)
     (run-hooks 'wal/theme-hook)
@@ -2091,6 +2117,7 @@ This returns the made updates."
   "Read a sensible font height for TYPE."
   (let* ((prev (symbol-value (intern (format "wal/%s-font-height" type))))
          (num (read-number (format "Set %s font (currently: %s): " type prev))))
+
     (list (max (min num 300) 80))))
 
 (defun wal/available-fonts (fonts)
@@ -2108,22 +2135,26 @@ This returns the made updates."
 (defun wal/select-fixed-font (font)
   "Select fixed (available) FONT."
   (interactive (wal/read-font 'fixed))
+
   (wal/font-update :font font '(default fixed-pitch)))
 
 (defun wal/select-variable-font (font)
   "Select variable (available) FONT."
   (interactive (wal/read-font 'variable))
+
   (wal/font-update :font font '(variable-pitch)))
 
 (defun wal/set-fixed-font-height (&optional height)
   "Set the HEIGHT for fixed fonts."
   (interactive (wal/read-sensible-font-height 'fixed))
+
   (setq wal/fixed-font-height height)
   (wal/font-update :height height '(default fixed-pitch)))
 
 (defun wal/set-variable-font-height (&optional height)
   "Set the HEIGHT for variable fonts."
   (interactive (wal/read-sensible-font-height 'variable))
+
   (setq wal/variable-font-height height)
   (wal/font-update :height height '(variable-pitch)))
 
@@ -2538,6 +2569,7 @@ Some people need macros, okay?
 (defun wal/kmacro (arg)
   "Toggle kmacro recording with ARG."
   (interactive "P")
+
   (cond
    (defining-kbd-macro (kmacro-end-macro arg))
    (t (kmacro-start-macro arg))))
@@ -2568,6 +2600,7 @@ No offender.
 (defun wal/clear-registers ()
   "Clear all registers."
   (interactive)
+
   (setq register-alist nil))
 
 (use-package register
@@ -2597,6 +2630,7 @@ Highlight lines.
 
 This just means increasing duration, delay, size and brightness."
   (interactive)
+
   (defvar pulse-iterations)
   (let ((pulse-iterations 30))
 
@@ -2963,6 +2997,7 @@ snippets.
   "Comment the element ELT according to mode."
   (when (eq (car-safe elt) 'c)
     (let ((cs (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start)))
+
       (concat cs (cadr elt)))))
 
 (use-package tempel
@@ -3133,6 +3168,7 @@ Let's have a dash of board.
   (dashboard-startup-banner (let ((ext (if (or (daemonp) (display-graphic-p))
                                            ".png"
                                          ".txt")))
+
                               (expand-file-name
                                (concat "assets/logo" ext)
                                wal/emacs-config-default-path)))
@@ -3739,11 +3775,13 @@ If no PREFIX is given, a slash is pre-pended to the first match."
   "Check if BUFFER should be spared."
   (let* ((name (buffer-name buffer))
          (spared (seq-some (lambda (it) (string-match-p it name)) wal/spared-popups)))
+
     spared))
 
 (defun wal/kill-some-popups ()
   "Query for killing some popups."
   (interactive)
+
   (let* ((group (when popper-group-function
                   (funcall popper-group-function)))
          (buried (thread-last (alist-get group popper-buried-popup-alist nil nil 'equal)
@@ -3896,6 +3934,7 @@ jump to a word in the buffer or anywhere.n"
 (defun wal/avy-goto-line (&optional beginning)
   "Go to line or BEGINNING of line."
   (interactive "P")
+
   (if beginning
       (progn
         (avy-goto-line)
@@ -3905,6 +3944,7 @@ jump to a word in the buffer or anywhere.n"
 (defun wal/avy-mark-region ()
   "Select two lines and mark the region between them."
   (interactive)
+
   (avy-with wal/avy-mark-region
     (let* ((beg (avy--line))
            (end (avy--line)))
@@ -4351,6 +4391,7 @@ Heavy lifting with =consult=.
   "Search for regexp with rg in DIR with INITIAL input.
 Do not ignore hidden files."
   (interactive "P")
+
   (let ((consult-ripgrep-args
          (concat (substring consult-ripgrep-args 0 -1) "--no-ignore .")))
 
@@ -4361,6 +4402,7 @@ Do not ignore hidden files."
 (defun wal/consult-unregister ()
   "Remove KEY from the register."
   (interactive)
+
   (let ((key (with-no-warnings
                (consult--read
                 (consult-register--candidates)
@@ -4372,6 +4414,7 @@ Do not ignore hidden files."
                 :require-match t
                 :history t ;; disable history
                 :lookup #'consult--lookup-candidate))))
+
     (setq register-alist (assoc-delete-all key register-alist))))
 
 (defun wal/consult-line (&optional not-at-point)
@@ -4379,6 +4422,7 @@ Do not ignore hidden files."
 
 If NOT-AT-POINT is t, call `consult-line' normally."
   (interactive "P")
+
   (if not-at-point
       (consult-line)
     (consult-line (thing-at-point 'symbol))))
@@ -4386,6 +4430,7 @@ If NOT-AT-POINT is t, call `consult-line' normally."
 (defun wal/consult-clock-in ()
   "Clock into an Org agenda heading."
   (interactive)
+
   (save-window-excursion
     (consult-org-agenda)
     (org-clock-in)))
@@ -4418,6 +4463,7 @@ If NOT-AT-POINT is t, call `consult-line' normally."
   (bind-key (wal/prefix-user-key wal/consult-key)
             #'(lambda nil
                 (interactive)
+
                 (use-package-autoload-keymap 'wal/consult-map 'consult nil)))
   (bind-key wal/consult-key 'consult-goto-line 'goto-map)
 
@@ -4584,6 +4630,7 @@ set to filter by project buffers."
   (let* ((buffers (project-buffers (project-current)))
          (pred (lambda () (memq (current-buffer) buffers)))
          (compilation-save-buffers-predicate pred))
+
     (apply fun args)))
 
 (use-package project
@@ -4691,6 +4738,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   "Show up to given LEVEL.
 This calls `org-content' interactively."
   (interactive "nShow content up to level: ")
+
   (when (fboundp 'org-content)
     (org-content level)))
 
@@ -4930,6 +4978,7 @@ Trying to organize my thoughts using Zettelkästen.
 If called with `universal-argument', default to `org-roam' in any
 case."
   (interactive)
+
   (declare-function org-refile "ext:org.el")
 
   (if (and (org-roam-buffer-p) (not (wal/univ-p)))
@@ -5052,6 +5101,7 @@ Turn any =org-mode= buffer into a presentation.
 (defun wal/org-tree-slide-toggle-visibility ()
   "Toggle visibility of cursor."
   (interactive)
+
   (if cursor-type
       (setq cursor-type nil)
     (setq cursor-type t)))
@@ -5280,6 +5330,7 @@ You know the drill. Clock in, clock out.
 (defun wal/org-clock-take-note ()
   "Take a note for the currently clocked-in entry."
   (interactive)
+
   (save-window-excursion
     (org-clock-goto)
     (org-add-note)))
@@ -5443,11 +5494,13 @@ Uses the same optional SWITCHES."
     (let ((default-directory (expand-file-name "~/")))
 
       (dired-read-dir-and-switches "")))
+
   (pop-to-buffer-same-window (dired-noselect dirname switches)))
 
 (defun wal/image-dired ()
   "Run `image-dired' in the `default-directory'."
   (interactive)
+
   (image-dired (expand-file-name default-directory)))
 
 (defun wal/dired-buffer-p (buffer)
@@ -5667,6 +5720,7 @@ Optionally, a buffer display action ACTION can be passed of the
 form (FUNCTIONS . ALIST). See `display-buffer' for more
 information."
   (interactive "sEnter command: ")
+
   (unless (executable-find (car (split-string-shell-command cmd)))
     (user-error (format "Unknown command '%s'" cmd)))
 
@@ -5690,6 +5744,7 @@ If called from a project buffer, this only creates a `vterm'
 buffer if one doesn't exist yet (unless called with
 FORCE-NEW/`universal-argument')."
   (interactive "P")
+
   (if-let* ((cont (and (not force-new)
                        (project-current)))
             (buffers (project-buffers (project-current)))
@@ -6747,6 +6802,7 @@ Prettify your ugly JavaScript.
 (defun wal/prettier-refresh ()
   "Force re-loading configuration and apply."
   (interactive)
+
   (when wal/prettier-timer
     (user-error "Refresh timer already running"))
 
@@ -6920,6 +6976,7 @@ Sometimes things that don't do things need to look nice.
 (defun wal/markdown-view ()
   "Toggle between different markdown views."
   (interactive)
+
   (cond
    ((eq major-mode 'markdown-mode)
     (markdown-view-mode)
@@ -7016,6 +7073,7 @@ LSP support for Dart.
 (defun wal/lsp-dart-service-uri ()
   "Get the service URI (needed for devtools)."
   (interactive)
+
   (condition-case err
       (when (fboundp 'lsp-workspace-get-metadata)
         (let ((uri (lsp-workspace-get-metadata "devtools-vm-service-uri")))
@@ -7098,11 +7156,13 @@ LSP integration.
 (defun wal/with-bash-shell (fun &rest args)
   "Run FUN with ARGS in bash shell."
   (let ((shell-file-name "/bin/bash"))
+
     (apply fun args)))
 
 (defun wal/java-test-dwim ()
   "Run or debug test or class depending on ARGS."
   (interactive)
+
   (let* ((mode (wal/transient-grab "mode"))
          (scope (wal/transient-grab "scope"))
          (fun (intern (format "dap-java-%s-test-%s" mode scope))))
@@ -7606,6 +7666,7 @@ Display it afterwards unless DEFER-DISPLAY is t.
 
 If KILL-BUFFER is t, kill the file's buffer."
   (interactive "fSelect file: ")
+
   (when (and (fboundp 'flycheck-get-checker-for-buffer)
              (fboundp 'flycheck-syntax-check-new)
              (fboundp 'flycheck-compute-working-directory)
@@ -7661,6 +7722,7 @@ My spelling is bad. Uses American English for =flyspell=.
 (defun wal/flyspell ()
   "(De-)Activate the appropriate `flyspell' mode."
   (interactive)
+
   (if flyspell-mode
       (flyspell-mode -1)
     (if (derived-mode-p 'prog-mode)
@@ -8582,6 +8644,7 @@ Animate a swimming whale in a =posframe=.
     (with-current-buffer (get-buffer-create wal/ascii-whale-buffer)
       (defvar wal/fixed-font-height)
       (let ((fheight (* 2 wal/fixed-font-height)))
+
         (face-remap-add-relative 'default :height fheight)))
 
     ;; Make sure the first frame is animated before we display.
@@ -8644,6 +8707,7 @@ INFO contains positioning information."
 (defun wal/ascii-whale-toggle-display ()
   "Toggle the animation."
   (interactive)
+
   (if wal/ascii-whale-timer
       (wal/ascii-whale-clean-up)
     (wal/ascii-whale-setup)))
@@ -8667,6 +8731,7 @@ Minor mode for editing this config.
 
 This returns the tag and its annotation as propertized strings."
   (interactive)
+
   (let* ((default-directory wal/emacs-config-default-path)
          (version (propertize
                    (string-trim
@@ -8685,6 +8750,7 @@ This returns the tag and its annotation as propertized strings."
 (defun wal/show-config-diff-range ()
   "Call `magit-diff-range' with the latest tag."
   (interactive)
+
   (let ((version (shell-command-to-string "git describe --abbrev=0")))
 
     (magit-diff-range (string-trim version) '("--stat"))))
@@ -8697,6 +8763,7 @@ This returns the tag and its annotation as propertized strings."
   "Prompt the user to tangle the config.
 If the answer is no, there will be no additional prompt."
   (interactive)
+
   (let ((help-form (message "This will update your packages. Restart Emacs afterwards.")))
 
     (if (and wal/tangle-do-prompt (y-or-n-p "Config changed, want to tangle? "))
@@ -8728,28 +8795,33 @@ This will activate minor mode `wal/config-mode'."
 (defun wal/find-init ()
   "Find and switch to the `user-init-file'."
   (interactive)
+
   (switch-to-buffer (find-file-noselect (file-truename user-init-file))))
 
 (defun wal/customize-group ()
   "Customize `wal' group."
   (interactive)
+
   (customize-group 'wal t))
 
 (defun wal/dired-config-packages ()
   "Open the packages with Dired."
   (interactive)
+
   (pop-to-buffer-same-window
     (dired-noselect wal/emacs-config-package-path)))
 
 (defun wal/dired-config-tests ()
   "Open test folder with Dired."
   (interactive)
+
   (pop-to-buffer-same-window
     (dired-noselect (expand-file-name "test" wal/emacs-config-default-path))))
 
 (defun wal/find-config-changelog ()
   "Find the the changelog of the config."
   (interactive)
+
   (let* ((root wal/emacs-config-default-path)
          (changelog (expand-file-name "CHANGELOG.md" root)))
 
@@ -8793,18 +8865,21 @@ This will activate minor mode `wal/config-mode'."
 (defun wal/check-coverage ()
   "Check the current coverage for custom functionality."
   (interactive)
+
   (let* ((command "cask exec ert-runner && cat coverage.txt"))
 
     (wal/coverage--execute
      command
      (lambda ()
        (let ((average (wal/check-coverage--calculate-coverage)))
+
          (message "All tests succeeded. Coverage: %s" average)))
      (lambda (str) (message "Tests fail: %s" str)))))
 
 (defun wal/create-json-coverage ()
   "Create a JSON report file."
   (interactive)
+
   (let ((command "export COVERAGE_WITH_JSON=true && cask exec ert-runner"))
 
     (wal/coverage--execute
@@ -8839,6 +8914,7 @@ name are deleted beforehand."
                       (string-equal (file-name-extension it)
                                     "el"))
                     package-files)))
+
     el-files))
 
 (defun wal/checkdoc-config-packages ()
