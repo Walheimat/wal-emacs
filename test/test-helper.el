@@ -30,6 +30,10 @@
 
 (defvar wal/booting nil)
 
+(defun wal/cold-start-p ()
+  "Check if we're loading this file from a cold start."
+  (not (featurep 'use-package)))
+
 (defun wal/rf (a &rest _r)
   "Return first argument passed A."
   a)
@@ -41,11 +45,6 @@
 (defun wal/rt (&rest _r)
   "Return symbol `testing'."
   'testing)
-
-;; Create a dummy `use-package' definition.
-(defmacro use-package (package-name &rest _args)
-  "Message that PACKAGE-NAME would have been loaded."
-  `(message "Would have loaded %s" ',package-name))
 
 (defmacro with-mock-old (name fun &rest body)
   "Evaluate BODY while mocking function NAME using FUN."
@@ -150,15 +149,24 @@ The associated file buffer is also killed."
            (delete-file ,tmp-file)
            (message "Deleted file '%s'." ,tmp-file))))))
 
-(defvar wal/emacs-config-default-path)
-(defvar wal/emacs-config-package-path)
+(when (wal/cold-start-p)
+  (message "Stumping `use-package'.")
 
-(let* ((source-dir (or (getenv "GITHUB_WORKSPACE") default-directory))
-       (package-dir (expand-file-name "wal" source-dir)))
-  (message "Setting source dir to %s, package dir to %s" source-dir package-dir)
-  (when (getenv "CI")
-    (add-to-list 'load-path package-dir))
-  (setq wal/emacs-config-default-path source-dir
-        wal/emacs-config-package-path package-dir))
+  (defmacro use-package (package-name &rest _args)
+    "Message that PACKAGE-NAME would have been loaded."
+    `(message "Would have loaded %s" ',package-name))
+
+  (defvar wal/emacs-config-default-path)
+  (defvar wal/emacs-config-package-path)
+
+  (let* ((source-dir (or (getenv "GITHUB_WORKSPACE") default-directory))
+         (package-dir (expand-file-name "wal" source-dir)))
+
+    (message "Setting source dir to %s, package dir to %s" source-dir package-dir)
+
+    (when (getenv "CI")
+      (add-to-list 'load-path package-dir))
+    (setq wal/emacs-config-default-path source-dir
+          wal/emacs-config-package-path package-dir)))
 
 ;;; test-helper.el ends here
