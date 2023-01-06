@@ -102,7 +102,7 @@ implementation."
     `(should (equal ,safe-exp (car (gethash ',fun wal/mock-history))))))
 
 (defmacro was-called-nth-with (fun expected index)
-  "Check if FUN was called with EXPECTED on the INDEX-th call."
+  "Check if FUN was called with EXPECTED on the INDEXth call."
   (let ((safe-exp (if (listp expected) expected `(list ,expected))))
     `(should (equal ,safe-exp (nth ,index (reverse (gethash ',fun wal/mock-history)))))))
 
@@ -138,16 +138,17 @@ The associated file buffer is also killed."
 
     `(progn
        (let ((wal/tmp-file ,tmp-file))
+
          (make-empty-file ,tmp-file)
-         (condition-case err
-             (progn
-               ,@body
-               (kill-buffer (get-file-buffer ,tmp-file))
-               (delete-file ,tmp-file)
-               (message "Deleted %s" ,tmp-file))
-           (error
-            (delete-file ,tmp-file)
-            (error "Deleted %s after error: %s" ,tmp-file err)))))))
+
+         (unwind-protect
+             (progn ,@body)
+           (when (get-buffer ,filename)
+             (kill-buffer ,filename)
+             (message "Killed buffer '%s'." ,filename))
+
+           (delete-file ,tmp-file)
+           (message "Deleted file '%s'." ,tmp-file))))))
 
 (defvar wal/emacs-config-default-path)
 (defvar wal/emacs-config-package-path)
