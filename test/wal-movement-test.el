@@ -19,13 +19,13 @@
     (with-temp-buffer
       (insert "test")
 
-      (wal/avy-goto-word t)
+      (wal/avy-goto-word)
 
       (was-called-with avy-jump (list nil :beg (line-beginning-position) :end (line-end-position)))
 
-      (wal/avy-goto-word)
+      (wal/avy-goto-word t)
 
-      (was-called-with avy-goto-word-0 (list t)))))
+      (was-called-with avy-goto-word-0 t))))
 
 (ert-deftest test-wal/avy-goto-line ()
   (with-mock ((avy-goto-line . #'beginning-of-line)

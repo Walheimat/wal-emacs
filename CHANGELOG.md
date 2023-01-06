@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   table using the project as the key.
 - More robust mocking tools.
 - Full test coverage.
+- Function `wal/avy-goto-word` now goes to word in line first. Called
+  with `C-u` goes to word in buffer, called with multiple `C-u` goes
+  to word anywhere.
 
 ### Changed
 
