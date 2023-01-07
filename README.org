@@ -4635,6 +4635,20 @@ set to filter by project buffers."
 
     (apply fun args)))
 
+(defun wal/project-find-rg (query files)
+  "Run `rg' in project.
+
+Will search using QUERY in FILES."
+  (interactive
+   (list
+    (rg-read-pattern nil)
+    (rg-read-files)))
+
+  (let ((dir (project-root (project-current t)))
+        (flags (funcall rg-command-line-flags-function 'nil)))
+
+      (rg-run query files dir nil nil flags)))
+
 (use-package project
   :ensure nil
 
@@ -4644,8 +4658,13 @@ set to filter by project buffers."
    '(project-compile wal/project-test wal/project-install))
 
   :custom
-  (project-switch-commands 'project-find-dir)
   (project-vc-extra-root-markers '("pom.xml" "package.json" "project.godot"))
+
+  (project-switch-commands '((project-find-file "Find file" ?f)
+                             (project-find-dir "Find dir" ?d)
+                             (wal/project-find-rg "Find rg" ?n)
+                             (project-eshell "Eshell" ?e)))
+
   (project-vc-ignores '("node_modules/"
                         "build/"
                         "android/"
