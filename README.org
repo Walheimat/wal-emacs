@@ -2920,7 +2920,7 @@ It's fun to edit things /quickly/.
 Don't you want to edit your buffer in multiple places at once?
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/mc-conflicting-modes '(lispy-mode corfu-mode)
+(defvar wal/mc-conflicting-modes '(puni-mode corfu-mode)
   "Modes that are in conflict with `multiple-cursors-mode'.")
 
 (defvar-local wal/mc-disabled nil
@@ -3493,7 +3493,7 @@ Sometimes the list of minor modes overcrowds the modeline.
                              wal/config-mode
                              verb-mode
                              verb-response-body-mode
-                             lispy-mode
+                             puni-mode
                              pet-mode)))
 #+END_SRC
 
@@ -6558,15 +6558,15 @@ The philosopher's choice.
 #+BEGIN_SRC emacs-lisp
 (wal/define-expansion-pack lisp
   "For (common-) Lisp developers using sbcl."
-  :packages (slime)
-  :extras (lispy))
+  :packages (puni)
+  :extras (slime))
 
 (wal/define-expansion-pack clojure
   "For Clojure developers using cider with lein."
   :packages (clojure-mode cider))
 #+END_SRC
 
-*** lispy
+*** puni
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -6574,22 +6574,26 @@ The philosopher's choice.
 Deal with the parens.
 
 #+BEGIN_SRC emacs-lisp
-(use-package lispy
+(use-package puni
   :wal-ways nil
 
   :ensure nil
 
-  :hook (lisp-data-mode . lispy-mode)
+  :hook (lisp-data-mode . puni-mode)
+
+  :config
+  ;; This package doesn't have a lighter.
+  (add-to-list 'minor-mode-alist (list 'puni-mode " pni"))
 
   :bind
-  (:map lispy-mode-map
-   ("i" . special-lispy-up)
-   ("k" . special-lispy-down)
-   ("j" . special-lispy-left)
-   ("l" . special-lispy-right)
-   ("h" . special-lispy-tab))
-
-  :delight " '-y")
+  (:map puni-mode-map
+   ("C-M-." . puni-squeeze)
+   ("C-M-;" . puni-barf-backward)
+   ("C-M-'" . puni-barf-forward)
+   ("C-M-[" . puni-slurp-backward)
+   ("C-M-]" . puni-slurp-forward)
+   ("C-M-," . puni-raise)
+   ("C-M-/" . puni-convolute)))
 #+END_SRC
 
 *** elisp-mode
@@ -6618,9 +6622,9 @@ Deal with the parens.
       ("h" "helpful" helpful-at-point)
       ("m" "expand macro" emacs-lisp-macroexpand)]])
 
-  (with-eval-after-load 'lispy
+  (with-eval-after-load 'puni
     (transient-append-suffix 'wal/emacs-lisp-mode-dispatch '(0 0 -1)
-      '("l" "lispy" lispy-mode))))
+      '("p" "puni" puni-mode))))
 #+END_SRC
 
 *** lisp-mode

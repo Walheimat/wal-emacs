@@ -37,10 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Package `projectile` in favor of using built-in `project`.
 - Custom flag `wal/flag-deny`.
-- Package `paredit` for `lispy` (undoing recent switch).
 - Packages `esh-autosuggest` and `eshell-prompt-extras`.
 - Binding of command `restart-emacs`.
 - `hydra` to scroll other window.
+- `paredit` in favor of `puni`.
 
 ### Fixed
 
