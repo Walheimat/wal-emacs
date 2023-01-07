@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   be accessed directly.
 - Exit command `wal/delete-edit-or-kill` is now bound to `C-x C-c`
   (the default binding).
+- `org-src` now splits window vertically when editing source code.
 
 ### Removed
 
