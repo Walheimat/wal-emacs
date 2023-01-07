@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Function `wal/avy-goto-word` now goes to word in line first. Called
   with `C-u` goes to word in buffer, called with multiple `C-u` goes
   to word anywhere.
+- `wal/scratch-buffer` now allows session creation/selection like
+  `eshell`.
 
 ### Changed
 

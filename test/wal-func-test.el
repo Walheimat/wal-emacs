@@ -386,12 +386,14 @@
           (call-interactively 'some-fun))))))
 
 (ert-deftest test-wal/scratch-buffer ()
-  (with-mock ((switch-to-buffer . (lambda (n) (buffer-name n))))
+  (with-mock ((pop-to-buffer . (lambda (n &rest _) (buffer-name n))))
 
     (should (equal (wal/scratch-buffer) "*scratch*"))
-    (should (equal (wal/scratch-buffer t) "*scratch*<2>")))
+    (should (equal (wal/scratch-buffer t) "*scratch*<2>"))
+    (should (equal (wal/scratch-buffer 4) "*scratch*<4>")))
 
-  (kill-buffer "*scratch*<2>"))
+  (kill-buffer "*scratch*<2>")
+  (kill-buffer "*scratch*<4>"))
 
 (ert-deftest test-wal/persist-scratch-and-rehydrate ()
   (wal/with-temp-file "scratch"

@@ -463,8 +463,6 @@ Resets all variables that were initially set by
 (add-hook 'emacs-startup-hook #'wal/set-indent-defaults)
 #+END_SRC
 
-*** Dir Local Indentation
-
 ** Scratch Buffer
 
 Let's keep the scratch contents.
@@ -1276,17 +1274,21 @@ Both functions will be called interactively."
 Make the scratch buffer contents persist between sessions.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/scratch-buffer (&optional create)
+(defun wal/scratch-buffer (&optional session)
   "Switch to the scratch buffer.
 
-If CREATE is t, do and use that instead."
+If SESSION is non-nil, switch to (or create) it."
   (interactive "P")
 
-  (let ((buf (if create
-                 (generate-new-buffer "*scratch*")
-               (get-buffer-create "*scratch*"))))
+  (let* ((name "*scratch*")
+         (buf (cond ((numberp session)
+                     (get-buffer-create (format "%s<%d>" name session)))
+                    (session
+                     (generate-new-buffer name))
+                    (t
+                     (get-buffer-create name)))))
 
-    (switch-to-buffer buf)))
+    (pop-to-buffer buf '(display-buffer-same-window))))
 
 (defvar wal/scratch-persist nil)
 
