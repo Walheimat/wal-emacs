@@ -21,7 +21,7 @@
 
       (wal/avy-goto-word)
 
-      (was-called-with avy-jump (list nil :beg (line-beginning-position) :end (line-end-position)))
+      (was-called-with avy-jump (list nil :beg (line-beginning-position) :end (line-end-position) :window-flip t))
 
       (wal/avy-goto-word t)
 
