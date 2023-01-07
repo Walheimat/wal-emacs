@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to word anywhere.
 - `wal/scratch-buffer` now allows session creation/selection like
   `eshell`.
+- Package `log4j-mode` as part of new `java` expansion pack.
 
 ### Changed
 
