@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `slime` no longer requires `sbcl` executable to exist.
+- Most custom additional bindings were removed from built-in maps. QoL
+  bindings were kept.
 
 ## [v1.10.0]
 
