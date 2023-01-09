@@ -694,7 +694,12 @@ I use many[fn:9] custom keybindings. You can find an overview [[file:docs/bindin
 
 Allows defining custom prefixes.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
+(defvar wal/leaders '(wal/lieutenant wal/captain wal/major wal/colonel wal/general))
+(defvar wal/general-leaders '(wal/lieutenant wal/major wal/general))
+
 (cl-defmacro wal/create-leader-sink (name &key definer prefix)
   "Macro to create a leader sink `NAME-sink'.
 
@@ -725,9 +730,6 @@ All ARGS are passed to both definers."
   `(progn
     (wal/lieutenant ,@args ,key ,fun)
     (wal/lieutenant-sink ,@args ,key ,mfun)))
-
-(defvar wal/leaders '(wal/lieutenant wal/captain wal/major wal/colonel wal/general))
-(defvar wal/general-leaders '(wal/lieutenant wal/major wal/general))
 
 (defun wal/key-by-leader (leader)
   "Get the key for LEADER."
@@ -769,7 +771,11 @@ All ARGS are passed to both definers."
         (mode (propertize (symbol-name major-mode) 'face 'success)))
 
     (message "Captain (%s) has no binding in %s" key mode)))
+#+END_SRC
 
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package general
   :demand t
 
@@ -785,13 +791,19 @@ All ARGS are passed to both definers."
 Provides a context for related commands that can be (re-)executed in
 quick succession.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defvaralias 'w/hs 'wal/hydra-separator)
 (defvar wal/hydra-separator (propertize " ⋰ " 'face 'shadow))
 
 (defvaralias 'w/hew 'wal/hydra-emoji-whale)
 (defvar wal/hydra-emoji-whale "🐋")
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package hydra)
 #+END_SRC
 
@@ -805,13 +817,19 @@ Another nice way of grouping keys.
 Some transients are bound directly, others are =wal/univ= variants (see
 above).
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/transient-grab (arg)
   "Grab argument ARG from current command."
   (transient-arg-value
    (format "--%s=" arg)
    (transient-args transient-current-command)))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package transient
   :custom
   (transient-hide-during-minibuffer-read t)
@@ -2392,7 +2410,14 @@ Allows installing from other sources (like GitHub) using recipes.
 (use-package quelpa
   :custom
   (quelpa-update-melpa-p nil))
+#+END_SRC
 
+** quelpa-use-package
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
 ;; NOTE: This package seems no longer maintained.
 (use-package quelpa-use-package
   :init
@@ -2402,6 +2427,7 @@ Allows installing from other sources (like GitHub) using recipes.
   (when (fboundp 'quelpa-use-package-activate-advice)
     (quelpa-use-package-activate-advice)))
 #+END_SRC
+
 
 ** Footer
 :PROPERTIES:
@@ -2567,6 +2593,8 @@ Hide blocks.
 
 Some people need macros, okay?
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/kmacro (arg)
   "Toggle kmacro recording with ARG."
@@ -2575,7 +2603,11 @@ Some people need macros, okay?
   (cond
    (defining-kbd-macro (kmacro-end-macro arg))
    (t (kmacro-start-macro arg))))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package kmacro
   :ensure nil
 
@@ -2598,13 +2630,19 @@ Some people need macros, okay?
 
 No offender.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/clear-registers ()
   "Clear all registers."
   (interactive)
 
   (setq register-alist nil))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package register
   :ensure nil
 
@@ -2626,6 +2664,8 @@ No offender.
 
 Highlight lines.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/lighthouse ()
   "Do a heavy `pulse-momentary-highlight-one-line'.
@@ -2637,7 +2677,11 @@ This just means increasing duration, delay, size and brightness."
   (let ((pulse-iterations 30))
 
     (pulse-momentary-highlight-one-line (point) 'cursor)))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package pulse
   :ensure nil
 
@@ -2919,6 +2963,8 @@ It's fun to edit things /quickly/.
 
 Don't you want to edit your buffer in multiple places at once?
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defvar wal/mc-conflicting-modes '(puni-mode corfu-mode)
   "Modes that are in conflict with `multiple-cursors-mode'.")
@@ -2940,6 +2986,11 @@ Don't you want to edit your buffer in multiple places at once?
   (seq-each (lambda (it) (eval `(,it 1))) wal/mc-disabled)
   (setq wal/mc-disabled nil))
 
+#+END_SRC
+
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package multiple-cursors
   :init
   ;; Since the map is `nil', using `:bind' would fail.
@@ -2987,6 +3038,8 @@ One thing that can be a bit tricky is selecting regions, not anymore.
 Don't reduce the boilerplate, reduce your involvement in it with
 snippets.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/tempel-setup-capf ()
   "Prepend `tempel-complete'."
@@ -3001,7 +3054,11 @@ snippets.
     (let ((cs (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start)))
 
       (concat cs (cadr elt)))))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package tempel
   :hook ((prog-mode prog-like org-mode) . wal/tempel-setup-capf)
 
@@ -3033,11 +3090,17 @@ snippets.
 
 Less intrusive pairing mode than =smartparens=.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/in-case-of-mc-mode-do-not-default (&rest _args)
   "Advise to inhibit if `multiple-cursors-mode' is t."
   (bound-and-true-p multiple-cursors-mode))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package elec-pair
   :ensure nil
 
@@ -3120,6 +3183,8 @@ I like nice-looking things.
 
 Let's have a dash of board.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/with-recent-files-excluded (fun &rest args)
   "Advise FUN to ignore certain directories, applying ARGS."
@@ -3142,7 +3207,11 @@ Let's have a dash of board.
     (add-hook
      'server-after-make-frame-hook
      #'dashboard-insert-startupify-lists)))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package dashboard
   :wal-ways nil
 
@@ -3461,7 +3530,14 @@ Refine a couple of major and minor mode names.
     (delight 'python-mode "Snake" :major)
     (delight 'js-mode "NaNsense" :major)
     (delight 'inferior-python-mode "Bite" :major)))
+#+END_SRC
 
+*** diminish
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
 (use-package diminish)
 #+END_SRC
 
@@ -3506,6 +3582,8 @@ Font *JetBrains Mono* has the best support for ligatures.
 :UNNUMBERED: t
 :END:
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defconst wal/common-ligatures
   '(
@@ -3526,7 +3604,11 @@ Font *JetBrains Mono* has the best support for ligatures.
 ARGS is a list containing modes and additional ligatures."
   (cl-destructuring-bind (modes ligatures) args
     (apply fun `(,modes ,(append ligatures wal/common-ligatures)))))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package ligature
   :wal-ways nil
 
@@ -3675,6 +3757,8 @@ Everything that has to do with windows.
 
 Ace interacting with (multiple) windows.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/aw-delete-window-kill-buffer (window)
   "Call `aw-delete-window' on WINDOW requesting buffer kill."
@@ -3691,7 +3775,11 @@ Ace interacting with (multiple) windows.
   (let ((ignore-window-parameters t))
 
     (delete-other-windows window)))
+#+END_SRC
 
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package ace-window
   :config
   ;; We want to switch buffers using `consult'.
@@ -3737,6 +3825,8 @@ Ace interacting with (multiple) windows.
 :END:
 
 Treat certain buffers and their windows as pop-ups.
+
+**** Utility
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/popper-echo-replace (regexp buffer-name &optional prefix)
@@ -3799,7 +3889,11 @@ If no PREFIX is given, a slash is pre-pended to the first match."
           (cl-remove-if-not
            (lambda (it) (buffer-live-p (cdr it)))
            (alist-get group popper-buried-popup-alist nil nil 'equal)))))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package popper
   :wal-ways nil
 
@@ -3924,6 +4018,8 @@ Moving around should be fun.
 
 Who needs a mouse.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/avy-goto-word (&optional scope)
   "Jump to a word.
@@ -3982,7 +4078,11 @@ beginning."
   (when (or (wal/univ-p)
             (and (eq major-mode 'org-mode) (org-at-heading-p)))
     (goto-char (line-beginning-position))))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package avy
   :commands (avy-with)
 
@@ -4156,12 +4256,18 @@ Complete commands and code.
 
 Alternative.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/corfu-enable-in-minibuffer ()
   "Enable Corfu in the minibuffer if `completion-at-point' is bound."
   (when (where-is-internal #'completion-at-point (list (current-local-map)))
     (corfu-mode 1)))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package corfu
   :hook
   (((org-mode prog-mode prog-like eshell-mode) . corfu-mode)
@@ -4257,6 +4363,8 @@ Provide global option narrowing using the =vertico= family of products.
 :UNNUMBERED: t
 :END:
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defvar-local wal/command nil
   "Command that started completion session.")
@@ -4270,7 +4378,11 @@ Provide global option narrowing using the =vertico= family of products.
   (unless (and (eq (car args) 'category)
                (eq wal/command 'dired-goto-file))
     (apply fun args)))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package vertico-directory
   :ensure nil
 
@@ -4383,7 +4495,14 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
 
   :wal-bind
   ("k" . wal/univ-embark-act))
+#+END_SRC
 
+*** embark-consult
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
 (use-package embark-consult
   :demand
   :after (embark consult)
@@ -4397,6 +4516,8 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
 :END:
 
 Heavy lifting with =consult=.
+
+**** Utility
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/consult-ripgrep-ignored (&optional dir initial)
@@ -4458,7 +4579,11 @@ If NOT-AT-POINT is t, call `consult-line' normally."
   (let ((vertico-count 20))
 
     (apply fun args)))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package consult
   :commands
   (wal/consult-line
@@ -4597,6 +4722,8 @@ Keep order.
 
 Built-in project management.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defvar wal/project-commands `(compile ,(make-hash-table :test 'equal)
                                test ,(make-hash-table :test 'equal)
@@ -4666,7 +4793,11 @@ Will search using QUERY in FILES."
         (flags (funcall rg-command-line-flags-function 'nil)))
 
       (rg-run query files dir nil nil flags)))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package project
   :ensure nil
 
@@ -4768,6 +4899,8 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 :UNNUMBERED: t
 :END:
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/first-require-ox-md (&rest _args)
   "Advise to require `ox-md' before export dispatch."
@@ -4781,7 +4914,11 @@ This calls `org-content' interactively."
 
   (when (fboundp 'org-content)
     (org-content level)))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package org
   :ensure nil
 
@@ -4894,6 +5031,8 @@ This calls `org-content' interactively."
 :UNNUMBERED: t
 :END:
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/then-find-tasks-and-store-window-configuration (&rest _r)
   "Open the first agenda files and store in window register."
@@ -4903,7 +5042,11 @@ This calls `org-content' interactively."
     (unless (get-buffer-window tasks-buffer)
       (display-buffer tasks-buffer '(display-buffer-in-previous-window)))
     (window-configuration-to-register wal/org-agenda-register-char)))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package org-agenda
   :ensure nil
 
@@ -5011,6 +5154,8 @@ Trying to organize my thoughts using Zettelkästen.
 :UNNUMBERED: t
 :END:
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/maybe-org-roam-refile (&rest args)
   "Refile using ARGS, but use `org-roam-refile' for its buffers.
@@ -5026,7 +5171,11 @@ case."
 
         (org-refile args))
     (org-refile args)))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package org-roam
   :if (executable-find "sqlite3")
   :wal-ways nil
@@ -5127,6 +5276,8 @@ Fancy UI.
 
 Turn any =org-mode= buffer into a presentation.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/relative-column-width (&optional target-width)
   "Get the relative column width of TARGET-WIDTH."
@@ -5175,7 +5326,11 @@ Turn any =org-mode= buffer into a presentation.
   "Hook into `text-scale-mode-hook' for `org-tree-slide'."
   (when (and (boundp 'org-tree-slide-mode) org-tree-slide-mode)
     (wal/org-tree-slide-play)))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package org-tree-slide
   :wal-ways nil
 
@@ -5263,6 +5418,8 @@ Editing source blocks.
 
 Capture templates.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/org-capture-find-project-tasks ()
   "Find a project's tasks file.
@@ -5273,7 +5430,11 @@ If the project root cannot be determined, use
                      (project-root current))))
 
     (expand-file-name "tasks.org" (or proj-root org-directory))))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package org-capture
   :ensure nil
 
@@ -5346,6 +5507,8 @@ Convenient (and less safe) source block interaction.
 
 You know the drill. Clock in, clock out.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/org-clock-in-switch-to-state (todo-state)
   "Only switch state to IN PROGRESS if TODO-STATE was given."
@@ -5375,7 +5538,11 @@ You know the drill. Clock in, clock out.
   (save-window-excursion
     (org-clock-goto)
     (org-add-note)))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package org-clock
   :ensure nil
 
@@ -5527,6 +5694,8 @@ Run =dired= with =C-x d=.
 
 The mother of all buffers. You don't need no tree views.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/dired-from-home (dirname &optional switches)
   "Find DIRNAME local to HOME directory.
@@ -5555,7 +5724,11 @@ Uses the same optional SWITCHES."
    :sort 'visibility
    :as #'buffer-name
    :predicate #'wal/dired-buffer-p))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package dired
   :ensure nil
 
@@ -5751,6 +5924,9 @@ Some common shell commands require an additional =C-c=:
 + =C-c C-u= to send =C-u=.
 + =C-c C-t= to enter/exit =copy-mode=.
 
+
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defconst wal/vterm-prefix "VTerm")
 
@@ -5801,7 +5977,11 @@ FORCE-NEW/`universal-argument')."
               buffers)))
       (switch-to-buffer project-vterm)
     (vterm)))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package vterm
   :wal-ways nil
 
@@ -5861,6 +6041,8 @@ end
 
 Set up =eshell=. I like the idea of it but I don't really use it.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/instead-truncate-buffer (&rest _r)
   "Advise to truncate buffer."
@@ -5869,7 +6051,11 @@ Set up =eshell=. I like the idea of it but I don't really use it.
 
     (when (fboundp 'eshell-truncate-buffer)
       (eshell-truncate-buffer))))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package eshell
   :ensure nil
 
@@ -6312,6 +6498,8 @@ Hide those details from me.
 
 Use snake when you can't =make=.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/in-python-project-p (&optional marker-file)
   "Check if we're currently in a Python project.
@@ -6323,7 +6511,11 @@ TOML."
               (project-directory (locate-dominating-file current marker)))
 
     t))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package python
   :ensure nil
 
@@ -6371,6 +6563,8 @@ TOML."
 
 Did Microsoft do the right thing?
 
+*** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/lsp-pyright-install-stubs ()
   "Install the pyright stubs."
@@ -6393,7 +6587,11 @@ Did Microsoft do the right thing?
 
       (display-buffer-in-side-window buffer '((side . bottom)))
       (async-shell-command cmd buffer))))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package lsp-pyright
   :wal-ways nil
 
@@ -6502,11 +6700,17 @@ It takes more than one environment to make sense of Python code.
 
 Takes care[fn:14] of all your virtual environment needs.
 
+***** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/otherwise-return-argument (arg)
   "Return ARG if original function returned nil."
   arg)
+#+END_SRC
 
+***** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package pet
   :if (and (executable-find "dasel")
            (executable-find "sqlite3"))
@@ -6758,9 +6962,6 @@ Can we have =deno= instead of =node=?
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defvar-local wal/force-jsx nil
-  "Whether `js-jsx-syntax' should always be set to t.")
-
 (use-package js
   :wal-ways nil
 
@@ -6774,9 +6975,6 @@ Can we have =deno= instead of =node=?
     :tabs t
     :lsp t
     :corfu (0.1 2)
-
-    (when wal/force-jsx
-      (setq-local js-jsx-syntax t))
 
     (when (fboundp 'add-node-modules-path)
       (add-node-modules-path))
@@ -6846,6 +7044,8 @@ Allow accessing a project's =node_modules=.
 
 Prettify your ugly JavaScript.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defvar wal/prettier-timer nil)
 
@@ -6866,7 +7066,11 @@ Prettify your ugly JavaScript.
                             (setq wal/prettier-timer nil)
                             (prettier-prettify)
                             (message "Refresh done"))))))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package prettier
   :wal-ways nil
 
@@ -7022,6 +7226,8 @@ Sometimes things that don't do things need to look nice.
 :UNNUMBERED: t
 :END:
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/markdown-view ()
   "Toggle between different markdown views."
@@ -7036,6 +7242,11 @@ Sometimes things that don't do things need to look nice.
     (mixed-pitch-mode -1))
    (t
     (error "Can't change view outside of markdown modes"))))
+#+END_SRC
+
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 
 (use-package markdown-mode
   :wal-ways nil
@@ -7099,6 +7310,8 @@ Yes, you need to install *Android Studio* for some reason.
 
 LSP support for Dart.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/find-dart-flutter-sdk-dir ()
   "Find the Dart Flutter SDK directory."
@@ -7132,7 +7345,11 @@ LSP support for Dart.
           (message "Service URI (%s) copied to kill ring" uri)))
     (error
       (message "Couldn't get service URI: %s" (error-message-string err)))))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package lsp-dart
   :if (or (executable-find "flutter") (executable-find "dart"))
   :wal-ways nil
@@ -7208,6 +7425,8 @@ It's a =JavaEmacsPackageConfigurationSectionFactory=, mate.
 
 LSP integration.
 
+**** Utility
+
 #+begin_src emacs-lisp
 (defun wal/with-bash-shell (fun &rest args)
   "Run FUN with ARGS in bash shell."
@@ -7226,7 +7445,11 @@ LSP integration.
     (transient-set)
 
     (call-interactively fun)))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package lsp-java
   :wal-ways nil
 
@@ -7547,6 +7770,8 @@ Get text.
 
 The engine you've been waiting for.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 ;; Workaround from https://github.com/godotengine/emacs-gdscript-mode#known-issues
 (defun wal/with-json-data-ignored-for-gdscript (fun &rest args)
@@ -7562,7 +7787,11 @@ replying to the `JSONRPC' request."
                      (not (gethash "method" json-data nil)))
           (apply fun args)))
     (apply fun args)))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package gdscript-mode
   :wal-ways nil
 
@@ -7682,6 +7911,8 @@ Please let me know when I screwed up. I promise I will learn.
 
 =flycheck= is for all of our linting/code quality needs.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defconst wal/flycheck-file--buffer "*wal-flycheck-file*")
 
@@ -7761,7 +7992,11 @@ If KILL-BUFFER is t, kill the file's buffer."
 
               (flycheck-syntax-check-start check callback))
           (user-error "Couldn't determine checker for file"))))))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package flycheck
   :commands (wal/flycheck-file)
 
@@ -7795,6 +8030,8 @@ If KILL-BUFFER is t, kill the file's buffer."
 
 My spelling is bad. Uses American English for =flyspell=.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/flyspell ()
   "(De-)Activate the appropriate `flyspell' mode."
@@ -7805,7 +8042,11 @@ My spelling is bad. Uses American English for =flyspell=.
     (if (derived-mode-p 'prog-mode)
         (flyspell-prog-mode)
       (flyspell-mode))))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package flyspell
   :ensure nil
 
@@ -7922,6 +8163,8 @@ smaller."
 =lsp-mode= is the fancy version. You'll have to install some language
 servers yourself[fn:15].
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/slow-lsp-p (mode)
   "Check if MODE is considered slow."
@@ -7952,7 +8195,11 @@ PREFIX-LENGTH)."
 (defun wal/first-prevent-adding-other-projects (&rest _args)
   "Prevent adding workspace roots from other projects."
   (eval '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
   :wal-ways nil
 
@@ -8061,6 +8308,8 @@ Don't clutter things up too much.
 Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
 [[file:docs/debug-templates.org][templates]].
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defvar wal/dap-before nil)
 
@@ -8080,7 +8329,11 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
 (defun wal/dap-stopped (_session)
   "Re-display the hydra."
   (wal/dap-hydra/body))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package dap-mode
   :wal-ways nil
 
@@ -8363,11 +8616,17 @@ I browse, I request.
 
 Make requests using Org.
 
+**** Utility
+
 #+BEGIN_SRC emacs-lisp
 (defun wal/pick-windows-being-kept (&rest _args)
   "Provide t to `verb-kill-*' functions to keep window."
   (list t))
+#+END_SRC
 
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package verb
   :wal-ways nil
 
