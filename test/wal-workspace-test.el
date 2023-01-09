@@ -31,6 +31,12 @@
       (was-called-with compile "test")
       (should (string-equal "test" (gethash "/tmp/cmd" (plist-get wal/project-commands 'test)))))))
 
+(ert-deftest test-wal/project-compile ()
+  (with-mock (wal/project-command)
+    (wal/project-compile)
+
+    (was-called-with wal/project-command '(compile "Compile project: "))))
+
 (ert-deftest test-wal/project-test ()
   (with-mock (wal/project-command)
     (wal/project-test)

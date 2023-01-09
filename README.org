@@ -4598,11 +4598,13 @@ Keep order.
 Built-in project management.
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/project-commands `(test ,(make-hash-table :test 'equal)
+(defvar wal/project-commands `(compile ,(make-hash-table :test 'equal)
+                               test ,(make-hash-table :test 'equal)
                                install ,(make-hash-table :test 'equal))
   "Hash maps for compilation commands.")
 
 ;; Set these as dir locals.
+(defvar-local wal/project-compile-default-cmd nil)
 (defvar-local wal/project-test-default-cmd nil)
 (defvar-local wal/project-install-default-cmd nil)
 
@@ -4621,6 +4623,12 @@ Built-in project management.
     (puthash key command table)
 
     (compile command)))
+
+(defun wal/project-compile ()
+  "Compile the current project."
+  (interactive)
+
+  (wal/project-command 'compile "Compile project: "))
 
 (defun wal/project-test ()
   "Test the current project."
@@ -4685,6 +4693,7 @@ Will search using QUERY in FILES."
 
   :bind
   (:map project-prefix-map
+   ("c" . wal/project-compile)
    ("t" . wal/project-test)
    ("i" . wal/project-install))
 
