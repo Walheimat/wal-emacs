@@ -4240,11 +4240,6 @@ Complete commands and code.
   "Change completion settings."
   :group 'wal
   :tag "Completion")
-
-(defcustom wal/consult-key "["
-  "The key used for `consult'."
-  :type 'key-sequence
-  :group 'wal-complete)
 #+END_SRC
 
 ** Inline Completion
@@ -4597,12 +4592,6 @@ If NOT-AT-POINT is t, call `consult-line' normally."
   (wal/univ consult-register-load consult-register-store)
 
   (defvar wal/consult-map (make-sparse-keymap))
-  (bind-key (wal/prefix-user-key wal/consult-key)
-            #'(lambda nil
-                (interactive)
-
-                (use-package-autoload-keymap 'wal/consult-map 'consult nil)))
-  (bind-key wal/consult-key 'consult-goto-line 'goto-map)
 
   :config
   ;; Integrate with `xref'.
@@ -4627,19 +4616,9 @@ If NOT-AT-POINT is t, call `consult-line' normally."
   ;; Use a bigger `vertico' when grepping.
   (advice-add 'consult-ripgrep :around #'wal/with-big-vertico)
 
-  ;; Create suffixes for other transients.
-  (with-eval-after-load 'rg-menu
-    (transient-append-suffix 'rg-menu "p" `(,wal/consult-key "Using consult" consult-ripgrep)))
-  (with-eval-after-load 'lsp-mode
-    (transient-append-suffix 'wal/lsp-dispatch '(0 3 1)
-      `(,wal/consult-key "symbol" consult-lsp-file-symbols)))
-  (with-eval-after-load 'org
-    (transient-append-suffix 'wal/org-mode-dispatch "o"
-      `(,wal/consult-key "go to heading" consult-org-heading)))
-
   (with-eval-after-load 'which-key
     (which-key-add-key-based-replacements
-      (wal/prefix-user-key wal/consult-key)
+      (wal/prefix-user-key "[")
       '(nil . "consult")))
 
   :custom
@@ -4647,23 +4626,30 @@ If NOT-AT-POINT is t, call `consult-line' normally."
 
   :bind
   (:map wal/consult-map
-   ("<SPC>" . wal/univ-consult-mark)
    ("c" . wal/consult-clock-in)
    ("f" . consult-focus-lines)
+   ("g" . consult-goto-line)
+   ("h" . consult-org-heading)
+   ("i" . wal/consult-line)
    ("k" . consult-kmacro)
    ("l" . consult-locate)
    ("m" . consult-bookmark)
+   ("n" . consult-ripgrep)
    ("r" . consult-register)
-   ("u" . wal/consult-unregister)
-   ("s" . wal/consult-line)
+   ("s" . consult-symbol)
    ("t" . consult-theme)
+   ("u" . wal/consult-unregister)
+   ("<SPC>" . wal/univ-consult-mark)
    ("C-f" . consult-recent-file)
    ("+" . consult-mode-command)
    ("-" . consult-minor-mode-menu))
 
   :wal-bind
   (("j" . consult-buffer)
-   ("i" . wal/univ-consult-register-load)))
+   ("i" . wal/univ-consult-register-load))
+
+  :wal-bind-keymap
+  (("[" . wal/consult-map)))
    #+END_SRC
 
 ** Footer
