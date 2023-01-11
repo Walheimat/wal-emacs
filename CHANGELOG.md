@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Most custom additional bindings were removed from built-in maps. QoL
   bindings were kept.
 
+
+### Removed
+
+- Package `jest` because of its `projectile` dependency leading to
+  issues.
+
 ## [v1.10.0]
 
 Plan vanilla.
