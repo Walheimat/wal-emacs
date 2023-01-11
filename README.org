@@ -1810,9 +1810,9 @@ The rest of the BODY will be spliced into the lambda."
                           (t `(wal/maybe-enable-tabs :indent-with ,tabs)))
                    ,@safe-body
                    ,(when lsp
-                      (if corfu
-                          `(wal/lsp ',corfu)
-                        '(wal/lsp)))
+                     '(wal/lsp))
+                   ,(when corfu
+                      `(wal/corfu-auto ',corfu))
                    ,(when prog-like
                       '(run-hooks 'prog-like-hook))
                    ,(when captain
@@ -4258,6 +4258,14 @@ Alternative.
   "Enable Corfu in the minibuffer if `completion-at-point' is bound."
   (when (where-is-internal #'completion-at-point (list (current-local-map)))
     (corfu-mode 1)))
+
+(defun wal/corfu-auto (values)
+  "Set delay and minimum prefix using VALUES.
+
+This a list of (DELAY PREFIX-LENGTH)."
+  (cl-destructuring-bind (delay prefix) values
+    (setq-local corfu-auto-delay delay
+                corfu-auto-prefix prefix)))
 #+END_SRC
 
 **** Configuration
@@ -8141,27 +8149,21 @@ servers yourself[fn:15].
   "Check if MODE is considered slow."
   (memq mode wal/lsp-slow-modes))
 
-(defvar wal/lsp-corfu-values '(0.1 0))
-
 (defun wal/lsp (&optional corfu-values)
   "Defer LSP setup for the file.
 
-Unless the associated server is considered slow, delays and
-minimum prefixes are reduced using CORFU-VALUES a list of (DELAY
-PREFIX-LENGTH)."
+Sets up completion styles to use `orderless' unless the mode is
+considered slow."
   (unless (wal/slow-lsp-p major-mode)
-    (cl-destructuring-bind (delay prefix) (or corfu-values wal/lsp-corfu-values)
-      (setq-local corfu-auto-delay delay
-                  corfu-auto-prefix prefix)))
-
-  (setq-local completion-styles '(orderless partial-completion basic))
+    (setq-local completion-styles '(orderless partial-completion basic)))
 
   (lsp-deferred))
 
-(defun wal/lsp-completion-with-corfu ()
-  "Advise completion to work better with `corfu' and `orderless'."
-  (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
-        completion-styles))
+(defun wal/lsp-completion ()
+  "Make sure completion works well with `corfu' and `orderless'."
+  (unless (wal/slow-lsp-p major-mode)
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          completion-styles)))
 
 (defun wal/first-prevent-adding-other-projects (&rest _args)
   "Prevent adding workspace roots from other projects."
@@ -8174,7 +8176,7 @@ PREFIX-LENGTH)."
 (use-package lsp-mode
   :wal-ways nil
 
-  :hook (lsp-completion-mode . wal/lsp-completion-with-corfu)
+  :hook (lsp-completion-mode . wal/lsp-completion)
 
   :config
   ;; Integrate with other packages.

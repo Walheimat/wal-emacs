@@ -13,7 +13,7 @@
 
     (should (wal/slow-lsp-p 'test-mode))))
 
-(ert-deftest test-wal/lsp--sets-styles-for-slow-modes ()
+(ert-deftest test-wal/lsp--does-not-set-styles-for-slow-modes ()
   (with-mock lsp-deferred
 
     (let ((wal/lsp-slow-modes '(text-mode)))
@@ -23,24 +23,25 @@
         (wal/lsp)
 
         (was-called lsp-deferred)
+        (should (equal '(basic partial-completion emacs22) completion-styles))))))
+
+(ert-deftest test-wal/lsp--otherwise-sets-styles ()
+  (with-mock lsp-deferred
+
+    (let ((wal/lsp-slow-modes nil))
+
+      (with-temp-buffer
+        (text-mode)
+        (wal/lsp)
+
+        (was-called lsp-deferred)
         (should (equal '(orderless partial-completion basic) completion-styles))))))
 
-(ert-deftest test-wal/lsp--sets-corfu ()
-  (defvar corfu-auto-delay nil)
-  (defvar corfu-auto-prefix nil)
-
-  (with-mock lsp-deferred
-    (with-temp-buffer
-      (wal/lsp)
-
-      (should (equal 0.1 corfu-auto-delay))
-      (should (equal 0 corfu-auto-prefix)))))
-
-(ert-deftest test-wal/lsp-completion-with-corfu ()
+(ert-deftest test-wal/lsp-completion ()
   (let ((completion-category-defaults '((lsp-capf (styles other))))
         (completion-styles '(testful)))
 
-    (wal/lsp-completion-with-corfu)
+    (wal/lsp-completion)
 
     (should (equal '((lsp-capf (styles testful))) completion-category-defaults))))
 

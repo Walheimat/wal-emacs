@@ -989,7 +989,6 @@
    (wal/hook test
      "We're just testing."
      :messages '("Just testing")
-     :lsp t
      :corfu (0.2 4)
      (message "hi"))
    `(progn
@@ -999,7 +998,7 @@
         (hack-local-variables)
         (wal/disable-tabs)
         (message "hi")
-        (wal/lsp '(0.2 4)))
+        (wal/corfu-auto '(0.2 4)))
       (add-hook 'test-hook 'wal/test-hook))))
 
 (ert-deftest test-wal/fundamental-mode--switches ()
