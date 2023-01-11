@@ -4742,6 +4742,14 @@ Built-in project management.
 (defvar-local wal/project-test-default-cmd nil)
 (defvar-local wal/project-install-default-cmd nil)
 
+(defvar wal/project-current-command nil)
+
+(defun wal/project-command--buffer-name (_major-mode)
+  "Get the buffer name for the current command."
+  (if wal/project-current-command
+      (concat "*" "project-" wal/project-current-command "*")
+    "*project-compile*"))
+
 (defun wal/project-command (cmd prompt)
   "Run CMD for the current project using PROMPT."
   (let* ((cur (project-current))
@@ -4751,7 +4759,10 @@ Built-in project management.
                        (intern (format "wal/project-%s-default-cmd" cmd)))
                       ""))
          (prev (gethash key table default))
-         (command (read-shell-command prompt prev)))
+         (command (read-shell-command prompt prev))
+         (default-directory key)
+         (wal/project-current-command (symbol-name cmd))
+         (compilation-buffer-name-function 'wal/project-command--buffer-name))
 
     ;; Store the entered command.
     (puthash key command table)

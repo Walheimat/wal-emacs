@@ -16,6 +16,12 @@
 
       (should (wal/with-project-bounded-compilation fun)))))
 
+(ert-deftest test-wal/project-command--buffer-name ()
+  (let ((wal/project-current-command "test"))
+    (should (string-equal (wal/project-command--buffer-name nil) "*project-test*")))
+
+  (should (string-equal (wal/project-command--buffer-name nil) "*project-compile*")))
+
 (ert-deftest test-wal/project-command ()
   (let ((wal/project-commands (list 'test (make-hash-table :test 'equal)))
         (wal/project-test-default-cmd "untest"))
