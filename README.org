@@ -4637,6 +4637,11 @@ If NOT-AT-POINT is t, call `consult-line' normally."
       (wal/prefix-user-key "[")
       '(nil . "consult")))
 
+  (with-eval-after-load 'org-keys
+    (wal/replace-in-alist
+     'org-speed-commands
+     '(("j" . consult-org-heading))))
+
   :custom
   (consult-buffer-filter (list "\\` " "\\`\\*" "\\`magit"))
 
@@ -4937,9 +4942,6 @@ This calls `org-content' interactively."
   :config
   ;; TEMP: Getting missing face errors otherwise.
   (require 'org-indent)
-
-  ;; Remove `org-cycle-agenda-files'.
-  (define-key org-mode-map (kbd "C-,") nil)
 
   ;; Require `ox-md' before calling dispatch as it might not be loaded.
   (advice-add
@@ -5596,12 +5598,6 @@ Add some user speed commands.
   :ensure nil
 
   :after org
-
-  :config
-  (wal/replace-in-alist
-   'org-speed-commands
-   '(("a" . org-archive-subtree)
-     ("j" . consult-org-heading)))
 
   :custom
   (org-use-speed-commands t)
