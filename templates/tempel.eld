@@ -64,6 +64,13 @@ emacs-lisp-mode
  q n n
  ";;; " name ".el ends here")
 
+js-mode
+
+(docstring
+ "/**" n
+ " * " q n
+ " */")
+
 ;; Local Variables:
 ;; mode: lisp-data
 ;; outline-regexp: "[a-z]"
