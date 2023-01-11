@@ -2782,6 +2782,9 @@ Show compilations in a pop-up and scroll output.
 (use-package compile
   :ensure nil
 
+  :hook
+  (compilation-filter . ansi-color-compilation-filter)
+
   :config
   (wdb/pop-up "\\*compilation")
 
@@ -6947,6 +6950,18 @@ Can we have =deno= instead of =node=?
 :UNNUMBERED: t
 :END:
 
+**** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/jest-compilation-error-regexp
+  '(jest
+    "^[[:blank:]]+at[^\n\r]+(\\([a-zA-Z/]+\\(?:.spec\\|.test\\)?.\\(?:js\\|jsx\\)\\):\\([0-9]+\\):\\([0-9]+\\))$"
+    1 2 3)
+  "Regular expression used for jest errors.")
+#+END_SRC
+
+**** Configuration
+
 #+BEGIN_SRC emacs-lisp
 (use-package js
   :wal-ways nil
@@ -6961,6 +6976,8 @@ Can we have =deno= instead of =node=?
     :tabs t
     :lsp t
     :corfu (0.1 2)
+
+    (setq-local compilation-error-screen-columns nil)
 
     (when (fboundp 'add-node-modules-path)
       (add-node-modules-path))
@@ -6978,6 +6995,12 @@ Can we have =deno= instead of =node=?
       ("c" "context" js-syntactic-context)]])
 
   (ligature-set-ligatures 'js-mode '("=>" "!==" "===" "!!"))
+
+  ;; Add regular expression for jest errors.
+  (add-to-list 'compilation-error-regexp-alist 'jest)
+  (add-to-list
+   'compilation-error-regexp-alist-alist
+   wal/jest-compilation-error-regexp)
 
   :bind
   (:map js-mode-map

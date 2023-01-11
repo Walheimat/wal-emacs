@@ -7,12 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Regular expression for `js` to follow errors in jest output.
+
 ### Changed
 
 - `slime` no longer requires `sbcl` executable to exist.
 - Most custom additional bindings were removed from built-in maps. QoL
   bindings were kept.
-
 
 ### Removed
 
