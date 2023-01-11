@@ -1001,6 +1001,22 @@
         (wal/corfu-auto '(0.2 4)))
       (add-hook 'test-hook 'wal/test-hook))))
 
+(ert-deftest test-wal/hook--shallow ()
+  (match-expansion
+   (wal/hook test
+     "We're just testing."
+     :messages '("Just testing")
+     :lsp t
+     :corfu (0.2 4)
+     :shallow t
+     (message "hi"))
+   `(progn
+      (defun wal/test-hook ()
+        "We're just testing."
+        (message "hi")
+        (wal/corfu-auto '(0.2 4)))
+      (add-hook 'test-hook 'wal/test-hook))))
+
 (ert-deftest test-wal/fundamental-mode--switches ()
   (with-temp-buffer
     (emacs-lisp-mode)

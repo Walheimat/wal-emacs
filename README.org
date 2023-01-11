@@ -1762,7 +1762,12 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
   "Run `prog-like-hook' functions."
   (run-hooks 'prog-like-hook))
 
-(cl-defmacro wal/hook (name docs &body body &key messages lsp lsp-ignores tabs prog-like captain corfu &allow-other-keys)
+(cl-defmacro wal/hook
+    (name
+     docs
+     &body body
+     &key messages lsp lsp-ignores tabs prog-like captain corfu shallow
+     &allow-other-keys)
   "Hook into major mode NAME, describe with DOCS.
 
 MESSAGES is a list of strings to randomly choose from and
@@ -1780,15 +1785,19 @@ will be mapped to the captain key.
 
 CORFU is a list of (IDLE-DELAY PREFIX-LENGTH).
 
+SHALLOW is either t or nil. If it is t, all keys but CORFU will
+be ignored.
+
 The rest of the BODY will be spliced into the lambda."
   (declare (indent defun) (doc-string 2))
 
   (let ((target (intern (concat (symbol-name name) "-hook")))
         (safe-body (cl-loop for (key val) on body by 'cddr
-                            unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :captain :corfu))
+                            unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :captain :corfu :shallow))
                             collect key
                             and collect val))
         (func-name (intern (concat "wal/" (symbol-name name) "-hook")))
+        (include (not shallow))
         (captain-name (intern (concat "wal/" (symbol-name name) "-dispatch"))))
 
     `(progn
@@ -1798,28 +1807,30 @@ The rest of the BODY will be spliced into the lambda."
               ,docs
               ,@(delete
                  nil
-                 `(,(when messages
+                 `(,(when (and include messages)
                       `(wal/message-in-a-bottle ,messages))
-                   (hack-local-variables)
-                   ,(cond ((equal 'always tabs)
-                           `(wal/enable-tabs))
-                          ((equal t tabs)
-                           `(wal/maybe-enable-tabs))
-                          ((not tabs)
-                           '(wal/disable-tabs))
-                          (t `(wal/maybe-enable-tabs :indent-with ,tabs)))
+                   ,(and include '(hack-local-variables))
+                   ,(and include (cond ((equal 'always tabs)
+                                        `(wal/enable-tabs))
+                                       ((equal t tabs)
+                                        `(wal/maybe-enable-tabs))
+                                       ((not tabs)
+                                        '(wal/disable-tabs))
+                                       (t `(wal/maybe-enable-tabs :indent-with ,tabs))))
                    ,@safe-body
-                   ,(when lsp
+                   ,(when (and include lsp)
                      '(wal/lsp))
                    ,(when corfu
                       `(wal/corfu-auto ',corfu))
                    ,(when prog-like
                       '(run-hooks 'prog-like-hook))
-                   ,(when captain
+                   ,(when (and include captain)
                       `(local-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) ',captain-name)))))
+
             ,(when (and lsp lsp-ignores)
                `(with-eval-after-load 'lsp-mode
                   (wal/append 'lsp-file-watch-ignored-directories ,lsp-ignores)))
+
             (add-hook
              ',target
              ',func-name))))))
@@ -6837,6 +6848,11 @@ Deal with the parens.
   (wal/hook common-lisp-mode
     "hook into `common-lisp-mode'."
     :captain t)
+
+  (wal/hook lisp-data-mode
+    "Hook into `lisp-data-mode."
+    :shallow t
+    :corfu (0 1))
 
   :config
   (with-eval-after-load 'slime
