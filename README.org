@@ -5036,21 +5036,6 @@ This calls `org-content' interactively."
 :UNNUMBERED: t
 :END:
 
-**** Utility
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/then-find-tasks-and-store-window-configuration (&rest _r)
-  "Open the first agenda files and store in window register."
-  (let* ((tasks (car org-agenda-files))
-         (tasks-buffer (find-file-noselect tasks)))
-
-    (unless (get-buffer-window tasks-buffer)
-      (display-buffer tasks-buffer '(display-buffer-in-previous-window)))
-    (window-configuration-to-register wal/org-agenda-register-char)))
-#+END_SRC
-
-**** Configuration
-
 #+BEGIN_SRC emacs-lisp
 (use-package org-agenda
   :ensure nil
@@ -5058,16 +5043,14 @@ This calls `org-content' interactively."
   :config
   (wal/replace-in-alist 'org-agenda-prefix-format '((agenda . "  %?-12t%? c%s%b")))
 
-  (advice-add
-   'org-agenda-list :after
-   #'wal/then-find-tasks-and-store-window-configuration)
-
   :custom
   (org-agenda-hide-tags-regexp "^@")
   (org-agenda-span 'day)
   (org-agenda-restore-windows-after-quit t)
   (org-agenda-time-leading-zero t)
   (org-agenda-log-mode-items '(clock))
+  (org-agenda-start-with-clockreport-mode t)
+  (org-agenda-start-with-log-mode t)
   (org-agenda-clockreport-parameter-plist
    '(:link t
      :maxlevel 3

@@ -24,21 +24,6 @@
 
     (was-called-with org-content (list 8))))
 
-(ert-deftest test-wal/then-find-tasks-and-store-window-configuration ()
-  (defvar org-agenda-files)
-  (with-mock (display-buffer
-              window-configuration-to-register)
-
-    (let ((org-agenda-files '("~"))
-          (wal/org-agenda-register-char ?t))
-
-      (wal/then-find-tasks-and-store-window-configuration)
-
-      (let ((buf (find-file-noselect "~")))
-
-        (was-called-with display-buffer (list buf '(display-buffer-in-previous-window)))
-        (was-called-with window-configuration-to-register (list ?t))))))
-
 (ert-deftest test-wal/maybe-org-roam-refile ()
   (defvar org-roam-directory)
   (defvar org-agenda-files)
