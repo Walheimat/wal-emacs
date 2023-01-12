@@ -4660,7 +4660,6 @@ If NOT-AT-POINT is t, call `consult-line' normally."
    ("m" . consult-bookmark)
    ("n" . consult-ripgrep)
    ("r" . consult-register)
-   ("s" . consult-symbol)
    ("t" . consult-theme)
    ("u" . wal/consult-unregister)
    ("<SPC>" . wal/univ-consult-mark)
@@ -8370,11 +8369,33 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
 
 Jump to symbols with =consult=.
 
+**** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/ignore-if-no-lsp (&rest _args)
+  "Don't call the function if `lsp-mode' is nil."
+  (unless lsp-mode
+    (message "Not in a LSP buffer"))
+  lsp-mode)
+#+END_SRC
+
+
+**** Configuration
+
 #+begin_src emacs-lisp
 (use-package consult-lsp
   :wal-ways nil
 
-  :after (consult lsp-mode))
+  :after (consult lsp-mode)
+
+  :config
+  (advice-add
+   'consult-lsp-file-symbols :before-while
+   #'wal/ignore-if-no-lsp)
+
+  :bind
+  (:map wal/consult-map
+   ("s" . consult-lsp-file-symbols)))
 #+end_src
 
 ** lsp-sonarlint

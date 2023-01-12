@@ -78,4 +78,16 @@
 
     (was-called wal/dap-hydra/body)))
 
+(ert-deftest test-wal/ignore-if-no-lsp ()
+  (defvar lsp-mode)
+  (with-mock (message)
+    (let ((lsp-mode nil))
+      (should-not (wal/ignore-if-no-lsp))
+      (was-called-with message "Not in a LSP buffer")
+      (wal/clear-mocks))
+
+    (let ((lsp-mode t))
+      (should (wal/ignore-if-no-lsp))
+      (was-not-called message))))
+
 ;;; wal-lsp-test.el ends here
