@@ -2358,10 +2358,11 @@ are two differences:
                 (nconc args* (use-package-normalize/:wal-bind name keyword x)))
           (setq arg (cdr arg)))
          (t
-          (use-package-error
-           (concat (symbol-name name)
-                   " wants arguments acceptable to the `bind-keys' macro,"
-                   " or a list of such values"))))))
+          (when (fboundp 'use-package-error)
+            (use-package-error
+             (concat (symbol-name name)
+                     " wants arguments acceptable to the `bind-keys' macro,"
+                     " or a list of such values")))))))
     args*))
 
 (defalias 'use-package-normalize/:wal-bind 'wal/use-package-normalize-binder)
@@ -2482,6 +2483,8 @@ external ones.
 (declare-function wal/modern-emacs-p "wal-func.el")
 (declare-function wdb/pop-up "wal-func.el")
 (declare-function wdb/side "wal-func.el")
+
+(defvar wal/misc-map)
 
 (wal/on-boot emacs
   (wdb/pop-up 'help-mode)
@@ -4731,7 +4734,11 @@ Keep order.
 
 (declare-function consult--buffer-query "ext:consult.el")
 (declare-function project-buffers "ext:project.el")
+(declare-function project-name "ext:project.el")
 (declare-function project-root "ext:project.el")
+(declare-function rg-read-files "ext:rg.el")
+(declare-function rg-run "ext:rg.el")
+(declare-function rg-read-pattern "ext:rg.el")
 (declare-function wal/univ-p "wal-func.el")
 
 (defvar compilation-save-buffers-predicate)
@@ -5205,6 +5212,7 @@ case."
   (interactive)
 
   (declare-function org-refile "ext:org.el")
+  (defvar org-roam-directory)
 
   (if (and (org-roam-buffer-p) (not (wal/univ-p)))
       (let ((org-agenda-files (list org-roam-directory)))
@@ -8194,7 +8202,7 @@ servers yourself[fn:15].
   "Check if MODE is considered slow."
   (memq mode wal/lsp-slow-modes))
 
-(defun wal/lsp (&optional corfu-values)
+(defun wal/lsp ()
   "Defer LSP setup for the file.
 
 Sets up completion styles to use `orderless' unless the mode is
@@ -8415,9 +8423,10 @@ Jump to symbols with =consult=.
 #+BEGIN_SRC emacs-lisp
 (defun wal/ignore-if-no-lsp (&rest _args)
   "Don't call the function if `lsp-mode' is nil."
-  (unless lsp-mode
-    (message "Not in a LSP buffer"))
-  lsp-mode)
+  (if (bound-and-true-p lsp-mode)
+      t
+    (message "Not in a LSP buffer")
+    nil))
 #+END_SRC
 
 
