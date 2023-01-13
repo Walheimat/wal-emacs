@@ -751,7 +751,7 @@
 
     (with-mock ((message . #'wal/rf))
 
-      (should (string-equal (wal/message-in-a-bottle bottle wal/ascii-whale) "}< ,.__) Sting is playing bass, yeah")))))
+      (should (string-equal (wal/message-in-a-bottle bottle wal/ascii-cachalot-whale) "}< ,.__) Sting is playing bass, yeah")))))
 
 (ert-deftest test-wal/install-packages ()
   (with-mock ((package-install . #'wal/rf)
@@ -1005,8 +1005,6 @@
   (match-expansion
    (wal/hook test
      "We're just testing."
-     :messages '("Just testing")
-     :lsp t
      :corfu (0.2 4)
      :shallow t
      (message "hi"))

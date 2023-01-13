@@ -1601,8 +1601,8 @@ Act on regions.
 Show messages without cluttering.
 
 #+BEGIN_SRC emacs-lisp
-(defconst wal/ascii-whale (propertize "}< ,.__)" 'face 'mode-line-emphasis)
-  "A small, highlighted ASCII whale.")
+(defconst wal/ascii-cachalot-whale (propertize "}< ,.__)" 'face 'mode-line-emphasis)
+  "A small, highlighted ASCII cachalot whale.")
 
 (defconst wal/ascii-blue-whale (propertize "}    , ﬞ   ⎠" 'face 'mode-line-emphasis)
   "A small, highlighted ASCII blue whale.")
@@ -1646,7 +1646,7 @@ Calls `delete-other-windows' if DELETE-WINDOWS is t."
                        (lambda (it) (not (package-installed-p it)))
                        packages)))
 
-    (mapc (lambda (it) (package-install it)) new-packages)
+    (mapc #'package-install new-packages)
 
     (when delete-windows
       (delete-other-windows))
@@ -1786,8 +1786,8 @@ will be mapped to the captain key.
 
 CORFU is a list of (IDLE-DELAY PREFIX-LENGTH).
 
-SHALLOW is either t or nil. If it is t, all keys but CORFU will
-be ignored.
+SHALLOW is either t or nil. If it is t, no indentation-related
+values will be set.
 
 The rest of the BODY will be spliced into the lambda."
   (declare (indent defun) (doc-string 2))
@@ -1808,7 +1808,7 @@ The rest of the BODY will be spliced into the lambda."
               ,docs
               ,@(delete
                  nil
-                 `(,(when (and include messages)
+                 `(,(when messages
                       `(wal/message-in-a-bottle ,messages))
                    ,(and include '(hack-local-variables))
                    ,(and include (cond ((equal 'always tabs)
@@ -1819,13 +1819,13 @@ The rest of the BODY will be spliced into the lambda."
                                         '(wal/disable-tabs))
                                        (t `(wal/maybe-enable-tabs :indent-with ,tabs))))
                    ,@safe-body
-                   ,(when (and include lsp)
+                   ,(when lsp
                      '(wal/lsp))
                    ,(when corfu
                       `(wal/corfu-auto ',corfu))
                    ,(when prog-like
                       '(run-hooks 'prog-like-hook))
-                   ,(when (and include captain)
+                   ,(when captain
                       `(local-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) ',captain-name)))))
 
             ,(when (and lsp lsp-ignores)
@@ -2507,6 +2507,8 @@ No double spaces in sentences.
   :init
   (wal/hook text-mode
     "Hook into `text-mode'."
+    :shallow t
+
     ;; Activate `flyspell-mode' when editing commit messages.
     (when (string-match "COMMIT_EDITMSG" (buffer-name))
       (flyspell-mode)))
@@ -2816,9 +2818,11 @@ Let's try to be even more =helpful=.
    ([remap describe-key] . helpful-key)
    ([remap describe-variable] . helpful-variable)
    ([remap describe-symbol] . helpful-symbol)
+
    :map help-map
    ("M" . helpful-macro)
    ("C-x" . helpful-kill-buffers)
+
    :map helpful-mode-map
    ("k" . kill-buffer-and-window)))
 #+END_SRC
@@ -3017,12 +3021,14 @@ Don't you want to edit your buffer in multiple places at once?
 
   :bind
   (("C-." . mc/mark-next-like-this)
+
    :map mc/keymap
+   ("C-," . mc/unmark-next-like-this)
+   ("C-/" . mc/skip-to-next-like-this)
+
    ;; Keep the first two bindings from the default map.
    ("C-g" . mc/keyboard-quit)
-   ("C-'" . mc-hide-unmatched-lines-mode)
-   ("C-," . mc/unmark-next-like-this)
-   ("C-/" . mc/skip-to-next-like-this))
+   ("C-'" . mc-hide-unmatched-lines-mode))
 
   :wal-bind
   ("<mouse-3>" . mc/add-cursor-on-click)
@@ -3163,7 +3169,7 @@ I like nice-looking things.
 (declare-function wal/biased-random "wal-func.el")
 
 (defvar dashboard-footer-messages)
-(defvar wal/ascii-whale)
+(defvar wal/ascii-cachalot-whale)
 (defvar wal/emacs-config-default-path)
 
 (defgroup wal-visuals nil
@@ -3250,7 +3256,9 @@ Let's have a dash of board.
   (dashboard-items '((recents . 5)
                      (projects . 3)
                      (bookmarks . 3)))
+  (dashboard-projects-backend 'project-el)
 
+  (dashboard-image-banner-max-height (if wal/hidpi 0 300))
   (dashboard-startup-banner (let ((ext (if (or (daemonp) (display-graphic-p))
                                            ".png"
                                          ".txt")))
@@ -3258,9 +3266,10 @@ Let's have a dash of board.
                               (expand-file-name
                                (concat "assets/logo" ext)
                                wal/emacs-config-default-path)))
+
   (dashboard-footer-icon (if (or (daemonp) (display-graphic-p))
                              ":whale:"
-                           wal/ascii-whale))
+                           wal/ascii-cachaolot-whale))
   (dashboard-footer-messages '("breaching your favorite stupid framework"
                                "I propel myself forward on nothing but flukes"
                                "devout and up the spout"
@@ -3285,8 +3294,6 @@ Let's have a dash of board.
   (dashboard-set-file-icons t)
   (dashboard-set-navigator t)
   (dashboard-path-style 'truncate-beginning)
-  (dashboard-projects-backend 'project-el)
-  (dashboard-image-banner-max-height (if wal/hidpi 0 300))
 
   :bind
   (("C-c d" . dashboard-refresh-buffer)))
@@ -8052,6 +8059,7 @@ My spelling is bad. Uses American English for =flyspell=.
   :bind
   (:map flyspell-mode-map
    ("C-." . ispell-word)  ; Replaces `flyspell-auto-correct-word', which is still available via `C-M-i'.
+
    :map wal/flyspell-map
    ("s" . wal/flyspell)
    ("b" . flyspell-buffer)
