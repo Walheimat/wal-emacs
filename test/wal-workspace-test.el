@@ -70,4 +70,13 @@
 
     (was-called-with rg-run (list 'testing 'testing "/tmp/project" nil nil 'testing))))
 
+(ert-deftest test-wal/project-find-buffer ()
+  (defvar consult-project-buffer-sources)
+  (with-mock (consult-buffer)
+    (let ((consult-project-buffer-sources 'testing))
+
+      (wal/project-find-buffer)
+
+      (was-called-with consult-buffer (list 'testing)))))
+
 ;;; wal-workspace-test.el ends here
