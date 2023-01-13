@@ -28,12 +28,13 @@
 
     (with-mock ((project-current . #'always)
                 (project-root . (lambda (_) "/tmp/cmd"))
+                (project-name . (lambda (_) "Test Project"))
                 (read-shell-command . (lambda (&_rest _) "test"))
                 compile)
 
-      (wal/project-command 'test "Testing: ")
+      (wal/project-command 'test)
 
-      (was-called-with read-shell-command (list "Testing: " "untest"))
+      (was-called-with read-shell-command (list "Test project (Test Project): " "untest"))
       (was-called-with compile "test")
       (should (string-equal "test" (gethash "/tmp/cmd" (plist-get wal/project-commands 'test)))))))
 
@@ -41,20 +42,20 @@
   (with-mock (wal/project-command)
     (wal/project-compile)
 
-    (was-called-with wal/project-command '(compile "Compile project: "))))
+    (was-called-with wal/project-command '(compile))))
 
 (ert-deftest test-wal/project-test ()
   (with-mock (wal/project-command)
     (wal/project-test)
 
-    (was-called-with wal/project-command '(test "Test project: "))))
+    (was-called-with wal/project-command '(test))))
 
 (ert-deftest test-wal/project-install ()
   (with-mock (wal/project-command)
 
     (wal/project-install)
 
-    (was-called-with wal/project-command '(install "Install project: "))))
+    (was-called-with wal/project-command '(install))))
 
 (ert-deftest test-wal/project-find-rg ()
   (with-mock ((rg-read-pattern . #'wal/rt)

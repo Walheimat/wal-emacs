@@ -4759,15 +4759,18 @@ Built-in project management.
       (concat "*" "project-" wal/project-current-command "*")
     "*project-compile*"))
 
-(defun wal/project-command (cmd prompt)
-  "Run CMD for the current project using PROMPT."
+(defun wal/project-command (cmd)
+  "Run CMD for the current project."
   (let* ((cur (project-current))
          (key (project-root cur))
+         (name (project-name cur))
+         (cmd-name (symbol-name cmd))
          (table (plist-get wal/project-commands cmd))
          (default (or (symbol-value
                        (intern (format "wal/project-%s-default-cmd" cmd)))
                       ""))
          (prev (gethash key table default))
+         (prompt (concat (capitalize cmd-name) " project (" name "): "))
          (command (read-shell-command prompt prev))
          (default-directory key)
          (wal/project-current-command (symbol-name cmd))
@@ -4782,19 +4785,19 @@ Built-in project management.
   "Compile the current project."
   (interactive)
 
-  (wal/project-command 'compile "Compile project: "))
+  (wal/project-command 'compile))
 
 (defun wal/project-test ()
   "Test the current project."
   (interactive)
 
-  (wal/project-command 'test "Test project: "))
+  (wal/project-command 'test))
 
 (defun wal/project-install ()
   "Install the current project."
   (interactive)
 
-  (wal/project-command 'install "Install project: "))
+  (wal/project-command 'install))
 
 (defun wal/with-project-bounded-compilation (fun &rest args)
   "Run FUN applying ARGS.
