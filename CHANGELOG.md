@@ -10,17 +10,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Regular expression for `js` to follow errors in jest output.
+- `wal/hook` now accepts key `shallow` to not meddle with indentation.
+- Compilations buffers now filter ANSI colors.
+- Package `iedit`.
+- `project-switch-commands` `wal/project-consult-buffer` and
+  `wal/project-magit-status`.
 
 ### Changed
 
 - `slime` no longer requires `sbcl` executable to exist.
 - Most custom additional bindings were removed from built-in maps. QoL
   bindings were kept.
+- Package sections that have custom utility are now subdivided by
+  Utility and Configuration sections.
+- Setting `corfu-auto-{delay,prefix}` is now no longer tied to
+  `wal/lsp`.
 
 ### Removed
 
 - Package `jest` because of its `projectile` dependency leading to
   issues.
+- Calling `org-agenda-list` no longer stores a window configuration.
+
+### Fixed
+
+- `pixel-scroll-precision-mode` now only activated for 29+.
 
 ## [v1.10.0]
 
