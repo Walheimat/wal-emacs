@@ -70,13 +70,19 @@
 
     (was-called-with rg-run (list 'testing 'testing "/tmp/project" nil nil 'testing))))
 
-(ert-deftest test-wal/project-find-buffer ()
+(ert-deftest test-wal/project-consult-buffer ()
   (defvar consult-project-buffer-sources)
   (with-mock (consult-buffer)
     (let ((consult-project-buffer-sources 'testing))
 
-      (wal/project-find-buffer)
+      (wal/project-consult-buffer)
 
       (was-called-with consult-buffer (list 'testing)))))
+
+(ert-deftest test-wal/project-magit-status ()
+  (with-mock (magit-status (project-root . (lambda (_) "/tmp/test")) project-current)
+    (wal/project-magit-status)
+
+    (was-called-with magit-status (list "/tmp/test"))))
 
 ;;; wal-workspace-test.el ends here
