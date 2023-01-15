@@ -4777,6 +4777,8 @@ Built-in project management.
 (defvar-local wal/project-install-default-cmd nil)
 
 (defvar wal/project-current-command nil)
+(defvar wal/project-command-history nil)
+(defconst wal/project-command-history-length 5)
 
 (defun wal/project-command--buffer-name (_major-mode)
   "Get the buffer name for the current command."
@@ -4785,24 +4787,33 @@ Built-in project management.
     "*project-compile*"))
 
 (defun wal/project-command (cmd)
-  "Run CMD for the current project."
-  (let* ((cur (project-current))
-         (key (project-root cur))
-         (name (project-name cur))
-         (cmd-name (symbol-name cmd))
+  "Run CMD for the current project.
+
+Each command will be stored in a per-project history."
+  (let* ((current (project-current t))
+         (root (project-root current))
+         (name (project-name current))
+
          (table (plist-get wal/project-commands cmd))
-         (default (or (symbol-value
-                       (intern (format "wal/project-%s-default-cmd" cmd)))
-                      ""))
-         (prev (gethash key table default))
-         (prompt (concat (capitalize cmd-name) " project (" name "): "))
-         (command (read-shell-command prompt prev))
-         (default-directory key)
+         (default-cmd (or (symbol-value
+                           (intern (format "wal/project-%s-default-cmd" cmd)))
+                          ""))
+         (history (gethash root table (make-ring wal/project-command-history-length)))
+         (wal/project-command-history (ring-elements history))
+
+         (initial (if (ring-empty-p history)
+                      default-cmd
+                    (ring-ref history 0)))
          (wal/project-current-command (symbol-name cmd))
+         (prompt (concat (capitalize wal/project-current-command) " project (" name "): "))
+         (command (read-shell-command prompt initial 'wal/project-command-history))
+
+         (default-directory (project-root current))
          (compilation-buffer-name-function 'wal/project-command--buffer-name))
 
     ;; Store the entered command.
-    (puthash key command table)
+    (ring-insert history command)
+    (puthash root history table)
 
     (compile command)))
 

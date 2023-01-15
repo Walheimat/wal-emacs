@@ -24,19 +24,28 @@
 
 (ert-deftest test-wal/project-command ()
   (let ((wal/project-commands (list 'test (make-hash-table :test 'equal)))
-        (wal/project-test-default-cmd "untest"))
+        (wal/project-test-default-cmd "untest")
+        (wal/project-command-history nil)
+        (entered-command nil))
 
     (with-mock ((project-current . #'always)
                 (project-root . (lambda (_) "/tmp/cmd"))
                 (project-name . (lambda (_) "Test Project"))
-                (read-shell-command . (lambda (&_rest _) "test"))
-                compile)
+                compile
+                (read-shell-command . (lambda (&rest _) entered-command)))
+
+      (setq entered-command "test")
 
       (wal/project-command 'test)
-
-      (was-called-with read-shell-command (list "Test project (Test Project): " "untest"))
+      (was-called-with read-shell-command (list "Test project (Test Project): " "untest" 'wal/project-command-history))
       (was-called-with compile "test")
-      (should (string-equal "test" (gethash "/tmp/cmd" (plist-get wal/project-commands 'test)))))))
+
+      (setq entered-command "best")
+      (wal/project-command 'test)
+      (was-called-with compile "best")
+
+      (should (string-equal "test" (ring-ref (gethash "/tmp/cmd" (plist-get wal/project-commands 'test)) 1)))
+      (should (string-equal "best" (ring-ref (gethash "/tmp/cmd" (plist-get wal/project-commands 'test)) 0))))))
 
 (ert-deftest test-wal/project-compile ()
   (with-mock (wal/project-command)

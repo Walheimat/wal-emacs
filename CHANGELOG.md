@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `iedit`.
 - `project-switch-commands` `wal/project-consult-buffer` and
   `wal/project-magit-status`.
+- Project commands now have a per-project history.
 
 ### Changed
 
