@@ -193,11 +193,6 @@
       (was-called-with add-hook (list 'after-revert-hook #'wal/tangle-config-prompt nil t))
       (was-called wal/ascii-whale-setup))))
 
-(ert-deftest test-wal/find-config-changelog ()
-  (wal/find-config-changelog)
-
-  (should (string-equal "CHANGELOG.md" (buffer-name))))
-
 (ert-deftest test-wal/check-coverage--calculate-coverage ()
   (with-temp-buffer
     (rename-buffer "*wal-async*<2>")
@@ -207,29 +202,12 @@
 
       (should (string-equal "46.67%" (wal/check-coverage--calculate-coverage))))))
 
-(ert-deftest test-wal/find-init ()
-  (with-mock ((file-truename . (lambda (_) wal/emacs-config-default-path)))
-
-    (wal/find-init)
-
-    (should (string-equal (buffer-name) "emacs-config"))))
-
 (ert-deftest test-wal/customize-group ()
   (with-mock customize-group
 
     (wal/customize-group)
 
     (was-called-with customize-group (list 'wal t))))
-
-(ert-deftest test-wal/dired-config-packages ()
-  (wal/dired-config-packages)
-
-  (should (string-equal (buffer-name) "wal")))
-
-(ert-deftest test-wal/dired-config-tests ()
-  (wal/dired-config-tests)
-
-  (should (string-equal (buffer-name) "test")))
 
 (ert-deftest test-wal/check-coverage ()
   (with-mock (wal/coverage--execute

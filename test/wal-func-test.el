@@ -274,6 +274,13 @@
 
       (should (string-equal (buffer-name) "custom.el")))))
 
+(ert-deftest test-wal/find-init ()
+  (with-mock ((file-truename . (lambda (_) wal/emacs-config-default-path)))
+
+    (wal/find-init)
+
+    (should (string-equal (buffer-name) "emacs-config"))))
+
 (ert-deftest test-wal/find-fish-config ()
   (wal/with-temp-file "config.fish"
 
