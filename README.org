@@ -8989,7 +8989,6 @@ Animate a swimming whale in a =posframe=.
 (defvar wal/ascii-whale-buffer "*swimming-whale*")
 (defvar wal/ascii-whale-timer nil)
 (defvar wal/ascii-whale-parent-buffer nil)
-(defvar wal/ascii-whale-border-color nil)
 
 (defun wal/ascii-whale-animate ()
   "Animate the ASCII whale."
@@ -8999,7 +8998,8 @@ Animate a swimming whale in a =posframe=.
 
     ;; Render current frame.
     (let* ((frame (aref wal/ascii-whale-key-frames wal/ascii-whale-frame-index))
-           (colored (propertize frame 'face 'mode-line-highlight)))
+           (colored (propertize frame 'face `(:foreground ,(face-attribute 'default :background)
+                                              :background ,(face-attribute 'cursor :background)))))
 
       (insert colored)
 
@@ -9016,8 +9016,6 @@ Animate a swimming whale in a =posframe=.
   (when (featurep 'posframe)
     ;; Integrate in current window configuration.
     (setq wal/ascii-whale-parent-buffer (current-buffer))
-
-    (setq wal/ascii-whale-border-color (face-attribute 'mode-line-highlight :background nil t))
 
     (pcase wal/config-ascii-whale
       ('blue
@@ -9095,7 +9093,7 @@ INFO contains positioning information."
      wal/ascii-whale-buffer
      :accept-focus nil
      :border-width (pcase wal/config-ascii-whale ('blue 12) ('cachalot 6) (_ 6))
-     :border-color wal/ascii-whale-border-color
+     :border-color (face-attribute 'cursor :background)
      :poshandler 'wal/ascii-whale-poshandler
      :posframe-parent-buffer (or wal/ascii-whale-parent-buffer (current-buffer))
      :hidehandler 'wal/ascii-whale-hidehandler)))
