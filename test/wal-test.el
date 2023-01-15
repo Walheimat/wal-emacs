@@ -89,13 +89,14 @@
     (should (wal/ascii-whale-hidehandler '(:posframe-parent-buffer '(nil nil))))))
 
 (ert-deftest test-wal/ascii-whale-display ()
-  (let ((wal/ascii-whale-parent-buffer 'parent))
-    (with-mock (posframe-show (point . (lambda () 0)) (face-attribute . #'wal/rf))
+  (let ((wal/ascii-whale-parent-buffer 'parent)
+        (wal/ascii-whale-border-color 'mode-line-highlight))
+    (with-mock (posframe-show (face-attribute . #'wal/rf))
 
       (wal/ascii-whale-display)
 
       (was-called-with posframe-show (list wal/ascii-whale-buffer
-                                           :position 0
+                                           :accept-focus nil
                                            :border-width 12
                                            :border-color 'mode-line-highlight
                                            :poshandler 'wal/ascii-whale-poshandler
@@ -109,7 +110,7 @@
       (wal/ascii-whale-display)
 
       (was-called-with posframe-show (list wal/ascii-whale-buffer
-                                           :position 0
+                                           :accept-focus nil
                                            :border-width 12
                                            :border-color 'mode-line-highlight
                                            :poshandler 'wal/ascii-whale-poshandler

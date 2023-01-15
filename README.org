@@ -8989,6 +8989,7 @@ Animate a swimming whale in a =posframe=.
 (defvar wal/ascii-whale-buffer "*swimming-whale*")
 (defvar wal/ascii-whale-timer nil)
 (defvar wal/ascii-whale-parent-buffer nil)
+(defvar wal/ascii-whale-border-color nil)
 
 (defun wal/ascii-whale-animate ()
   "Animate the ASCII whale."
@@ -9015,6 +9016,8 @@ Animate a swimming whale in a =posframe=.
   (when (featurep 'posframe)
     ;; Integrate in current window configuration.
     (setq wal/ascii-whale-parent-buffer (current-buffer))
+
+    (setq wal/ascii-whale-border-color (face-attribute 'mode-line-highlight :background nil t))
 
     (pcase wal/config-ascii-whale
       ('blue
@@ -9087,14 +9090,15 @@ INFO contains positioning information."
 
 (defun wal/ascii-whale-display ()
   "Display the running animation in a posframe."
-  (posframe-show
+  (let ((default-frame-alist nil))
+    (posframe-show
      wal/ascii-whale-buffer
-     :position (point)
+     :accept-focus nil
      :border-width (pcase wal/config-ascii-whale ('blue 12) ('cachalot 6) (_ 6))
-     :border-color (face-attribute 'mode-line-highlight :background nil t)
+     :border-color wal/ascii-whale-border-color
      :poshandler 'wal/ascii-whale-poshandler
      :posframe-parent-buffer (or wal/ascii-whale-parent-buffer (current-buffer))
-     :hidehandler 'wal/ascii-whale-hidehandler))
+     :hidehandler 'wal/ascii-whale-hidehandler)))
 
 (defun wal/ascii-whale-toggle-display ()
   "Toggle the animation."
