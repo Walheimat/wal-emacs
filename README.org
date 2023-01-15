@@ -401,7 +401,7 @@ Any mode that should be on/off no matter what.
 (scroll-bar-mode -1)
 
 ;; Emacs 29.
-(when (equal 'modern (wal/modern-emacs-p))
+(when (wal/modern-emacs-p 29)
   (pixel-scroll-precision-mode 1))
 #+END_SRC
 
@@ -596,7 +596,7 @@ Make completions look nice.
 
   (wal/lieutenant "," '(:keymap wal/misc-map :wk "misc"))
 
-  (when (wal/modern-emacs-p)
+  (when (wal/modern-emacs-p 29)
     (wal/lieutenant! "d" 'duplicate-line 'duplicate-dwim))
 
   (wal/lieutenant "s" '(wal/scratch-buffer :wk "scratch buffer"))
@@ -886,18 +886,16 @@ Custom functionality.
 ** Emacs
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/modern-emacs-p ()
+(defun wal/modern-emacs-p (&optional min-version)
   "Check if we're using a modern version of Emacs.
 
-This will return a truthy value vor any version above 27."
-  (cond
-   ((> emacs-major-version 29)
-    'bleeding)
-   ((> emacs-major-version 28)
-    'modern)
-   ((> emacs-major-version 27)
-    'current)
-   (t nil)))
+If MIN-VERSION is set to a number, verify that current version is
+at or above it."
+  (if min-version
+      (if (and (numberp min-version) (>= min-version 28))
+          (>= emacs-major-version min-version)
+        (user-error "Provided minimum version not acceptable"))
+    (>= emacs-major-version 28)))
 #+END_SRC
 
 ** Directories
@@ -2012,7 +2010,7 @@ Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] 
 
 (defun wal/transparency--param ()
   "Get the transparency parameter for this Emacs version."
-  (if (equal (wal/modern-emacs-p) 'modern)
+  (if (wal/modern-emacs-p 29)
       'alpha-background
     'alpha))
 

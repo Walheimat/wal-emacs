@@ -10,7 +10,7 @@
 
 (ert-deftest test-wal/modern-emacs-p ()
   (let ((emacs-major-version 30))
-    (should (wal/modern-emacs-p)))
+    (should (wal/modern-emacs-p 30)))
 
   (let ((emacs-major-version 29))
     (should (wal/modern-emacs-p)))
@@ -20,6 +20,10 @@
 
   (let ((emacs-major-version 27))
     (should-not (wal/modern-emacs-p))))
+
+(ert-deftest test-wal/modern-emacs-p--errors-for-bad-arguments ()
+  (should-error (wal/modern-emacs-p 27) :type 'user-error)
+  (should-error (wal/modern-emacs-p "testing") :type 'user-error))
 
 (ert-deftest test-wal/create-non-existent-directory ()
   (let ((temp-dir "/tmp/some-other/dir/"))
