@@ -347,7 +347,7 @@
         (preceding 'darkness)
         (item 'my))
 
-    (should-error (wal/insert-after 'test-target preceding item))))
+    (should-error (wal/insert-after 'test-target preceding item t))))
 
 (ert-deftest test-wal/insert-after--errors-if-key-not-in-list ()
   (let ((test-target '(hello my old friend))
