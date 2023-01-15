@@ -6540,11 +6540,9 @@ Use snake when you can't =make=.
 
 Unless another MARKER-FILE is provided, this will use the usual
 TOML."
-  (when-let* ((marker (or marker-file "pyproject.toml"))
+  (and-let* ((marker (or marker-file "pyproject.toml"))
               (current default-directory)
-              (project-directory (locate-dominating-file current marker)))
-
-    t))
+              (project-directory (locate-dominating-file current marker)))))
 #+END_SRC
 
 **** Configuration
@@ -9084,9 +9082,8 @@ INFO contains positioning information."
 
 (defun wal/ascii-whale-hidehandler (info)
   "Check INFO whether the parent buffer is invisible."
-  (when-let ((parent (cdr (plist-get info :posframe-parent-buffer))))
-
-    (not (get-buffer-window parent t))))
+  (and-let* ((parent (cdr (plist-get info :posframe-parent-buffer)))
+             (invisible (not (get-buffer-window parent t))))))
 
 (defun wal/ascii-whale-display ()
   "Display the running animation in a posframe."
