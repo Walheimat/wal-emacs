@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Utility and Configuration sections.
 - Setting `corfu-auto-{delay,prefix}` is now no longer tied to
   `wal/lsp`.
+- User-prefixed `y` now loads from register.
 
 ### Removed
 
