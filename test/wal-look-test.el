@@ -9,27 +9,32 @@
 (require 'wal-look nil t)
 
 (ert-deftest test-wal/set-transparency ()
-  (let ((emacs-major-version 29))
+  (let ((entered-number nil))
+    (with-mock ((read-number . (lambda (&rest _) entered-number)))
 
-    (funcall-interactively 'wal/set-transparency 90)
+      (let ((emacs-major-version 29))
 
-    (should (eq 90 wal/transparency))
-    (should (eq 90 (cdr (assoc 'alpha-background default-frame-alist)))))
+        (setq entered-number 90)
+        (call-interactively 'wal/set-transparency)
 
-  (let ((emacs-major-version 29))
+        (should (eq 90 wal/transparency))
+        (should (eq 90 (cdr (assoc 'alpha-background default-frame-alist)))))
 
-    (setq wal/transparency 50)
-    (funcall-interactively 'wal/set-transparency)
+      (let ((emacs-major-version 29))
 
-    (should (eq 50 wal/transparency))
-    (should (eq 50 (cdr (assoc 'alpha-background default-frame-alist)))))
+        (setq wal/transparency 50)
+        (wal/set-transparency)
 
-  (let ((emacs-major-version 28))
+        (should (eq 50 wal/transparency))
+        (should (eq 50 (cdr (assoc 'alpha-background default-frame-alist)))))
 
-    (funcall-interactively 'wal/set-transparency 90)
+      (let ((emacs-major-version 28))
 
-    (should (eq 90 wal/transparency))
-    (should (eq 90 (cdr (assoc 'alpha default-frame-alist))))))
+        (setq entered-number 90)
+        (call-interactively 'wal/set-transparency)
+
+        (should (eq 90 wal/transparency))
+        (should (eq 90 (cdr (assoc 'alpha default-frame-alist))))))))
 
 (ert-deftest test-wal/load-active-theme ()
   (let ((wal/active-theme nil))
