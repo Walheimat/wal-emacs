@@ -189,7 +189,6 @@
 
     (should (equal (buffer-string) "This will stay"))))
 
-
 (ert-deftest test-wal/kwim--kills-region-if-active ()
   (with-mock ((region-active-p . #'always) kill-region)
     (with-temp-buffer
@@ -439,7 +438,6 @@
 
     (should (eq indent-tabs-mode nil))))
 
-
 (ert-deftest test-wal/enable-tabs--enables ()
   (with-temp-buffer
     (setq-local indent-tabs-mode nil)
@@ -448,7 +446,6 @@
     (wal/enable-tabs)
 
     (should (eq indent-tabs-mode t))))
-
 
 (ert-deftest test-wal/maybe-enable-tabs--enables-if-tabs-preferred ()
   (with-temp-buffer
@@ -473,7 +470,6 @@
     (wal/maybe-enable-tabs)
 
     (should (eq indent-tabs-mode nil))))
-
 
 (defvar wal/indent-offset 6)
 (ert-deftest test-wal/set-indent-defaults ()
@@ -510,17 +506,14 @@
 
       (should (eq (wal/biased-random 4 t) 1)))))
 
-
 (ert-deftest test-wal/bytes-per-mb--floors ()
   (should (equal 314572 (wal/bytes-per-mb 0.3))))
-
 
 (ert-deftest test-wal/maybe-intern--interns-non-symbol ()
   (should (eq 'test (wal/maybe-intern "test"))))
 
 (ert-deftest test-wal/maybe-intern--leaves-symbols ()
   (should (eq 'test (wal/maybe-intern 'test))))
-
 
 (ert-deftest test-wal/truncate--truncates ()
   (should (string-equal (wal/truncate "This is it" 7) "This...")))
@@ -530,7 +523,6 @@
 
 (ert-deftest test-wal/truncate--leaves-as-is-if-below ()
   (should (string-equal (wal/truncate "This is it" 24) "This is it")))
-
 
 (ert-deftest test-wal/pad-string--pads ()
   (let ((test-string "hello"))
@@ -542,12 +534,10 @@
 
     (should (equal "hello " (wal/pad-string test-string t)))))
 
-
 (ert-deftest test-wal/univ-p ()
   (let ((current-prefix-arg '(4)))
 
     (should (wal/univ-p))))
-
 
 (defvar test-standard 'standard)
 
@@ -575,7 +565,6 @@
    `(when (require 'test nil :no-error)
       (message "Testing again"))))
 
-
 (ert-deftest test-wal/server-edit-p ()
   (defvar server-buffer-clients)
   (defvar with-editor-mode)
@@ -592,7 +581,6 @@
         (with-editor-mode nil))
 
     (should (wal/server-edit-p))))
-
 
 (ert-deftest test-wal/delete-edit-or-kill ()
   (with-mock ((wal/server-edit-p . #'always)
@@ -614,7 +602,6 @@
 
     (should (equal (wal/delete-edit-or-kill) 'kill))))
 
-
 (require 'shell)
 
 (ert-deftest test-wal/dead-shell-p ()
@@ -622,7 +609,6 @@
     (shell-mode)
 
     (should (wal/dead-shell-p))))
-
 
 (ert-deftest test-wal/prefix-user-key ()
   (defvar wal/use-hyper-prefix)
@@ -810,7 +796,6 @@
   (let ((wal/expansion-packs wal/test-packs))
 
     (should (wal/expansion-pack-p 'three-mode))))
-
 
 (ert-deftest test-wal/install-expansion-pack-extra ()
   (let ((messages '())
@@ -1100,7 +1085,6 @@
 
     (call-interactively #'wal/kill-async-process-buffers)
     (should (> buf-count (length (buffer-list)))))
-
 
   (with-mock ((buffer-list . (lambda () (list (get-buffer-create (generate-new-buffer-name "*wal-async*")))))
               (get-buffer-window . (lambda (_) 'window))

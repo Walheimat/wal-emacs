@@ -39,7 +39,6 @@
       (was-called-nth-with add-hook (list 'kill-buffer-hook #'wal/ascii-whale-clean-up nil t) 0)
       (was-called-nth-with add-hook (list 'window-configuration-change-hook #'wal/ascii-whale-display nil t) 1)
 
-
       (was-called-with run-with-timer (list 0 8 #'wal/ascii-whale-animate))
       (was-called wal/ascii-whale-animate)
       (was-called wal/ascii-whale-display))
