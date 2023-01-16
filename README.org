@@ -361,9 +361,9 @@ packages.
       display-time-default-load-average nil
       save-interprogram-paste-before-kill t
 
-      ;; Mark ring.
-      mark-ring-max 32
-      global-mark-ring-max 32
+      ;; Mark ring (halve it).
+      mark-ring-max 8
+      global-mark-ring-max 8
 
       ;; Search.
       isearch-lazy-count t
@@ -375,8 +375,10 @@ packages.
       ;; Editing.
       backward-delete-char-untabify-method 'hungry
 
+      ;; Recent files.
       ;; Otherwise source `consult--source-project-recent-file' won't work.
-      recentf-filename-handlers nil)
+      recentf-filename-handlers nil
+      recentf-max-saved-items 100)
 #+END_SRC
 
 ** Global Modes
@@ -4865,7 +4867,9 @@ Will search using QUERY in FILES."
   (interactive)
 
   (defvar consult-project-buffer-sources)
-  (consult-buffer consult-project-buffer-sources))
+  (let ((confirm-nonexistent-file-or-buffer t))
+
+    (consult-buffer consult-project-buffer-sources)))
 
 (defun wal/project-magit-status ()
   "Show `magit-status' for the current project."
