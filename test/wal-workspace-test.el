@@ -89,9 +89,24 @@
       (was-called-with consult-buffer (list 'testing)))))
 
 (ert-deftest test-wal/project-magit-status ()
-  (with-mock (magit-status (project-root . (lambda (_) "/tmp/test")) project-current)
+  (with-mock (magit-status
+              (project-root . (lambda (_) "/tmp/test"))
+              (project-current . (lambda (&rest _) (list 'vc 'Git "/tmp/test"))))
+
     (wal/project-magit-status)
 
     (was-called-with magit-status (list "/tmp/test"))))
+
+(ert-deftest test-wal/project-magit-status--ignores-if-no-vc ()
+  (ert-with-message-capture messages
+    (with-mock ((project-current . (lambda (&rest _) (list 'vc nil "/tmp/test")))
+                (project-root . (lambda (&rest _) "/tmp/test"))
+                magit-status)
+
+    (wal/project-magit-status)
+
+    (was-not-called magit-status)
+
+    (should (string= "Project at ’/tmp/test’ is not version-controlled\n" messages)))))
 
 ;;; wal-workspace-test.el ends here

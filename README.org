@@ -4871,7 +4871,11 @@ Will search using QUERY in FILES."
   "Show `magit-status' for the current project."
   (interactive)
 
-  (magit-status (project-root (project-current t))))
+  (if-let* ((current (project-current t))
+            (root (project-root current))
+            (is-vc (cadr current)))
+      (magit-status root)
+    (message "Project at '%s' is not version-controlled" root)))
 #+END_SRC
 
 **** Configuration
