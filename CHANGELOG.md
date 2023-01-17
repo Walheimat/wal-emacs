@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Idle delay was doubled.
 - Org `transient` now binds `org-info-find-node`.
 
+### Removed
+
+- Package `python-pytest` since it uses `projectile` under the hood
+  which causes problems.
+
 ### Fixed
 
 - `wal/project-magit-status` now will not run if the (sub-)project is
