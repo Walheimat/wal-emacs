@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Idle delay was doubled.
 - Org `transient` now binds `org-info-find-node`.
+- The `org` transient now allow sorting from headings; prefixes were
+  changed to free `s` (subtrees now use `t` and timestamps `.`).
 
 ### Removed
 
