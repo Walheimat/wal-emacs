@@ -677,11 +677,6 @@ I use many[fn:9] custom keybindings. You can find an overview [[file:docs/bindin
   "List of keys ordered by reachability."
   :type '(list string string string string string)
   :group 'wal-key-bindings)
-
-(defcustom wal/dwim-key "M-."
-  "Key sequence used to do what I mean."
-  :type 'key-sequence
-  :group 'wal-key-bindings)
 #+END_SRC
 
 ** Packages
@@ -834,11 +829,13 @@ above).
   (transient-hide-during-minibuffer-read t)
 
   :config
-  (bind-key wal/dwim-key 'transient-show 'transient-map)
-
   (with-eval-after-load 'wal-settings
     (defvar wal/idle-delay)
-    (setq transient-show-popup wal/idle-delay)))
+    (setq transient-show-popup wal/idle-delay))
+
+  :bind
+  (:map transient-map
+   ("M-." . transient-show)))
 #+END_SRC
 
 ** Footer
@@ -4275,7 +4272,6 @@ Complete commands and code.
 (defvar consult-register--narrow)
 (defvar savehist-additional-variables)
 (defvar wal/active-theme)
-(defvar wal/dwim-key)
 
 ;;; Customization:
 
@@ -4336,8 +4332,9 @@ This a list of (DELAY PREFIX-LENGTH)."
   :demand
   :after corfu
 
-  :config
-  (bind-key wal/dwim-key 'corfu-quick-complete 'corfu-map))
+  :bind
+  (:map corfu-map
+   ("M-q" . corfu-quick-complete)))
 #+END_SRC
 
 *** corfu-history
@@ -4504,7 +4501,10 @@ completion actions.
 
   :config
   (marginalia-mode)
-  (bind-key wal/dwim-key 'marginalia-cycle 'minibuffer-local-map))
+
+  :bind
+  (:map minibuffer-local-map
+   ("C-," . marginalia-cycle)))
 #+END_SRC
 
 *** embark
@@ -4534,7 +4534,7 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
 
   :custom
   (embark-mixed-indicator-delay wal/idle-delay)
-  (embark-cycle-key (kbd wal/dwim-key))
+  (embark-cycle-key (kbd "C-,"))
 
   :wal-bind
   ("k" . wal/univ-embark-act))
@@ -4588,7 +4588,7 @@ Do not ignore hidden files."
                 :narrow (consult--type-narrow consult-register--narrow)
                 :sort nil
                 :require-match t
-                :history t ;; disable history
+                :history t
                 :lookup #'consult--lookup-candidate))))
 
     (setq register-alist (assoc-delete-all key register-alist))))
@@ -4622,6 +4622,17 @@ If NOT-AT-POINT is t, call `consult-line' normally."
   (let ((vertico-count 20))
 
     (apply fun args)))
+
+(defvar-local wal/consult-preview-function nil)
+
+(defun wal/consult-toggle-preview ()
+  "Command to enable/disable preview."
+  (interactive)
+  (if wal/consult-preview-function
+      (setq consult--preview-function wal/consult-preview-function
+            wal/consult-preview-function nil)
+    (setq wal/consult-preview-function consult--preview-function
+          consult--preview-function #'ignore)))
 #+END_SRC
 
 **** Configuration
@@ -4649,12 +4660,14 @@ If NOT-AT-POINT is t, call `consult-line' normally."
    consult--source-recent-file
    consult--source-project-recent-file
    consult--source-bookmark
-   :preview-key (kbd wal/dwim-key)
+   :preview-key (kbd "C-.")
+
    consult--source-project-recent-file
    :narrow ?r
+
    wal/consult-clock-in
    :prompt "Clock in: "
-   :preview-key (kbd wal/dwim-key))
+   :preview-key (kbd "C-."))
 
   ;; Be sure to set the active them after switching.
   (advice-add 'consult-theme :after #'wal/then-set-active-theme)
@@ -4692,7 +4705,10 @@ If NOT-AT-POINT is t, call `consult-line' normally."
    ("<SPC>" . wal/univ-consult-mark)
    ("C-f" . consult-recent-file)
    ("+" . consult-mode-command)
-   ("-" . consult-minor-mode-menu))
+   ("-" . consult-minor-mode-menu)
+
+   :map vertico-map
+   ("C-M-." . wal/consult-toggle-preview))
 
   :wal-bind
   (("j" . consult-buffer)

@@ -110,4 +110,17 @@
 
     (should (equal 20 (wal/with-big-vertico fun)))))
 
+(ert-deftest test-wal/consult-toggle-preview ()
+  (defvar consult--preview-function)
+
+  (let ((consult--preview-function #'wal/rt))
+
+    (wal/consult-toggle-preview)
+
+    (should (equal #'ignore consult--preview-function))
+
+    (wal/consult-toggle-preview)
+
+    (should (equal #'wal/rt consult--preview-function))))
+
 ;;; wal-complete-test.el ends here

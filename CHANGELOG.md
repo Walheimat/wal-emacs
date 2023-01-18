@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Package `python-pytest` since it uses `projectile` under the hood
   which causes problems.
+- `wal/dwim-key` in favor of unique bindings.
 
 ### Fixed
 
