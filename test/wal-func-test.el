@@ -406,8 +406,9 @@
   (kill-buffer "*scratch*<4>"))
 
 (ert-deftest test-wal/persist-scratch-and-rehydrate ()
+  (defvar wal/scratch-persist-file)
   (wal/with-temp-file "scratch"
-    (let ((wal/scratch-persist wal/tmp-file))
+    (let ((wal/scratch-persist-file wal/tmp-file))
 
       (with-current-buffer (get-buffer-create "*scratch*")
         (erase-buffer)
@@ -415,7 +416,7 @@
 
       (wal/persist-scratch)
 
-      (let ((file (find-file-noselect wal/scratch-persist)))
+      (let ((file (find-file-noselect wal/scratch-persist-file)))
 
         (with-current-buffer file
 

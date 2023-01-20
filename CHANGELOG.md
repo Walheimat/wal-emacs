@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Function `wal/persist-scratch` now persist the content of all
+  scratch buffers.
+
 ### Changed
 
 - Idle delay was doubled.

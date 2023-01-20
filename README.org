@@ -473,8 +473,6 @@ Let's keep the scratch contents.
 ;; Empty scratch message.
 (setq initial-scratch-message "")
 
-(setq wal/scratch-persist wal/scratch-persist-file)
-
 (add-hook 'emacs-startup-hook #'wal/rehydrate-scratch)
 (add-hook 'kill-emacs-hook #'wal/persist-scratch)
 #+END_SRC
@@ -1268,25 +1266,32 @@ If SESSION is non-nil, switch to (or create) it."
 
     (pop-to-buffer buf '(display-buffer-same-window))))
 
-(defvar wal/scratch-persist nil)
-
 (defun wal/persist-scratch ()
-  "Persist contents of *scratch* buffer.
+  "Persist content of all *scratch* buffers.
 
-The contents are stored in `wal/scratch-persist' if non-nil."
-  (when wal/scratch-persist
-   (with-current-buffer (get-buffer-create "*scratch*")
-     (write-region (point-min) (point-max) wal/scratch-persist))))
+The contents are stored in `wal/scratch-persist-file' if non-nil. The
+order of buffers is not persisted."
+  (when wal/scratch-persist-file
+    (with-temp-buffer
+      (thread-last
+        (buffer-list)
+        (seq-filter (lambda (it) (string-match-p "\\*scratch" (buffer-name it))))
+        (reverse)
+        (mapconcat (lambda (it) (with-current-buffer it (concat (buffer-string) "\n\n"))))
+        (string-trim)
+        (insert))
+
+      (write-region (point-min) (point-max) wal/scratch-persist-file))))
 
 (defun wal/rehydrate-scratch ()
   "Re-hydrate scratch buffer (if persisted).
 
 This overrides the scratch buffer with the content stored in
 `wal/scratch-persist' if non-nil."
-  (when (file-exists-p wal/scratch-persist)
+  (when (file-exists-p wal/scratch-persist-file)
     (with-current-buffer (get-buffer "*scratch*")
       (delete-region (point-min) (point-max))
-      (insert-file-contents wal/scratch-persist))))
+      (insert-file-contents wal/scratch-persist-file))))
 #+END_SRC
 
 ** Indentation
