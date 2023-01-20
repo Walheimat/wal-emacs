@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `python-pytest` since it uses `projectile` under the hood
   which causes problems.
 - `wal/dwim-key` in favor of unique bindings.
+- Package `hydra` in favor of using `transient`. All hydras with the
+  exception of `wal/fly` (which I don't use) have been replaced.
 
 ### Fixed
 

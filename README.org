@@ -541,26 +541,6 @@ Make completions look nice.
      ["Fluff"
       ("w" "toggle animation" wal/ascii-whale-toggle-display)]])
 
-  ;; Move similar to `xah-fly-keys'.
-  (defhydra wal/fly (:hint nil :foreign-keys warn)
-    "
-%s`w/hew Fly: ✜ _i_ _j_ _k_ _l_ %s`w/hs ⇆ _u_ _o_ %s`w/hs ⇄ _h_ _;_ %s`w/hs ⇅ _,_ _._
-"
-    ("u" backward-word)
-    ("i" previous-line)
-    ("o" forward-word)
-    ("j" backward-char)
-    ("l" forward-char)
-    ("k" next-line)
-
-    ("h" beginning-of-line)
-    (";" end-of-line)
-
-    ("," scroll-up-command)
-    ("." scroll-down-command)
-
-    ("q" nil))
-
   ;; Additional `general' bindings.
   (wal/general
     "w" 'eww
@@ -777,30 +757,6 @@ All ARGS are passed to both definers."
   (seq-do #'wal/general-create-definer wal/general-leaders))
 #+END_SRC
 
-*** hydra
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Provides a context for related commands that can be (re-)executed in
-quick succession.
-
-**** Utility
-
-#+BEGIN_SRC emacs-lisp
-(defvaralias 'w/hs 'wal/hydra-separator)
-(defvar wal/hydra-separator (propertize " ⋰ " 'face 'shadow))
-
-(defvaralias 'w/hew 'wal/hydra-emoji-whale)
-(defvar wal/hydra-emoji-whale "🐋")
-#+END_SRC
-
-**** Configuration
-
-#+BEGIN_SRC emacs-lisp
-(use-package hydra)
-#+END_SRC
-
 *** transient
 :PROPERTIES:
 :UNNUMBERED: t
@@ -825,6 +781,8 @@ above).
 
 #+BEGIN_SRC emacs-lisp
 (use-package transient
+  :demand t
+
   :custom
   (transient-hide-during-minibuffer-read t)
 
@@ -2292,13 +2250,15 @@ available candidate from `wal/fixed-fonts'. Does the same for
 :END:
 
 Before =use-package= macro can be used to configure other packages it
-needs to be installed. We also install optional dependencies to
-diminish and delight minor modes.
+needs to be installed.
 
 #+BEGIN_SRC emacs-lisp
-(defconst wal/core-packages '(diminish
+(defconst wal/core-packages '(use-package
+                              quelpa
+                              quelpa-use-package
+                              diminish
                               delight
-                              use-package)
+                              general)
   "Packages to install before using `use-package'.
 Such as package `use-package'.")
 
@@ -2726,13 +2686,11 @@ be gone.
 
   :config
   ;; Allow for quicker un- and redoing.
-  (defhydra wal/winner (:hint nil)
-    "
-%s`w/hew Window layout: _u_ndo or _r_edo
-"
-    ("u" winner-undo)
-    ("r" winner-redo)
-    ("q" nil))
+  (wal/transient-define-prefix-once wal/winner ()
+    "Quickly undo and redo window configurations."
+    ["Window configurations"
+     ("u" "undo" winner-undo :transient t)
+     ("r" "redo" winner-redo :transient t)])
 
   (winner-mode 1)
 
@@ -2740,7 +2698,7 @@ be gone.
   (winner-dont-bind-my-keys t)
 
   :general
-  (wal/general "o" '(wal/winner/body :wk "winner")))
+  (wal/general "o" '(wal/winner :wk "winner")))
 #+END_SRC
 
 *** async
@@ -6318,24 +6276,22 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
   :ensure nil
 
   :config
-  (with-no-warnings
-    (defhydra wal/smerge (:hint nil :foreign-keys warn)
-      "
-%s`w/hew Resolve conflict: _u_pper, _l_ower or _a_ll %s`w/hs _n_ext or _p_revious
-"
-      ("p" smerge-prev)
-      ("n" smerge-next)
-      ("u" smerge-keep-upper)
-      ("l" smerge-keep-lower)
-      ("a" smerge-keep-all)
-      ("q" nil)))
+  (wal/transient-define-prefix-once wal/smerge ()
+    "Resolve conflicts until you don't."
+    [["Move"
+      ("n" "next" smerge-next :transient t)
+      ("p" "previous" smerge-prev :transient t)]
+     ["Keep"
+      ("u" "upper" smerge-keep-upper :transient t)
+      ("l" "lower" smerge-keep-lower :transient t)
+      ("a" "all" smerge-keep-all :transient t)]])
 
   (with-eval-after-load 'which-key
     (which-key-add-key-based-replacements "C-c g" "smerge"))
 
   :bind
   (:map smerge-basic-map
-   ("g" . wal/smerge/body))
+   ("g" . wal/smerge))
 
   :bind-keymap
   (("C-c g" . smerge-basic-map))
@@ -8381,21 +8337,19 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
   (add-hook 'dap-terminated-hook #'wal/dap-terminated t)
   (add-hook 'dap-stopped-hook #'wal/dap-stopped t)
 
-  (with-no-warnings
-    (defhydra wal/dap-hydra (:hint nil :foreign-keys warn)
-      "
-%s`w/hew Debug: _n_ext _c_ontinue %s`w/hs _i_n _o_ut
-"
-      ("n" dap-next)
-      ("i" dap-step-in)
-      ("o" dap-step-out)
-      ("c" dap-continue)
-
-      ("s" dap-debug "start" :color blue)
-      ("x" dap-disconnect "disconnect" :color blue)
-      ("b" dap-breakpoint-toggle "breakpoint" :color blue)
-
-      ("q" nil)))
+  (wal/transient-define-prefix-once wal/dap ()
+    "Debug, transiently."
+    [["Step"
+      ("n" "next" dap-next :transient t)
+      ("i" "step in" dap-step-in :transient t)
+      ("o" "step out" dap-step-out :transient t)
+      ("c" "continue" dap-continue :transient t)]
+     ["Debugging"
+      ("s" "start" dap-debug)
+      ("x" "disconnect" dap-disconnect)]
+     ["Breakpoints"
+      ("b" "toggle" dap-breakpoint-toggle)
+      ("l" "list" dap-ui-breakpoints-list)]])
 
   (wal/replace-in-alist
    'dap-ui-buffer-configurations
@@ -8413,7 +8367,7 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
   (dap-python-debugger 'debugpy)
 
   :general
-  (wal/major :keymaps 'lsp-mode-map "b" '(wal/dap-hydra/body :wk "debug"))
+  (wal/major :keymaps 'lsp-mode-map "b" '(wal/dap :wk "debug"))
 
   :delight " dap")
 #+END_SRC
