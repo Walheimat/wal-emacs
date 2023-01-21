@@ -2003,9 +2003,12 @@ the session."
   (interactive)
 
   (when wal/active-theme
-    (load-theme wal/active-theme t)
-    (run-hooks 'wal/theme-hook)
-    t))
+    (condition-case err
+        (progn
+          (load-theme wal/active-theme t)
+          (run-hooks 'wal/theme-hook))
+      (error
+       (message "Failed to load theme: %s" (error-message-string err))))))
 
 (wal/on-boot visuals
   ;; Some themes require configuration, so we only load after initialization.

@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `wal/project-magit-status` now will not run if the (sub-)project is
   not version-controlled.
 - LSP should no longer complain about missing `yasnippet`.
+- `wal/load-theme` now captures errors if loading a theme fails.
 
 ## [v1.10.1]
 

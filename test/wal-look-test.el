@@ -37,16 +37,29 @@
         (should (eq 90 (cdr (assoc 'alpha default-frame-alist))))))))
 
 (ert-deftest test-wal/load-active-theme ()
-  (let ((wal/active-theme nil))
+  (with-mock (load-theme run-hooks)
 
-    (should-not (wal/load-active-theme)))
+    (let ((wal/active-theme nil))
 
-  (with-mock ((custom-theme-p . #'always)
-              enable-theme)
+      (wal/load-active-theme)
 
-    (let ((wal/active-theme 'wombat))
+      (was-not-called load-theme)
+      (was-not-called run-hooks)
 
-      (should (wal/load-active-theme))
-      (was-called-with enable-theme (list 'wombat)))))
+      (wal/clear-mocks))
+
+    (let ((wal/active-theme 'test-theme))
+
+      (wal/load-active-theme)
+      (was-called-with load-theme (list 'test-theme t))
+      (was-called-with run-hooks (list 'wal/theme-hook)))))
+
+(ert-deftest test-wal/load-active-them--captures-error ()
+  (let ((wal/active-theme 'non-existence))
+
+    (ert-with-message-capture messages
+      (wal/load-active-theme)
+
+      (should (string= "Failed to load theme: Unable to find theme file for ‘non-existence’\n" messages)))))
 
 ;;; wal-look-test.el ends here
