@@ -9,11 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Function `wal/persist-scratch` now persist the content of all
+- Function `wal/persist-scratch` now persists the content of all
   scratch buffers.
 - Function `wal/bootstrap-config` now accepts second optional argument
   `cold-boot` to mimic a cold boot by setting `package-user-dir` to a
   temporary directory.
+- The handler for `use-package` keyword `:hook` is now advised to only
+  handle if the respective is either installed or built-in.
 
 ### Changed
 
@@ -32,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Cold booting the configuration should now work.
 - `wal/project-magit-status` now will not run if the (sub-)project is
   not version-controlled.
 - LSP should no longer complain about missing `yasnippet`.
