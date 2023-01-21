@@ -3605,12 +3605,13 @@ Font *JetBrains Mono* has the best support for ligatures.
     )
   "A list of ligatures available in all programming modes.")
 
-(defun wal/with-common-ligatures (fun &rest args)
-  "Advise FUN to append common ligatures.
+(defun wal/set-ligatures (modes ligatures)
+  "Set LIGATURES for MODES.
 
-ARGS is a list containing modes and additional ligatures."
-  (cl-destructuring-bind (modes ligatures) args
-    (apply fun `(,modes ,(append ligatures wal/common-ligatures)))))
+All ligatures in `wal/common-ligatures' will be appended to
+LIGATURES."
+  (when (require 'ligature nil t)
+    (ligature-set-ligatures modes (append ligatures wal/common-ligatures))))
 #+END_SRC
 
 **** Configuration
@@ -3619,12 +3620,7 @@ ARGS is a list containing modes and additional ligatures."
 (use-package ligature
   :wal-ways nil
 
-  :hook ((prog-mode prog-like) . ligature-mode)
-
-  :config
-  (advice-add
-   'ligature-set-ligatures :around
-   #'wal/with-common-ligatures))
+  :hook ((prog-mode prog-like) . ligature-mode))
 #+END_SRC
 
 ** Icons
@@ -6402,9 +6398,9 @@ Bitches brew.
   :config
   (define-abbrev-table 'elixir-mode-abbrev-table '(("p" "|>")))
 
-  (ligature-set-ligatures 'elixir-mode '("|>" "->" "<-" "=>"
-                                         "::" "<>" "#{" "\\\\"
-                                         "===" "!==" "..")))
+  (wal/set-ligatures 'elixir-mode '("|>" "->" "<-" "=>"
+                                    "::" "<>" "#{" "\\\\"
+                                    "===" "!==" "..")))
 #+END_SRC
 
 ** C/C++
@@ -6440,8 +6436,8 @@ I want to be ready for =jai=.
       ("s" "set" c-set-style)
       ("g" "guess (using buffer)" c-guess-buffer)]])
 
-  (ligature-set-ligatures 'c++-mode '("::" "->"))
-  (ligature-set-ligatures 'c-mode '("->")))
+  (wal/set-ligatures 'c++-mode '("::" "->"))
+  (wal/set-ligatures 'c-mode '("->")))
 #+END_SRC
 
 ** Rust
@@ -6486,8 +6482,8 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
       ("t c" "current" cargo-process-current-test)
       ("t f" "file" cargo-process-current-file-tests)]])
 
-  (ligature-set-ligatures 'rust-mode '("///" "->" "=>" "::"
-                                       ".." "#[")))
+  (wal/set-ligatures 'rust-mode '("///" "->" "=>" "::"
+                                  ".." "#[")))
 #+END_SRC
 
 *** cargo
@@ -6573,7 +6569,7 @@ TOML."
      ["Commands"
       ("r" "run shell" run-python)]])
 
-  (ligature-set-ligatures 'python-mode '("->" "__"))
+  (wal/set-ligatures 'python-mode '("->" "__"))
 
   :custom
   (python-indent-guess-indent-offset nil))
@@ -6870,7 +6866,7 @@ Deal with the parens.
         ("s" "slime" slime-mode)
         ("r" "open REPL" slime)]]))
 
-  (ligature-set-ligatures 'lisp-data-mode '(";;")))
+  (wal/set-ligatures 'lisp-data-mode '(";;")))
 #+END_SRC
 
 *** clojure-mode
@@ -6901,7 +6897,7 @@ Get some closure.
         ("r" "repl" cider-jack-in)
         ("n" "set namespace" cider-repl-set-ns)]]))
 
-  (ligature-set-ligatures 'clojure-mode '(";;" "->" "->>")))
+  (wal/set-ligatures 'clojure-mode '(";;" "->" "->>")))
 #+end_src
 
 *** cider
@@ -7012,7 +7008,7 @@ Can we have =deno= instead of =node=?
     [["Actions"
       ("c" "context" js-syntactic-context)]])
 
-  (ligature-set-ligatures 'js-mode '("=>" "!==" "===" "!!"))
+  (wal/set-ligatures 'js-mode '("=>" "!==" "===" "!!"))
 
   ;; Add regular expression for jest errors.
   (add-to-list 'compilation-error-regexp-alist 'jest)
@@ -7304,8 +7300,8 @@ Yes, you need to install *Android Studio* for some reason.
     :messages '("Bull's eye!"))
 
   :config
-  (ligature-set-ligatures 'dart-mode '("=>" "///" ".?" "??"
-                                       "??=" "..")))
+  (wal/set-ligatures 'dart-mode '("=>" "///" ".?" "??"
+                                  "??=" "..")))
 #+END_SRC
 
 *** lsp-dart
@@ -7421,7 +7417,7 @@ For some reason, this is also defined in =cc-mode=.
     :messages '("Mmmh ... maven"))
 
   :config
-  (ligature-set-ligatures 'java-mode '("::" "->")))
+  (wal/set-ligatures 'java-mode '("::" "->")))
 #+END_SRC
 
 *** lsp-java
@@ -7538,9 +7534,9 @@ The elephant in the room.
 
   (wdb/side "\\*Php SOE")
 
-  (ligature-set-ligatures 'php-mode '("::" "=>" "->" "??"
-                                      "__" "<>" "!==" "<=>"
-                                      "===")))
+  (wal/set-ligatures 'php-mode '("::" "=>" "->" "??"
+                                 "__" "<>" "!==" "<=>"
+                                 "===")))
 #+END_SRC
 
 ** Web
@@ -7610,7 +7606,7 @@ The only way to store strings, JSON.
     :messages '("Hodge-podge mark-up language"))
 
   :config
-  (ligature-set-ligatures 'html-mode '("<!--" "-->" "</" "/>")))
+  (wal/set-ligatures 'html-mode '("<!--" "-->" "</" "/>")))
 #+END_SRC
 
 *** nxml-mode
@@ -7630,7 +7626,7 @@ The only way to store strings, JSON.
     :prog-like t)
 
   :config
-  (ligature-set-ligatures 'nxml-mode '("<!--" "-->" "</" "/>")))
+  (wal/set-ligatures 'nxml-mode '("<!--" "-->" "</" "/>")))
 #+end_src
 
 *** yaml-mode
@@ -7856,7 +7852,7 @@ This mode is currently included in the main repo.
   :ensure nil
 
   :config
-  (ligature-set-ligatures 'prolog-mode '(":-")))
+  (wal/set-ligatures 'prolog-mode '(":-")))
 #+END_SRC
 
 ** Footer

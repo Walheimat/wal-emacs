@@ -33,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   not version-controlled.
 - LSP should no longer complain about missing `yasnippet`.
 - `wal/load-theme` now captures errors if loading a theme fails.
+- `ligature-set-ligature` is no longer called directly to avoid issues
+  on a cold boot.
 
 ## [v1.10.1]
 

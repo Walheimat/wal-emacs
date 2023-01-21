@@ -36,9 +36,13 @@
 
 (ert-deftest test-wal/with-common-ligatures ()
   (defvar wal/common-ligatures)
-  (let ((fun #'wal/ra)
-        (wal/common-ligatures '("?")))
 
-    (should (equal '((test-mode) ("!" "?")) (wal/with-common-ligatures fun '(test-mode) '("!"))))))
+  (let ((wal/common-ligatures '("?")))
+
+    (with-mock ((require . #'always) ligature-set-ligatures)
+
+      (wal/set-ligatures 'test-mode '("!"))
+
+      (was-called-with ligature-set-ligatures (list 'test-mode '("!" "?"))))))
 
 ;;; wal-visuals-test.el ends here
