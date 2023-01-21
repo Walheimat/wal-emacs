@@ -50,4 +50,19 @@
         (should (equal '((when t name nil (nil :wal-ways t)))
                        (use-package-handler/:wal-ways 'name nil nil nil nil)))))))
 
+(ert-deftest test-wal/ignore-if-not-installed ()
+  (let ((installed nil)
+        (built-in nil))
+    (with-mock ((package-installed-p . (lambda (_) installed))
+                (package-built-in-p . (lambda (_) built-in)))
+
+      (should-not (wal/ignore-if-not-installed 'some-package))
+
+      (setq installed t)
+      (should (wal/ignore-if-not-installed 'some-package))
+
+      (setq installed nil
+            built-in t)
+      (should (wal/ignore-if-not-installed 'some-package)))))
+
 ;;; wal-external-test.el ends here

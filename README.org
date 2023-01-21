@@ -2383,6 +2383,21 @@ use the result further down the line."
           ,@body)))))
 #+END_SRC
 
+**** Conditional :hook
+
+Don't add hooks if the package isn't installed.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/ignore-if-not-installed (name &rest _r)
+  "Don't handle hooks if a package isn't installed."
+  (or (package-installed-p name) (package-built-in-p name)))
+
+(wal/on-boot external
+  (advice-add
+   'use-package-handler/:hook :before-while
+   #'wal/ignore-if-not-installed))
+#+END_SRC
+
 ** quelpa
 :PROPERTIES:
 :UNNUMBERED: t
