@@ -106,12 +106,15 @@ Returns the path to the directory or nil (if created)."
 
     (setq wal/booting nil)))
 
-(defun wal/bootstrap-config (source-dir &optional no-load)
+(defun wal/bootstrap-config (source-dir &optional no-load cold-boot)
   "Bootstrap the configuration in SOURCE-DIR.
 
 This will tangle the config if it hasn't been yet.
 
-Unless NO-LOAD is t, this will load the `wal' package."
+Unless NO-LOAD is t, this will load the `wal' package.
+
+If COLD-BOOT is t, a temp folder will be used as a
+`package-user-dir' to test the behavior of a cold boot."
   (let* ((package-dir (expand-file-name "wal" source-dir))
          (created-dir (wal/find-or-create-directory package-dir)))
 
@@ -121,6 +124,9 @@ Unless NO-LOAD is t, this will load the `wal' package."
 
     (unless created-dir
       (wal/tangle-config))
+
+    (when cold-boot
+      (setq package-user-dir (make-temp-file nil t)))
 
     (unless no-load
       (condition-case err

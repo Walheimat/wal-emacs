@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Function `wal/persist-scratch` now persist the content of all
   scratch buffers.
+- Function `wal/bootstrap-config` now accepts second optional argument
+  `cold-boot` to mimic a cold boot by setting `package-user-dir` to a
+  temporary directory.
 
 ### Changed
 
