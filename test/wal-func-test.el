@@ -410,6 +410,8 @@
   (wal/with-temp-file "scratch"
     (let ((wal/scratch-persist-file wal/tmp-file))
 
+      (delete-file wal/tmp-file)
+
       (with-current-buffer (get-buffer-create "*scratch*")
         (erase-buffer)
         (insert "This one's itchy"))
