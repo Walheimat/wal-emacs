@@ -119,6 +119,7 @@ functionality is used.
 (defvar display-time-format)
 (defvar native-comp-async-report-warnings-errors)
 (defvar recentf-filename-handlers)
+(defvar recentf-max-saved-items)
 (defvar so-long-action)
 (defvar use-package-defaults)
 (defvar use-package-always-defer)
@@ -2395,9 +2396,9 @@ use the result further down the line."
 Don't add hooks if the package isn't installed.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/ignore-if-not-installed (name &rest _r)
-  "Don't handle hooks if a package isn't installed."
-  (or (package-installed-p name) (package-built-in-p name)))
+(defun wal/ignore-if-not-installed (package &rest _r)
+  "Don't handle hooks if PACKAGE isn't installed."
+  (or (package-installed-p package) (package-built-in-p package)))
 
 (wal/on-boot external
   (advice-add
@@ -6375,6 +6376,7 @@ Let's greet the world.
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
 (declare-function prettier--quit-all-processes "ext:prettier.el")
+(declare-function wal/set-ligatures "ext:wal-visuals.el")
 (declare-function wal/transient-grab "wal-key-bindings.el")
 (declare-function wdb/side "wal-func.el")
 
