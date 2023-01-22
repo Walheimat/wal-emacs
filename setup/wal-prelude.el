@@ -142,10 +142,12 @@ If COLD-BOOT is t, a temp folder will be used as a
       (wal/load-config)
 
       (when wal/init-error
-        (delay-warning
-         'wal
-         (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal/init-error)
-         :error)))))
+        (if cold-boot
+            (kill-emacs 1)
+          (delay-warning
+           'wal
+           (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal/init-error)
+           :error))))))
 
 (provide 'wal-prelude)
 
