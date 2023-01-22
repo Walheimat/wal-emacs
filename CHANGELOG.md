@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Scripts to simulate a cold boot (where nothing has been installed)
+  in `setup/setup-cold-boot.sh` and `setup/wal-setup-cold-boot.el`.
 - Function `wal/persist-scratch` now persists the content of all
   scratch buffers.
 - Function `wal/bootstrap-config` now accepts second optional argument
