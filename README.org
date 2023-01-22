@@ -1275,6 +1275,10 @@ If SESSION is non-nil, switch to (or create) it."
 The contents are stored in `wal/scratch-persist-file' if non-nil. The
 order of buffers is not persisted."
   (when wal/scratch-persist-file
+
+    (unless (file-exists-p wal/scratch-persist-file)
+      (make-empty-file wal/scratch-persist-file t))
+
     (with-temp-buffer
       (thread-last
         (buffer-list)
@@ -3272,7 +3276,7 @@ Let's have a dash of board.
 
   (dashboard-footer-icon (if (or (daemonp) (display-graphic-p))
                              ":whale:"
-                           wal/ascii-cachaolot-whale))
+                           wal/ascii-cachalot-whale))
   (dashboard-footer-messages '("breaching your favorite stupid framework"
                                "I propel myself forward on nothing but flukes"
                                "devout and up the spout"
@@ -5622,7 +5626,8 @@ You know the drill. Clock in, clock out.
   :after org
 
   :init
-  (add-to-list 'org-speed-commands '("N" . wal/org-clock-in-from-now))
+  (with-eval-after-load 'org-keys
+    (add-to-list 'org-speed-commands '("N" . wal/org-clock-in-from-now)))
 
   :config
   (with-eval-after-load 'which-key

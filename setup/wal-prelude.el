@@ -96,7 +96,8 @@ Returns the path to the directory or nil (if created)."
 
   (let ((dir (or package-dir
                  wal/emacs-config-package-path
-                 default-directory)))
+                 default-directory))
+        (current nil))
 
     (setq wal/booting t)
 
@@ -104,9 +105,12 @@ Returns the path to the directory or nil (if created)."
 
     (condition-case err
         (dolist (it wal/packages)
+          (setq current it)
           (require it))
       (error
-       (message "Failed to load package: %s" (error-message-string err))
+       (message "Failed to load package '%s': %s"
+                current
+                (error-message-string err))
        (setq wal/init-error err
              wal/booting nil)))
 

@@ -8,6 +8,8 @@
 ;;; Code:
 
 (require 'cl-macs)
+(require 'seq)
+(require 'scroll-bar)
 (require 'wal-prelude (expand-file-name
                        "setup/wal-prelude.el"
                        (getenv "EMACS_SOURCE_DIR")) t)
