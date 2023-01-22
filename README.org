@@ -295,7 +295,6 @@ Also create non-existing directories while finding files.
 (add-hook 'emacs-startup-hook (lambda ()
                                 (mapc (lambda (it) (make-directory it t))
                                       `(,wal/cache-directory
-                                        ,wal/site-lisp-directory
                                         ,wal/org-directory
                                         ,wal/agenda-tasks-directory
                                         ,wal/org-roam-directory))))
@@ -309,12 +308,16 @@ Add all sub-directories of the site lisp directory to load path (and
 custom theme load path). I put non-MELPA packages here.
 
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'load-path wal/site-lisp-directory)
+(make-directory wal/site-lisp-directory t)
 
-(dolist (project (directory-files wal/site-lisp-directory t "\\w+"))
-  (when (file-directory-p project)
-    (add-to-list 'load-path project)
-    (add-to-list 'custom-theme-load-path project)))
+(let ((root (list wal/site-lisp-directory))
+      (subdirs (directory-files wal/site-lisp-directory t "\\w+")))
+
+  (dolist (project (append root subdirs))
+    (when (file-directory-p project)
+      (add-to-list 'load-path project)
+      (add-to-list 'custom-theme-load-path project))))
+
 #+END_SRC
 
 ** Saving and Backups

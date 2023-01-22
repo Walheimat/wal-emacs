@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `wal-prelude` now emits messages about what's going on and the error
   handling was moved to `wal/load-config` to stop after a single
   error.
+- `wal/site-lisp` not existing should no longer cause issues.
 
 ## [v1.10.1]
 
