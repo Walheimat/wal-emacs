@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `wal/load-theme` now captures errors if loading a theme fails.
 - `ligature-set-ligature` is no longer called directly to avoid issues
   on a cold boot.
+- `wal-prelude` now emits messages about what's going on and the error
+  handling was moved to `wal/load-config` to stop after a single
+  error.
 
 ## [v1.10.1]
 

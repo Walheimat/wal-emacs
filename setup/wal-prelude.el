@@ -101,8 +101,14 @@ Returns the path to the directory or nil (if created)."
     (setq wal/booting t)
 
     (add-to-list 'load-path dir)
-    (dolist (it wal/packages)
-      (require it nil t))
+
+    (condition-case err
+        (dolist (it wal/packages)
+          (require it))
+      (error
+       (message "Failed to load package: %s" (error-message-string err))
+       (setq wal/init-error err
+             wal/booting nil)))
 
     (setq wal/booting nil)))
 
@@ -118,6 +124,8 @@ If COLD-BOOT is t, a temp folder will be used as a
   (let* ((package-dir (expand-file-name "wal" source-dir))
          (created-dir (wal/find-or-create-directory package-dir)))
 
+    (message "Boostrapping config from '%s'" source-dir)
+
     ;; These variables are also used in `wal' package.
     (setq wal/emacs-config-default-path source-dir)
     (setq wal/emacs-config-package-path package-dir)
@@ -126,17 +134,18 @@ If COLD-BOOT is t, a temp folder will be used as a
       (wal/tangle-config))
 
     (when cold-boot
-      (setq package-user-dir (make-temp-file nil t)))
+      (setq package-user-dir (make-temp-file nil t))
+
+      (message "Cold-boot using '%s'" package-user-dir))
 
     (unless no-load
-      (condition-case err
-          (wal/load-config)
-        (error
-         (setq wal/init-error (error-message-string err))
-         (delay-warning
-          'wal
-          (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal/init-error)
-          :error))))))
+      (wal/load-config)
+
+      (when wal/init-error
+        (delay-warning
+         'wal
+         (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal/init-error)
+         :error)))))
 
 (provide 'wal-prelude)
 
