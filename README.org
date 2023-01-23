@@ -6845,8 +6845,7 @@ Deal with the parens.
     :captain t
     :messages '("So it's just a bunch of lists?" "List your lambdas")
 
-    (prettify-symbols-mode)
-    (flycheck-mode 1))
+    (prettify-symbols-mode))
 
   :config
   (wal/transient-define-prefix-once wal/emacs-lisp-mode-dispatch ()
@@ -7596,9 +7595,7 @@ The only way to store strings, JSON.
     "Hook into `jsonian-mode'."
     :tabs t
     :captain t
-    :messages '("JSON ...? JSON?! JSON!!")
-
-    (flycheck-mode 1))
+    :messages '("JSON ...? JSON?! JSON!!"))
 
   :config
   ;; Integrate with `flycheck' and `so-long-mode'.
@@ -7671,9 +7668,7 @@ Sometimes things that do as well.
   (wal/hook yaml-mode
     "Hook into command `yaml-mode'."
     :messages '("JSON?! ... Ah, thank God it's you, YAML!")
-    :prog-like t
-
-    (flycheck-mode 1)))
+    :prog-like t))
 #+END_SRC
 
 *** css-mode
@@ -8019,7 +8014,12 @@ If KILL-BUFFER is t, kill the file's buffer."
 (use-package flycheck
   :commands (wal/flycheck-file)
 
-  :hook ((sh-set-shell) . flycheck-mode)
+  :hook ((sh-set-shell
+          typo-mode
+          emacs-lisp-mode
+          jsonian-mode
+          yaml-mode)
+         . flycheck-mode)
 
   :config
   (wdb/side flycheck-error-list-buffer)
@@ -8816,8 +8816,6 @@ triggered explicitly.
 #+BEGIN_SRC emacs-lisp
 (use-package typo
   :wal-ways nil
-
-  :hook (typo-mode . flycheck-mode)
 
   :delight " typ")
 #+END_SRC
