@@ -1739,7 +1739,7 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
     (name
      docs
      &body body
-     &key messages lsp lsp-ignores tabs prog-like captain corfu shallow
+     &key messages lsp lsp-ignores tabs prog-like captain corfu shallow functions
      &allow-other-keys)
   "Hook into major mode NAME, describe with DOCS.
 
@@ -1761,12 +1761,15 @@ CORFU is a list of (IDLE-DELAY PREFIX-LENGTH).
 SHALLOW is either t or nil. If it is t, no indentation-related
 values will be set.
 
+FUNCTIONS is a list of functions (for example modes) that should
+be called if they are bound.
+
 The rest of the BODY will be spliced into the lambda."
   (declare (indent defun) (doc-string 2))
 
   (let ((target (intern (concat (symbol-name name) "-hook")))
         (safe-body (cl-loop for (key val) on body by 'cddr
-                            unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :captain :corfu :shallow))
+                            unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :captain :corfu :shallow :functions))
                             collect key
                             and collect val))
         (func-name (intern (concat "wal/" (symbol-name name) "-hook")))
@@ -1797,6 +1800,10 @@ The rest of the BODY will be spliced into the lambda."
                       `(wal/corfu-auto ',corfu))
                    ,(when prog-like
                       '(run-hooks 'prog-like-hook))
+                   ,(when functions
+                      `(progn ,@(mapcar (lambda (it)
+                                          `(when (fboundp ',it) (,it)))
+                                        functions)))
                    ,(when captain
                       `(local-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) ',captain-name)))))
 
@@ -6844,8 +6851,7 @@ Deal with the parens.
     "Hook into `emacs-lisp-mode'."
     :captain t
     :messages '("So it's just a bunch of lists?" "List your lambdas")
-
-    (prettify-symbols-mode))
+    :functions (prettify-symbols-mode))
 
   :config
   (wal/transient-define-prefix-once wal/emacs-lisp-mode-dispatch ()
@@ -7012,13 +7018,9 @@ Can we have =deno= instead of =node=?
     :tabs t
     :lsp t
     :corfu (0.1 2)
+    :functions (add-node-modules-path prettier-mode)
 
-    (setq-local compilation-error-screen-columns nil)
-
-    (when (fboundp 'add-node-modules-path)
-      (add-node-modules-path))
-
-    (prettier-mode))
+    (setq-local compilation-error-screen-columns nil))
 
   :config
   ;; Load default `dap-mode' templates.
@@ -7064,8 +7066,7 @@ Please use TypeScript.
     :lsp t
     :tabs t
     :messages '("This is any, that is any, everything is any!")
-
-    (add-node-modules-path)))
+    :functions (add-node-modules-path)))
 #+END_SRC
 
 *** add-node-modules-path
@@ -7691,8 +7692,7 @@ We want quicker suggestions when in CSS modes.
     :lsp t
     :corfu (0.1 2)
     :messages '("Centering? It's simple. Here's 15 ways to do it.")
-
-    (add-node-modules-path)
+    :functions (add-node-modules-path)
 
     (when (executable-find "stylelint")
       (add-hook

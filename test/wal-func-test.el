@@ -1014,6 +1014,24 @@
         (wal/corfu-auto '(0.2 4)))
       (add-hook 'test-hook 'wal/test-hook))))
 
+(ert-deftest test-wal/hook--functions ()
+  (match-expansion
+   (wal/hook test
+     "We're just testing."
+     :shallow t
+     :functions (test-mode testable-mode)
+     (message "hi"))
+   `(progn
+      (defun wal/test-hook ()
+        "We're just testing."
+        (message "hi")
+        (progn
+          (when (fboundp 'test-mode)
+            (test-mode))
+          (when (fboundp 'testable-mode)
+            (testable-mode))))
+      (add-hook 'test-hook 'wal/test-hook))))
+
 (ert-deftest test-wal/fundamental-mode--switches ()
   (with-temp-buffer
     (emacs-lisp-mode)
