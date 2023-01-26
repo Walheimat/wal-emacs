@@ -109,4 +109,11 @@
 
     (should (string= "Project at ’/tmp/test’ is not version-controlled\n" messages)))))
 
+(ert-deftest test-wal/project-dired-root ()
+  (with-mock (project-current (project-root . (lambda (&rest _) "/tmp/test")) dired)
+
+    (wal/project-dired-root)
+
+    (was-called-with dired (list "/tmp/test"))))
+
 ;;; wal-workspace-test.el ends here
