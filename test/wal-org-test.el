@@ -44,6 +44,20 @@
       (should (equal '("/tmp/agenda") (wal/maybe-org-roam-refile)))
       (was-called org-refile))))
 
+(ert-deftest test-wal/agenda-buffer-p ()
+  (defvar org-agenda-contributing-files)
+  (wal/with-temp-file "test-agenda.org"
+    (let ((org-agenda-contributing-files `(,wal/tmp-file))
+          (buf (find-file-noselect wal/tmp-file)))
+
+      (should (wal/agenda-buffer-p buf)))))
+
+(ert-deftest test-wal/consult-agenda-buffer--query ()
+  (cl-defun consult--buffer-query (&key sort as predicate)
+    (list sort as predicate))
+
+  (should (equal (wal/consult-agenda-buffer--query) '(visibility buffer-name wal/agenda-buffer-p))))
+
 (ert-deftest test-wal/relative-column-width ()
   (defvar text-scale-mode-amount nil)
   (defvar text-scale-mode-step nil)
