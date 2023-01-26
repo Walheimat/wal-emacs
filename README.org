@@ -7521,13 +7521,13 @@ LSP integration.
   "Run or debug test or class depending on ARGS."
   (interactive)
 
-  (let* ((mode (wal/transient-grab "mode"))
-         (scope (wal/transient-grab "scope"))
-         (fun (intern (format "dap-java-%s-test-%s" mode scope))))
+  (if-let* ((mode (wal/transient-grab "mode"))
+            (scope (wal/transient-grab "scope"))
+            (fun (intern (format "dap-java-%s-test-%s" mode scope))))
 
-    (transient-set)
-
-    (call-interactively fun)))
+      (progn (transient-set)
+             (call-interactively fun))
+    (message "Select scope and mode")))
 #+END_SRC
 
 **** Configuration
@@ -7549,13 +7549,29 @@ LSP integration.
      dap-java-run-test-class
      dap-java-run-test-method))
 
+  (transient-define-argument wal/java-mode-switch ()
+    "Switch modes."
+    :description "Run in"
+    :class 'transient-switches
+    :argument-format "--mode=%s"
+    :argument-regexp "\\(--mode=\\(run\\|debug\\)\\)"
+    :choices '("run" "debug"))
+
+   (transient-define-argument wal/java-scope-switch ()
+    "Switch scopes."
+    :description "Use"
+    :class 'transient-switches
+    :argument-format "--scope=%s"
+    :argument-regexp "\\(--scope=\\(method\\|class\\)\\)"
+    :choices '("method" "class"))
+
   (wal/transient-define-prefix-once wal/java-mode-dispatch ()
     "Access `java-mode' commands."
     :value '("--mode=run" "--scope=method")
 
     ["Test"
-     ("m" "mode" "--mode=" :choices (run debug) :always-read t)
-     ("s" "scope" "--scope=" :choices (class method) :always-read t)
+     ("m" wal/java-mode-switch)
+     ("s" wal/java-scope-switch)
      ""
      ("t" "test" wal/java-test-dwim)])
 

@@ -136,7 +136,15 @@
 
     (wal/java-test-dwim)
 
-    (was-called dap-java-run-test-method)))
+    (was-called dap-java-run-test-method))
+
+  (with-mock (dap-java-run-test-method
+              transient-set
+              (wal/transient-grab . #'ignore))
+
+    (wal/java-test-dwim)
+
+    (was-not-called dap-java-run-test-method)))
 
 (ert-deftest test-wal/maybe-use-custom-scss-checker ()
   (defvar lsp-after-open-hook)
