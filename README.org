@@ -371,6 +371,8 @@ packages.
 
       ;; Search.
       isearch-lazy-count t
+      isearch-allow-motion t
+      isearch-allow-scroll t
 
       ;; Parentheses.
       show-paren-delay 0.1
@@ -2503,6 +2505,17 @@ Sometimes I need to see whitespace chars.
 
 No double spaces in sentences.
 
+**** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/flyspell-commit-messages ()
+  "Activate `flyspell-mode' when editing commit messages."
+  (when (string-match "COMMIT_EDITMSG" (buffer-name))
+    (flyspell-mode)))
+#+END_SRC
+
+**** Configuration
+
 #+BEGIN_SRC emacs-lisp
 (use-package text-mode
   :ensure nil
@@ -2511,10 +2524,7 @@ No double spaces in sentences.
   (wal/hook text-mode
     "Hook into `text-mode'."
     :shallow t
-
-    ;; Activate `flyspell-mode' when editing commit messages.
-    (when (string-match "COMMIT_EDITMSG" (buffer-name))
-      (flyspell-mode)))
+    :functions (wal/flyspell-commit-messages))
 
   :custom
   (sentence-end-double-space nil))
@@ -6416,13 +6426,12 @@ Bitches brew.
 
   :ensure nil
 
-  :hook (elixir-mode . abbrev-mode)
-
   :init
   (wal/hook elixir-mode
     "Hook into `elixir-mode'."
     :lsp t
-    :messages '("Mixin' potions" "A hex on you"))
+    :messages '("Mixin' potions" "A hex on you")
+    :functions (abbrev-mode))
 
   :config
   (define-abbrev-table 'elixir-mode-abbrev-table '(("p" "|>")))
@@ -7679,6 +7688,23 @@ Sometimes things that do as well.
 
 We want quicker suggestions when in CSS modes.
 
+**** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/maybe-use-custom-scss-checker ()
+  "Use custom checker in `scss-mode'."
+  (when (executable-find "stylelint")
+    (add-hook
+     'lsp-after-open-hook
+     (lambda ()
+       (if (equal major-mode 'scss-mode)
+           (setq-local flycheck-checker 'wal/scss-stylelint)
+         (setq-local flycheck-checker 'css-stylelint)))
+     nil t)))
+#+END_SRC
+
+**** Configuration
+
 #+BEGIN_SRC emacs-lisp
 (use-package css-mode
   :ensure nil
@@ -7692,16 +7718,7 @@ We want quicker suggestions when in CSS modes.
     :lsp t
     :corfu (0.1 2)
     :messages '("Centering? It's simple. Here's 15 ways to do it.")
-    :functions (add-node-modules-path)
-
-    (when (executable-find "stylelint")
-      (add-hook
-       'lsp-after-open-hook
-       (lambda ()
-         (if (equal major-mode 'scss-mode)
-             (setq-local flycheck-checker 'wal/scss-stylelint)
-           (setq-local flycheck-checker 'css-stylelint)))
-       nil t))))
+    :functions (add-node-modules-path wal/maybe-use-custom-scss-checker)))
 #+END_SRC
 
 *** pug-mode
@@ -7821,7 +7838,8 @@ replying to the `JSONRPC' request."
     :messages '("I wish you were Estra-gone"))
 
   :config
-  (advice-add 'lsp--get-message-type :around
+  (advice-add
+   'lsp--get-message-type :around
    #'wal/with-json-data-ignored-for-gdscript))
 #+END_SRC
 

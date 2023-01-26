@@ -8,6 +8,18 @@
 
 (require 'wal-emacs nil t)
 
+(ert-deftest test-wal/flyspell-commit-messages ()
+  (with-mock (flyspell-mode)
+
+    (with-temp-buffer
+      (wal/flyspell-commit-messages)
+      (was-not-called flyspell-mode)
+
+      (rename-buffer "COMMIT_EDITMSG")
+      (wal/flyspell-commit-messages)
+
+      (was-called flyspell-mode))))
+
 (ert-deftest test-wal/kmacro ()
   (with-mock (kmacro-end-macro
               kmacro-start-macro)
