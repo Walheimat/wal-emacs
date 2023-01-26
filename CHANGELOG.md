@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Buffer source for `consult` to narrow to (contributing) agenda
   buffers.
 
+### Changed
+
+- User-prefixed `i` both stores and loads using `consult` again.
+
 ## [v1.10.2]
 
 In cold boot.
