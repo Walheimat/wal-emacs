@@ -264,7 +264,7 @@
 
     (should (window-dedicated-p))
 
-    (wal/l t)
+    (wal/l)
 
     (should-not (window-dedicated-p))))
 
