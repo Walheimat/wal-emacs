@@ -579,20 +579,24 @@ Make completions look nice.
   (wal/lieutenant "<SPC>" '(wal/push-mark :wk "push mark"))
   (wal/lieutenant "s" '(wal/scratch-buffer :wk "scratch buffer"))
 
-  (defvar wal/misc-map (make-sparse-keymap))
-  (wal/lieutenant "," '(:keymap wal/misc-map :wk "misc"))
-
   (when (wal/modern-emacs-p 29)
     (wal/lieutenant "d" 'duplicate-dwim)
     (wal/lieutenant "f" 'find-sibling-file))
 
+  (defvar wal/triple-minus-map (make-sparse-keymap))
+  (defvar wal/triple-minus-key (wal/prefix-user-key "-"))
+
   (general-define-key
-   :keymaps 'wal/misc-map
+   :prefix wal/triple-minus-key
+   :prefix-map 'wal/triple-minus-map
    :wk-full-keys nil
    "f" '(wal/find-fish-config :wk "find fish")
    "b" '(wal/kill-some-file-buffers :wk "kill file buffers")
    "d" '(wal/l :wk "dedicate window")
    "k" '(kill-this-buffer :wk "kill this buffer"))
+
+  (with-eval-after-load 'which-key
+    (which-key-add-key-based-replacements (wal/prefix-user-key "-") "triple-minus"))
 
   (global-set-key (kbd "C-x o") #'wal/other-window)
   (global-set-key (kbd "C-M-i") #'completion-at-point)
@@ -2486,7 +2490,7 @@ external ones.
 (declare-function wdb/pop-up "wal-func.el")
 (declare-function wdb/side "wal-func.el")
 
-(defvar wal/misc-map)
+(defvar wal/triple-minus-map)
 
 (wal/on-boot emacs
   (wdb/pop-up 'help-mode)
@@ -2643,7 +2647,7 @@ Some people need macros, okay?
     (which-key-add-key-based-replacements "C-c k" "kmacro"))
 
   :bind
-  (:map wal/misc-map
+  (:map wal/triple-minus-map
    ("k" . wal/kmacro))
 
   :bind-keymap
@@ -2677,7 +2681,7 @@ No offender.
   (register-preview-delay wal/idle-delay)
 
   :bind
-  (:map wal/misc-map
+  (:map wal/triple-minus-map
    ("r" . wal/clear-registers))
 
   :bind-keymap
@@ -4002,7 +4006,7 @@ If no PREFIX is given, a slash is pre-pended to the first match."
    ("|" . popper-cycle))
 
   :general
-  (general-define-key :keymaps 'wal/misc-map :wk-full-keys nil
+  (general-define-key :keymaps 'wal/triple-minus-map :wk-full-keys nil
    "\\" '(wal/kill-some-popups :wk "kill popups")))
 #+END_SRC
 
@@ -4137,7 +4141,7 @@ beginning."
   (avy-background t)
 
   :bind
-  (:map wal/misc-map
+  (:map wal/triple-minus-map
    ("c" . avy-goto-char)
    ("w" . avy-goto-whitespace-end))
 
@@ -5001,7 +5005,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (defvar visual-fill-column-width)
 (defvar visual-fill-column-center-text)
 (defvar wal/agenda-tasks-directory)
-(defvar wal/misc-map)
+(defvar wal/triple-minus-map)
 
 (defgroup wal-org nil
   "Change settings used for org packages."
@@ -5676,7 +5680,7 @@ You know the drill. Clock in, clock out.
   (org-clock-heading-function #'wal/org-clock-heading)
 
   :bind
-  (:map wal/misc-map
+  (:map wal/triple-minus-map
    ("t" . org-clock-goto)
    ("n" . wal/org-clock-take-note)))
 #+END_SRC
