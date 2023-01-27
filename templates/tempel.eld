@@ -46,6 +46,11 @@ org-mode
  "#+BEGIN_SRC " p n q n
  "#+END_SRC" :post (org-edit-src-code))
 
+(quote
+ "#+BEGIN_QUOTE" n
+ q n
+ "#+END_QUOTE")
+
 conf-mode
 
 (box
