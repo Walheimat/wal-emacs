@@ -11,10 +11,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Buffer source for `consult` to narrow to (contributing) agenda
   buffers.
+- Support for `treesit` in `wal/hook` and using new macro
+  `wal/treesit`. Currently only used for `js-mode` as a test.
+- Ligatures can now be set through `wal/hook`.
+- `project-switch-action` to open project root.
+- Additional functions to be called are now part of `wal/hook` so that
+  they're only called if they're bound.
 
 ### Changed
 
 - User-prefixed `i` both stores and loads using `consult` again.
+- `wal/misc-map` was renamed to `wal/triple-minus-mode`.
+- `wal/java-mode-dispatch` now uses `transient-switches` instead of
+  completion to switch mode and scope.
+- `log4j-mode` is no longer enabled for all `*.log` files.
+
+### Fixed
+
+- `popper` bindings are now bound in global map.
 
 ## [v1.10.2]
 
