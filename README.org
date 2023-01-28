@@ -1776,13 +1776,17 @@ If TREESIT is non-nil, set the hook for the base-mode.
 The rest of the BODY will be spliced into the lambda."
   (declare (indent defun) (doc-string 2))
 
-  (let ((target (intern (concat (symbol-name name) "-hook")))
-        (ts-target (thread-first
+  (let* ((target (intern (concat (symbol-name name) "-hook")))
+
+         (ts-name (pcase treesit
+                    ('base "base")
+                    (_ "ts")))
+         (ts-target (thread-first
                      name
                      (symbol-name)
                      (split-string "-")
                      (cl-first)
-                     (concat "-base-mode-hook")
+                     (concat "-" ts-name "-mode-hook")
                      (intern)))
         (safe-body (cl-loop for (key val) on body by 'cddr
                             unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :captain :corfu :shallow :functions :treesit))
@@ -7112,7 +7116,7 @@ Can we have =deno= instead of =node=?
     :tabs t
     :lsp t
     :corfu (0.1 2)
-    :treesit t
+    :treesit base
     :functions (add-node-modules-path prettier-mode)
 
     (setq-local compilation-error-screen-columns nil))

@@ -1032,6 +1032,20 @@
             (testable-mode))))
       (add-hook 'test-hook 'wal/test-hook))))
 
+(ert-deftest test-wal/hook--treesit-base ()
+  (with-mock ((wal/modern-emacs-p . #'always))
+    (match-expansion
+     (wal/hook test
+       "We're just testing."
+       :shallow t
+       :treesit base
+       (message "hi"))
+     `(progn
+        (defun wal/test-hook ()
+          "We're just testing."
+          (message "hi"))
+        (add-hook 'test-base-mode-hook 'wal/test-hook)))))
+
 (ert-deftest test-wal/hook--treesit ()
   (with-mock ((wal/modern-emacs-p . #'always))
     (match-expansion
@@ -1044,8 +1058,7 @@
         (defun wal/test-hook ()
           "We're just testing."
           (message "hi"))
-        (add-hook 'test-base-mode-hook 'wal/test-hook)))))
-
+        (add-hook 'test-ts-mode-hook 'wal/test-hook)))))
 
 (ert-deftest test-wal/treesit ()
   (with-mock ((featurep . #'always)
