@@ -1745,8 +1745,20 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
 (cl-defmacro wal/hook
     (name
      docs
-     &body body
-     &key messages lsp lsp-ignores tabs prog-like captain corfu shallow functions treesit
+     &body
+     body
+     &key
+     messages
+     lsp
+     lsp-ignores
+     tabs
+     prog-like
+     captain
+     corfu
+     shallow
+     functions
+     treesit
+     ligatures
      &allow-other-keys)
   "Hook into major mode NAME, describe with DOCS.
 
@@ -1778,23 +1790,25 @@ The rest of the BODY will be spliced into the lambda."
 
   (let* ((target (intern (concat (symbol-name name) "-hook")))
 
-         (ts-name (pcase treesit
-                    ('base "base")
-                    (_ "ts")))
-         (ts-target (thread-first
-                     name
-                     (symbol-name)
-                     (split-string "-")
-                     (cl-first)
-                     (concat "-" ts-name "-mode-hook")
-                     (intern)))
-        (safe-body (cl-loop for (key val) on body by 'cddr
-                            unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :captain :corfu :shallow :functions :treesit))
-                            collect key
-                            and collect val))
-        (func-name (intern (concat "wal/" (symbol-name name) "-hook")))
-        (include (not shallow))
-        (captain-name (intern (concat "wal/" (symbol-name name) "-dispatch"))))
+         (ts-seg (pcase treesit
+                   ('base "base")
+                   (_ "ts")))
+         (ts-name (thread-first
+                    name
+                    (symbol-name)
+                    (split-string "-")
+                    (cl-subseq 0 -1)
+                    (string-join "-")
+                    (concat "-" ts-seg "-mode")))
+
+         (safe-body (cl-loop for (key val) on body by 'cddr
+                             unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :captain :corfu :shallow :functions :treesit :ligatures))
+                             collect key
+                             and collect val))
+
+         (func-name (intern (concat "wal/" (symbol-name name) "-hook")))
+         (include (not shallow))
+         (captain-name (intern (concat "wal/" (symbol-name name) "-dispatch"))))
 
     `(progn
        ,@(delete
@@ -1804,7 +1818,7 @@ The rest of the BODY will be spliced into the lambda."
               ,@(delete
                  nil
                  `(,(when messages
-                      `(wal/message-in-a-bottle ,messages))
+                      `(wal/message-in-a-bottle ',messages))
                    ,(and include '(hack-local-variables))
                    ,(and include (cond ((equal 'always tabs)
                                         `(wal/enable-tabs))
@@ -1815,7 +1829,7 @@ The rest of the BODY will be spliced into the lambda."
                                        (t `(wal/maybe-enable-tabs :indent-with ,tabs))))
                    ,@safe-body
                    ,(when lsp
-                     '(wal/lsp))
+                      '(wal/lsp))
                    ,(when corfu
                       `(wal/corfu-auto ',corfu))
                    ,(when prog-like
@@ -1829,10 +1843,15 @@ The rest of the BODY will be spliced into the lambda."
 
             ,(when (and lsp lsp-ignores)
                `(with-eval-after-load 'lsp-mode
-                  (wal/append 'lsp-file-watch-ignored-directories ,lsp-ignores)))
+                  (wal/append 'lsp-file-watch-ignored-directories ',lsp-ignores)))
+
+            ,(when ligatures
+               (if (and treesit (wal/modern-emacs-p 29))
+                   `(wal/set-ligatures '(,name ,(intern ts-name)) ',ligatures)
+                 `(wal/set-ligatures ',name ',ligatures)))
 
             (add-hook
-             ',(if (and treesit (wal/modern-emacs-p 29)) ts-target target)
+             ',(if (and treesit (wal/modern-emacs-p 29)) (intern (concat ts-name "-hook")) target)
              ',func-name))))))
 
 (cl-defmacro wal/treesit (language &key replacement icons-name)
@@ -5103,7 +5122,7 @@ This calls `org-content' interactively."
   :config
   (wal/hook org-mode
     "Hook into `org-mode'."
-    :messages '("Organize! Seize the means of production!")
+    :messages ("Organize! Seize the means of production!")
     :captain t
     :shallow t)
 
@@ -6399,7 +6418,7 @@ Syntax highlighting.
   :config
   (wal/hook gitignore-mode
     "Hook into `gitignore-mode'."
-    :messages '("I don't think I know you")))
+    :messages ("I don't think I know you")))
 #+END_SRC
 
 *** smerge-mode
@@ -6526,14 +6545,13 @@ Bitches brew.
   (wal/hook elixir-mode
     "Hook into `elixir-mode'."
     :lsp t
-    :messages '("Mixin' potions" "A hex on you")
-    :functions (abbrev-mode))
+    :messages ("Mixin' potions" "A hex on you")
+    :functions (abbrev-mode)
+    :ligatures ("|>" "->" "<-" "=>"
+                "::" "<>" "#{" "\\\\"
+                "===" "!==" ".."))
 
-  (define-abbrev-table 'elixir-mode-abbrev-table '(("p" "|>")))
-
-  (wal/set-ligatures 'elixir-mode '("|>" "->" "<-" "=>"
-                                    "::" "<>" "#{" "\\\\"
-                                    "===" "!==" "..")))
+  (define-abbrev-table 'elixir-mode-abbrev-table '(("p" "|>"))))
 #+END_SRC
 
 ** C/C++
@@ -6557,7 +6575,8 @@ I want to be ready for =jai=.
     "Hook into `c++-mode'."
     :lsp t
     :captain t
-    :messages '("Make tidy! Make clean!" "Serenity now!"))
+    :ligatures ("::" "->")
+    :messages ("Make tidy! Make clean!" "Serenity now!"))
 
   ;; Eliminate conflicts with `delight'.
   (advice-add 'c-update-modeline :override #'ignore)
@@ -6568,7 +6587,6 @@ I want to be ready for =jai=.
       ("s" "set" c-set-style)
       ("g" "guess (using buffer)" c-guess-buffer)]])
 
-  (wal/set-ligatures 'c++-mode '("::" "->"))
   (wal/set-ligatures 'c-mode '("->")))
 #+END_SRC
 
@@ -6601,7 +6619,8 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
     "Hook into `rust-mode'."
     :lsp t
     :captain t
-    :messages '("Consider the lobster"))
+    :ligatures ("///" "->" "=>" "::" ".." "#[")
+    :messages ("Consider the lobster"))
 
   (wal/transient-define-prefix-once wal/rust-mode-dispatch ()
     "Access `rust-mode' commands."
@@ -6611,10 +6630,7 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
      ["Test"
       ("t a" "test all" rust-test)
       ("t c" "current" cargo-process-current-test)
-      ("t f" "file" cargo-process-current-file-tests)]])
-
-  (wal/set-ligatures 'rust-mode '("///" "->" "=>" "::"
-                                  ".." "#[")))
+      ("t f" "file" cargo-process-current-file-tests)]]))
 #+END_SRC
 
 *** cargo
@@ -6675,11 +6691,12 @@ TOML."
     :captain t
     :lsp t
     :corfu (0.1 1)
+    :ligatures ("->" "__")
     :lsp-ignores
-    '("[/\\\\]\\.pytype\\'"
-      "[/\\\\]__pycache__\\'"
-      "[/\\\\]\\.pytest_cache\\'")
-    :messages '("Watch out for snakes!" "Vegetation, aggravation")
+    ("[/\\\\]\\.pytype\\'"
+     "[/\\\\]__pycache__\\'"
+     "[/\\\\]\\.pytest_cache\\'")
+    :messages ("Watch out for snakes!" "Vegetation, aggravation")
 
     (setq-local comment-inline-offset 2))
 
@@ -6698,8 +6715,6 @@ TOML."
       ("i f" "send file" python-shell-send-file)]
      ["Commands"
       ("r" "run shell" run-python)]])
-
-  (wal/set-ligatures 'python-mode '("->" "__"))
 
   :custom
   (python-indent-guess-indent-offset nil))
@@ -6951,7 +6966,7 @@ Deal with the parens.
   (wal/hook emacs-lisp-mode
     "Hook into `emacs-lisp-mode'."
     :captain t
-    :messages '("So it's just a bunch of lists?" "List your lambdas")
+    :messages ("So it's just a bunch of lists?" "List your lambdas")
     :functions (prettify-symbols-mode))
 
   (wal/transient-define-prefix-once wal/emacs-lisp-mode-dispatch ()
@@ -6984,16 +6999,15 @@ Deal with the parens.
   (wal/hook lisp-data-mode
     "Hook into `lisp-data-mode."
     :shallow t
-    :corfu (0.1 1))
+    :corfu (0.1 1)
+    :ligatures (";;"))
 
   (with-eval-after-load 'slime
     (wal/transient-define-prefix-once wal/common-lisp-mode-dispatch ()
       "Access `slime' actions."
       [["Slime"
         ("s" "slime" slime-mode)
-        ("r" "open REPL" slime)]]))
-
-  (wal/set-ligatures 'lisp-data-mode '(";;")))
+        ("r" "open REPL" slime)]])))
 #+END_SRC
 
 *** clojure-mode
@@ -7014,16 +7028,15 @@ Get some closure.
     "Hook into `clojure-mode'."
     :lsp t
     :captain t
-    :messages '("Cider brew"))
+    :ligatures (";;" "->" "->>")
+    :messages ("Cider brew"))
 
   (with-eval-after-load 'cider
     (wal/transient-define-prefix-once wal/clojure-mode-dispatch ()
       "Access `clojure-mode' commands."
       [["Cider"
         ("r" "repl" cider-jack-in)
-        ("n" "set namespace" cider-repl-set-ns)]]))
-
-  (wal/set-ligatures 'clojure-mode '(";;" "->" "->>")))
+        ("n" "set namespace" cider-repl-set-ns)]])))
 #+end_src
 
 *** cider
@@ -7111,12 +7124,13 @@ Can we have =deno= instead of =node=?
   :config
   (wal/hook js-mode
     "Hook into `js-mode'."
-    :messages '("NaN !== NaN" "Null falsy values or undefined")
+    :messages ("NaN !== NaN" "Null falsy values or undefined")
     :captain t
     :tabs t
     :lsp t
     :corfu (0.1 2)
     :treesit base
+    :ligatures ("=>" "!==" "===" "!!")
     :functions (add-node-modules-path prettier-mode)
 
     (setq-local compilation-error-screen-columns nil))
@@ -7136,8 +7150,6 @@ Can we have =deno= instead of =node=?
     "Access JS commands."
     [["Actions"
       ("c" "context" js-syntactic-context)]])
-
-  (wal/set-ligatures 'js-mode '("=>" "!==" "===" "!!"))
 
   ;; Add regular expression for jest errors.
   (add-to-list 'compilation-error-regexp-alist 'jest)
@@ -7170,7 +7182,7 @@ Please use TypeScript.
     "Hook into `typescript-mode'."
     :lsp t
     :tabs t
-    :messages '("This is any, that is any, everything is any!")
+    :messages ("This is any, that is any, everything is any!")
     :functions (add-node-modules-path)))
 #+END_SRC
 
@@ -7259,7 +7271,7 @@ Setup for LSP.
   (wal/hook go-mode
     "Hook into `go-mode'."
     :lsp t
-    :messages '("What does Sonic say?" "Put a golang under your tongue")))
+    :messages ("What does Sonic say?" "Put a golang under your tongue")))
 #+END_SRC
 
 ** Scripting
@@ -7288,7 +7300,7 @@ Bash your head in!
   :config
   (wal/hook sh-mode
     "Hook into `sh-mode'."
-    :messages '("Sh..sh..h.." "Bash your head in"))
+    :messages ("Sh..sh..h.." "Bash your head in"))
 
   :custom
   (sh-basic-offset 2)
@@ -7422,10 +7434,8 @@ Yes, you need to install *Android Studio* for some reason.
     "Hook into `dart-mode'."
     :lsp t
     :captain t
-    :messages '("Bull's eye!"))
-
-  (wal/set-ligatures 'dart-mode '("=>" "///" ".?" "??"
-                                  "??=" "..")))
+    :messages ("Bull's eye!")
+    :ligatures ("=>" "///" ".?" "??" "??=" "..")))
 #+END_SRC
 
 *** lsp-dart
@@ -7538,9 +7548,8 @@ For some reason, this is also defined in =cc-mode=.
     :lsp t
     :lsp-ignores '("[/\\\\]\\.gradle\\'")
     :captain t
-    :messages '("Mmmh ... maven"))
-
-  (wal/set-ligatures 'java-mode '("::" "->")))
+    :messages ("Mmmh ... maven")
+    :ligatures ("::" "->")))
 #+END_SRC
 
 *** lsp-java
@@ -7666,15 +7675,14 @@ The elephant in the room.
   (wal/hook php-mode
     "Hook into `php-mode'."
     :lsp t
-    :messages '("Stampy, no!"))
+    :messages ("Stampy, no!")
+    :ligatures ("::" "=>" "->" "??"
+                "__" "<>" "!==" "<=>"
+                "==="))
 
   (require 'dap-php) ; Run `dap-php-setup'.
 
-  (wdb/side "\\*Php SOE")
-
-  (wal/set-ligatures 'php-mode '("::" "=>" "->" "??"
-                                 "__" "<>" "!==" "<=>"
-                                 "===")))
+  (wdb/side "\\*Php SOE"))
 #+END_SRC
 
 ** Web
@@ -7712,7 +7720,7 @@ The only way to store strings, JSON.
     :tabs t
     :captain t
     :prog-like t
-    :messages '("JSON ...? JSON?! JSON!!"))
+    :messages ("JSON ...? JSON?! JSON!!"))
 
   ;; Integrate with `flycheck' and `so-long-mode'.
   (jsonian-no-so-long-mode)
@@ -7739,9 +7747,8 @@ The only way to store strings, JSON.
   (wal/hook mhtml-mode
     "Hook into `mhtml-mode'."
     :lsp t
-    :messages '("Hodge-podge mark-up language"))
-
-  (wal/set-ligatures 'html-mode '("<!--" "-->" "</" "/>")))
+    :messages ("Hodge-podge mark-up language")
+    :ligatures ("<!--" "-->" "</" "/>")))
 #+END_SRC
 
 *** nxml-mode
@@ -7753,15 +7760,13 @@ The only way to store strings, JSON.
 (use-package nxml-mode
   :ensure nil
 
-  :init
+  :config
   (wal/hook nxml-mode
     "Hook into `nxml-mode'."
     :lsp t
-    :messages '("Extreme mark-up language")
-    :prog-like t)
-
-  :config
-  (wal/set-ligatures 'nxml-mode '("<!--" "-->" "</" "/>")))
+    :messages ("Extreme mark-up language")
+    :ligatures ("<!--" "-->" "</" "/>")
+    :prog-like t))
 #+end_src
 
 *** yaml-mode
@@ -7782,7 +7787,7 @@ Sometimes things that do as well.
   :config
   (wal/hook yaml-mode
     "Hook into command `yaml-mode'."
-    :messages '("JSON?! ... Ah, thank God it's you, YAML!")
+    :messages ("JSON?! ... Ah, thank God it's you, YAML!")
     :prog-like t))
 #+END_SRC
 
@@ -7822,7 +7827,7 @@ We want quicker suggestions when in CSS modes.
     :tabs t
     :lsp t
     :corfu (0.1 2)
-    :messages '("Centering? It's simple. Here's 15 ways to do it.")
+    :messages ("Centering? It's simple. Here's 15 ways to do it.")
     :functions (add-node-modules-path wal/maybe-use-custom-scss-checker)))
 #+END_SRC
 
@@ -7886,7 +7891,7 @@ Get text.
     "Hook into `web-mode'."
     :lsp t
     :tabs t
-    :messages '("This is the Internet"))
+    :messages ("This is the Internet"))
 
   :custom
   (web-mode-comment-style 2))
@@ -7940,7 +7945,7 @@ replying to the `JSONRPC' request."
     :lsp t
     :tabs always
     :corfu (0.2 3)
-    :messages '("I wish you were Estra-gone"))
+    :messages ("I wish you were Estra-gone"))
 
   (advice-add
    'lsp--get-message-type :around
@@ -8666,7 +8671,7 @@ Make =Dockerfiles= look nice.
   :config
   (wal/hook dockerfile-mode
     "Hook into `dockerfile-mode'."
-    :messages '("Have you ever given?")))
+    :messages ("Have you ever given?")))
 #+END_SRC
 
 ** Kubernetes

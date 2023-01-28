@@ -887,9 +887,9 @@
   (match-expansion
    (wal/hook test
      "We're just testing."
-     :messages '("Just testing")
+     :messages ("Just testing")
      :lsp t
-     :lsp-ignores '(".ignoramus")
+     :lsp-ignores (".ignoramus")
      :tabs t)
    `(progn
       (defun wal/test-hook ()
@@ -907,7 +907,7 @@
   (match-expansion
    (wal/hook test
      "We're just testing."
-     :messages '("Just testing")
+     :messages ("Just testing")
      :lsp t
      :tabs 'some-fun)
    `(progn
@@ -923,7 +923,7 @@
   (match-expansion
    (wal/hook test
      "We're just testing."
-     :messages '("Just testing")
+     :messages ("Just testing")
      :lsp t
      :tabs always)
    `(progn
@@ -939,7 +939,7 @@
   (match-expansion
    (wal/hook test
      "We're just testing."
-     :messages '("Just testing")
+     :messages ("Just testing")
      :lsp nil)
    `(progn
       (defun wal/test-hook ()
@@ -953,7 +953,7 @@
   (match-expansion
    (wal/hook test
      "We're just testing."
-     :messages '("Just testing")
+     :messages ("Just testing")
      :prog-like t
      (message "hi"))
    `(progn
@@ -970,7 +970,7 @@
   (match-expansion
    (wal/hook test
      "We're just testing."
-     :messages '("Just testing")
+     :messages ("Just testing")
      :captain t
      (message "hi"))
    `(progn
@@ -987,7 +987,7 @@
   (match-expansion
    (wal/hook test
      "We're just testing."
-     :messages '("Just testing")
+     :messages ("Just testing")
      :corfu (0.2 4)
      (message "hi"))
    `(progn
@@ -1035,30 +1035,63 @@
 (ert-deftest test-wal/hook--treesit-base ()
   (with-mock ((wal/modern-emacs-p . #'always))
     (match-expansion
-     (wal/hook test
+     (wal/hook test-mode
        "We're just testing."
        :shallow t
        :treesit base
        (message "hi"))
      `(progn
-        (defun wal/test-hook ()
+        (defun wal/test-mode-hook ()
           "We're just testing."
           (message "hi"))
-        (add-hook 'test-base-mode-hook 'wal/test-hook)))))
+        (add-hook 'test-base-mode-hook 'wal/test-mode-hook)))))
 
 (ert-deftest test-wal/hook--treesit ()
   (with-mock ((wal/modern-emacs-p . #'always))
     (match-expansion
-     (wal/hook test
+     (wal/hook test-mode
        "We're just testing."
        :shallow t
        :treesit t
        (message "hi"))
      `(progn
-        (defun wal/test-hook ()
+        (defun wal/test-mode-hook ()
           "We're just testing."
           (message "hi"))
-        (add-hook 'test-ts-mode-hook 'wal/test-hook)))))
+        (add-hook 'test-ts-mode-hook 'wal/test-mode-hook)))))
+
+(ert-deftest test-wal/hook--ligatures ()
+  (with-mock ((wal/modern-emacs-p . #'always))
+    (match-expansion
+
+     (wal/hook test-mode
+       "We're just testing."
+       :shallow t
+       :ligatures ("?!")
+       (message "hi"))
+     `(progn
+        (defun wal/test-mode-hook ()
+          "We're just testing."
+          (message "hi"))
+        (wal/set-ligatures 'test-mode '("?!"))
+        (add-hook 'test-mode-hook 'wal/test-mode-hook)))))
+
+(ert-deftest test-wal/hook--ligatures--with-treesit ()
+  (with-mock ((wal/modern-emacs-p . #'always))
+    (match-expansion
+
+     (wal/hook test-mode
+       "We're just testing."
+       :shallow t
+       :ligatures ("?!")
+       :treesit t
+       (message "hi"))
+     `(progn
+        (defun wal/test-mode-hook ()
+          "We're just testing."
+          (message "hi"))
+        (wal/set-ligatures '(test-mode test-ts-mode) '("?!"))
+        (add-hook 'test-ts-mode-hook 'wal/test-mode-hook)))))
 
 (ert-deftest test-wal/treesit ()
   (with-mock ((featurep . #'always)
