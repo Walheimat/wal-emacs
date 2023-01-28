@@ -1032,6 +1032,71 @@
             (testable-mode))))
       (add-hook 'test-hook 'wal/test-hook))))
 
+(ert-deftest test-wal/hook--treesit ()
+  (with-mock ((wal/modern-emacs-p . #'always))
+    (match-expansion
+     (wal/hook test
+       "We're just testing."
+       :shallow t
+       :treesit t
+       (message "hi"))
+     `(progn
+        (defun wal/test-hook ()
+          "We're just testing."
+          (message "hi"))
+        (add-hook 'test-base-mode-hook 'wal/test-hook)))))
+
+
+(ert-deftest test-wal/treesit ()
+  (with-mock ((featurep . #'always)
+              (treesit-available-p . #'always)
+              (treesit-ready-p . #'always))
+
+    (match-expansion
+     (wal/treesit test-lang)
+     `(progn
+        (message "Remapping %s to %s" 'test-lang-mode 'test-lang-ts-mode)
+        (add-to-list 'major-mode-remap-alist
+                     '(test-lang-mode . test-lang-ts-mode))
+        (with-eval-after-load 'all-the-icons
+          (when-let ((setting
+                      (cdr
+                       (assoc 'test-lang-mode all-the-icons-mode-icon-alist)))
+                     (name 'test-lang-ts-mode))
+
+            (add-to-list 'all-the-icons-mode-icon-alist
+                         (cons name setting))))))))
+
+(ert-deftest test-wal/treesit--with-replacements ()
+  (with-mock ((featurep . #'always)
+              (treesit-available-p . #'always)
+              (treesit-ready-p . #'always))
+
+    (match-expansion
+     (wal/treesit test-lang
+       :replacement tt-ts-mode
+       :icons-name test-mode)
+     `(progn
+        (message "Remapping %s to %s" 'test-lang-mode 'tt-ts-mode)
+        (add-to-list 'major-mode-remap-alist
+                     '(test-lang-mode . tt-ts-mode))
+        (with-eval-after-load 'all-the-icons
+          (when-let ((setting
+                      (cdr
+                       (assoc 'test-mode all-the-icons-mode-icon-alist)))
+                     (name 'tt-ts-mode))
+
+            (add-to-list 'all-the-icons-mode-icon-alist
+                         (cons name setting))))))))
+
+(ert-deftest test-wal/treesit--not-available ()
+  (with-mock ((featurep . #'ignore))
+    (match-expansion
+     (wal/treesit test-lang
+       :replacement tt-ts-mode
+       :icons-name test-mode)
+     `(message "Not remapping %s" 'test-lang))))
+
 (ert-deftest test-wal/fundamental-mode--switches ()
   (with-temp-buffer
     (emacs-lisp-mode)

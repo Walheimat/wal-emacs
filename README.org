@@ -837,6 +837,7 @@ Custom functionality.
 ;;; Code:
 
 (require 'compile)
+(require 'treesit nil t)
 
 (declare-function server-edit "ext:server.el")
 (declare-function server-edit-abort "ext:server.el")
@@ -1745,7 +1746,7 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
     (name
      docs
      &body body
-     &key messages lsp lsp-ignores tabs prog-like captain corfu shallow functions
+     &key messages lsp lsp-ignores tabs prog-like captain corfu shallow functions treesit
      &allow-other-keys)
   "Hook into major mode NAME, describe with DOCS.
 
@@ -1770,12 +1771,21 @@ values will be set.
 FUNCTIONS is a list of functions (for example modes) that should
 be called if they are bound.
 
+If TREESIT is non-nil, set the hook for the base-mode.
+
 The rest of the BODY will be spliced into the lambda."
   (declare (indent defun) (doc-string 2))
 
   (let ((target (intern (concat (symbol-name name) "-hook")))
+        (ts-target (thread-first
+                     name
+                     (symbol-name)
+                     (split-string "-")
+                     (cl-first)
+                     (concat "-base-mode-hook")
+                     (intern)))
         (safe-body (cl-loop for (key val) on body by 'cddr
-                            unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :captain :corfu :shallow :functions))
+                            unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :captain :corfu :shallow :functions :treesit))
                             collect key
                             and collect val))
         (func-name (intern (concat "wal/" (symbol-name name) "-hook")))
@@ -1818,8 +1828,38 @@ The rest of the BODY will be spliced into the lambda."
                   (wal/append 'lsp-file-watch-ignored-directories ,lsp-ignores)))
 
             (add-hook
-             ',target
+             ',(if (and treesit (wal/modern-emacs-p 29)) ts-target target)
              ',func-name))))))
+
+(cl-defmacro wal/treesit (language &key replacement icons-name)
+  "Remap LANGUAGE major-mode to tree-sitter variant if possible.
+
+If REPLACEMENT is non-nil, use it instead of constructing
+LANGUAGE-ts-mode for the variant.
+
+If ICONS-NAME is non-nil, use it instead of LANGUAGE-mode to try
+to set an icon."
+  (declare (indent defun))
+
+  (if-let* ((available (and (featurep 'treesit) (treesit-available-p)))
+            (ready (treesit-ready-p language))
+
+            (sym-name (symbol-name language))
+            (mode-name (intern (concat sym-name "-mode")))
+
+            (ts-name (or replacement (intern (concat sym-name "-ts-mode")))))
+
+      `(progn
+         (message "Remapping %s to %s" ',mode-name ',ts-name)
+         (add-to-list 'major-mode-remap-alist ',(cons mode-name ts-name))
+
+         (with-eval-after-load 'all-the-icons
+           (when-let ((setting (cdr (assoc ',(or icons-name mode-name) all-the-icons-mode-icon-alist)))
+                      (name ',ts-name))
+
+             (add-to-list 'all-the-icons-mode-icon-alist
+                          (cons name setting)))))
+    `(message "Not remapping %s" ',language)))
 #+END_SRC
 
 ** Additional Mode Controls
