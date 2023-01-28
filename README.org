@@ -2587,7 +2587,7 @@ No double spaces in sentences.
 (use-package text-mode
   :ensure nil
 
-  :config
+  :init
   (wal/hook text-mode
     "Hook into `text-mode'."
     :shallow t
@@ -5119,13 +5119,14 @@ This calls `org-content' interactively."
 
   :hook (org-mode . auto-fill-mode)
 
-  :config
+  :init
   (wal/hook org-mode
     "Hook into `org-mode'."
     :messages ("Organize! Seize the means of production!")
     :captain t
     :shallow t)
 
+  :config
   ;; TEMP: Getting missing face errors otherwise.
   (require 'org-indent)
 
@@ -5589,13 +5590,14 @@ Editing source blocks.
 
   :after org
 
-  :config
+  :init
   (wal/hook org-src-mode ()
     "Hook into function `org-src-mode'."
     :shallow t
 
     (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
 
+  :config
   (wal/append
    'org-src-lang-modes
    '(("dockerfile" . dockerfile)
@@ -5934,12 +5936,13 @@ Uses the same optional SWITCHES."
 (use-package dired
   :ensure nil
 
-  :config
+  :init
   (wal/hook dired-mode
     "Hook into `dired-mode'."
     :captain t
     :shallow t)
 
+  :config
   ;; We aren't scared of finding alternate files.
   (put 'dired-find-alternate-file 'disabled nil)
 
@@ -6179,7 +6182,7 @@ FORCE-NEW/`universal-argument')."
   :hook
   (vterm-mode . with-editor-export-git-editor)
 
-  :config
+  :init
   (wal/hook vterm-mode ()
     "Hook into `vterm-mode'.
 
@@ -6415,7 +6418,7 @@ Syntax highlighting.
   :mode (("/\\.npmignore\\'" . gitignore-mode)
          ("/\\.dockerignore" . gitignore-mode))
 
-  :config
+  :init
   (wal/hook gitignore-mode
     "Hook into `gitignore-mode'."
     :messages ("I don't think I know you")))
@@ -6541,7 +6544,7 @@ Bitches brew.
 
   :ensure nil
 
-  :config
+  :init
   (wal/hook elixir-mode
     "Hook into `elixir-mode'."
     :lsp t
@@ -6551,6 +6554,7 @@ Bitches brew.
                 "::" "<>" "#{" "\\\\"
                 "===" "!==" ".."))
 
+  :config
   (define-abbrev-table 'elixir-mode-abbrev-table '(("p" "|>"))))
 #+END_SRC
 
@@ -6570,7 +6574,7 @@ I want to be ready for =jai=.
   ;; I don't use C, no need to (often incorrectly) guess.
   :mode ("\\.h\\'" . c++-mode)
 
-  :config
+  :init
   (wal/hook c++-mode
     "Hook into `c++-mode'."
     :lsp t
@@ -6578,6 +6582,7 @@ I want to be ready for =jai=.
     :ligatures ("::" "->")
     :messages ("Make tidy! Make clean!" "Serenity now!"))
 
+  :config
   ;; Eliminate conflicts with `delight'.
   (advice-add 'c-update-modeline :override #'ignore)
 
@@ -6614,7 +6619,7 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
 
   :ensure nil
 
-  :config
+  :init
   (wal/hook rust-mode
     "Hook into `rust-mode'."
     :lsp t
@@ -6622,6 +6627,7 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
     :ligatures ("///" "->" "=>" "::" ".." "#[")
     :messages ("Consider the lobster"))
 
+  :config
   (wal/transient-define-prefix-once wal/rust-mode-dispatch ()
     "Access `rust-mode' commands."
     [["Commands"
@@ -6685,7 +6691,7 @@ TOML."
 (use-package python
   :ensure nil
 
-  :config
+  :init
   (wal/hook python-mode
     "Hook into `python-mode'."
     :captain t
@@ -6700,6 +6706,7 @@ TOML."
 
     (setq-local comment-inline-offset 2))
 
+  :config
   ;; Load default `dap-mode' templates.
   (with-eval-after-load 'dap-mode
     (require 'dap-python))
@@ -6962,13 +6969,14 @@ Deal with the parens.
 (use-package elisp-mode
   :ensure nil
 
-  :config
+  :init
   (wal/hook emacs-lisp-mode
     "Hook into `emacs-lisp-mode'."
     :captain t
     :messages ("So it's just a bunch of lists?" "List your lambdas")
     :functions (prettify-symbols-mode))
 
+  :config
   (wal/transient-define-prefix-once wal/emacs-lisp-mode-dispatch ()
     "Access `elisp' commands."
     [["Utility"
@@ -6991,7 +6999,7 @@ Deal with the parens.
 (use-package lisp-mode
   :ensure nil
 
-  :config
+  :init
   (wal/hook common-lisp-mode
     "hook into `common-lisp-mode'."
     :captain t)
@@ -7002,6 +7010,7 @@ Deal with the parens.
     :corfu (0.1 1)
     :ligatures (";;"))
 
+  :config
   (with-eval-after-load 'slime
     (wal/transient-define-prefix-once wal/common-lisp-mode-dispatch ()
       "Access `slime' actions."
@@ -7023,7 +7032,7 @@ Get some closure.
 
   :ensure nil
 
-  :config
+  :init
   (wal/hook clojure-mode
     "Hook into `clojure-mode'."
     :lsp t
@@ -7031,6 +7040,7 @@ Get some closure.
     :ligatures (";;" "->" "->>")
     :messages ("Cider brew"))
 
+  :config
   (with-eval-after-load 'cider
     (wal/transient-define-prefix-once wal/clojure-mode-dispatch ()
       "Access `clojure-mode' commands."
@@ -7121,7 +7131,7 @@ Can we have =deno= instead of =node=?
 
   :ensure nil
 
-  :config
+  :init
   (wal/hook js-mode
     "Hook into `js-mode'."
     :messages ("NaN !== NaN" "Null falsy values or undefined")
@@ -7139,6 +7149,7 @@ Can we have =deno= instead of =node=?
     :replacement js-ts-mode
     :icons-name js-mode)
 
+  :config
   (when (wal/modern-emacs-p 29)
     (bind-key "M-." nil js-ts-mode-map))
 
@@ -7177,7 +7188,7 @@ Please use TypeScript.
 
   :mode "\\.ts\\(x\\)?\\'"
 
-  :config
+  :init
   (wal/hook typescript-mode
     "Hook into `typescript-mode'."
     :lsp t
@@ -7267,7 +7278,7 @@ Setup for LSP.
 
   :ensure nil
 
-  :config
+  :init
   (wal/hook go-mode
     "Hook into `go-mode'."
     :lsp t
@@ -7297,7 +7308,7 @@ Bash your head in!
 (use-package sh-script
   :ensure nil
 
-  :config
+  :init
   (wal/hook sh-mode
     "Hook into `sh-mode'."
     :messages ("Sh..sh..h.." "Bash your head in"))
@@ -7391,12 +7402,13 @@ Sometimes things that don't do things need to look nice.
 
   :ensure nil
 
-  :config
+  :init
   (wal/hook markdown-mode
     "Hook into `markdown-mode'."
     :captain t
     :shallow t)
 
+  :config
   (wal/transient-define-prefix-once wal/markdown-mode-dispatch ()
     "Access `markdown-mode' commands."
     [["View"
@@ -7429,7 +7441,7 @@ Yes, you need to install *Android Studio* for some reason.
 
   :ensure nil
 
-  :config
+  :init
   (wal/hook dart-mode
     "Hook into `dart-mode'."
     :lsp t
@@ -7542,7 +7554,7 @@ For some reason, this is also defined in =cc-mode=.
 (use-package cc-mode
   :ensure nil
 
-  :config
+  :init
   (wal/hook java-mode
     "Hook into `java-mode'."
     :lsp t
@@ -7671,7 +7683,7 @@ The elephant in the room.
 
   :ensure nil
 
-  :config
+  :init
   (wal/hook php-mode
     "Hook into `php-mode'."
     :lsp t
@@ -7680,6 +7692,7 @@ The elephant in the room.
                 "__" "<>" "!==" "<=>"
                 "==="))
 
+  :config
   (require 'dap-php) ; Run `dap-php-setup'.
 
   (wdb/side "\\*Php SOE"))
@@ -7714,7 +7727,7 @@ The only way to store strings, JSON.
   :mode (("\\.arb\\'" . jsonian-mode)
          ("\\.\\([a-zA-Z]\\)+rc\\'" . jsonian-mode))
 
-  :config
+  :init
   (wal/hook jsonian-mode
     "Hook into `jsonian-mode'."
     :tabs t
@@ -7722,6 +7735,7 @@ The only way to store strings, JSON.
     :prog-like t
     :messages ("JSON ...? JSON?! JSON!!"))
 
+  :config
   ;; Integrate with `flycheck' and `so-long-mode'.
   (jsonian-no-so-long-mode)
   (with-eval-after-load 'flycheck
@@ -7743,7 +7757,7 @@ The only way to store strings, JSON.
 (use-package mhtml-mode
   :ensure nil
 
-  :config
+  :init
   (wal/hook mhtml-mode
     "Hook into `mhtml-mode'."
     :lsp t
@@ -7760,7 +7774,7 @@ The only way to store strings, JSON.
 (use-package nxml-mode
   :ensure nil
 
-  :config
+  :init
   (wal/hook nxml-mode
     "Hook into `nxml-mode'."
     :lsp t
@@ -7784,7 +7798,7 @@ Sometimes things that do as well.
 
   :mode "\\.tpl\\'" ; Helm templates.
 
-  :config
+  :init
   (wal/hook yaml-mode
     "Hook into command `yaml-mode'."
     :messages ("JSON?! ... Ah, thank God it's you, YAML!")
@@ -7821,7 +7835,7 @@ We want quicker suggestions when in CSS modes.
 
   :mode ("\\.rasi" . css-mode)
 
-  :config
+  :init
   (wal/hook css-mode
     "Hook into `css-mode'."
     :tabs t
@@ -7886,7 +7900,7 @@ Get text.
          "\\.blade.php\\'"
          "\\.component.html\\'")
 
-  :config
+  :init
   (wal/hook web-mode
     "Hook into `web-mode'."
     :lsp t
@@ -7939,7 +7953,7 @@ replying to the `JSONRPC' request."
 
   :ensure nil
 
-  :config
+  :init
   (wal/hook gdscript-mode
     "Hook into `gdscript-mode'."
     :lsp t
@@ -7947,6 +7961,7 @@ replying to the `JSONRPC' request."
     :corfu (0.2 3)
     :messages ("I wish you were Estra-gone"))
 
+  :config
   (advice-add
    'lsp--get-message-type :around
    #'wal/with-json-data-ignored-for-gdscript))
@@ -8668,7 +8683,7 @@ Make =Dockerfiles= look nice.
 
   :ensure nil
 
-  :config
+  :init
   (wal/hook dockerfile-mode
     "Hook into `dockerfile-mode'."
     :messages ("Have you ever given?")))
