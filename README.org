@@ -1757,7 +1757,7 @@ MODE is only checked if it has a language mapping."
          t)))
 
 (defmacro wal/hook--tabs (tabs)
-  "Set messages and indentation."
+  "Set messages and indentation using TABS."
    `(progn
       (hack-local-variables)
       ,(cond ((equal 'always tabs)
@@ -1767,6 +1767,45 @@ MODE is only checked if it has a language mapping."
              ((not tabs)
               '(wal/disable-tabs))
              (t `(wal/maybe-enable-tabs :indent-with ,tabs)))))
+
+(defun wal/hook--safe-body (body)
+  "Collect everything from BODY that's a key."
+  (cl-loop for (key val)
+           on body by 'cddr
+           unless (memq key '(:messages
+                              :lsp
+                              :lsp-ignores
+                              :tabs
+                              :prog-like
+                              :captain
+                              :corfu
+                              :shallow
+                              :functions
+                              :treesit
+                              :ligatures))
+           collect key
+           and collect val))
+
+(defun wal/hook--treesit (treesit name)
+  "Get `treesit' values from using TREESIT and NAME.
+
+Retunrs cons cell of (TS-NAME . TS-READY)."
+  (let* ((ts-seg (pcase treesit
+                   ('base "base")
+                   (_ "ts")))
+
+         (ts-name (thread-first
+                    name
+                    (symbol-name)
+                    (split-string "-")
+                    (cl-subseq 0 -1)
+                    (string-join "-")
+                    (concat "-" ts-seg "-mode")))
+
+         (ts-ready (and treesit (wal/hook--treesit-ready-p name))))
+
+   (cons ts-name ts-ready)))
+
 
 (cl-defmacro wal/hook
     (name
@@ -1816,22 +1855,7 @@ The rest of the BODY will be spliced into the lambda."
 
   (let* ((target (intern (concat (symbol-name name) "-hook")))
 
-         (ts-seg (pcase treesit
-                   ('base "base")
-                   (_ "ts")))
-         (ts-name (thread-first
-                    name
-                    (symbol-name)
-                    (split-string "-")
-                    (cl-subseq 0 -1)
-                    (string-join "-")
-                    (concat "-" ts-seg "-mode")))
-         (ts-ready (and treesit (wal/hook--treesit-ready-p name)))
-
-         (safe-body (cl-loop for (key val) on body by 'cddr
-                             unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :captain :corfu :shallow :functions :treesit :ligatures))
-                             collect key
-                             and collect val))
+         (ts (wal/hook--treesit treesit name))
 
          (func-name (intern (concat "wal/" (symbol-name name) "-hook")))
 
@@ -1850,7 +1874,7 @@ The rest of the BODY will be spliced into the lambda."
                    ,(when (not shallow)
                       `(wal/hook--tabs ,tabs))
 
-                   ,@safe-body
+                   ,@(wal/hook--safe-body body)
 
                    ,(when lsp
                       '(wal/lsp))
@@ -1874,13 +1898,13 @@ The rest of the BODY will be spliced into the lambda."
                   (wal/append 'lsp-file-watch-ignored-directories ',lsp-ignores)))
 
             ,(when ligatures
-               (if ts-ready
-                   `(wal/set-ligatures '(,name ,(intern ts-name)) ',ligatures)
+               (if (cdr-safe ts)
+                   `(wal/set-ligatures '(,name ,(intern (car-safe ts))) ',ligatures)
                  `(wal/set-ligatures ',name ',ligatures)))
 
             (add-hook
-             ',(if ts-ready
-                   (intern (concat ts-name "-hook"))
+             ',(if (cdr-safe ts)
+                   (intern (concat (car-safe ts)"-hook"))
                  target)
              ',func-name))))))
 
