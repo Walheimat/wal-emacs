@@ -1742,6 +1742,20 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
   "Run `prog-like-hook' functions."
   (run-hooks 'prog-like-hook))
 
+(defvar wal/treesit-mode-lang-alist '((js-mode . javascript))
+  "Alist mapping major modes to languages.")
+
+(defun wal/hook--treesit-ready-p (mode)
+  "Check if treesit is available for MODE.
+
+MODE is only checked if it has a language mapping."
+  (and (wal/modern-emacs-p 29)
+       (require 'treesit nil t)
+       (treesit-available-p)
+       (if-let* ((lang (cdr-safe (assoc mode wal/treesit-mode-lang-alist))))
+           (treesit-ready-p lang t)
+         t)))
+
 (cl-defmacro wal/hook
     (name
      docs
@@ -1800,6 +1814,7 @@ The rest of the BODY will be spliced into the lambda."
                     (cl-subseq 0 -1)
                     (string-join "-")
                     (concat "-" ts-seg "-mode")))
+         (ts-ready (and treesit (wal/hook--treesit-ready-p name)))
 
          (safe-body (cl-loop for (key val) on body by 'cddr
                              unless (memq key '(:messages :lsp :lsp-ignores :tabs :prog-like :captain :corfu :shallow :functions :treesit :ligatures))
@@ -1846,12 +1861,13 @@ The rest of the BODY will be spliced into the lambda."
                   (wal/append 'lsp-file-watch-ignored-directories ',lsp-ignores)))
 
             ,(when ligatures
-               (if (and treesit (wal/modern-emacs-p 29))
+               (if ts-ready
                    `(wal/set-ligatures '(,name ,(intern ts-name)) ',ligatures)
                  `(wal/set-ligatures ',name ',ligatures)))
 
             (add-hook
-             ',(if (and treesit (wal/modern-emacs-p 29)) (intern (concat ts-name "-hook")) target)
+             ',(if ts-ready
+                   (intern (concat ts-name "-hook")) target)
              ',func-name))))))
 
 (cl-defmacro wal/treesit (language &key replacement icons-name)
