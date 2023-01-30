@@ -1758,15 +1758,15 @@ MODE is only checked if it has a language mapping."
 
 (defmacro wal/hook--tabs (tabs)
   "Set messages and indentation using TABS."
-   `(progn
-      (hack-local-variables)
-      ,(cond ((equal 'always tabs)
-              `(wal/enable-tabs))
-             ((equal t tabs)
-              `(wal/maybe-enable-tabs))
-             ((not tabs)
-              '(wal/disable-tabs))
-             (t `(wal/maybe-enable-tabs :indent-with ,tabs)))))
+  `(progn
+     (hack-local-variables)
+     ,(cond ((equal 'always tabs)
+             `(wal/enable-tabs))
+            ((equal t tabs)
+             `(wal/maybe-enable-tabs))
+            ((not tabs)
+             '(wal/disable-tabs))
+            (t `(wal/maybe-enable-tabs :indent-with ,tabs)))))
 
 (defun wal/hook--safe-body (body)
   "Collect everything from BODY that's a key."
@@ -1804,8 +1804,58 @@ Retunrs cons cell of (TS-NAME . TS-READY)."
 
          (ts-ready (and treesit (wal/hook--treesit-ready-p name))))
 
-   (cons ts-name ts-ready)))
+    (cons ts-name ts-ready)))
 
+(defvar wal/hook--function-keywords '(:corfu
+                                      :captain
+                                      :functions
+                                      :lsp
+                                      :messages
+                                      :prog-like
+                                      :shallow
+                                      :tabs))
+
+(defun wal/hook--get-function-values (args)
+  "Collect function keywords from ARGS."
+  (cl-loop for kw in wal/hook--function-keywords
+           collect (plist-get args kw)))
+
+(defun wal/hook--get-function-name (name suffix &optional prefix)
+  "Get function name for NAME."
+  (let ((end (concat (symbol-name name) "-" suffix)))
+
+    (if prefix
+        (intern (concat "wal/" end))
+      (intern end))))
+
+(defmacro wal/hook--function (name docs args)
+  "Create hook function NAME from ARGS with DOCS."
+  (declare (indent defun))
+
+  (cl-destructuring-bind
+      (corfu captain functions lsp messages prog-like shallow tabs)
+      (wal/hook--get-function-values args)
+
+    `(defun ,(wal/hook--get-function-name name "hook" t) ()
+       ,docs
+       ,@(delete
+          nil
+          `(,(when messages `(wal/message-in-a-bottle ',messages))
+            ,(when (not shallow) `(wal/hook--tabs ,tabs))
+
+            ,@(wal/hook--safe-body args)
+
+            ,(when lsp '(wal/lsp))
+            ,(when corfu `(wal/corfu-auto ',corfu))
+            ,(when prog-like '(run-hooks 'prog-like-hook))
+            ,(when functions
+               `(progn ,@(mapcar (lambda (it)
+                                   `(when (fboundp ',it) (,it)))
+                                 functions)))
+            ,(when captain
+               `(local-set-key
+                 (kbd (wal/key-combo-for-leader 'wal/captain))
+                 ',(wal/hook--get-function-name name "dispatch" t))))))))
 
 (cl-defmacro wal/hook
     (name
@@ -1853,60 +1903,27 @@ If TREESIT is non-nil, set the hook for the base-mode.
 The rest of the BODY will be spliced into the lambda."
   (declare (indent defun) (doc-string 2))
 
-  (let* ((target (intern (concat (symbol-name name) "-hook")))
-
-         (ts (wal/hook--treesit treesit name))
-
-         (func-name (intern (concat "wal/" (symbol-name name) "-hook")))
-
-         (captain-name (intern (concat "wal/" (symbol-name name) "-dispatch"))))
+  (let* ((ts (wal/hook--treesit treesit name)))
 
     `(progn
+       (wal/hook--function ,name ,docs ,body)
+
        ,@(delete
           nil
-          `((defun ,func-name ()
-              ,docs
-              ,@(delete
-                 nil
-                 `(,(when messages
-                      `(wal/message-in-a-bottle ',messages))
-
-                   ,(when (not shallow)
-                      `(wal/hook--tabs ,tabs))
-
-                   ,@(wal/hook--safe-body body)
-
-                   ,(when lsp
-                      '(wal/lsp))
-
-                   ,(when corfu
-                      `(wal/corfu-auto ',corfu))
-
-                   ,(when prog-like
-                      '(run-hooks 'prog-like-hook))
-
-                   ,(when functions
-                      `(progn ,@(mapcar (lambda (it)
-                                          `(when (fboundp ',it) (,it)))
-                                        functions)))
-
-                   ,(when captain
-                      `(local-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) ',captain-name)))))
-
-            ,(when (and lsp lsp-ignores)
+          `(,(when (and lsp lsp-ignores)
                `(with-eval-after-load 'lsp-mode
                   (wal/append 'lsp-file-watch-ignored-directories ',lsp-ignores)))
 
             ,(when ligatures
                (if (cdr-safe ts)
                    `(wal/set-ligatures '(,name ,(intern (car-safe ts))) ',ligatures)
-                 `(wal/set-ligatures ',name ',ligatures)))
+                 `(wal/set-ligatures ',name ',ligatures)))))
 
-            (add-hook
-             ',(if (cdr-safe ts)
-                   (intern (concat (car-safe ts)"-hook"))
-                 target)
-             ',func-name))))))
+       (add-hook
+        ',(if (cdr-safe ts)
+              (wal/hook--get-function-name (intern (car-safe ts)) "hook")
+            (wal/hook--get-function-name name "hook"))
+        ',(wal/hook--get-function-name name "hook" t)))))
 
 (cl-defmacro wal/treesit (language &key replacement icons-name)
   "Remap LANGUAGE major-mode to tree-sitter variant if possible.
