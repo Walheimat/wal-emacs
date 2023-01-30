@@ -885,7 +885,7 @@
 
 (ert-deftest test-wal/hook--treesit-ready-p ()
   (defvar wal/treesit-mode-lang-alist)
-  (with-mock ((featurep . #'always)
+  (with-mock ((require . #'always)
               (treesit-available-p . #'always)
               (wal/modern-emacs-p . #'always)
               (treesit-ready-p . (lambda (it &rest _) (equal 'testable it))))
@@ -1068,7 +1068,8 @@
 
 (ert-deftest test-wal/hook--treesit-base ()
   (with-mock ((wal/modern-emacs-p . #'always)
-              (treesit-available-p . #'always))
+              (treesit-available-p . #'always)
+              (require . #'always))
     (match-expansion
      (wal/hook test-mode
        "We're just testing."
@@ -1083,7 +1084,8 @@
 
 (ert-deftest test-wal/hook--treesit ()
   (with-mock ((wal/modern-emacs-p . #'always)
-              (treesit-available-p . #'always))
+              (treesit-available-p . #'always)
+              (require . #'always))
     (match-expansion
      (wal/hook test-mode
        "We're just testing."
@@ -1114,7 +1116,8 @@
 
 (ert-deftest test-wal/hook--ligatures--with-treesit ()
   (with-mock ((wal/modern-emacs-p . #'always)
-              (treesit-available-p . #'always))
+              (treesit-available-p . #'always)
+              (require . #'always))
     (match-expansion
 
      (wal/hook test-mode
