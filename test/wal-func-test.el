@@ -896,6 +896,34 @@
       (should-not (wal/hook--treesit-ready-p 'zest-mode))
       (should (wal/hook--treesit-ready-p 'no-mapping-mode)))))
 
+(ert-deftest test-wal/hook--tabs ()
+  (match-expansion
+   (wal/hook--tabs t)
+   `(progn
+      (hack-local-variables)
+      (wal/maybe-enable-tabs))))
+
+(ert-deftest test-wal/hook--tabs--always ()
+  (match-expansion
+   (wal/hook--tabs always)
+   `(progn
+      (hack-local-variables)
+      (wal/enable-tabs))))
+
+(ert-deftest test-wal/hook--tabs--with-fun ()
+  (match-expansion
+   (wal/hook--tabs 'test-fun)
+   `(progn
+      (hack-local-variables)
+      (wal/maybe-enable-tabs :indent-with 'test-fun))))
+
+(ert-deftest test-wal/hook--tabs--disabled ()
+  (match-expansion
+   (wal/hook--tabs nil)
+   `(progn
+      (hack-local-variables)
+      (wal/disable-tabs))))
+
 (ert-deftest test-wal/hook ()
   (match-expansion
    (wal/hook test
@@ -908,8 +936,7 @@
       (defun wal/test-hook ()
         "We're just testing."
         (wal/message-in-a-bottle '("Just testing"))
-        (hack-local-variables)
-        (wal/maybe-enable-tabs)
+        (wal/hook--tabs t)
         (wal/lsp))
       (with-eval-after-load 'lsp-mode
         (wal/append 'lsp-file-watch-ignored-directories
@@ -927,8 +954,7 @@
       (defun wal/test-hook ()
         "We're just testing."
         (wal/message-in-a-bottle '("Just testing"))
-        (hack-local-variables)
-        (wal/maybe-enable-tabs :indent-with 'some-fun)
+        (wal/hook--tabs 'some-fun)
         (wal/lsp))
       (add-hook 'test-hook 'wal/test-hook))))
 
@@ -943,8 +969,7 @@
       (defun wal/test-hook ()
         "We're just testing."
         (wal/message-in-a-bottle '("Just testing"))
-        (hack-local-variables)
-        (wal/enable-tabs)
+        (wal/hook--tabs always)
         (wal/lsp))
       (add-hook 'test-hook 'wal/test-hook))))
 
@@ -958,8 +983,7 @@
       (defun wal/test-hook ()
         "We're just testing."
         (wal/message-in-a-bottle '("Just testing"))
-        (hack-local-variables)
-        (wal/disable-tabs))
+        (wal/hook--tabs nil))
       (add-hook 'test-hook 'wal/test-hook))))
 
 (ert-deftest test-wal/hook--prog-like ()
@@ -968,13 +992,12 @@
      "We're just testing."
      :messages ("Just testing")
      :prog-like t
+     :shallow t
      (message "hi"))
    `(progn
       (defun wal/test-hook ()
         "We're just testing."
         (wal/message-in-a-bottle '("Just testing"))
-        (hack-local-variables)
-        (wal/disable-tabs)
         (message "hi")
         (run-hooks 'prog-like-hook))
       (add-hook 'test-hook 'wal/test-hook))))
@@ -985,13 +1008,12 @@
      "We're just testing."
      :messages ("Just testing")
      :captain t
+     :shallow t
      (message "hi"))
    `(progn
       (defun wal/test-hook ()
         "We're just testing."
         (wal/message-in-a-bottle '("Just testing"))
-        (hack-local-variables)
-        (wal/disable-tabs)
         (message "hi")
         (local-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) 'wal/test-dispatch))
       (add-hook 'test-hook 'wal/test-hook))))
@@ -1002,13 +1024,12 @@
      "We're just testing."
      :messages ("Just testing")
      :corfu (0.2 4)
+     :shallow t
      (message "hi"))
    `(progn
       (defun wal/test-hook ()
         "We're just testing."
         (wal/message-in-a-bottle '("Just testing"))
-        (hack-local-variables)
-        (wal/disable-tabs)
         (message "hi")
         (wal/corfu-auto '(0.2 4)))
       (add-hook 'test-hook 'wal/test-hook))))

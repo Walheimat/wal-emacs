@@ -1756,6 +1756,18 @@ MODE is only checked if it has a language mapping."
            (treesit-ready-p lang t)
          t)))
 
+(defmacro wal/hook--tabs (tabs)
+  "Set messages and indentation."
+   `(progn
+      (hack-local-variables)
+      ,(cond ((equal 'always tabs)
+              `(wal/enable-tabs))
+             ((equal t tabs)
+              `(wal/maybe-enable-tabs))
+             ((not tabs)
+              '(wal/disable-tabs))
+             (t `(wal/maybe-enable-tabs :indent-with ,tabs)))))
+
 (cl-defmacro wal/hook
     (name
      docs
@@ -1822,7 +1834,7 @@ The rest of the BODY will be spliced into the lambda."
                              and collect val))
 
          (func-name (intern (concat "wal/" (symbol-name name) "-hook")))
-         (include (not shallow))
+
          (captain-name (intern (concat "wal/" (symbol-name name) "-dispatch"))))
 
     `(progn
@@ -1834,25 +1846,26 @@ The rest of the BODY will be spliced into the lambda."
                  nil
                  `(,(when messages
                       `(wal/message-in-a-bottle ',messages))
-                   ,(and include '(hack-local-variables))
-                   ,(and include (cond ((equal 'always tabs)
-                                        `(wal/enable-tabs))
-                                       ((equal t tabs)
-                                        `(wal/maybe-enable-tabs))
-                                       ((not tabs)
-                                        '(wal/disable-tabs))
-                                       (t `(wal/maybe-enable-tabs :indent-with ,tabs))))
+
+                   ,(when (not shallow)
+                      `(wal/hook--tabs ,tabs))
+
                    ,@safe-body
+
                    ,(when lsp
                       '(wal/lsp))
+
                    ,(when corfu
                       `(wal/corfu-auto ',corfu))
+
                    ,(when prog-like
                       '(run-hooks 'prog-like-hook))
+
                    ,(when functions
                       `(progn ,@(mapcar (lambda (it)
                                           `(when (fboundp ',it) (,it)))
                                         functions)))
+
                    ,(when captain
                       `(local-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) ',captain-name)))))
 
@@ -1867,7 +1880,8 @@ The rest of the BODY will be spliced into the lambda."
 
             (add-hook
              ',(if ts-ready
-                   (intern (concat ts-name "-hook")) target)
+                   (intern (concat ts-name "-hook"))
+                 target)
              ',func-name))))))
 
 (cl-defmacro wal/treesit (language &key replacement icons-name)
