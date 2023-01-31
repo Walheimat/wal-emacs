@@ -1224,12 +1224,13 @@ removed."
 Make function calls even more versatile.
 
 #+BEGIN_SRC emacs-lisp
-(cl-defmacro wal/univ (a b)
-  "Define a prefix-modified function for A.
+(cl-defmacro parallel (a b)
+  "Define a function composing A and B.
 
-It will call B instead if the default `universal-argument' is
-present. It will again call A with `universal-argument' if the
-function is called with two `C-u' or more.
+By default, A is called. B will be called if the default
+`universal-argument' is present. A will be called with
+`universal-argument' if the function is called with two `C-u' or
+more.
 
 Both functions will be called interactively."
   (declare (indent defun))
@@ -1237,7 +1238,7 @@ Both functions will be called interactively."
   (let ((a-name (symbol-name a))
         (b-name (symbol-name b)))
 
-    `(defun ,(intern (concat "wal/univ-" a-name)) (&optional call-other)
+    `(defun ,(intern (concat a-name "//" b-name)) (&optional call-other)
        ,(concat (format "Call `%s' or `%s' depending on prefix argument."
                         a-name
                         b-name)
@@ -4361,16 +4362,16 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 
 #+BEGIN_SRC emacs-lisp
 (use-package rg
-  :commands (wal/univ-rg-project rg-menu rg-read-pattern)
+  :commands (rg-project//rg-menu rg-menu rg-read-pattern)
 
   :init
-  (wal/univ rg-project rg-menu)
+  (parallel rg-project rg-menu)
 
   :config
   (wdb/pop-up "\\*rg\\*\\'")
 
   :wal-bind
-  ("n" . wal/univ-rg-project))
+  ("n" . rg-project//rg-menu))
 #+END_SRC
 
 *** dumb-jump
@@ -4678,10 +4679,10 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
 (use-package embark
   :after vertico
 
-  :commands (wal/univ-embark-act)
+  :commands (embark-act//embark-dwim)
 
   :init
-  (wal/univ embark-act embark-dwim)
+  (parallel embark-act embark-dwim)
 
   :config
   ;; No mode-line for collections and completions.
@@ -4697,7 +4698,7 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
   (embark-cycle-key (kbd "C-,"))
 
   :wal-bind
-  ("k" . wal/univ-embark-act))
+  ("k" . embark-act//embark-dwim))
 #+END_SRC
 
 *** embark-consult
@@ -4802,13 +4803,13 @@ If NOT-AT-POINT is t, call `consult-line' normally."
   :commands
   (wal/consult-line
    wal/consult-clock-in
-   wal/univ-consult-mark
-   wal/univ-consult-register-load
+   consult-mark//consult-global-mark
+   consult-register-load//consult-register-store
    wal/consult-unregister)
 
   :init
-  (wal/univ consult-mark consult-global-mark)
-  (wal/univ consult-register-load consult-register-store)
+  (parallel consult-mark consult-global-mark)
+  (parallel consult-register-load consult-register-store)
 
   (defvar wal/consult-map (make-sparse-keymap))
 
@@ -4864,7 +4865,7 @@ If NOT-AT-POINT is t, call `consult-line' normally."
    ("r" . consult-register)
    ("t" . consult-theme)
    ("u" . wal/consult-unregister)
-   ("<SPC>" . wal/univ-consult-mark)
+   ("<SPC>" . consult-mark//consult-global-mark)
    ("C-f" . consult-recent-file)
    ("+" . consult-mode-command)
    ("-" . consult-minor-mode-menu)
@@ -4874,7 +4875,7 @@ If NOT-AT-POINT is t, call `consult-line' normally."
 
   :wal-bind
   (("j" . consult-buffer)
-   ("i" . wal/univ-consult-register-load))
+   ("i" . consult-register-load//consult-register-load))
 
   :wal-bind-keymap
   (("[" . wal/consult-map)))
@@ -6413,10 +6414,10 @@ Forget remembering =git= commands, use =transient=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
-  :commands (wal/magit-dispatch wal/univ-magit-status)
+  :commands (wal/magit-dispatch magit-status//wal/magit-dispatch)
 
   :init
-  (wal/univ magit-status wal/magit-dispatch)
+  (parallel magit-status wal/magit-dispatch)
 
   :config
   (wal/transient-define-prefix-once wal/magit-dispatch ()
@@ -6436,7 +6437,7 @@ Forget remembering =git= commands, use =transient=.
       ("c" "clone" magit-clone)]])
 
   :wal-bind
-  ("m" . wal/univ-magit-status)
+  ("m" . magit-status//wal/magit-dispatch)
 
   :custom
   (magit-blame-mode-lighter " mbl")

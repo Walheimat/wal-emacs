@@ -381,10 +381,10 @@
 
     (should (equal '("testing" "again") (wal/list-from 'test-target "again")))))
 
-(ert-deftest test-wal/univ ()
+(ert-deftest test-parallel ()
   (match-expansion
-   (wal/univ some-fun other-fun)
-   `(defun wal/univ-some-fun (&optional call-other)
+   (parallel some-fun other-fun)
+   `(defun some-fun//other-fun (&optional call-other)
       "Call `some-fun' or `other-fun' depending on prefix argument.\nNo argument means: call the prior. A single `C-u' means: call the latter. Two or more `C-u' means: call the prior with `universal-argument'."
       (interactive "P")
       (if (> (prefix-numeric-value call-other) 4)
