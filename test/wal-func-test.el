@@ -928,15 +928,18 @@
   (match-expansion
    (wal/hook--function test-mode
      "We're just testing."
-     (:messages ("Just testing")
-      :lsp t
-      :lsp-ignores (".ignoramus")
-      :tabs t))
-   `(defun wal/test-mode-hook ()
-      "We're just testing."
-      (wal/message-in-a-bottle '("Just testing"))
-      (wal/hook--tabs t)
-      (wal/lsp))))
+     :messages ("Just testing")
+     :lsp t
+     :lsp-ignores (".ignoramus")
+     :tabs t)
+   `(progn
+      (defun wal/test-mode-hook ()
+        "We're just testing."
+        (wal/message-in-a-bottle '("Just testing"))
+        (wal/hook--tabs t)
+        (wal/lsp))
+
+      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
 
 (ert-deftest test-wal/hook ()
   (match-expansion
@@ -949,121 +952,169 @@
    `(progn
       (wal/hook--function test-mode
         "We're just testing."
-        (:messages ("Just testing")
-         :lsp t
-         :lsp-ignores (".ignoramus")
-         :tabs t))
-      (with-eval-after-load 'lsp-mode
-        (wal/append 'lsp-file-watch-ignored-directories
-                    '(".ignoramus")))
-      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
+        :messages ("Just testing")
+        :lsp t
+        :lsp-ignores (".ignoramus")
+        :tabs t)
+
+      (wal/hook--ligatures test-mode
+        :messages ("Just testing")
+        :lsp t
+        :lsp-ignores (".ignoramus")
+        :tabs t)
+
+      (wal/hook--lsp :messages ("Just testing")
+                     :lsp t
+                     :lsp-ignores (".ignoramus")
+                     :tabs t))))
 
 (ert-deftest test-wal/hook--custom-indent ()
   (match-expansion
-   (wal/hook--function test
+   (wal/hook--function test-mode
      "We're just testing."
-     (:messages ("Just testing")
-      :lsp t
-      :tabs 'some-fun))
-   `(defun wal/test-hook ()
-      "We're just testing."
-      (wal/message-in-a-bottle '("Just testing"))
-      (wal/hook--tabs 'some-fun)
-      (wal/lsp))))
+     :messages ("Just testing")
+     :lsp t
+     :tabs 'some-fun)
+   `(progn
+      (defun wal/test-mode-hook ()
+        "We're just testing."
+        (wal/message-in-a-bottle '("Just testing"))
+        (wal/hook--tabs 'some-fun)
+        (wal/lsp))
+
+      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
 
 (ert-deftest test-wal/hook--enable-indent ()
   (match-expansion
-   (wal/hook--function test
+   (wal/hook--function test-mode
      "We're just testing."
-     (:messages ("Just testing")
-      :lsp t
-      :tabs always))
-   `(defun wal/test-hook ()
-      "We're just testing."
-      (wal/message-in-a-bottle '("Just testing"))
-      (wal/hook--tabs always)
-      (wal/lsp))))
+     :messages ("Just testing")
+     :lsp t
+     :tabs always)
+   `(progn
+      (defun wal/test-mode-hook ()
+        "We're just testing."
+        (wal/message-in-a-bottle '("Just testing"))
+        (wal/hook--tabs always)
+        (wal/lsp))
+
+      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
 
 (ert-deftest test-wal/hook--with-tabs ()
   (match-expansion
-   (wal/hook--function test
+   (wal/hook--function test-mode
      "We're just testing."
-     (:messages ("Just testing")
-      :lsp nil))
-   `(defun wal/test-hook ()
-      "We're just testing."
-      (wal/message-in-a-bottle '("Just testing"))
-      (wal/hook--tabs nil))))
+     :messages ("Just testing")
+     :lsp nil)
+   `(progn
+      (defun wal/test-mode-hook ()
+        "We're just testing."
+        (wal/message-in-a-bottle '("Just testing"))
+        (wal/hook--tabs nil))
+
+      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
 
 (ert-deftest test-wal/hook--prog-like ()
   (match-expansion
-   (wal/hook--function test
+   (wal/hook--function test-mode
      "We're just testing."
-     (:messages ("Just testing")
-      :prog-like t
-      :shallow t
-      (message "hi")))
-   `(defun wal/test-hook ()
-      "We're just testing."
-      (wal/message-in-a-bottle '("Just testing"))
-      (message "hi")
-      (run-hooks 'prog-like-hook))))
+     :messages ("Just testing")
+     :prog-like t
+     :shallow t
+     (message "hi"))
+   `(progn
+      (defun wal/test-mode-hook ()
+        "We're just testing."
+        (wal/message-in-a-bottle '("Just testing"))
+        (message "hi")
+        (run-hooks 'prog-like-hook))
+
+      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
 
 (ert-deftest test-wal/hook--lieutenant ()
   (match-expansion
-   (wal/hook--function test
+   (wal/hook--function test-mode
      "We're just testing."
-     (:messages ("Just testing")
-      :captain t
-      :shallow t
-      (message "hi")))
-   `(defun wal/test-hook ()
-      "We're just testing."
-      (wal/message-in-a-bottle '("Just testing"))
-      (message "hi")
-      (local-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) 'wal/test-dispatch))))
+     :messages ("Just testing")
+     :captain t
+     :shallow t
+     (message "hi"))
+   `(progn
+      (defun wal/test-mode-hook ()
+        "We're just testing."
+        (wal/message-in-a-bottle '("Just testing"))
+        (message "hi")
+        (local-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) 'wal/test-mode-dispatch))
+
+      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
 
 (ert-deftest test-wal/hook--corfu ()
   (match-expansion
-   (wal/hook--function test
+   (wal/hook--function test-mode
      "We're just testing."
-     (:messages ("Just testing")
-      :corfu (0.2 4)
-      :shallow t
-      (message "hi")))
-   `(defun wal/test-hook ()
-      "We're just testing."
-      (wal/message-in-a-bottle '("Just testing"))
-      (message "hi")
-      (wal/corfu-auto '(0.2 4)))))
+     :messages ("Just testing")
+     :corfu (0.2 4)
+     :shallow t
+     (message "hi"))
+   `(progn
+      (defun wal/test-mode-hook ()
+        "We're just testing."
+        (wal/message-in-a-bottle '("Just testing"))
+        (message "hi")
+        (wal/corfu-auto '(0.2 4)))
+
+      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
 
 (ert-deftest test-wal/hook--shallow ()
   (match-expansion
-   (wal/hook--function test
+   (wal/hook--function test-mode
      "We're just testing."
-     (:corfu (0.2 4)
-      :shallow t
-      (message "hi")))
-   `(defun wal/test-hook ()
-      "We're just testing."
-      (message "hi")
-      (wal/corfu-auto '(0.2 4)))))
+     :corfu (0.2 4)
+     :shallow t
+     (message "hi"))
+   `(progn
+      (defun wal/test-mode-hook ()
+        "We're just testing."
+        (message "hi")
+        (wal/corfu-auto '(0.2 4)))
+
+      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
 
 (ert-deftest test-wal/hook--functions ()
   (match-expansion
-   (wal/hook--function test
+   (wal/hook--function test-mode
      "We're just testing."
-     (:shallow t
-      :functions (test-mode testable-mode)
-      (message "hi")))
-   `(defun wal/test-hook ()
-      "We're just testing."
-      (message "hi")
-      (progn
-        (when (fboundp 'test-mode)
-          (test-mode))
-        (when (fboundp 'testable-mode)
-          (testable-mode))))))
+     :shallow t
+     :functions (test-mode testable-mode)
+     (message "hi"))
+   `(progn
+      (defun wal/test-mode-hook ()
+        "We're just testing."
+        (message "hi")
+        (progn
+          (when (fboundp 'test-mode)
+            (test-mode))
+          (when (fboundp 'testable-mode)
+            (testable-mode))))
+
+      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
+
+(ert-deftest test-wal/hook--functions--with-treesit ()
+  (with-mock ((wal/modern-emacs-p . #'always)
+              (treesit-available-p . #'always)
+              (require . #'always))
+    (match-expansion
+     (wal/hook--function test-mode
+       "We're just testing."
+       :shallow t
+       :treesit t
+       (message "hi"))
+     `(progn
+        (defun wal/test-mode-hook ()
+          "We're just testing."
+          (message "hi"))
+
+        (add-hook 'test-ts-mode-hook 'wal/test-mode-hook)))))
 
 (ert-deftest test-wal/hook--treesit-base ()
   (with-mock ((wal/modern-emacs-p . #'always)
@@ -1075,8 +1126,12 @@
        :treesit base
        (message "hi"))
      `(progn
-        (wal/hook--function test-mode "We're just testing." (:treesit base (message "hi")))
-        (add-hook 'test-base-mode-hook 'wal/test-mode-hook)))))
+        (wal/hook--function test-mode
+          "We're just testing."
+          :treesit base
+          (message "hi"))
+        (wal/hook--ligatures test-mode :treesit base (message "hi"))
+        (wal/hook--lsp :treesit base (message "hi"))))))
 
 (ert-deftest test-wal/hook--treesit ()
   (with-mock ((wal/modern-emacs-p . #'always)
@@ -1088,34 +1143,34 @@
        :treesit t
        (message "hi"))
      `(progn
-        (wal/hook--function test-mode "We're just testing." (:treesit t (message "hi")))
-        (add-hook 'test-ts-mode-hook 'wal/test-mode-hook)))))
+        (wal/hook--function test-mode
+          "We're just testing."
+          :treesit t
+          (message "hi"))
+        (wal/hook--ligatures test-mode :treesit t (message "hi"))
+        (wal/hook--lsp :treesit t (message "hi"))))))
 
 (ert-deftest test-wal/hook--ligatures ()
-  (with-mock ((wal/modern-emacs-p . #'always))
+  (with-mock ((wal/modern-emacs-p . #'ignore))
     (match-expansion
-     (wal/hook test-mode
-       "We're just testing."
-       :ligatures ("?!"))
-     `(progn
-        (wal/hook--function test-mode "We're just testing." (:ligatures ("?!")))
-        (wal/set-ligatures 'test-mode '("?!"))
-        (add-hook 'test-mode-hook 'wal/test-mode-hook)))))
+     (wal/hook--ligatures test-mode :ligatures ("?!"))
+     `(wal/set-ligatures 'test-mode '("?!")))))
 
 (ert-deftest test-wal/hook--ligatures--with-treesit ()
   (with-mock ((wal/modern-emacs-p . #'always)
               (treesit-available-p . #'always)
               (require . #'always))
     (match-expansion
-     (wal/hook test-mode
-       "We're just testing."
+     (wal/hook--ligatures test-mode
        :ligatures ("?!")
        :treesit t)
+     `(wal/set-ligatures '(test-mode test-ts-mode) '("?!")))))
 
-     `(progn
-        (wal/hook--function test-mode "We're just testing." (:ligatures ("?!") :treesit t))
-        (wal/set-ligatures '(test-mode test-ts-mode) '("?!"))
-        (add-hook 'test-ts-mode-hook 'wal/test-mode-hook)))))
+(ert-deftest test-wal/hook--lsp ()
+  (match-expansion
+   (wal/hook--lsp :lsp t :lsp-ignores (".ignoramus"))
+   `(with-eval-after-load 'lsp-mode
+      (wal/append 'lsp-file-watch-ignored-directories '(".ignoramus")))))
 
 (ert-deftest test-wal/treesit ()
   (with-mock ((featurep . #'always)

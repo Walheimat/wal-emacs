@@ -1768,21 +1768,24 @@ MODE is only checked if it has a language mapping."
              '(wal/disable-tabs))
             (t `(wal/maybe-enable-tabs :indent-with ,tabs)))))
 
+(defvar wal/hook--keywords
+  '(:captain
+    :corfu
+    :functions
+    :ligatures
+    :lsp
+    :lsp-ignores
+    :messages
+    :prog-like
+    :shallow
+    :tabs
+    :treesit))
+
 (defun wal/hook--safe-body (body)
   "Collect everything from BODY that's a key."
   (cl-loop for (key val)
            on body by 'cddr
-           unless (memq key '(:messages
-                              :lsp
-                              :lsp-ignores
-                              :tabs
-                              :prog-like
-                              :captain
-                              :corfu
-                              :shallow
-                              :functions
-                              :treesit
-                              :ligatures))
+           unless (memq key wal/hook--keywords)
            collect key
            and collect val))
 
@@ -1806,75 +1809,108 @@ Retunrs cons cell of (TS-NAME . TS-READY)."
 
     (cons ts-name ts-ready)))
 
-(defvar wal/hook--function-keywords '(:corfu
-                                      :captain
-                                      :functions
-                                      :lsp
-                                      :messages
-                                      :prog-like
-                                      :shallow
-                                      :tabs))
-
-(defun wal/hook--get-function-values (args)
-  "Collect function keywords from ARGS."
-  (cl-loop for kw in wal/hook--function-keywords
-           collect (plist-get args kw)))
-
 (defun wal/hook--get-function-name (name suffix &optional prefix)
-  "Get function name for NAME."
+  "Get function name for NAME with SUFFIX.
+
+If PREFIX is non-nil, prepend `wal/' to the function name."
   (let ((end (concat (symbol-name name) "-" suffix)))
 
     (if prefix
         (intern (concat "wal/" end))
       (intern end))))
 
-(defmacro wal/hook--function (name docs args)
-  "Create hook function NAME from ARGS with DOCS."
-  (declare (indent defun))
-
-  (cl-destructuring-bind
-      (corfu captain functions lsp messages prog-like shallow tabs)
-      (wal/hook--get-function-values args)
-
-    `(defun ,(wal/hook--get-function-name name "hook" t) ()
-       ,docs
-       ,@(delete
-          nil
-          `(,(when messages `(wal/message-in-a-bottle ',messages))
-            ,(when (not shallow) `(wal/hook--tabs ,tabs))
-
-            ,@(wal/hook--safe-body args)
-
-            ,(when lsp '(wal/lsp))
-            ,(when corfu `(wal/corfu-auto ',corfu))
-            ,(when prog-like '(run-hooks 'prog-like-hook))
-            ,(when functions
-               `(progn ,@(mapcar (lambda (it)
-                                   `(when (fboundp ',it) (,it)))
-                                 functions)))
-            ,(when captain
-               `(local-set-key
-                 (kbd (wal/key-combo-for-leader 'wal/captain))
-                 ',(wal/hook--get-function-name name "dispatch" t))))))))
-
-(cl-defmacro wal/hook
+(cl-defmacro wal/hook--function
     (name
      docs
      &body
      body
      &key
-     messages
-     lsp
-     lsp-ignores
-     tabs
-     prog-like
      captain
      corfu
-     shallow
      functions
+     lsp
+     messages
+     prog-like
+     shallow
+     tabs
      treesit
-     ligatures
      &allow-other-keys)
+  "Create hook function NAME with DOCS.
+
+MESSAGES is a list of strings to randomly choose from and
+display.
+
+LSP is either t or nil. LSP-IGNORES are additional paths to add
+to variable `lsp-file-watch-ignored-directories'.
+
+TABS is either nil, t or a symbol. Unless the symbol is `always',
+tabs are enabled using `wal/maybe-enable-tabs', passing it to the
+function as an indentation function.
+
+CAPTAIN is either t or nil. If it is t, a prefixed function
+will be mapped to the captain key.
+
+CORFU is a list of (IDLE-DELAY PREFIX-LENGTH).
+
+SHALLOW is either t or nil. If it is t, no indentation-related
+values will be set.
+
+FUNCTIONS is a list of functions (for example modes) that should
+be called if they are bound.
+
+If TREESIT is non-nil, set the hook for the base-mode.
+
+The rest of the BODY will be spliced into the hook function."
+  (declare (indent defun))
+
+  (let ((ts (wal/hook--treesit treesit name)))
+
+    `(progn
+       (defun ,(wal/hook--get-function-name name "hook" t) ()
+         ,docs
+         ,@(delete
+            nil
+            `(,(when messages `(wal/message-in-a-bottle ',messages))
+              ,(when (not shallow) `(wal/hook--tabs ,tabs))
+
+              ,@(wal/hook--safe-body body)
+
+              ,(when lsp '(wal/lsp))
+              ,(when corfu `(wal/corfu-auto ',corfu))
+              ,(when prog-like '(run-hooks 'prog-like-hook))
+              ,(when functions
+                 `(progn ,@(mapcar (lambda (it)
+                                     `(when (fboundp ',it) (,it)))
+                                   functions)))
+              ,(when captain
+                 `(local-set-key
+                   (kbd (wal/key-combo-for-leader 'wal/captain))
+                   ',(wal/hook--get-function-name name "dispatch" t))))))
+
+       (add-hook
+        ',(if (cdr-safe ts)
+              (wal/hook--get-function-name (intern (car-safe ts)) "hook")
+            (wal/hook--get-function-name name "hook"))
+        ',(wal/hook--get-function-name name "hook" t)))))
+
+(cl-defmacro wal/hook--ligatures (name &key ligatures treesit &allow-other-keys)
+  "Set up LIGATURES respecting TREESIT for NAME."
+  (declare (indent defun))
+
+  (when-let ((non-empty ligatures)
+             (ts (wal/hook--treesit treesit name)))
+
+    (if (cdr-safe ts)
+        `(wal/set-ligatures '(,name ,(intern (car-safe ts))) ',ligatures)
+      `(wal/set-ligatures ',name ',ligatures))))
+
+(cl-defmacro wal/hook--lsp (&key lsp lsp-ignores &allow-other-keys)
+  "Set up LSP and LSP-IGNORES."
+  (when (and lsp lsp-ignores)
+    `(with-eval-after-load 'lsp-mode
+       (wal/append 'lsp-file-watch-ignored-directories ',lsp-ignores))))
+
+(cl-defmacro wal/hook (name docs &rest args)
   "Hook into major mode NAME, describe with DOCS.
 
 MESSAGES is a list of strings to randomly choose from and
@@ -1900,30 +1936,14 @@ be called if they are bound.
 
 If TREESIT is non-nil, set the hook for the base-mode.
 
-The rest of the BODY will be spliced into the lambda."
+The rest of the ARGS will be spliced into the hook function."
   (declare (indent defun) (doc-string 2))
+  `(progn
+     (wal/hook--function ,name ,docs ,@args)
 
-  (let* ((ts (wal/hook--treesit treesit name)))
+     (wal/hook--ligatures ,name ,@args)
 
-    `(progn
-       (wal/hook--function ,name ,docs ,body)
-
-       ,@(delete
-          nil
-          `(,(when (and lsp lsp-ignores)
-               `(with-eval-after-load 'lsp-mode
-                  (wal/append 'lsp-file-watch-ignored-directories ',lsp-ignores)))
-
-            ,(when ligatures
-               (if (cdr-safe ts)
-                   `(wal/set-ligatures '(,name ,(intern (car-safe ts))) ',ligatures)
-                 `(wal/set-ligatures ',name ',ligatures)))))
-
-       (add-hook
-        ',(if (cdr-safe ts)
-              (wal/hook--get-function-name (intern (car-safe ts)) "hook")
-            (wal/hook--get-function-name name "hook"))
-        ',(wal/hook--get-function-name name "hook" t)))))
+     (wal/hook--lsp ,@args)))
 #+END_SRC
 
 ** Treesitter
