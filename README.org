@@ -1745,7 +1745,7 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
 (defvar wal/treesit-mode-lang-alist '((js-mode . javascript))
   "Alist mapping major modes to languages.")
 
-(defun wal/hook--treesit-ready-p (mode)
+(defun harpoon--treesit-ready-p (mode)
   "Check if treesit is available for MODE.
 
 MODE is only checked if it has a language mapping."
@@ -1756,7 +1756,7 @@ MODE is only checked if it has a language mapping."
            (treesit-ready-p lang t)
          t)))
 
-(defmacro wal/hook--tabs (tabs)
+(defmacro harpoon--tabs (tabs)
   "Set messages and indentation using TABS."
   `(progn
      (hack-local-variables)
@@ -1768,7 +1768,7 @@ MODE is only checked if it has a language mapping."
              '(wal/disable-tabs))
             (t `(wal/maybe-enable-tabs :indent-with ,tabs)))))
 
-(defvar wal/hook--keywords
+(defvar harpoon--keywords
   '(:captain
     :corfu
     :functions
@@ -1781,15 +1781,15 @@ MODE is only checked if it has a language mapping."
     :tabs
     :treesit))
 
-(defun wal/hook--safe-body (body)
+(defun harpoon--safe-body (body)
   "Collect everything from BODY that's a key."
   (cl-loop for (key val)
            on body by 'cddr
-           unless (memq key wal/hook--keywords)
+           unless (memq key harpoon--keywords)
            collect key
            and collect val))
 
-(defun wal/hook--treesit (treesit name)
+(defun harpoon--treesit (treesit name)
   "Get `treesit' values from using TREESIT and NAME.
 
 Retunrs cons cell of (TS-NAME . TS-READY)."
@@ -1805,11 +1805,11 @@ Retunrs cons cell of (TS-NAME . TS-READY)."
                     (string-join "-")
                     (concat "-" ts-seg "-mode")))
 
-         (ts-ready (and treesit (wal/hook--treesit-ready-p name))))
+         (ts-ready (and treesit (harpoon--treesit-ready-p name))))
 
     (cons ts-name ts-ready)))
 
-(defun wal/hook--get-function-name (name suffix &optional prefix)
+(defun harpoon--get-function-name (name suffix &optional prefix)
   "Get function name for NAME with SUFFIX.
 
 If PREFIX is non-nil, prepend `wal/' to the function name."
@@ -1819,7 +1819,7 @@ If PREFIX is non-nil, prepend `wal/' to the function name."
         (intern (concat "wal/" end))
       (intern end))))
 
-(cl-defmacro wal/hook--function
+(cl-defmacro harpoon--function
     (name
      docs
      &body
@@ -1863,17 +1863,17 @@ If TREESIT is non-nil, set the hook for the base-mode.
 The rest of the BODY will be spliced into the hook function."
   (declare (indent defun))
 
-  (let ((ts (wal/hook--treesit treesit name)))
+  (let ((ts (harpoon--treesit treesit name)))
 
     `(progn
-       (defun ,(wal/hook--get-function-name name "hook" t) ()
+       (defun ,(harpoon--get-function-name name "hook" t) ()
          ,docs
          ,@(delete
             nil
             `(,(when messages `(wal/message-in-a-bottle ',messages))
-              ,(when (not shallow) `(wal/hook--tabs ,tabs))
+              ,(when (not shallow) `(harpoon--tabs ,tabs))
 
-              ,@(wal/hook--safe-body body)
+              ,@(harpoon--safe-body body)
 
               ,(when lsp '(wal/lsp))
               ,(when corfu `(wal/corfu-auto ',corfu))
@@ -1885,32 +1885,32 @@ The rest of the BODY will be spliced into the hook function."
               ,(when captain
                  `(local-set-key
                    (kbd (wal/key-combo-for-leader 'wal/captain))
-                   ',(wal/hook--get-function-name name "dispatch" t))))))
+                   ',(harpoon--get-function-name name "dispatch" t))))))
 
        (add-hook
         ',(if (cdr-safe ts)
-              (wal/hook--get-function-name (intern (car-safe ts)) "hook")
-            (wal/hook--get-function-name name "hook"))
-        ',(wal/hook--get-function-name name "hook" t)))))
+              (harpoon--get-function-name (intern (car-safe ts)) "hook")
+            (harpoon--get-function-name name "hook"))
+        ',(harpoon--get-function-name name "hook" t)))))
 
-(cl-defmacro wal/hook--ligatures (name &key ligatures treesit &allow-other-keys)
+(cl-defmacro harpoon--ligatures (name &key ligatures treesit &allow-other-keys)
   "Set up LIGATURES respecting TREESIT for NAME."
   (declare (indent defun))
 
   (when-let ((non-empty ligatures)
-             (ts (wal/hook--treesit treesit name)))
+             (ts (harpoon--treesit treesit name)))
 
     (if (cdr-safe ts)
         `(wal/set-ligatures '(,name ,(intern (car-safe ts))) ',ligatures)
       `(wal/set-ligatures ',name ',ligatures))))
 
-(cl-defmacro wal/hook--lsp (&key lsp lsp-ignores &allow-other-keys)
+(cl-defmacro harpoon--lsp (&key lsp lsp-ignores &allow-other-keys)
   "Set up LSP and LSP-IGNORES."
   (when (and lsp lsp-ignores)
     `(with-eval-after-load 'lsp-mode
        (wal/append 'lsp-file-watch-ignored-directories ',lsp-ignores))))
 
-(cl-defmacro wal/hook (name docs &rest args)
+(cl-defmacro harpoon (name docs &rest args)
   "Hook into major mode NAME, describe with DOCS.
 
 MESSAGES is a list of strings to randomly choose from and
@@ -1939,11 +1939,11 @@ If TREESIT is non-nil, set the hook for the base-mode.
 The rest of the ARGS will be spliced into the hook function."
   (declare (indent defun) (doc-string 2))
   `(progn
-     (wal/hook--function ,name ,docs ,@args)
+     (harpoon--function ,name ,docs ,@args)
 
-     (wal/hook--ligatures ,name ,@args)
+     (harpoon--ligatures ,name ,@args)
 
-     (wal/hook--lsp ,@args)))
+     (harpoon--lsp ,@args)))
 #+END_SRC
 
 ** Treesitter
@@ -2683,7 +2683,7 @@ No double spaces in sentences.
   :ensure nil
 
   :init
-  (wal/hook text-mode
+  (harpoon text-mode
     "Hook into `text-mode'."
     :shallow t
     :functions (wal/flyspell-commit-messages))
@@ -5215,7 +5215,7 @@ This calls `org-content' interactively."
   :hook (org-mode . auto-fill-mode)
 
   :init
-  (wal/hook org-mode
+  (harpoon org-mode
     "Hook into `org-mode'."
     :messages ("Organize! Seize the means of production!")
     :captain t
@@ -5686,7 +5686,7 @@ Editing source blocks.
   :after org
 
   :init
-  (wal/hook org-src-mode ()
+  (harpoon org-src-mode ()
     "Hook into function `org-src-mode'."
     :shallow t
 
@@ -6032,7 +6032,7 @@ Uses the same optional SWITCHES."
   :ensure nil
 
   :init
-  (wal/hook dired-mode
+  (harpoon dired-mode
     "Hook into `dired-mode'."
     :captain t
     :shallow t)
@@ -6278,7 +6278,7 @@ FORCE-NEW/`universal-argument')."
   (vterm-mode . with-editor-export-git-editor)
 
   :init
-  (wal/hook vterm-mode ()
+  (harpoon vterm-mode ()
     "Hook into `vterm-mode'.
 
   This sets the query on exit flag to nil for the vterm process."
@@ -6514,7 +6514,7 @@ Syntax highlighting.
          ("/\\.dockerignore" . gitignore-mode))
 
   :init
-  (wal/hook gitignore-mode
+  (harpoon gitignore-mode
     "Hook into `gitignore-mode'."
     :messages ("I don't think I know you")))
 #+END_SRC
@@ -6640,7 +6640,7 @@ Bitches brew.
   :ensure nil
 
   :init
-  (wal/hook elixir-mode
+  (harpoon elixir-mode
     "Hook into `elixir-mode'."
     :lsp t
     :messages ("Mixin' potions" "A hex on you")
@@ -6670,7 +6670,7 @@ I want to be ready for =jai=.
   :mode ("\\.h\\'" . c++-mode)
 
   :init
-  (wal/hook c++-mode
+  (harpoon c++-mode
     "Hook into `c++-mode'."
     :lsp t
     :captain t
@@ -6715,7 +6715,7 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
   :ensure nil
 
   :init
-  (wal/hook rust-mode
+  (harpoon rust-mode
     "Hook into `rust-mode'."
     :lsp t
     :captain t
@@ -6787,7 +6787,7 @@ TOML."
   :ensure nil
 
   :init
-  (wal/hook python-mode
+  (harpoon python-mode
     "Hook into `python-mode'."
     :captain t
     :lsp t
@@ -7065,7 +7065,7 @@ Deal with the parens.
   :ensure nil
 
   :init
-  (wal/hook emacs-lisp-mode
+  (harpoon emacs-lisp-mode
     "Hook into `emacs-lisp-mode'."
     :captain t
     :messages ("So it's just a bunch of lists?" "List your lambdas")
@@ -7095,11 +7095,11 @@ Deal with the parens.
   :ensure nil
 
   :init
-  (wal/hook common-lisp-mode
+  (harpoon common-lisp-mode
     "hook into `common-lisp-mode'."
     :captain t)
 
-  (wal/hook lisp-data-mode
+  (harpoon lisp-data-mode
     "Hook into `lisp-data-mode."
     :shallow t
     :corfu (0.1 1)
@@ -7128,7 +7128,7 @@ Get some closure.
   :ensure nil
 
   :init
-  (wal/hook clojure-mode
+  (harpoon clojure-mode
     "Hook into `clojure-mode'."
     :lsp t
     :captain t
@@ -7227,7 +7227,7 @@ Can we have =deno= instead of =node=?
   :ensure nil
 
   :init
-  (wal/hook js-mode
+  (harpoon js-mode
     "Hook into `js-mode'."
     :messages ("NaN !== NaN" "Null falsy values or undefined")
     :captain t
@@ -7284,7 +7284,7 @@ Please use TypeScript.
   :mode "\\.ts\\(x\\)?\\'"
 
   :init
-  (wal/hook typescript-mode
+  (harpoon typescript-mode
     "Hook into `typescript-mode'."
     :lsp t
     :tabs t
@@ -7374,7 +7374,7 @@ Setup for LSP.
   :ensure nil
 
   :init
-  (wal/hook go-mode
+  (harpoon go-mode
     "Hook into `go-mode'."
     :lsp t
     :messages ("What does Sonic say?" "Put a golang under your tongue")))
@@ -7404,7 +7404,7 @@ Bash your head in!
   :ensure nil
 
   :init
-  (wal/hook sh-mode
+  (harpoon sh-mode
     "Hook into `sh-mode'."
     :messages ("Sh..sh..h.." "Bash your head in"))
 
@@ -7498,7 +7498,7 @@ Sometimes things that don't do things need to look nice.
   :ensure nil
 
   :init
-  (wal/hook markdown-mode
+  (harpoon markdown-mode
     "Hook into `markdown-mode'."
     :captain t
     :shallow t)
@@ -7537,7 +7537,7 @@ Yes, you need to install *Android Studio* for some reason.
   :ensure nil
 
   :init
-  (wal/hook dart-mode
+  (harpoon dart-mode
     "Hook into `dart-mode'."
     :lsp t
     :captain t
@@ -7650,7 +7650,7 @@ For some reason, this is also defined in =cc-mode=.
   :ensure nil
 
   :init
-  (wal/hook java-mode
+  (harpoon java-mode
     "Hook into `java-mode'."
     :lsp t
     :lsp-ignores '("[/\\\\]\\.gradle\\'")
@@ -7779,7 +7779,7 @@ The elephant in the room.
   :ensure nil
 
   :init
-  (wal/hook php-mode
+  (harpoon php-mode
     "Hook into `php-mode'."
     :lsp t
     :messages ("Stampy, no!")
@@ -7823,7 +7823,7 @@ The only way to store strings, JSON.
          ("\\.\\([a-zA-Z]\\)+rc\\'" . jsonian-mode))
 
   :init
-  (wal/hook jsonian-mode
+  (harpoon jsonian-mode
     "Hook into `jsonian-mode'."
     :tabs t
     :captain t
@@ -7853,7 +7853,7 @@ The only way to store strings, JSON.
   :ensure nil
 
   :init
-  (wal/hook mhtml-mode
+  (harpoon mhtml-mode
     "Hook into `mhtml-mode'."
     :lsp t
     :messages ("Hodge-podge mark-up language")
@@ -7870,7 +7870,7 @@ The only way to store strings, JSON.
   :ensure nil
 
   :init
-  (wal/hook nxml-mode
+  (harpoon nxml-mode
     "Hook into `nxml-mode'."
     :lsp t
     :messages ("Extreme mark-up language")
@@ -7894,7 +7894,7 @@ Sometimes things that do as well.
   :mode "\\.tpl\\'" ; Helm templates.
 
   :init
-  (wal/hook yaml-mode
+  (harpoon yaml-mode
     "Hook into command `yaml-mode'."
     :messages ("JSON?! ... Ah, thank God it's you, YAML!")
     :prog-like t))
@@ -7931,7 +7931,7 @@ We want quicker suggestions when in CSS modes.
   :mode ("\\.rasi" . css-mode)
 
   :init
-  (wal/hook css-mode
+  (harpoon css-mode
     "Hook into `css-mode'."
     :tabs t
     :lsp t
@@ -7996,7 +7996,7 @@ Get text.
          "\\.component.html\\'")
 
   :init
-  (wal/hook web-mode
+  (harpoon web-mode
     "Hook into `web-mode'."
     :lsp t
     :tabs t
@@ -8049,7 +8049,7 @@ replying to the `JSONRPC' request."
   :ensure nil
 
   :init
-  (wal/hook gdscript-mode
+  (harpoon gdscript-mode
     "Hook into `gdscript-mode'."
     :lsp t
     :tabs always
@@ -8779,7 +8779,7 @@ Make =Dockerfiles= look nice.
   :ensure nil
 
   :init
-  (wal/hook dockerfile-mode
+  (harpoon dockerfile-mode
     "Hook into `dockerfile-mode'."
     :messages ("Have you ever given?")))
 #+END_SRC
