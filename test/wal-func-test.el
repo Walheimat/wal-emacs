@@ -753,19 +753,20 @@
 
       (should (string-equal (wal/message-in-a-bottle bottle wal/ascii-cachalot-whale) "}< ,.__) Sting is playing bass, yeah")))))
 
-(ert-deftest test-junk-install-packages ()
-  (with-mock ((package-install . #'wal/rf)
-              (package-installed-p . (lambda (package) (memq package '(three)))))
+(ert-deftest test-junk--install ()
+  (with-mock (package-install
+              delete-other-windows
+              quelpa)
 
-    (should (eq 2 (junk-install-packages '(one two) :delete-windows t)))
-    (should (eq 1 (junk-install-packages '(three four))))))
+    (junk--install '(one two) :delete-windows t)
+    (was-called-nth-with package-install '(one) 0)
+    (was-called-nth-with package-install '(two) 1)
+    (was-called delete-other-windows)
+    (wal/clear-mocks)
 
-(ert-deftest test-junk-install-recipes ()
-  (with-mock ((quelpa . #'wal/rf)
-              (package-installed-p . (lambda (package) (memq package '(three)))))
-
-    (should (eq 2 (junk-install-recipes '((one rest) (two rest)))))
-    (should (eq 1 (junk-install-recipes '((three rest) (four reset)))))))
+    (junk--install '(four) :installer 'quelpa)
+    (was-called-with quelpa '(four))
+    (was-not-called delete-other-windows)))
 
 (ert-deftest test-junk-expand ()
   (match-expansion
@@ -790,37 +791,31 @@
                          (three :packages nil :extras nil :docs "That's three." :recipes
                                 ((three-mode :fetcher url :url "https://get-three-mode")))))
 
-(ert-deftest test-junk-expansion-packs ()
+(ert-deftest test-junk--packs ()
   (let ((junk-expansion-packs wal/test-packs))
 
-    (should (equal (junk-packs) '(one two twofer three-mode)))))
+    (should (equal (junk--packs) '(one two twofer three-mode)))))
 
-(ert-deftest test-junk-pack-p ()
+(ert-deftest test-junk--pack-p ()
   (let ((junk-expansion-packs wal/test-packs))
 
-    (should (junk-pack-p 'three-mode))))
+    (should (junk--pack-p 'three-mode))))
 
-(ert-deftest test-junk-install-extra ()
-  (let ((messages '())
-        (junk-expansion-packs wal/test-packs))
+(ert-deftest test-junk--install-extras ()
+  (let ((extras (plist-get (nth 2 junk-expansion-packs) :extras))
+        (selection 'all))
 
-    (with-mock ((package-installed-p . #'ignore)
-                (package-install . #'always)
-                (completing-read . (lambda (_m _l) 'all)))
+    (ert-with-message-capture messages
+      (with-mock ((package-installed-p . #'ignore)
+                  (package-install . #'always)
+                  (completing-read . (lambda (_m _l) selection)))
 
-      (ert-with-message-capture messages
-        (junk-install-extra (nth 2 junk-expansion-packs))
+        (junk--install-extras extras)
 
-        (should (string-match "Installed all extras" messages))))
+        (setq selection 'twofer)
+        (junk--install-extras extras)
 
-    (with-mock ((package-installed-p . #'ignore)
-                (package-install . #'always)
-                (message . (lambda (m &rest args) (add-to-list 'messages (format m (car args)))))
-                (completing-read . (lambda (_m _l) 'twofer)))
-
-      (junk-install-extra (nth 2 junk-expansion-packs))
-
-      (should (string-equal (car messages) "Installed extra 'twofer'.")))))
+      (should (string-equal messages "Installed all extras.\nInstalled extra ’twofer’.\n"))))))
 
 (ert-deftest test-junk-install ()
   (let ((messages '()))
@@ -833,7 +828,7 @@
 
         (call-interactively 'junk-install)
 
-        (should (string-equal (car messages) "Installed expansion pack 'one'"))))))
+        (should (string-equal (car messages) "Installed 'one'."))))))
 
 (ert-deftest test-junk-install--installed-already ()
   (let ((messages '()))
@@ -844,7 +839,7 @@
 
         (call-interactively 'junk-install)
 
-        (should (string-equal (car messages) "All core packages/recipes already installed."))))))
+        (should (string-equal (car messages) "Package 'one' is already installed."))))))
 
 (ert-deftest test-junk-install--with-extras ()
   (let ((messages '()))
@@ -857,13 +852,13 @@
       (let ((junk-expansion-packs wal/test-packs))
         (call-interactively 'junk-install)
 
-        (should (string-equal (car messages) "Installed expansion pack 'two'"))))
+        (should (string-equal (car messages) "Installed 'two'."))))
 
     (with-mock ((completing-read . (lambda (_m _v) "two"))
-                (package-installed-p . #'ignore)
+                (package-installed-p . (lambda (it) (equal 'two it)))
                 (package-install . #'always)
                 (yes-or-no-p . #'always)
-                (junk-install-extra . (lambda (_) 'extra)))
+                (junk--install-extras . (lambda (_) 'extra)))
 
       (let ((junk-expansion-packs wal/test-packs))
 

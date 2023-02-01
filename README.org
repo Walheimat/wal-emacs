@@ -1614,34 +1614,22 @@ several so-called expansion packs[fn:11].
 
 Individual languages build this list using macro `junk'.")
 
-(cl-defun junk-install-packages (packages &key delete-windows)
-  "Install all PACKAGES unless already installed.
+(cl-defun junk--install (packages &key delete-windows installer)
+  "Install PACKAGES.
 
-Returns the number of newly installed packages.
+Calls `delete-other-windows' if DELETE-WINDOWS is t.
 
-Calls `delete-other-windows' if DELETE-WINDOWS is t."
-  (let ((new-packages (seq-filter
-                       (lambda (it) (not (package-installed-p it)))
-                       packages)))
+Uses `package-install' unless custom INSTALLER is provided."
+  (let ((installer (or installer #'package-install)))
 
-    (mapc #'package-install new-packages)
+    (mapc installer packages)
 
     (when delete-windows
-      (delete-other-windows))
+      (delete-other-windows))))
 
-    (length new-packages)))
-
-(defun junk-install-recipes (recipes)
-  "Install packages from RECIPES using `quelpa'.
-
-Returns the number of newly installed packages."
-  (let* ((new-packages (seq-filter
-                        (lambda (it) (not (package-installed-p (car it))))
-                        recipes)))
-
-    (mapc (lambda (it) (quelpa it)) new-packages)
-
-    (length new-packages)))
+(defun junk--filter (packages)
+  "Return PACKAGES that are not yet installed."
+  (seq-filter (lambda (it) (not (package-installed-p it))) packages))
 
 (cl-defmacro junk-expand (name docs &key packages extras recipes)
   "Define an expansion pack of PACKAGES under NAME.
@@ -1667,7 +1655,7 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
      (mapcar #'car (plist-get p :recipes))
      (plist-get p :docs))))
 
-(defun junk-packs ()
+(defun junk--packs ()
   "Get a list of all expansion packs."
   (seq-reduce
    (lambda (acc it)
@@ -1677,23 +1665,22 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
        (append acc packages extras recipes)))
    junk-expansion-packs '()))
 
-(defun junk-pack-p (pack)
+(defun junk--pack-p (pack)
   "Check if PACK is an expansion pack package."
-  (memq pack (junk-packs)))
+  (memq pack (junk--packs)))
 
-(defun junk-install-extra (pack)
-  "Install an or all extras of an expansion for PACK."
-  (let* ((extras (plist-get (cdr pack) :extras))
-         (selection (wal/maybe-intern
+(defun junk--install-extras (extras)
+  "Install one or all packages in EXTRAS."
+  (let* ((selection (wal/maybe-intern
                      (completing-read
                       "Select extra to install: " (append extras '(all))))))
 
     (pcase selection
       ('all
-       (junk-install-packages extras)
+       (junk--install extras)
        (message "Installed all extras."))
       (_
-       (junk-install-packages (list selection))
+       (junk--install (list selection))
        (message (format "Installed extra '%s'." selection))))))
 
 (defun junk-install (pack)
@@ -1709,18 +1696,20 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
         (packages extras recipes _)
         (junk--parts item)
 
-      (if (not item)
-          (user-error "Unknown pack '%s', check `junk-expansion-packs'" sym)
-        (let* ((installed-packages (junk-install-packages packages :delete-windows t))
-               (installed-recipes (junk-install-recipes recipes)))
+      (when (not item)
+        (user-error "Unknown pack '%s', check `junk-expansion-packs'" sym))
 
-          ;; Notify about what happened.
-          (if (= 0 (+ installed-packages installed-recipes))
-              (message "All core packages/recipes already installed.")
-            (message "Installed expansion pack '%s'" pack))
+      (let ((normal (junk--filter packages))
+            (from-recipe (junk--filter (mapcar #'car recipes))))
 
-          (when (and extras (yes-or-no-p "Want to install an extras?"))
-            (junk-install-extra item)))))))
+        (if (not (append normal from-recipe))
+            (if (and (junk--filter extras)
+                     (yes-or-no-p (format "Want to install an extra for '%s'?" pack)))
+                (junk--install-extras extras)
+              (message "Package '%s' is already installed." pack))
+          (junk--install normal :delete-windows t)
+          (junk--install from-recipe :installer 'quelpa)
+          (message "Installed '%s'." pack))))))
 
 (defun junk--stringify (package-list)
   "Stringify PACKAGE-LIST."
@@ -2419,7 +2408,7 @@ available candidate from `wal/fixed-fonts'. Does the same for
 (eval-when-compile
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
-(declare-function junk-pack-p "wal-func.el")
+(declare-function junk--pack-p "wal-func.el")
 (declare-function wal/prefix-user-key "wal-func.el")
 
 (defvar wal/minimal)
@@ -2545,7 +2534,7 @@ use the result further down the line."
   (when (and (fboundp 'use-package-process-keywords)
              (fboundp 'use-package-plist-maybe-put))
     (let* ((active (or pred
-                       (if (junk-pack-p name)
+                       (if (junk--pack-p name)
                            (not (null (package-installed-p name)))
                          (or (not (or wal/minimal wal/flag-mini))
                              (not (null (memq name wal/minimal-exclude)))))))

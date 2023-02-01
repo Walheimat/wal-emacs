@@ -33,7 +33,7 @@
     (with-mock ((package-installed-p . #'ignore)
                 use-package-plist-maybe-put
                 use-package-process-keywords
-                (junk-pack-p . (lambda (_) toggle)))
+                (junk--pack-p . (lambda (_) toggle)))
 
       (should (equal '((when nil name nil (nil :wal-ways nil)))
                      (use-package-handler/:wal-ways 'name nil nil nil nil)))
