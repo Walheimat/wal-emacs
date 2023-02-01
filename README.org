@@ -2441,11 +2441,15 @@ Such as package `use-package'.")
   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 
   ;; Try to install. On fail refresh and install again.
-  (condition-case nil
-      (junk-install-packages wal/core-packages :delete-windows t)
-    (error
-     (package-refresh-contents)
-     (junk-install-packages wal/core-packages :delete-windows t)))
+  (let ((missing (seq-filter
+                  (lambda (it) (not (package-installed-p it)))
+                  wal/core-packages)))
+
+    (condition-case nil
+        (mapc 'package-install missing)
+      (error
+       (package-refresh-contents)
+       (mapc 'package-install missing))))
 
   (eval-when-compile
     (require 'use-package nil t)))
