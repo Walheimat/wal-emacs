@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `wal/java-mode-dispatch` now uses `transient-switches` instead of
   completion to switch mode and scope.
 - `log4j-mode` is no longer enabled for all `*.log` files.
+- `wal/expansion-pack-*` is now `junk-*` (like a sperm whale's melon).
 
 ### Fixed
 

@@ -753,29 +753,29 @@
 
       (should (string-equal (wal/message-in-a-bottle bottle wal/ascii-cachalot-whale) "}< ,.__) Sting is playing bass, yeah")))))
 
-(ert-deftest test-wal/install-packages ()
+(ert-deftest test-junk-install-packages ()
   (with-mock ((package-install . #'wal/rf)
               (package-installed-p . (lambda (package) (memq package '(three)))))
 
-    (should (eq 2 (wal/install-packages '(one two) :delete-windows t)))
-    (should (eq 1 (wal/install-packages '(three four))))))
+    (should (eq 2 (junk-install-packages '(one two) :delete-windows t)))
+    (should (eq 1 (junk-install-packages '(three four))))))
 
-(ert-deftest test-wal/install-recipes ()
+(ert-deftest test-junk-install-recipes ()
   (with-mock ((quelpa . #'wal/rf)
               (package-installed-p . (lambda (package) (memq package '(three)))))
 
-    (should (eq 2 (wal/install-recipes '((one rest) (two rest)))))
-    (should (eq 1 (wal/install-recipes '((three rest) (four reset)))))))
+    (should (eq 2 (junk-install-recipes '((one rest) (two rest)))))
+    (should (eq 1 (junk-install-recipes '((three rest) (four reset)))))))
 
-(ert-deftest test-wal/define-expansion-pack ()
+(ert-deftest test-junk-expand ()
   (match-expansion
-   (wal/define-expansion-pack test
+   (junk-expand test
      "Tasteful expansion pack."
      :packages '(pull out of the package)
      :extras '(prep some ketchup)
      :recipes '(heat in oven))
    `(add-to-list
-     'wal/expansion-packs
+     'junk-expansion-packs
      '(test . (:packages '(pull out of the package)
                          :extras '(prep some ketchup)
                          :docs "Tasteful expansion pack."
@@ -790,26 +790,26 @@
                          (three :packages nil :extras nil :docs "That's three." :recipes
                                 ((three-mode :fetcher url :url "https://get-three-mode")))))
 
-(ert-deftest test-wal/expansion-packs ()
-  (let ((wal/expansion-packs wal/test-packs))
+(ert-deftest test-junk-expansion-packs ()
+  (let ((junk-expansion-packs wal/test-packs))
 
-    (should (equal (wal/expansion-packs) '(one two twofer three-mode)))))
+    (should (equal (junk-packs) '(one two twofer three-mode)))))
 
-(ert-deftest test-wal/expansion-pack-p ()
-  (let ((wal/expansion-packs wal/test-packs))
+(ert-deftest test-junk-pack-p ()
+  (let ((junk-expansion-packs wal/test-packs))
 
-    (should (wal/expansion-pack-p 'three-mode))))
+    (should (junk-pack-p 'three-mode))))
 
-(ert-deftest test-wal/install-expansion-pack-extra ()
+(ert-deftest test-junk-install-extra ()
   (let ((messages '())
-        (wal/expansion-packs wal/test-packs))
+        (junk-expansion-packs wal/test-packs))
 
     (with-mock ((package-installed-p . #'ignore)
                 (package-install . #'always)
                 (completing-read . (lambda (_m _l) 'all)))
 
       (ert-with-message-capture messages
-        (wal/install-expansion-pack-extra (nth 2 wal/expansion-packs))
+        (junk-install-extra (nth 2 junk-expansion-packs))
 
         (should (string-match "Installed all extras" messages))))
 
@@ -818,35 +818,35 @@
                 (message . (lambda (m &rest args) (add-to-list 'messages (format m (car args)))))
                 (completing-read . (lambda (_m _l) 'twofer)))
 
-      (wal/install-expansion-pack-extra (nth 2 wal/expansion-packs))
+      (junk-install-extra (nth 2 junk-expansion-packs))
 
       (should (string-equal (car messages) "Installed extra 'twofer'.")))))
 
-(ert-deftest test-wal/install-expansion-pack ()
+(ert-deftest test-junk-install ()
   (let ((messages '()))
     (with-mock ((completing-read . (lambda (_m _v) "one"))
                 (package-installed-p . #'ignore)
                 (package-install . #'always)
                 (message . (lambda (m &rest args) (add-to-list 'messages (format m (car args))))))
 
-      (let ((wal/expansion-packs wal/test-packs))
+      (let ((junk-expansion-packs wal/test-packs))
 
-        (call-interactively 'wal/install-expansion-pack)
+        (call-interactively 'junk-install)
 
         (should (string-equal (car messages) "Installed expansion pack 'one'"))))))
 
-(ert-deftest test-wal/install-expansion-pack--installed-already ()
+(ert-deftest test-junk-install--installed-already ()
   (let ((messages '()))
     (with-mock ((completing-read . (lambda (_m _v) "one"))
                 (package-installed-p . #'always)
                 (message . (lambda (m &rest args) (add-to-list 'messages (format m (car args))))))
-      (let ((wal/expansion-packs wal/test-packs))
+      (let ((junk-expansion-packs wal/test-packs))
 
-        (call-interactively 'wal/install-expansion-pack)
+        (call-interactively 'junk-install)
 
         (should (string-equal (car messages) "All core packages/recipes already installed."))))))
 
-(ert-deftest test-wal/install-expansion-pack--with-extras ()
+(ert-deftest test-junk-install--with-extras ()
   (let ((messages '()))
     (with-mock ((completing-read . (lambda (_m _v) "two"))
                 (package-installed-p . #'ignore)
@@ -854,8 +854,8 @@
                 (message . (lambda (m &rest args) (add-to-list 'messages (format m (car args)))))
                 (yes-or-no-p . #'ignore))
 
-      (let ((wal/expansion-packs wal/test-packs))
-        (call-interactively 'wal/install-expansion-pack)
+      (let ((junk-expansion-packs wal/test-packs))
+        (call-interactively 'junk-install)
 
         (should (string-equal (car messages) "Installed expansion pack 'two'"))))
 
@@ -863,20 +863,20 @@
                 (package-installed-p . #'ignore)
                 (package-install . #'always)
                 (yes-or-no-p . #'always)
-                (wal/install-expansion-pack-extra . (lambda (_) 'extra)))
+                (junk-install-extra . (lambda (_) 'extra)))
 
-      (let ((wal/expansion-packs wal/test-packs))
+      (let ((junk-expansion-packs wal/test-packs))
 
-        (should (equal (call-interactively 'wal/install-expansion-pack) 'extra))))))
+        (should (equal (call-interactively 'junk-install) 'extra))))))
 
-(ert-deftest test-wal/install-expansion-pack--errors-for-non-existing ()
-  (let ((wal/expansion-packs wal/test-packs))
+(ert-deftest test-junk-install--errors-for-non-existing ()
+  (let ((junk-expansion-packs wal/test-packs))
 
-    (should-error (wal/install-expansion-pack 'four))))
+    (should-error (junk-install 'four))))
 
-(ert-deftest test-wal/expansion--stringify ()
-  (should (string-equal (wal/expansion--stringify '(one two three)) "one, two, three"))
-  (should (string-empty-p (wal/expansion--stringify '()))))
+(ert-deftest test-junk--stringify ()
+  (should (string-equal (junk--stringify '(one two three)) "one, two, three"))
+  (should (string-empty-p (junk--stringify '()))))
 
 (ert-deftest test-wal/prog-like ()
   (with-mock ((run-hooks . #'wal/rf))

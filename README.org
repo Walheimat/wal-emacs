@@ -501,20 +501,20 @@ Make completions look nice.
 
 #+BEGIN_SRC emacs-lisp
 (with-eval-after-load 'marginalia
-  (defun wal/annotate-expansion-pack (candidate)
+  (defun junk-annotate (candidate)
     "Annotate CANDIDATE expansion pack."
-    (let* ((item (assoc (intern candidate) wal/expansion-packs))
-           (parts (wal/expansion-pack--parts item)))
+    (let* ((item (assoc (intern candidate) junk-expansion-packs))
+           (parts (junk--parts item)))
 
       (cl-destructuring-bind (packages extras recipes docs) parts
 
         (marginalia--fields
          (docs :face 'marginalia-documentation :truncate 0.6)
-         ((wal/expansion--stringify (append packages recipes)) :face 'marginalia-value :truncate 0.8)
-         ((wal/expansion--stringify extras) :face 'marginalia-value :truncate 0.4)))))
+         ((junk--stringify (append packages recipes)) :face 'marginalia-value :truncate 0.8)
+         ((junk--stringify extras) :face 'marginalia-value :truncate 0.4)))))
 
-  (add-to-list 'marginalia-annotator-registry '(expansion-pack wal/annotate-expansion-pack builtin none))
-  (add-to-list 'marginalia-command-categories '(wal/install-expansion-pack . expansion-pack)))
+  (add-to-list 'marginalia-annotator-registry '(expansion-pack junk-annotate builtin none))
+  (add-to-list 'marginalia-command-categories '(junk-install . expansion-pack)))
 #+END_SRC
 
 ** Buffer Display
@@ -534,7 +534,7 @@ Make completions look nice.
     [["Do"
       ("f" "config" wal/find-config)
       ("t" "tangle" wal/tangle-config)
-      ("x" "install expansion pack" wal/install-expansion-pack)
+      ("x" "install expansion pack" junk-install)
       ("g" "customize group" wal/customize-group)
       ("d" "show diff" wal/show-config-diff-range)]
      ["Check"
@@ -1610,13 +1610,12 @@ Some packages are opt-in (will not be ensured) and belong to one or
 several so-called expansion packs[fn:11].
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/expansion-packs nil
-  "Packs of expansion packages to be installed using `wal/install-expansion-pack'.
+(defvar junk-expansion-packs nil
+  "Packs of expansion packages to be installed using `junk-install'.
 
-Individual languages build this list using macro
-`wal/define-expansion-pack'.")
+Individual languages build this list using macro `junk'.")
 
-(cl-defun wal/install-packages (packages &key delete-windows)
+(cl-defun junk-install-packages (packages &key delete-windows)
   "Install all PACKAGES unless already installed.
 
 Returns the number of newly installed packages.
@@ -1633,7 +1632,7 @@ Calls `delete-other-windows' if DELETE-WINDOWS is t."
 
     (length new-packages)))
 
-(defun wal/install-recipes (recipes)
+(defun junk-install-recipes (recipes)
   "Install packages from RECIPES using `quelpa'.
 
 Returns the number of newly installed packages."
@@ -1645,19 +1644,19 @@ Returns the number of newly installed packages."
 
     (length new-packages)))
 
-(cl-defmacro wal/define-expansion-pack (name docs &key packages extras recipes)
+(cl-defmacro junk-expand (name docs &key packages extras recipes)
   "Define an expansion pack of PACKAGES under NAME.
 
 Documented using DOCS.
 
-Optionally provide `quelpa' RECIPES."
+Optionally provide `quelpa' RECIPES and EXTRAS."
   (declare (indent defun) (doc-string 2))
 
   `(add-to-list
-    'wal/expansion-packs
+    'junk-expansion-packs
     '(,name . (:packages ,packages :extras ,extras :docs ,docs :recipes ,recipes))))
 
-(defun wal/expansion-pack--parts (pack)
+(defun junk--parts (pack)
   "Get the parts from expansion pack PACK.
 
 Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
@@ -1669,23 +1668,21 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
      (mapcar #'car (plist-get p :recipes))
      (plist-get p :docs))))
 
-(wal/expansion-pack--parts (nth 5 wal/expansion-packs))
-
-(defun wal/expansion-packs ()
+(defun junk-packs ()
   "Get a list of all expansion packs."
   (seq-reduce
    (lambda (acc it)
      (cl-destructuring-bind
          (packages extras recipes _)
-         (wal/expansion-pack--parts it)
+         (junk--parts it)
        (append acc packages extras recipes)))
-   wal/expansion-packs '()))
+   junk-expansion-packs '()))
 
-(defun wal/expansion-pack-p (pack)
+(defun junk-pack-p (pack)
   "Check if PACK is an expansion pack package."
-  (memq pack (wal/expansion-packs)))
+  (memq pack (junk-packs)))
 
-(defun wal/install-expansion-pack-extra (pack)
+(defun junk-install-extra (pack)
   "Install an or all extras of an expansion for PACK."
   (let* ((extras (plist-get (cdr pack) :extras))
          (selection (wal/maybe-intern
@@ -1694,29 +1691,29 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
 
     (pcase selection
       ('all
-       (wal/install-packages extras)
+       (junk-install-packages extras)
        (message "Installed all extras."))
       (_
-       (wal/install-packages (list selection))
+       (junk-install-packages (list selection))
        (message (format "Installed extra '%s'." selection))))))
 
-(defun wal/install-expansion-pack (pack)
+(defun junk-install (pack)
   "Install the given expansion PACK."
   (interactive
    (list (completing-read "Select pack to install: "
-                          (mapcar (lambda (pack) (car pack)) wal/expansion-packs))))
+                          (mapcar (lambda (pack) (car pack)) junk-expansion-packs))))
 
   (let* ((sym (wal/maybe-intern pack))
-         (item (assoc sym wal/expansion-packs)))
+         (item (assoc sym junk-expansion-packs)))
 
     (cl-destructuring-bind
         (packages extras recipes _)
-        (wal/expansion-pack--parts item)
+        (junk--parts item)
 
       (if (not item)
-          (user-error "Unknown pack '%s', check `wal/expansion-packs'" sym)
-        (let* ((installed-packages (wal/install-packages packages :delete-windows t))
-               (installed-recipes (wal/install-recipes recipes)))
+          (user-error "Unknown pack '%s', check `junk-expansion-packs'" sym)
+        (let* ((installed-packages (junk-install-packages packages :delete-windows t))
+               (installed-recipes (junk-install-recipes recipes)))
 
           ;; Notify about what happened.
           (if (= 0 (+ installed-packages installed-recipes))
@@ -1724,9 +1721,9 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
             (message "Installed expansion pack '%s'" pack))
 
           (when (and extras (yes-or-no-p "Want to install an extras?"))
-            (wal/install-expansion-pack-extra item)))))))
+            (junk-install-extra item)))))))
 
-(defun wal/expansion--stringify (package-list)
+(defun junk--stringify (package-list)
   "Stringify PACKAGE-LIST."
   (if package-list
       (mapconcat (lambda (it) (format "%s" it)) package-list ", ")
@@ -2423,7 +2420,7 @@ available candidate from `wal/fixed-fonts'. Does the same for
 (eval-when-compile
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
-(declare-function wal/expansion-pack-p "wal-func.el")
+(declare-function junk-pack-p "wal-func.el")
 (declare-function wal/prefix-user-key "wal-func.el")
 
 (defvar wal/minimal)
@@ -2457,10 +2454,10 @@ Such as package `use-package'.")
 
   ;; Try to install. On fail refresh and install again.
   (condition-case nil
-      (wal/install-packages wal/core-packages :delete-windows t)
+      (junk-install-packages wal/core-packages :delete-windows t)
     (error
      (package-refresh-contents)
-     (wal/install-packages wal/core-packages :delete-windows t)))
+     (junk-install-packages wal/core-packages :delete-windows t)))
 
   (eval-when-compile
     (require 'use-package nil t)))
@@ -2549,7 +2546,7 @@ use the result further down the line."
   (when (and (fboundp 'use-package-process-keywords)
              (fboundp 'use-package-plist-maybe-put))
     (let* ((active (or pred
-                       (if (wal/expansion-pack-p name)
+                       (if (junk-pack-p name)
                            (not (null (package-installed-p name)))
                          (or (not (or wal/minimal wal/flag-mini))
                              (not (null (memq name wal/minimal-exclude)))))))
@@ -5446,7 +5443,7 @@ Trying to organize my thoughts using Zettelkästen.
 /Note/ that you will need to install =sqlite3= manually.
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack org-roam
+(junk-expand org-roam
   "Note rhizome."
   :packages (org-roam)
   :extras (org-roam-ui))
@@ -6304,7 +6301,7 @@ FORCE-NEW/`universal-argument')."
 ** Eshell
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack eshell
+(junk-expand eshell
   "Make eshell feel like a feature-complete shell."
   :packages (eshell-syntax-highlighting))
 #+END_SRC
@@ -6402,7 +6399,7 @@ I'm becoming an old git.
 Forget remembering =git= commands, use =transient=.
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack magit
+(junk-expand magit
   "Support pull requests and code reviews."
   :packages (forge code-review))
 #+END_SRC
@@ -6624,7 +6621,7 @@ Let's greet the world.
 Bitches brew.
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack elixir
+(junk-expand elixir
   "For Elixir developers."
   :packages (elixir-mode))
 #+END_SRC
@@ -6696,7 +6693,7 @@ I want to be ready for =jai=.
 Consider the lobster.
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack rust
+(junk-expand rust
   "For Rust developers."
   :packages (rust-mode cargo))
 #+END_SRC
@@ -6755,7 +6752,7 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
 Hide those details from me.
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack python
+(junk-expand python
   "Virtual environment, isort, poetry and notebook support."
   :packages (pet python-isort python-black)
   :extras (lsp-pyright ein poetry))
@@ -7008,12 +7005,12 @@ Takes care[fn:15] of all your virtual environment needs.
 The philosopher's choice.
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack lisp
+(junk-expand lisp
   "For (common-) Lisp developers using sbcl."
   :packages (puni)
   :extras (slime))
 
-(wal/define-expansion-pack clojure
+(junk-expand clojure
   "For Clojure developers using cider with lein."
   :packages (clojure-mode cider))
 #+END_SRC
@@ -7198,7 +7195,7 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
 Can we have =deno= instead of =node=?
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack javascript
+(junk-expand javascript
   "For Node.js developers."
   :packages (add-node-modules-path prettier)
   :extras (typescript-mode))
@@ -7356,7 +7353,7 @@ Prettify your ugly JavaScript.
 Ogling new languages.
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack go
+(junk-expand go
   "For Go developers."
   :packages (go-mode))
 #+END_SRC
@@ -7384,11 +7381,11 @@ Setup for LSP.
 ** Scripting
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack fish
+(junk-expand fish
   "For fish shell users."
   :packages (fish-mode))
 
-(wal/define-expansion-pack cli
+(junk-expand cli
   "For CLI power users."
   :packages (crontab-mode))
 #+END_SRC
@@ -7462,7 +7459,7 @@ Support =fish= functions.
 Sometimes things that don't do things need to look nice.
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack markdown
+(junk-expand markdown
   "For MD users."
   :packages (markdown-mode))
 #+END_SRC
@@ -7521,7 +7518,7 @@ Sometimes things that don't do things need to look nice.
 Yes, you need to install *Android Studio* for some reason.
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack flutter
+(junk-expand flutter
   "Dart major mode and LSP package."
   :packages (dart-mode lsp-dart))
 #+END_SRC
@@ -7634,7 +7631,7 @@ LSP support for Dart.
 It's a =JavaEmacsPackageConfigurationSectionFactory=, mate.
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack java
+(junk-expand java
   "Java expansions."
   :packages (lsp-java log4j-mode))
 #+END_SRC
@@ -7763,7 +7760,7 @@ Font-locked logs.
 The elephant in the room.
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack php
+(junk-expand php
   "Major mode and web mode for templates."
   :packages (php-mode))
 #+END_SRC
@@ -7799,7 +7796,7 @@ The elephant in the room.
 Does anyone actually like web development?
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack web
+(junk-expand web
   "For web developers."
   :packages (yaml-mode jsonian)
   :extras (pug-mode po-mode web-mode))
@@ -8010,7 +8007,7 @@ Get text.
 ** Games
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack games
+(junk-expand games
   "For game developers."
   :packages (gdscript-mode))
 #+END_SRC
@@ -8068,7 +8065,7 @@ replying to the `JSONRPC' request."
 On the hunt for yet another language.
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack jakt
+(junk-expand jakt
   "Go on a hunt with Jakt."
   :recipes ((jakt-mode
              :fetcher url
@@ -8403,7 +8400,7 @@ smaller."
 ** Packages
 
 #+begin_src emacs-lisp
-(wal/define-expansion-pack lsp
+(junk-expand lsp
   "Docker and Kubernetes."
   :extras (lsp-sonarlint))
 #+end_src
@@ -8732,7 +8729,7 @@ Internet.
 ** Docker
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack docker
+(junk-expand docker
   "Docker and Kubernetes."
   :packages (docker dockerfile-mode))
 #+END_SRC
@@ -8788,7 +8785,7 @@ Make =Dockerfiles= look nice.
 ** Kubernetes
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack kubernetes
+(junk-expand kubernetes
   "Kubernetes."
   :packages (kubernetes))
 #+END_SRC
@@ -8822,7 +8819,7 @@ Who doesn't like pods and stuff?
 ** Jenkins
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack jenkins
+(junk-expand jenkins
   "If you're more of a butler than a rancher."
   :packages (jenkinsfile-mode))
 #+END_SRC
@@ -8949,7 +8946,7 @@ Make requests using Org.
 ** E-Mails
 
 #+BEGIN_SRC emacs-lisp
-(wal/define-expansion-pack mailing
+(junk-expand mailing
   "For people reading/writing emails in Emacs."
   :packages (smtpmail))
 #+END_SRC
