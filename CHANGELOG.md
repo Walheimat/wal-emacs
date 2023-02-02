@@ -11,12 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Buffer source for `consult` to narrow to (contributing) agenda
   buffers.
-- Support for `treesit` in `wal/hook` and using new macro
+- Support for `treesit` in `harpoon` and using new macro
   `wal/treesit`. Currently only used for `js-mode` as a test.
-- Ligatures can now be set through `wal/hook`.
+- Ligatures can now be set through `harpoon` using keyword `:ligatures`.
 - `project-switch-action` to open project root.
-- Additional functions to be called are now part of `wal/hook` so that
-  they're only called if they're bound.
+- Additional functions to be called are now part of `harpoon` using
+  keywords `:functions` so that they're only called if they're bound.
 
 ### Changed
 
@@ -26,10 +26,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   completion to switch mode and scope.
 - `log4j-mode` is no longer enabled for all `*.log` files.
 - `wal/expansion-pack-*` is now `junk-*` (like a sperm whale's melon).
+- Macro `wal/hook` was renamed to `harpoon` and refactored into
+  meaningful sub-macros.
+- Macro `wal/define-expansion-pack` was renamed to `junk-expand` and
+  all underlying functionality to `junk-*`.
+- Macro `wal/univ` was renamed to `parallel`. The function it creates
+  now no longer just prefixes the first function's name with
+  `wal/univ-*` but instead constructs `<a>||<b>` out of both names.
 
 ### Fixed
 
 - `popper` bindings are now bound in global map.
+- `consult-customize` sets `:preview-key` using string (seems a recent
+  change).
+- `wal/dap-stopped` now calls `wal/dap` instead of missing
+  `dap/hydra/body`, setting `transient-show-popup` to `t` so it's
+  immediately shown.
 
 ## [v1.10.2]
 
