@@ -1223,6 +1223,8 @@ removed."
 Make function calls even more versatile.
 
 #+BEGIN_SRC emacs-lisp
+(defvar parallel--separator "||")
+
 (cl-defmacro parallel (a b)
   "Define a function composing A and B.
 
@@ -1237,7 +1239,7 @@ Both functions will be called interactively."
   (let ((a-name (symbol-name a))
         (b-name (symbol-name b)))
 
-    `(defun ,(intern (concat a-name "//" b-name)) (&optional call-other)
+    `(defun ,(intern (concat a-name parallel--separator b-name)) (&optional call-other)
        ,(concat (format "Call `%s' or `%s' depending on prefix argument."
                         a-name
                         b-name)
@@ -4351,7 +4353,7 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 
 #+BEGIN_SRC emacs-lisp
 (use-package rg
-  :commands (rg-project//rg-menu rg-menu rg-read-pattern)
+  :commands (rg-project||rg-menu rg-menu rg-read-pattern)
 
   :init
   (parallel rg-project rg-menu)
@@ -4360,7 +4362,7 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
   (wdb/pop-up "\\*rg\\*\\'")
 
   :wal-bind
-  ("n" . rg-project//rg-menu))
+  ("n" . rg-project||rg-menu))
 #+END_SRC
 
 *** dumb-jump
@@ -4668,7 +4670,7 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
 (use-package embark
   :after vertico
 
-  :commands (embark-act//embark-dwim)
+  :commands (embark-act||embark-dwim)
 
   :init
   (parallel embark-act embark-dwim)
@@ -4687,7 +4689,7 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
   (embark-cycle-key (kbd "C-,"))
 
   :wal-bind
-  ("k" . embark-act//embark-dwim))
+  ("k" . embark-act||embark-dwim))
 #+END_SRC
 
 *** embark-consult
@@ -4792,8 +4794,8 @@ If NOT-AT-POINT is t, call `consult-line' normally."
   :commands
   (wal/consult-line
    wal/consult-clock-in
-   consult-mark//consult-global-mark
-   consult-register-load//consult-register-store
+   consult-mark||consult-global-mark
+   consult-register-load||consult-register-store
    wal/consult-unregister)
 
   :init
@@ -4856,7 +4858,7 @@ If NOT-AT-POINT is t, call `consult-line' normally."
    ("r" . consult-register)
    ("t" . consult-theme)
    ("u" . wal/consult-unregister)
-   ("<SPC>" . consult-mark//consult-global-mark)
+   ("<SPC>" . consult-mark||consult-global-mark)
    ("C-f" . consult-recent-file)
    ("+" . consult-mode-command)
    ("-" . consult-minor-mode-menu)
@@ -4866,7 +4868,7 @@ If NOT-AT-POINT is t, call `consult-line' normally."
 
   :wal-bind
   (("j" . consult-buffer)
-   ("i" . consult-register-load//consult-register-store))
+   ("i" . consult-register-load||consult-register-store))
 
   :wal-bind-keymap
   (("[" . wal/consult-map)))
@@ -6405,7 +6407,7 @@ Forget remembering =git= commands, use =transient=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
-  :commands (wal/magit-dispatch magit-status//wal/magit-dispatch)
+  :commands (wal/magit-dispatch magit-status||wal/magit-dispatch)
 
   :init
   (parallel magit-status wal/magit-dispatch)
@@ -6428,7 +6430,7 @@ Forget remembering =git= commands, use =transient=.
       ("c" "clone" magit-clone)]])
 
   :wal-bind
-  ("m" . magit-status//wal/magit-dispatch)
+  ("m" . magit-status||wal/magit-dispatch)
 
   :custom
   (magit-blame-mode-lighter " mbl")

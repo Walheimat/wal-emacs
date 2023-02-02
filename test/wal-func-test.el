@@ -384,7 +384,7 @@
 (ert-deftest test-parallel ()
   (match-expansion
    (parallel some-fun other-fun)
-   `(defun some-fun//other-fun (&optional call-other)
+   `(defun some-fun||other-fun (&optional call-other)
       "Call `some-fun' or `other-fun' depending on prefix argument.\nNo argument means: call the prior. A single `C-u' means: call the latter. Two or more `C-u' means: call the prior with `universal-argument'."
       (interactive "P")
       (if (> (prefix-numeric-value call-other) 4)
