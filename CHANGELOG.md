@@ -34,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   now no longer just prefixes the first function's name with
   `wal/univ-*` but instead constructs `<a>||<b>` out of both names.
 
+### Removed
+
+- Custom variable `wal/idle-delay` in favor of using distinct values
+  for distinct cases.
+
 ### Fixed
 
 - `popper` bindings are now bound in global map.

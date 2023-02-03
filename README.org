@@ -192,11 +192,6 @@ functionality is used.
   "Acknowledge all warnings."
   :type 'boolean
   :group 'wal-settings)
-
-(defcustom wal/idle-delay 1.6
-  "The delay after which helpful information should be shown."
-  :type 'float
-  :group 'wal-settings)
 #+END_SRC
 
 ** Personal
@@ -345,7 +340,7 @@ packages.
 
 #+BEGIN_SRC emacs-lisp
 (setq read-process-output-max (wal/bytes-per-mb 1)
-      echo-keystrokes 0.1
+      echo-keystrokes 0.2
 
       ;; Undo limits.
       undo-limit (wal/bytes-per-mb 1)
@@ -791,16 +786,7 @@ above).
   :demand t
 
   :custom
-  (transient-hide-during-minibuffer-read t)
-
-  :config
-  (with-eval-after-load 'wal-settings
-    (defvar wal/idle-delay)
-    (setq transient-show-popup wal/idle-delay))
-
-  :bind
-  (:map transient-map
-   ("M-." . transient-show)))
+  (transient-hide-during-minibuffer-read t))
 #+END_SRC
 
 ** Footer
@@ -2828,14 +2814,11 @@ No offender.
   :ensure nil
 
   :custom
-  (register-preview-delay wal/idle-delay)
+  (register-preview-delay 0.8)
 
   :bind
   (:map wal/triple-minus-map
-   ("r" . wal/clear-registers))
-
-  :bind-keymap
-  (("C-c r" . ctl-x-r-map)))
+   ("r" . wal/clear-registers)))
 #+END_SRC
 
 *** pulse
@@ -3650,7 +3633,7 @@ Show the next possible key presses towards a command.
   (which-key-mode 1)
 
   :custom
-  (which-key-idle-delay wal/idle-delay)
+  (which-key-idle-delay 0.4)
   (which-key-lighter " wk?")
   (which-key-sort-uppercase-first nil)
   (which-key-show-docstrings t)
@@ -4217,7 +4200,7 @@ Who needs a mouse.
   "Jump to a word.
 
 SCOPE will consume `universal-argument' to determine whether to
-jump to a word in the buffer or anywhere.n"
+jump to a word in the buffer or anywhere."
   (interactive "P")
 
   (if scope
@@ -4685,8 +4668,8 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
               #'wal/duck-duck-go-region)
 
   :custom
-  (embark-mixed-indicator-delay wal/idle-delay)
-  (embark-cycle-key (kbd "C-,"))
+  (embark-mixed-indicator-delay 0.8)
+  (embark-cycle-key "C-,")
 
   :wal-bind
   ("k" . embark-act||embark-dwim))
