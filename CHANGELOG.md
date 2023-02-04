@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.10.3]
+
+Piece of junk.
 
 ### Added
 
@@ -14,7 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for `treesit` in `harpoon` and using new macro
   `wal/treesit`. Currently only used for `js-mode` as a test.
 - Ligatures can now be set through `harpoon` using keyword `:ligatures`.
-- `project-switch-action` to open project root.
+- `project-switch-action` to open project root; command to compile
+  project.
 - Additional functions to be called are now part of `harpoon` using
   keywords `:functions` so that they're only called if they're bound.
 
@@ -25,7 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `wal/java-mode-dispatch` now uses `transient-switches` instead of
   completion to switch mode and scope.
 - `log4j-mode` is no longer enabled for all `*.log` files.
-- `wal/expansion-pack-*` is now `junk-*` (like a sperm whale's melon).
 - Macro `wal/hook` was renamed to `harpoon` and refactored into
   meaningful sub-macros.
 - Macro `wal/define-expansion-pack` was renamed to `junk-expand` and
@@ -33,9 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Macro `wal/univ` was renamed to `parallel`. The function it creates
   now no longer just prefixes the first function's name with
   `wal/univ-*` but instead constructs `<a>||<b>` out of both names.
-- `parallel` now determines callee on whether the prefix argument is
+  `parallel` now determines callee on whether the prefix argument is
   numeric or not, which allows both commands to have a meaningful
   value.
+- Function `wal/l` now toggles dedication.
+- Tasks in `org/tasks` are filtered for `dashboard`.
 
 ### Removed
 
@@ -47,9 +51,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `popper` bindings are now bound in global map.
 - `consult-customize` sets `:preview-key` using string (seems a recent
   change).
+- Same fix for `embark`.
 - `wal/dap-stopped` now calls `wal/dap` instead of missing
   `dap/hydra/body`, setting `transient-show-popup` to `t` so it's
   immediately shown.
+- `wal/project-command` makes sure `project-vc-name` doesn't mess with
+  any output.
+- `wal/maybe-org-roam-refile` was renamed to `wal/org-refile` and now
+  listens for numeric prefix argument to skip `org-roam`-specific
+  behavior.
 
 ## [v1.10.2]
 
