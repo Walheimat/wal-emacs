@@ -2724,9 +2724,10 @@ Effing diffing.
 (use-package diff-mode
   :ensure nil
 
-  :config
-  ;; Removes `diff-goto-source'.
-  (define-key diff-mode-shared-map (kbd "o") nil))
+  :bind
+  ;; Remove `diff-goto-source'.
+  (:map diff-mode-shared-map
+   ("o". nil)))
 #+END_SRC
 
 *** tabulated-list
@@ -2789,16 +2790,9 @@ Some people need macros, okay?
 (use-package kmacro
   :ensure nil
 
-  :config
-  (with-eval-after-load 'which-key
-    (which-key-add-key-based-replacements "C-c k" "kmacro"))
-
   :bind
   (:map wal/triple-minus-map
-   ("k" . wal/kmacro))
-
-  :bind-keymap
-  (("C-c k" . kmacro-keymap)))
+   ("k" . wal/kmacro)))
 #+END_SRC
 
 *** register
@@ -3384,7 +3378,7 @@ Let's have a dash of board.
   "Advise FUN to ignore certain directories, applying ARGS."
   (defvar recentf-exclude)
 
-  (let ((recentf-exclude '("bookmarks\\'" "zettelkasten")))
+  (let ((recentf-exclude '("bookmarks\\'" "zettelkasten" "org/tasks")))
 
     (apply fun args)))
 
@@ -5846,12 +5840,6 @@ You know the drill. Clock in, clock out.
   :init
   (with-eval-after-load 'org-keys
     (add-to-list 'org-speed-commands '("N" . wal/org-clock-in-from-now)))
-
-  :config
-  (with-eval-after-load 'which-key
-    (which-key-add-key-based-replacements
-      (wal/key-combo-for-leader 'wal/lieutenant ", t")
-      "take note"))
 
   :custom
   ;; We want a continuous, persistent clock.
@@ -8565,12 +8553,9 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
   (delete-other-windows))
 
 (defun wal/dap-stopped (_session)
-  "(Re-)display the transient immediately."
-  (defvar transient-show-popup)
-
-  (let ((transient-show-popup t))
-
-    (wal/dap)))
+  "(Re-)display the hydra immediately."
+  (message "Session stopped.")
+  (dap-hydra))
 #+END_SRC
 
 **** Configuration
@@ -8591,20 +8576,6 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
   (add-hook 'dap-terminated-hook #'wal/dap-terminated t)
   (add-hook 'dap-stopped-hook #'wal/dap-stopped t)
 
-  (wal/transient-define-prefix-once wal/dap ()
-    "Debug, transiently."
-    [["Step"
-      ("n" "next" dap-next :transient t)
-      ("i" "step in" dap-step-in :transient t)
-      ("o" "step out" dap-step-out :transient t)
-      ("c" "continue" dap-continue :transient t)]
-     ["Debugging"
-      ("s" "start" dap-debug)
-      ("x" "disconnect" dap-disconnect)]
-     ["Breakpoints"
-      ("b" "toggle" dap-breakpoint-toggle)
-      ("l" "list" dap-ui-breakpoints-list)]])
-
   (wal/replace-in-alist
    'dap-ui-buffer-configurations
    `((,dap-ui--repl-buffer . ((side . bottom) (slot . 1) (window-height . 10)))
@@ -8613,15 +8584,17 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
   (wdb/side dap-ui--repl-buffer :no-other t)
   (wdb/side dap-ui--locals-buffer :side 'right :no-other t)
 
+  (with-eval-after-load 'lsp-mode
+    (transient-append-suffix 'wal/lsp-dispatch '(0 -1)
+      ["Debug"
+       ("b" "start" dap-debug)]))
+
   :custom
   (dap-auto-show-output nil)
-  (dap-auto-configure-features '(locals repl))
+  (dap-auto-configure-features nil)
 
   (dap-python-executable "python3")
   (dap-python-debugger 'debugpy)
-
-  :general
-  (wal/major :keymaps 'lsp-mode-map "b" '(wal/dap :wk "debug"))
 
   :delight " dap")
 #+END_SRC

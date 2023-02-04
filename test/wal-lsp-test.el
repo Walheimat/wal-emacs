@@ -72,11 +72,11 @@
     (should (equal 'testing wal/dap-before))))
 
 (ert-deftest test-wal/dap-stopped ()
-  (with-mock wal/dap
+  (with-mock dap-hydra
 
     (wal/dap-stopped nil)
 
-    (was-called wal/dap)))
+    (was-called dap-hydra)))
 
 (ert-deftest test-wal/ignore-if-no-lsp ()
   (defvar lsp-mode)

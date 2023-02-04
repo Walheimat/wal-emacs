@@ -13,7 +13,7 @@
 
   (let ((fun (lambda (_) recentf-exclude)))
 
-    (should (equal '("bookmarks\\'" "zettelkasten") (wal/with-recent-files-excluded fun 'test)))))
+    (should (equal '("bookmarks\\'" "zettelkasten" "org/tasks") (wal/with-recent-files-excluded fun 'test)))))
 
 (ert-deftest test-wal/instead-show-biased-random ()
   (defvar dashboard-footer-messages '("Testing"))
