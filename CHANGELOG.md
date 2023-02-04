@@ -33,6 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Macro `wal/univ` was renamed to `parallel`. The function it creates
   now no longer just prefixes the first function's name with
   `wal/univ-*` but instead constructs `<a>||<b>` out of both names.
+- `parallel` now determines callee on whether the prefix argument is
+  numeric or not, which allows both commands to have a meaningful
+  value.
 
 ### Removed
 

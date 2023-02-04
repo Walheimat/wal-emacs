@@ -384,16 +384,39 @@
 (ert-deftest test-parallel ()
   (match-expansion
    (parallel some-fun other-fun)
-   `(defun some-fun||other-fun (&optional call-other)
-      "Call `some-fun' or `other-fun' depending on prefix argument.\nNo argument means: call the prior. A single `C-u' means: call the latter. Two or more `C-u' means: call the prior with `universal-argument'."
+   `(defun some-fun||other-fun (&optional arg)
+      "Call `some-fun' or `other-fun' depending on prefix argument.\nNo argument means: call the prior. Numeric prefix `0' means: call the latter.\n\nFor all other prefix values: numeric prefixes call the latter, `universal-argument' prefixes call the prior."
       (interactive "P")
-      (if (> (prefix-numeric-value call-other) 4)
-          (call-interactively 'some-fun)
-        (setq current-prefix-arg nil)
-        (prefix-command-update)
-        (if call-other
-            (call-interactively 'other-fun)
-          (call-interactively 'some-fun))))))
+
+       (cond
+        ((not arg)
+         (call-interactively ',some-fun))
+        ((equal 0 arg )
+         (call-interactively ',other-fun))
+        ((equal (prefix-numeric-value arg) arg)
+         (call-interactively ',other-fun))
+        (t
+         (call-interactively 'some-fun))))))
+
+(ert-deftest test-parallel--universalize ()
+  (match-expansion
+   (parallel some-fun other-fun :universalize t)
+   `(defun some-fun||other-fun (&optional arg)
+      "Call `some-fun' or `other-fun' depending on prefix argument.\nNo argument means: call the prior. Numeric prefix `0' means: call the latter.\n\nFor all other prefix values: numeric prefixes call the latter, `universal-argument' prefixes call the prior.\n\nThis function is universalized."
+      (interactive "P")
+
+       (cond
+        ((not arg)
+         (call-interactively ',some-fun))
+        ((equal 0 arg )
+         (call-interactively ',other-fun))
+        ((equal (prefix-numeric-value arg) arg)
+         (progn
+           (setq current-prefix-arg (list arg))
+           (prefix-command-update)
+           (call-interactively ',other-fun)))
+        (t
+         (call-interactively 'some-fun))))))
 
 (ert-deftest test-wal/scratch-buffer ()
   (with-mock ((pop-to-buffer . (lambda (n &rest _) (buffer-name n))))
