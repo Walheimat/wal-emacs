@@ -391,7 +391,9 @@
        (cond
         ((not arg)
          (call-interactively ',some-fun))
-        ((equal 0 arg )
+        ((equal 0 arg)
+         (setq current-prefix-arg nil)
+         (prefix-command-update)
          (call-interactively ',other-fun))
         ((equal (prefix-numeric-value arg) arg)
          (call-interactively ',other-fun))
@@ -408,7 +410,9 @@
        (cond
         ((not arg)
          (call-interactively ',some-fun))
-        ((equal 0 arg )
+        ((equal 0 arg)
+         (setq current-prefix-arg nil)
+         (prefix-command-update)
          (call-interactively ',other-fun))
         ((equal (prefix-numeric-value arg) arg)
          (progn
