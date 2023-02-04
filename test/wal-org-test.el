@@ -32,10 +32,13 @@
         (org-roam-directory "/tmp/roam"))
 
     (with-mock ((org-roam-buffer-p . #'always)
-                (wal/univ-p . #'ignore)
                 (org-refile . (lambda (&rest _) org-agenda-files)))
 
       (should (equal '("/tmp/roam") (wal/maybe-org-roam-refile)))
+      (was-called org-refile)
+
+      (wal/clear-mocks)
+      (should (equal '("/tmp/agenda") (wal/maybe-org-roam-refile 5)))
       (was-called org-refile))
 
     (with-mock ((org-roam-buffer-p . #'ignore)

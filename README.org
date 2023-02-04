@@ -5438,21 +5438,21 @@ Trying to organize my thoughts using Zettelkästen.
 **** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/maybe-org-roam-refile (&rest args)
-  "Refile using ARGS, but use `org-roam-refile' for its buffers.
+(defun wal/maybe-org-roam-refile (&optional arg)
+  "Refile using ARGS, but use `org-roam-directory' for its files.
 
-If called with `universal-argument', default to `org-roam' in any
-case."
-  (interactive)
+If called with numeric prefix `5', don't set `org-agenda-files' (allows
+refiling to non-`org-roam' files."
+  (interactive "P")
 
   (declare-function org-refile "ext:org.el")
   (defvar org-roam-directory)
 
-  (if (and (org-roam-buffer-p) (not (wal/univ-p)))
+  (if (and (org-roam-buffer-p) (not (equal arg 5)))
       (let ((org-agenda-files (list org-roam-directory)))
 
-        (org-refile args))
-    (org-refile args)))
+        (org-refile arg))
+    (org-refile arg)))
 #+END_SRC
 
 **** Configuration
