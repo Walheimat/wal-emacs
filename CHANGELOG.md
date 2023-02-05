@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Macro `wal/treesit` is now part of `harpoon`.
+- Macro `harpoon` was greatly refactored again to account for
+  `treesit`.
+- The `transient` `harpoon` dispatches were renamed from
+  `wal/<mode>-dispatch` to `mode-captain`.
+- Macro `parallel` now differentiates by numeric and "normal" prefix
+  argument. This means calling the B command requires `C-u 0` instead
+  of `C-u`. This allows for both commands to consume the argument.
+  Keyword `:universalize` allows converting numeric to non-numeric if
+  the called command expects `'(4)` over `4` etc.
+- `project` ignores `.ccls-cache`.
+
+
+### Removed
+
+- Package `jsonian` in favor of using built-in `js-json-mode`.
+- Package `emojify` in favor of relying on built-in emoji support.
+
 ## [v1.10.3]
 
 Piece of junk.
