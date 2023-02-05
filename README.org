@@ -1737,8 +1737,11 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
 
 *** harpoon
 
+The =harpoon= macro allows the creation of =use-package=-like templates to
+set up (major-) modes using hooks.
+
 #+BEGIN_SRC emacs-lisp
-(defvar harpoon-keywords
+(defvar harpoon--keywords
   '(:captain
     :corfu
     :functions
@@ -1749,6 +1752,66 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
     :prog-like
     :shallow
     :tabs))
+
+(defun harpoon--safe-body (body)
+  "Collect everything from BODY that's a key."
+  (cl-loop for (key val)
+           on body by 'cddr
+           unless (memq key harpoon--keywords)
+           collect key
+           and collect val))
+
+(defvar harpoon--treesit-alist '((js-mode . javascript)
+                                 (c++-mode . cpp)
+                                 (python-mode . python))
+  "Alist mapping languages to major modes.")
+
+(defvar harpoon--treesit-alias-alist '((js-mode . javascript-mode))
+  "Alist mapping modes to their alias.")
+
+(defun harpoon--treesit-ready-p (name)
+  "Check if treesit is available for LANGUAGE."
+  (and (wal/modern-emacs-p 29)
+       (require 'treesit nil t)
+       (treesit-available-p)
+       (treesit-ready-p (harpoon--treesit-language name) t)))
+
+(defun harpoon--treesit-language (name)
+  "Get language for MODE."
+  (cdr-safe (assoc name harpoon--treesit-alist)))
+
+(defun harpoon--treesit-maybe-alias (name)
+  "Get the potentially aliased mode name for NAME."
+  (or (cdr-safe (assoc name harpoon--treesit-alias-alist))
+      name))
+
+(defun harpoon--treesit-name (name)
+  "Get treesit name for NAME."
+  (let ((segment (thread-first
+                   name
+                   (symbol-name)
+                   (split-string "-mode")
+                   (car))))
+    (intern (concat segment "-ts-mode"))))
+
+(defun harpoon--mode-name (name)
+  "Get mode name for NAME."
+  (if-let* ((ready (harpoon--treesit-ready-p name)))
+      (harpoon--treesit-name name)
+    name))
+
+(defun harpoon--function-name (mode &optional harpoon)
+  "Get the name of the target hook for MODE."
+  (let ((suffix (if harpoon "harpoon" "hook")))
+
+    (thread-first
+      mode
+      (harpoon--mode-name)
+      (symbol-name)
+      (concat "-" suffix)
+      (intern))))
+
+;;; Macros:
 
 (defmacro harpoon-tabs (tabs)
   "Set messages and indentation using TABS."
@@ -1761,88 +1824,6 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
             ((not tabs)
              '(wal/disable-tabs))
             (t `(wal/maybe-enable-tabs :indent-with ,tabs)))))
-
-(defun harpoon--safe-body (body)
-  "Collect everything from BODY that's a key."
-  (cl-loop for (key val)
-           on body by 'cddr
-           unless (memq key harpoon-keywords)
-           collect key
-           and collect val))
-
-(defvar harpoon-treesit--alist '((js-mode . javascript)
-                                 (c++-mode . cpp)
-                                 (python-mode . python))
-  "Alist mapping languages to major modes.")
-
-(defvar harpoon-treesit--alias-alist '((js-mode . javascript-mode))
-  "Alist mapping modes to their alias.")
-
-(defun harpoon-treesit--ready-p (name)
-  "Check if treesit is available for LANGUAGE."
-  (and (wal/modern-emacs-p 29)
-       (require 'treesit nil t)
-       (treesit-available-p)
-       (treesit-ready-p (harpoon-treesit--language name) t)))
-
-(defun harpoon-treesit--language (name)
-  "Get language for MODE."
-  (cdr-safe (assoc name harpoon-treesit--alist)))
-
-(defun harpoon-treesit--maybe-alias (name)
-  "Get the potentially aliased mode name for NAME."
-  (or (cdr-safe (assoc name harpoon-treesit--alias-alist))
-      name))
-
-(defun harpoon-treesit--ts-name (name)
-  "Get treesit name for NAME."
-  (let ((segment (thread-first
-                         name
-                         (symbol-name)
-                         (split-string "-mode")
-                         (car))))
-      (intern (concat segment "-ts-mode"))))
-
-(cl-defmacro harpoon-treesit (name)
-  "Remap LANGUAGE major-mode to tree-sitter variant if possible."
-  (declare (indent defun))
-
-  (when-let* ((ready (harpoon-treesit--ready-p name))
-              (mode-name name)
-              (ts-mode-name (harpoon-treesit--ts-name name)))
-
-    `(progn
-         (message "Remapping %s to %s" ',mode-name ',ts-mode-name)
-         (add-to-list 'major-mode-remap-alist ',(cons (harpoon-treesit--maybe-alias mode-name) ts-mode-name))
-
-         (with-eval-after-load 'all-the-icons
-           (when-let ((setting (cdr (assoc ',mode-name all-the-icons-mode-icon-alist)))
-                      (name ',ts-mode-name))
-
-             (add-to-list 'all-the-icons-mode-icon-alist (cons name setting)))))))
-
-(defun harpoon--mode-name (name)
-  "Get mode name for NAME."
-  (if-let* ((ready (harpoon-treesit--ready-p name)))
-      (harpoon-treesit--ts-name name)
-    name))
-
- (defun harpoon-function--name (mode &optional harpoon)
-  "Get the name of the target hook for MODE."
-  (let ((suffix (if harpoon "harpoon" "hook")))
-
-    (thread-first
-      mode
-      (harpoon--mode-name)
-      (symbol-name)
-      (concat "-" suffix)
-      (intern))))
-
-(cl-defmacro harpoon-hook (name)
-  "Create the hook call."
-   `(add-hook
-     ',(harpoon-function--name name)
-     ',(harpoon-function--name name t)))
 
 (cl-defmacro harpoon-function
     (name
@@ -1884,7 +1865,7 @@ be called if they are bound.
 The rest of the BODY will be spliced into the hook function."
   (declare (indent defun))
 
-  `(defun ,(harpoon-function--name name t) ()
+  `(defun ,(harpoon--function-name name t) ()
      ,(format "Hook into `%s'." name)
      ,@(delete
         nil
@@ -1905,6 +1886,12 @@ The rest of the BODY will be spliced into the hook function."
                (kbd (wal/key-combo-for-leader 'wal/captain))
                ',(intern (concat (symbol-name name) "-captain"))))))))
 
+(cl-defmacro harpoon-hook (name)
+  "Create the hook call."
+  `(add-hook
+    ',(harpoon--function-name name)
+    ',(harpoon--function-name name t)))
+
 (cl-defmacro harpoon-ligatures (name &key ligatures &allow-other-keys)
   "Set up LIGATURES for NAME."
   (declare (indent defun))
@@ -1913,12 +1900,29 @@ The rest of the BODY will be spliced into the hook function."
 
     `(wal/set-ligatures ',(harpoon--mode-name name) ',ligatures)))
 
-
 (cl-defmacro harpoon-lsp (&key lsp lsp-ignores &allow-other-keys)
   "Set up LSP and LSP-IGNORES."
   (when (and lsp lsp-ignores)
     `(with-eval-after-load 'lsp-mode
        (wal/append 'lsp-file-watch-ignored-directories ',lsp-ignores))))
+
+(cl-defmacro harpoon-treesit (name)
+  "Remap LANGUAGE major-mode to tree-sitter variant if possible."
+  (declare (indent defun))
+
+  (when-let* ((ready (harpoon--treesit-ready-p name))
+              (mode-name name)
+              (ts-mode-name (harpoon--treesit-name name)))
+
+    `(progn
+       (message "Remapping %s to %s" ',mode-name ',ts-mode-name)
+       (add-to-list 'major-mode-remap-alist ',(cons (harpoon--treesit-maybe-alias mode-name) ts-mode-name))
+
+       (with-eval-after-load 'all-the-icons
+         (when-let ((setting (cdr (assoc ',mode-name all-the-icons-mode-icon-alist)))
+                    (name ',ts-mode-name))
+
+           (add-to-list 'all-the-icons-mode-icon-alist (cons name setting)))))))
 
 (cl-defmacro harpoon (name &rest args)
   "Hook into major mode NAME.

@@ -905,18 +905,18 @@
 
     (should (equal (wal/prog-like) 'prog-like-hook))))
 
-(ert-deftest test-harpoon-treesit--ready-p ()
-  (defvar harpoon-treesit--alist)
+(ert-deftest test-harpoon--treesit-ready-p ()
+  (defvar harpoon--treesit-alist)
   (with-mock ((wal/modern-emacs-p . #'always)
               (require . #'always)
               (treesit-available-p . #'always)
               (treesit-ready-p . (lambda (it &rest _) (equal 'testable it))))
 
-    (let ((harpoon-treesit--alist '((test-mode . testable) (zest-mode . zestable))))
+    (let ((harpoon--treesit-alist '((test-mode . testable) (zest-mode . zestable))))
 
-      (should (harpoon-treesit--ready-p 'test-mode))
-      (should-not (harpoon-treesit--ready-p 'zest-mode))
-      (should-not (harpoon-treesit--ready-p 'no-mapping-mode)))))
+      (should (harpoon--treesit-ready-p 'test-mode))
+      (should-not (harpoon--treesit-ready-p 'zest-mode))
+      (should-not (harpoon--treesit-ready-p 'no-mapping-mode)))))
 
 (ert-deftest test-harpoon-tabs ()
   (match-expansion
@@ -1100,7 +1100,7 @@
       (wal/append 'lsp-file-watch-ignored-directories '(".ignoramus")))))
 
 (ert-deftest test-harpoon-treesit ()
-  (with-mock ((harpoon-treesit--ready-p . #'always))
+  (with-mock ((harpoon--treesit-ready-p . #'always))
 
     (match-expansion
      (harpoon-treesit test-mode)
@@ -1118,7 +1118,7 @@
                          (cons name setting))))))))
 
 (ert-deftest test-harpoon--mode-name--with-treeesit ()
-  (with-mock ((harpoon-treesit--ready-p . #'always))
+  (with-mock ((harpoon--treesit-ready-p . #'always))
     (should (equal 'test-ts-mode (harpoon--mode-name 'test-mode)))))
 
 (ert-deftest test-harpoon-hook ()
