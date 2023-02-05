@@ -524,7 +524,7 @@ Make completions look nice.
 #+BEGIN_SRC emacs-lisp
 ;; Create `transient' for config package.
 (with-no-warnings
-  (transient-define-prefix wal-config-captain ()
+  (wal/transient-define-captain wal-config ()
     "Facilitate the usage of or the working on Walheimat's config."
     [["Do"
       ("f" "config" wal/find-config)
@@ -1487,7 +1487,7 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
 
 (defvar wal/transient-may-redefine nil)
 
-(defmacro wal/transient-define-prefix-once (name arglist &rest args)
+(defmacro wal/transient-define-captain (name arglist &rest args)
   "Make sure that prefix NAME called with ARGLIST and ARGS is only defined once."
   (declare (debug (&define name lambda-list
                            [&optional lambda-doc]
@@ -1496,8 +1496,11 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
                            [&optional ("interactive" interactive) def-body]))
            (indent defun)
            (doc-string 3))
-  (unless (and (fboundp name) (not wal/transient-may-redefine))
-    `(transient-define-prefix ,name ,arglist ,@args)))
+
+  (let ((composite-name (intern (concat (symbol-name name) "-captain"))))
+
+    (unless (and (fboundp composite-name) (not wal/transient-may-redefine))
+      `(transient-define-prefix ,composite-name ,arglist ,@args))))
 
 (defmacro setq-unless (&rest pairs)
   "Set variable/value PAIRS if they're currently nil."
@@ -2865,7 +2868,7 @@ be gone.
 
   :config
   ;; Allow for quicker un- and redoing.
-  (wal/transient-define-prefix-once wal/winner ()
+  (wal/transient-define-captain winner ()
     "Quickly undo and redo window configurations."
     ["Window configurations"
      ("u" "undo" winner-undo :transient t)
@@ -2877,7 +2880,7 @@ be gone.
   (winner-dont-bind-my-keys t)
 
   :general
-  (wal/general "o" '(wal/winner :wk "winner")))
+  (wal/general "o" '(winner-captain :wk "winner")))
 #+END_SRC
 
 *** async
@@ -5191,7 +5194,7 @@ This calls `org-content' interactively."
    #'wal/first-require-ox-md)
 
   (with-no-warnings
-    (wal/transient-define-prefix-once org-mode-captain ()
+    (wal/transient-define-captain org-mode ()
       "Access `org-mode' commands."
       [["Commands"
         ("n" "add note" org-add-note)
@@ -5463,7 +5466,7 @@ refiling to non-`org-roam' files."
   ;; Refile differently for these files.
   (wal/replace-in-alist 'org-speed-commands '(("w" . wal/org-refile)))
 
-  (wal/transient-define-prefix-once org-roam-captain ()
+  (wal/transient-define-captain org-roam ()
     "Run `org-roam' commands."
     [["Capture"
       ("c" "capture" org-roam-capture)
@@ -5993,7 +5996,7 @@ Uses the same optional SWITCHES."
   ;; We aren't scared of finding alternate files.
   (put 'dired-find-alternate-file 'disabled nil)
 
-  (wal/transient-define-prefix-once dired-mode-captain ()
+  (wal/transient-define-captain dired-mode ()
     "Access Dired commands."
     [["Utility"
       ("q" "query replace" dired-do-query-replace-regexp)
@@ -6368,7 +6371,7 @@ Forget remembering =git= commands, use =transient=.
   (parallel magit-status magit-captain)
 
   :config
-  (wal/transient-define-prefix-once magit-captain ()
+  (wal/transient-define-captain magit ()
     "Call `magit' commands in a `magit'-y way."
     [["Core"
       ("m" "status" magit-status)
@@ -6479,7 +6482,7 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
   :ensure nil
 
   :config
-  (wal/transient-define-prefix-once wal/smerge ()
+  (wal/transient-define-captain smerge ()
     "Resolve conflicts until you don't."
     [["Move"
       ("n" "next" smerge-next :transient t)
@@ -6494,7 +6497,7 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
 
   :bind
   (:map smerge-basic-map
-   ("g" . wal/smerge))
+   ("g" . smerge-captain))
 
   :bind-keymap
   (("C-c g" . smerge-basic-map))
@@ -6627,7 +6630,7 @@ I want to be ready for =jai=.
   ;; Eliminate conflicts with `delight'.
   (advice-add 'c-update-modeline :override #'ignore)
 
-  (wal/transient-define-prefix-once c++-mode-captain ()
+  (wal/transient-define-captain c++-mode ()
     "Access `c++-mode' commands."
     [["Style"
       ("s" "set" c-set-style)
@@ -6668,7 +6671,7 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
     :messages ("Consider the lobster"))
 
   :config
-  (wal/transient-define-prefix-once rust-mode-captain ()
+  (wal/transient-define-captain rust-mode ()
     "Access `rust-mode' commands."
     [["Commands"
       ("c" "compile" rust-compile)
@@ -6753,7 +6756,7 @@ TOML."
   ;; Show inferior shell at the bottom.
   (wdb/side 'inferior-python-mode)
 
-  (wal/transient-define-prefix-once python-mode-captain ()
+  (wal/transient-define-captain python-mode ()
     "Access `python-mode' commands."
     [["Inferior shell"
       ("i r" "send region" python-shell-send-region)
@@ -7024,7 +7027,7 @@ Deal with the parens.
     :functions (prettify-symbols-mode))
 
   :config
-  (wal/transient-define-prefix-once emacs-lisp-mode-captain ()
+  (wal/transient-define-captain emacs-lisp-mode ()
     "Access `elisp' commands."
     [["Utility"
       ("c" "check parens" check-parens)
@@ -7057,7 +7060,7 @@ Deal with the parens.
 
   :config
   (with-eval-after-load 'slime
-    (wal/transient-define-prefix-once common-lisp-mode-captain ()
+    (wal/transient-define-captain common-lisp-mode ()
       "Access `slime' actions."
       [["Slime"
         ("s" "slime" slime-mode)
@@ -7086,7 +7089,7 @@ Get some closure.
 
   :config
   (with-eval-after-load 'cider
-    (wal/transient-define-prefix-once clojure-mode-captain ()
+    (wal/transient-define-captain clojure-mode ()
       "Access `clojure-mode' commands."
       [["Cider"
         ("r" "repl" cider-jack-in)
@@ -7195,7 +7198,7 @@ Can we have =deno= instead of =node=?
   (with-eval-after-load 'dap-mode
     (require 'dap-node))
 
-  (wal/transient-define-prefix-once js-mode-captain ()
+  (wal/transient-define-captain js-mode ()
     "Access JS commands."
     [["Actions"
       ("c" "context" js-syntactic-context)]])
@@ -7443,7 +7446,7 @@ Sometimes things that don't do things need to look nice.
     :shallow t)
 
   :config
-  (wal/transient-define-prefix-once markdown-mode-captain ()
+  (wal/transient-define-captain markdown-mode ()
     "Access `markdown-mode' commands."
     [["View"
       ("v" "toggle view" wal/markdown-view)]])
@@ -7547,7 +7550,7 @@ LSP support for Dart.
   ;; Display at the bottom.
   (wdb/side "\\*Flutter")
 
-  (wal/transient-define-prefix-once dart-mode-captain ()
+  (wal/transient-define-captain dart-mode ()
     "Access flutter commands."
     [["Hot-reloading"
       ("R" "restart" lsp-dart-dap-flutter-hot-restart)
@@ -7660,7 +7663,7 @@ LSP integration.
     :argument-regexp "\\(--scope=\\(method\\|class\\)\\)"
     :choices '("method" "class"))
 
-  (wal/transient-define-prefix-once java-mode-captain ()
+  (wal/transient-define-captain java-mode ()
     "Access `java-mode' commands."
     :value '("--mode=run" "--scope=method")
 
@@ -8354,7 +8357,7 @@ considered slow."
   ;; Don't keep track of multiple projects.
   (advice-add 'lsp :before #'wal/first-prevent-adding-other-projects)
 
-  (wal/transient-define-prefix-once lsp-captain ()
+  (wal/transient-define-captain lsp-mode ()
     "Call `lsp-mode' functions."
     [["Format"
       ("f" "buffer" lsp-format-buffer)
@@ -8407,7 +8410,7 @@ considered slow."
   (lsp-xml-format-split-attributes-indent-size 1)
 
   :general
-  (wal/major :keymaps 'lsp-mode-map "l" '(lsp-captain :wk "lsp"))
+  (wal/major :keymaps 'lsp-mode-map "l" '(lsp-mode-captain :wk "lsp"))
 
   :delight
   (lsp-mode " lsp")
@@ -8498,7 +8501,7 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
   (wdb/side dap-ui--locals-buffer :side 'right :no-other t)
 
   (with-eval-after-load 'lsp-mode
-    (transient-append-suffix 'lsp-captain '(0 -1)
+    (transient-append-suffix 'lsp-mode-captain '(0 -1)
       ["Debug"
        ("b" "start" dap-debug)]))
 
@@ -8795,7 +8798,7 @@ Make requests using Org.
    #'wal/pick-windows-being-kept)
 
   :config
-  (wal/transient-define-prefix-once verb-captain ()
+  (wal/transient-define-captain verb ()
     "Dispatch `verb' commands."
     [["Request"
       ("r" "send" verb-send-request-on-point

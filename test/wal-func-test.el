@@ -667,27 +667,27 @@
        (setq wal/is-testing t))
      `(message "Ignoring statements in '%s'" 'test))))
 
-(ert-deftest test-wal/transient-define-prefix-once ()
+(ert-deftest test-wal/transient-define-captain ()
   (match-expansion
-   (wal/transient-define-prefix-once test-prefix ()
+   (wal/transient-define-captain test-mode ()
      "This is a world."
      [("i" "ignore" ignore)])
-   `(transient-define-prefix test-prefix ()
+   `(transient-define-prefix test-mode-captain ()
       "This is a world."
       [("i" "ignore" ignore)]))
 
-  (defun test-prefix () nil)
+  (defun test-mode-captain () nil)
   (match-expansion
-   (wal/transient-define-prefix-once test-prefix ()
+   (wal/transient-define-captain test-mode ()
      "This is a world."
      [("i" "ignore" ignore)])
    `nil)
   (let ((wal/transient-may-redefine t))
     (match-expansion
-     (wal/transient-define-prefix-once test-prefix ()
+     (wal/transient-define-captain test-mode ()
        "This is a world."
        [("i" "ignore" ignore)])
-     `(transient-define-prefix test-prefix ()
+     `(transient-define-prefix test-mode-captain ()
         "This is a world."
         [("i" "ignore" ignore)])))
   (fmakunbound 'test-prefix))
