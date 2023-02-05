@@ -905,344 +905,228 @@
 
     (should (equal (wal/prog-like) 'prog-like-hook))))
 
-(ert-deftest test-harpoon--treesit-ready-p ()
-  (defvar wal/treesit-mode-lang-alist)
-  (with-mock ((require . #'always)
+(ert-deftest test-harpoon-treesit--ready-p ()
+  (defvar harpoon-treesit--alist)
+  (with-mock ((wal/modern-emacs-p . #'always)
+              (require . #'always)
               (treesit-available-p . #'always)
-              (wal/modern-emacs-p . #'always)
               (treesit-ready-p . (lambda (it &rest _) (equal 'testable it))))
 
-    (let ((wal/treesit-mode-lang-alist '((test-mode . testable) (zest-mode . zestable))))
+    (let ((harpoon-treesit--alist '((test-mode . testable) (zest-mode . zestable))))
 
-      (should (harpoon--treesit-ready-p 'test-mode))
-      (should-not (harpoon--treesit-ready-p 'zest-mode))
-      (should (harpoon--treesit-ready-p 'no-mapping-mode)))))
+      (should (harpoon-treesit--ready-p 'test-mode))
+      (should-not (harpoon-treesit--ready-p 'zest-mode))
+      (should-not (harpoon-treesit--ready-p 'no-mapping-mode)))))
 
-(ert-deftest test-harpoon--tabs ()
+(ert-deftest test-harpoon-tabs ()
   (match-expansion
-   (harpoon--tabs t)
+   (harpoon-tabs t)
    `(progn
       (hack-local-variables)
       (wal/maybe-enable-tabs))))
 
-(ert-deftest test-harpoon--tabs--always ()
+(ert-deftest test-harpoon-tabs--always ()
   (match-expansion
-   (harpoon--tabs always)
+   (harpoon-tabs always)
    `(progn
       (hack-local-variables)
       (wal/enable-tabs))))
 
-(ert-deftest test-harpoon--tabs--with-fun ()
+(ert-deftest test-harpoon-tabs--with-fun ()
   (match-expansion
-   (harpoon--tabs 'test-fun)
+   (harpoon-tabs 'test-fun)
    `(progn
       (hack-local-variables)
       (wal/maybe-enable-tabs :indent-with 'test-fun))))
 
-(ert-deftest test-harpoon--tabs--disabled ()
+(ert-deftest test-harpoon-tabs--disabled ()
   (match-expansion
-   (harpoon--tabs nil)
+   (harpoon-tabs nil)
    `(progn
       (hack-local-variables)
       (wal/disable-tabs))))
 
-(ert-deftest test-harpoon--function ()
-  (match-expansion
-   (harpoon--function test-mode
-     "We're just testing."
-     :messages ("Just testing")
-     :lsp t
-     :lsp-ignores (".ignoramus")
-     :tabs t)
-   `(progn
-      (defun wal/test-mode-hook ()
-        "We're just testing."
-        (wal/message-in-a-bottle '("Just testing"))
-        (harpoon--tabs t)
-        (wal/lsp))
-
-      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
-
 (ert-deftest test-harpoon ()
   (match-expansion
    (harpoon test-mode
-     "We're just testing."
      :messages ("Just testing")
      :lsp t
      :lsp-ignores (".ignoramus")
      :tabs t)
    `(progn
-      (harpoon--function test-mode
-        "We're just testing."
+      (harpoon-function test-mode
         :messages ("Just testing")
         :lsp t
         :lsp-ignores (".ignoramus")
         :tabs t)
 
-      (harpoon--ligatures test-mode
+      (harpoon-hook test-mode)
+
+      (harpoon-ligatures test-mode
         :messages ("Just testing")
         :lsp t
         :lsp-ignores (".ignoramus")
         :tabs t)
 
-      (harpoon--lsp :messages ("Just testing")
-                     :lsp t
-                     :lsp-ignores (".ignoramus")
-                     :tabs t))))
+      (harpoon-lsp :messages ("Just testing")
+                   :lsp t
+                   :lsp-ignores (".ignoramus")
+                   :tabs t)
 
-(ert-deftest test-harpoon--custom-indent ()
+      (harpoon-treesit test-mode))))
+
+(ert-deftest test-harpoon-function ()
   (match-expansion
-   (harpoon--function test-mode
-     "We're just testing."
+   (harpoon-function test-mode
+     :messages ("Just testing")
+     :lsp t
+     :lsp-ignores (".ignoramus")
+     :tabs t)
+   `(defun test-mode-harpoon ()
+      "Hook into `test-mode'."
+      (wal/message-in-a-bottle '("Just testing"))
+      (harpoon-tabs t)
+      (wal/lsp))))
+
+(ert-deftest test-harpoon-function--custom-indent ()
+  (match-expansion
+   (harpoon-function test-mode
      :messages ("Just testing")
      :lsp t
      :tabs 'some-fun)
-   `(progn
-      (defun wal/test-mode-hook ()
-        "We're just testing."
-        (wal/message-in-a-bottle '("Just testing"))
-        (harpoon--tabs 'some-fun)
-        (wal/lsp))
+   `(defun test-mode-harpoon ()
+      "Hook into `test-mode'."
+      (wal/message-in-a-bottle '("Just testing"))
+      (harpoon-tabs 'some-fun)
+      (wal/lsp))))
 
-      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
-
-(ert-deftest test-harpoon--enable-indent ()
+(ert-deftest test-harpoon-function--enable-indent ()
   (match-expansion
-   (harpoon--function test-mode
-     "We're just testing."
+   (harpoon-function test-mode
      :messages ("Just testing")
      :lsp t
      :tabs always)
-   `(progn
-      (defun wal/test-mode-hook ()
-        "We're just testing."
-        (wal/message-in-a-bottle '("Just testing"))
-        (harpoon--tabs always)
-        (wal/lsp))
+   `(defun test-mode-harpoon ()
+      "Hook into `test-mode'."
+      (wal/message-in-a-bottle '("Just testing"))
+      (harpoon-tabs always)
+      (wal/lsp))))
 
-      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
-
-(ert-deftest test-harpoon--with-tabs ()
+(ert-deftest test-harpoon-function--with-tabs ()
   (match-expansion
-   (harpoon--function test-mode
-     "We're just testing."
+   (harpoon-function test-mode
      :messages ("Just testing")
      :lsp nil)
-   `(progn
-      (defun wal/test-mode-hook ()
-        "We're just testing."
-        (wal/message-in-a-bottle '("Just testing"))
-        (harpoon--tabs nil))
+   `(defun test-mode-harpoon ()
+      "Hook into `test-mode'."
+      (wal/message-in-a-bottle '("Just testing"))
+      (harpoon-tabs nil))))
 
-      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
-
-(ert-deftest test-harpoon--prog-like ()
+(ert-deftest test-harpoon-function--prog-like ()
   (match-expansion
-   (harpoon--function test-mode
-     "We're just testing."
+   (harpoon-function test-mode
      :messages ("Just testing")
      :prog-like t
      :shallow t
      (message "hi"))
-   `(progn
-      (defun wal/test-mode-hook ()
-        "We're just testing."
-        (wal/message-in-a-bottle '("Just testing"))
-        (message "hi")
-        (run-hooks 'prog-like-hook))
+   `(defun test-mode-harpoon ()
+      "Hook into `test-mode'."
+      (wal/message-in-a-bottle '("Just testing"))
+      (message "hi")
+      (run-hooks 'prog-like-hook))))
 
-      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
-
-(ert-deftest test-harpoon--lieutenant ()
+(ert-deftest test-harpoon-function--captain ()
   (match-expansion
-   (harpoon--function test-mode
-     "We're just testing."
+   (harpoon-function test-mode
      :messages ("Just testing")
      :captain t
      :shallow t
      (message "hi"))
-   `(progn
-      (defun wal/test-mode-hook ()
-        "We're just testing."
-        (wal/message-in-a-bottle '("Just testing"))
-        (message "hi")
-        (local-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) 'wal/test-mode-dispatch))
-
-      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
+   `(defun test-mode-harpoon ()
+      "Hook into `test-mode'."
+      (wal/message-in-a-bottle '("Just testing"))
+      (message "hi")
+      (local-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) 'test-mode-captain))))
 
 (ert-deftest test-harpoon--corfu ()
   (match-expansion
-   (harpoon--function test-mode
-     "We're just testing."
-     :messages ("Just testing")
+   (harpoon-function test-mode
+    :messages ("Just testing")
      :corfu (0.2 4)
      :shallow t
      (message "hi"))
-   `(progn
-      (defun wal/test-mode-hook ()
-        "We're just testing."
-        (wal/message-in-a-bottle '("Just testing"))
-        (message "hi")
-        (wal/corfu-auto '(0.2 4)))
-
-      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
+   `(defun test-mode-harpoon ()
+      "Hook into `test-mode'."
+      (wal/message-in-a-bottle '("Just testing"))
+      (message "hi")
+      (wal/corfu-auto '(0.2 4)))))
 
 (ert-deftest test-harpoon--shallow ()
   (match-expansion
-   (harpoon--function test-mode
-     "We're just testing."
+   (harpoon-function test-mode
      :corfu (0.2 4)
      :shallow t
      (message "hi"))
-   `(progn
-      (defun wal/test-mode-hook ()
-        "We're just testing."
-        (message "hi")
-        (wal/corfu-auto '(0.2 4)))
-
-      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
+   `(defun test-mode-harpoon ()
+      "Hook into `test-mode'."
+      (message "hi")
+      (wal/corfu-auto '(0.2 4)))))
 
 (ert-deftest test-harpoon--functions ()
   (match-expansion
-   (harpoon--function test-mode
-     "We're just testing."
+   (harpoon-function test-mode
      :shallow t
      :functions (test-mode testable-mode)
      (message "hi"))
-   `(progn
-      (defun wal/test-mode-hook ()
-        "We're just testing."
-        (message "hi")
-        (progn
-          (when (fboundp 'test-mode)
-            (test-mode))
-          (when (fboundp 'testable-mode)
-            (testable-mode))))
+   `(defun test-mode-harpoon ()
+      "Hook into `test-mode'."
+      (message "hi")
+      (progn
+        (when (fboundp 'test-mode)
+          (test-mode))
+        (when (fboundp 'testable-mode)
+          (testable-mode))))))
 
-      (add-hook 'test-mode-hook 'wal/test-mode-hook))))
-
-(ert-deftest test-harpoon--functions--with-treesit ()
-  (with-mock ((wal/modern-emacs-p . #'always)
-              (treesit-available-p . #'always)
-              (require . #'always))
-    (match-expansion
-     (harpoon--function test-mode
-       "We're just testing."
-       :shallow t
-       :treesit t
-       (message "hi"))
-     `(progn
-        (defun wal/test-mode-hook ()
-          "We're just testing."
-          (message "hi"))
-
-        (add-hook 'test-ts-mode-hook 'wal/test-mode-hook)))))
-
-(ert-deftest test-harpoon--treesit-base ()
-  (with-mock ((wal/modern-emacs-p . #'always)
-              (treesit-available-p . #'always)
-              (require . #'always))
-    (match-expansion
-     (harpoon test-mode
-       "We're just testing."
-       :treesit base
-       (message "hi"))
-     `(progn
-        (harpoon--function test-mode
-          "We're just testing."
-          :treesit base
-          (message "hi"))
-        (harpoon--ligatures test-mode :treesit base (message "hi"))
-        (harpoon--lsp :treesit base (message "hi"))))))
-
-(ert-deftest test-harpoon--treesit ()
-  (with-mock ((wal/modern-emacs-p . #'always)
-              (treesit-available-p . #'always)
-              (require . #'always))
-    (match-expansion
-     (harpoon test-mode
-       "We're just testing."
-       :treesit t
-       (message "hi"))
-     `(progn
-        (harpoon--function test-mode
-          "We're just testing."
-          :treesit t
-          (message "hi"))
-        (harpoon--ligatures test-mode :treesit t (message "hi"))
-        (harpoon--lsp :treesit t (message "hi"))))))
-
-(ert-deftest test-harpoon--ligatures ()
-  (with-mock ((wal/modern-emacs-p . #'ignore))
-    (match-expansion
-     (harpoon--ligatures test-mode :ligatures ("?!"))
-     `(wal/set-ligatures 'test-mode '("?!")))))
-
-(ert-deftest test-harpoon--ligatures--with-treesit ()
-  (with-mock ((wal/modern-emacs-p . #'always)
-              (treesit-available-p . #'always)
-              (require . #'always))
-    (match-expansion
-     (harpoon--ligatures test-mode
-       :ligatures ("?!")
-       :treesit t)
-     `(wal/set-ligatures '(test-mode test-ts-mode) '("?!")))))
-
-(ert-deftest test-harpoon--lsp ()
+(ert-deftest test-harpoon-ligatures ()
   (match-expansion
-   (harpoon--lsp :lsp t :lsp-ignores (".ignoramus"))
+   (harpoon-ligatures test-mode
+     :ligatures ("?!"))
+   `(wal/set-ligatures 'test-mode '("?!"))))
+
+(ert-deftest test-harpoon-lsp ()
+  (match-expansion
+   (harpoon-lsp :lsp t :lsp-ignores (".ignoramus"))
    `(with-eval-after-load 'lsp-mode
       (wal/append 'lsp-file-watch-ignored-directories '(".ignoramus")))))
 
-(ert-deftest test-wal/treesit ()
-  (with-mock ((featurep . #'always)
-              (treesit-available-p . #'always)
-              (treesit-ready-p . #'always))
+(ert-deftest test-harpoon-treesit ()
+  (with-mock ((harpoon-treesit--ready-p . #'always))
 
     (match-expansion
-     (wal/treesit test-lang)
+     (harpoon-treesit test-mode)
      `(progn
-        (message "Remapping %s to %s" 'test-lang-mode 'test-lang-ts-mode)
+        (message "Remapping %s to %s" 'test-mode 'test-ts-mode)
         (add-to-list 'major-mode-remap-alist
-                     '(test-lang-mode . test-lang-ts-mode))
-        (with-eval-after-load 'all-the-icons
-          (when-let ((setting
-                      (cdr
-                       (assoc 'test-lang-mode all-the-icons-mode-icon-alist)))
-                     (name 'test-lang-ts-mode))
-
-            (add-to-list 'all-the-icons-mode-icon-alist
-                         (cons name setting))))))))
-
-(ert-deftest test-wal/treesit--with-replacements ()
-  (with-mock ((featurep . #'always)
-              (treesit-available-p . #'always)
-              (treesit-ready-p . #'always))
-
-    (match-expansion
-     (wal/treesit test-lang
-       :replacement tt-ts-mode
-       :icons-name test-mode)
-     `(progn
-        (message "Remapping %s to %s" 'test-lang-mode 'tt-ts-mode)
-        (add-to-list 'major-mode-remap-alist
-                     '(test-lang-mode . tt-ts-mode))
+                     '(test-mode . test-ts-mode))
         (with-eval-after-load 'all-the-icons
           (when-let ((setting
                       (cdr
                        (assoc 'test-mode all-the-icons-mode-icon-alist)))
-                     (name 'tt-ts-mode))
+                     (name 'test-ts-mode))
 
             (add-to-list 'all-the-icons-mode-icon-alist
                          (cons name setting))))))))
 
-(ert-deftest test-wal/treesit--not-available ()
-  (with-mock ((featurep . #'ignore))
-    (match-expansion
-     (wal/treesit test-lang
-       :replacement tt-ts-mode
-       :icons-name test-mode)
-     `(message "Not remapping %s" 'test-lang))))
+(ert-deftest test-harpoon--mode-name--with-treeesit ()
+  (with-mock ((harpoon-treesit--ready-p . #'always))
+    (should (equal 'test-ts-mode (harpoon--mode-name 'test-mode)))))
+
+(ert-deftest test-harpoon-hook ()
+  (match-expansion
+   (harpoon-hook test-mode)
+   `(add-hook
+     'test-mode-hook
+     'test-mode-harpoon)))
 
 (ert-deftest test-wal/fundamental-mode--switches ()
   (with-temp-buffer

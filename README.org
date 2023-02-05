@@ -523,7 +523,7 @@ Make completions look nice.
 #+BEGIN_SRC emacs-lisp
 ;; Create `transient' for config package.
 (with-no-warnings
-  (transient-define-prefix wal/config-dispatch ()
+  (transient-define-prefix wal-config-captain ()
     "Facilitate the usage of or the working on Walheimat's config."
     [["Do"
       ("f" "config" wal/find-config)
@@ -563,7 +563,7 @@ Make completions look nice.
     "pr" '(package-reinstall :wk "re-install")
     "pd" '(package-delete :wk "delete"))
 
-  (global-set-key (kbd (wal/key-combo-for-leader 'wal/colonel)) #'wal/config-dispatch)
+  (global-set-key (kbd (wal/key-combo-for-leader 'wal/colonel)) #'wal-config-captain)
 
   (wal/general "n" '(display-line-numbers-mode :wk "line numbers"))
 
@@ -1728,22 +1728,24 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
 (defun wal/prog-like ()
   "Run `prog-like-hook' functions."
   (run-hooks 'prog-like-hook))
+#+END_SRC
 
-(defvar wal/treesit-mode-lang-alist '((js-mode . javascript))
-  "Alist mapping major modes to languages.")
+*** harpoon
 
-(defun harpoon--treesit-ready-p (mode)
-  "Check if treesit is available for MODE.
+#+BEGIN_SRC emacs-lisp
+(defvar harpoon-keywords
+  '(:captain
+    :corfu
+    :functions
+    :ligatures
+    :lsp
+    :lsp-ignores
+    :messages
+    :prog-like
+    :shallow
+    :tabs))
 
-MODE is only checked if it has a language mapping."
-  (and (wal/modern-emacs-p 29)
-       (require 'treesit nil t)
-       (treesit-available-p)
-       (if-let* ((lang (cdr-safe (assoc mode wal/treesit-mode-lang-alist))))
-           (treesit-ready-p lang t)
-         t)))
-
-(defmacro harpoon--tabs (tabs)
+(defmacro harpoon-tabs (tabs)
   "Set messages and indentation using TABS."
   `(progn
      (hack-local-variables)
@@ -1755,60 +1757,89 @@ MODE is only checked if it has a language mapping."
              '(wal/disable-tabs))
             (t `(wal/maybe-enable-tabs :indent-with ,tabs)))))
 
-(defvar harpoon--keywords
-  '(:captain
-    :corfu
-    :functions
-    :ligatures
-    :lsp
-    :lsp-ignores
-    :messages
-    :prog-like
-    :shallow
-    :tabs
-    :treesit))
-
 (defun harpoon--safe-body (body)
   "Collect everything from BODY that's a key."
   (cl-loop for (key val)
            on body by 'cddr
-           unless (memq key harpoon--keywords)
+           unless (memq key harpoon-keywords)
            collect key
            and collect val))
 
-(defun harpoon--treesit (treesit name)
-  "Get `treesit' values from using TREESIT and NAME.
+(defvar harpoon-treesit--alist '((js-mode . javascript)
+                                 (c++-mode . cpp))
+  "Alist mapping languages to major modes.")
 
-Retunrs cons cell of (TS-NAME . TS-READY)."
-  (let* ((ts-seg (pcase treesit
-                   ('base "base")
-                   (_ "ts")))
+(defvar harpoon-treesit--alias-alist '((js-mode . javascript-mode))
+  "Alist mapping modes to their alias.")
 
-         (ts-name (thread-first
-                    name
-                    (symbol-name)
-                    (split-string "-")
-                    (cl-subseq 0 -1)
-                    (string-join "-")
-                    (concat "-" ts-seg "-mode")))
+(defun harpoon-treesit--ready-p (name)
+  "Check if treesit is available for LANGUAGE."
+  (and (wal/modern-emacs-p 29)
+       (require 'treesit nil t)
+       (treesit-available-p)
+       (treesit-ready-p (harpoon-treesit--language name) t)))
 
-         (ts-ready (and treesit (harpoon--treesit-ready-p name))))
+(defun harpoon-treesit--language (name)
+  "Get language for MODE."
+  (cdr-safe (assoc name harpoon-treesit--alist)))
 
-    (cons ts-name ts-ready)))
+(defun harpoon-treesit--maybe-alias (name)
+  "Get the potentially aliased mode name for NAME."
+  (or (cdr-safe (assoc name harpoon-treesit--alias-alist))
+      name))
 
-(defun harpoon--get-function-name (name suffix &optional prefix)
-  "Get function name for NAME with SUFFIX.
+(defun harpoon-treesit--ts-name (name)
+  "Get treesit name for NAME."
+  (let ((segment (thread-first
+                         name
+                         (symbol-name)
+                         (split-string "-mode")
+                         (car))))
+      (intern (concat segment "-ts-mode"))))
 
-If PREFIX is non-nil, prepend `wal/' to the function name."
-  (let ((end (concat (symbol-name name) "-" suffix)))
+(cl-defmacro harpoon-treesit (name)
+  "Remap LANGUAGE major-mode to tree-sitter variant if possible."
+  (declare (indent defun))
 
-    (if prefix
-        (intern (concat "wal/" end))
-      (intern end))))
+  (when-let* ((ready (harpoon-treesit--ready-p name))
+              (mode-name name)
+              (ts-mode-name (harpoon-treesit--ts-name name)))
 
-(cl-defmacro harpoon--function
+    `(progn
+         (message "Remapping %s to %s" ',mode-name ',ts-mode-name)
+         (add-to-list 'major-mode-remap-alist ',(cons (harpoon-treesit--maybe-alias mode-name) ts-mode-name))
+
+         (with-eval-after-load 'all-the-icons
+           (when-let ((setting (cdr (assoc ',mode-name all-the-icons-mode-icon-alist)))
+                      (name ',ts-mode-name))
+
+             (add-to-list 'all-the-icons-mode-icon-alist (cons name setting)))))))
+
+(defun harpoon--mode-name (name)
+  "Get mode name for NAME."
+  (if-let* ((ready (harpoon-treesit--ready-p name)))
+      (harpoon-treesit--ts-name name)
+    name))
+
+ (defun harpoon-function--name (mode &optional harpoon)
+  "Get the name of the target hook for MODE."
+  (let ((suffix (if harpoon "harpoon" "hook")))
+
+    (thread-first
+      mode
+      (harpoon--mode-name)
+      (symbol-name)
+      (concat "-" suffix)
+      (intern))))
+
+(cl-defmacro harpoon-hook (name)
+  "Create the hook call."
+   `(add-hook
+     ',(harpoon-function--name name)
+     ',(harpoon-function--name name t)))
+
+(cl-defmacro harpoon-function
     (name
-     docs
      &body
      body
      &key
@@ -1820,7 +1851,6 @@ If PREFIX is non-nil, prepend `wal/' to the function name."
      prog-like
      shallow
      tabs
-     treesit
      &allow-other-keys)
   "Create hook function NAME with DOCS.
 
@@ -1834,8 +1864,8 @@ TABS is either nil, t or a symbol. Unless the symbol is `always',
 tabs are enabled using `wal/maybe-enable-tabs', passing it to the
 function as an indentation function.
 
-CAPTAIN is either t or nil. If it is t, a prefixed function
-will be mapped to the captain key.
+CAPTAIN is either t or nil. If it is t, a suffixed function will
+be mapped to the captain key.
 
 CORFU is a list of (IDLE-DELAY PREFIX-LENGTH).
 
@@ -1845,60 +1875,47 @@ values will be set.
 FUNCTIONS is a list of functions (for example modes) that should
 be called if they are bound.
 
-If TREESIT is non-nil, set the hook for the base-mode.
-
 The rest of the BODY will be spliced into the hook function."
   (declare (indent defun))
 
-  (let ((ts (harpoon--treesit treesit name)))
+  `(defun ,(harpoon-function--name name t) ()
+     ,(format "Hook into `%s'." name)
+     ,@(delete
+        nil
+        `(,(when messages `(wal/message-in-a-bottle ',messages))
+          ,(when (not shallow) `(harpoon-tabs ,tabs))
 
-    `(progn
-       (defun ,(harpoon--get-function-name name "hook" t) ()
-         ,docs
-         ,@(delete
-            nil
-            `(,(when messages `(wal/message-in-a-bottle ',messages))
-              ,(when (not shallow) `(harpoon--tabs ,tabs))
+          ,@(harpoon--safe-body body)
 
-              ,@(harpoon--safe-body body)
+          ,(when lsp '(wal/lsp))
+          ,(when corfu `(wal/corfu-auto ',corfu))
+          ,(when prog-like '(run-hooks 'prog-like-hook))
+          ,(when functions
+             `(progn ,@(mapcar (lambda (it)
+                                 `(when (fboundp ',it) (,it)))
+                               functions)))
+          ,(when captain
+             `(local-set-key
+               (kbd (wal/key-combo-for-leader 'wal/captain))
+               ',(intern (concat (symbol-name name) "-captain"))))))))
 
-              ,(when lsp '(wal/lsp))
-              ,(when corfu `(wal/corfu-auto ',corfu))
-              ,(when prog-like '(run-hooks 'prog-like-hook))
-              ,(when functions
-                 `(progn ,@(mapcar (lambda (it)
-                                     `(when (fboundp ',it) (,it)))
-                                   functions)))
-              ,(when captain
-                 `(local-set-key
-                   (kbd (wal/key-combo-for-leader 'wal/captain))
-                   ',(harpoon--get-function-name name "dispatch" t))))))
-
-       (add-hook
-        ',(if (cdr-safe ts)
-              (harpoon--get-function-name (intern (car-safe ts)) "hook")
-            (harpoon--get-function-name name "hook"))
-        ',(harpoon--get-function-name name "hook" t)))))
-
-(cl-defmacro harpoon--ligatures (name &key ligatures treesit &allow-other-keys)
-  "Set up LIGATURES respecting TREESIT for NAME."
+(cl-defmacro harpoon-ligatures (name &key ligatures &allow-other-keys)
+  "Set up LIGATURES for NAME."
   (declare (indent defun))
 
-  (when-let ((non-empty ligatures)
-             (ts (harpoon--treesit treesit name)))
+  (when-let ((non-empty ligatures))
 
-    (if (cdr-safe ts)
-        `(wal/set-ligatures '(,name ,(intern (car-safe ts))) ',ligatures)
-      `(wal/set-ligatures ',name ',ligatures))))
+    `(wal/set-ligatures ',(harpoon--mode-name name) ',ligatures)))
 
-(cl-defmacro harpoon--lsp (&key lsp lsp-ignores &allow-other-keys)
+
+(cl-defmacro harpoon-lsp (&key lsp lsp-ignores &allow-other-keys)
   "Set up LSP and LSP-IGNORES."
   (when (and lsp lsp-ignores)
     `(with-eval-after-load 'lsp-mode
        (wal/append 'lsp-file-watch-ignored-directories ',lsp-ignores))))
 
-(cl-defmacro harpoon (name docs &rest args)
-  "Hook into major mode NAME, describe with DOCS.
+(cl-defmacro harpoon (name &rest args)
+  "Hook into major mode NAME.
 
 MESSAGES is a list of strings to randomly choose from and
 display.
@@ -1921,50 +1938,18 @@ values will be set.
 FUNCTIONS is a list of functions (for example modes) that should
 be called if they are bound.
 
-If TREESIT is non-nil, set the hook for the base-mode.
-
 The rest of the ARGS will be spliced into the hook function."
-  (declare (indent defun) (doc-string 2))
-  `(progn
-     (harpoon--function ,name ,docs ,@args)
-
-     (harpoon--ligatures ,name ,@args)
-
-     (harpoon--lsp ,@args)))
-#+END_SRC
-
-** Treesitter
-
-#+BEGIN_SRC emacs-lisp
-(cl-defmacro wal/treesit (language &key replacement icons-name)
-  "Remap LANGUAGE major-mode to tree-sitter variant if possible.
-
-If REPLACEMENT is non-nil, use it instead of constructing
-LANGUAGE-ts-mode for the variant.
-
-If ICONS-NAME is non-nil, use it instead of LANGUAGE-mode to try
-to set an icon."
   (declare (indent defun))
+  `(progn
+     (harpoon-function ,name ,@args)
 
-  (if-let* ((available (and (featurep 'treesit) (treesit-available-p)))
-            (ready (treesit-ready-p language t))
+     (harpoon-hook ,name)
 
-            (sym-name (symbol-name language))
-            (mode-name (intern (concat sym-name "-mode")))
+     (harpoon-ligatures ,name ,@args)
 
-            (ts-name (or replacement (intern (concat sym-name "-ts-mode")))))
+     (harpoon-lsp ,@args)
 
-      `(progn
-         (message "Remapping %s to %s" ',mode-name ',ts-name)
-         (add-to-list 'major-mode-remap-alist ',(cons mode-name ts-name))
-
-         (with-eval-after-load 'all-the-icons
-           (when-let ((setting (cdr (assoc ',(or icons-name mode-name) all-the-icons-mode-icon-alist)))
-                      (name ',ts-name))
-
-             (add-to-list 'all-the-icons-mode-icon-alist
-                          (cons name setting)))))
-    `(message "Not remapping %s" ',language)))
+     (harpoon-treesit ,name)))
 #+END_SRC
 
 ** Additional Mode Controls
@@ -2675,7 +2660,6 @@ No double spaces in sentences.
 
   :init
   (harpoon text-mode
-    "Hook into `text-mode'."
     :shallow t
     :functions (wal/flyspell-commit-messages))
 
@@ -5190,7 +5174,6 @@ This calls `org-content' interactively."
 
   :init
   (harpoon org-mode
-    "Hook into `org-mode'."
     :messages ("Organize! Seize the means of production!")
     :captain t
     :shallow t)
@@ -5205,7 +5188,7 @@ This calls `org-content' interactively."
    #'wal/first-require-ox-md)
 
   (with-no-warnings
-    (wal/transient-define-prefix-once wal/org-mode-dispatch ()
+    (wal/transient-define-prefix-once org-mode-captain ()
       "Access `org-mode' commands."
       [["Commands"
         ("n" "add note" org-add-note)
@@ -5477,7 +5460,7 @@ refiling to non-`org-roam' files."
   ;; Refile differently for these files.
   (wal/replace-in-alist 'org-speed-commands '(("w" . wal/org-refile)))
 
-  (wal/transient-define-prefix-once wal/org-roam-dispatch ()
+  (wal/transient-define-prefix-once org-roam-captain ()
     "Run `org-roam' commands."
     [["Capture"
       ("c" "capture" org-roam-capture)
@@ -5520,7 +5503,7 @@ refiling to non-`org-roam' files."
       :empty-lines 1)))
 
   :wal-bind
-  ("]" . wal/org-roam-dispatch))
+  ("]" . org-roam-captain))
 #+END_SRC
 
 *** org-roam-ui
@@ -5538,7 +5521,7 @@ Fancy UI.
   :after org-roam
 
   :config
-  (transient-append-suffix 'wal/org-roam-dispatch '(0 3 0)
+  (transient-append-suffix 'org-roam-captain '(0 3 0)
     '("u" "ui" org-roam-ui-mode))
 
   :ensure nil)
@@ -5620,7 +5603,7 @@ Turn any =org-mode= buffer into a presentation.
 
   :init
   ;; Insert new group after "Visibility".
-  (transient-append-suffix 'wal/org-mode-dispatch '(0 2)
+  (transient-append-suffix 'org-mode-captain '(0 2)
     ["Presentation"
      ("p" "present" org-tree-slide-mode)
      ("i" "indent" org-indent-mode)])
@@ -5661,7 +5644,6 @@ Editing source blocks.
 
   :init
   (harpoon org-src-mode ()
-    "Hook into function `org-src-mode'."
     :shallow t
 
     (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
@@ -5674,7 +5656,7 @@ Editing source blocks.
      ("markdown" . markdown)
      ("fish" . fish)))
 
-  (transient-append-suffix 'wal/org-mode-dispatch '(0 0 1)
+  (transient-append-suffix 'org-mode-captain '(0 0 1)
     '("e" "edit source" org-edit-src-code
       :inapt-if-not org-in-src-block-p))
 
@@ -6001,7 +5983,6 @@ Uses the same optional SWITCHES."
 
   :init
   (harpoon dired-mode
-    "Hook into `dired-mode'."
     :captain t
     :shallow t)
 
@@ -6009,7 +5990,7 @@ Uses the same optional SWITCHES."
   ;; We aren't scared of finding alternate files.
   (put 'dired-find-alternate-file 'disabled nil)
 
-  (wal/transient-define-prefix-once wal/dired-mode-dispatch ()
+  (wal/transient-define-prefix-once dired-mode-captain ()
     "Access Dired commands."
     [["Utility"
       ("q" "query replace" dired-do-query-replace-regexp)
@@ -6247,9 +6228,6 @@ FORCE-NEW/`universal-argument')."
 
   :init
   (harpoon vterm-mode ()
-    "Hook into `vterm-mode'.
-
-  This sets the query on exit flag to nil for the vterm process."
     :shallow t
 
     (when-let* ((buf (current-buffer))
@@ -6381,13 +6359,13 @@ Forget remembering =git= commands, use =transient=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
-  :commands (wal/magit-dispatch magit-status||wal/magit-dispatch)
+  :commands (magit-captain magit-status||magit-captain)
 
   :init
-  (parallel magit-status wal/magit-dispatch)
+  (parallel magit-status magit-captain)
 
   :config
-  (wal/transient-define-prefix-once wal/magit-dispatch ()
+  (wal/transient-define-prefix-once magit-captain ()
     "Call `magit' commands in a `magit'-y way."
     [["Core"
       ("m" "status" magit-status)
@@ -6404,7 +6382,7 @@ Forget remembering =git= commands, use =transient=.
       ("c" "clone" magit-clone)]])
 
   :wal-bind
-  ("m" . magit-status||wal/magit-dispatch)
+  ("m" . magit-status||magit-captain)
 
   :custom
   (magit-blame-mode-lighter " mbl")
@@ -6460,7 +6438,7 @@ doom.
   :wal-ways nil
 
   :config
-  (transient-append-suffix 'wal/magit-dispatch #'magit-clone
+  (transient-append-suffix 'magit-captain #'magit-clone
     '("t" "time machine" git-timemachine-toggle))
 
   :defer 2
@@ -6483,7 +6461,6 @@ Syntax highlighting.
 
   :init
   (harpoon gitignore-mode
-    "Hook into `gitignore-mode'."
     :messages ("I don't think I know you")))
 #+END_SRC
 
@@ -6609,7 +6586,6 @@ Bitches brew.
 
   :init
   (harpoon elixir-mode
-    "Hook into `elixir-mode'."
     :lsp t
     :messages ("Mixin' potions" "A hex on you")
     :functions (abbrev-mode)
@@ -6639,7 +6615,6 @@ I want to be ready for =jai=.
 
   :init
   (harpoon c++-mode
-    "Hook into `c++-mode'."
     :lsp t
     :captain t
     :ligatures ("::" "->")
@@ -6649,7 +6624,7 @@ I want to be ready for =jai=.
   ;; Eliminate conflicts with `delight'.
   (advice-add 'c-update-modeline :override #'ignore)
 
-  (wal/transient-define-prefix-once wal/c++-mode-dispatch ()
+  (wal/transient-define-prefix-once c++-mode-captain ()
     "Access `c++-mode' commands."
     [["Style"
       ("s" "set" c-set-style)
@@ -6684,14 +6659,13 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
 
   :init
   (harpoon rust-mode
-    "Hook into `rust-mode'."
     :lsp t
     :captain t
     :ligatures ("///" "->" "=>" "::" ".." "#[")
     :messages ("Consider the lobster"))
 
   :config
-  (wal/transient-define-prefix-once wal/rust-mode-dispatch ()
+  (wal/transient-define-prefix-once rust-mode-captain ()
     "Access `rust-mode' commands."
     [["Commands"
       ("c" "compile" rust-compile)
@@ -6756,7 +6730,6 @@ TOML."
 
   :init
   (harpoon python-mode
-    "Hook into `python-mode'."
     :captain t
     :lsp t
     :corfu (0.1 1)
@@ -6777,7 +6750,7 @@ TOML."
   ;; Show inferior shell at the bottom.
   (wdb/side 'inferior-python-mode)
 
-  (wal/transient-define-prefix-once wal/python-mode-dispatch ()
+  (wal/transient-define-prefix-once python-mode-captain ()
     "Access `python-mode' commands."
     [["Inferior shell"
       ("i r" "send region" python-shell-send-region)
@@ -6851,7 +6824,7 @@ Sort with =isort=.
   :after python
 
   :init
-  (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
+  (transient-append-suffix 'python-mode-captain '(0 1 -1)
     '("s" "isort" python-isort-buffer)))
 #+end_src
 
@@ -6871,7 +6844,7 @@ Blacken buffers.
   :after python
 
   :init
-  (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
+  (transient-append-suffix 'python-mode-captain '(0 1 -1)
     '("b" "black" python-black-buffer)))
 #+END_SRC
 
@@ -6891,7 +6864,7 @@ Work with Jupyter notebooks.
   :after python
 
   :init
-  (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
+  (transient-append-suffix 'python-mode-captain '(0 1 -1)
     '("e" "ein" ein:run)))
 #+END_SRC
 
@@ -6951,7 +6924,7 @@ Takes care[fn:14] of all your virtual environment needs.
   :after python
 
   :init
-  (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
+  (transient-append-suffix 'python-mode-captain '(0 1 -1)
     '("p" "poetry" poetry)))
 #+END_SRC
 
@@ -6966,7 +6939,7 @@ Takes care[fn:14] of all your virtual environment needs.
   :after python
 
   :init
-  (transient-append-suffix 'wal/python-mode-dispatch '(0 1 -1)
+  (transient-append-suffix 'python-mode-captain '(0 1 -1)
     '("v" "activate venv" pyvenv-activate)))
 #+END_SRC
 
@@ -7034,13 +7007,12 @@ Deal with the parens.
 
   :init
   (harpoon emacs-lisp-mode
-    "Hook into `emacs-lisp-mode'."
     :captain t
     :messages ("So it's just a bunch of lists?" "List your lambdas")
     :functions (prettify-symbols-mode))
 
   :config
-  (wal/transient-define-prefix-once wal/emacs-lisp-mode-dispatch ()
+  (wal/transient-define-prefix-once emacs-lisp-mode-captain ()
     "Access `elisp' commands."
     [["Utility"
       ("c" "check parens" check-parens)
@@ -7049,7 +7021,7 @@ Deal with the parens.
       ("m" "expand macro" emacs-lisp-macroexpand)]])
 
   (with-eval-after-load 'puni
-    (transient-append-suffix 'wal/emacs-lisp-mode-dispatch '(0 0 -1)
+    (transient-append-suffix 'emacs-lisp-mode-captain '(0 0 -1)
       '("p" "puni" puni-mode))))
 #+END_SRC
 
@@ -7064,18 +7036,16 @@ Deal with the parens.
 
   :init
   (harpoon common-lisp-mode
-    "hook into `common-lisp-mode'."
     :captain t)
 
   (harpoon lisp-data-mode
-    "Hook into `lisp-data-mode."
     :shallow t
     :corfu (0.1 1)
     :ligatures (";;"))
 
   :config
   (with-eval-after-load 'slime
-    (wal/transient-define-prefix-once wal/common-lisp-mode-dispatch ()
+    (wal/transient-define-prefix-once common-lisp-mode-captain ()
       "Access `slime' actions."
       [["Slime"
         ("s" "slime" slime-mode)
@@ -7097,7 +7067,6 @@ Get some closure.
 
   :init
   (harpoon clojure-mode
-    "Hook into `clojure-mode'."
     :lsp t
     :captain t
     :ligatures (";;" "->" "->>")
@@ -7105,7 +7074,7 @@ Get some closure.
 
   :config
   (with-eval-after-load 'cider
-    (wal/transient-define-prefix-once wal/clojure-mode-dispatch ()
+    (wal/transient-define-prefix-once clojure-mode-captain ()
       "Access `clojure-mode' commands."
       [["Cider"
         ("r" "repl" cider-jack-in)
@@ -7196,21 +7165,15 @@ Can we have =deno= instead of =node=?
 
   :init
   (harpoon js-mode
-    "Hook into `js-mode'."
     :messages ("NaN !== NaN" "Null falsy values or undefined")
     :captain t
     :tabs t
     :lsp t
     :corfu (0.1 2)
-    :treesit base
     :ligatures ("=>" "!==" "===" "!!")
     :functions (add-node-modules-path prettier-mode)
 
     (setq-local compilation-error-screen-columns nil))
-
-  (wal/treesit javascript
-    :replacement js-ts-mode
-    :icons-name js-mode)
 
   :config
   (when (wal/modern-emacs-p 29)
@@ -7220,7 +7183,7 @@ Can we have =deno= instead of =node=?
   (with-eval-after-load 'dap-mode
     (require 'dap-node))
 
-  (wal/transient-define-prefix-once wal/js-mode-dispatch ()
+  (wal/transient-define-prefix-once js-mode-captain ()
     "Access JS commands."
     [["Actions"
       ("c" "context" js-syntactic-context)]])
@@ -7253,7 +7216,6 @@ Please use TypeScript.
 
   :init
   (harpoon typescript-mode
-    "Hook into `typescript-mode'."
     :lsp t
     :tabs t
     :messages ("This is any, that is any, everything is any!")
@@ -7314,7 +7276,7 @@ Prettify your ugly JavaScript.
   :ensure nil
 
   :config
-  (transient-append-suffix 'wal/js-mode-dispatch '(0 0 0)
+  (transient-append-suffix 'js-mode-captain '(0 0 0)
     '("p" "prettier" prettier-prettify)))
 #+END_SRC
 
@@ -7343,7 +7305,6 @@ Setup for LSP.
 
   :init
   (harpoon go-mode
-    "Hook into `go-mode'."
     :lsp t
     :messages ("What does Sonic say?" "Put a golang under your tongue")))
 #+END_SRC
@@ -7373,7 +7334,6 @@ Bash your head in!
 
   :init
   (harpoon sh-mode
-    "Hook into `sh-mode'."
     :messages ("Sh..sh..h.." "Bash your head in"))
 
   :custom
@@ -7467,12 +7427,11 @@ Sometimes things that don't do things need to look nice.
 
   :init
   (harpoon markdown-mode
-    "Hook into `markdown-mode'."
     :captain t
     :shallow t)
 
   :config
-  (wal/transient-define-prefix-once wal/markdown-mode-dispatch ()
+  (wal/transient-define-prefix-once markdown-mode-captain ()
     "Access `markdown-mode' commands."
     [["View"
       ("v" "toggle view" wal/markdown-view)]])
@@ -7506,7 +7465,6 @@ Yes, you need to install *Android Studio* for some reason.
 
   :init
   (harpoon dart-mode
-    "Hook into `dart-mode'."
     :lsp t
     :captain t
     :messages ("Bull's eye!")
@@ -7577,7 +7535,7 @@ LSP support for Dart.
   ;; Display at the bottom.
   (wdb/side "\\*Flutter")
 
-  (wal/transient-define-prefix-once wal/dart-mode-dispatch ()
+  (wal/transient-define-prefix-once dart-mode-captain ()
     "Access flutter commands."
     [["Hot-reloading"
       ("R" "restart" lsp-dart-dap-flutter-hot-restart)
@@ -7619,7 +7577,6 @@ For some reason, this is also defined in =cc-mode=.
 
   :init
   (harpoon java-mode
-    "Hook into `java-mode'."
     :lsp t
     :lsp-ignores '("[/\\\\]\\.gradle\\'")
     :captain t
@@ -7691,7 +7648,7 @@ LSP integration.
     :argument-regexp "\\(--scope=\\(method\\|class\\)\\)"
     :choices '("method" "class"))
 
-  (wal/transient-define-prefix-once wal/java-mode-dispatch ()
+  (wal/transient-define-prefix-once java-mode-captain ()
     "Access `java-mode' commands."
     :value '("--mode=run" "--scope=method")
 
@@ -7748,7 +7705,6 @@ The elephant in the room.
 
   :init
   (harpoon php-mode
-    "Hook into `php-mode'."
     :lsp t
     :messages ("Stampy, no!")
     :ligatures ("::" "=>" "->" "??"
@@ -7783,7 +7739,6 @@ Does anyone actually like web development?
 
   :init
   (harpoon mhtml-mode
-    "Hook into `mhtml-mode'."
     :lsp t
     :messages ("Hodge-podge mark-up language")
     :ligatures ("<!--" "-->" "</" "/>")))
@@ -7800,7 +7755,6 @@ Does anyone actually like web development?
 
   :init
   (harpoon nxml-mode
-    "Hook into `nxml-mode'."
     :lsp t
     :messages ("Extreme mark-up language")
     :ligatures ("<!--" "-->" "</" "/>")
@@ -7824,7 +7778,6 @@ Sometimes things that do as well.
 
   :init
   (harpoon yaml-mode
-    "Hook into command `yaml-mode'."
     :messages ("JSON?! ... Ah, thank God it's you, YAML!")
     :prog-like t))
 #+END_SRC
@@ -7861,7 +7814,6 @@ We want quicker suggestions when in CSS modes.
 
   :init
   (harpoon css-mode
-    "Hook into `css-mode'."
     :tabs t
     :lsp t
     :corfu (0.1 2)
@@ -7926,7 +7878,6 @@ Get text.
 
   :init
   (harpoon web-mode
-    "Hook into `web-mode'."
     :lsp t
     :tabs t
     :messages ("This is the Internet"))
@@ -7979,7 +7930,6 @@ replying to the `JSONRPC' request."
 
   :init
   (harpoon gdscript-mode
-    "Hook into `gdscript-mode'."
     :lsp t
     :tabs always
     :corfu (0.2 3)
@@ -8392,7 +8342,7 @@ considered slow."
   ;; Don't keep track of multiple projects.
   (advice-add 'lsp :before #'wal/first-prevent-adding-other-projects)
 
-  (wal/transient-define-prefix-once wal/lsp-dispatch ()
+  (wal/transient-define-prefix-once lsp-captain ()
     "Call `lsp-mode' functions."
     [["Format"
       ("f" "buffer" lsp-format-buffer)
@@ -8414,7 +8364,7 @@ considered slow."
 
   ;; JavaScript.
   (with-eval-after-load 'js
-    (transient-append-suffix 'wal/js-mode-dispatch '(0 0 -1)
+    (transient-append-suffix 'js-mode-captain '(0 0 -1)
       '("r" "rename file" lsp-javascript-rename-file)))
 
   ;; Command map.
@@ -8445,7 +8395,7 @@ considered slow."
   (lsp-xml-format-split-attributes-indent-size 1)
 
   :general
-  (wal/major :keymaps 'lsp-mode-map "l" '(wal/lsp-dispatch :wk "lsp"))
+  (wal/major :keymaps 'lsp-mode-map "l" '(lsp-captain :wk "lsp"))
 
   :delight
   (lsp-mode " lsp")
@@ -8536,7 +8486,7 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
   (wdb/side dap-ui--locals-buffer :side 'right :no-other t)
 
   (with-eval-after-load 'lsp-mode
-    (transient-append-suffix 'wal/lsp-dispatch '(0 -1)
+    (transient-append-suffix 'lsp-captain '(0 -1)
       ["Debug"
        ("b" "start" dap-debug)]))
 
@@ -8698,7 +8648,6 @@ Make =Dockerfiles= look nice.
 
   :init
   (harpoon dockerfile-mode
-    "Hook into `dockerfile-mode'."
     :messages ("Have you ever given?")))
 #+END_SRC
 
@@ -8819,7 +8768,7 @@ Make requests using Org.
 
   :after org
 
-  :commands (wal/verb)
+  :commands (verb-captain)
 
   :init
   ;; Make the tag available.
@@ -8834,7 +8783,7 @@ Make requests using Org.
    #'wal/pick-windows-being-kept)
 
   :config
-  (wal/transient-define-prefix-once wal/verb ()
+  (wal/transient-define-prefix-once verb-captain ()
     "Dispatch `verb' commands."
     [["Request"
       ("r" "send" verb-send-request-on-point
@@ -8856,7 +8805,7 @@ Make requests using Org.
 
   :general
   (wal/major :keymaps '(verb-mode-map verb-response-body-mode-map)
-    "v" '(wal/verb :wk "verb"))
+    "v" '(verb-captain :wk "verb"))
 
   :delight
   (verb-mode " vrb")
