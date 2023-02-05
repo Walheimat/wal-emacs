@@ -123,4 +123,27 @@
 
     (should (equal #'wal/rt consult--preview-function))))
 
+(ert-deftest test-wal/consult-buffer--narrow-to-projects ()
+    (defvar wal/consult-buffer-narrow-to-project)
+    (with-mock (project-current)
+      (setq wal/consult-buffer-narrow-to-project t
+            unread-command-events nil)
+
+      (wal/consult-buffer--narrow-to-project)
+
+      (should-not unread-command-events)
+
+      (setq this-command 'consult-buffer)
+
+      (wal/consult-buffer--narrow-to-project)
+
+      (should unread-command-events)
+
+      (setq wal/consult-buffer-narrow-to-project nil
+            unread-command-events nil)
+
+      (wal/consult-buffer--narrow-to-project)
+
+      (should-not unread-command-events)))
+
 ;;; wal-complete-test.el ends here

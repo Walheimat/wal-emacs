@@ -4408,6 +4408,12 @@ Complete commands and code.
   "Change completion settings."
   :group 'wal
   :tag "Completion")
+
+(defcustom wal/consult-buffer-narrow-to-project t
+  "Whether `consult-buffer' should be pre-narrowed to the current
+project's buffers."
+  :type 'boolean
+  :group 'wal-complete)
 #+END_SRC
 
 ** Inline Completion
@@ -4762,6 +4768,13 @@ If NOT-AT-POINT is t, call `consult-line' normally."
             wal/consult-preview-function nil)
     (setq wal/consult-preview-function consult--preview-function
           consult--preview-function #'ignore)))
+
+(defun wal/consult-buffer--narrow-to-project ()
+  "Pre-narrow `consult-buffer' in projects."
+  (when (and wal/consult-buffer-narrow-to-project
+             (equal this-command 'consult-buffer)
+             (project-current nil))
+    (setq unread-command-events (append unread-command-events (list ?p 32)))))
 #+END_SRC
 
 **** Configuration
@@ -4807,6 +4820,11 @@ If NOT-AT-POINT is t, call `consult-line' normally."
 
   ;; Use a bigger `vertico' when grepping.
   (advice-add 'consult-ripgrep :around #'wal/with-big-vertico)
+
+  ;; Narrow to project buffers.
+  (add-hook
+   'minibuffer-setup-hook
+   #'wal/consult-buffer--narrow-to-project)
 
   (with-eval-after-load 'which-key
     (which-key-add-key-based-replacements

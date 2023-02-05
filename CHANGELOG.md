@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Following recipe from its wiki, `consult-buffer` is now pre-narrowed
+  to project buffers by default. This is controlled by new custom
+  variable `wal/consult-buffer-narrow-to-project`.
+
 ### Changed
 
 - Macro `wal/treesit` is now part of `harpoon`.
@@ -20,7 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Keyword `:universalize` allows converting numeric to non-numeric if
   the called command expects `'(4)` over `4` etc.
 - `project` ignores `.ccls-cache`.
-
 
 ### Removed
 
