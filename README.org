@@ -1768,7 +1768,8 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
            and collect val))
 
 (defvar harpoon-treesit--alist '((js-mode . javascript)
-                                 (c++-mode . cpp))
+                                 (c++-mode . cpp)
+                                 (python-mode . python))
   "Alist mapping languages to major modes.")
 
 (defvar harpoon-treesit--alias-alist '((js-mode . javascript-mode))
@@ -6805,6 +6806,15 @@ Did Microsoft do the right thing?
   :wal-ways nil
 
   :ensure nil
+
+  :config
+  ;; TEMP: Allow `python-ts-mode'.
+  (when (harpoon-treesit--ready-p 'python-mode)
+    (defvar lsp-clients)
+
+    (when-let* ((struct (gethash 'pyright lsp-clients)))
+
+      (setf (cl-struct-slot-value 'lsp--client 'major-modes struct) '(python-mode python-ts-mode))))
 
   :demand
   :after python)
