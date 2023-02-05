@@ -1726,6 +1726,11 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
 
 ** Hooks
 
+*** prog-like
+
+Custom hook used by =harpoon= to make it easier to set up
+non-=prog-mode=-derived modes as if they were.
+
 #+BEGIN_SRC emacs-lisp
 (defvar prog-like-hook nil
   "Commands that should be run for prog-like modes.")
@@ -1747,7 +1752,6 @@ set up (major-) modes using hooks.
     :functions
     :ligatures
     :lsp
-    :lsp-ignores
     :messages
     :prog-like
     :shallow
@@ -1844,8 +1848,9 @@ set up (major-) modes using hooks.
 MESSAGES is a list of strings to randomly choose from and
 display.
 
-LSP is either t or nil. LSP-IGNORES are additional paths to add
-to variable `lsp-file-watch-ignored-directories'.
+LSP is either nil, t or a plist. If it is a plist, key
+`:ignore-dirs' can be used to add additional paths to variable
+`lsp-file-watch-ignored-directories'.
 
 TABS is either nil, t or a symbol. Unless the symbol is `always',
 tabs are enabled using `wal/maybe-enable-tabs', passing it to the
@@ -1900,11 +1905,11 @@ The rest of the BODY will be spliced into the hook function."
 
     `(wal/set-ligatures ',(harpoon--mode-name name) ',ligatures)))
 
-(cl-defmacro harpoon-lsp (&key lsp lsp-ignores &allow-other-keys)
-  "Set up LSP and LSP-IGNORES."
-  (when (and lsp lsp-ignores)
+(cl-defmacro harpoon-lsp (&key lsp &allow-other-keys)
+  "Set up LSP."
+  (when (and lsp (listp lsp) (plist-member lsp :ignore-dirs))
     `(with-eval-after-load 'lsp-mode
-       (wal/append 'lsp-file-watch-ignored-directories ',lsp-ignores))))
+       (wal/append 'lsp-file-watch-ignored-directories ',(plist-get lsp :ignore-dirs)))))
 
 (cl-defmacro harpoon-treesit (name)
   "Remap LANGUAGE major-mode to tree-sitter variant if possible."
@@ -1930,8 +1935,9 @@ The rest of the BODY will be spliced into the hook function."
 MESSAGES is a list of strings to randomly choose from and
 display.
 
-LSP is either t or nil. LSP-IGNORES are additional paths to add
-to variable `lsp-file-watch-ignored-directories'.
+LSP is either nil, t or a plist. If it is a plist, key
+`:ignore-dirs' can be used to add additional paths to variable
+`lsp-file-watch-ignored-directories'.
 
 TABS is either nil, t or a symbol. Unless the symbol is `always',
 tabs are enabled using `wal/maybe-enable-tabs', passing it to the
@@ -6741,13 +6747,13 @@ TOML."
   :init
   (harpoon python-mode
     :captain t
-    :lsp t
+    :lsp
+    (:ignore-dirs
+     ("[/\\\\]\\.pytype\\'"
+      "[/\\\\]__pycache__\\'"
+      "[/\\\\]\\.pytest_cache\\'"))
     :corfu (0.1 1)
     :ligatures ("->" "__")
-    :lsp-ignores
-    ("[/\\\\]\\.pytype\\'"
-     "[/\\\\]__pycache__\\'"
-     "[/\\\\]\\.pytest_cache\\'")
     :messages ("Watch out for snakes!" "Vegetation, aggravation")
 
     (setq-local comment-inline-offset 2))
@@ -7587,8 +7593,7 @@ For some reason, this is also defined in =cc-mode=.
 
   :init
   (harpoon java-mode
-    :lsp t
-    :lsp-ignores '("[/\\\\]\\.gradle\\'")
+    :lsp (:ignore-dirs ("[/\\\\]\\.gradle\\'"))
     :captain t
     :messages ("Mmmh ... maven")
     :ligatures ("::" "->")))

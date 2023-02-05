@@ -388,17 +388,17 @@
       "Call `some-fun' or `other-fun' depending on prefix argument.\nNo argument means: call the prior. Numeric prefix `0' means: call the latter.\n\nFor all other prefix values: numeric prefixes call the latter, `universal-argument' prefixes call the prior."
       (interactive "P")
 
-       (cond
-        ((not arg)
-         (call-interactively ',some-fun))
-        ((equal 0 arg)
-         (setq current-prefix-arg nil)
-         (prefix-command-update)
-         (call-interactively ',other-fun))
-        ((equal (prefix-numeric-value arg) arg)
-         (call-interactively ',other-fun))
-        (t
-         (call-interactively 'some-fun))))))
+      (cond
+       ((not arg)
+        (call-interactively ',some-fun))
+       ((equal 0 arg)
+        (setq current-prefix-arg nil)
+        (prefix-command-update)
+        (call-interactively ',other-fun))
+       ((equal (prefix-numeric-value arg) arg)
+        (call-interactively ',other-fun))
+       (t
+        (call-interactively 'some-fun))))))
 
 (ert-deftest test-parallel--universalize ()
   (match-expansion
@@ -407,20 +407,20 @@
       "Call `some-fun' or `other-fun' depending on prefix argument.\nNo argument means: call the prior. Numeric prefix `0' means: call the latter.\n\nFor all other prefix values: numeric prefixes call the latter, `universal-argument' prefixes call the prior.\n\nThis function is universalized."
       (interactive "P")
 
-       (cond
-        ((not arg)
-         (call-interactively ',some-fun))
-        ((equal 0 arg)
-         (setq current-prefix-arg nil)
-         (prefix-command-update)
-         (call-interactively ',other-fun))
-        ((equal (prefix-numeric-value arg) arg)
-         (progn
-           (setq current-prefix-arg (list arg))
-           (prefix-command-update)
-           (call-interactively ',other-fun)))
-        (t
-         (call-interactively 'some-fun))))))
+      (cond
+       ((not arg)
+        (call-interactively ',some-fun))
+       ((equal 0 arg)
+        (setq current-prefix-arg nil)
+        (prefix-command-update)
+        (call-interactively ',other-fun))
+       ((equal (prefix-numeric-value arg) arg)
+        (progn
+          (setq current-prefix-arg (list arg))
+          (prefix-command-update)
+          (call-interactively ',other-fun)))
+       (t
+        (call-interactively 'some-fun))))))
 
 (ert-deftest test-wal/scratch-buffer ()
   (with-mock ((pop-to-buffer . (lambda (n &rest _) (buffer-name n))))
@@ -842,7 +842,7 @@
         (setq selection 'twofer)
         (junk--install-extras extras)
 
-      (should (string-equal messages "Installed all extras.\nInstalled extra ’twofer’.\n"))))))
+        (should (string-equal messages "Installed all extras.\nInstalled extra ’twofer’.\n"))))))
 
 (ert-deftest test-junk-install ()
   (let ((messages '()))
@@ -951,13 +951,11 @@
    (harpoon test-mode
      :messages ("Just testing")
      :lsp t
-     :lsp-ignores (".ignoramus")
      :tabs t)
    `(progn
       (harpoon-function test-mode
         :messages ("Just testing")
         :lsp t
-        :lsp-ignores (".ignoramus")
         :tabs t)
 
       (harpoon-hook test-mode)
@@ -965,13 +963,12 @@
       (harpoon-ligatures test-mode
         :messages ("Just testing")
         :lsp t
-        :lsp-ignores (".ignoramus")
         :tabs t)
 
-      (harpoon-lsp :messages ("Just testing")
-                   :lsp t
-                   :lsp-ignores (".ignoramus")
-                   :tabs t)
+      (harpoon-lsp
+       :messages ("Just testing")
+       :lsp t
+       :tabs t)
 
       (harpoon-treesit test-mode))))
 
@@ -980,7 +977,6 @@
    (harpoon-function test-mode
      :messages ("Just testing")
      :lsp t
-     :lsp-ignores (".ignoramus")
      :tabs t)
    `(defun test-mode-harpoon ()
       "Hook into `test-mode'."
@@ -1051,7 +1047,7 @@
 (ert-deftest test-harpoon--corfu ()
   (match-expansion
    (harpoon-function test-mode
-    :messages ("Just testing")
+     :messages ("Just testing")
      :corfu (0.2 4)
      :shallow t
      (message "hi"))
@@ -1095,7 +1091,7 @@
 
 (ert-deftest test-harpoon-lsp ()
   (match-expansion
-   (harpoon-lsp :lsp t :lsp-ignores (".ignoramus"))
+   (harpoon-lsp :lsp (:ignore-dirs (".ignoramus")))
    `(with-eval-after-load 'lsp-mode
       (wal/append 'lsp-file-watch-ignored-directories '(".ignoramus")))))
 
@@ -1147,30 +1143,30 @@
   (with-temp-buffer
     (rename-buffer "*async-finalize-test*")
 
-      (with-mock (delete-window delete-other-windows)
+    (with-mock (delete-window delete-other-windows)
 
-        (let ((finalizer (wal/async-process--finalize #'delete-window #'delete-other-windows)))
+      (let ((finalizer (wal/async-process--finalize #'delete-window #'delete-other-windows)))
 
-          (apply finalizer (list (current-buffer) "finished\n"))
+        (apply finalizer (list (current-buffer) "finished\n"))
 
-          (was-called delete-window)
-          (was-not-called delete-other-window)
-          (wal/clear-mocks)))
+        (was-called delete-window)
+        (was-not-called delete-other-window)
+        (wal/clear-mocks)))
 
-      (with-mock ((delete-window . (lambda () (error "Oops"))) delete-other-windows)
+    (with-mock ((delete-window . (lambda () (error "Oops"))) delete-other-windows)
 
-        (let ((finalizer (wal/async-process--finalize #'delete-window #'delete-other-windows)))
+      (let ((finalizer (wal/async-process--finalize #'delete-window #'delete-other-windows)))
 
-          (apply finalizer (list (current-buffer) "finished\n"))
+        (apply finalizer (list (current-buffer) "finished\n"))
 
-          (was-called delete-window)
-          (was-called-with delete-other-windows "Oops*async-finalize-test*")
-          (wal/clear-mocks)
+        (was-called delete-window)
+        (was-called-with delete-other-windows "Oops*async-finalize-test*")
+        (wal/clear-mocks)
 
-          (apply finalizer (list (current-buffer) "something else "))
+        (apply finalizer (list (current-buffer) "something else "))
 
-          (was-not-called delete-window)
-          (was-called-with delete-other-windows "something else")))))
+        (was-not-called delete-window)
+        (was-called-with delete-other-windows "something else")))))
 
 (ert-deftest test-wal/aysnc-process--maybe-interrupt ()
   (with-mock ((compilation-find-buffer . (lambda () (message "found-buffer") "buffer"))
