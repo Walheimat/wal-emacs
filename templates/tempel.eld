@@ -73,8 +73,8 @@ js-mode
 
 (docstring
  "/**" n
- " * " q n
- " */")
+ " * " q > n
+ " */" >)
 
 ;; Local Variables:
 ;; mode: lisp-data

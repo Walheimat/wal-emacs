@@ -32,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `jsonian` in favor of using built-in `js-json-mode`.
 - Package `emojify` in favor of relying on built-in emoji support.
 
+## Fixed
+
+- Template for `docstring` now indents the other lines.
+
 ## [v1.10.3]
 
 Piece of junk.
