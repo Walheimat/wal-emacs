@@ -1333,13 +1333,8 @@ Sets tab variable `indent-tabs-mode' to t."
 
   (setq indent-tabs-mode t))
 
-(cl-defun wal/maybe-enable-tabs (&key indent-with)
-  "Maybe enable tabs.
-
-Optionally set `indent-line-function' to INDENT-WITH."
-  (when indent-with
-    (setq-local indent-line-function indent-with))
-
+(defun wal/maybe-enable-tabs ()
+  "Maybe enable tabs."
   (if wal/prefer-tabs
       (wal/enable-tabs)
     (wal/disable-tabs)))
@@ -1821,7 +1816,8 @@ set up (major-) modes using hooks.
              `(wal/maybe-enable-tabs))
             ((not tabs)
              '(wal/disable-tabs))
-            (t `(wal/maybe-enable-tabs :indent-with ,tabs)))))
+            (t
+             `(wal/maybe-enable-tabs)))))
 
 (cl-defmacro harpoon-function
     (name

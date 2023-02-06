@@ -485,14 +485,6 @@
 
     (should (eq indent-tabs-mode t))))
 
-(ert-deftest test-wal/maybe-enable-tabs--sets-function ()
-  (with-temp-buffer
-    (setq-local wal/prefer-tabs nil)
-
-    (wal/maybe-enable-tabs :indent-with 'some-fun)
-
-    (should (eq indent-line-function 'some-fun))))
-
 (ert-deftest test-wal/maybe-enable-tabs--disables-unless-preferred ()
   (with-temp-buffer
     (setq-local wal/prefer-tabs nil)
@@ -926,12 +918,12 @@
       (hack-local-variables)
       (wal/enable-tabs))))
 
-(ert-deftest test-harpoon-tabs--with-fun ()
+(ert-deftest test-harpoon-tabs--other-symbol ()
   (match-expansion
-   (harpoon-tabs 'test-fun)
+   (harpoon-tabs test)
    `(progn
       (hack-local-variables)
-      (wal/maybe-enable-tabs :indent-with 'test-fun))))
+      (wal/maybe-enable-tabs))))
 
 (ert-deftest test-harpoon-tabs--disabled ()
   (match-expansion
