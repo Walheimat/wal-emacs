@@ -1818,28 +1818,30 @@ set up (major-) modes using hooks.
      prog-like
      tabs
      &allow-other-keys)
-  "Create hook function NAME with DOCS.
+  "Create hook function for NAME.
+
+CAPTAIN is either t or nil. If it is t, a prefixed function
+will be mapped to the captain key.
+
+CORFU is a list of (IDLE-DELAY PREFIX-LENGTH).
+
+FUNCTIONS is a list of functions (for example modes) that should
+be called if they are bound.
+
+LSP is either nil, t or a plist. For the purpose of this macro,
+any non-nil value will enable `lsp-mode'.
 
 MESSAGES is a list of strings to randomly choose from and
 display.
 
-LSP is either nil, t or a plist. If it is a plist, key
-`:ignore-dirs' can be used to add additional paths to variable
-`lsp-file-watch-ignored-directories'.
+PROG-LIKE is either nil or t. If it's t, the created function
+will run `prog-like-hook'.
 
 TABS is either nil, t, `always' or `never'. Nil (or missing)
 means: do nothing. The symbol t will call
 `wal/maybe-enable-tabs'; the symbol `always' will call
 `wal/enable-tabs' and the symbol `never' will call
 `wal/disable-tabs'.
-
-CAPTAIN is either t or nil. If it is t, a suffixed function will
-be mapped to the captain key.
-
-CORFU is a list of (IDLE-DELAY PREFIX-LENGTH).
-
-FUNCTIONS is a list of functions (for example modes) that should
-be called if they are bound.
 
 The rest of the BODY will be spliced into the hook function."
   (declare (indent defun))
@@ -1885,7 +1887,10 @@ The rest of the BODY will be spliced into the hook function."
     ',(harpoon--function-name name t)))
 
 (cl-defmacro harpoon-ligatures (name &key ligatures &allow-other-keys)
-  "Set up LIGATURES for NAME."
+  "Set up ligatures for NAME.
+
+LIGATURES is a list of strings that should be set using
+`ligatures-set-ligatures'."
   (declare (indent defun))
 
   (when-let ((non-empty ligatures))
@@ -1893,7 +1898,11 @@ The rest of the BODY will be spliced into the hook function."
     `(wal/set-ligatures ',(harpoon--mode-name name) ',ligatures)))
 
 (cl-defmacro harpoon-lsp (&key lsp &allow-other-keys)
-  "Set up LSP."
+  "Set up LSP.
+
+LSP is either nil, t or a plist. If it is a plist, key
+`:ignore-dirs' can be used to add additional paths to variable
+`lsp-file-watch-ignored-directories'."
   (when (and lsp (listp lsp) (plist-member lsp :ignore-dirs))
     `(with-eval-after-load 'lsp-mode
        (wal/append 'lsp-file-watch-ignored-directories ',(plist-get lsp :ignore-dirs)))))
@@ -1919,28 +1928,8 @@ The rest of the BODY will be spliced into the hook function."
 (cl-defmacro harpoon (name &rest args)
   "Hook into major mode NAME.
 
-MESSAGES is a list of strings to randomly choose from and
-display.
-
-LSP is either nil, t or a plist. If it is a plist, key
-`:ignore-dirs' can be used to add additional paths to variable
-`lsp-file-watch-ignored-directories'.
-
-TABS is either nil, t, `always' or `never'. Nil (or missing)
-means: do nothing. The symbol t will call
-`wal/maybe-enable-tabs'; the symbol `always' will call
-`wal/enable-tabs' and the symbol `never' will call
-`wal/disable-tabs'.
-
-CAPTAIN is either t or nil. If it is t, a prefixed function
-will be mapped to the captain key.
-
-CORFU is a list of (IDLE-DELAY PREFIX-LENGTH).
-
-FUNCTIONS is a list of functions (for example modes) that should
-be called if they are bound.
-
-The rest of the ARGS will be spliced into the hook function."
+See documentation macros `harpoon-function', `harpoon-ligatures'
+and `harpoon-lsp' for the available keywords."
   (declare (indent defun))
   `(progn
      (harpoon-function ,name ,@args)
