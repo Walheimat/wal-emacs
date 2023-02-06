@@ -1743,7 +1743,6 @@ set up (major-) modes using hooks.
     :lsp
     :messages
     :prog-like
-    :shallow
     :tabs))
 
 (defun harpoon--safe-body (body)
@@ -1806,19 +1805,6 @@ set up (major-) modes using hooks.
 
 ;;; Macros:
 
-(defmacro harpoon-tabs (tabs)
-  "Set messages and indentation using TABS."
-  `(progn
-     (hack-local-variables)
-     ,(cond ((equal 'always tabs)
-             `(wal/enable-tabs))
-            ((equal t tabs)
-             `(wal/maybe-enable-tabs))
-            ((not tabs)
-             '(wal/disable-tabs))
-            (t
-             `(wal/maybe-enable-tabs)))))
-
 (cl-defmacro harpoon-function
     (name
      &body
@@ -1830,7 +1816,6 @@ set up (major-) modes using hooks.
      lsp
      messages
      prog-like
-     shallow
      tabs
      &allow-other-keys)
   "Create hook function NAME with DOCS.
@@ -1842,17 +1827,16 @@ LSP is either nil, t or a plist. If it is a plist, key
 `:ignore-dirs' can be used to add additional paths to variable
 `lsp-file-watch-ignored-directories'.
 
-TABS is either nil, t or a symbol. Unless the symbol is `always',
-tabs are enabled using `wal/maybe-enable-tabs', passing it to the
-function as an indentation function.
+TABS is either nil, t, `always' or `never'. Nil (or missing)
+means: do nothing. The symbol t will call
+`wal/maybe-enable-tabs'; the symbol `always' will call
+`wal/enable-tabs' and the symbol `never' will call
+`wal/disable-tabs'.
 
 CAPTAIN is either t or nil. If it is t, a suffixed function will
 be mapped to the captain key.
 
 CORFU is a list of (IDLE-DELAY PREFIX-LENGTH).
-
-SHALLOW is either t or nil. If it is t, no indentation-related
-values will be set.
 
 FUNCTIONS is a list of functions (for example modes) that should
 be called if they are bound.
@@ -1865,7 +1849,20 @@ The rest of the BODY will be spliced into the hook function."
      ,@(delete
         nil
         `(,(when messages `(wal/message-in-a-bottle ',messages))
-          ,(when (not shallow) `(harpoon-tabs ,tabs))
+
+          ,(cond
+            ((equal 'never tabs)
+             '(wal/disable-tabs))
+
+            ((equal 'always tabs)
+             '(wal/enable-tabs))
+
+            ((not tabs) nil)
+
+            (t
+             '(progn
+                (hack-local-variables)
+                (wal/maybe-enable-tabs))))
 
           ,@(harpoon--safe-body body)
 
@@ -1929,17 +1926,16 @@ LSP is either nil, t or a plist. If it is a plist, key
 `:ignore-dirs' can be used to add additional paths to variable
 `lsp-file-watch-ignored-directories'.
 
-TABS is either nil, t or a symbol. Unless the symbol is `always',
-tabs are enabled using `wal/maybe-enable-tabs', passing it to the
-function as an indentation function.
+TABS is either nil, t, `always' or `never'. Nil (or missing)
+means: do nothing. The symbol t will call
+`wal/maybe-enable-tabs'; the symbol `always' will call
+`wal/enable-tabs' and the symbol `never' will call
+`wal/disable-tabs'.
 
 CAPTAIN is either t or nil. If it is t, a prefixed function
 will be mapped to the captain key.
 
 CORFU is a list of (IDLE-DELAY PREFIX-LENGTH).
-
-SHALLOW is either t or nil. If it is t, no indentation-related
-values will be set.
 
 FUNCTIONS is a list of functions (for example modes) that should
 be called if they are bound.
@@ -2666,7 +2662,6 @@ No double spaces in sentences.
 
   :init
   (harpoon text-mode
-    :shallow t
     :functions (wal/flyspell-commit-messages))
 
   :custom
@@ -5199,8 +5194,7 @@ This calls `org-content' interactively."
   :init
   (harpoon org-mode
     :messages ("Organize! Seize the means of production!")
-    :captain t
-    :shallow t)
+    :captain t)
 
   :config
   ;; TEMP: Getting missing face errors otherwise.
@@ -5667,8 +5661,7 @@ Editing source blocks.
   :after org
 
   :init
-  (harpoon org-src-mode ()
-    :shallow t
+  (harpoon org-src-mode
 
     (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
 
@@ -6007,8 +6000,7 @@ Uses the same optional SWITCHES."
 
   :init
   (harpoon dired-mode
-    :captain t
-    :shallow t)
+    :captain t)
 
   :config
   ;; We aren't scared of finding alternate files.
@@ -6252,7 +6244,6 @@ FORCE-NEW/`universal-argument')."
 
   :init
   (harpoon vterm-mode ()
-    :shallow t
 
     (when-let* ((buf (current-buffer))
                 (proc (get-buffer-process buf)))
@@ -7063,7 +7054,6 @@ Deal with the parens.
     :captain t)
 
   (harpoon lisp-data-mode
-    :shallow t
     :corfu (0.1 1)
     :ligatures (";;"))
 
@@ -7241,7 +7231,6 @@ Please use TypeScript.
   :init
   (harpoon typescript-mode
     :lsp t
-    :tabs t
     :messages ("This is any, that is any, everything is any!")
     :functions (add-node-modules-path)))
 #+END_SRC
@@ -7451,8 +7440,7 @@ Sometimes things that don't do things need to look nice.
 
   :init
   (harpoon markdown-mode
-    :captain t
-    :shallow t)
+    :captain t)
 
   :config
   (wal/transient-define-captain markdown-mode ()
@@ -7837,7 +7825,6 @@ We want quicker suggestions when in CSS modes.
 
   :init
   (harpoon css-mode
-    :tabs t
     :lsp t
     :corfu (0.1 2)
     :messages ("Centering? It's simple. Here's 15 ways to do it.")
@@ -7902,7 +7889,6 @@ Get text.
   :init
   (harpoon web-mode
     :lsp t
-    :tabs t
     :messages ("This is the Internet"))
 
   :custom

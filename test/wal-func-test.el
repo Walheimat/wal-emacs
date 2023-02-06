@@ -904,34 +904,6 @@
       (should-not (harpoon--treesit-ready-p 'zest-mode))
       (should-not (harpoon--treesit-ready-p 'no-mapping-mode)))))
 
-(ert-deftest test-harpoon-tabs ()
-  (match-expansion
-   (harpoon-tabs t)
-   `(progn
-      (hack-local-variables)
-      (wal/maybe-enable-tabs))))
-
-(ert-deftest test-harpoon-tabs--always ()
-  (match-expansion
-   (harpoon-tabs always)
-   `(progn
-      (hack-local-variables)
-      (wal/enable-tabs))))
-
-(ert-deftest test-harpoon-tabs--other-symbol ()
-  (match-expansion
-   (harpoon-tabs test)
-   `(progn
-      (hack-local-variables)
-      (wal/maybe-enable-tabs))))
-
-(ert-deftest test-harpoon-tabs--disabled ()
-  (match-expansion
-   (harpoon-tabs nil)
-   `(progn
-      (hack-local-variables)
-      (wal/disable-tabs))))
-
 (ert-deftest test-harpoon ()
   (match-expansion
    (harpoon test-mode
@@ -962,24 +934,24 @@
   (match-expansion
    (harpoon-function test-mode
      :messages ("Just testing")
-     :lsp t
-     :tabs t)
+     :lsp t)
    `(defun test-mode-harpoon ()
       "Hook into `test-mode'."
       (wal/message-in-a-bottle '("Just testing"))
-      (harpoon-tabs t)
       (wal/lsp))))
 
-(ert-deftest test-harpoon-function--custom-indent ()
+(ert-deftest test-harpoon-function--some-symbol ()
   (match-expansion
    (harpoon-function test-mode
      :messages ("Just testing")
      :lsp t
-     :tabs 'some-fun)
+     :tabs anything)
    `(defun test-mode-harpoon ()
       "Hook into `test-mode'."
       (wal/message-in-a-bottle '("Just testing"))
-      (harpoon-tabs 'some-fun)
+      (progn
+        (hack-local-variables)
+        (wal/maybe-enable-tabs))
       (wal/lsp))))
 
 (ert-deftest test-harpoon-function--enable-indent ()
@@ -991,25 +963,25 @@
    `(defun test-mode-harpoon ()
       "Hook into `test-mode'."
       (wal/message-in-a-bottle '("Just testing"))
-      (harpoon-tabs always)
+      (wal/enable-tabs)
       (wal/lsp))))
 
-(ert-deftest test-harpoon-function--with-tabs ()
+(ert-deftest test-harpoon-function--no-tabs ()
   (match-expansion
    (harpoon-function test-mode
      :messages ("Just testing")
-     :lsp nil)
+     :lsp nil
+     :tabs never)
    `(defun test-mode-harpoon ()
       "Hook into `test-mode'."
       (wal/message-in-a-bottle '("Just testing"))
-      (harpoon-tabs nil))))
+      (wal/disable-tabs))))
 
 (ert-deftest test-harpoon-function--prog-like ()
   (match-expansion
    (harpoon-function test-mode
      :messages ("Just testing")
      :prog-like t
-     :shallow t
      (message "hi"))
    `(defun test-mode-harpoon ()
       "Hook into `test-mode'."
@@ -1022,7 +994,6 @@
    (harpoon-function test-mode
      :messages ("Just testing")
      :captain t
-     :shallow t
      (message "hi"))
    `(defun test-mode-harpoon ()
       "Hook into `test-mode'."
@@ -1035,7 +1006,6 @@
    (harpoon-function test-mode
      :messages ("Just testing")
      :corfu (0.2 4)
-     :shallow t
      (message "hi"))
    `(defun test-mode-harpoon ()
       "Hook into `test-mode'."
@@ -1043,21 +1013,9 @@
       (message "hi")
       (wal/corfu-auto '(0.2 4)))))
 
-(ert-deftest test-harpoon--shallow ()
-  (match-expansion
-   (harpoon-function test-mode
-     :corfu (0.2 4)
-     :shallow t
-     (message "hi"))
-   `(defun test-mode-harpoon ()
-      "Hook into `test-mode'."
-      (message "hi")
-      (wal/corfu-auto '(0.2 4)))))
-
 (ert-deftest test-harpoon--functions ()
   (match-expansion
    (harpoon-function test-mode
-     :shallow t
      :functions (test-mode testable-mode)
      (message "hi"))
    `(defun test-mode-harpoon ()
