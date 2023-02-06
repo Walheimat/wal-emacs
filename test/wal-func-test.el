@@ -539,12 +539,6 @@
 (ert-deftest test-wal/bytes-per-mb--floors ()
   (should (equal 314572 (wal/bytes-per-mb 0.3))))
 
-(ert-deftest test-wal/maybe-intern--interns-non-symbol ()
-  (should (eq 'test (wal/maybe-intern "test"))))
-
-(ert-deftest test-wal/maybe-intern--leaves-symbols ()
-  (should (eq 'test (wal/maybe-intern 'test))))
-
 (ert-deftest test-wal/truncate--truncates ()
   (should (string-equal (wal/truncate "This is it" 7) "This...")))
 

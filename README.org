@@ -1388,12 +1388,6 @@ throws are 3 or THROWS."
 This function may be used to set variables that expect bytes."
   (floor (* 1024 1024 num)))
 
-(defun wal/maybe-intern (symbol?)
-  "Maybe `intern' SYMBOL? if it's not a symbol."
-  (if (symbolp symbol?)
-      symbol?
-    (intern symbol?)))
-
 (defun wal/truncate (text &optional max-len)
   "Truncate TEXT if longer than MAX-LEN.
 
@@ -1677,7 +1671,7 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
 
 (defun junk--install-extras (extras)
   "Install one or all packages in EXTRAS."
-  (let* ((selection (wal/maybe-intern
+  (let* ((selection (intern-soft
                      (completing-read
                       "Select extra to install: " (append extras '(all))))))
 
@@ -1695,7 +1689,7 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
    (list (completing-read "Select pack to install: "
                           (mapcar (lambda (pack) (car pack)) junk-expansion-packs))))
 
-  (let* ((sym (wal/maybe-intern pack))
+  (let* ((sym (intern-soft pack))
          (item (assoc sym junk-expansion-packs)))
 
     (cl-destructuring-bind
