@@ -5035,6 +5035,43 @@ Will search using QUERY in FILES."
          (root (project-root current)))
 
     (dired root)))
+
+(defun wal/project--buffer-root (buffer)
+  "Get the project root for BUFFER."
+  (when-let* ((file (buffer-file-name buffer))
+              (dir (file-name-directory file))
+              (project (project-current nil dir)))
+
+    (project-root project)))
+
+(defun wal/project--read-open-projects (&optional prompt)
+  "Collect open projects.
+
+Optionally a different PROMPT can be provided.
+
+If there are no open projects, this function returns nil."
+  (let ((candidates (cl-remove-duplicates
+                     (cl-loop for buffer being the buffers
+                              for project = (wal/project--buffer-root buffer)
+                              if project
+                              collect project)
+                     :test 'string=)))
+    (when candidates
+      (completing-read (or prompt "Select open project: ")
+                       candidates
+                       nil
+                       t))))
+
+(defun wal/project-switch-project (&optional project)
+  "Switch to PROJECT.
+
+This is the same as `project-switch-project' but the candidates
+are limited to open projects (unless no open projects exist)."
+  (interactive (list (wal/project--read-open-projects "Switch project: ")))
+
+  (if project
+      (project-switch-project project)
+    (call-interactively 'project-switch-project)))
 #+END_SRC
 
 **** Configuration
@@ -5042,6 +5079,8 @@ Will search using QUERY in FILES."
 #+BEGIN_SRC emacs-lisp
 (use-package project
   :ensure nil
+
+  :commands (wal/project-switch-project)
 
   :init
   (wal/advise-many
@@ -5051,6 +5090,14 @@ Will search using QUERY in FILES."
      wal/project-install
      wal/project-compile
      recompile))
+
+  (parallel wal/project-switch-project project-switch-project)
+
+  :config
+  (with-eval-after-load 'marginalia
+    (add-to-list
+     'marginalia-command-categories
+     '(wal/project-switch-project . project-file)))
 
   :custom
   (project-vc-extra-root-markers '("pom.xml"
@@ -5085,7 +5132,7 @@ Will search using QUERY in FILES."
 
   :wal-bind
   (("h" . project-find-file)
-   ("p" . project-switch-project)))
+   ("p" . wal/project-switch-project||project-switch-project)))
 #+END_SRC
 
 ** Footer

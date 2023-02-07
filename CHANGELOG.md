@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Following recipe from its wiki, `consult-buffer` is now pre-narrowed
   to project buffers by default. This is controlled by new custom
   variable `wal/consult-buffer-narrow-to-project`.
+- Command `wal/project-switch-project` that filters by open projects.
+  User-prefixed `h` now uses a `parallel` of this and the original.
 
 ### Changed
 
