@@ -6512,19 +6512,14 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
   :ensure nil
 
   :config
-  (wal/transient-define-captain smerge ()
-    "Resolve conflicts until you don't."
-    [["Move"
-      ("n" "next" smerge-next :transient t)
-      ("p" "previous" smerge-prev :transient t)]
-     ["Keep"
-      ("u" "upper" smerge-keep-upper :transient t)
-      ("l" "lower" smerge-keep-lower :transient t)
-      ("a" "all" smerge-keep-all :transient t)]])
-
-  :bind
-  (:map wal/triple-minus-map
-   ("^" . smerge-captain))
+  (defvar-keymap smerge-repeat-map
+    :doc "Keymap to repeat various `smerge' commands."
+    :repeat t
+    "n" #'smerge-next
+    "p" #'smerge-prev
+    "l" #'smerge-keep-lower
+    "u" #'smerge-keep-upper
+    "a" #'smerge-keep-all)
 
   :delight " smg")
 #+END_SRC
