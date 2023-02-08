@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Keyword `:universalize` allows converting numeric to non-numeric if
   the called command expects `'(4)` over `4` etc.
 - `project` ignores `.ccls-cache`.
+- Most `which-key` replacements that are not prefixes were removed.
 
 ### Removed
 
