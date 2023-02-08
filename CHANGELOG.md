@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the called command expects `'(4)` over `4` etc.
 - `project` ignores `.ccls-cache`.
 - Most `which-key` replacements that are not prefixes were removed.
+- Transients for `winner` and `smerge` were replaced by using (and
+  adding) `repeat-mode` maps.
 
 ### Removed
 
