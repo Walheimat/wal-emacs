@@ -116,4 +116,45 @@
 
     (was-called-with dired (list "/tmp/test"))))
 
+(ert-deftest test-wal/project--buffer-root ()
+  (with-mock ((project-current . (lambda (&rest _r) '(vc Git "/tmp")))
+              project-root)
+    (with-temp-buffer
+      (setq buffer-file-name "/tmp/test-buffer/file.test")
+
+      (wal/project--buffer-root (current-buffer))
+
+      (was-called-with project-current '(nil "/tmp/test-buffer/"))
+      (was-called-with project-root (list '(vc Git "/tmp"))))))
+
+(ert-deftest test-wal/project--read-open-projects ()
+  (with-mock ((buffer-list . (lambda () '("a" "c" "b" "c" "a")))
+              (wal/project--buffer-root . (lambda (b) b))
+              completing-read)
+
+    (wal/project--read-open-projects "Test prompt: ")
+
+    (was-called-with completing-read (list "Test prompt: "
+                                           (list "b" "c" "a")
+                                           nil
+                                           t))))
+
+(ert-deftest test-wal/project-switch-project ()
+  (let ((candidate nil))
+
+    (with-mock ((wal/project--read-open-projects . (lambda (_) candidate))
+                project-switch-project)
+
+      (call-interactively 'wal/project-switch-project)
+
+      (was-called project-switch-project)
+
+      (wal/clear-mocks)
+
+      (setq candidate '(vc Git "/tmp"))
+
+      (call-interactively 'wal/project-switch-project)
+
+      (was-called-with project-switch-project (list candidate)))))
+
 ;;; wal-workspace-test.el ends here
