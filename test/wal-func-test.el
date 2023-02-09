@@ -129,6 +129,15 @@
                    '((major-mode . test-mode)
                      (display-buffer-reuse-window display-buffer-same-window))))))
 
+(ert-deftest wal/display-buffer-use-some-frame ()
+  (let ((display-buffer-alist '()))
+
+    (wal/display-buffer-use-some-frame 'test-mode)
+
+    (should (equal (car display-buffer-alist)
+                   '((major-mode . test-mode)
+                     (display-buffer-use-some-frame))))))
+
 (ert-deftest wal/kill-some-file-buffers ()
   (wal/with-temp-file "to-be-killed"
     (with-mock kill-buffer-ask
