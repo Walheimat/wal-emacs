@@ -939,13 +939,25 @@ removed."
                  `(,condition
                    (display-buffer-reuse-window display-buffer-same-window)))))
 
-(defun wal/display-buffer-use-some-frame (buffer)
-  "Display BUFFER in other frame."
+(defun wal/other-displayed-frame-p (frame)
+  "Check that FRAME is not the selected frame and has a display entry."
+    (and (not (eq frame (selected-frame)))
+         (get-lru-window frame)
+         (cdr-safe (assoc 'display (frame-parameters frame)))))
+
+(defun wal/display-buffer-other-frame (buffer)
+  "Display BUFFER, preferably in another frame.
+
+Tries to reuse window first, then checks for another frame and
+lastly pops up a window."
   (let ((condition (wal/display-buffer-condition buffer)))
 
     (add-to-list 'display-buffer-alist
                  `(,condition
-                   (display-buffer-use-some-frame)))))
+                   (display-buffer-reuse-window
+                    display-buffer-use-some-frame
+                    display-buffer-pop-up-window)
+                   (frame-predicate . wal/other-displayed-frame-p)))))
 
 ;; Prefer short-hands.
 (defalias 'wdb/pop-up 'wal/display-buffer-in-pop-up)
@@ -953,7 +965,7 @@ removed."
 (defalias 'wdb/direction 'wal/display-buffer-in-direction)
 (defalias 'wdb/ghost 'wal/display-buffer-ethereally)
 (defalias 'wdb/same 'wal/display-buffer-reuse-same-window)
-(defalias 'wdb/some-frame 'wal/display-buffer-use-some-frame)
+(defalias 'wdb/other-frame 'wal/display-buffer-other-frame)
 #+END_SRC
 
 ** Buffer Hygiene
@@ -4882,6 +4894,7 @@ Keep order.
 (declare-function ring-insert "ext:ring.el")
 (declare-function ring-ref "ext:ring.el")
 (declare-function wal/univ-p "wal-func.el")
+(declare-function wdb/other-frame "wal-func.el")
 
 (defvar compilation-save-buffers-predicate)
 (defvar org-agenda-files)
@@ -5089,6 +5102,8 @@ are limited to open projects (unless no open projects exist)."
     (add-to-list
      'marginalia-command-categories
      '(wal/project-switch-project||project-switch-project . project-file)))
+
+  (wdb/other-frame "\\*project")
 
   :custom
   (project-vc-extra-root-markers '("pom.xml"

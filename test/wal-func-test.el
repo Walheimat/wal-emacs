@@ -129,14 +129,35 @@
                    '((major-mode . test-mode)
                      (display-buffer-reuse-window display-buffer-same-window))))))
 
-(ert-deftest wal/display-buffer-use-some-frame ()
+(ert-deftest test-wal/other-displayed-frame-p ()
+  (let ((frame nil)
+        (params nil))
+    (with-mock ((selected-frame . (lambda () frame))
+                get-lru-window
+                (frame-parameters . (lambda (_) params)))
+
+
+      (setq frame 1)
+      (setq params '((display . t)))
+
+      (should (wal/other-displayed-frame-p 0))
+      (should-not (wal/other-displayed-frame-p 1))
+
+      (setq params '((display . nil)))
+
+      (should-not (wal/other-displayed-frame-p 0)))))
+
+(ert-deftest wal/display-buffer-other-frame ()
   (let ((display-buffer-alist '()))
 
-    (wal/display-buffer-use-some-frame 'test-mode)
+    (wal/display-buffer-other-frame 'test-mode)
 
     (should (equal (car display-buffer-alist)
                    '((major-mode . test-mode)
-                     (display-buffer-use-some-frame))))))
+                     (display-buffer-reuse-window
+                      display-buffer-use-some-frame
+                      display-buffer-pop-up-window)
+                     (frame-predicate . wal/other-displayed-frame-p))))))
 
 (ert-deftest wal/kill-some-file-buffers ()
   (wal/with-temp-file "to-be-killed"

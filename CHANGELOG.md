@@ -14,8 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   variable `wal/consult-buffer-narrow-to-project`.
 - Command `wal/project-switch-project` that filters by open projects.
   User-prefixed `h` now uses a `parallel` of this and the original.
-- Utility funcion `wal/display-buffer-use-some-frame` to add buffer to
-  `display-buffer-alist` using the action of the same name.
+- Utility funcion `wal/display-buffer-other-frame` to display a buffer
+  in another frame if possible, reusing its window, and only as a last
+  resort in a pop-p window. This is used for custom `project` command
+  buffers.
 
 ### Changed
 
