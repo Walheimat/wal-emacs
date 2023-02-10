@@ -3946,33 +3946,27 @@ Treat certain buffers and their windows as pop-ups.
   "Search for REGEXP in BUFFER-NAME.
 
 If no PREFIX is given, a slash is pre-pended to the first match."
-  (let ((prefix (or prefix "/")))
+  (let ((prefix (or prefix "")))
 
     (with-temp-buffer
       (insert buffer-name)
       (goto-char (point-min))
       (re-search-forward regexp nil t)
       (concat
-       (if (match-string 2) (match-string 2) "")
        prefix
-       (if (match-string 1) (match-string 1) "")))))
+       (if (match-string 1) (concat (match-string 1) ": ") "")
+       (if (match-string 2) (match-string 2) "")))))
 
-(defvar wal/pe-helpful-re "\\*helpful \\w+\: ")
-(defvar wal/pe-dc-re "\\* docker-compose \\(?1:up\\|run\\|build\\)\\( --rm\\)?\\ \\(?2:\\w+\\)")
-(defvar wal/pe-cont-re "\\* docker container \\(?1:logs\\|stop\\)?\\ ?\\(--tail [[:digit:]]+\\)?\\ \\(?2:\\w+_\\w+_[[:digit:]]+\\)\\ \\*")
+(defvar wal/popper-echo-regex-alist
+  '(("\\*helpful \\(?1:variable\\|function\\|macro\\): \\(?2:[a-zA-Z-]+\\)\\*")
+    ("\\* docker-compose \\(?1:up\\|run\\|build\\)\\( --rm\\)?\\ \\(?2:\\w+\\)" . "dc/")
+    ("\\* docker container \\(?1:logs\\|stop\\)?\\ ?\\(--tail [[:digit:]]+\\)?\\ \\(?2:\\w+_\\w+_[[:digit:]]+\\)\\ \\*" . "dcon/")))
 
 (defun wal/popper-echo-transform (buffer-name)
   "Transform BUFFER-NAME by truncating certain prefixes."
-  (cond
-   ((string-match wal/pe-helpful-re buffer-name)
-    (concat
-     (substring (replace-regexp-in-string wal/pe-helpful-re "" buffer-name) 0 -1)
-     "/help"))
-   ((string-match wal/pe-dc-re buffer-name)
-    (wal/popper-echo-replace wal/pe-dc-re buffer-name "/dc-"))
-   ((string-match wal/pe-cont-re buffer-name)
-    (wal/popper-echo-replace wal/pe-cont-re buffer-name))
-   (t buffer-name)))
+  (if-let ((match (cl-find-if (lambda (it) (string-match (car it) buffer-name)) wal/popper-echo-regex-alist)))
+      (wal/popper-echo-replace (car match) buffer-name (cdr-safe match))
+    buffer-name))
 
 (defvar wal/spared-popups '("\\*Messages\\*"))
 

@@ -29,9 +29,9 @@
     (was-called-with delete-other-windows (list 'window))))
 
 (ert-deftest test-wal/popper-echo-transform ()
-  (should (string-match "testing/help" (wal/popper-echo-transform "*helpful variable: testing*")))
-  (should (string-match "testing/dc-up" (wal/popper-echo-transform "* docker-compose up --rm testing*")))
-  (should (string-match "is_testing_2/logs" (wal/popper-echo-transform "* docker container logs --tail 10 is_testing_2 *")))
+  (should (string-match "variable: testing" (wal/popper-echo-transform "*helpful variable: testing*")))
+  (should (string-match "up: testing" (wal/popper-echo-transform "* docker-compose up --rm testing*")))
+  (should (string-match "logs: is_testing_2" (wal/popper-echo-transform "* docker container logs --tail 10 is_testing_2 *")))
   (should (string-match "*unchanged*" (wal/popper-echo-transform "*unchanged*"))))
 
 (ert-deftest test-wal/popper--spared-p ()
