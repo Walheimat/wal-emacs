@@ -111,8 +111,8 @@ functionality is used.
 (declare-function wal/rehydrate-scratch "wal-key-bindings.el")
 (declare-function wal/reset-to-standard "wal-func.el")
 (declare-function wal/set-indent-defaults "wal-func.el")
-(declare-function wdb/side "wal-func.el")
-(declare-function wdb/pop-up "wal-func.el")
+(declare-function wdb/faraway "wal-func.el")
+(declare-function wdb/nearby "wal-func.el")
 
 (defvar debugger-bury-or-kill)
 (defvar display-time-default-load-average)
@@ -515,8 +515,8 @@ Make completions look nice.
 ** Buffer Display
 
 #+BEGIN_SRC emacs-lisp
-(wdb/pop-up "^\\*wal-async\\*")
-(wdb/pop-up "^\\*Messages\\*")
+(wdb/faraway "^\\*wal-async\\*")
+(wdb/faraway "^\\*Messages\\*")
 #+END_SRC
 
 ** Key Bindings
@@ -872,33 +872,23 @@ should get created."
 Utility functions to configure displaying buffers of a certain type.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/display-buffer-condition (buffer-or-mode)
+(defun wal/display-buffer--condition (buffer-or-mode)
   "Get a display buffer condition for BUFFER-OR-MODE."
   (pcase buffer-or-mode
     ((pred stringp) buffer-or-mode)
     ((pred symbolp) `(major-mode . ,buffer-or-mode))
     (_ (user-error "Call with string or symbol"))))
 
-(defun wal/display-buffer-in-pop-up (buffer &optional in-frame)
-  "Display BUFFER in a pop-up.
-The pop-up is a window unless IN-FRAME is t."
-  (let ((condition (wal/display-buffer-condition buffer))
-        (action (if in-frame
-                     'display-buffer-pop-up-frame
-                   'display-buffer-pop-up-window)))
-
-    (add-to-list 'display-buffer-alist `(,condition (,action)))))
-
 ;; The next two functions make sense for `popper' buffers.
 
-(cl-defun wal/display-buffer-in-side-window (buffer &key side loose no-other height)
-  "Display BUFFER in SIDE window.
+(cl-defun wal/display-buffer-same-place-or-nearby (buffer &key side loose no-other height)
+  "Display BUFFER where it is or nearby.
 
 This window will be on SIDE (on the bottom by default), not
 delete other windows, dedicated to the buffer (unless LOOSE),
 available to `other-window' (unless NO-OTHER) 20 (or HEIGHT)
 lines high and visible frames are considered reusable."
-  (let ((condition (wal/display-buffer-condition buffer)))
+  (let ((condition (wal/display-buffer--condition buffer)))
 
     (add-to-list 'display-buffer-alist
                  `(,condition
@@ -909,63 +899,28 @@ lines high and visible frames are considered reusable."
                    (window-height . ,(or height 10))
                    (window-parameters . ((no-other-window . ,no-other)))))))
 
-(defun wal/display-buffer-in-direction (buffer &optional direction)
-  "Display BUFFER in direction.
-The direction is right-most or DIRECTION."
-  (let ((condition (wal/display-buffer-condition buffer)))
-
-    (add-to-list 'display-buffer-alist
-                 `(,condition
-                   (display-buffer-reuse-mode-window display-buffer-in-direction)
-                   (direction . ,(or direction 'rightmost))))))
-
-(defun wal/display-buffer-ethereally (buffer)
-  "Display BUFFER ethereally.
-
-This means there is no display function used and the mode line is
-removed."
-  (let ((condition (wal/display-buffer-condition buffer)))
-
-    (add-to-list 'display-buffer-alist
-                 `(,condition
-                   nil
-                   (window-parameters (mode-line-format . none))))))
-
-(defun wal/display-buffer-reuse-same-window (buffer)
-  "Display BUFFER reusing same window."
-  (let ((condition (wal/display-buffer-condition buffer)))
-
-    (add-to-list 'display-buffer-alist
-                 `(,condition
-                   (display-buffer-reuse-window display-buffer-same-window)))))
-
-(defun wal/other-displayed-frame-p (frame)
+(defun wal/display-buffer-use-some-frame--with-display-p (frame)
   "Check that FRAME is not the selected frame and has a display entry."
     (and (not (eq frame (selected-frame)))
          (get-lru-window frame)
          (cdr-safe (assoc 'display (frame-parameters frame)))))
 
-(defun wal/display-buffer-other-frame (buffer)
-  "Display BUFFER, preferably in another frame.
+(defun wal/display-buffer-same-place-or-faraway (buffer)
+  "Display BUFFER where it is or far away.
 
 Tries to reuse window first, then checks for another frame and
 lastly pops up a window."
-  (let ((condition (wal/display-buffer-condition buffer)))
+  (let ((condition (wal/display-buffer--condition buffer)))
 
     (add-to-list 'display-buffer-alist
                  `(,condition
                    (display-buffer-reuse-window
                     display-buffer-use-some-frame
                     display-buffer-pop-up-window)
-                   (frame-predicate . wal/other-displayed-frame-p)))))
+                   (frame-predicate . wal/display-buffer-use-some-frame--with-display-p)))))
 
-;; Prefer short-hands.
-(defalias 'wdb/pop-up 'wal/display-buffer-in-pop-up)
-(defalias 'wdb/side 'wal/display-buffer-in-side-window)
-(defalias 'wdb/direction 'wal/display-buffer-in-direction)
-(defalias 'wdb/ghost 'wal/display-buffer-ethereally)
-(defalias 'wdb/same 'wal/display-buffer-reuse-same-window)
-(defalias 'wdb/other-frame 'wal/display-buffer-other-frame)
+(defalias 'wdb/nearby 'wal/display-buffer-same-place-or-nearby)
+(defalias 'wdb/faraway 'wal/display-buffer-same-place-or-faraway)
 #+END_SRC
 
 ** Buffer Hygiene
@@ -2633,15 +2588,14 @@ external ones.
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
 (declare-function wal/modern-emacs-p "wal-func.el")
-(declare-function wdb/pop-up "wal-func.el")
-(declare-function wdb/side "wal-func.el")
-
+(declare-function wdb/faraway "wal-func.el")
+(declare-function wdb/nearby "wal-func.el")
 (defvar wal/triple-minus-map)
 
 (wal/on-boot emacs
-  (wdb/pop-up 'help-mode)
-  (wdb/pop-up 'shortdoc-mode)
-  (wdb/side 'debug-mode :no-other t))
+  (wdb/faraway 'help-mode)
+  (wdb/faraway 'shortdoc-mode)
+  (wdb/nearby 'debug-mode :no-other t))
 #+END_SRC
 
 ** Improved Editing
@@ -2926,7 +2880,7 @@ Show compilations in a pop-up and scroll output.
   (compilation-filter . ansi-color-compilation-filter)
 
   :config
-  (wdb/pop-up "\\*compilation")
+  (wdb/faraway "\\*compilation")
 
   :custom
   (compilation-scroll-output t))
@@ -2947,7 +2901,7 @@ Let's try to be even more =helpful=.
   :after elisp-mode
 
   :config
-  (wdb/pop-up 'helpful-mode)
+  (wdb/faraway 'helpful-mode)
 
   :bind
   (([remap describe-command] . helpful-command)
@@ -2978,7 +2932,7 @@ Leave a bookmark why don't you.
   :ensure nil
 
   :config
-  (wdb/side "\\*Bookmark Annotation\\*" :side 'left :no-other t)
+  (wdb/nearby "\\*Bookmark Annotation\\*" :side 'left :no-other t)
 
   (with-eval-after-load 'bookmark
     (which-key-add-key-based-replacements "C-c m" "bookmark"))
@@ -3023,7 +2977,7 @@ Look up words in a word book.
   :ensure nil
 
   :config
-  (wdb/pop-up "^\\*Dictionary")
+  (wdb/faraway "^\\*Dictionary")
 
   :custom
   (dictionary-server "dict.org")
@@ -4317,7 +4271,7 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
   (parallel rg-project rg-menu)
 
   :config
-  (wdb/pop-up "\\*rg\\*\\'")
+  (wdb/faraway "\\*rg\\*\\'")
 
   :wal-bind
   ("n" . rg-project||rg-menu))
@@ -4640,9 +4594,6 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
   (parallel embark-act embark-dwim)
 
   :config
-  ;; No mode-line for collections and completions.
-  (wdb/ghost "\\`\\*Embark Collect \\(Live\\|Completions\\)\\*")
-
   ;; Search using region.
   (define-key embark-region-map
               (kbd "g")
@@ -4894,7 +4845,7 @@ Keep order.
 (declare-function ring-insert "ext:ring.el")
 (declare-function ring-ref "ext:ring.el")
 (declare-function wal/univ-p "wal-func.el")
-(declare-function wdb/other-frame "wal-func.el")
+(declare-function wdb/faraway "wal-func.el")
 
 (defvar compilation-save-buffers-predicate)
 (defvar org-agenda-files)
@@ -5103,7 +5054,7 @@ are limited to open projects (unless no open projects exist)."
      'marginalia-command-categories
      '(wal/project-switch-project||project-switch-project . project-file)))
 
-  (wdb/other-frame "\\*project")
+  (wdb/faraway "\\*project")
 
   :custom
   (project-vc-extra-root-markers '("pom.xml"
@@ -5519,7 +5470,7 @@ refiling to non-`org-roam' files."
 
   :config
   ;; Show roam buffer on the right.
-  (wdb/side org-roam-buffer :side 'right :no-other t)
+  (wdb/nearby org-roam-buffer :side 'right :no-other t)
 
   ;; Refile differently for these files.
   (wal/replace-in-alist 'org-speed-commands '(("w" . wal/org-refile)))
@@ -6602,7 +6553,7 @@ Let's greet the world.
 (declare-function prettier--quit-all-processes "ext:prettier.el")
 (declare-function wal/set-ligatures "ext:wal-visuals.el")
 (declare-function wal/transient-grab "wal-key-bindings.el")
-(declare-function wdb/side "wal-func.el")
+(declare-function wdb/nearby "wal-func.el")
 
 (defvar prettier-processes)
 
@@ -6797,7 +6748,7 @@ TOML."
     (require 'dap-python))
 
   ;; Show inferior shell at the bottom.
-  (wdb/side 'inferior-python-mode)
+  (wdb/nearby 'inferior-python-mode)
 
   (wal/transient-define-captain python-mode ()
     "Access `python-mode' commands."
@@ -7146,7 +7097,7 @@ Can't have closure without REPL.
   :after clojure-mode
 
   :config
-  (wdb/side 'cider-repl-mode)
+  (wdb/nearby 'cider-repl-mode)
 
   :custom
   (cider-jack-in-default 'lein))
@@ -7579,7 +7530,7 @@ LSP support for Dart.
    #'wal/lsp-dart-set-process-query-on-exit-flag)
 
   ;; Display at the bottom.
-  (wdb/side "\\*Flutter")
+  (wdb/nearby "\\*Flutter")
 
   (wal/transient-define-captain dart-mode ()
     "Access flutter commands."
@@ -7759,7 +7710,7 @@ The elephant in the room.
   :config
   (require 'dap-php) ; Run `dap-php-setup'.
 
-  (wdb/side "\\*Php SOE"))
+  (wdb/nearby "\\*Php SOE"))
 #+END_SRC
 
 ** Web
@@ -8067,8 +8018,8 @@ Please let me know when I screwed up. I promise I will learn.
 (eval-when-compile
   (require 'flycheck nil t))
 
-(declare-function wdb/side "wal-func.el")
 (declare-function wal/major "wal-key-bindings.el")
+(declare-function wdb/nearby "wal-func.el")
 (declare-function flycheck-parse-stylelint "ext:flycheck.el")
 (declare-function flycheck-buffer-nonempty-p "ext:flycheck.el")
 
@@ -8176,7 +8127,7 @@ If KILL-BUFFER is t, kill the file's buffer."
   :hook ((prog-mode prog-like-mode) . flycheck-mode)
 
   :config
-  (wdb/side flycheck-error-list-buffer)
+  (wdb/nearby flycheck-error-list-buffer)
 
   ;; TEMP: https://github.com/flycheck/flycheck/pull/1944
   (flycheck-define-checker wal/scss-stylelint
@@ -8523,8 +8474,8 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
    `((,dap-ui--repl-buffer . ((side . bottom) (slot . 1) (window-height . 10)))
      (,dap-ui--locals-buffer . ((side . right) (slot . 1)))))
 
-  (wdb/side dap-ui--repl-buffer :no-other t)
-  (wdb/side dap-ui--locals-buffer :side 'right :no-other t)
+  (wdb/nearby dap-ui--repl-buffer :no-other t)
+  (wdb/nearby dap-ui--locals-buffer :side 'right :no-other t)
 
   (with-eval-after-load 'lsp-mode
     (transient-append-suffix 'lsp-mode-captain '(0 -1)
@@ -8659,9 +8610,9 @@ What goes =docker-compose= up, goes =docker-compose= down.
   :ensure nil
 
   :config
-  (wdb/side "\\*docker-containers\\*" :side 'top :height 15)
-  (wdb/pop-up "^\\* docker container")
-  (wdb/pop-up "^\\* docker-compose")
+  (wdb/nearby "\\*docker-containers\\*" :side 'top :height 15)
+  (wdb/faraway "^\\* docker container")
+  (wdb/faraway "^\\* docker-compose")
 
   :custom
   (docker-run-async-with-buffer-function 'docker-run-async-with-buffer-shell)

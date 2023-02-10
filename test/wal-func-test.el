@@ -47,35 +47,19 @@
 
     (delete-directory temp-dir)))
 
-(ert-deftest test-wal/display-buffer-condition--passes-strings ()
-  (should (string-equal "testing" (wal/display-buffer-condition "testing"))))
+(ert-deftest test-wal/display-buffer--condition--passes-strings ()
+  (should (string-equal "testing" (wal/display-buffer--condition "testing"))))
 
-(ert-deftest test-wal/display-buffer-condition--considers-symbols-major-modes ()
-  (should (equal '(major-mode . test-mode) (wal/display-buffer-condition 'test-mode))))
+(ert-deftest test-wal/display-buffer--condition--considers-symbols-major-modes ()
+  (should (equal '(major-mode . test-mode) (wal/display-buffer--condition 'test-mode))))
 
-(ert-deftest test-wal/display-buffer-condition--errors-for-unsupported-types ()
-  (should-error (wal/display-buffer-condition '(hello world)) :type 'user-error))
+(ert-deftest test-wal/display-buffer--condition--errors-for-unsupported-types ()
+  (should-error (wal/display-buffer--condition '(hello world)) :type 'user-error))
 
-(ert-deftest test-wal/display-buffer-in-pop-up ()
+(ert-deftest test-wal/display-buffer-same-place-or-nearby ()
   (let ((display-buffer-alist '()))
 
-    (wal/display-buffer-in-pop-up 'test-mode)
-
-    (should (equal
-             (car display-buffer-alist)
-             '((major-mode . test-mode) (display-buffer-pop-up-window))))
-    (setq display-buffer-alist '())
-
-    (wal/display-buffer-in-pop-up 'test-mode t)
-
-    (should (equal
-             (car display-buffer-alist)
-             '((major-mode . test-mode) (display-buffer-pop-up-frame))))))
-
-(ert-deftest test-wal/display-buffer-in-side-window ()
-  (let ((display-buffer-alist '()))
-
-    (wal/display-buffer-in-side-window 'test-mode :side 'top :loose nil :no-other t :height 12)
+    (wal/display-buffer-same-place-or-nearby 'test-mode :side 'top :loose nil :no-other t :height 12)
 
     (should (equal (car display-buffer-alist)
                    '((major-mode . test-mode)
@@ -88,7 +72,7 @@
 
     (setq display-buffer-list '())
 
-    (wal/display-buffer-in-side-window 'test-mode :loose t)
+    (wal/display-buffer-same-place-or-nearby 'test-mode :loose t)
 
     (should (equal (car display-buffer-alist)
                    '((major-mode . test-mode)
@@ -100,36 +84,7 @@
                      (window-parameters . ((no-other-window))))))
     ))
 
-(ert-deftest test-wal/display-buffer-in-direction ()
-  (let ((display-buffer-alist '()))
-
-    (wal/display-buffer-in-direction 'test-mode 'leftmost)
-
-    (should (equal (car display-buffer-alist)
-                   '((major-mode . test-mode)
-                     (display-buffer-reuse-mode-window display-buffer-in-direction)
-                     (direction . leftmost))))))
-
-(ert-deftest test-wal/display-buffer-ethereally ()
-  (let ((display-buffer-alist '()))
-
-    (wal/display-buffer-ethereally 'test-mode)
-
-    (should (equal (car display-buffer-alist)
-                   '((major-mode . test-mode)
-                     nil
-                     (window-parameters . ((mode-line-format . none))))))))
-
-(ert-deftest wal/display-buffer-reuse-same-window ()
-  (let ((display-buffer-alist '()))
-
-    (wal/display-buffer-reuse-same-window 'test-mode)
-
-    (should (equal (car display-buffer-alist)
-                   '((major-mode . test-mode)
-                     (display-buffer-reuse-window display-buffer-same-window))))))
-
-(ert-deftest test-wal/other-displayed-frame-p ()
+(ert-deftest test-wal/display-buffer-use-some-frame--with-display-p ()
   (let ((frame nil)
         (params nil))
     (with-mock ((selected-frame . (lambda () frame))
@@ -140,24 +95,24 @@
       (setq frame 1)
       (setq params '((display . t)))
 
-      (should (wal/other-displayed-frame-p 0))
-      (should-not (wal/other-displayed-frame-p 1))
+      (should (wal/display-buffer-use-some-frame--with-display-p 0))
+      (should-not (wal/display-buffer-use-some-frame--with-display-p 1))
 
       (setq params '((display . nil)))
 
-      (should-not (wal/other-displayed-frame-p 0)))))
+      (should-not (wal/display-buffer-use-some-frame--with-display-p 0)))))
 
-(ert-deftest wal/display-buffer-other-frame ()
+(ert-deftest wal/display-buffer-same-place-or-faraway ()
   (let ((display-buffer-alist '()))
 
-    (wal/display-buffer-other-frame 'test-mode)
+    (wal/display-buffer-same-place-or-faraway 'test-mode)
 
     (should (equal (car display-buffer-alist)
                    '((major-mode . test-mode)
                      (display-buffer-reuse-window
                       display-buffer-use-some-frame
                       display-buffer-pop-up-window)
-                     (frame-predicate . wal/other-displayed-frame-p))))))
+                     (frame-predicate . wal/display-buffer-use-some-frame--with-display-p))))))
 
 (ert-deftest wal/kill-some-file-buffers ()
   (wal/with-temp-file "to-be-killed"

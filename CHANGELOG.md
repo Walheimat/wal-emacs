@@ -14,10 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   variable `wal/consult-buffer-narrow-to-project`.
 - Command `wal/project-switch-project` that filters by open projects.
   User-prefixed `h` now uses a `parallel` of this and the original.
-- Utility funcion `wal/display-buffer-other-frame` to display a buffer
-  in another frame if possible, reusing its window, and only as a last
-  resort in a pop-p window. This is used for custom `project` command
-  buffers.
+- Utility funcion `wal/display-buffer-same-place-or-faraway` to
+  display a buffer in another frame if possible, reusing its window,
+  and only as a last resort in a pop-p window. This is used for custom
+  `project` command buffers.
 
 ### Changed
 
@@ -35,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Most `which-key` replacements that are not prefixes were removed.
 - Transients for `winner` and `smerge` were replaced by using (and
   adding) `repeat-mode` maps.
+- `display-buffer` utility functions were reduced to two cases:
+  `wal/display-buffer-same-place-or-{faraway,nearby}`.
 
 ### Removed
 
