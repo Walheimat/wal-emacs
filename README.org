@@ -525,7 +525,7 @@ Make completions look nice.
 #+BEGIN_SRC emacs-lisp
 ;; Create `transient' for config package.
 (with-no-warnings
-  (wal/transient-define-captain wal-config ()
+  (transient-define-prefix colonel ()
     "Facilitate the usage of or the working on Walheimat's config."
     [["Do"
       ("f" "config" wal/find-config)
@@ -565,7 +565,7 @@ Make completions look nice.
     "pr" 'package-reinstall
     "pd" 'package-delete)
 
-  (global-set-key (kbd (wal/key-combo-for-leader 'wal/colonel)) #'wal-config-captain)
+  (global-set-key (kbd (wal/key-combo-for-leader 'wal/colonel)) #'colonel)
 
   (wal/general "n" 'display-line-numbers-mode)
 
@@ -669,10 +669,41 @@ I use many[fn:10] custom keybindings. You can find an overview [[file:docs/bindi
   :type 'boolean
   :group 'wal-key-bindings)
 
-(defcustom wal/key-reach '(";" "." "/" "'" ",")
+(defcustom wal/key-reach '(";" "," "." "/" "'" "[" "]")
   "List of keys ordered by reachability."
-  :type '(list string string string string string)
+  :type '(list string string string string string string string)
   :group 'wal-key-bindings)
+#+END_SRC
+
+** Leaders
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/leaders
+  (list 'wal/lieutenant
+        'wal/consult
+        'wal/captain
+        'wal/major
+        'wal/trooper
+        'wal/colonel
+        'wal/general)
+  "Leader keys ordered to match `wal/key-reach'.")
+
+(defun wal/key-by-leader (leader)
+  "Get the key for LEADER."
+  (nth (seq-position wal/leaders leader) wal/key-reach))
+
+(defun wal/key-combo-for-leader (leader &optional key in-sink)
+  "Get the key combination for LEADER.
+
+ If KEY is non-nil, append it. If IN-SINK is non-nil, infix leader key."
+  (let* ((leader-key (wal/key-by-leader leader))
+         (prefixed (wal/prefix-user-key leader-key)))
+
+    (if key
+        (if in-sink
+            (concat prefixed " " leader-key " " key)
+          (concat prefixed " " key))
+      prefixed)))
 #+END_SRC
 
 ** Packages
@@ -687,8 +718,8 @@ Allows defining custom prefixes.
 **** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/leaders '(wal/lieutenant wal/captain wal/major wal/colonel wal/general))
-(defvar wal/general-leaders '(wal/lieutenant wal/major wal/general))
+(defvar wal/general-leaders '(wal/lieutenant wal/major wal/general)
+  "Leaders that a `general' definer will be created for.")
 
 (cl-defmacro wal/create-leader-sink (name &key definer prefix)
   "Macro to create a leader sink `NAME-sink'.
@@ -720,23 +751,6 @@ All ARGS are passed to both definers."
   `(progn
     (wal/lieutenant ,@args ,key ,fun)
     (wal/lieutenant-sink ,@args ,key ,mfun)))
-
-(defun wal/key-by-leader (leader)
-  "Get the key for LEADER."
-  (nth (seq-position wal/leaders leader) wal/key-reach))
-
-(defun wal/key-combo-for-leader (leader &optional key in-sink)
-  "Get the key combination for LEADER.
-
- If KEY is non-nil, append it. If IN-SINK is non-nil, infix leader key."
-  (let* ((leader-key (wal/key-by-leader leader))
-         (prefixed (wal/prefix-user-key leader-key)))
-
-    (if key
-        (if in-sink
-            (concat prefixed " " leader-key " " key)
-          (concat prefixed " " key))
-      prefixed)))
 
 (defun wal/general-create-definer (leader)
   "Create a definer for LEADER with a sink."
@@ -800,7 +814,8 @@ above).
   :demand t
 
   :custom
-  (transient-hide-during-minibuffer-read t))
+  (transient-hide-during-minibuffer-read t)
+  (transient-show-popup 0.8))
 #+END_SRC
 
 ** Footer
@@ -2796,7 +2811,10 @@ No offender.
 
   :bind
   (:map wal/triple-minus-map
-   ("r" . wal/clear-registers)))
+   ("r" . wal/clear-registers))
+
+  :wal-bind
+  ("i" . jump-to-register))
 #+END_SRC
 
 *** pulse
@@ -4735,14 +4753,19 @@ If NOT-AT-POINT is t, call `consult-line' normally."
   (wal/consult-line
    wal/consult-clock-in
    consult-mark||consult-global-mark
-   consult-register-load||consult-register-store
    wal/consult-unregister)
 
   :init
   (parallel consult-mark consult-global-mark)
-  (parallel consult-register-load consult-register-store)
 
-  (defvar wal/consult-map (make-sparse-keymap))
+  (general-define-key
+    :prefix (wal/key-combo-for-leader 'wal/consult)
+    :prefix-map 'wal/consult-map)
+
+  (with-eval-after-load 'which-key
+    (which-key-add-key-based-replacements
+      (wal/key-combo-for-leader 'wal/consult)
+      '(nil . "consult")))
 
   :config
   ;; Integrate with `xref'.
@@ -4776,11 +4799,6 @@ If NOT-AT-POINT is t, call `consult-line' normally."
    'minibuffer-setup-hook
    #'wal/consult-buffer--narrow-to-project)
 
-  (with-eval-after-load 'which-key
-    (which-key-add-key-based-replacements
-      (wal/prefix-user-key "[")
-      '(nil . "consult")))
-
   (with-eval-after-load 'org-keys
     (wal/replace-in-alist
      'org-speed-commands
@@ -4813,10 +4831,7 @@ If NOT-AT-POINT is t, call `consult-line' normally."
    ("C-M-." . wal/consult-toggle-preview))
 
   :wal-bind
-  (("j" . consult-buffer))
-
-  :wal-bind-keymap
-  (("[" . wal/consult-map)))
+  (("j" . consult-buffer)))
    #+END_SRC
 
 ** Footer
@@ -5480,15 +5495,19 @@ If called with numeric prefix `5', don't set variable
   :ensure nil
 
   :commands
-  (wal/org-roam
-   org-roam-buffer-display-dedicated
+  (org-roam-buffer-display-dedicated
    org-roam-capture
    org-roam-node-create
    org-roam-node-find
-   org-roam-node-read)
+   org-roam-node-read
+   trooper)
 
   :init
   (setq org-roam-v2-ack t)
+
+  (general-define-key
+   (wal/key-combo-for-leader 'wal/trooper)
+   'trooper)
 
   :config
   ;; Show roam buffer on the right.
@@ -5497,7 +5516,7 @@ If called with numeric prefix `5', don't set variable
   ;; Refile differently for these files.
   (wal/replace-in-alist 'org-speed-commands '(("w" . wal/org-refile)))
 
-  (wal/transient-define-captain org-roam ()
+  (transient-define-prefix trooper ()
     "Run `org-roam' commands."
     [["Capture"
       ("c" "capture" org-roam-capture)
@@ -5537,10 +5556,7 @@ If called with numeric prefix `5', don't set variable
       "* %?\n:PROPERTIES:\n:CREATED_AT: %U\n:TASK: %k\n:END:"
       :target (file+head "%<%Y-%m-%d>.org"
                          "#+title: %<%Y-%m-%d>\n")
-      :empty-lines 1)))
-
-  :wal-bind
-  ("]" . org-roam-captain))
+      :empty-lines 1))))
 #+END_SRC
 
 *** org-roam-ui
@@ -5558,7 +5574,7 @@ Fancy UI.
   :after org-roam
 
   :config
-  (transient-append-suffix 'org-roam-captain '(0 3 0)
+  (transient-append-suffix 'trooper '(0 3 0)
     '("u" "ui" org-roam-ui-mode))
 
   :ensure nil)

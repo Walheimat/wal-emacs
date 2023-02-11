@@ -33,19 +33,23 @@
 
 (ert-deftest test-wal/key-by-leader ()
   (defvar wal/key-reach)
-  (let ((wal/key-reach '("a" "b" "c")))
+  (defvar wal/leaders)
+  (let ((wal/key-reach '("a" "b" "c"))
+        (wal/leaders '(hunk bunk trunk)))
 
-    (should (string-equal "c" (wal/key-by-leader 'wal/major)))))
+    (should (string-equal "c" (wal/key-by-leader 'trunk)))))
 
 (ert-deftest test-wal/key-combo-for-leader ()
   (defvar wal/key-reach)
+  (defvar wal/leaders)
   (with-mock ((wal/prefix-user-key . (lambda (x) (concat "C-t " x))))
 
-    (let ((wal/key-reach '("a" "b" "c")))
+    (let ((wal/key-reach '("a" "b" "c"))
+          (wal/leaders '(hunk bunk trunk)))
 
-      (should (string-equal "C-t a k" (wal/key-combo-for-leader 'wal/lieutenant "k")))
-      (should (string-equal "C-t a a k" (wal/key-combo-for-leader 'wal/lieutenant "k" t)))
-      (should (string-equal "C-t a" (wal/key-combo-for-leader 'wal/lieutenant))))))
+      (should (string-equal "C-t a k" (wal/key-combo-for-leader 'hunk "k")))
+      (should (string-equal "C-t b b k" (wal/key-combo-for-leader 'bunk "k" t)))
+      (should (string-equal "C-t c" (wal/key-combo-for-leader 'trunk))))))
 
 (ert-deftest test-wal/general-create-definer ()
   (with-mock ((wal/key-combo-for-leader . (lambda (_) "C-t"))

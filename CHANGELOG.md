@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.10.4]
 
 ### Added
 
@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and only as a last resort in a pop-p window. This is used for custom
   `project` command buffers.
 - Keymap `wal/zero-in` to bind finding commands.
+- Keys `[` and `]` were added to `wal/key-reach`; leaders
+  `wal/consult` and `wal/trooper` were added to map `wal/consult-map`
+  and `wal/org-roam-captain`.
 
 ### Changed
 
@@ -38,6 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   adding) `repeat-mode` maps.
 - `display-buffer` utility functions were reduced to two cases:
   `wal/display-buffer-same-place-or-{faraway,nearby}`.
+- The order of `wal/key-reach` has changed, pushing `colonel` and
+  `general` to `[` and `]`.
 
 ### Removed
 
