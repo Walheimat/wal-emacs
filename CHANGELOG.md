@@ -43,11 +43,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal/display-buffer-same-place-or-{faraway,nearby}`.
 - The order of `wal/key-reach` has changed, pushing `colonel` and
   `general` to `[` and `]`.
+- Non-`captain` dispatches no longer use custom transient.
 
 ### Removed
 
 - Package `jsonian` in favor of using built-in `js-json-mode`.
 - Package `emojify` in favor of relying on built-in emoji support.
+- Several `parallel` uses. The transients were moved to `wal/major`.
 
 ## Fixed
 

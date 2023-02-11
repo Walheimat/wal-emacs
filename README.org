@@ -4301,16 +4301,16 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 
 #+BEGIN_SRC emacs-lisp
 (use-package rg
-  :commands (rg-project||rg-menu rg-menu rg-read-pattern)
-
-  :init
-  (parallel rg-project rg-menu)
+  :commands (rg-project rg-menu rg-read-pattern)
 
   :config
   (wdb/faraway "\\*rg\\*\\'")
 
+  :general
+  (wal/major "n" 'rg-menu)
+
   :wal-bind
-  ("n" . rg-project||rg-menu))
+  ("n" . rg-project))
 #+END_SRC
 
 *** dumb-jump
@@ -6415,13 +6415,10 @@ Forget remembering =git= commands, use =transient=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
-  :commands (magit-captain magit-status||magit-captain)
-
-  :init
-  (parallel magit-status magit-captain)
+  :commands (ma-magit magit-status)
 
   :config
-  (wal/transient-define-captain magit ()
+  (transient-define-prefix ma-magit ()
     "Call `magit' commands in a `magit'-y way."
     [["Core"
       ("m" "status" magit-status)
@@ -6437,8 +6434,11 @@ Forget remembering =git= commands, use =transient=.
       ("x" "run" magit-run)
       ("c" "clone" magit-clone)]])
 
+  :general
+  (wal/major "m" 'ma-magit)
+
   :wal-bind
-  ("m" . magit-status||magit-captain)
+  ("m" . magit-status)
 
   :custom
   (magit-blame-mode-lighter " mbl")
@@ -6494,7 +6494,7 @@ doom.
   :wal-ways nil
 
   :config
-  (transient-append-suffix 'magit-captain #'magit-clone
+  (transient-append-suffix 'ma-magit #'magit-clone
     '("t" "time machine" git-timemachine-toggle))
 
   :defer 2
@@ -8381,7 +8381,7 @@ considered slow."
   ;; Don't keep track of multiple projects.
   (advice-add 'lsp :before #'wal/first-prevent-adding-other-projects)
 
-  (wal/transient-define-captain lsp-mode ()
+  (transient-define-prefix lsp-mode-dispatch ()
     "Call `lsp-mode' functions."
     [["Format"
       ("f" "buffer" lsp-format-buffer)
@@ -8434,7 +8434,7 @@ considered slow."
   (lsp-xml-format-split-attributes-indent-size 1)
 
   :general
-  (wal/major :keymaps 'lsp-mode-map "l" '(lsp-mode-captain :wk "lsp"))
+  (wal/major :keymaps 'lsp-mode-map "l" '(lsp-mode-dispatch :wk "lsp"))
 
   :delight
   (lsp-mode " lsp")
@@ -8525,7 +8525,7 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
   (wdb/nearby dap-ui--locals-buffer :side 'right :no-other t)
 
   (with-eval-after-load 'lsp-mode
-    (transient-append-suffix 'lsp-mode-captain '(0 -1)
+    (transient-append-suffix 'lsp-mode-dispatch '(0 -1)
       ["Debug"
        ("b" "start" dap-debug)]))
 
