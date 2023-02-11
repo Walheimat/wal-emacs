@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   display a buffer in another frame if possible, reusing its window,
   and only as a last resort in a pop-p window. This is used for custom
   `project` command buffers.
+- Keymap `wal/zero-in` to bind finding commands.
 
 ### Changed
 

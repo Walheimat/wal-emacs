@@ -573,15 +573,18 @@ Make completions look nice.
 
   (wal/lieutenant "<SPC>" 'wal/push-mark)
   (wal/lieutenant "s" 'wal/scratch-buffer)
+  (wal/lieutenant "k" 'wal/kwim)
 
   (when (wal/modern-emacs-p 29)
-    (wal/lieutenant "d" 'duplicate-dwim)
-    (wal/lieutenant "f" 'find-sibling-file))
+    (wal/lieutenant "d" 'duplicate-dwim))
 
   (defvar wal/triple-minus-map (make-sparse-keymap)
     "Keymap for one-off custom commands.")
-
   (defvar wal/triple-minus-key (wal/prefix-user-key "-"))
+
+  (defvar wal/zero-in-map (make-sparse-keymap)
+    "Keymap for assorted finders.")
+  (defvar wal/zero-in-key (wal/prefix-user-key "0"))
 
   (general-define-key
    :prefix wal/triple-minus-key
@@ -590,8 +593,16 @@ Make completions look nice.
    "b" 'wal/kill-some-file-buffers
    "d" 'wal/l)
 
+  (general-define-key
+   :prefix wal/zero-in-key
+   :prefix-map 'wal/zero-in-map
+   :wk-full-keys nil
+   "s" 'find-sibling-file
+   "f" 'wal/find-fish-config)
+
   (with-eval-after-load 'which-key
     (which-key-add-key-based-replacements (wal/prefix-user-key "-") "triple-minus")
+    (which-key-add-key-based-replacements (wal/prefix-user-key "0") "zero-in")
 
     ;; This forces prefixing with `C-c w'.
     (when (not (display-graphic-p))
@@ -600,9 +611,6 @@ Make completions look nice.
 
   (global-set-key (kbd "C-x o") #'wal/other-window)
   (global-set-key (kbd "C-M-i") #'completion-at-point)
-
-  ;; Replaces `kill-sexp'.
-  (global-set-key (kbd "C-k") #'wal/kwim)
 
   ;; Replaces `save-buffers-kill-terminal'.
   (global-set-key (kbd "C-x C-c") #'wal/delete-edit-or-kill))
