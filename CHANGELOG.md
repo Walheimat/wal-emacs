@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v1.10.4]
+## [v1.11.0]
+
+Silicon mountain.
 
 ### Added
 
@@ -14,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   variable `wal/consult-buffer-narrow-to-project`.
 - Command `wal/project-switch-project` that filters by open projects.
   User-prefixed `h` now uses a `parallel` of this and the original.
-- Utility funcion `wal/display-buffer-same-place-or-faraway` to
+- Utility function `wal/display-buffer-same-place-or-faraway` to
   display a buffer in another frame if possible, reusing its window,
   and only as a last resort in a pop-p window. This is used for custom
   `project` command buffers.
