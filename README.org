@@ -1759,11 +1759,14 @@ set up (major-) modes using hooks.
 
 (defvar harpoon--treesit-alist '((js-mode . javascript)
                                  (c++-mode . cpp)
-                                 (python-mode . python))
+                                 (python-mode . python)
+                                 (js-json-mode . json))
   "Alist mapping languages to major modes.")
 
 (defvar harpoon--treesit-alias-alist '((js-mode . javascript-mode))
   "Alist mapping modes to their alias.")
+
+(defvar harpoon--treesit-replacement-alist '((js-json-mode . json-mode)))
 
 (defun harpoon--treesit-ready-p (name)
   "Check if treesit is available for NAME."
@@ -1781,13 +1784,20 @@ set up (major-) modes using hooks.
   (or (cdr-safe (assoc name harpoon--treesit-alias-alist))
       name))
 
+(defun harpoon--treesit-maybe-replace (name)
+  "Get the potentially replaced mode name for NAME."
+  (or (cdr-safe (assoc name harpoon--treesit-replacement-alist))
+      name))
+
 (defun harpoon--treesit-name (name)
   "Get treesit name for NAME."
-  (let ((segment (thread-first
-                   name
-                   (symbol-name)
-                   (split-string "-mode")
-                   (car))))
+  (let* ((name (harpoon--treesit-maybe-replace name))
+         (segment (thread-first
+                    name
+                    (symbol-name)
+                    (split-string "-mode")
+                    (car))))
+
     (intern (concat segment "-ts-mode"))))
 
 (defun harpoon--mode-name (name)
@@ -7218,6 +7228,11 @@ Can we have =deno= instead of =node=?
     :functions (add-node-modules-path prettier-mode)
 
     (setq-local compilation-error-screen-columns nil))
+
+  (harpoon js-json-mode
+    :messages ("JSON! JSON? JSON!?")
+    :tabs t
+    :lsp t)
 
   :config
   (when (wal/modern-emacs-p 29)

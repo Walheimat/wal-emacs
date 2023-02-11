@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keys `[` and `]` were added to `wal/key-reach`; leaders
   `wal/consult` and `wal/trooper` were added to map `wal/consult-map`
   and `wal/org-roam-captain`.
+- Macro `harpoon` now has a mapping for modes whose `treesit`
+  equivalent does not follow the `<name>-ts-mode` pattern.
+- `js-json-mode` (and `json-ts-mode`) now have a `harpoon`.
 
 ### Changed
 
