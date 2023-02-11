@@ -1034,6 +1034,8 @@
         (add-to-list 'major-mode-remap-alist
                      '(test-mode . test-ts-mode))
         (with-eval-after-load 'all-the-icons
+          (defvar all-the-icons-mode-icon-alist)
+
           (when-let ((setting
                       (cdr
                        (assoc 'test-mode all-the-icons-mode-icon-alist)))

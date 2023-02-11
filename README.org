@@ -265,8 +265,10 @@ installed from there.
 
 (when wal/flag-doctor
   (setq use-package-compute-statistics t)
-  (when (fboundp 'use-package-report)
-    (add-hook 'after-init-hook #'use-package-report)))
+
+  (declare-function use-package-report "ext:use-package.el")
+
+  (add-hook 'after-init-hook #'use-package-report))
 
 (wal/insert-after 'use-package-keywords :bind-keymap* :wal-bind)
 (wal/insert-after 'use-package-keywords :wal-bind :wal-bind-keymap)
@@ -288,12 +290,11 @@ Make sure that custom directories exist. We want:
 Also create non-existing directories while finding files.
 
 #+BEGIN_SRC emacs-lisp
-(add-hook 'emacs-startup-hook (lambda ()
-                                (mapc (lambda (it) (make-directory it t))
-                                      `(,wal/cache-directory
-                                        ,wal/org-directory
-                                        ,wal/agenda-tasks-directory
-                                        ,wal/org-roam-directory))))
+(mapc (lambda (it) (make-directory it t))
+      `(,wal/cache-directory
+        ,wal/org-directory
+        ,wal/agenda-tasks-directory
+        ,wal/org-roam-directory))
 
 (add-to-list 'find-file-not-found-functions #'wal/create-non-existent-directory)
 #+END_SRC
@@ -578,7 +579,7 @@ Make completions look nice.
     (wal/lieutenant "f" 'find-sibling-file))
 
   (defvar wal/triple-minus-map (make-sparse-keymap)
-    "Keymap for semi-useful custom commands.")
+    "Keymap for one-off custom commands.")
 
   (defvar wal/triple-minus-key (wal/prefix-user-key "-"))
 
@@ -586,12 +587,16 @@ Make completions look nice.
    :prefix wal/triple-minus-key
    :prefix-map 'wal/triple-minus-map
    :wk-full-keys nil
-   "f" 'wal/find-fish-config
    "b" 'wal/kill-some-file-buffers
    "d" 'wal/l)
 
   (with-eval-after-load 'which-key
-    (which-key-add-key-based-replacements (wal/prefix-user-key "-") "triple-minus"))
+    (which-key-add-key-based-replacements (wal/prefix-user-key "-") "triple-minus")
+
+    ;; This forces prefixing with `C-c w'.
+    (when (not (display-graphic-p))
+      (which-key-add-key-based-replacements "C-c w" "wal")))
+
 
   (global-set-key (kbd "C-x o") #'wal/other-window)
   (global-set-key (kbd "C-M-i") #'completion-at-point)
@@ -1196,7 +1201,7 @@ Both functions are called interactively.
 By default, A is called. B will be called if the prefix argument
 is numeric. This allows both commands to consume the prefix.
 
-If `universalize' is t, the prefix argument is set to mimic the
+If UNIVERSALIZE is t, the prefix argument is set to mimic the
 `universal-argument' for B."
   (declare (indent defun))
 
@@ -1738,14 +1743,14 @@ set up (major-) modes using hooks.
   "Alist mapping modes to their alias.")
 
 (defun harpoon--treesit-ready-p (name)
-  "Check if treesit is available for LANGUAGE."
+  "Check if treesit is available for NAME."
   (and (wal/modern-emacs-p 29)
        (require 'treesit nil t)
        (treesit-available-p)
        (treesit-ready-p (harpoon--treesit-language name) t)))
 
 (defun harpoon--treesit-language (name)
-  "Get language for MODE."
+  "Get language for NAME."
   (cdr-safe (assoc name harpoon--treesit-alist)))
 
 (defun harpoon--treesit-maybe-alias (name)
@@ -1769,7 +1774,9 @@ set up (major-) modes using hooks.
     name))
 
 (defun harpoon--function-name (mode &optional harpoon)
-  "Get the name of the target hook for MODE."
+  "Get the name of the target hook for MODE.
+
+The suffix is `-hook' unless HARPOON is t, then it is `-harpoon'."
   (let ((suffix (if harpoon "harpoon" "hook")))
 
     (thread-first
@@ -1857,7 +1864,7 @@ The rest of the BODY will be spliced into the hook function."
                ',(intern (concat (symbol-name name) "-captain"))))))))
 
 (cl-defmacro harpoon-hook (name)
-  "Create the hook call."
+  "Create the hook call for NAME."
   `(add-hook
     ',(harpoon--function-name name)
     ',(harpoon--function-name name t)))
@@ -1884,7 +1891,7 @@ LSP is either nil, t or a plist. If it is a plist, key
        (wal/append 'lsp-file-watch-ignored-directories ',(plist-get lsp :ignore-dirs)))))
 
 (cl-defmacro harpoon-treesit (name)
-  "Remap LANGUAGE major-mode to tree-sitter variant if possible."
+  "Remap mode NAME to tree-sitter variant if possible."
   (declare (indent defun))
 
   (when-let* ((ready (harpoon--treesit-ready-p name))
@@ -1896,16 +1903,20 @@ LSP is either nil, t or a plist. If it is a plist, key
        (add-to-list 'major-mode-remap-alist ',(cons (harpoon--treesit-maybe-alias mode-name) ts-mode-name))
 
        (with-eval-after-load 'all-the-icons
+         (defvar all-the-icons-mode-icon-alist)
+
          (when-let ((setting (cdr (assoc ',mode-name all-the-icons-mode-icon-alist)))
                     (name ',ts-mode-name))
 
            (add-to-list 'all-the-icons-mode-icon-alist (cons name setting)))))))
 
 (cl-defmacro harpoon (name &rest args)
-  "Hook into major mode NAME.
+  "Hook into mode NAME.
 
-See documentation macros `harpoon-function', `harpoon-ligatures'
-and `harpoon-lsp' for the available keywords."
+The ARGS are a keyword plist provided to sub-macros.
+
+See documentation of macros `harpoon-function',
+`harpoon-ligatures' and `harpoon-lsp' for the available keywords."
   (declare (indent defun))
   `(progn
      (harpoon-function ,name ,@args)
@@ -2424,6 +2435,9 @@ are two differences:
 
 1. It prefixes the key strings with `wal/prefix-user-key'.
 2. On recursion it calls this normalizer."
+  (declare-function use-package-recognize-function "ext:use-package.el")
+  (declare-function use-package-error "ext:use-package.el")
+
   (let ((arg args)
         args*)
     (while arg
@@ -2432,7 +2446,6 @@ are two differences:
          ((and (consp x)
                (or (stringp (car x))
                    (vectorp (car x)))
-               (fboundp 'use-package-recognize-function)
                (or (use-package-recognize-function (cdr x) t #'stringp)))
           ;; This is where we deviate from the `:bind' normalizer.
           (setq args* (nconc args* (list (cons (wal/prefix-user-key (car x)) (cdr x)))))
@@ -2451,11 +2464,10 @@ are two differences:
                 (nconc args* (use-package-normalize/:wal-bind name keyword x)))
           (setq arg (cdr arg)))
          (t
-          (when (fboundp 'use-package-error)
-            (use-package-error
-             (concat (symbol-name name)
-                     " wants arguments acceptable to the `bind-keys' macro,"
-                     " or a list of such values")))))))
+          (use-package-error
+           (concat (symbol-name name)
+                   " wants arguments acceptable to the `bind-keys' macro,"
+                   " or a list of such values"))))))
     args*))
 
 (defalias 'use-package-normalize/:wal-bind 'wal/use-package-normalize-binder)
@@ -2488,21 +2500,22 @@ PRED is t or (2) NAME is installed.
 
 The STATE is updated as well before parsing REST if we want to
 use the result further down the line."
-  (when (and (fboundp 'use-package-process-keywords)
-             (fboundp 'use-package-plist-maybe-put))
-    (let* ((active (or pred
-                       (if (junk--pack-p name)
-                           (not (null (package-installed-p name)))
-                         (or (not (or wal/minimal wal/flag-mini))
-                             (not (null (memq name wal/minimal-exclude)))))))
+  (declare-function use-package-process-keywords "ext:use-package.el")
+  (declare-function use-package-plist-maybe-put "ext:use-package.el")
 
-           (body (use-package-process-keywords
-                   name
-                   rest
-                   (use-package-plist-maybe-put state :wal-ways active))))
+  (let* ((active (or pred
+                     (if (junk--pack-p name)
+                         (not (null (package-installed-p name)))
+                       (or (not (or wal/minimal wal/flag-mini))
+                           (not (null (memq name wal/minimal-exclude)))))))
 
-      `((when ,active
-          ,@body)))))
+         (body (use-package-process-keywords
+                 name
+                 rest
+                 (use-package-plist-maybe-put state :wal-ways active))))
+
+    `((when ,active
+        ,@body))))
 #+END_SRC
 
 **** Conditional :hook
@@ -2545,8 +2558,9 @@ Allows installing from other sources (like GitHub) using recipes.
   (setq quelpa-use-package-inhibit-loading-quelpa t)
 
   :config
-  (when (fboundp 'quelpa-use-package-activate-advice)
-    (quelpa-use-package-activate-advice)))
+  (declare-function quelpa-use-package-activate-advice "ext:quelpa-use-package")
+
+  (quelpa-use-package-activate-advice))
 #+END_SRC
 
 ** Footer
@@ -2678,7 +2692,7 @@ Effing diffing.
   :bind
   ;; Remove `diff-goto-source'.
   (:map diff-mode-shared-map
-   ("o". nil)))
+   ("o" . nil)))
 #+END_SRC
 
 *** tabulated-list
@@ -3782,7 +3796,9 @@ Screen saver, CPU devourer.
                        zone-pgm-rat-race
                        zone-pgm-whack-chars])
 
-  (when (and (fboundp 'zone-when-idle) wal/zone-when-idle)
+  (declare-function zone-when-idle "ext:zone.el")
+
+  (when wal/zone-when-idle
     (zone-when-idle wal/zone-timer))
 
   :general
@@ -4339,8 +4355,7 @@ Complete commands and code.
   :tag "Completion")
 
 (defcustom wal/consult-buffer-narrow-to-project t
-  "Whether `consult-buffer' should be pre-narrowed to the current
-project's buffers."
+  "Whether `consult-buffer' is narrowed to project."
   :type 'boolean
   :group 'wal-complete)
 #+END_SRC
@@ -4629,12 +4644,13 @@ Heavy lifting with =consult=.
 Do not ignore hidden files."
   (interactive "P")
 
+  (declare-function consult--grep "ext:consult.el")
+  (declare-function consult--ripgrep-builder "ext:consult.el")
+
   (let ((consult-ripgrep-args
          (concat (substring consult-ripgrep-args 0 -1) "--no-ignore .")))
 
-    (when (and (fboundp 'consult--grep)
-               (fboundp 'consult--ripgrep-builder))
-      (consult--grep "Ripgrep (ignored)" #'consult--ripgrep-builder dir initial))))
+    (consult--grep "Ripgrep (ignored)" #'consult--ripgrep-builder dir initial)))
 
 (defun wal/consult-unregister ()
   "Remove KEY from the register."
@@ -4886,6 +4902,8 @@ Built-in project management.
   "Run CMD for the current project.
 
 Each command will be stored in a per-project history."
+  (defvar project-vc-name)
+
   (let* ((project-vc-name nil)
          (current (project-current t))
          (root (project-root current))
@@ -5075,11 +5093,12 @@ are limited to open projects (unless no open projects exist)."
                         ".ccls-cache/"
                         "coverage/"))
 
-  :bind
-  (:map project-prefix-map
-   ("c" . wal/project-compile)
-   ("t" . wal/project-test)
-   ("i" . wal/project-install))
+  :general
+  (wal/major
+    "p" '(:ignore t :wk "project")
+    "pc" 'wal/project-compile
+    "pt" 'wal/project-test
+    "pi" 'wal/project-install)
 
   :wal-bind
   (("h" . project-find-file)
@@ -5168,8 +5187,9 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 This calls `org-content' interactively."
   (interactive "nShow content up to level: ")
 
-  (when (fboundp 'org-content)
-    (org-content level)))
+  (declare-function org-content "ext:org-cycle.el")
+
+  (org-content level))
 #+END_SRC
 
 **** Configuration
@@ -5226,7 +5246,7 @@ This calls `org-content' interactively."
   (org-ellipsis "↷")
   (org-hide-emphasis-markers t)
   (org-startup-with-inline-images t)
-  (org-startup-folded 'overview)
+  (org-startup-folded 'nofold)
   (org-cycle-separator-lines 1)
 
   ;; Logging.
@@ -5426,10 +5446,10 @@ Trying to organize my thoughts using Zettelkästen.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/org-refile (&optional arg)
-  "Refile using ARGS, but use `org-roam-directory' for its files.
+  "Refile using ARG, but use `org-roam-directory' for its files.
 
-If called with numeric prefix `5', don't set `org-agenda-files' (allows
-refiling to non-`org-roam' files."
+If called with numeric prefix `5', don't set variable
+`org-agenda-files' (allows refiling to non-`org-roam' files."
   (interactive "P")
 
   (declare-function org-refile "ext:org.el")
@@ -5584,8 +5604,9 @@ Turn any =org-mode= buffer into a presentation.
         cursor-type t)
   (visual-fill-column-mode -1)
 
-  (when (fboundp 'outline-show-all)
-    (outline-show-all))
+  (declare-function outline-show-all "ext:outline.el")
+
+  (outline-show-all)
 
   (setq wal/org-tree-slide-disabled-modes '())
 
@@ -5786,23 +5807,28 @@ You know the drill. Clock in, clock out.
 
 (defun wal/org-clock-heading ()
   "Render a truncated heading for modeline."
-  (when (and (fboundp 'org-link-display-format) (fboundp 'org-get-heading))
-    (let ((heading (org-link-display-format
-	                (org-no-properties (org-get-heading t t t t)))))
+  (declare-function org-link-display-format "ext:org-link.el")
+  (declare-function org-get-heading "ext:org.el")
 
-      (wal/truncate heading 12))))
+  (let ((heading (org-link-display-format
+	              (org-no-properties (org-get-heading t t t t)))))
+
+    (wal/truncate heading 12)))
 
 (defun wal/org-clock-in-from-now ()
   "Force `org-clock-in' without continuous logging."
   (defvar org-clock-continuously)
+  (declare-function org-clock-in "ext:org-clock.el")
+
   (let ((org-clock-continuously nil))
 
-    (when (fboundp 'org-clock-in)
-      (org-clock-in))))
+    (org-clock-in)))
 
 (defun wal/org-clock-take-note ()
   "Take a note for the currently clocked-in entry."
   (interactive)
+
+  (declare-function org-clock-goto "ext:org-clock.el")
 
   (save-window-excursion
     (org-clock-goto)
@@ -6272,10 +6298,11 @@ Set up =eshell=. I like the idea of it but I don't really use it.
 (defun wal/instead-truncate-buffer (&rest _r)
   "Advise to truncate buffer."
   (defvar eshell-buffer-maximum-lines)
+  (declare-function eshell-truncate-buffer "ext:eshell.el")
+
   (let ((eshell-buffer-maximum-lines 0))
 
-    (when (fboundp 'eshell-truncate-buffer)
-      (eshell-truncate-buffer))))
+    (eshell-truncate-buffer)))
 #+END_SRC
 
 **** Configuration
@@ -6484,11 +6511,11 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
   (defvar-keymap smerge-repeat-map
     :doc "Keymap to repeat various `smerge' commands."
     :repeat t
-    "n" #'smerge-next
-    "p" #'smerge-prev
-    "l" #'smerge-keep-lower
-    "u" #'smerge-keep-upper
-    "a" #'smerge-keep-all)
+    "n" 'smerge-next
+    "p" 'smerge-prev
+    "l" 'smerge-keep-lower
+    "u" 'smerge-keep-upper
+    "a" 'smerge-keep-all)
 
   :delight " smg")
 #+END_SRC
@@ -7496,12 +7523,13 @@ LSP support for Dart.
   "Get the service URI (needed for devtools)."
   (interactive)
 
-  (condition-case err
-      (when (fboundp 'lsp-workspace-get-metadata)
-        (let ((uri (lsp-workspace-get-metadata "devtools-vm-service-uri")))
+  (declare-function lsp-workspace-get-metadata "ext:lsp-workspace.el")
 
-          (kill-new uri)
-          (message "Service URI (%s) copied to kill ring" uri)))
+  (condition-case err
+      (let ((uri (lsp-workspace-get-metadata "devtools-vm-service-uri")))
+
+        (kill-new uri)
+        (message "Service URI (%s) copied to kill ring" uri))
     (error
       (message "Couldn't get service URI: %s" (error-message-string err)))))
 #+END_SRC
@@ -8093,23 +8121,24 @@ Display it afterwards unless DEFER-DISPLAY is t.
 If KILL-BUFFER is t, kill the file's buffer."
   (interactive "fSelect file: ")
 
-  (when (and (fboundp 'flycheck-get-checker-for-buffer)
-             (fboundp 'flycheck-syntax-check-new)
-             (fboundp 'flycheck-compute-working-directory)
-             (fboundp 'flycheck-syntax-check-start))
-    (with-current-buffer (find-file-noselect file)
-      (let ((checker (flycheck-get-checker-for-buffer)))
+  (declare-function flycheck-get-checker-for-buffer "ext:flycheck.el")
+  (declare-function flycheck-syntax-check-new "ext:flycheck.el")
+  (declare-function flycheck-compute-working-directory "ext:flycheck.el")
+  (declare-function flycheck-syntax-check-start "ext:flycheck.el")
 
-        (if checker
-            (let* ((check (flycheck-syntax-check-new
-                           :buffer (current-buffer)
-                           :checker checker
-                           :context nil
-                           :working-directory (flycheck-compute-working-directory checker)))
-                   (callback (wal/flycheck-file--callback file (current-buffer) defer-display kill-buffer)))
+  (with-current-buffer (find-file-noselect file)
+    (let ((checker (flycheck-get-checker-for-buffer)))
 
-              (flycheck-syntax-check-start check callback))
-          (user-error "Couldn't determine checker for file"))))))
+      (if checker
+          (let* ((check (flycheck-syntax-check-new
+                         :buffer (current-buffer)
+                         :checker checker
+                         :context nil
+                         :working-directory (flycheck-compute-working-directory checker)))
+                 (callback (wal/flycheck-file--callback file (current-buffer) defer-display kill-buffer)))
+
+            (flycheck-syntax-check-start check callback))
+        (user-error "Couldn't determine checker for file")))))
 #+END_SRC
 
 **** Configuration
