@@ -996,7 +996,9 @@
       "Hook into `test-mode'."
       (wal/message-in-a-bottle '("Just testing"))
       (message "hi")
-      (wal/corfu-auto '(0.2 4)))))
+      (progn
+        (wal/corfu-auto '(0.2 4))
+        (local-set-key (kbd "C-M-i") #'completion-at-point)))))
 
 (ert-deftest test-harpoon--functions ()
   (match-expansion

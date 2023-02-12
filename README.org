@@ -608,9 +608,8 @@ Make completions look nice.
     (when (not (display-graphic-p))
       (which-key-add-key-based-replacements "C-c w" "wal")))
 
-
-  (global-set-key (kbd "C-x o") #'wal/other-window)
-  (global-set-key (kbd "C-M-i") #'completion-at-point)
+  (global-set-key [remap other-window] #'wal/other-window)
+  (global-set-key [remap kill-line] #'wal/kwim)
 
   ;; Replaces `save-buffers-kill-terminal'.
   (global-set-key (kbd "C-x C-c") #'wal/delete-edit-or-kill))
@@ -990,7 +989,7 @@ Optionally RESET the type when called with `universal-argument'."
 
       (setq-local cursor-type type))))
 
-(defun wal/kwim ()
+(defun wal/kwim (&optional arg)
   "Kill what I mean.
 
 If there's an active region, kill it.
@@ -999,8 +998,10 @@ If we're at the (actual) end or (actual) beginning of a line,
 kill the whole line, otherwise kill forward.
 
 If a whole line is killed, move to the beginning of text on the
-next line."
-  (interactive)
+next line.
+
+ARG is passed to `kill-line' and `kill-whole-line'."
+  (interactive "P")
 
   (if (region-active-p)
       (kill-region nil nil t)
@@ -1016,8 +1017,8 @@ next line."
         (setq p-beg (point)))
 
       (if (and (/= p-before p-beg) (/= p-before p-end))
-          (kill-line)
-        (kill-whole-line)
+          (kill-line arg)
+        (kill-whole-line arg)
         (beginning-of-line-text)))))
 #+END_SRC
 
@@ -1885,7 +1886,10 @@ The rest of the BODY will be spliced into the hook function."
           ,@(harpoon--safe-body body)
 
           ,(when lsp '(wal/lsp))
-          ,(when corfu `(wal/corfu-auto ',corfu))
+          ,(when corfu
+             `(progn
+                (wal/corfu-auto ',corfu)
+                (local-set-key (kbd "C-M-i") #'completion-at-point)))
           ,(when prog-like '(run-hooks 'prog-like-hook))
           ,(when functions
              `(progn ,@(mapcar (lambda (it)
@@ -4010,7 +4014,7 @@ If no PREFIX is given, a slash is pre-pended to the first match."
        (if (match-string 2) (match-string 2) "")))))
 
 (defvar wal/popper-echo-regex-alist
-  '(("\\*helpful \\(?1:variable\\|function\\|macro\\): \\(?2:[a-zA-Z-]+\\)\\*")
+  '(("\\*helpful \\(?1:variable\\|function\\|macro\\|command\\): \\(?2:[a-zA-Z-]+\\)\\*")
     ("\\* docker-compose \\(?1:up\\|run\\|build\\)\\( --rm\\)?\\ \\(?2:\\w+\\)" . "dc/")
     ("\\* docker container \\(?1:logs\\|stop\\)?\\ ?\\(--tail [[:digit:]]+\\)?\\ \\(?2:\\w+_\\w+_[[:digit:]]+\\)\\ \\*" . "dcon/")))
 
