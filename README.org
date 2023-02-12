@@ -1024,36 +1024,7 @@ ARG is passed to `kill-line' and `kill-whole-line'."
 
 ** Windows
 
-I keep messing up, splitting vertically when I meant horizontally.
-This is inspired by [[https://github.com/purcell/emacs.d/blob/master][purcell's config]].
-
 #+BEGIN_SRC emacs-lisp
-(defun wal/split-window-the-other-way ()
-  "Split window the other way.
-This means if horizontally split, split vertically; if vertically
-split, split horizontally."
-  (interactive)
-
-  (let* ((other-buffer (and (next-window) (window-buffer (next-window))))
-         (win (selected-window))
-         (split-direction (cond ((or (windows-sharing-edge win 'above)
-                                     (windows-sharing-edge win 'below))
-                                 'vert)
-                                ((or (windows-sharing-edge win 'right)
-                                     (windows-sharing-edge win 'left))
-                                 'hori)
-                                (t nil))))
-
-    (delete-other-windows)
-
-    (pcase split-direction
-      ('vert (split-window-horizontally))
-      ('hori (split-window-vertically))
-      (_ nil))
-
-    (when other-buffer
-      (set-window-buffer (next-window) other-buffer))))
-
 (defun wal/other-window (&optional prefer-frame)
   "Switch to other window.
 

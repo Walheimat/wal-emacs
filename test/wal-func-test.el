@@ -181,25 +181,6 @@
 
     (was-called-with kill-region (list nil nil t))))
 
-(ert-deftest test-wal/split-window-the-other-way ()
-  (with-temp-buffer
-    (save-window-excursion
-      (split-window-horizontally)
-      (wal/split-window-the-other-way)
-
-      (should (windows-sharing-edge (selected-window) 'below)))
-    (save-window-excursion
-      (split-window-horizontally)
-      (other-window 1)
-      (wal/split-window-the-other-way)
-
-      (should (windows-sharing-edge (selected-window) 'below)))
-    (save-window-excursion
-      (split-window-vertically)
-      (wal/split-window-the-other-way)
-
-      (should (windows-sharing-edge (selected-window) 'right)))))
-
 (ert-deftest test-wal/other-window ()
   (with-mock ((active-minibuffer-window . #'always)
               (switch-to-minibuffer . (lambda () 'mini)))
