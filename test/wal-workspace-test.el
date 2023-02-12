@@ -23,6 +23,8 @@
   (should (string-equal (wal/project-command--buffer-name nil) "*project-compile*")))
 
 (ert-deftest test-wal/project-command ()
+  (defvar wal/project-test-default-cmd nil)
+
   (let ((wal/project-commands (list 'test (make-hash-table :test 'equal)))
         (wal/project-test-default-cmd "untest")
         (wal/project-command-history nil)
@@ -47,24 +49,17 @@
       (should (string-equal "test" (ring-ref (gethash "/tmp/cmd" (plist-get wal/project-commands 'test)) 1)))
       (should (string-equal "best" (ring-ref (gethash "/tmp/cmd" (plist-get wal/project-commands 'test)) 0))))))
 
-(ert-deftest test-wal/project-compile ()
-  (with-mock (wal/project-command)
-    (wal/project-compile)
-
-    (was-called-with wal/project-command '(compile))))
-
-(ert-deftest test-wal/project-test ()
-  (with-mock (wal/project-command)
-    (wal/project-test)
-
-    (was-called-with wal/project-command '(test))))
-
-(ert-deftest test-wal/project-install ()
-  (with-mock (wal/project-command)
-
-    (wal/project-install)
-
-    (was-called-with wal/project-command '(install))))
+(ert-deftest test-wal/project-create-command ()
+  (with-mock ((make-hash-table . (lambda (&rest _) 'hash-table)))
+    (match-expansion
+     (wal/project-create-command test)
+     `(progn
+        (defvar-local wal/project-test-default-cmd nil)
+        (defun wal/project-test nil "Test the current project."
+               (interactive)
+               (wal/project-command 'test))
+        (setq wal/project-commands (plist-put wal/project-commands 'test hash-table))
+        (wal/major "pt" 'wal/project-test)))))
 
 (ert-deftest test-wal/project-find-rg ()
   (with-mock ((rg-read-pattern . #'wal/rt)

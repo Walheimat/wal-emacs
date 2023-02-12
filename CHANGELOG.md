@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Macro `wal/project-create-command` that defines everything necessary
+  based on a single symbol.
+
 ### Changed
 
 - Value for `transient-show-popup` is `t` locally in

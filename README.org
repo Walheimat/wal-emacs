@@ -4891,15 +4891,8 @@ Built-in project management.
 **** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/project-commands `(compile ,(make-hash-table :test 'equal)
-                               test ,(make-hash-table :test 'equal)
-                               install ,(make-hash-table :test 'equal))
+(defvar wal/project-commands nil
   "Hash maps for compilation commands.")
-
-;; Set these as dir locals.
-(defvar-local wal/project-compile-default-cmd nil)
-(defvar-local wal/project-test-default-cmd nil)
-(defvar-local wal/project-install-default-cmd nil)
 
 (defvar wal/project-current-command nil)
 (defvar wal/project-command-history nil)
@@ -4945,23 +4938,30 @@ Each command will be stored in a per-project history."
 
     (compile command)))
 
-(defun wal/project-compile ()
-  "Compile the current project."
-  (interactive)
+(defmacro wal/project-create-command (name &optional key)
+  "Create command NAME.
 
-  (wal/project-command 'compile))
+The command will be bound using `wal/major' using its initial
+unles KEY is provided."
+  (let ((function-name (intern (format "wal/project-%s" name)))
+        (variable-name (intern (format "wal/project-%s-default-cmd" name)))
+        (key (or key (substring (symbol-name name) 0 1))))
 
-(defun wal/project-test ()
-  "Test the current project."
-  (interactive)
+    `(progn
+       (defvar-local ,variable-name nil)
 
-  (wal/project-command 'test))
+       (defun ,function-name ()
+         ,(concat (capitalize (symbol-name name)) " the current project.")
+         (interactive)
 
-(defun wal/project-install ()
-  "Install the current project."
-  (interactive)
+         (wal/project-command ',name))
 
-  (wal/project-command 'install))
+       (setq wal/project-commands (plist-put
+                                   wal/project-commands
+                                   ',name
+                                   ,(make-hash-table :test 'equal)))
+
+       (wal/major ,(format "p%s" key) ',function-name))))
 
 (defun wal/with-project-bounded-compilation (fun &rest args)
   "Run FUN applying ARGS.
@@ -5081,6 +5081,12 @@ are limited to open projects (unless no open projects exist)."
 
   (wdb/faraway "\\*project")
 
+  (wal/project-create-command test)
+  (wal/project-create-command publish)
+  (wal/project-create-command install)
+  (wal/project-create-command compile)
+  (wal/project-create-command build)
+
   :custom
   (project-vc-extra-root-markers '("pom.xml"
                                    "package.json"
@@ -5108,11 +5114,7 @@ are limited to open projects (unless no open projects exist)."
                         "coverage/"))
 
   :general
-  (wal/major
-    "p" '(:ignore t :wk "project")
-    "pc" 'wal/project-compile
-    "pt" 'wal/project-test
-    "pi" 'wal/project-install)
+  (wal/major "p" '(:ignore t :wk "project"))
 
   :wal-bind
   (("h" . project-find-file)
