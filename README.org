@@ -1896,7 +1896,7 @@ LSP is either nil, t or a plist. If it is a plist, key
 `lsp-file-watch-ignored-directories'."
   (when (and lsp (listp lsp) (plist-member lsp :ignore-dirs))
     `(with-eval-after-load 'lsp-mode
-       (wal/append 'lsp-file-watch-ignored-directories ',(plist-get lsp :ignore-dirs)))))
+       (wal/lsp-ignore-directory ',(plist-get lsp :ignore-dirs)))))
 
 (cl-defmacro harpoon-treesit (name)
   "Remap mode NAME to tree-sitter variant if possible."
@@ -5080,6 +5080,7 @@ are limited to open projects (unless no open projects exist)."
   (project-vc-extra-root-markers '("pom.xml"
                                    "package.json"
                                    "project.godot"
+                                   "pyproject.toml"
                                    ".project-marker"))
 
   (project-switch-commands '((project-find-file "Find file" ?f)
@@ -6766,10 +6767,7 @@ TOML."
   (harpoon python-mode
     :captain t
     :lsp
-    (:ignore-dirs
-     ("[/\\\\]\\.pytype\\'"
-      "[/\\\\]__pycache__\\'"
-      "[/\\\\]\\.pytest_cache\\'"))
+    (:ignore-dirs (".pytype" "__pycache__" ".pytest_cache" "typings"))
     :corfu (0.1 1)
     :ligatures ("->" "__")
     :messages ("Watch out for snakes!" "Vegetation, aggravation")
@@ -7614,7 +7612,7 @@ For some reason, this is also defined in =cc-mode=.
 
   :init
   (harpoon java-mode
-    :lsp (:ignore-dirs ("[/\\\\]\\.gradle\\'"))
+    :lsp (:ignore-dirs (".gradle"))
     :captain t
     :messages ("Mmmh ... maven")
     :ligatures ("::" "->")))
@@ -8353,6 +8351,23 @@ considered slow."
 (defun wal/first-prevent-adding-other-projects (&rest _args)
   "Prevent adding workspace roots from other projects."
   (eval '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))
+
+(defun wal/lsp-ignore-directory--escape (dir)
+  "Escape directory DIR."
+  (if (string-prefix-p "." dir)
+      (concat "[/\\\\]\\" dir "\\'")
+    (concat "[/\\\\]" dir "\\'")))
+
+(defun wal/lsp-ignore-directory (dir)
+  "Make sure DIR is ignored.
+
+It can be either a list of strings or a single string."
+  (let ((dirs (if (listp dir) dir (list dir))))
+
+    (thread-last
+      dirs
+      (mapcar 'wal/lsp-ignore-directory--escape)
+      (wal/append 'lsp-file-watch-ignored-directories))))
 #+END_SRC
 
 **** Configuration
@@ -8368,9 +8383,7 @@ considered slow."
   (require 'avy nil t)
 
   ;; Additional ignores.
-  (wal/append
-   'lsp-file-watch-ignored-directories
-   '("[/\\\\]build\\'" "[/\\\\]vendor\\'"))
+  (wal/lsp-ignore-directory '("build" "vendor" ".cask"))
 
   ;; Don't keep track of multiple projects.
   (advice-add 'lsp :before #'wal/first-prevent-adding-other-projects)

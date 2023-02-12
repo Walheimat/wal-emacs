@@ -1005,7 +1005,7 @@
   (match-expansion
    (harpoon-lsp :lsp (:ignore-dirs (".ignoramus")))
    `(with-eval-after-load 'lsp-mode
-      (wal/append 'lsp-file-watch-ignored-directories '(".ignoramus")))))
+      (wal/lsp-ignore-directory '(".ignoramus")))))
 
 (ert-deftest test-harpoon-treesit ()
   (with-mock ((harpoon--treesit-ready-p . #'always))

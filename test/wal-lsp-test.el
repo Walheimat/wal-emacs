@@ -52,6 +52,23 @@
 
     (was-called-with eval (list '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))))
 
+(ert-deftest test-wal/lsp-ignore-directory--escape ()
+  (should (string= "[/\\\\]tests\\'" (wal/lsp-ignore-directory--escape "tests")))
+  (should (string= "[/\\\\]\\.tests\\'" (wal/lsp-ignore-directory--escape ".tests"))))
+
+(ert-deftest test-wal/lsp-ignore-directory ()
+(with-mock (wal/append (wal/lsp-ignore-directory--escape . (lambda (it) it)))
+
+  (wal/lsp-ignore-directory "test")
+
+  (was-called-with wal/append (list 'lsp-file-watch-ignored-directories '("test")))
+
+  (wal/clear-mocks)
+
+  (wal/lsp-ignore-directory '("test" "best"))
+
+  (was-called-with wal/append (list 'lsp-file-watch-ignored-directories '("test" "best")))))
+
 (ert-deftest test-wal/dap-terminated ()
   (with-mock (hydra-disable
               set-window-configuration)
