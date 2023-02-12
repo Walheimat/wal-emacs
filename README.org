@@ -2244,23 +2244,26 @@ This has no default value."
 (defvar wal/fonts-updated-hook nil
   "Functions to run when fonts were updated.")
 
-(defun wal/font-update (attribute value faces)
+(defun wal/font-update (attribute value faces &optional arg)
   "Set ATTRIBUTE to VALUE for FACES.
 
-This returns the made updates."
-  (mapc (lambda (it)
-          (when (internal-lisp-face-p it)
-            (set-face-attribute it nil attribute value)))
-        faces)
+This returns the made updates. Affects all frames unless ARG is
+t."
+  (let ((frame (when arg (selected-frame))))
 
-  (run-hooks 'wal/fonts-updated-hook))
+    (mapc (lambda (it)
+            (when (internal-lisp-face-p it)
+              (set-face-attribute it frame attribute value)))
+          faces)
+
+    (run-hooks 'wal/fonts-updated-hook)))
 
 (defun wal/read-sensible-font-height (type)
   "Read a sensible font height for TYPE."
   (let* ((prev (symbol-value (intern (format "wal/%s-font-height" type))))
          (num (read-number (format "Set %s font (currently: %s): " type prev))))
 
-    (list (max (min num 300) 80))))
+    (max (min num 300) 80)))
 
 (defun wal/available-fonts (fonts)
   "Filter FONTS down to available fonts."
@@ -2272,33 +2275,38 @@ This returns the made updates."
          (prev (face-attribute name :family))
          (fonts (symbol-value (intern (format "wal/%s-fonts" type))))
          (font (completing-read (format "Select %s font (current: %s) " type prev) (wal/available-fonts fonts))))
-    (list font)))
+
+    font))
 
 (defun wal/select-fixed-font (font)
   "Select fixed (available) FONT."
-  (interactive (wal/read-font 'fixed))
+  (interactive (list (wal/read-font 'fixed)))
 
   (wal/font-update :font font '(default fixed-pitch)))
 
 (defun wal/select-variable-font (font)
   "Select variable (available) FONT."
-  (interactive (wal/read-font 'variable))
+  (interactive (list (wal/read-font 'variable)))
 
   (wal/font-update :font font '(variable-pitch)))
 
-(defun wal/set-fixed-font-height (&optional height)
-  "Set the HEIGHT for fixed fonts."
-  (interactive (wal/read-sensible-font-height 'fixed))
+(defun wal/set-fixed-font-height (height &optional arg)
+  "Set the HEIGHT for fixed fonts
+
+Affects all frames unless ARG is t."
+  (interactive (list (wal/read-sensible-font-height 'fixed) current-prefix-arg))
 
   (setq wal/fixed-font-height height)
-  (wal/font-update :height height '(default fixed-pitch)))
+  (wal/font-update :height height '(default fixed-pitch) arg))
 
-(defun wal/set-variable-font-height (&optional height)
-  "Set the HEIGHT for variable fonts."
-  (interactive (wal/read-sensible-font-height 'variable))
+(defun wal/set-variable-font-height (height &optional arg)
+  "Set the HEIGHT for variable fonts.
+
+Affects all frames unless ARG is t."
+  (interactive (list (wal/read-sensible-font-height 'variable) current-prefix-arg))
 
   (setq wal/variable-font-height height)
-  (wal/font-update :height height '(variable-pitch)))
+  (wal/font-update :height height '(variable-pitch) arg))
 
 (defun wal/preferred-fonts (fonts)
   "Filter FONTS down to preferred fonts."

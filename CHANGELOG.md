@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Macro `wal/project-create-command` that defines everything necessary
   based on a single symbol.
+- Commands `wal/set-{fixed,variable}-font-height` now read the prefix
+  argument to apply their changes only to the current frame.
 
 ### Changed
 
