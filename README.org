@@ -1188,6 +1188,10 @@ Make function calls even more versatile.
 #+BEGIN_SRC emacs-lisp
 (defvar parallel--separator "||")
 
+(defun parallel-p ()
+  "Check if we would trigger a `parallel' command."
+  (equal 0 current-prefix-arg))
+
 (cl-defmacro parallel (a b &key universalize)
   "Define a function composing A and B.
 
@@ -4726,6 +4730,7 @@ If NOT-AT-POINT is t, call `consult-line' normally."
   "Pre-narrow `consult-buffer' in projects."
   (when (and wal/consult-buffer-narrow-to-project
              (equal this-command 'consult-buffer)
+             (not (parallel-p))
              (project-current nil))
     (setq unread-command-events (append unread-command-events (list ?p 32)))))
 #+END_SRC
