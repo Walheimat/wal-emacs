@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Value for `transient-show-popup` is `t` locally in
   `magit-status-mode`, meaning there's no delay.
 
+### Fixed
+
+- `wdb/faraway` now sets `inhibit-switch-frame` to do just that.
+
 ## [v1.11.0]
 
 Silicon mountain.

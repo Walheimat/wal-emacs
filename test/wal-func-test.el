@@ -112,7 +112,8 @@
                      (display-buffer-reuse-window
                       display-buffer-use-some-frame
                       display-buffer-pop-up-window)
-                     (frame-predicate . wal/display-buffer-use-some-frame--with-display-p))))))
+                     (frame-predicate . wal/display-buffer-use-some-frame--with-display-p)
+                     (inhibit-switch-frame . t))))))
 
 (ert-deftest wal/kill-some-file-buffers ()
   (wal/with-temp-file "to-be-killed"
