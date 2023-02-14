@@ -610,6 +610,7 @@ Make completions look nice.
 
   (global-set-key [remap other-window] #'wal/other-window)
   (global-set-key [remap kill-line] #'wal/kwim)
+  (global-set-key [remap move-beginning-of-line] #'wal/mwim-beginning)
 
   ;; Replaces `save-buffers-kill-terminal'.
   (global-set-key (kbd "C-x C-c") #'wal/delete-edit-or-kill))
@@ -1021,6 +1022,23 @@ ARG is passed to `kill-line' and function `kill-whole-line'."
           (kill-line arg)
         (kill-whole-line arg)
         (beginning-of-line-text)))))
+
+(defun wal/mwim-beginning (arg)
+  "Call `move-beginning-of-line' with ARG.
+
+If we're already at the beginning, move to the beginning of the
+line text."
+  (interactive "P")
+
+  (let ((p-before (point))
+        (p-after nil))
+
+    (move-beginning-of-line arg)
+
+    (setq p-after (point))
+
+    (when (= p-before p-after)
+      (beginning-of-line-text))))
 #+END_SRC
 
 ** Windows

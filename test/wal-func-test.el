@@ -182,6 +182,22 @@
 
     (was-called-with kill-region (list nil nil t))))
 
+(ert-deftest test-wal/mwim-beginning ()
+  (with-temp-buffer
+    (insert "hello\n  world")
+    (goto-char 7)
+    (call-interactively 'wal/mwim-beginning)
+
+    (should (eq (point) 9))
+
+    (call-interactively 'wal/mwim-beginning)
+
+    (should (eq (point) 7))
+
+    (call-interactively 'wal/mwim-beginning)
+
+    (should (eq (point) 9))))
+
 (ert-deftest test-wal/other-window ()
   (with-mock ((active-minibuffer-window . #'always)
               (switch-to-minibuffer . (lambda () 'mini)))
