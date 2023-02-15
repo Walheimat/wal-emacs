@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Value for `transient-show-popup` is `t` locally in
   `magit-status-mode`, meaning there's no delay.
+- Command `wal/project-switch-project` was replaced by
+  `wal/consult-project` that pre-narrows to open projects.
 
 ### Fixed
 

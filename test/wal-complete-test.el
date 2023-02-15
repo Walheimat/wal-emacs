@@ -123,27 +123,46 @@
 
     (should (equal #'wal/rt consult--preview-function))))
 
-(ert-deftest test-wal/consult-buffer--narrow-to-projects ()
-    (defvar wal/consult-buffer-narrow-to-project)
-    (with-mock (project-current)
-      (setq wal/consult-buffer-narrow-to-project t
+(ert-deftest test-wal/consult--pre-narrow ()
+    (defvar wal/consult-buffer-pre-narrow)
+    (with-mock (project-current (consult--open-project-items . #'always))
+      (setq wal/consult-buffer-pre-narrow t
             unread-command-events nil)
 
-      (wal/consult-buffer--narrow-to-project)
+      (wal/consult--pre-narrow)
 
       (should-not unread-command-events)
 
       (setq this-command 'consult-buffer)
 
-      (wal/consult-buffer--narrow-to-project)
+      (wal/consult--pre-narrow)
 
       (should unread-command-events)
 
-      (setq wal/consult-buffer-narrow-to-project nil
+      (setq unread-command-events nil
+            this-command 'wal/consult-project)
+
+      (wal/consult--pre-narrow)
+
+      (should unread-command-events)
+
+      (setq wal/consult-pre-narrow nil
             unread-command-events nil)
 
-      (wal/consult-buffer--narrow-to-project)
+      (wal/consult--pre-narrow)
 
       (should-not unread-command-events)))
 
+(ert-deftest test-consult--open-project-items ()
+  (with-mock ((buffer-list . (lambda () '("a" "c" "b" "c" "a")))
+              (wal/project--buffer-root . (lambda (b) b)))
+
+    (should (equal '("b" "c" "a") (consult--open-project-items)))))
+
+(ert-deftest test-wal/consult-project ()
+  (with-mock (consult--multi)
+
+    (call-interactively 'wal/consult-project)
+
+    (was-called-with consult--multi (list '(consult--source-open-projects consult--source-projects) :prompt "Select project: "))))
 ;;; wal-complete-test.el ends here

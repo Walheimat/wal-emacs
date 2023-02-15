@@ -4398,8 +4398,8 @@ Complete commands and code.
   :group 'wal
   :tag "Completion")
 
-(defcustom wal/consult-buffer-narrow-to-project t
-  "Whether `consult-buffer' is narrowed to project."
+(defcustom wal/consult-pre-narrow t
+  "Whether `consult' commands may be pre-narrowed."
   :type 'boolean
   :group 'wal-complete)
 #+END_SRC
@@ -4755,28 +4755,63 @@ If NOT-AT-POINT is t, call `consult-line' normally."
     (setq wal/consult-preview-function consult--preview-function
           consult--preview-function #'ignore)))
 
-(defun wal/consult-buffer--narrow-to-project ()
-  "Pre-narrow `consult-buffer' in projects."
-  (when (and wal/consult-buffer-narrow-to-project
-             (equal this-command 'consult-buffer)
-             (not (parallel-p))
-             (project-current nil))
-    (setq unread-command-events (append unread-command-events (list ?p 32)))))
+(defun wal/consult--pre-narrow ()
+  "Pre-narrow `consult' commands."
+  (when wal/consult-pre-narrow
+    (pcase this-command
+      ('consult-buffer
+       (when (and (not (parallel-p))
+                  (project-current nil))
+         (setq unread-command-events (append unread-command-events (list ?p 32)))))
+
+      ('wal/consult-project
+       (when (and (consult--open-project-items)
+                  (not (parallel-p)))
+         (setq unread-command-events (append unread-command-events (list ?o 32))))))))
+
+(defvar consult--project-history nil)
+
+(defvar consult--source-projects
+  (list :name "Projects"
+        :category 'project
+        :history 'consult--project-history
+        :action 'project-switch-project
+        :preview-key "C-."
+        :items (lambda () (mapcar #'car project--list))))
+
+(defun consult--open-project-items ()
+  "Get the open projects."
+  (cl-remove-duplicates
+   (cl-loop for buffer being the buffers
+            for project = (wal/project--buffer-root buffer)
+            if project
+            collect project)
+   :test 'string=))
+
+(defvar consult--source-open-projects
+  (list :name "Open projects"
+        :category 'project
+        :narrow ?o
+        :history 'consult--project-history
+        :action 'project-switch-project
+        :items 'consult--open-project-items))
+
+(defun wal/consult-project ()
+  "Enhanced `project-switch-project' command."
+  (interactive)
+
+  (consult--multi
+   '(consult--source-open-projects consult--source-projects)
+   :prompt "Select project: "))
 #+END_SRC
 
 **** Configuration
 
 #+BEGIN_SRC emacs-lisp
 (use-package consult
-  :commands
-  (wal/consult-line
-   wal/consult-clock-in
-   consult-mark||consult-global-mark
-   wal/consult-unregister)
+  :commands (consult--multi)
 
   :init
-  (parallel consult-mark consult-global-mark)
-
   (general-define-key
     :prefix (wal/key-combo-for-leader 'wal/consult)
     :prefix-map 'wal/consult-map)
@@ -4813,15 +4848,21 @@ If NOT-AT-POINT is t, call `consult-line' normally."
   ;; Use a bigger `vertico' when grepping.
   (advice-add 'consult-ripgrep :around #'wal/with-big-vertico)
 
-  ;; Narrow to project buffers.
-  (add-hook
-   'minibuffer-setup-hook
-   #'wal/consult-buffer--narrow-to-project)
+  ;; Pre-narrow `consult' commands.
+  (add-hook 'minibuffer-setup-hook #'wal/consult--pre-narrow)
 
   (with-eval-after-load 'org-keys
     (wal/replace-in-alist
      'org-speed-commands
      '(("j" . consult-org-heading))))
+
+  (defun wal/consult-project ()
+  "Enhanced `project-switch-project' command."
+  (interactive)
+
+  (consult--multi
+   '(consult--source-open-projects consult--source-projects)
+   :prompt "Select project: "))
 
   :custom
   (consult-buffer-filter (list "\\` " "\\`\\*" "\\`magit"))
@@ -4841,7 +4882,8 @@ If NOT-AT-POINT is t, call `consult-line' normally."
    ("r" . consult-register)
    ("t" . consult-theme)
    ("u" . wal/consult-unregister)
-   ("<SPC>" . consult-mark||consult-global-mark)
+   ("<SPC>" . consult-mark)
+   ("@" . consult-global-mark)
    ("C-f" . consult-recent-file)
    ("+" . consult-mode-command)
    ("-" . consult-minor-mode-menu)
@@ -4850,7 +4892,8 @@ If NOT-AT-POINT is t, call `consult-line' normally."
    ("C-M-." . wal/consult-toggle-preview))
 
   :wal-bind
-  (("j" . consult-buffer)))
+  (("j" . consult-buffer)
+   ("p" . wal/consult-project)))
    #+END_SRC
 
 ** Footer
@@ -5047,40 +5090,15 @@ Will search using QUERY in FILES."
 
 (defun wal/project--buffer-root (buffer)
   "Get the project root for BUFFER."
-  (when-let* ((file (buffer-file-name buffer))
-              (dir (file-name-directory file))
-              (project (project-current nil dir)))
+  (with-current-buffer buffer
+    (when-let* ((dir (cond
+                      (buffer-file-name
+                       (file-name-directory buffer-file-name))
+                      (dired-directory dired-directory)
+                      (t nil)))
+                (project (project-current nil dir)))
 
-    (project-root project)))
-
-(defun wal/project--read-open-projects (&optional prompt)
-  "Collect open projects.
-
-Optionally a different PROMPT can be provided.
-
-If there are no open projects, this function returns nil."
-  (let ((candidates (cl-remove-duplicates
-                     (cl-loop for buffer being the buffers
-                              for project = (wal/project--buffer-root buffer)
-                              if project
-                              collect project)
-                     :test 'string=)))
-    (when candidates
-      (completing-read (or prompt "Select open project: ")
-                       candidates
-                       nil
-                       t))))
-
-(defun wal/project-switch-project (&optional project)
-  "Switch to PROJECT.
-
-This is the same as `project-switch-project' but the candidates
-are limited to open projects (unless no open projects exist)."
-  (interactive (list (wal/project--read-open-projects "Switch project: ")))
-
-  (if project
-      (project-switch-project project)
-    (call-interactively 'project-switch-project)))
+      (project-root project))))
 #+END_SRC
 
 **** Configuration
@@ -5088,8 +5106,6 @@ are limited to open projects (unless no open projects exist)."
 #+BEGIN_SRC emacs-lisp
 (use-package project
   :ensure nil
-
-  :commands (wal/project-switch-project)
 
   :init
   (wal/advise-many
@@ -5100,14 +5116,7 @@ are limited to open projects (unless no open projects exist)."
      wal/project-compile
      recompile))
 
-  (parallel wal/project-switch-project project-switch-project)
-
   :config
-  (with-eval-after-load 'marginalia
-    (add-to-list
-     'marginalia-command-categories
-     '(wal/project-switch-project||project-switch-project . project-file)))
-
   (wdb/faraway "\\*project")
 
   (wal/project-create-command test)
@@ -5146,8 +5155,7 @@ are limited to open projects (unless no open projects exist)."
   (wal/major "p" '(:ignore t :wk "project"))
 
   :wal-bind
-  (("h" . project-find-file)
-   ("p" . wal/project-switch-project||project-switch-project)))
+  (("h" . project-find-file)))
 #+END_SRC
 
 ** Footer
