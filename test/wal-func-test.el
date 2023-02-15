@@ -109,7 +109,8 @@
 
     (should (equal (car display-buffer-alist)
                    '((major-mode . test-mode)
-                     (display-buffer-reuse-window
+                     (display-buffer-reuse-mode-window
+                      display-buffer-reuse-window
                       display-buffer-use-some-frame
                       display-buffer-pop-up-window)
                      (frame-predicate . wal/display-buffer-use-some-frame--with-display-p)

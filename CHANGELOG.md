@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `magit-status-mode`, meaning there's no delay.
 - Command `wal/project-switch-project` was replaced by
   `wal/consult-project` that pre-narrows to open projects.
+- `wdb/faraway` now checks for mode windows as well.
+- `helpful` now uses `display-buffer` over `pop-to-buffer`.
 
 ### Fixed
 
