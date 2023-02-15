@@ -537,7 +537,8 @@ Make completions look nice.
       ("c d" "checkdoc" wal/checkdoc-config-packages)
       ("c f" "flycheck" wal/flycheck-config-packages)
       ("c o" "coverage" wal/check-coverage)
-      ("c j" "JSON coverage" wal/create-json-coverage)]
+      ("c j" "JSON coverage" wal/create-json-coverage)
+      ("c b" "cold boot" wal/perform-cold-boot)]
      ["Fluff"
       ("w" "toggle animation" wal/ascii-whale-toggle-display)]])
 
@@ -9470,6 +9471,32 @@ name are deleted beforehand."
 
     (dolist (it (wal/package-files))
       (wal/flycheck-file it t t))))
+#+END_SRC
+
+*** Cold Boot
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/perform-cold-boot--on-success ()
+  "Display success message."
+  (message "Cold boot succeeded."))
+
+(defun wal/perform-cold-boot--on-failure ()
+  "Display failure message."
+  (message "Cold boot failed."))
+
+(defun wal/perform-cold-boot ()
+  "Execute a cold boot."
+  (interactive)
+
+  (let* ((command "./cold-boot.sh")
+         (setup-dir (expand-file-name "setup" wal/emacs-config-default-path))
+         (full-command (concat "cd " setup-dir " && " command)))
+
+    (wal/async-process
+     full-command
+     'wal/perform-cold-boot--on-success
+     'wal/perform-cold-boot--on-failure
+     t)))
 #+END_SRC
 
 ** Footer

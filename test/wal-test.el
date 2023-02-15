@@ -240,7 +240,7 @@
 
       (wal/coverage--execute "test" 'success 'failure)
 
-      (was-called-with wal/async-process '("cd /tmp && test" success failure t)) )))
+      (was-called-with wal/async-process '("cd /tmp && test" success failure t)))))
 
 (ert-deftest test-wal/package-files ()
   (let* ((dir "/tmp/package")
@@ -290,4 +290,23 @@
       (was-called-nth-with wal/flycheck-file (list "/tmp/one" t t) 0)
       (was-called-nth-with wal/flycheck-file (list "/tmp/two" t t) 1))))
 
+(ert-deftest test-wal/perform-cold-boot--handlers ()
+  (ert-with-message-capture messages
+    (wal/perform-cold-boot--on-success)
+    (wal/perform-cold-boot--on-failure)
+
+    (should (string= messages "Cold boot succeeded.\nCold boot failed.\n"))))
+
+(ert-deftest test-wal/perform-cold-boot ()
+  (defvar wal/emacs-config-default-path)
+  (let ((wal/emacs-config-default-path "/tmp"))
+
+    (with-mock (wal/async-process)
+
+      (call-interactively 'wal/perform-cold-boot)
+
+      (was-called-with wal/async-process '("cd /tmp/setup && ./cold-boot.sh"
+                                           wal/perform-cold-boot--on-success
+                                           wal/perform-cold-boot--on-failure
+                                           t)))))
 ;;; wal-test.el ends here
