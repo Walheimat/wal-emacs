@@ -5507,18 +5507,23 @@ Trying to organize my thoughts using Zettelkästen.
 (defun wal/org-refile (&optional arg)
   "Refile using ARG, but use `org-roam-directory' for its files.
 
-If called with numeric prefix `5', don't set variable
-`org-agenda-files' (allows refiling to non-`org-roam' files."
+If called with numeric prefix `5', set variable
+`org-agenda-files' to the `org-roam-directory'."
   (interactive "P")
 
   (declare-function org-refile "ext:org.el")
   (defvar org-roam-directory)
 
-  (if (and (org-roam-buffer-p) (not (equal arg 5)))
-      (let ((org-agenda-files (list org-roam-directory)))
+  (cond
+   ((and (org-roam-buffer-p) (not (equal arg 5)))
+    (let ((org-agenda-files (list org-roam-directory)))
 
-        (org-refile arg))
-    (org-refile arg)))
+      (org-refile arg)))
+
+   ((equal arg 5)
+    (org-refile))
+
+   (t (org-refile arg))))
 #+END_SRC
 
 **** Configuration
@@ -5816,7 +5821,7 @@ Configure refiling headings.
   ;; Allow refiling in same file up to level 3.
   (org-refile-targets
    '((nil . (:maxlevel . 3))
-     (org-agenda-files . (:maxlevel . 2)))))
+     (org-agenda-files . (:maxlevel . 3)))))
 #+END_SRC
 
 ** Other
@@ -7345,6 +7350,13 @@ Prettify your ugly JavaScript.
                             (setq wal/prettier-timer nil)
                             (prettier-prettify)
                             (message "Refresh done"))))))
+
+(defun wal/prettier-mode-ignore-buffer-function ()
+  "Ignore if it is a node_module buffer or a JSON buffer."
+  (declare-function prettier--in-node-modules-p "ext:prettier.el")
+
+  (or (prettier--in-node-modules-p)
+      (derived-mode-p 'js-json-mode)))
 #+END_SRC
 
 **** Configuration
@@ -7357,7 +7369,10 @@ Prettify your ugly JavaScript.
 
   :config
   (transient-append-suffix 'js-mode-captain '(0 0 0)
-    '("p" "prettier" prettier-prettify)))
+    '("p" "prettier" prettier-prettify))
+
+  :custom
+  (prettier-mode-ignore-buffer-function #'wal/prettier-mode-ignore-buffer-function))
 #+END_SRC
 
 ** Go
