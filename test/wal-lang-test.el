@@ -92,6 +92,22 @@
 
       (should-error (wal/markdown-view)))))
 
+(ert-deftest test-wal/prettier-mode-ignore-buffer-function ()
+  (let ((is-node nil))
+
+    (with-mock ((prettier--in-node-modules-p . (lambda () is-node)))
+
+      (with-temp-buffer
+        (should-not (wal/prettier-mode-ignore-buffer-function))
+
+        (setq is-node t)
+
+        (should (wal/prettier-mode-ignore-buffer-function))
+
+        (setq major-mode 'js-json-mode)
+
+        (should (wal/prettier-mode-ignore-buffer-function))))))
+
 (ert-deftest test-wal/find-dart-flutter-sdk-dir ()
   (with-mock ((executable-find . (lambda (x) (format "/usr/bin/%s" x)))
               (shell-command-to-string . (lambda (_) "/tmp/sdk\n")))
