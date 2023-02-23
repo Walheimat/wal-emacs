@@ -3761,7 +3761,8 @@ Sometimes the list of minor modes overcrowds the modeline.
                              verb-mode
                              verb-response-body-mode
                              puni-mode
-                             pet-mode)))
+                             pet-mode
+                             prettier-mode)))
 #+END_SRC
 
 ** Ligatures
@@ -7263,7 +7264,8 @@ Can we have =deno= instead of =node=?
   (harpoon js-json-mode
     :messages ("JSON! JSON? JSON!?")
     :tabs t
-    :lsp t)
+    :lsp t
+    :functions (add-node-modules-path prettier-mode))
 
   :config
   (when (wal/modern-emacs-p 29)
@@ -7354,13 +7356,6 @@ Prettify your ugly JavaScript.
                             (setq wal/prettier-timer nil)
                             (prettier-prettify)
                             (message "Refresh done"))))))
-
-(defun wal/prettier-mode-ignore-buffer-function ()
-  "Ignore if it is a node_module buffer or a JSON buffer."
-  (declare-function prettier--in-node-modules-p "ext:prettier.el")
-
-  (or (prettier--in-node-modules-p)
-      (derived-mode-p 'js-json-mode)))
 #+END_SRC
 
 **** Configuration
@@ -7372,11 +7367,20 @@ Prettify your ugly JavaScript.
   :ensure nil
 
   :config
-  (transient-append-suffix 'js-mode-captain '(0 0 0)
-    '("p" "prettier" prettier-prettify))
+  (with-eval-after-load 'js
+    (transient-append-suffix 'js-mode-captain '(0 0 0)
+      '("p" "prettier" prettier-prettify)))
+
+  ;; Copy JSON parsers for newer major modes.
+  (mapc
+   (lambda (it)
+     (add-to-list
+      'prettier-major-mode-parsers
+      (cons it (cdr-safe (assoc 'json-mode prettier-major-mode-parsers)))))
+   '(js-json-mode json-ts-mode))
 
   :custom
-  (prettier-mode-ignore-buffer-function #'wal/prettier-mode-ignore-buffer-function))
+  (prettier-lighter " prt"))
 #+END_SRC
 
 ** Go
