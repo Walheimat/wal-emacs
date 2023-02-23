@@ -87,12 +87,17 @@
       (was-called-with consult-line "hello"))))
 
 (ert-deftest test-wal/consult-clock-in ()
-  (with-mock (consult-org-agenda org-clock-in)
+  (with-mock (consult-org-agenda org-clock-in wal/org-clock-in-from-now)
 
     (wal/consult-clock-in)
 
     (was-called consult-org-agenda)
-    (was-called org-clock-in)))
+    (was-called org-clock-in)
+
+    (funcall-interactively 'wal/consult-clock-in '(4))
+
+    (was-called consult-org-agenda)
+    (was-called wal/org-clock-in-from-now)))
 
 (ert-deftest test-wal/then-set-active-theme ()
   (let ((out nil)

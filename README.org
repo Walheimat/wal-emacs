@@ -4730,13 +4730,17 @@ If NOT-AT-POINT is t, call `consult-line' normally."
       (consult-line)
     (consult-line (thing-at-point 'symbol))))
 
-(defun wal/consult-clock-in ()
-  "Clock into an Org agenda heading."
-  (interactive)
+(defun wal/consult-clock-in (&optional discontinue)
+  "Clock into an Org agenda heading.
+
+If DISCONTINUE is non-nil, clock in from now."
+  (interactive "P")
 
   (save-window-excursion
     (consult-org-agenda)
-    (org-clock-in)))
+    (if discontinue
+        (wal/org-clock-in-from-now)
+      (org-clock-in))))
 
 (defun wal/then-set-active-theme (theme)
   "Advise to set `wal/active-theme' to THEME."
