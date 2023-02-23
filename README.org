@@ -5018,6 +5018,8 @@ Each command will be stored in a per-project history."
 
     (compile command)))
 
+(defvar wal/project-prefix-map (make-sparse-keymap))
+
 (defmacro wal/project-create-command (name &optional key)
   "Create command NAME.
 
@@ -5041,7 +5043,7 @@ unles KEY is provided."
                                    ',name
                                    ,(make-hash-table :test 'equal)))
 
-       (wal/major ,(format "p%s" key) ',function-name))))
+       (bind-key ,key ',function-name wal/project-prefix-map))))
 
 (defun wal/with-project-bounded-compilation (fun &rest args)
   "Run FUN applying ARGS.
@@ -5159,8 +5161,8 @@ Will search using QUERY in FILES."
                         ".ccls-cache/"
                         "coverage/"))
 
-  :general
-  (wal/major "p" '(:ignore t :wk "project"))
+  :bind-keymap
+  ("C-c p" . wal/project-prefix-map)
 
   :wal-bind
   (("h" . project-find-file)))

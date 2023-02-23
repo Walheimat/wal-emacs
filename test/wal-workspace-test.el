@@ -59,7 +59,7 @@
                (interactive)
                (wal/project-command 'test))
         (setq wal/project-commands (plist-put wal/project-commands 'test hash-table))
-        (wal/major "pt" 'wal/project-test)))))
+        (bind-key "t" 'wal/project-test wal/project-prefix-map)))))
 
 (ert-deftest test-wal/project-find-rg ()
   (with-mock ((rg-read-pattern . #'wal/rt)
