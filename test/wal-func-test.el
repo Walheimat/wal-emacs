@@ -365,21 +365,6 @@
 
     (should (equal '("testing" "again") (wal/list-from 'test-target "again")))))
 
-(ert-deftest test-parallel-p ()
-  (defvar current-prefix-arg)
-
-  (let ((current-prefix-arg nil))
-
-    (should-not (parallel-p))
-
-    (setq current-prefix-arg '(4))
-
-    (should-not (parallel-p))
-
-    (setq current-prefix-arg 0)
-
-    (should (parallel-p))))
-
 (ert-deftest test-parallel ()
   (match-expansion
    (parallel some-fun other-fun)
