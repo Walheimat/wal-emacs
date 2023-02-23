@@ -33,14 +33,15 @@
   "Exit with errors."
   (lambda (_status &optional errors)
     (when errors
-      (seq-do (lambda (err)
-                (when-let ((err-message (flycheck-error-message err))
-                           (line (flycheck-error-line err))
-                           (file (flycheck-error-filename err)))
+      (seq-do
+       (lambda (err)
+         (when-let ((file (flycheck-error-filename err))
+                    (line (flycheck-error-line err))
+                    (col (flycheck-error-column err))
+                    (mess (flycheck-error-message err)))
 
-                  (message "file: %s, line %d: %s\n" file line err-message)))
-              errors)
-      (setq wal-pacify-errors t))))
+           (add-to-list 'wal-pacify-errors (format "%s %d:%d %s\n" file line col mess))))
+       errors))))
 
 (defun wal-pacify--check-file (file)
   "Check FILE with flycheck."
@@ -56,6 +57,8 @@
 
         (flycheck-syntax-check-start check callback)))))
 
+(message "Checking package files")
+
 (dolist (it (wal/package-files))
   (wal-pacify--check-file it))
 
@@ -64,6 +67,11 @@
 (flycheck-safe-delete-temporaries)
 
 (when wal-pacify-errors
+  (message "Check failed!")
+
+  (dolist (it wal-pacify-errors)
+    (message it))
+
   (kill-emacs 1))
 
 ;;; wal-pacify.el ends here
