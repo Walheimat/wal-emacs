@@ -4771,17 +4771,15 @@ If DISCONTINUE is non-nil, clock in from now."
 
 (defun wal/consult--pre-narrow ()
   "Pre-narrow `consult' commands."
-  (when wal/consult-pre-narrow
-    (pcase this-command
-      ('consult-buffer
-       (when (and (not (parallel-p))
-                  (project-current nil))
-         (setq unread-command-events (append unread-command-events (list ?p 32)))))
+  (and-let* ((should-narrow (and wal/consult-pre-narrow (not (wal/univ-p))))
+             (char (pcase this-command
+                     ('consult-buffer
+                      (when (project-current nil) ?p))
 
-      ('wal/consult-project
-       (when (and (consult--open-project-items)
-                  (not (parallel-p)))
-         (setq unread-command-events (append unread-command-events (list ?o 32))))))))
+                     ('wal/consult-project
+                      (when (consult--open-project-items) ?o)))))
+
+    (setq unread-command-events (append unread-command-events (list char 32)))))
 
 (defvar consult--project-history nil)
 
