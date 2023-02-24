@@ -173,16 +173,6 @@ functionality is used.
   :type 'string
   :group 'wal-settings)
 
-(defcustom wal/minimal nil
-  "Whether to use a minimal configuration."
-  :type 'boolean
-  :group 'wal-settings)
-
-(defcustom wal/minimal-exclude '()
-  "Packages that are not part of a minimal configuration but should be installed."
-  :type '(repeat symbol)
-  :group 'wal-settings)
-
 (defcustom wal/maximize-new-frames t
   "Whether to maximize new frames by default."
   :type 'boolean
@@ -269,12 +259,6 @@ installed from there.
   (declare-function use-package-report "ext:use-package.el")
 
   (add-hook 'after-init-hook #'use-package-report))
-
-(wal/insert-after 'use-package-keywords :bind-keymap* :wal-bind)
-(wal/insert-after 'use-package-keywords :wal-bind :wal-bind-keymap)
-
-(wal/insert-after 'use-package-keywords :pin :wal-ways)
-(add-to-list 'use-package-defaults '(:wal-ways t t))
 #+END_SRC
 
 ** Directories
@@ -601,13 +585,9 @@ Make completions look nice.
    "s" 'find-sibling-file
    "f" 'wal/find-fish-config)
 
-  (with-eval-after-load 'which-key
-    (which-key-add-key-based-replacements (wal/prefix-user-key "-") "triple-minus")
-    (which-key-add-key-based-replacements (wal/prefix-user-key "0") "zero-in")
-
-    ;; This forces prefixing with `C-c w'.
-    (when (not (display-graphic-p))
-      (which-key-add-key-based-replacements "C-c w" "wal")))
+  (that-key "triple-minus" :user-key "-")
+  (that-key "zero-in" :user-key "0")
+  (that-key "wal" :key "C-c w" :condition (not (display-graphic-p)))
 
   (global-set-key [remap other-window] #'wal/other-window)
   (global-set-key [remap kill-line] #'wal/kwim)
@@ -800,6 +780,56 @@ Another nice way of grouping keys.
 
 Some transients are bound directly, others are =wal/univ= variants (see
 above).
+
+*** which-key
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Show the next possible key presses towards a command.
+
+**** Utility
+
+#+BEGIN_SRC emacs-lisp
+(cl-defmacro that-key (description &key key condition user-key leader)
+  "Add DESCRIPTION for KEY after loading `which-key'.
+
+If CONDITION is non-nil, surround the replacement with it.
+USER-KEY and LEADER can be used to prefix the key."
+  (let ((key (cond
+              (user-key
+               (wal/prefix-user-key user-key))
+              (leader
+               (apply 'wal/key-combo-for-leader leader))
+              (key key)
+              (t ""))))
+    `(with-eval-after-load 'which-key
+       ,(if condition
+            `(when ,condition
+               (which-key-add-key-based-replacements ,key ,description))
+          `(which-key-add-key-based-replacements ,key ,description)))))
+#+END_SRC
+
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package which-key
+  :wal-ways nil
+
+  :defer 2
+
+  :config
+  (which-key-mode 1)
+
+  :custom
+  (which-key-idle-delay 0.8)
+  (which-key-idle-secondary-delay 0.2)
+  (which-key-lighter " wk?")
+  (which-key-sort-uppercase-first nil)
+  (which-key-show-docstrings t)
+  (which-key-preserve-window-configuration t)
+  (which-key-show-early-on-C-h t))
+#+END_SRC
 
 **** Utility
 
@@ -2416,8 +2446,20 @@ available candidate from `wal/fixed-fonts'. Does the same for
 (declare-function junk--pack-p "wal-func.el")
 (declare-function wal/prefix-user-key "wal-func.el")
 
-(defvar wal/minimal)
-(defvar wal/minimal-exclude)
+(defgroup wal-external nil
+  "Change settings for external packages."
+  :group 'wal
+  :tag "Settings")
+
+(defcustom wal/minimal nil
+  "Whether to use a minimal configuration."
+  :type 'boolean
+  :group 'wal-external)
+
+(defcustom wal/minimal-exclude '()
+  "Packages that are not part of a minimal configuration but should be installed."
+  :type '(repeat symbol)
+  :group 'wal-external)
 #+END_SRC
 
 ** Packages
@@ -2457,7 +2499,13 @@ Such as package `use-package'.")
        (mapc 'package-install missing))))
 
   (eval-when-compile
-    (require 'use-package nil t)))
+    (require 'use-package nil t))
+
+  (wal/insert-after 'use-package-keywords :bind-keymap* :wal-bind)
+  (wal/insert-after 'use-package-keywords :wal-bind :wal-bind-keymap)
+
+  (wal/insert-after 'use-package-keywords :pin :wal-ways)
+  (add-to-list 'use-package-defaults '(:wal-ways t t)))
 #+END_SRC
 
 *** Extensions
@@ -2640,7 +2688,8 @@ external ones.
 ;;; Code:
 
 (eval-when-compile
-  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+  (require 'wal-func (expand-file-name "wal-func.el" "."))
+  (require 'wal-key-bindings (expand-file-name "wal-key-bindings.el" ".")))
 
 (declare-function wal/modern-emacs-p "wal-func.el")
 (declare-function wdb/faraway "wal-func.el")
@@ -2996,8 +3045,7 @@ Leave a bookmark why don't you.
   :config
   (wdb/nearby "\\*Bookmark Annotation\\*" :side 'left :no-other t)
 
-  (with-eval-after-load 'bookmark
-    (which-key-add-key-based-replacements "C-c m" "bookmark"))
+  (that-key "bookmark" :key "C-c m")
 
   :custom
   (bookmark-use-annotations t)
@@ -3624,32 +3672,6 @@ Show colors colorfully.
 #+END_SRC
 
 ** Where Am I?
-
-*** which-key
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Show the next possible key presses towards a command.
-
-#+BEGIN_SRC emacs-lisp
-(use-package which-key
-  :wal-ways nil
-
-  :defer 2
-
-  :config
-  (which-key-mode 1)
-
-  :custom
-  (which-key-idle-delay 0.8)
-  (which-key-idle-secondary-delay 0.2)
-  (which-key-lighter " wk?")
-  (which-key-sort-uppercase-first nil)
-  (which-key-show-docstrings t)
-  (which-key-preserve-window-configuration t)
-  (which-key-show-early-on-C-h t))
-#+END_SRC
 
 *** goggles
 :PROPERTIES:
@@ -4833,10 +4855,7 @@ If DISCONTINUE is non-nil, clock in from now."
     :prefix (wal/key-combo-for-leader 'wal/consult)
     :prefix-map 'wal/consult-map)
 
-  (with-eval-after-load 'which-key
-    (which-key-add-key-based-replacements
-      (wal/key-combo-for-leader 'wal/consult)
-      '(nil . "consult")))
+  (that-key '(nil . "consult") :leader (wal/consult))
 
   :config
   ;; Integrate with `xref'.
@@ -8137,8 +8156,10 @@ Please let me know when I screwed up. I promise I will learn.
 ;;; Code:
 
 (eval-when-compile
-  (require 'flycheck nil t))
+  (require 'flycheck nil t)
+  (require 'wal-key-bindings (expand-file-name "wal-key-bindings.el" ".")))
 
+(declare-function wal/key-combo-for-leader "wal-key-bindings.el")
 (declare-function wal/major "wal-key-bindings.el")
 (declare-function wdb/nearby "wal-func.el")
 (declare-function flycheck-parse-stylelint "ext:flycheck.el")

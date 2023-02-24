@@ -80,4 +80,29 @@
 
               (should (string-equal "--testing=test" (wal/transient-grab "testing"))))))
 
+(ert-deftest test-that-key ()
+  (with-mock ((wal/prefix-user-key . (lambda (k) (concat "H-" k)))
+              (wal/key-combo-for-leader . (lambda (_l _k k) (concat "M-" k))))
+
+    (match-expansion
+     (that-key "Help me!" :key "h")
+     `(with-eval-after-load 'which-key
+        (which-key-add-key-based-replacements "h" "Help me!")))
+
+    (match-expansion
+     (that-key "Help me!" :user-key "h")
+     `(with-eval-after-load 'which-key
+        (which-key-add-key-based-replacements "H-h" "Help me!")))
+
+    (match-expansion
+     (that-key "Help me!" :leader (tester :key "h"))
+     `(with-eval-after-load 'which-key
+        (which-key-add-key-based-replacements "M-h" "Help me!")))
+
+    (match-expansion
+     (that-key "Help me!" :key "h" :condition (display-graphic-p))
+     `(with-eval-after-load 'which-key
+        (when (display-graphic-p)
+          (which-key-add-key-based-replacements "h" "Help me!"))))))
+
 ;;; wal-key-bindings-test.el ends here
