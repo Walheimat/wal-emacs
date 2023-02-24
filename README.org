@@ -7902,15 +7902,19 @@ We want quicker suggestions when in CSS modes.
 **** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/maybe-use-custom-scss-checker ()
-  "Use custom checker in `scss-mode'."
+(defun wal/maybe-use-custom-css-checker ()
+  "Use custom checker in `scss-mode' and `less-mode'."
   (when (executable-find "stylelint")
     (add-hook
      'lsp-after-open-hook
      (lambda ()
-       (if (equal major-mode 'scss-mode)
-           (setq-local flycheck-checker 'wal/scss-stylelint)
-         (setq-local flycheck-checker 'css-stylelint)))
+       (pcase major-mode
+         ('scss-mode
+          (setq-local flycheck-checker 'wal/scss-stylelint))
+         ('less-css-mode
+          (setq-local flycheck-checker 'wal/less-stylelint))
+         (_
+          (setq-local flycheck-checker 'css-stylelint))))
      nil t)))
 #+END_SRC
 
@@ -7927,7 +7931,7 @@ We want quicker suggestions when in CSS modes.
     :lsp t
     :corfu (0.1 2)
     :messages ("Centering? It's simple. Here's 15 ways to do it.")
-    :functions (add-node-modules-path wal/maybe-use-custom-scss-checker)))
+    :functions (add-node-modules-path wal/maybe-use-custom-css-checker)))
 #+END_SRC
 
 *** pug-mode
@@ -8255,6 +8259,17 @@ If KILL-BUFFER is t, kill the file's buffer."
     :error-parser flycheck-parse-stylelint
     :predicate flycheck-buffer-nonempty-p
     :modes (scss-mode))
+
+  (flycheck-define-checker wal/less-stylelint
+    "Same as default but not passing `--syntax' flag."
+    :command ("stylelint"
+              (eval flycheck-stylelint-args)
+              (option-flag "--quiet" flycheck-stylelint-quiet)
+              (config-file "--config" flycheck-stylelintrc))
+    :standard-input t
+    :error-parser flycheck-parse-stylelint
+    :predicate flycheck-buffer-nonempty-p
+    :modes (less-css-mode))
 
   :custom
   (flycheck-mode-line-prefix "fly"))

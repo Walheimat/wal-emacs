@@ -146,7 +146,7 @@
 
     (was-not-called dap-java-run-test-method)))
 
-(ert-deftest test-wal/maybe-use-custom-scss-checker ()
+(ert-deftest test-wal/maybe-use-custom-css-checker ()
   (defvar lsp-after-open-hook)
   (defvar flycheck-checker)
   (with-mock ((executable-find . #'always))
@@ -154,12 +154,20 @@
           (flycheck-checker nil))
       (with-temp-buffer
         (setq-local major-mode 'scss-mode)
-        (wal/maybe-use-custom-scss-checker)
+        (wal/maybe-use-custom-css-checker)
         (run-hooks 'lsp-after-open-hook)
+
         (should (equal flycheck-checker 'wal/scss-stylelint))
+
         (setq-local major-mode 'test-mode)
         (run-hooks 'lsp-after-open-hook)
-        (should (equal flycheck-checker 'css-stylelint))))))
+
+        (should (equal flycheck-checker 'css-stylelint))
+
+        (setq-local major-mode 'less-css-mode)
+        (run-hooks 'lsp-after-open-hook)
+
+        (should (equal flycheck-checker 'wal/less-stylelint))))))
 
 (ert-deftest test-wal/with-json-data-ignored-for-gdscript ()
   (let ((table (make-hash-table :test 'equal)))
