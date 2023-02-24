@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   argument to apply their changes only to the current frame.
 - Command `wal/perform-cold-boot` to run the `cold-boot.sh` script
   interactively.
+- Setting `which-key` replacements is now done using new macro
+  `that-key`.
 
 ### Changed
 
@@ -24,10 +26,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal/consult-project` that pre-narrows to open projects.
 - `wdb/faraway` now checks for mode windows as well.
 - `helpful` now uses `display-buffer` over `pop-to-buffer`.
+- Keymap for `flycheck` was moved to `wal/major`.
 
 ### Fixed
 
 - `wdb/faraway` now sets `inhibit-switch-frame` to do just that.
+- Functionality concerning external packages was moved from
+  `wal-settings` to `wal-external`.
 
 ## [v1.11.0]
 
