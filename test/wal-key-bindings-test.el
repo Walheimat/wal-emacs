@@ -47,9 +47,10 @@
     (let ((wal/key-reach '("a" "b" "c"))
           (wal/leaders '(hunk bunk trunk)))
 
-      (should (string-equal "C-t a k" (wal/key-combo-for-leader 'hunk "k")))
-      (should (string-equal "C-t b b k" (wal/key-combo-for-leader 'bunk "k" t)))
-      (should (string-equal "C-t c" (wal/key-combo-for-leader 'trunk))))))
+      (should (string-equal "C-t a k" (wal/key-combo-for-leader 'hunk :key "k")))
+      (should (string-equal "C-t b b k" (wal/key-combo-for-leader 'bunk :key "k" :in-sink t)))
+      (should (string-equal "C-t c" (wal/key-combo-for-leader 'trunk)))
+      (should (equal (kbd "C-t b") (wal/key-combo-for-leader 'bunk :translate t))))))
 
 (ert-deftest test-wal/general-create-definer ()
   (with-mock ((wal/key-combo-for-leader . (lambda (_) "C-t"))

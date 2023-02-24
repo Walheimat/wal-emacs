@@ -693,18 +693,21 @@ I use many[fn:10] custom keybindings. You can find an overview [[file:docs/bindi
   "Get the key for LEADER."
   (nth (seq-position wal/leaders leader) wal/key-reach))
 
-(defun wal/key-combo-for-leader (leader &optional key in-sink)
+(cl-defun wal/key-combo-for-leader (leader &key key in-sink translate)
   "Get the key combination for LEADER.
 
- If KEY is non-nil, append it. If IN-SINK is non-nil, infix leader key."
-  (let* ((leader-key (wal/key-by-leader leader))
-         (prefixed (wal/prefix-user-key leader-key)))
-
-    (if key
-        (if in-sink
-            (concat prefixed " " leader-key " " key)
-          (concat prefixed " " key))
-      prefixed)))
+If KEY is non-nil, append it. If IN-SINK is non-nil, infix leader
+key. If TRANSLATE is non-nil, convert using `kbd'."
+  (when-let* ((leader-key (wal/key-by-leader leader))
+              (prefix (wal/prefix-user-key leader-key))
+              (combo (if key
+                         (if in-sink
+                             (concat prefix " " leader-key " " key)
+                           (concat prefix " " key))
+                       prefix)))
+    (if translate
+        (kbd combo)
+      combo)))
 #+END_SRC
 
 ** Packages
@@ -8506,7 +8509,7 @@ It can be either a list of strings or a single string."
       '("r" "rename file" lsp-javascript-rename-file)))
 
   ;; Command map.
-  (setq lsp-keymap-prefix (wal/key-combo-for-leader 'wal/major "l" t))
+  (setq lsp-keymap-prefix (wal/key-combo-for-leader 'wal/major :key "l" :in-sink t))
   (lsp-enable-which-key-integration t)
   (wal/major-sink "l" '(:keymap lsp-command-map :wk "LSP"))
 
