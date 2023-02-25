@@ -1068,9 +1068,6 @@
 
     (should (equal major-mode 'emacs-lisp-mode))))
 
-(ert-deftest test-wal/async-process--buffer-name ()
-  (should (string= (wal/async-process--buffer-name major-mode) "*wal-async*")))
-
 (ert-deftest test-wal/async-process--finalize ()
   (with-temp-buffer
     (rename-buffer "*async-finalize-test*")
@@ -1111,33 +1108,16 @@
 
 (ert-deftest test-wal/async-process ()
   (with-mock ((wal/async-process--maybe-interrupt . (lambda () (message "interrupted")))
-              (compilation-start . (lambda (c _ _n) (message "compiles") (get-buffer-create "async"))))
+              (compilation-start . (lambda (&rest _) (message "compiles"))))
     (ert-with-message-capture messages
       (wal/async-process
        "compiles"
        (lambda () (message "finishes"))
        (lambda (_m) nil)
        t)
-      (with-current-buffer "async"
+      (with-current-buffer "*wal-async*"
         (funcall (car compilation-finish-functions) nil "finished\n"))
       (should (string= "interrupted\ncompiles\nfinishes\n" messages)))))
-
-(ert-deftest test-wal/kill-async-process-buffers ()
-  (get-buffer-create (generate-new-buffer-name "*wal-async*"))
-  (get-buffer-create (generate-new-buffer-name "*wal-async*"))
-
-  (let ((buf-count (length (buffer-list))))
-
-    (call-interactively #'wal/kill-async-process-buffers)
-    (should (> buf-count (length (buffer-list)))))
-
-  (with-mock ((buffer-list . (lambda () (list (get-buffer-create (generate-new-buffer-name "*wal-async*")))))
-              (get-buffer-window . (lambda (_) 'window))
-              delete-window)
-
-    (wal/kill-async-process-buffers)
-
-    (was-called-with delete-window (list 'window))))
 
 (ert-deftest test-wal/matches-in-string ()
   (let ((str "This 1 string has 3 matches, or is it 2?")

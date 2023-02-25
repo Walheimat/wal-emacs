@@ -193,13 +193,15 @@
       (was-called wal/ascii-whale-setup))))
 
 (ert-deftest test-wal/check-coverage--calculate-coverage ()
+  (kill-buffer "*wal-async*")
+
   (with-temp-buffer
-    (rename-buffer "*wal-async*<2>")
+    (rename-buffer "*wal-async*")
 
-    (with-mock ((buffer-list . (lambda () (list (get-buffer-create "*wal-async*") (get-buffer-create "*wal-async*<1>") (current-buffer)))))
-      (insert "wal-windows : Percent 50% [Relevant: 40 Covered: 20 Missed: 20]\nwal-windows : Percent 40% [Relevant: 20 Covered: 8 Missed: 12]")
 
-      (should (string-equal "46.67%" (wal/check-coverage--calculate-coverage))))))
+   (insert "wal-windows : Percent 50% [Relevant: 40 Covered: 20 Missed: 20]\nwal-windows : Percent 40% [Relevant: 20 Covered: 8 Missed: 12]")
+
+   (should (string-equal "46.67%" (wal/check-coverage--calculate-coverage)))))
 
 (ert-deftest test-wal/customize-group ()
   (with-mock customize-group

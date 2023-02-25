@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `vertico-multiform-mode` is now enabled; several `consult` commands
   that concern visiting places in buffer now use the `buffer` display.
 
+### Changed
+
+- `wal/async-process` now re-uses the same buffer in
+  `compilation-mode` so `recompile` can be used.
+
 ## [v1.11.1]
 
 Peak conformance.

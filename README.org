@@ -2027,10 +2027,8 @@ Optonally, interrupt any running process if INTERRUPT is t."
 
   (let ((finalizer (wal/async-process--finalize callback error-callback)))
 
-    (with-current-buffer (compilation-start
-                          command t
-                          #'wal/async-process--buffer-name)
-      (view-mode 1)
+    (with-current-buffer (get-buffer-create "*wal-async*")
+      (compilation-start command)
       (add-hook 'compilation-finish-functions finalizer nil t))))
 
 (defun wal/async-process--maybe-interrupt ()
@@ -2038,10 +2036,6 @@ Optonally, interrupt any running process if INTERRUPT is t."
   (when-let* ((comp-buffer (compilation-find-buffer))
               (proc (get-buffer-process comp-buffer)))
     (interrupt-process proc)))
-
-(defun wal/async-process--buffer-name (_mode-name)
-  "Generate a buffer name for MODE-NAME."
-  (generate-new-buffer-name "*wal-async*"))
 
 (defun wal/async-process--finalize (callback error-callback)
   "Get finalizer that will call CALLBACK or ERROR-CALLBACK."
@@ -2054,17 +2048,6 @@ Optonally, interrupt any running process if INTERRUPT is t."
                                        (error-message-string err)
                                        (buffer-name buf)))))
          (funcall error-callback (string-trim status)))))
-
-(defun wal/kill-async-process-buffers ()
-  "Kill all async process buffers."
-  (interactive)
-
-  (dolist (buf (buffer-list))
-    (with-current-buffer buf
-      (when (string-match "^\\*wal-async" (buffer-name))
-        (when-let ((window (get-buffer-window buf)))
-          (delete-window window))
-        (kill-buffer buf)))))
 #+END_SRC
 
 ** Strings
@@ -9452,25 +9435,11 @@ This will activate minor mode `wal/config-mode'."
 
     (apply '+ (mapcar #'string-to-number numbers))))
 
-(defun wal/check-coverage--buffer-number (buf)
-  "Get the count of BUF."
-  (let* ((regex "\\(?1:[[:digit:]]+\\)")
-         (content (with-current-buffer buf (buffer-name)))
-         (numbers (wal/matches-in-string regex content))
-         (number (car-safe numbers)))
-
-    (if number (string-to-number number) 0)))
-
 (defun wal/check-coverage--calculate-coverage ()
   "Calculate the full coverage."
-  (when-let* ((buffers (seq-filter (lambda (it) (string-match "\\*wal-async" (buffer-name it))) (buffer-list)))
-              (compare (lambda (a b)
-                         (> (wal/check-coverage--buffer-number a)
-                            (wal/check-coverage--buffer-number b))))
-              (filtered (seq-sort compare buffers))
-              (latest (car filtered))
-              (relevant (wal/check-coverage--add latest "Relevant"))
-              (covered (wal/check-coverage--add latest "Covered")))
+  (when-let* ((buffer (get-buffer "*wal-async*"))
+              (relevant (wal/check-coverage--add buffer "Relevant"))
+              (covered (wal/check-coverage--add buffer "Covered")))
 
     (format "%.2f%%" (* 100 (/ (float covered) relevant)))))
 
