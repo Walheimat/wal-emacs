@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.11.1]
+
+Peak conformance.
 
 ### Added
 
@@ -17,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   interactively.
 - Setting `which-key` replacements is now done using new macro
   `that-key`.
+- `pre-push` hook that will run `flycheck` against the package files.
+- Command `wal/mwim-beginnnig` to jump to `beginning-of-line-text.`
+- Utility `wal/lsp-ignore-directory` that allows just passing
+  directory names (used by `harpoon`).
+- Custom `flycheck` checker for `less-css-mode`.
 
 ### Changed
 
@@ -27,12 +34,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `wdb/faraway` now checks for mode windows as well.
 - `helpful` now uses `display-buffer` over `pop-to-buffer`.
 - Keymap for `flycheck` was moved to `wal/major`.
+- Binding for `completion-at-point` is now local when using `corfu` in
+  `harpoon`.
+- `wal/consult-clock-in` now clocks discontinuously if called with
+  `C-u`.
+- `consult{-global}-mark` no longer uses `parallel`.
+- Max refile depth was increased by one.
+- `smerge` now uses prefix `C-c r`.
+- `flycheck`'s prefix map is now bound in `wal/major`.
+
+### Removed
+
+- Command `wal/split-window-the-other-way`.
 
 ### Fixed
 
 - `wdb/faraway` now sets `inhibit-switch-frame` to do just that.
 - Functionality concerning external packages was moved from
   `wal-settings` to `wal-external`.
+- Variable name `json-encoding-default-indentation` when resetting
+  indent defaults.
+- `wal/kwim` now passes prefix argument to `kill{-whole}-line`.
+- `org-refile` no longer passes prefix argument if it is numeric
+  argument 5 (so that things can be refiled and not just visited).
+- The JSON parsers for `prettier` should now also work for other JSON
+  modes.
 
 ## [v1.11.0]
 
