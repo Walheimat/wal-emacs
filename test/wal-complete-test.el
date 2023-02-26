@@ -176,6 +176,10 @@
 
     (let ((buffers '(one two current)))
 
-      (should (equal '(current one two) (wal/adjust-by-putting-current-buffer-first buffers))))))
+      (should (equal '(current one two) (wal/adjust-by-putting-current-buffer-first buffers)))
+
+      (setq buffers '(one two three))
+
+      (should (equal '(one two three) (wal/adjust-by-putting-current-buffer-first buffers))))))
 
 ;;; wal-complete-test.el ends here
