@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `wal/async-process` now re-uses the same buffer in
   `compilation-mode` so `recompile` can be used.
+- `consult-buffer` queries that sort by visibility are advised to
+  still put the current buffer first.
 
 ## [v1.11.1]
 

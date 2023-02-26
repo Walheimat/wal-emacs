@@ -4838,6 +4838,12 @@ If DISCONTINUE is non-nil, clock in from now."
   (consult--multi
    '(consult--source-open-projects consult--source-projects)
    :prompt "Select project: "))
+
+(defun wal/adjust-by-putting-current-buffer-first (buffers)
+  "Return BUFFERS with the current buffer first."
+  (let ((current (current-buffer)))
+
+    (cons current (delq current buffers))))
 #+END_SRC
 
 **** Configuration
@@ -4880,6 +4886,11 @@ If DISCONTINUE is non-nil, clock in from now."
 
   ;; Use a bigger `vertico' when grepping.
   (advice-add 'consult-ripgrep :around #'wal/with-big-vertico)
+
+  ;; Stay on first buffer before input.
+  (advice-add
+   'consult--buffer-sort-visibility :filter-return
+   'wal/adjust-by-putting-current-buffer-first)
 
   ;; Pre-narrow `consult' commands.
   (add-hook 'minibuffer-setup-hook #'wal/consult--pre-narrow)

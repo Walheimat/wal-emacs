@@ -170,4 +170,12 @@
     (call-interactively 'wal/consult-project)
 
     (was-called-with consult--multi (list '(consult--source-open-projects consult--source-projects) :prompt "Select project: "))))
+
+(ert-deftest test-wal/adjust-by-putting-current-buffer-first ()
+  (with-mock ((current-buffer . (lambda () 'current)))
+
+    (let ((buffers '(one two current)))
+
+      (should (equal '(current one two) (wal/adjust-by-putting-current-buffer-first buffers))))))
+
 ;;; wal-complete-test.el ends here
