@@ -1068,6 +1068,9 @@
 
     (should (equal major-mode 'emacs-lisp-mode))))
 
+(ert-deftest test-wal/async-process--buffer-name ()
+  (should (string= (wal/async-process--buffer-name 'test-mode) wal/async-process-buffer-name)))
+
 (ert-deftest test-wal/async-process--finalize ()
   (with-temp-buffer
     (rename-buffer "*async-finalize-test*")
