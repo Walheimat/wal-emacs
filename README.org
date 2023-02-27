@@ -4779,17 +4779,6 @@ If DISCONTINUE is non-nil, clock in from now."
 
     (apply fun args)))
 
-(defvar-local wal/consult-preview-function nil)
-
-(defun wal/consult-toggle-preview ()
-  "Command to enable/disable preview."
-  (interactive)
-  (if wal/consult-preview-function
-      (setq consult--preview-function wal/consult-preview-function
-            wal/consult-preview-function nil)
-    (setq wal/consult-preview-function consult--preview-function
-          consult--preview-function #'ignore)))
-
 (defun wal/consult--pre-narrow ()
   "Pre-narrow `consult' commands."
   (and-let* ((should-narrow (and wal/consult-pre-narrow (not (wal/univ-p))))
@@ -4872,7 +4861,6 @@ If DISCONTINUE is non-nil, clock in from now."
    consult--source-project-recent-file
    consult--source-bookmark
    consult-recent-file
-   consult-theme
    wal/consult-clock-in
    consult-org-heading
    :preview-key "C-."
@@ -4924,10 +4912,7 @@ If DISCONTINUE is non-nil, clock in from now."
    ("@" . consult-global-mark)
    ("R" . consult-recent-file)
    ("+" . consult-mode-command)
-   ("-" . consult-minor-mode-menu)
-
-   :map vertico-map
-   ("C-M-;" . wal/consult-toggle-preview))
+   ("-" . consult-minor-mode-menu))
 
   :wal-bind
   (("j" . consult-buffer)
