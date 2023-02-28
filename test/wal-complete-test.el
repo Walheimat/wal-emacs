@@ -117,7 +117,10 @@
 
 (ert-deftest test-wal/consult--pre-narrow ()
     (defvar wal/consult-buffer-pre-narrow)
-    (with-mock (project-current (consult--open-project-items . #'always))
+    (with-mock ((consult--project-root . #'always)
+                (consult--buffer-query . #'always)
+                (consult--open-project-items . #'always))
+
       (setq wal/consult-buffer-pre-narrow t
             unread-command-events nil)
 
