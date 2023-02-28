@@ -278,37 +278,35 @@
       (was-called-nth-with checkdoc-file (list "/tmp/one") 0)
       (was-called-nth-with checkdoc-file (list "/tmp/two") 1))))
 
-(ert-deftest test-wal/flycheck-config-packages ()
-  (let ((in '("/tmp/one" "/tmp/two")))
-    (with-mock (display-buffer
-                (wal/package-files . (lambda () in))
-                wal/flycheck-file--erase
-                wal/flycheck-file)
-
-      (call-interactively 'wal/flycheck-config-packages)
-
-      (was-called wal/flycheck-file--erase)
-      (was-called display-buffer)
-      (was-called-nth-with wal/flycheck-file (list "/tmp/one" t t) 0)
-      (was-called-nth-with wal/flycheck-file (list "/tmp/two" t t) 1))))
-
-(ert-deftest test-wal/perform-cold-boot--handlers ()
+(ert-deftest test-wal/run-script--handlers ()
   (ert-with-message-capture messages
-    (wal/perform-cold-boot--on-success)
-    (wal/perform-cold-boot--on-failure)
+    (funcall (wal/run-script--on-success "cold-boot"))
+    (funcall (wal/run-script--on-failure "cold-boot") "test")
 
-    (should (string= messages "Cold boot succeeded.\nCold boot failed.\n"))))
+    (should (string= messages "Script ’cold-boot’ succeeded.\nScript ’cold-boot’ failed.\n\ntest\n"))))
 
-(ert-deftest test-wal/perform-cold-boot ()
+(ert-deftest test-wal/run-script ()
   (defvar wal/emacs-config-default-path)
   (let ((wal/emacs-config-default-path "/tmp"))
 
-    (with-mock (wal/async-process)
+    (with-mock (wal/async-process
+                (wal/run-script--on-success . (lambda (_) 'success))
+                (wal/run-script--on-failure . (lambda (_) 'failure)))
 
-      (call-interactively 'wal/perform-cold-boot)
+      (wal/run-script "cold-boot")
 
       (was-called-with wal/async-process '("cd /tmp/setup && ./cold-boot.sh"
-                                           wal/perform-cold-boot--on-success
-                                           wal/perform-cold-boot--on-failure
+                                           success
+                                           failure
                                            t)))))
+
+(ert-deftest test-wal/run-script--scripts ()
+  (with-mock (wal/run-script)
+
+    (wal/run-pacify)
+    (was-called-with wal/run-script "pacify")
+
+    (wal/run-cold-boot)
+    (was-called-with wal/run-script "cold-boot")))
+
 ;;; wal-test.el ends here

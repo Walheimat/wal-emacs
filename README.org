@@ -519,10 +519,10 @@ Make completions look nice.
       ("d" "show diff" wal/show-config-diff-range)]
      ["Check"
       ("c d" "checkdoc" wal/checkdoc-config-packages)
-      ("c f" "flycheck" wal/flycheck-config-packages)
+      ("c f" "flycheck" wal/run-pacify)
       ("c o" "coverage" wal/check-coverage)
       ("c j" "JSON coverage" wal/create-json-coverage)
-      ("c b" "cold boot" wal/perform-cold-boot)]
+      ("c b" "cold boot" wal/run-cold-boot)]
      ["Fluff"
       ("w" "toggle animation" wal/ascii-whale-toggle-display)]])
 
@@ -9428,7 +9428,31 @@ This will activate minor mode `wal/config-mode'."
   (customize-group 'wal t))
 #+END_SRC
 
-*** Coverage
+*** Scripts
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/run-script--on-success (name)
+  "Display success message."
+  (lambda () (message "Script '%s' succeeded." name)))
+
+(defun wal/run-script--on-failure (name)
+  "Display failure message."
+  (lambda (err) (message "Script '%s' failed.\n\n%s" name err)))
+
+(defun wal/run-script (name)
+  "Run a script."
+  (let* ((command (format "./%s.sh" name))
+         (setup-dir (expand-file-name "setup" wal/emacs-config-default-path))
+         (full-command (concat "cd " setup-dir " && " command)))
+
+    (wal/async-process
+     full-command
+     (wal/run-script--on-success name)
+     (wal/run-script--on-failure name)
+     t)))
+#+END_SRC
+
+**** Coverage
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/check-coverage--add (buf type)
@@ -9488,7 +9512,7 @@ name are deleted beforehand."
     (wal/async-process full-command on-success on-failure t)))
 #+END_SRC
 
-*** Checking
+**** Checking
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/package-files ()
@@ -9511,43 +9535,21 @@ name are deleted beforehand."
   (dolist (it (wal/package-files))
     (checkdoc-file it)))
 
-(defun wal/flycheck-config-packages ()
-  "Run `wal/flycheck' on all config package files."
+(defun wal/run-pacify ()
+  "Run the pacify script."
   (interactive)
 
-  (let ((output-buffer (wal/flycheck-file--get-buffer)))
-
-    (wal/flycheck-file--erase)
-    (display-buffer output-buffer)
-
-    (dolist (it (wal/package-files))
-      (wal/flycheck-file it t t))))
+  (wal/run-script "pacify"))
 #+END_SRC
 
-*** Cold Boot
+**** Cold Boot
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/perform-cold-boot--on-success ()
-  "Display success message."
-  (message "Cold boot succeeded."))
-
-(defun wal/perform-cold-boot--on-failure ()
-  "Display failure message."
-  (message "Cold boot failed."))
-
-(defun wal/perform-cold-boot ()
-  "Execute a cold boot."
+(defun wal/run-cold-boot ()
+  "Run the cold-boot script."
   (interactive)
 
-  (let* ((command "./cold-boot.sh")
-         (setup-dir (expand-file-name "setup" wal/emacs-config-default-path))
-         (full-command (concat "cd " setup-dir " && " command)))
-
-    (wal/async-process
-     full-command
-     'wal/perform-cold-boot--on-success
-     'wal/perform-cold-boot--on-failure
-     t)))
+  (wal/run-script "cold-boot"))
 #+END_SRC
 
 ** Footer
