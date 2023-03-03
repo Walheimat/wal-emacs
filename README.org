@@ -2090,24 +2090,6 @@ Optonally, interrupt any running process if INTERRUPT is t."
   (mapc (lambda (it) (advice-add it combinator advice)) advised))
 #+end_src
 
-** Mark
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/push-mark (&optional clear-marks)
-  "Set mark at where point is without activating it.
-If CLEAR-MARKS is t, clear the mark ring."
-  (interactive "P")
-
-  (let ((mark (mark t)))
-
-    (when (or (null mark) (/= mark (point)))
-      (when clear-marks
-        (setq-local mark-ring nil))
-
-      (push-mark)
-      (message "Mark set"))))
-#+END_SRC
-
 ** Footer
 :PROPERTIES:
 :VISIBILITY: folded
@@ -3202,7 +3184,6 @@ Don't you want to edit your buffer in multiple places at once?
   "Re-enable modes that were disabled before exiting."
   (seq-each (lambda (it) (eval `(,it 1))) wal/mc-disabled)
   (setq wal/mc-disabled nil))
-
 #+END_SRC
 
 **** Configuration
@@ -4597,8 +4578,6 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
 
 #+BEGIN_SRC emacs-lisp
 (use-package embark
-  :after vertico
-
   :init
   (parallel embark-act embark-dwim)
 
@@ -8398,6 +8377,7 @@ Don't clutter things up too much.
 
   :custom
   (lsp-ui-doc-show-with-cursor t)
+
   ;; No sideline stuff.
   (lsp-ui-sideline-enable nil)
 

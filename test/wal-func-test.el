@@ -1146,36 +1146,4 @@
   (should (and (advice--p (advice--symbol-function 'wal/test-fun-1))
                (advice--p (advice--symbol-function 'wal/test-fun-2)))))
 
-(ert-deftest test-wal/push-mark ()
-  (with-mock message
-    (with-temp-buffer
-      (insert "testing")
-      (goto-char (point-max))
-      (wal/push-mark)
-
-      (should (eq (mark t) 8))
-
-      (call-interactively 'wal/push-mark)
-
-      (should (eq (mark t) 8))
-
-      (insert " still testing")
-      (goto-char (point-max))
-      (wal/push-mark)
-      (insert " and still testing")
-      (goto-char (point-max))
-
-      (should (eq (length mark-ring) 1))
-
-      (goto-char (+ 1 (point-min)))
-      (wal/push-mark)
-
-      (should (eq (length mark-ring) 2))
-
-      (goto-char (point-max))
-      (funcall-interactively 'wal/push-mark t)
-
-      (should (eq (mark t) 40))
-      (should (eq (length mark-ring) 1)))))
-
 ;;; wal-func-test.el ends here
