@@ -4777,14 +4777,7 @@ If DISCONTINUE is non-nil, clock in from now."
 
 #+BEGIN_SRC emacs-lisp
 (use-package consult
-  :commands (consult--multi)
-
-  :init
-  (general-define-key
-    :prefix (wal/key-combo-for-leader 'wal/consult)
-    :prefix-map 'wal/consult-map)
-
-  (that-key '(nil . "consult") :leader (wal/consult))
+  :commands (consult--multi consult)
 
   :config
   ;; Integrate with `xref'.
@@ -4826,27 +4819,42 @@ If DISCONTINUE is non-nil, clock in from now."
      'org-speed-commands
      '(("j" . consult-org-heading))))
 
+  (transient-define-prefix consult ()
+    "Run `consult' commands."
+    [["Goto"
+      ("." "mark" consult-mark)
+      ("g" "line" consult-goto-line)
+      ("h" "heading" consult-org-heading
+       :inapt-if-not-mode 'org-mode)]
+
+     ["Find"
+      ("m" "bookmark" consult-bookmark)
+      ("@" "global mark" consult-global-mark)
+      ("r" "recent file" consult-recent-file)
+      ("a" "agenda" consult-org-agenda)]
+
+     ["Search"
+      ("s" "line" wal/consult-line)
+      ("n" "grep" consult-ripgrep)
+      ("l" "locate" consult-locate)]
+
+     ["Do"
+      ("c" "clock in" wal/consult-clock-in)
+      ("k" "call macro" consult-kmacro)
+      ("t" "change theme" consult-theme)
+      ("u" "unregister" wal/consult-unregister)]
+
+     ["Modes"
+      ("+" "major mode command" consult-mode-command)
+      ("-" "toggle minor mode" consult-minor-mode-menu)]])
+
   :custom
   (consult-buffer-filter (list "\\` " "\\`\\*" "\\`magit"))
 
-  :bind
-  (:map wal/consult-map
-   ("a" . consult-org-agenda)
-   ("c" . wal/consult-clock-in)
-   ("g" . consult-goto-line)
-   ("h" . consult-org-heading)
-   ("k" . consult-kmacro)
-   ("l" . consult-locate)
-   ("m" . consult-bookmark)
-   ("n" . consult-ripgrep)
-   ("s" . wal/consult-line)
-   ("t" . consult-theme)
-   ("u" . wal/consult-unregister)
-   ("<SPC>" . consult-mark)
-   ("@" . consult-global-mark)
-   ("r" . consult-recent-file)
-   ("+" . consult-mode-command)
-   ("-" . consult-minor-mode-menu))
+  :general
+  (general-define-key
+   (wal/key-combo-for-leader 'wal/consult)
+   'consult)
 
   :wal-bind
   (("i" . consult-register)
@@ -7975,8 +7983,6 @@ Please let me know when I screwed up. I promise I will learn.
 (declare-function wdb/nearby "wal-func.el")
 (declare-function flycheck-parse-stylelint "ext:flycheck.el")
 (declare-function flycheck-buffer-nonempty-p "ext:flycheck.el")
-
-(defvar wal/consult-map)
 #+END_SRC
 
 ** Packages
@@ -8175,9 +8181,9 @@ Find errors by severity.
   :defer 2
   :after (consult flycheck)
 
-  :bind
-  (:map wal/consult-map
-   ("f" . consult-flycheck)))
+  :config
+  (transient-append-suffix 'consult '(0 0 -1)
+    '("f" "error" consult-flycheck)))
 #+END_SRC
 
 ** Footer
@@ -8501,6 +8507,7 @@ Jump to symbols with =consult=.
 (use-package consult-lsp
   :wal-ways nil
 
+  :demand
   :after (consult lsp-mode)
 
   :config
@@ -8508,9 +8515,9 @@ Jump to symbols with =consult=.
    'consult-lsp-file-symbols :before-while
    #'wal/ignore-if-no-lsp)
 
-  :bind
-  (:map wal/consult-map
-   ("s" . consult-lsp-file-symbols)))
+  (transient-append-suffix 'consult '(0 0 -1)
+    '("y" "symbol" consult-lsp-file-symbols
+      :inapt-if-not (lambda () (bound-and-true-p lsp-mode)))))
 #+end_src
 
 ** lsp-sonarlint
