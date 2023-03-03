@@ -59,6 +59,7 @@
                (interactive)
                (wal/project-command 'test))
         (setq wal/project-commands (plist-put wal/project-commands 'test hash-table))
+        (advice-add 'wal/project-test :around #'wal/with-project-bounded-compilation)
         (bind-key "t" 'wal/project-test wal/project-prefix-map)))))
 
 (ert-deftest test-wal/project-find-rg ()

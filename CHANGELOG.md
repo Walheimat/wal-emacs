@@ -26,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `popper-echo-mode` is no longer on.
 - `wal/consult-line` was inverted (again).
 
+### Fixed
+
+- All commands created with `wal/project-create-command` are now
+  advised using `wal/with-project-bounded-compilation`.
+
 ## [v1.11.1]
 
 Peak conformance.

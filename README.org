@@ -5055,6 +5055,10 @@ unles KEY is provided."
                                    ',name
                                    ,(make-hash-table :test 'equal)))
 
+       (advice-add
+        ',function-name :around
+        #'wal/with-project-bounded-compilation)
+
        (bind-key ,key ',function-name wal/project-prefix-map))))
 
 (defun wal/with-project-bounded-compilation (fun &rest args)
@@ -5133,9 +5137,6 @@ Will search using QUERY in FILES."
   (wal/advise-many
    'wal/with-project-bounded-compilation :around
    '(project-compile
-     wal/project-test
-     wal/project-install
-     wal/project-compile
      recompile))
 
   :config
