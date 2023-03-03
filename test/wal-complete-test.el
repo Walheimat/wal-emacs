@@ -74,7 +74,7 @@
 (ert-deftest test-wal/consult-line ()
   (with-mock consult-line
 
-    (wal/consult-line t)
+    (wal/consult-line)
 
     (was-called consult-line)
 
@@ -82,7 +82,7 @@
       (insert "hello")
       (goto-char 1)
 
-      (wal/consult-line)
+      (wal/consult-line t)
 
       (was-called-with consult-line "hello"))))
 
