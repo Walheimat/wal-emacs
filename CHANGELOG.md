@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `compilation-mode` so `recompile` can be used.
 - `consult-buffer` queries that sort by visibility are advised to
   still put the current buffer first.
+- `transient-show-popup` is now `t` again and
+  `transient-mode-line-format` shows the buffer identification.
 
 ## [v1.11.1]
 

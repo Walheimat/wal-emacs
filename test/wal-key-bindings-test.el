@@ -80,6 +80,16 @@
 
               (should (string-equal "--testing=test" (wal/transient-grab "testing"))))))
 
+(ert-deftest test-wal/transient-command-or-captain ()
+  (with-temp-buffer
+    (setq-local mode-line-buffer-identification "cool-captain")
+
+    (should (string= "captain" (wal/transient-command-or-captain)))
+
+    (setq-local mode-line-buffer-identification "another-transient")
+
+    (should-not (string= "captain" (wal/transient-command-or-captain)))))
+
 (ert-deftest test-that-key ()
   (with-mock ((wal/prefix-user-key . (lambda (k) (concat "H-" k)))
               (wal/key-combo-for-leader . (lambda (_l _k k) (concat "M-" k))))

@@ -781,6 +781,36 @@ Another nice way of grouping keys.
 Some transients are bound directly, others are =wal/univ= variants (see
 above).
 
+
+**** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/transient-grab (arg)
+  "Grab argument ARG from current command."
+  (transient-arg-value
+   (format "--%s=" arg)
+   (transient-args transient-current-command)))
+
+(defun wal/transient-command-or-captain ()
+  "Show only captain if command includes it."
+  (if (string-match "captain" mode-line-buffer-identification)
+      "captain"
+    mode-line-buffer-identification))
+#+END_SRC
+
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package transient
+  :demand t
+
+  :custom
+  (transient-hide-during-minibuffer-read t)
+  (transient-mode-line-format '("%e"
+                                mode-line-front-space
+                                (:eval (wal/transient-command-or-captain)))))
+#+END_SRC
+
 *** which-key
 :PROPERTIES:
 :UNNUMBERED: t
@@ -829,27 +859,6 @@ USER-KEY and LEADER can be used to prefix the key."
   (which-key-show-docstrings t)
   (which-key-preserve-window-configuration t)
   (which-key-show-early-on-C-h t))
-#+END_SRC
-
-**** Utility
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/transient-grab (arg)
-  "Grab argument ARG from current command."
-  (transient-arg-value
-   (format "--%s=" arg)
-   (transient-args transient-current-command)))
-#+END_SRC
-
-**** Configuration
-
-#+BEGIN_SRC emacs-lisp
-(use-package transient
-  :demand t
-
-  :custom
-  (transient-hide-during-minibuffer-read t)
-  (transient-show-popup 0.4))
 #+END_SRC
 
 ** Footer
@@ -6497,10 +6506,6 @@ Forget remembering =git= commands, use =transient=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
-  :init
-  (harpoon magit-status-mode
-    (setq-local transient-show-popup t))
-
   :config
   (transient-define-prefix ma-magit ()
     "Call `magit' commands in a `magit'-y way."
