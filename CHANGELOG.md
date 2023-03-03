@@ -26,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `popper-echo-mode` is no longer on.
 - `wal/consult-line` was inverted (again).
 
+### Removed
+
+- Package `goggles`, `code-review`, `forge`, `pug-mode`, `po-mode`,
+  `graphql`, `jakt-mode`, `jenkinsfile-mode`, `tokei` and `typo-mode`
+  were mothballed.
+
 ### Fixed
 
 - All commands created with `wal/project-create-command` are now

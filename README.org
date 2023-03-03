@@ -3670,27 +3670,6 @@ Show colors colorfully.
   :delight " rbm")
 #+END_SRC
 
-** Where Am I?
-
-*** goggles
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Pulse on region edits.
-
-#+BEGIN_SRC emacs-lisp
-(use-package goggles
-  :wal-ways nil
-
-  :hook ((prog-mode text-mode) . goggles-mode)
-
-  :custom
-  (goggles-pulse-iterations 20)
-
-  :delight " ggl")
-#+END_SRC
-
 ** Modeline
 
 Minor modes are white-listed, hidden, delighted and diminished.
@@ -3846,35 +3825,6 @@ You need to install the icons yourself[fn:12].
   :wal-ways nil)
 #+END_SRC
 
-** Screen-Saver
-
-*** zone
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Screen saver, CPU devourer.
-
-#+BEGIN_SRC emacs-lisp
-(use-package zone
-  :ensure nil
-
-  :config
-  (setq zone-programs [zone-pgm-drip
-                       zone-pgm-jitter
-                       zone-pgm-dissolve
-                       zone-pgm-rat-race
-                       zone-pgm-whack-chars])
-
-  (declare-function zone-when-idle "ext:zone.el")
-
-  (when wal/zone-when-idle
-    (zone-when-idle wal/zone-timer))
-
-  :general
-  (wal/general "0" 'zone))
-#+END_SRC
-
 ** Other
 
 *** mixed-pitch
@@ -3895,18 +3845,6 @@ Allow using variable and fixed fonts in the same buffer.
   (mixed-pitch-variable-pitch-cursor nil)
 
   :delight " mpm")
-#+END_SRC
-
-*** visual-fill-column
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Allow padding and centering text.
-
-#+BEGIN_SRC emacs-lisp
-(use-package visual-fill-column
-  :wal-ways nil)
 #+END_SRC
 
 ** Footer
@@ -6497,40 +6435,6 @@ Forget remembering =git= commands, use =transient=.
   (magit-bury-buffer-function 'magit-restore-window-configuration))
 #+END_SRC
 
-*** forge
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Deal with pull/merge requests.
-
-#+BEGIN_SRC emacs-lisp
-(use-package forge
-  :wal-ways nil
-
-  :ensure nil
-
-  :demand
-  :after magit)
-#+END_SRC
-
-*** code-review
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Review pull/merge requests.
-
-#+BEGIN_SRC emacs-lisp
-(use-package code-review
-  :wal-ways nil
-
-  :ensure nil
-
-  :demand
-  :after forge)
-#+END_SRC
-
 ** Other
 
 *** git-timemachine
@@ -7936,46 +7840,6 @@ We want quicker suggestions when in CSS modes.
     :functions (add-node-modules-path wal/maybe-use-custom-css-checker)))
 #+END_SRC
 
-*** pug-mode
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Support for =pug= templates.
-
-#+BEGIN_SRC emacs-lisp
-(use-package pug-mode
-  :wal-ways nil
-
-  :ensure nil)
-#+END_SRC
-
-*** po-mode
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Get text.
-
-#+BEGIN_SRC emacs-lisp
-(use-package po-mode
-  :wal-ways nil
-
-  :ensure nil)
-#+END_SRC
-
-*** graphql
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-#+BEGIN_SRC emacs-lisp
-(use-package graphql
-  :wal-ways nil
-
-  :ensure nil)
-#+END_SRC
-
 *** web-mode
 :PROPERTIES:
 :UNNUMBERED: t
@@ -8053,39 +7917,6 @@ replying to the `JSONRPC' request."
   (advice-add
    'lsp--get-message-type :around
    #'wal/with-json-data-ignored-for-gdscript))
-#+END_SRC
-
-** Jakt
-
-On the hunt for yet another language.
-
-#+BEGIN_SRC emacs-lisp
-(junk-expand jakt
-  "Go on a hunt with Jakt."
-  :recipes ((jakt-mode
-             :fetcher url
-             :url "https://raw.githubusercontent.com/Walheimat/jakt/main/editors/emacs/jakt-mode.el")))
-#+END_SRC
-
-*** jakt-mode
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-This mode is currently included in the main repo.
-
-#+BEGIN_SRC emacs-lisp
-(use-package jakt-mode
-  :wal-ways nil
-
-  :ensure nil
-
-  :quelpa
-  (jakt-mode
-   :fetcher url
-   :url "https://raw.githubusercontent.com/Walheimat/jakt/main/editors/emacs/jakt-mode.el")
-
-  :mode "\\.jakt\\'")
 #+END_SRC
 
 ** Prolog
@@ -8831,28 +8662,6 @@ Who doesn't like pods and stuff?
   (wal/major "8" '(kubernetes-overview :wk "kubernetes")))
 #+END_SRC
 
-** Jenkins
-
-#+BEGIN_SRC emacs-lisp
-(junk-expand jenkins
-  "If you're more of a butler than a rancher."
-  :packages (jenkinsfile-mode))
-#+END_SRC
-
-*** jenkinsfile-mode
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-#+begin_src emacs-lisp
-(use-package jenkinsfile-mode
-  :wal-ways nil
-
-  :ensure nil
-
-  :mode "Jenkinsfile")
-#+end_src
-
 ** Footer
 :PROPERTIES:
 :VISIBILITY: folded
@@ -9022,106 +8831,6 @@ your =load-path=.
 (provide 'wal-web)
 
 ;;; wal-web.el ends here
-#+END_SRC
-
-* Writing
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle (expand-file-name "wal-writing.el" wal/emacs-config-package-path)
-:END:
-
-Sometimes you have to sit down and write something.
-
-** Header
-:PROPERTIES:
-:VISIBILITY: folded
-:END:
-
-#+BEGIN_SRC emacs-lisp
-;;; wal-writing.el --- Writing. -*- lexical-binding: t -*-
-
-;;; Commentary:
-;;
-;; Provide writing packages.
-
-;;; Code:
-#+END_SRC
-
-** Packages
-
-*** typo
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Access complex punctuation.
-
-To me this doesn't necessarily make sense for all =text-mode= modes
-(like =org-mode=), so instead it needs to be triggered explicitly.
-
-#+BEGIN_SRC emacs-lisp
-(use-package typo
-  :wal-ways nil
-
-  :delight " typ")
-#+END_SRC
-
-** Footer
-:PROPERTIES:
-:VISIBILITY: folded
-:END:
-
-#+BEGIN_SRC emacs-lisp
-(provide 'wal-writing)
-
-;;; wal-writing.el ends here
-#+END_SRC
-
-* Fluff
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle (expand-file-name "wal-fluff.el" wal/emacs-config-package-path)
-:END:
-
-** Header
-:PROPERTIES:
-:VISIBILITY: folded
-:END:
-
-#+BEGIN_SRC emacs-lisp
-;;; wal-fluff.el --- Fluff. -*- lexical-binding: t -*-
-
-;;; Commentary:
-;;
-;; Provide fluff packages. These are not installed by default.
-
-;;; Code:
-#+END_SRC
-
-** Packages
-
-*** tokei
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Display code statistics.
-
-#+BEGIN_SRC emacs-lisp
-(use-package tokei
-  :if (executable-find "tokei")
-  :wal-ways nil
-
-  :ensure nil)
-#+END_SRC
-
-** Footer
-:PROPERTIES:
-:VISIBILITY: folded
-:END:
-
-#+BEGIN_SRC emacs-lisp
-(provide 'wal-fluff)
-
-;;; wal-fluff.el ends here
 #+END_SRC
 
 * Config Package

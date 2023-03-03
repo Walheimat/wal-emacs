@@ -39,9 +39,7 @@
                          wal-fix
                          wal-lsp
                          wal-devops
-                         wal-web
-                         wal-writing
-                         wal-fluff)
+                         wal-web)
   "List of sub-packages that will be loaded.
 
 The order determines the load order as well.")
