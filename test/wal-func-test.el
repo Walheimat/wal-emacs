@@ -710,11 +710,11 @@
    `(progn
       (defun wal/init-setup-test ()
         "Do base setup for test. Do minimal setup on repeats.\nNothing else."
-        (unless (memq 'test wal/setup-list)
+        (unless (memq 'test wal/performed-setups)
           (progn
             (message "Initial setup of '%s'" "test")
             (message "Hello")
-            (add-to-list 'wal/setup-list 'test)))
+            (add-to-list 'wal/performed-setups 'test)))
         (message "Bye"))
       (if (daemonp)
           (progn
@@ -882,7 +882,7 @@
               (treesit-available-p . #'always)
               (treesit-ready-p . (lambda (it &rest _) (equal 'testable it))))
 
-    (let ((harpoon--treesit-alist '((test-mode . testable) (zest-mode . zestable))))
+    (let ((harpoon--treesit-modes '((test-mode . testable) (zest-mode . zestable))))
 
       (should (harpoon--treesit-ready-p 'test-mode))
       (should-not (harpoon--treesit-ready-p 'zest-mode))

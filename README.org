@@ -1563,7 +1563,7 @@ Allow differentiating between initial and repeated setups.
       `(add-hook 'server-after-make-frame-hook (lambda () ,@body))
     `(add-hook 'emacs-startup-hook (lambda () ,@body))))
 
-(defvar wal/setup-list '()
+(defvar wal/performed-setups '()
   "List of already performed setups.")
 
 (cl-defmacro wal/define-init-setup (name docs &key initial always immediately)
@@ -1580,11 +1580,11 @@ appropriate hook is chosen for the original call."
     `(progn
        (defun ,func-name ()
          ,(format "Do base setup for %s. Do minimal setup on repeats.\n%s" name docs)
-         (unless (memq ',name wal/setup-list)
+         (unless (memq ',name wal/performed-setups)
            (progn
              (message "Initial setup of '%s'" ,(symbol-name name))
              ,@initial
-             (add-to-list 'wal/setup-list ',name)))
+             (add-to-list 'wal/performed-setups ',name)))
          ,@always)
        (if (daemonp)
            (progn
@@ -1797,16 +1797,17 @@ set up (major-) modes using hooks.
            collect key
            and collect val))
 
-(defvar harpoon--treesit-alist '((js-mode . javascript)
+(defvar harpoon--treesit-modes '((js-mode . javascript)
                                  (c++-mode . cpp)
                                  (python-mode . python)
                                  (js-json-mode . json))
   "Alist mapping languages to major modes.")
 
-(defvar harpoon--treesit-alias-alist '((js-mode . javascript-mode))
+(defvar harpoon--treesit-aliases '((js-mode . javascript-mode))
   "Alist mapping modes to their alias.")
 
-(defvar harpoon--treesit-replacement-alist '((js-json-mode . json-mode)))
+(defvar harpoon--treesit-replacements '((js-json-mode . json-mode))
+  "Alist mapping modes to those replacing them.")
 
 (defun harpoon--treesit-ready-p (name)
   "Check if treesit is available for NAME."
@@ -1817,16 +1818,16 @@ set up (major-) modes using hooks.
 
 (defun harpoon--treesit-language (name)
   "Get language for NAME."
-  (cdr-safe (assoc name harpoon--treesit-alist)))
+  (cdr-safe (assoc name harpoon--treesit-modes)))
 
 (defun harpoon--treesit-maybe-alias (name)
   "Get the potentially aliased mode name for NAME."
-  (or (cdr-safe (assoc name harpoon--treesit-alias-alist))
+  (or (cdr-safe (assoc name harpoon--treesit-aliases))
       name))
 
 (defun harpoon--treesit-maybe-replace (name)
   "Get the potentially replaced mode name for NAME."
-  (or (cdr-safe (assoc name harpoon--treesit-replacement-alist))
+  (or (cdr-safe (assoc name harpoon--treesit-replacements))
       name))
 
 (defun harpoon--treesit-name (name)
