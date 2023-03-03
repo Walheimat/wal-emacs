@@ -9134,13 +9134,17 @@ This will activate minor mode `wal/config-mode'."
 *** Scripts
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/run-script--on-success (name)
-  "Display success message."
-  (lambda () (message "Script '%s' succeeded." name)))
+(defun wal/run-pacify ()
+  "Run the pacify script."
+  (interactive)
 
-(defun wal/run-script--on-failure (name)
-  "Display failure message."
-  (lambda (err) (message "Script '%s' failed.\n\n%s" name err)))
+  (wal/run-script "pacify"))
+
+(defun wal/run-cold-boot ()
+  "Run the cold-boot script."
+  (interactive)
+
+  (wal/run-script "cold-boot"))
 
 (defun wal/run-script (name)
   "Run a script."
@@ -9153,26 +9157,14 @@ This will activate minor mode `wal/config-mode'."
      (wal/run-script--on-success name)
      (wal/run-script--on-failure name)
      t)))
-#+END_SRC
 
-**** Coverage
+(defun wal/run-script--on-success (name)
+  "Display success message."
+  (lambda () (message "Script '%s' succeeded." name)))
 
-#+BEGIN_SRC emacs-lisp
-(defun wal/check-coverage--add (buf type)
-  "Add all numbers of TYPE in buffer BUF."
-  (let* ((regex (concat type ": \\(?1:[[:digit:]]+\\)"))
-         (content (with-current-buffer buf (buffer-string)))
-         (numbers (wal/matches-in-string regex content)))
-
-    (apply '+ (mapcar #'string-to-number numbers))))
-
-(defun wal/check-coverage--calculate-coverage ()
-  "Calculate the full coverage."
-  (when-let* ((buffer (get-buffer "*wal-async*"))
-              (relevant (wal/check-coverage--add buffer "Relevant"))
-              (covered (wal/check-coverage--add buffer "Covered")))
-
-    (format "%.2f%%" (* 100 (/ (float covered) relevant)))))
+(defun wal/run-script--on-failure (name)
+  "Display failure message."
+  (lambda (err) (message "Script '%s' failed.\n\n%s" name err)))
 
 (defun wal/check-coverage ()
   "Check the current coverage for custom functionality."
@@ -9213,21 +9205,23 @@ name are deleted beforehand."
   (let ((full-command (concat "cd " wal/emacs-config-default-path " && " command)))
 
     (wal/async-process full-command on-success on-failure t)))
-#+END_SRC
 
-**** Checking
 
-#+BEGIN_SRC emacs-lisp
-(defun wal/package-files ()
-  "Get the package files."
-  (let* ((package-files (wal/directory-files wal/emacs-config-package-path))
-         (el-files (seq-filter
-                    (lambda (it)
-                      (string-equal (file-name-extension it)
-                                    "el"))
-                    package-files)))
+(defun wal/check-coverage--add (buf type)
+  "Add all numbers of TYPE in buffer BUF."
+  (let* ((regex (concat type ": \\(?1:[[:digit:]]+\\)"))
+         (content (with-current-buffer buf (buffer-string)))
+         (numbers (wal/matches-in-string regex content)))
 
-    el-files))
+    (apply '+ (mapcar #'string-to-number numbers))))
+
+(defun wal/check-coverage--calculate-coverage ()
+  "Calculate the full coverage."
+  (when-let* ((buffer (get-buffer "*wal-async*"))
+              (relevant (wal/check-coverage--add buffer "Relevant"))
+              (covered (wal/check-coverage--add buffer "Covered")))
+
+    (format "%.2f%%" (* 100 (/ (float covered) relevant)))))
 
 (defun wal/checkdoc-config-packages ()
   "Run `checkdoc-file' on all package files."
@@ -9238,21 +9232,16 @@ name are deleted beforehand."
   (dolist (it (wal/package-files))
     (checkdoc-file it)))
 
-(defun wal/run-pacify ()
-  "Run the pacify script."
-  (interactive)
+(defun wal/package-files ()
+  "Get the package files."
+  (let* ((package-files (wal/directory-files wal/emacs-config-package-path))
+         (el-files (seq-filter
+                    (lambda (it)
+                      (string-equal (file-name-extension it)
+                                    "el"))
+                    package-files)))
 
-  (wal/run-script "pacify"))
-#+END_SRC
-
-**** Cold Boot
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/run-cold-boot ()
-  "Run the cold-boot script."
-  (interactive)
-
-  (wal/run-script "cold-boot"))
+    el-files))
 #+END_SRC
 
 ** Footer
