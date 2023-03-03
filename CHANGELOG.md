@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   still put the current buffer first.
 - `transient-show-popup` is now `t` again and
   `transient-mode-line-format` shows the buffer identification.
+- `wal/kill-some-popups` now only asks for confirmation if called with
+  prefix argument.
+- `popper-echo-mode` is no longer on.
 
 ## [v1.11.1]
 

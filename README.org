@@ -4028,32 +4028,6 @@ Treat certain buffers and their windows as pop-ups.
 **** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/popper-echo-replace (regexp buffer-name &optional prefix)
-  "Search for REGEXP in BUFFER-NAME.
-
-If no PREFIX is given, a slash is pre-pended to the first match."
-  (let ((prefix (or prefix "")))
-
-    (with-temp-buffer
-      (insert buffer-name)
-      (goto-char (point-min))
-      (re-search-forward regexp nil t)
-      (concat
-       prefix
-       (if (match-string 1) (concat (match-string 1) ": ") "")
-       (if (match-string 2) (match-string 2) "")))))
-
-(defvar wal/popper-echo-regex-alist
-  '(("\\*helpful \\(?1:variable\\|function\\|macro\\|command\\): \\(?2:[a-zA-Z-]+\\)\\*")
-    ("\\* docker-compose \\(?1:up\\|run\\|build\\)\\( --rm\\)?\\ \\(?2:\\w+\\)" . "dc/")
-    ("\\* docker container \\(?1:logs\\|stop\\)?\\ ?\\(--tail [[:digit:]]+\\)?\\ \\(?2:\\w+_\\w+_[[:digit:]]+\\)\\ \\*" . "dcon/")))
-
-(defun wal/popper-echo-transform (buffer-name)
-  "Transform BUFFER-NAME by truncating certain prefixes."
-  (if-let ((match (cl-find-if (lambda (it) (string-match (car it) buffer-name)) wal/popper-echo-regex-alist)))
-      (wal/popper-echo-replace (car match) buffer-name (cdr-safe match))
-    buffer-name))
-
 (defvar wal/spared-popups '("\\*Messages\\*"))
 
 (defun wal/popper--spared-p (buffer)
@@ -4063,9 +4037,11 @@ If no PREFIX is given, a slash is pre-pended to the first match."
 
     spared))
 
-(defun wal/kill-some-popups ()
-  "Query for killing some popups."
-  (interactive)
+(defun wal/kill-some-popups (&optional ask-first)
+  "Kill some popups.
+
+If ASK-FIRST is true uses `kill-some-buffers' instead of `kill-buffer'."
+  (interactive "P")
 
   (let* ((group (when popper-group-function
                   (funcall popper-group-function)))
@@ -4076,7 +4052,10 @@ If no PREFIX is given, a slash is pre-pended to the first match."
                               (delete-dups))))
 
     (when buried
-      (kill-some-buffers buried))
+      (if ask-first
+          (kill-some-buffers buried)
+        (dolist (it buried)
+          (kill-buffer it))))
 
     (setf (alist-get group popper-buried-popup-alist nil nil 'equal)
           (cl-remove-if-not
@@ -4091,18 +4070,7 @@ If no PREFIX is given, a slash is pre-pended to the first match."
   :wal-ways nil
 
   :config
-  (with-eval-after-load 'all-the-icons
-    (defvar wal/popper-mode-line-icon (concat
-                                       " "
-                                       (all-the-icons-faicon "fort-awesome"
-                                                             :face 'all-the-icons-dsilver
-                                                             :height 0.9
-                                                             :v-adjust 0.0)
-                                       " "))
-    (setq popper-mode-line '(:eval wal/popper-mode-line-icon)))
-
   (popper-mode 1)
-  (popper-echo-mode 1)
 
   :custom
   (popper-display-control 'user)
@@ -4142,11 +4110,6 @@ If no PREFIX is given, a slash is pre-pended to the first match."
                               help-mode
                               dictionary-mode
                               shortdoc-mode))
-
-  (popper-echo-dispatch-persist nil)
-  (popper-echo-dispatch-keys '(?a ?s ?d ?f ?g ?q ?w ?e ?r ?t))
-  (popper-echo-lines 1)
-  (popper-echo-transform-function #'wal/popper-echo-transform)
 
   :wal-bind
   (("\\" . popper-toggle-latest)
