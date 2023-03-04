@@ -6,6 +6,9 @@
 
 ;;; Code:
 
+(require 'cl-macs)
+(require 'seq)
+(require 'scroll-bar)
 (require 'wal-prelude (expand-file-name
                        "setup/wal-prelude.el"
                        (getenv "EMACS_SOURCE_DIR"))
@@ -17,9 +20,11 @@
     (wal/bootstrap-config source-dir t)))
 
 (defvar wal/emacs-config-package-path)
-(declare-function wal/package-files "ext:wal-prelude.el")
+(declare-function wal/package-files "ext:wal.el")
+(declare-function wal/directory-files "ext:wal-prelude.el")
 
 (add-to-list 'load-path wal/emacs-config-package-path)
+
 (require 'wal nil t)
 
 (package-initialize)

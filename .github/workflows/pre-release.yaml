@@ -1,0 +1,64 @@
+name: Pre-release checks
+on:
+  push:
+    branches:
+      - pre-release
+
+jobs:
+  byte-compile:
+    runs-on: ubuntu-latest
+    if: ${{ contains(github.event.head_commit.message, 'pacify') }}
+    steps:
+      - name: Set environment to allow unsecure commands
+        run: echo "ACTIONS_ALLOW_UNSECURE_COMMANDS=true" >> $GITHUB_ENV
+
+      - name: Get Emacs
+        uses: purcell/setup-emacs@master
+        with:
+          version: 28.1
+
+      - name: Get Cask
+        uses: conao3/setup-cask@master
+        with:
+          version: 0.8.6
+
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      - name: Tangle the configuration
+        run: |
+          emacs --batch -l ./setup/wal-setup-ci.el
+          ls -al ./wal
+
+      - name: Install dependencies
+        run: cask install
+
+      - name: Check files
+        run: |
+          export EMACS_SOURCE_DIR=$GITHUB_WORKSPACE
+          cask emacs --batch -l ./setup/wal-pacify.el
+
+  cold-boot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set environment to allow unsecure commands
+        run: echo "ACTIONS_ALLOW_UNSECURE_COMMANDS=true" >> $GITHUB_ENV
+
+      - name: Get Emacs
+        uses: purcell/setup-emacs@master
+        with:
+          version: 28.1
+
+      - name: Get Cask
+        uses: conao3/setup-cask@master
+        with:
+          version: 0.8.6
+
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      - name: Execute cold boot
+        run: |
+          export EMACS_SOURCE_DIR=$GITHUB_WORKSPACE
+          emacs --batch -l ./setup/wal-setup-cold-boot.el
