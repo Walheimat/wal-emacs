@@ -5,13 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.11.2]
+
+Echo gecko.
 
 ### Added
 
 - `vertico-multiform-mode` is now enabled; several `consult` commands
   that concern visiting places in buffer now use the `buffer` display.
 - Command `wal/rg-rerun-toggle-hidden` to do just that.
+- `consult` is now a `transient`.
 
 ### Changed
 
@@ -25,12 +28,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   prefix argument.
 - `popper-echo-mode` is no longer on.
 - `wal/consult-line` was inverted (again).
+- CI jobs are now grouped by branch. The `pre-push` hook was moved to
+  a CI job that is only triggered by message "pacify".
+- Various bindings.
+- Some variables were renamed to reflect intent over content.
+- Commands to test the config now share function `wal/run-script`
+  instead of their own implementation.
 
 ### Removed
 
 - Package `goggles`, `code-review`, `forge`, `pug-mode`, `po-mode`,
   `graphql`, `jakt-mode`, `jenkinsfile-mode`, `tokei` and `typo-mode`
   were mothballed.
+- Command `wal/push-mark`.
+- Configuration for `zone`.
 
 ### Fixed
 

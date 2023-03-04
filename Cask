@@ -3,8 +3,7 @@
 
 (development
  (depends-on "ert-runner")
- (depends-on "undercover")
- (depends-on "flycheck"))
+ (depends-on "undercover"))
 
 (package "wal" "1.7.12" "Walheimat's configuration")
 

@@ -2800,7 +2800,7 @@ Hide blocks.
   :ensure nil
 
   :general
-  (wal/major :keymaps 'hs-minor-mode-map
+  (wal/lieutenant :keymaps 'hs-minor-mode-map
     "h" 'hs-toggle-hiding))
 #+END_SRC
 
@@ -6271,8 +6271,9 @@ FORCE-NEW/`universal-argument')."
   (vterm-buffer-name-string (concat wal/vterm-prefix ": %s"))
   (vterm-max-scrollback 10000)
 
-  :general
-  (wal/major "t" '(wal/vterm :wk "vterm"))
+  :bind
+  (:map wal/zero-in-map
+   ("t" . wal/vterm))
 
   :delight
   (vterm-copy-mode " vcp"))
@@ -8449,7 +8450,8 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
   (with-eval-after-load 'lsp-mode
     (transient-append-suffix 'lsp-mode-dispatch '(0 -1)
       ["Debug"
-       ("b" "start" dap-debug)]))
+       ("B" "start" dap-debug)
+       ("b" "menu" dap-hydra)]))
 
   :custom
   (dap-auto-show-output nil)
@@ -8643,8 +8645,9 @@ Who doesn't like pods and stuff?
   (kubernetes-default-overview-view 'deployments)
   (kubernetes-json-mode (if (featurep 'jsonian-mode) 'jsonian-mode 'js-mode))
 
-  :general
-  (wal/major "8" '(kubernetes-overview :wk "kubernetes")))
+  :bind
+  (:map wal/zero-in-map
+   ("8" . kubernetes-overview)))
 #+END_SRC
 
 ** Footer
@@ -9125,7 +9128,7 @@ This will activate minor mode `wal/config-mode'."
   (wal/run-script "cold-boot"))
 
 (defun wal/run-script (name)
-  "Run a script."
+  "Run script named NAME."
   (let* ((command (format "./%s.sh" name))
          (setup-dir (expand-file-name "setup" wal/emacs-config-default-path))
          (full-command (concat "cd " setup-dir " && " command)))
@@ -9137,11 +9140,11 @@ This will activate minor mode `wal/config-mode'."
      t)))
 
 (defun wal/run-script--on-success (name)
-  "Display success message."
+  "Display success message for script NAME."
   (lambda () (message "Script '%s' succeeded." name)))
 
 (defun wal/run-script--on-failure (name)
-  "Display failure message."
+  "Display failure message for script NAME."
   (lambda (err) (message "Script '%s' failed.\n\n%s" name err)))
 
 (defun wal/check-coverage ()
