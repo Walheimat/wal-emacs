@@ -76,6 +76,13 @@ js-mode
  " * " q > n
  " */" >)
 
+java-mode
+
+(docstring
+ "/**" n
+ " * " q > n
+ " */" >)
+
 ;; Local Variables:
 ;; mode: lisp-data
 ;; outline-regexp: "[a-z]"
