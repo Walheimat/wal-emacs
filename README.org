@@ -649,28 +649,23 @@ I use many[fn:10] custom keybindings. You can find an overview [[file:docs/bindi
   :type 'boolean
   :group 'wal-key-bindings)
 
-(defcustom wal/key-reach '(";" "." "," "/" "'" "[" "]" "\\")
-  "List of keys ordered by reachability."
-  :type '(list string string string string string string string string)
+(defcustom wal/leaders '((";" . wal/lieutenant)
+                         ("." . wal/captain)
+                         ("," . wal/consult)
+                         ("/" . wal/major)
+                         ("'" . wal/trooper)
+                         ("[" . wal/general))
+  "Alist mapping prefix keys to leaders."
+  :type '(alist :key-type string :value-type symbol)
   :group 'wal-key-bindings)
 #+END_SRC
 
 ** Leaders
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/leaders
-  (list 'wal/lieutenant
-        'wal/consult
-        'wal/captain
-        'wal/major
-        'wal/trooper
-        'wal/colonel
-        'wal/general)
-  "Leader keys ordered to match `wal/key-reach'.")
-
 (defun wal/key-by-leader (leader)
   "Get the key for LEADER."
-  (nth (seq-position wal/leaders leader) wal/key-reach))
+  (car-safe (rassoc leader wal/leaders)))
 
 (cl-defun wal/key-combo-for-leader (leader &key key in-sink translate)
   "Get the key combination for LEADER.

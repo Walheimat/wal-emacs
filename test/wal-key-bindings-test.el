@@ -34,8 +34,7 @@
 (ert-deftest test-wal/key-by-leader ()
   (defvar wal/key-reach)
   (defvar wal/leaders)
-  (let ((wal/key-reach '("a" "b" "c"))
-        (wal/leaders '(hunk bunk trunk)))
+  (let ((wal/leaders '(("a" . hunk) ("b" . bunk) ("c" . trunk))))
 
     (should (string-equal "c" (wal/key-by-leader 'trunk)))))
 
@@ -44,8 +43,7 @@
   (defvar wal/leaders)
   (with-mock ((wal/prefix-user-key . (lambda (x) (concat "C-t " x))))
 
-    (let ((wal/key-reach '("a" "b" "c"))
-          (wal/leaders '(hunk bunk trunk)))
+    (let ((wal/leaders '(("a" . hunk) ("b" . bunk) ("c" . trunk))))
 
       (should (string-equal "C-t a k" (wal/key-combo-for-leader 'hunk :key "k")))
       (should (string-equal "C-t b b k" (wal/key-combo-for-leader 'bunk :key "k" :in-sink t)))
