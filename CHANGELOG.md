@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `transient`s `colonel` and `consult` now use advice to delay the popup.
+
 ### Added
 
 - `treesit` and `lsp-mode` is enabled for `yaml`.

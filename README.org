@@ -528,6 +528,8 @@ Make completions look nice.
      ["Fluff"
       ("w" "toggle animation" wal/ascii-whale-toggle-display)]])
 
+  (advice-add 'colonel :around 'wal/with-delayed-transient-popup)
+
   ;; Additional `general' bindings.
   (wal/general
     "w" 'eww
@@ -791,6 +793,13 @@ above).
   (if (string-match "captain" mode-line-buffer-identification)
       "captain"
     mode-line-buffer-identification))
+
+(defun wal/with-delayed-transient-popup (fun &rest args)
+  "Delay the transient FUN before calling it with ARGS."
+  (defvar transient-show-popup)
+  (let ((transient-show-popup 0.8))
+
+    (apply fun args)))
 #+END_SRC
 
 **** Configuration
@@ -4785,6 +4794,8 @@ If DISCONTINUE is non-nil, clock in from now."
   (advice-add
    'consult--buffer-sort-visibility :filter-return
    'wal/adjust-by-putting-current-buffer-first)
+
+  (advice-add 'consult :around 'wal/with-delayed-transient-popup)
 
   ;; Pre-narrow `consult' commands.
   (add-hook 'minibuffer-setup-hook #'wal/consult--pre-narrow)

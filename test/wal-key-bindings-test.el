@@ -88,6 +88,12 @@
 
     (should-not (string= "captain" (wal/transient-command-or-captain)))))
 
+(ert-deftest test-wal/with-delayed-transient-popup ()
+  (defvar transient-show-popup)
+  (let ((transient-show-popup 0.4))
+
+    (should (equal 0.8 (wal/with-delayed-transient-popup (lambda () transient-show-popup))))))
+
 (ert-deftest test-that-key ()
   (with-mock ((wal/prefix-user-key . (lambda (k) (concat "H-" k)))
               (wal/key-combo-for-leader . (lambda (_l _k k) (concat "M-" k))))
