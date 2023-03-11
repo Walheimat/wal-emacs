@@ -146,6 +146,21 @@
 
     (was-not-called dap-java-run-test-method)))
 
+(ert-deftest test-wal/junit-match-file ()
+  (let ((matched nil))
+
+    (with-mock ((buffer-list . (lambda () (list "a" "b")))
+                (buffer-file-name . (lambda (b) (concat "buffer-" b)))
+                (match-string . (lambda (_) matched)))
+
+      (setq matched "a")
+
+      (should (string= "buffer-a" (wal/junit-match-file)))
+
+      (setq matched "d")
+
+      (should (string= "d" (wal/junit-match-file))))))
+
 (ert-deftest test-wal/maybe-use-custom-css-checker ()
   (defvar lsp-after-open-hook)
   (defvar flycheck-checker)

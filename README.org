@@ -7620,6 +7620,27 @@ LSP integration.
       (progn (transient-set)
              (call-interactively fun))
     (message "Select scope and mode")))
+
+(defun wal/junit-match-file ()
+  "Find the buffer associated with the matched error."
+  (save-match-data
+    (let* ((file (match-string 2))
+           (buffer (cl-find-if
+                    (lambda (it)
+                      (when-let ((name (buffer-file-name it)))
+                        (string-match file name)))
+                    (buffer-list))))
+
+      (if buffer
+          (buffer-file-name buffer)
+        file))))
+
+(defvar wal/junit-compilation-error-regexp
+  '(junit
+    "^[[:blank:]]+ \\([^\n\r]+\\)(\\([^\n\r]+.java\\):\\([0-9]+\\))"
+    wal/junit-match-file
+    3)
+  "Regular expression used for JUnit errors.")
 #+END_SRC
 
 **** Configuration
@@ -7666,6 +7687,12 @@ LSP integration.
      ("s" wal/java-scope-switch)
      ""
      ("t" "test" wal/java-test-dwim)])
+
+  ;; Add regular expression for JUnit errors.
+  (add-to-list 'compilation-error-regexp-alist 'junit)
+  (add-to-list
+   'compilation-error-regexp-alist-alist
+   wal/junit-compilation-error-regexp)
 
   :custom
   (lsp-java-format-on-type-enabled nil) ; Suggested fix for failing completion.
