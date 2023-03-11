@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `electric-indent-mode` is disabled for `multiple-cursors-mode`.
+- Undos `treemacs` attempt to force ignore its buffers (which is
+  mainly annoying for `dap-mode` buffers).
 
 ## [v1.11.2]
 
