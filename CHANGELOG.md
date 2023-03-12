@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   now bound to `popper`.
 - `text-mode` now activates `flycheck` but is set up to only check on
   save.
+- `flyspell` now has a repeat map and the default map is overridden by
+  `wal/flyspell-map`.
 
 ### Added
 

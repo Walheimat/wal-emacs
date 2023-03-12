@@ -848,8 +848,6 @@ USER-KEY and LEADER can be used to prefix the key."
 
 #+BEGIN_SRC emacs-lisp
 (use-package which-key
-  :wal-ways nil
-
   :defer 2
 
   :config
@@ -8169,23 +8167,34 @@ My spelling is bad. Uses American English for =flyspell=.
 
   (that-key "flyspell" :key "C-c s")
 
+  :config
+  ;; Override the map to not remove zealous bindings.
+  (setq flyspell-mode-map wal/flyspell-map)
+
+  (defvar-keymap flyspell-repeat-map
+    :doc "Keymap to repeat various `flyspell' commands."
+    :repeat t
+    "n" 'flyspell-goto-next-error
+    "i" 'ispell-word
+    "a" 'flyspell-auto-correct-word)
+
   :custom
   (flyspell-issue-message-flag nil)
   (flyspell-mode-line-string " fsp")
   (flyspell-default-dictionary "american")
 
   :bind
-  (:map flyspell-mode-map
-   ("C-." . ispell-word)  ; Replaces `flyspell-auto-correct-word', which is still available via `C-M-i'.
-
-   :map wal/flyspell-map
+  (:map wal/flyspell-map
    ("s" . wal/flyspell)
    ("b" . flyspell-buffer)
    ("r" . flyspell-region)
+   ("n" . flyspell-goto-next-error)
+   ("i" . ispell-word)
+   ("a" . flyspell-auto-correct-word)
    ("c" . ispell-change-dictionary))
 
   :bind-keymap
-  (("C-c s" . wal/flyspell-map)))
+  (("C-c s" . flyspell-mode-map)))
 #+END_SRC
 
 *** consult-flycheck
