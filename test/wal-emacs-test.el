@@ -20,6 +20,18 @@
 
       (was-called flyspell-mode))))
 
+(ert-deftest test-wal/flycheck-on-save ()
+  (with-mock (flycheck-mode)
+
+    (defvar flycheck-check-syntax-automatically nil)
+
+    (with-temp-buffer
+      (wal/flycheck-on-save)
+      (was-called flycheck-mode)
+
+      (should (equal '(save) flycheck-check-syntax-automatically)))))
+
+
 (ert-deftest test-wal/kmacro ()
   (with-mock (kmacro-end-macro
               kmacro-start-macro)

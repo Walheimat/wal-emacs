@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `transient`s `colonel` and `consult` now use advice to delay the popup.
 - `ace-window-dispatch` is now bound to `M-o`; user-prefixed `o` is
   now bound to `popper`.
+- `text-mode` now activates `flycheck` but is set up to only check on
+  save.
 
 ### Added
 
