@@ -707,7 +707,7 @@
      :always
      ((message "Bye"))
      :immediately t)
-   `(progn
+   `(wal/on-boot test
       (defun wal/init-setup-test ()
         "Do base setup for test. Do minimal setup on repeats.\nNothing else."
         (unless (memq 'test wal/performed-setups)

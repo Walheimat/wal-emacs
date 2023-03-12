@@ -1579,7 +1579,7 @@ appropriate hook is chosen for the original call."
 
   (let ((func-name (intern (concat "wal/init-setup-" (symbol-name name)))))
 
-    `(progn
+    `(wal/on-boot ,name
        (defun ,func-name ()
          ,(format "Do base setup for %s. Do minimal setup on repeats.\n%s" name docs)
          (unless (memq ',name wal/performed-setups)
@@ -2190,26 +2190,25 @@ the session."
       (error
        (message "Failed to load theme: %s" (error-message-string err))))))
 
-(wal/on-boot visuals
-  ;; Some themes require configuration, so we only load after initialization.
-  (wal/define-init-setup visuals
-    "Set up visual frills like theme and transparency."
-    :initial
-    ((add-to-list 'default-frame-alist `(,(wal/transparency--param) . ,wal/transparency))
+(wal/define-init-setup visuals
+  "Set up visual frills like theme and transparency."
+  :initial
+  ((add-to-list 'default-frame-alist `(,(wal/transparency--param) . ,wal/transparency))
 
-     (when wal/theme
-       (setq wal/active-theme wal/theme)
-       (wal/load-active-theme))
+   ;; Mix of old and new.
+   (setq frame-title-format '(multiple-frames "%b" ("%b@" system-name)))
 
-     (when wal/hidpi
-       (set-fringe-mode 18)))
-    :always
-    ((wal/set-transparency)
+   ;; Some themes require configuration, so we only load after initialization.
+   (when wal/theme
+     (setq wal/active-theme wal/theme)
      (wal/load-active-theme))
-    :immediately t)
 
-  ;; Mix of old and new.
-  (setq frame-title-format '(multiple-frames "%b" ("%b@" system-name))))
+   (when wal/hidpi
+     (set-fringe-mode 18)))
+  :always
+  ((wal/set-transparency)
+   (wal/load-active-theme))
+  :immediately t)
 
 (provide 'wal-look)
 
@@ -2369,40 +2368,39 @@ instead."
   (set-face-attribute 'font-lock-comment-face nil :slant 'italic :weight 'normal)
   (set-face-attribute 'font-lock-keyword-face nil :weight 'bold))
 
-(wal/on-boot fonts
- (wal/define-init-setup fonts
-   "Set up fonts for GUI Emacs.
+(wal/define-init-setup fonts
+  "Set up fonts for GUI Emacs.
 
 This sets `default' and `fixed-pitch' fonts to the first
 available candidate from `wal/fixed-fonts'. Does the same for
 `variable-pitch' using `wal/variable-fonts'."
-   :initial
-   ((when (or (daemonp) (display-graphic-p))
-      (mapc (lambda (it)
-              (when (internal-lisp-face-p it)
-                (set-face-attribute it nil
-                                    :font (wal/fonts-candidate wal/fixed-fonts t)
-                                    :height wal/fixed-font-height)))
-            '(default fixed-pitch))
-      (mapc (lambda (it)
-              (when (internal-lisp-face-p it)
-                (set-face-attribute it nil :inherit 'mode-line)))
-            '(mode-line-active mode-line-inactive))
+  :initial
+  ((when (or (daemonp) (display-graphic-p))
+     (mapc (lambda (it)
+             (when (internal-lisp-face-p it)
+               (set-face-attribute it nil
+                                   :font (wal/fonts-candidate wal/fixed-fonts t)
+                                   :height wal/fixed-font-height)))
+           '(default fixed-pitch))
+     (mapc (lambda (it)
+             (when (internal-lisp-face-p it)
+               (set-face-attribute it nil :inherit 'mode-line)))
+           '(mode-line-active mode-line-inactive))
 
-      ;; Variable pitch face.
-      (set-face-attribute 'variable-pitch nil
-                          :font (wal/fonts-candidate wal/variable-fonts t)
-                          :height wal/variable-font-height)))
-   :always
-   ((run-hooks 'wal/fonts-updated-hook)))
+     ;; Variable pitch face.
+     (set-face-attribute 'variable-pitch nil
+                         :font (wal/fonts-candidate wal/variable-fonts t)
+                         :height wal/variable-font-height))
 
- (wal/general
-   "sf" 'wal/set-fixed-font-height
-   "sv" 'wal/set-variable-font-height
-   "sF" 'wal/select-fixed-font
-   "sV" 'wal/select-variable-font)
+   (wal/general
+     "sf" 'wal/set-fixed-font-height
+     "sv" 'wal/set-variable-font-height
+     "sF" 'wal/select-fixed-font
+     "sV" 'wal/select-variable-font)
 
- (add-hook 'font-lock-mode-hook #'wal/font-lock))
+   (add-hook 'font-lock-mode-hook #'wal/font-lock))
+  :always
+  ((run-hooks 'wal/fonts-updated-hook)))
 
 (provide 'wal-fonts)
 
