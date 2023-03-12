@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `transient`s `colonel` and `consult` now use advice to delay the popup.
+- `ace-window-dispatch` is now bound to `M-o`; user-prefixed `o` is
+  now bound to `popper`.
 
 ### Added
 
