@@ -10,8 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `transient`s `colonel` and `consult` now use advice to delay the popup.
-- `ace-window-dispatch` is now bound to `M-o`; user-prefixed `o` is
-  now bound to `popper`.
+- `popper` is now bound to user-prefixed `\`; cycling is done adding
+  meta key.
 - `text-mode` now activates `flycheck` but is set up to only check on
   save.
 - `flyspell` now has a repeat map and the default map is overridden by
@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `electric-indent-mode` is disabled for `multiple-cursors-mode`.
 - Undos `treemacs` attempt to force ignore its buffers (which is
   mainly annoying for `dap-mode` buffers).
+- `wal/other-window` has a repeat map like the original
+  `other-window`.
 
 ## [v1.11.2]
 
