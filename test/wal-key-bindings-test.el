@@ -24,12 +24,12 @@
     (was-called-with general-define-key
                      (list :prefix "C-t" "t" (list :ignore t :wk "TESTER!")))))
 
-(ert-deftest test-wal/lieutenant! ()
+(ert-deftest test-wal/editor! ()
   (match-expansion
-   (wal/lieutenant! "t" #'ignore #'always)
+   (wal/editor! "t" #'ignore #'always)
    '(progn
-      (wal/lieutenant "t" #'ignore)
-      (wal/lieutenant-sink "t" #'always))))
+      (wal/editor "t" #'ignore)
+      (wal/editor-sink "t" #'always))))
 
 (ert-deftest test-wal/key-by-leader ()
   (defvar wal/key-reach)
@@ -60,15 +60,15 @@
     (was-called-nth-with eval (list '(general-create-definer wal/tester :prefix "C-t")) 0)
     (was-called-nth-with eval (list '(wal/create-leader-sink wal/tester-sink :definer wal/tester :prefix "C-t")) 1)))
 
-(ert-deftest test-wal/captain? ()
+(ert-deftest test-wal/major? ()
   (with-mock (message (wal/key-combo-for-leader . (lambda (&rest _) "C-t")))
 
     (with-temp-buffer
       (text-mode)
 
-      (wal/captain?)
+      (wal/major?)
 
-      (was-called-with message (list "Captain (%s) has no binding in %s" "C-t" "text-mode")))))
+      (was-called-with message (list "Major (%s) has no binding in %s" "C-t" "text-mode")))))
 
 (ert-deftest test-wal/transient-grab ()
   (defvar transient-current-command)
@@ -78,15 +78,15 @@
 
               (should (string-equal "--testing=test" (wal/transient-grab "testing"))))))
 
-(ert-deftest test-wal/transient-command-or-captain ()
+(ert-deftest test-wal/transient-command-or-major ()
   (with-temp-buffer
-    (setq-local mode-line-buffer-identification "cool-captain")
+    (setq-local mode-line-buffer-identification "cool-major")
 
-    (should (string= "captain" (wal/transient-command-or-captain)))
+    (should (string= "major" (wal/transient-command-or-major)))
 
     (setq-local mode-line-buffer-identification "another-transient")
 
-    (should-not (string= "captain" (wal/transient-command-or-captain)))))
+    (should-not (string= "major" (wal/transient-command-or-major)))))
 
 (ert-deftest test-wal/with-delayed-transient-popup ()
   (defvar transient-show-popup)

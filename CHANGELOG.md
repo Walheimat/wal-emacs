@@ -9,7 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `transient`s `colonel` and `consult` now use advice to delay the popup.
+- Leader key `captain` was renamed to `major`; `major` was renamed to
+  `ambassador`; `colonel` was renamed to `whaler`; `trooper` was
+  renamed to `roamer`; `lieutenant` was renamed to `editor`.
+- `transient`s `whaler` and `consult` now use advice to delay the
+  popup.
 - `popper` is now bound to user-prefixed `\`; cycling is done adding
   meta key.
 - `text-mode` now activates `flycheck` but is set up to only check on

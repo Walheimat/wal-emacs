@@ -637,27 +637,27 @@
        (setq wal/is-testing t))
      `(message "Ignoring statements in '%s'" 'test))))
 
-(ert-deftest test-wal/transient-define-captain ()
+(ert-deftest test-wal/transient-define-major ()
   (match-expansion
-   (wal/transient-define-captain test-mode ()
+   (wal/transient-define-major test-mode ()
      "This is a world."
      [("i" "ignore" ignore)])
-   `(transient-define-prefix test-mode-captain ()
+   `(transient-define-prefix test-mode-major ()
       "This is a world."
       [("i" "ignore" ignore)]))
 
-  (defun test-mode-captain () nil)
+  (defun test-mode-major () nil)
   (match-expansion
-   (wal/transient-define-captain test-mode ()
+   (wal/transient-define-major test-mode ()
      "This is a world."
      [("i" "ignore" ignore)])
    `nil)
   (let ((wal/transient-may-redefine t))
     (match-expansion
-     (wal/transient-define-captain test-mode ()
+     (wal/transient-define-major test-mode ()
        "This is a world."
        [("i" "ignore" ignore)])
-     `(transient-define-prefix test-mode-captain ()
+     `(transient-define-prefix test-mode-major ()
         "This is a world."
         [("i" "ignore" ignore)])))
   (fmakunbound 'test-prefix))
@@ -973,17 +973,17 @@
       (message "hi")
       (run-hooks 'prog-like-hook))))
 
-(ert-deftest test-harpoon-function--captain ()
+(ert-deftest test-harpoon-function--major ()
   (match-expansion
    (harpoon-function test-mode
      :messages ("Just testing")
-     :captain t
+     :major t
      (message "hi"))
    `(defun test-mode-harpoon ()
       "Hook into `test-mode'."
       (wal/message-in-a-bottle '("Just testing"))
       (message "hi")
-      (local-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) 'test-mode-captain))))
+      (local-set-key (kbd (wal/key-combo-for-leader 'wal/major)) 'test-mode-major))))
 
 (ert-deftest test-harpoon--corfu ()
   (match-expansion

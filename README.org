@@ -558,10 +558,10 @@ Make completions look nice.
 
   (wal/general "n" 'display-line-numbers-mode)
 
-  (global-set-key (kbd (wal/key-combo-for-leader 'wal/captain)) #'wal/captain?)
+  (global-set-key (kbd (wal/key-combo-for-leader 'wal/major)) #'wal/major?)
 
   (when (wal/modern-emacs-p 29)
-    (wal/lieutenant "d" 'duplicate-dwim))
+    (wal/editor "d" 'duplicate-dwim))
 
   (defvar wal/triple-minus-map (make-sparse-keymap)
     "Keymap for one-off custom commands.")
@@ -657,11 +657,11 @@ I use many[fn:10] custom keybindings. You can find an overview [[file:docs/bindi
   :type 'boolean
   :group 'wal-key-bindings)
 
-(defcustom wal/leaders '((";" . wal/lieutenant)
-                         ("." . wal/captain)
+(defcustom wal/leaders '((";" . wal/editor)
+                         ("." . wal/major)
                          ("," . wal/consult)
-                         ("/" . wal/major)
-                         ("'" . wal/trooper)
+                         ("/" . wal/ambassador)
+                         ("'" . wal/roamer)
                          ("[" . wal/whaler)
                          ("]" . wal/general))
   "Alist mapping prefix keys to leaders."
@@ -705,7 +705,7 @@ Allows defining custom prefixes.
 **** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/general-leaders '(wal/lieutenant wal/major wal/general)
+(defvar wal/general-leaders '(wal/editor wal/ambassador wal/general)
   "Leaders that a `general' definer will be created for.")
 
 (cl-defmacro wal/create-leader-sink (name &key definer prefix)
@@ -729,15 +729,15 @@ the sink for and PREFIX is its prefix."
                                        it))
                                    args))))))
 
-(cl-defmacro wal/lieutenant! (key fun mfun &rest args)
+(cl-defmacro wal/editor! (key fun mfun &rest args)
   "Bind FUN to KEY, MFUN in the sink.
 
 All ARGS are passed to both definers."
   (declare (indent defun))
 
   `(progn
-    (wal/lieutenant ,@args ,key ,fun)
-    (wal/lieutenant-sink ,@args ,key ,mfun)))
+    (wal/editor ,@args ,key ,fun)
+    (wal/editor-sink ,@args ,key ,mfun)))
 
 (defun wal/general-create-definer (leader)
   "Create a definer for LEADER with a sink."
@@ -754,14 +754,14 @@ All ARGS are passed to both definers."
     ;; Also create the sink.
     (eval `(wal/create-leader-sink ,sink :definer ,leader :prefix ,key))))
 
-(defun wal/captain? ()
-  "Show message when captain is not locally bound."
+(defun wal/major? ()
+  "Show message when major is not locally bound."
   (interactive)
 
-  (let ((key (propertize (wal/key-combo-for-leader 'wal/captain) 'face 'success))
+  (let ((key (propertize (wal/key-combo-for-leader 'wal/major) 'face 'success))
         (mode (propertize (symbol-name major-mode) 'face 'success)))
 
-    (message "Captain (%s) has no binding in %s" key mode)))
+    (message "Major (%s) has no binding in %s" key mode)))
 #+END_SRC
 
 *** Configuration
@@ -794,10 +794,10 @@ above).
    (format "--%s=" arg)
    (transient-args transient-current-command)))
 
-(defun wal/transient-command-or-captain ()
-  "Show only captain if command includes it."
-  (if (string-match "captain" mode-line-buffer-identification)
-      "captain"
+(defun wal/transient-command-or-major ()
+  "Show only major if command includes it."
+  (if (string-match "major" mode-line-buffer-identification)
+      "major"
     mode-line-buffer-identification))
 
 (defun wal/with-delayed-transient-popup (fun &rest args)
@@ -818,7 +818,7 @@ above).
   (transient-hide-during-minibuffer-read t)
   (transient-mode-line-format '("%e"
                                 mode-line-front-space
-                                (:eval (wal/transient-command-or-captain)))))
+                                (:eval (wal/transient-command-or-major)))))
 #+END_SRC
 
 *** which-key
@@ -1528,7 +1528,7 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
 
 (defvar wal/transient-may-redefine nil)
 
-(defmacro wal/transient-define-captain (name arglist &rest args)
+(defmacro wal/transient-define-major (name arglist &rest args)
   "Make sure that prefix NAME called with ARGLIST and ARGS is only defined once."
   (declare (debug (&define name lambda-list
                            [&optional lambda-doc]
@@ -1538,7 +1538,7 @@ in GUI mode or `wal/use-hyper-prefix' is nil."
            (indent defun)
            (doc-string 3))
 
-  (let ((composite-name (intern (concat (symbol-name name) "-captain"))))
+  (let ((composite-name (intern (concat (symbol-name name) "-major"))))
 
     (unless (and (fboundp composite-name) (not wal/transient-may-redefine))
       `(transient-define-prefix ,composite-name ,arglist ,@args))))
@@ -1788,7 +1788,7 @@ set up (major-) modes using hooks.
 
 #+BEGIN_SRC emacs-lisp
 (defvar harpoon--keywords
-  '(:captain
+  '(:major
     :corfu
     :functions
     :ligatures
@@ -1876,7 +1876,7 @@ The suffix is `-hook' unless HARPOON is t, then it is `-harpoon'."
      &body
      body
      &key
-     captain
+     major
      corfu
      functions
      lsp
@@ -1886,8 +1886,8 @@ The suffix is `-hook' unless HARPOON is t, then it is `-harpoon'."
      &allow-other-keys)
   "Create hook function for NAME.
 
-CAPTAIN is either t or nil. If it is t, a prefixed function
-will be mapped to the captain key.
+MAJOR is either t or nil. If it is t, a prefixed function
+will be mapped to the major key.
 
 CORFU is a list of (IDLE-DELAY PREFIX-LENGTH).
 
@@ -1944,10 +1944,10 @@ The rest of the BODY will be spliced into the hook function."
              `(progn ,@(mapcar (lambda (it)
                                  `(when (fboundp ',it) (,it)))
                                functions)))
-          ,(when captain
+          ,(when major
              `(local-set-key
-               (kbd (wal/key-combo-for-leader 'wal/captain))
-               ',(intern (concat (symbol-name name) "-captain"))))))))
+               (kbd (wal/key-combo-for-leader 'wal/major))
+               ',(intern (concat (symbol-name name) "-major"))))))))
 
 (cl-defmacro harpoon-hook (name)
   "Create the hook call for NAME."
@@ -2815,7 +2815,7 @@ Hide blocks.
   :ensure nil
 
   :general
-  (wal/lieutenant :keymaps 'hs-minor-mode-map
+  (wal/editor :keymaps 'hs-minor-mode-map
     "h" 'hs-toggle-hiding))
 #+END_SRC
 
@@ -2845,7 +2845,7 @@ Some people need macros, okay?
   :ensure nil
 
   :general
-  (wal/lieutenant "k" 'wal/kmacro))
+  (wal/editor "k" 'wal/kmacro))
 #+END_SRC
 
 *** register
@@ -3230,7 +3230,7 @@ Don't you want to edit your buffer in multiple places at once?
   ("<mouse-3>" . mc/add-cursor-on-click)
 
   :general
-  (wal/lieutenant! "." 'mc/mark-all-like-this  'mc/edit-ends-of-lines))
+  (wal/editor! "." 'mc/mark-all-like-this  'mc/edit-ends-of-lines))
 #+END_SRC
 
 *** iedit
@@ -4194,10 +4194,10 @@ beginning."
 
   :general
   ;; Lines.
-  (wal/lieutenant! "c" 'avy-copy-line 'avy-copy-region)
-  (wal/lieutenant! "x" 'avy-kill-whole-line 'avy-kill-region)
-  (wal/lieutenant! "m" 'avy-move-line 'avy-move-region)
-  (wal/lieutenant! "w"
+  (wal/editor! "c" 'avy-copy-line 'avy-copy-region)
+  (wal/editor! "x" 'avy-kill-whole-line 'avy-kill-region)
+  (wal/editor! "m" 'avy-move-line 'avy-move-region)
+  (wal/editor! "w"
     'avy-kill-ring-save-whole-line
     'avy-kill-ring-save-region))
 #+END_SRC
@@ -4266,7 +4266,7 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
   (wdb/faraway "\\*rg\\*\\'")
 
   :general
-  (wal/major "n" 'rg-menu)
+  (wal/ambassador "n" 'rg-menu)
 
   :bind
   (:map rg-mode-map
@@ -4981,7 +4981,7 @@ Each command will be stored in a per-project history."
 (defmacro wal/project-create-command (name &optional key)
   "Create command NAME.
 
-The command will be bound using `wal/major' using its initial
+The command will be bound using `wal/ambassador' using its initial
 unles KEY is provided."
   (let ((function-name (intern (format "wal/project-%s" name)))
         (variable-name (intern (format "wal/project-%s-default-cmd" name)))
@@ -5224,7 +5224,7 @@ This calls `org-content' interactively."
   :init
   (harpoon org-mode
     :messages ("Organize! Seize the means of production!")
-    :captain t)
+    :major t)
 
   :config
   ;; TEMP: Getting missing face errors otherwise.
@@ -5236,7 +5236,7 @@ This calls `org-content' interactively."
    #'wal/first-require-ox-md)
 
   (with-no-warnings
-    (wal/transient-define-captain org-mode ()
+    (wal/transient-define-major org-mode ()
       "Access `org-mode' commands."
       [["Commands"
         ("n" "add note" org-add-note)
@@ -5501,14 +5501,14 @@ If called with numeric prefix `5', set variable
    org-roam-node-create
    org-roam-node-find
    org-roam-node-read
-   trooper)
+   roamer)
 
   :init
   (setq org-roam-v2-ack t)
 
   (general-define-key
-   (wal/key-combo-for-leader 'wal/trooper)
-   'trooper)
+   (wal/key-combo-for-leader 'wal/roamer)
+   'roamer)
 
   :config
   ;; Show roam buffer on the right.
@@ -5517,7 +5517,7 @@ If called with numeric prefix `5', set variable
   ;; Refile differently for these files.
   (wal/replace-in-alist 'org-speed-commands '(("w" . wal/org-refile)))
 
-  (transient-define-prefix trooper ()
+  (transient-define-prefix roamer ()
     "Run `org-roam' commands."
     [["Capture"
       ("c" "capture" org-roam-capture)
@@ -5575,7 +5575,7 @@ Fancy UI.
   :after org-roam
 
   :config
-  (transient-append-suffix 'trooper '(0 3 0)
+  (transient-append-suffix 'roamer '(0 3 0)
     '("u" "ui" org-roam-ui-mode))
 
   :ensure nil)
@@ -5658,7 +5658,7 @@ Turn any =org-mode= buffer into a presentation.
 
   :init
   ;; Insert new group after "Visibility".
-  (transient-append-suffix 'org-mode-captain '(0 2)
+  (transient-append-suffix 'org-mode-major '(0 2)
     ["Presentation"
      ("p" "present" org-tree-slide-mode)
      ("i" "indent" org-indent-mode)])
@@ -5705,7 +5705,7 @@ Editing source blocks.
      ("markdown" . markdown)
      ("fish" . fish)))
 
-  (transient-append-suffix 'org-mode-captain '(0 0 1)
+  (transient-append-suffix 'org-mode-major '(0 0 1)
     '("e" "edit source" org-edit-src-code
       :inapt-if-not org-in-src-block-p))
 
@@ -5880,7 +5880,7 @@ You know the drill. Clock in, clock out.
   (org-clock-heading-function #'wal/org-clock-heading)
 
   :general
-  (wal/lieutenant "n" 'wal/org-clock-take-note))
+  (wal/editor "n" 'wal/org-clock-take-note))
 #+END_SRC
 
 *** org-duration
@@ -6034,13 +6034,13 @@ Uses the same optional SWITCHES."
 
   :init
   (harpoon dired-mode
-    :captain t)
+    :major t)
 
   :config
   ;; We aren't scared of finding alternate files.
   (put 'dired-find-alternate-file 'disabled nil)
 
-  (wal/transient-define-captain dired-mode ()
+  (wal/transient-define-major dired-mode ()
     "Access Dired commands."
     [["Utility"
       ("q" "query replace" dired-do-query-replace-regexp)
@@ -6428,7 +6428,7 @@ Forget remembering =git= commands, use =transient=.
       ("c" "clone" magit-clone)]])
 
   :general
-  (wal/major "m" 'ma-magit)
+  (wal/ambassador "m" 'ma-magit)
 
   :wal-bind
   ("m" . magit-status)
@@ -6623,7 +6623,7 @@ I want to be ready for =jai=.
   :init
   (harpoon c++-mode
     :lsp t
-    :captain t
+    :major t
     :ligatures ("::" "->")
     :messages ("Make tidy! Make clean!" "Serenity now!"))
 
@@ -6631,7 +6631,7 @@ I want to be ready for =jai=.
   ;; Eliminate conflicts with `delight'.
   (advice-add 'c-update-modeline :override #'ignore)
 
-  (wal/transient-define-captain c++-mode ()
+  (wal/transient-define-major c++-mode ()
     "Access `c++-mode' commands."
     [["Style"
       ("s" "set" c-set-style)
@@ -6667,12 +6667,12 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
   :init
   (harpoon rust-mode
     :lsp t
-    :captain t
+    :major t
     :ligatures ("///" "->" "=>" "::" ".." "#[")
     :messages ("Consider the lobster"))
 
   :config
-  (wal/transient-define-captain rust-mode ()
+  (wal/transient-define-major rust-mode ()
     "Access `rust-mode' commands."
     [["Commands"
       ("c" "compile" rust-compile)
@@ -6737,7 +6737,7 @@ TOML."
 
   :init
   (harpoon python-mode
-    :captain t
+    :major t
     :lsp
     (:ignore-dirs (".pytype" "__pycache__" ".pytest_cache" "typings"))
     :corfu (0.1 1)
@@ -6754,7 +6754,7 @@ TOML."
   ;; Show inferior shell at the bottom.
   (wdb/nearby 'inferior-python-mode)
 
-  (wal/transient-define-captain python-mode ()
+  (wal/transient-define-major python-mode ()
     "Access `python-mode' commands."
     [["Inferior shell"
       ("i r" "send region" python-shell-send-region)
@@ -6828,7 +6828,7 @@ Sort with =isort=.
   :after python
 
   :init
-  (transient-append-suffix 'python-mode-captain '(0 1 -1)
+  (transient-append-suffix 'python-mode-major '(0 1 -1)
     '("s" "isort" python-isort-buffer)))
 #+end_src
 
@@ -6848,7 +6848,7 @@ Blacken buffers.
   :after python
 
   :init
-  (transient-append-suffix 'python-mode-captain '(0 1 -1)
+  (transient-append-suffix 'python-mode-major '(0 1 -1)
     '("b" "black" python-black-buffer)))
 #+END_SRC
 
@@ -6868,7 +6868,7 @@ Work with Jupyter notebooks.
   :after python
 
   :init
-  (transient-append-suffix 'python-mode-captain '(0 1 -1)
+  (transient-append-suffix 'python-mode-major '(0 1 -1)
     '("e" "ein" ein:run)))
 #+END_SRC
 
@@ -6928,7 +6928,7 @@ Takes care[fn:14] of all your virtual environment needs.
   :after python
 
   :init
-  (transient-append-suffix 'python-mode-captain '(0 1 -1)
+  (transient-append-suffix 'python-mode-major '(0 1 -1)
     '("p" "poetry" poetry)))
 #+END_SRC
 
@@ -6943,7 +6943,7 @@ Takes care[fn:14] of all your virtual environment needs.
   :after python
 
   :init
-  (transient-append-suffix 'python-mode-captain '(0 1 -1)
+  (transient-append-suffix 'python-mode-major '(0 1 -1)
     '("v" "activate venv" pyvenv-activate)))
 #+END_SRC
 
@@ -7011,12 +7011,12 @@ Deal with the parens.
 
   :init
   (harpoon emacs-lisp-mode
-    :captain t
+    :major t
     :messages ("So it's just a bunch of lists?" "List your lambdas")
     :functions (prettify-symbols-mode))
 
   :config
-  (wal/transient-define-captain emacs-lisp-mode ()
+  (wal/transient-define-major emacs-lisp-mode ()
     "Access `elisp' commands."
     [["Utility"
       ("c" "check parens" check-parens)
@@ -7025,7 +7025,7 @@ Deal with the parens.
       ("m" "expand macro" emacs-lisp-macroexpand)]])
 
   (with-eval-after-load 'puni
-    (transient-append-suffix 'emacs-lisp-mode-captain '(0 0 -1)
+    (transient-append-suffix 'emacs-lisp-mode-major '(0 0 -1)
       '("p" "puni" puni-mode))))
 #+END_SRC
 
@@ -7040,7 +7040,7 @@ Deal with the parens.
 
   :init
   (harpoon common-lisp-mode
-    :captain t)
+    :major t)
 
   (harpoon lisp-data-mode
     :corfu (0.1 1)
@@ -7048,7 +7048,7 @@ Deal with the parens.
 
   :config
   (with-eval-after-load 'slime
-    (wal/transient-define-captain common-lisp-mode ()
+    (wal/transient-define-major common-lisp-mode ()
       "Access `slime' actions."
       [["Slime"
         ("s" "slime" slime-mode)
@@ -7071,13 +7071,13 @@ Get some closure.
   :init
   (harpoon clojure-mode
     :lsp t
-    :captain t
+    :major t
     :ligatures (";;" "->" "->>")
     :messages ("Cider brew"))
 
   :config
   (with-eval-after-load 'cider
-    (wal/transient-define-captain clojure-mode ()
+    (wal/transient-define-major clojure-mode ()
       "Access `clojure-mode' commands."
       [["Cider"
         ("r" "repl" cider-jack-in)
@@ -7169,7 +7169,7 @@ Can we have =deno= instead of =node=?
   :init
   (harpoon js-mode
     :messages ("NaN !== NaN" "Null falsy values or undefined")
-    :captain t
+    :major t
     :tabs t
     :lsp t
     :corfu (0.1 2)
@@ -7192,7 +7192,7 @@ Can we have =deno= instead of =node=?
   (with-eval-after-load 'dap-mode
     (require 'dap-node))
 
-  (wal/transient-define-captain js-mode ()
+  (wal/transient-define-major js-mode ()
     "Access JS commands."
     [["Actions"
       ("c" "context" js-syntactic-context)]])
@@ -7285,7 +7285,7 @@ Prettify your ugly JavaScript.
 
   :config
   (with-eval-after-load 'js
-    (transient-append-suffix 'js-mode-captain '(0 0 0)
+    (transient-append-suffix 'js-mode-major '(0 0 0)
       '("p" "prettier" prettier-prettify)))
 
   ;; Copy JSON parsers for newer major modes.
@@ -7447,10 +7447,10 @@ Sometimes things that don't do things need to look nice.
 
   :init
   (harpoon markdown-mode
-    :captain t)
+    :major t)
 
   :config
-  (wal/transient-define-captain markdown-mode ()
+  (wal/transient-define-major markdown-mode ()
     "Access `markdown-mode' commands."
     [["View"
       ("v" "toggle view" wal/markdown-view)]])
@@ -7485,7 +7485,7 @@ Yes, you need to install *Android Studio* for some reason.
   :init
   (harpoon dart-mode
     :lsp t
-    :captain t
+    :major t
     :messages ("Bull's eye!")
     :ligatures ("=>" "///" ".?" "??" "??=" "..")))
 #+END_SRC
@@ -7555,7 +7555,7 @@ LSP support for Dart.
   ;; Display at the bottom.
   (wdb/nearby "\\*Flutter")
 
-  (wal/transient-define-captain dart-mode ()
+  (wal/transient-define-major dart-mode ()
     "Access flutter commands."
     [["Hot-reloading"
       ("R" "restart" lsp-dart-dap-flutter-hot-restart)
@@ -7598,7 +7598,7 @@ For some reason, this is also defined in =cc-mode=.
   :init
   (harpoon java-mode
     :lsp (:ignore-dirs (".gradle"))
-    :captain t
+    :major t
     :messages ("Mmmh ... maven")
     :ligatures ("::" "->")))
 #+END_SRC
@@ -7688,7 +7688,7 @@ LSP integration.
     :argument-regexp "\\(--scope=\\(method\\|class\\)\\)"
     :choices '("method" "class"))
 
-  (wal/transient-define-captain java-mode ()
+  (wal/transient-define-major java-mode ()
     "Access `java-mode' commands."
     :value '("--mode=run" "--scope=method")
 
@@ -8000,7 +8000,7 @@ Please let me know when I screwed up. I promise I will learn.
   (require 'wal-key-bindings (expand-file-name "wal-key-bindings.el" ".")))
 
 (declare-function wal/key-combo-for-leader "wal-key-bindings.el")
-(declare-function wal/major "wal-key-bindings.el")
+(declare-function wal/ambassador "wal-key-bindings.el")
 (declare-function wdb/nearby "wal-func.el")
 (declare-function flycheck-parse-stylelint "ext:flycheck.el")
 (declare-function flycheck-buffer-nonempty-p "ext:flycheck.el")
@@ -8106,7 +8106,7 @@ If KILL-BUFFER is t, kill the file's buffer."
   :hook ((prog-mode prog-like-mode) . flycheck-mode)
 
   :init
-  (that-key "flycheck" :leader (wal/major :key "f"))
+  (that-key "flycheck" :leader (wal/ambassador :key "f"))
 
   :config
   (wdb/nearby flycheck-error-list-buffer)
@@ -8136,7 +8136,7 @@ If KILL-BUFFER is t, kill the file's buffer."
 
   :custom
   (flycheck-mode-line-prefix "fly")
-  (flycheck-keymap-prefix (wal/key-combo-for-leader 'wal/major :key "f" :translate t)))
+  (flycheck-keymap-prefix (wal/key-combo-for-leader 'wal/ambassador :key "f" :translate t)))
 #+END_SRC
 
 *** flyspell
@@ -8379,13 +8379,13 @@ It can be either a list of strings or a single string."
 
   ;; JavaScript.
   (with-eval-after-load 'js
-    (transient-append-suffix 'js-mode-captain '(0 0 -1)
+    (transient-append-suffix 'js-mode-major '(0 0 -1)
       '("r" "rename file" lsp-javascript-rename-file)))
 
   ;; Command map.
-  (setq lsp-keymap-prefix (wal/key-combo-for-leader 'wal/major :key "l" :in-sink t))
+  (setq lsp-keymap-prefix (wal/key-combo-for-leader 'wal/ambassador :key "l" :in-sink t))
   (lsp-enable-which-key-integration t)
-  (wal/major-sink "l" '(:keymap lsp-command-map :wk "LSP"))
+  (wal/ambassador-sink "l" '(:keymap lsp-command-map :wk "LSP"))
 
   :custom
   ;; Simplify visuals.
@@ -8410,7 +8410,7 @@ It can be either a list of strings or a single string."
   (lsp-xml-format-split-attributes-indent-size 1)
 
   :general
-  (wal/major :keymaps 'lsp-mode-map "l" '(lsp-mode-dispatch :wk "lsp"))
+  (wal/ambassador :keymaps 'lsp-mode-map "l" '(lsp-mode-dispatch :wk "lsp"))
 
   :delight
   (lsp-mode " lsp")
@@ -8648,7 +8648,7 @@ What goes =docker-compose= up, goes =docker-compose= down.
   (docker-show-status nil)
 
   :general
-  (wal/major "d" 'docker))
+  (wal/ambassador "d" 'docker))
 #+END_SRC
 
 *** dockerfile-mode
@@ -8778,7 +8778,7 @@ Make requests using Org.
    #'wal/pick-windows-being-kept)
 
   :config
-  (wal/transient-define-captain verb ()
+  (wal/transient-define-major verb ()
     "Dispatch `verb' commands."
     [["Request"
       ("r" "send" verb-send-request-on-point
@@ -8799,8 +8799,8 @@ Make requests using Org.
    ("q" . quit-window))
 
   :general
-  (wal/major :keymaps '(verb-mode-map verb-response-body-mode-map)
-    "v" '(verb-captain :wk "verb"))
+  (wal/ambassador :keymaps '(verb-mode-map verb-response-body-mode-map)
+    "v" '(verb-major :wk "verb"))
 
   :delight
   (verb-mode " vrb")
@@ -8839,7 +8839,7 @@ You either need to install =maildir-utils= or build from [[https://github.com/dj
   (mu4e-get-mail-command "offlineimap") ; This one works nicely.
 
   :general
-  (wal/major "@" 'mu4e))
+  (wal/ambassador "@" 'mu4e))
 #+END_SRC
 
 *** smtpmail
