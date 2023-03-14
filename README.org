@@ -3901,6 +3901,13 @@ Ace interacting with (multiple) windows.
   "Advise `aw--switch-buffer' to use `consult-buffer'."
   (call-interactively 'consult-buffer))
 
+(defun wal/first-undo-treemacs-meddling (&rest _args)
+  "Make sure `treemacs-mode' windows may be targets."
+    ;; Undo action by `treemacs' that forces its buffers to be ignored.
+  (when (and (boundp 'aw-ignored-buffers)
+             (memq 'treemacs-mode aw-ignored-buffers))
+    (setq aw-ignored-buffers (delq 'treemacs-mode aw-ignored-buffers))))
+
 (defun wal/aw-delete-other-windows (window)
   "Delete windows other than WINDOW."
   (defvar ignore-window-parameters)
@@ -3920,6 +3927,11 @@ Ace interacting with (multiple) windows.
    'aw--switch-buffer :override
    #'wal/instead-call-consult-buffer)
 
+  ;; Undo what `treemacs-compatibility' does.
+  (advice-add
+   'ace-window :before
+   #'wal/first-undo-treemacs-meddling)
+
   ;; We update the dispatch list after the package is loaded.
   (setq aw-dispatch-alist '((?h aw-split-window-horz "horizontal split")
                             (?v aw-split-window-vert "vertical split")
@@ -3932,10 +3944,6 @@ Ace interacting with (multiple) windows.
                             (?b aw-switch-buffer-in-window "buffer")
                             ;; If this has a description, it doesn't work.
                             (?? aw-show-dispatch-help)))
-
-  ;; Undo action by `treemacs' that forces its buffers to be ignored.
-  (with-eval-after-load 'treemacs-compatibility
-    (setq aw-ignored-buffers (delq 'treemacs-mode aw-ignored-buffers)))
 
   :custom
   (aw-dispatch-always t)

@@ -21,6 +21,15 @@
 
     (was-called-with call-interactively (list 'consult-buffer))))
 
+(ert-deftest test-wal/first-undo-treemacs-meddling ()
+  (defvar aw-ignored-buffers)
+
+  (let ((aw-ignored-buffers '(test-mode treemacs-mode cool-mode)))
+
+    (wal/first-undo-treemacs-meddling)
+
+    (should (equal '(test-mode cool-mode) aw-ignored-buffers))))
+
 (ert-deftest test-wal/aw-delete-other-windows ()
   (with-mock delete-other-windows
 
