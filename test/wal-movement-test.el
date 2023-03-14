@@ -23,7 +23,13 @@
 
       (was-called-with avy-jump (list nil :beg (line-beginning-position) :end (line-end-position) :window-flip t))
 
-      (wal/avy-goto-word t)
+      (wal/avy-goto-word '(4))
+
+      (was-called-with avy-goto-word-0 t)
+
+      (wal/clear-mocks)
+
+      (wal/avy-goto-word 1)
 
       (was-called-with avy-goto-word-0 t))))
 

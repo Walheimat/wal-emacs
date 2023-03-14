@@ -4119,7 +4119,8 @@ jump to a word in the buffer or anywhere."
   (interactive "P")
 
   (if scope
-      (let ((flip (> 5 (prefix-numeric-value scope))))
+      (let ((flip (or (and (listp scope) (> 5 (prefix-numeric-value scope)))
+                      (and (numberp scope) (> 2 scope)))))
 
         (setq current-prefix-arg nil)
         (avy-goto-word-0 flip))
