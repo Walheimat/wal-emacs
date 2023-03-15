@@ -509,8 +509,8 @@ Make completions look nice.
 ** Key Bindings
 
 #+BEGIN_SRC emacs-lisp
-;; Create `transient' for config package.
 (with-no-warnings
+  ;; Create `transient' for config package.
   (transient-define-prefix whaler ()
     "Facilitate the usage of or the working on Walheimat's config."
     [["Do"
@@ -3875,87 +3875,6 @@ Everything that has to do with windows.
 
 ** Packages
 
-*** ace-window
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Ace interacting with (multiple) windows.
-
-**** Utility
-
-#+BEGIN_SRC emacs-lisp
-(defun wal/aw-delete-window-kill-buffer (window)
-  "Call `aw-delete-window' on WINDOW requesting buffer kill."
-  (aw-delete-window window t))
-
-(defun wal/instead-call-consult-buffer (&rest _args)
-  "Advise `aw--switch-buffer' to use `consult-buffer'."
-  (call-interactively 'consult-buffer))
-
-(defun wal/first-undo-treemacs-meddling (&rest _args)
-  "Make sure `treemacs-mode' windows may be targets."
-    ;; Undo action by `treemacs' that forces its buffers to be ignored.
-  (when (and (boundp 'aw-ignored-buffers)
-             (memq 'treemacs-mode aw-ignored-buffers))
-    (setq aw-ignored-buffers (delq 'treemacs-mode aw-ignored-buffers))))
-
-(defun wal/aw-delete-other-windows (window)
-  "Delete windows other than WINDOW."
-  (defvar ignore-window-parameters)
-
-  (let ((ignore-window-parameters t))
-
-    (delete-other-windows window)))
-#+END_SRC
-
-*** Configuration
-
-#+BEGIN_SRC emacs-lisp
-(use-package ace-window
-  :config
-  ;; We want to switch buffers using `consult'.
-  (advice-add
-   'aw--switch-buffer :override
-   #'wal/instead-call-consult-buffer)
-
-  ;; Undo what `treemacs-compatibility' does.
-  (advice-add
-   'ace-window :before
-   #'wal/first-undo-treemacs-meddling)
-
-  ;; We update the dispatch list after the package is loaded.
-  (setq aw-dispatch-alist '((?h aw-split-window-horz "horizontal split")
-                            (?v aw-split-window-vert "vertical split")
-                            (?f aw-split-window-fair "fair split")
-                            (?d aw-delete-window "delete")
-                            (?x wal/aw-delete-window-kill-buffer "kill")
-                            (?o wal/aw-delete-other-windows "delete other")
-                            (?c aw-copy-window "copy")
-                            (?s aw-swap-window "swap")
-                            (?b aw-switch-buffer-in-window "buffer")
-                            ;; If this has a description, it doesn't work.
-                            (?? aw-show-dispatch-help)))
-
-  :custom
-  (aw-dispatch-always t)
-  (aw-keys '(?j ?k ?l ?\; ?u ?i ?o ?p))
-  (aw-fair-aspect-ratio 3)
-
-  :custom-face
-  (aw-leading-char-face
-   ((t :foreground unspecified
-       :background unspecified
-       :weight bold
-       :height 1.6
-       :inherit mode-line-emphasis)))
-
-  :wal-bind
-  ("o" . ace-window)
-
-  :delight " ace")
-#+END_SRC
-
 *** popper
 :PROPERTIES:
 :UNNUMBERED: t
@@ -4050,8 +3969,8 @@ If ASK-FIRST is true uses `kill-some-buffers' instead of `kill-buffer'."
                               shortdoc-mode))
 
   :wal-bind
-  (("\\" . popper-toggle-latest)
-   ("M-\\" . popper-cycle))
+  (("o" . popper-toggle-latest)
+   ("M-o" . popper-cycle))
 
   :general
   (general-define-key :keymaps 'wal/triple-minus-map :wk-full-keys nil

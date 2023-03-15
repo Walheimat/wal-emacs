@@ -34,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `wal/other-window` has a repeat map like the original
   `other-window`.
 
+### Removed
+
+- Package `ace-window` has been mothballed.
+
 ## [v1.11.2]
 
 Echo gecko.

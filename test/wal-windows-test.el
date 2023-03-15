@@ -8,35 +8,6 @@
 
 (require 'wal-windows nil t)
 
-(ert-deftest test-wal/aw-delete-window-kill-buffer ()
-  (with-mock aw-delete-window
-    (wal/aw-delete-window-kill-buffer 'window)
-
-    (was-called-with aw-delete-window (list 'window t))))
-
-(ert-deftest test-wal/instead-call-consult-buffer ()
-  (with-mock call-interactively
-
-    (wal/instead-call-consult-buffer)
-
-    (was-called-with call-interactively (list 'consult-buffer))))
-
-(ert-deftest test-wal/first-undo-treemacs-meddling ()
-  (defvar aw-ignored-buffers)
-
-  (let ((aw-ignored-buffers '(test-mode treemacs-mode cool-mode)))
-
-    (wal/first-undo-treemacs-meddling)
-
-    (should (equal '(test-mode cool-mode) aw-ignored-buffers))))
-
-(ert-deftest test-wal/aw-delete-other-windows ()
-  (with-mock delete-other-windows
-
-    (wal/aw-delete-other-windows 'window)
-
-    (was-called-with delete-other-windows (list 'window))))
-
 (ert-deftest test-wal/popper--spared-p ()
   (let ((wal/spared-popups '("testing")))
 
