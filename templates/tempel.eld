@@ -70,6 +70,7 @@ emacs-lisp-mode
  ";;; " name ".el ends here")
 
 js-mode
+js-ts-mode
 
 (docstring
  "/**" n

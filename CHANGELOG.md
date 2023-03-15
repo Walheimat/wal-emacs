@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   mainly annoying for `dap-mode` buffers).
 - `wal/other-window` has a repeat map like the original
   `other-window`.
+- `js-ts-mode` has the same templates as `js-mode`.
 
 ### Removed
 
