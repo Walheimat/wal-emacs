@@ -24,9 +24,9 @@
     (was-called-with general-define-key
                      (list :prefix "C-t" "t" (list :ignore t :wk "TESTER!")))))
 
-(ert-deftest test-wal/editor! ()
+(ert-deftest test-wal/editors ()
   (match-expansion
-   (wal/editor! "t" #'ignore #'always)
+   (wal/editors "t" #'ignore #'always)
    '(progn
       (wal/editor "t" #'ignore)
       (wal/editor-sink "t" #'always))))
