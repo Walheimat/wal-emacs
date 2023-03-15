@@ -581,13 +581,6 @@ Make completions look nice.
   (that-key "zero-in" :user-key "0")
   (that-key "wal" :key "C-c w" :condition (not (display-graphic-p)))
 
-  (global-set-key [remap other-window] #'wal/other-window)
-
-  (defvar-keymap wal/other-window-repeat-map
-    :doc "Keymap to repeat `wal/other-window'."
-    :repeat t
-    "o" 'wal/other-window)
-
   (global-set-key [remap kill-line] #'wal/kwim)
   (global-set-key [remap move-beginning-of-line] #'wal/mwim-beginning)
   (global-set-key (kbd "C-c x") #'wal/scratch-buffer)
@@ -1092,25 +1085,6 @@ line text."
 ** Windows
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/other-window (&optional prefer-frame)
-  "Switch to other window.
-
-If the minibuffer is active, switch to that. If there's another
-frame, switch to that if PREFER-FRAME is true. Otherwise switch
-to next buffer."
-  (interactive "P")
-
-  (cond
-   ((active-minibuffer-window)
-    (switch-to-minibuffer))
-   ((and (not (equal (next-frame) (selected-frame)))
-         (or prefer-frame (one-window-p)))
-    (other-frame 1))
-   ((one-window-p)
-    (switch-to-buffer nil))
-   (t
-    (other-window 1))))
-
 (defun wal/l ()
   "Dedicate the window to the current buffer.
 

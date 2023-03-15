@@ -199,49 +199,6 @@
 
     (should (eq (point) 9))))
 
-(ert-deftest test-wal/other-window ()
-  (with-mock ((active-minibuffer-window . #'always)
-              (switch-to-minibuffer . (lambda () 'mini)))
-
-    (should (equal (wal/other-window) 'mini)))
-
-  (with-mock ((active-minibuffer-window . #'ignore)
-              (next-frame . (lambda () 'other))
-              (other-frame . (lambda (_) 'frame)))
-
-    (should (equal (wal/other-window) 'frame)))
-
-  (with-mock ((active-minibuffer-window . #'ignore)
-              (next-frame . (lambda () (selected-frame)))
-              (one-window-p . #'ignore)
-              (other-window . (lambda (_) 'window)))
-
-    (should (equal (wal/other-window) 'window)))
-
-  (with-mock ((active-minibuffer-window . #'ignore)
-              (next-frame . (lambda () (selected-frame)))
-              (one-window-p . #'always)
-              (switch-to-buffer . (lambda (_) 'buffer)))
-
-    (should (equal (wal/other-window) 'buffer)))
-
-  (with-mock ((active-window-buffer . #'ignore)
-              (next-frame . (lambda () 'other))
-              (other-frame . (lambda (_) 'frame))
-              (one-window-p . #'ignore)
-              (other-window . (lambda (_) 'otherw)))
-
-    (should (equal (wal/other-window t) 'frame))
-    (should (equal (wal/other-window) 'otherw)))
-
-  (with-mock ((active-window-buffer . (lambda () nil))
-              (next-frame . (lambda () 'other))
-              (other-frame . (lambda (_) 'frame))
-              (one-window-p . (lambda () t)))
-
-    (should (equal (wal/other-window t) 'frame))
-    (should (equal (wal/other-window) 'frame))))
-
 (ert-deftest test-wal/l ()
   (with-temp-buffer
     (wal/l)
