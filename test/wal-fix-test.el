@@ -127,4 +127,11 @@
         (was-not-called flyspell-mode)
         (was-called flyspell-prog-mode)))))
 
+(ert-deftest test-wal/flyspell-goto-previous-error ()
+  (with-mock (flyspell-goto-next-error)
+
+    (wal/flyspell-goto-previous-error)
+
+    (was-called-with flyspell-goto-next-error (list t))))
+
 ;;; wal-fix-test.el ends here
