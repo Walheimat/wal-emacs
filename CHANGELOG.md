@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.11.3]
+
+Demilitarized keyboard.
 
 ### Changed
 
@@ -13,20 +15,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `captain` was renamed to `major`; `major` was renamed to
   `ambassador`; `colonel` was renamed to `whaler`; `trooper` was
   renamed to `roamer`; `lieutenant` was renamed to `editor`.
-- `transient`s `whaler` and `consult` now use advice to delay the
-  popup.
 - `popper` is now bound to user-prefixed `\`; cycling is done adding
   meta key.
 - `text-mode` now activates `flycheck` but is set up to only check on
   save.
-- `flyspell` now has a repeat map and the default map is overridden by
-  `wal/flyspell-map`.
+-  Macro `wal/define-init-setup` now implies `wal/on-boot`.
 
 ### Added
 
 - Configuration for built-in `windmove`.
 - `treesit` and `lsp-mode` is enabled for `yaml`.
 - Regex matching for JUnit errors.
+- Advice to delay the popup of `transient`s; used by leaders `whaler`
+  and `consult`.
+- `flyspell` now has a repeat map and the default map is overridden by
+  `wal/flyspell-map`.
 
 ### Fixed
 
@@ -40,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Package `ace-window` has been mothballed.
+- Custom `wal/other-window`.
 
 ## [v1.11.2]
 
