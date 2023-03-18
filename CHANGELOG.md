@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Leader key `captain` was renamed to `major`; `major` was renamed to
+- Leader key `general` was renamed to `administrator`; leader key
+  `captain` was renamed to `major`; `major` was renamed to
   `ambassador`; `colonel` was renamed to `whaler`; `trooper` was
   renamed to `roamer`; `lieutenant` was renamed to `editor`.
 - `transient`s `whaler` and `consult` now use advice to delay the
