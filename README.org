@@ -3722,7 +3722,6 @@ Sometimes the list of minor modes overcrowds the modeline.
   :custom
   (minions-prominent-modes '(smerge-mode
                              git-timemachine-mode
-                             vterm-copy-mode
                              with-editor-mode
                              typo-mode
                              auto-fill-function
@@ -3846,8 +3845,6 @@ Everything that has to do with windows.
 ;; Provide window packages.
 
 ;;; Code:
-
-(declare-function aw-delete-window "ext:ace-window.el")
 
 (defvar popper-buried-popup-alist)
 (defvar popper-group-function)
@@ -6096,9 +6093,6 @@ I am convinced that we are in a terminal process.
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
 (declare-function project-buffers "ext:project.el")
-(declare-function vterm-mode "ext:vterm.el")
-(declare-function vterm-send-return "ext:vterm.el")
-(declare-function vterm-send-string "ext:vterm.el")
 #+END_SRC
 
 ** Packages
@@ -6112,103 +6106,6 @@ I am convinced that we are in a terminal process.
 (use-package with-editor
   :custom
   (with-editor-mode-lighter " w/e"))
-#+END_SRC
-
-*** vterm
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-If you want a fullyfledged terminal emulator[fn:13].
-
-Some commands require an additional =C-c=:
-
-+ =C-c C-c= to send =C-c=.
-+ =C-c C-g= to send =C-g=.
-+ =C-c C-u= to send =C-u=.
-+ =C-c C-t= to enter/exit =copy-mode=.
-
-**** Utility
-
-#+BEGIN_SRC emacs-lisp
-(defconst wal/vterm-prefix "VTerm")
-
-(defun wal/vterm-run (cmd &optional action)
-  "Run CMD in `vterm' terminal and switch to it.
-
-Optionally, a buffer display action ACTION can be passed of the
-form (FUNCTIONS . ALIST). See `display-buffer' for more
-information."
-  (interactive "sEnter command: ")
-
-  (unless (executable-find (car (split-string-shell-command cmd)))
-    (user-error (format "Unknown command '%s'" cmd)))
-
-  (let* ((buffer (seq-find
-                  (lambda (it)
-                    (string-match cmd (buffer-name it)))
-                  (buffer-list))))
-
-    (if buffer
-        (display-buffer buffer action)
-      (with-current-buffer (get-buffer-create (format "*vterm-run-%s*" cmd))
-        (vterm-mode)
-        (vterm-send-string cmd)
-        (vterm-send-return)
-        (display-buffer (current-buffer) action)))))
-
-(defun wal/vterm (&optional force-new)
-  "Get a `vterm' buffer.
-
-If called from a project buffer, this only creates a `vterm'
-buffer if one doesn't exist yet (unless called with
-FORCE-NEW/`universal-argument')."
-  (interactive "P")
-
-  (if-let* ((cont (and (not force-new)
-                       (project-current)))
-            (buffers (project-buffers (project-current)))
-            (project-vterm
-             (cl-find-if
-              #'(lambda (it)
-                  (and (provided-mode-derived-p
-                        (buffer-local-value 'major-mode it)
-                        'vterm-mode)
-                       (string-match-p
-                        wal/vterm-prefix
-                        (buffer-name it))))
-              buffers)))
-      (switch-to-buffer project-vterm)
-    (vterm)))
-#+END_SRC
-
-**** Configuration
-
-#+BEGIN_SRC emacs-lisp
-(use-package vterm
-  :wal-ways nil
-
-  :hook
-  (vterm-mode . with-editor-export-git-editor)
-
-  :init
-  (harpoon vterm-mode ()
-
-    (when-let* ((buf (current-buffer))
-                (proc (get-buffer-process buf)))
-
-      (set-process-query-on-exit-flag proc nil)))
-
-  :custom
-  (vterm-buffer-name-string (concat wal/vterm-prefix ": %s"))
-  (vterm-max-scrollback 10000)
-
-  :bind
-  (:map wal/zero-in-map
-   ("t" . wal/vterm))
-
-  :delight
-  (vterm-copy-mode " vcp"))
 #+END_SRC
 
 ** Eshell
@@ -6796,7 +6693,7 @@ It takes more than one environment to make sense of Python code.
 :UNNUMBERED: t
 :END:
 
-Takes care[fn:14] of all your virtual environment needs.
+Takes care[fn:13] of all your virtual environment needs.
 
 ***** Utility
 
@@ -8218,7 +8115,7 @@ smaller."
 :END:
 
 =lsp-mode= is the fancy version. You'll have to install some language
-servers yourself[fn:15].
+servers yourself[fn:14].
 
 **** Utility
 
@@ -9274,9 +9171,6 @@ running =M-x all-the-icons-install-fonts= and selecting =yes=.
 If the installation process should fail for any reason, close Emacs
 and re-run it.
 
-[fn:13] If you're on an older distro your =libvterm= package might be
-too old.
+[fn:13] Currently requires [[https://daseldocs.tomwright.me/installation#manual ][dasel]].
 
-[fn:14] Currently requires [[https://daseldocs.tomwright.me/installation#manual ][dasel]].
-
-[fn:15] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
+[fn:14] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
