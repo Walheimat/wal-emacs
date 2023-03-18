@@ -116,12 +116,12 @@
     (should (equal 20 (wal/with-big-vertico fun)))))
 
 (ert-deftest test-wal/consult--pre-narrow ()
-    (defvar wal/consult-buffer-pre-narrow)
+    (defvar wal/consult-pre-narrow)
     (with-mock ((consult--project-root . #'always)
                 (consult--buffer-query . #'always)
                 (consult--open-project-items . #'always))
 
-      (setq wal/consult-buffer-pre-narrow t
+      (setq wal/consult-pre-narrow t
             unread-command-events nil)
 
       (wal/consult--pre-narrow)
@@ -147,6 +147,13 @@
       (wal/consult--pre-narrow)
 
       (should-not unread-command-events)))
+
+(ert-deftest test-wal/consult-toggle-pre-narrow ()
+  (defvar wal/consult-pre-narrow)
+  (let ((wal/consult-pre-narrow nil))
+
+    (wal/consult-toggle-pre-narrowing)
+    (should wal/consult-pre-narrow)))
 
 (ert-deftest test-consult--open-project-items ()
   (with-mock ((buffer-list . (lambda () '("a" "c" "b" "c" "a")))

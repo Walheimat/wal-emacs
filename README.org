@@ -4257,11 +4257,6 @@ Complete commands and code.
   "Change completion settings."
   :group 'wal
   :tag "Completion")
-
-(defcustom wal/consult-pre-narrow t
-  "Whether `consult' commands may be pre-narrowed."
-  :type 'boolean
-  :group 'wal-complete)
 #+END_SRC
 
 ** Inline Completion
@@ -4615,12 +4610,23 @@ If DISCONTINUE is non-nil, clock in from now."
 
     (apply fun args)))
 
+(defvar wal/consult-pre-narrow nil
+  "Whether `consult' commands should be pre-narrowed.")
+
+(defun wal/consult-toggle-pre-narrowing ()
+  "Toggle pre-narrowing of `consult' commands."
+  (interactive)
+
+  (setq wal/consult-pre-narrow (not wal/consult-pre-narrow)))
+
 (defun wal/consult--pre-narrow ()
   "Pre-narrow `consult' commands."
   (declare-function consult--buffer-query "ext:consult.el")
   (declare-function consult--project-root "ext:consult.el")
 
-  (and-let* ((should-narrow (and wal/consult-pre-narrow (not (wal/univ-p))))
+  (and-let* ((should-narrow (if wal/consult-pre-narrow
+                                (not (wal/univ-p))
+                              (wal/univ-p)))
              (char (pcase this-command
                      ('consult-buffer
                       (when-let* ((root (consult--project-root))
@@ -4758,7 +4764,10 @@ If DISCONTINUE is non-nil, clock in from now."
 
      ["Modes"
       ("+" "major mode command" consult-mode-command)
-      ("-" "toggle minor mode" consult-minor-mode-menu)]])
+      ("-" "toggle minor mode" consult-minor-mode-menu)]]
+
+     ["Utility"
+      ("N" "toggle pre-narrowing" wal/consult-toggle-pre-narrowing)])
 
   :custom
   (consult-buffer-filter (list "\\` " "\\`\\*" "\\`magit"))
