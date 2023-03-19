@@ -8188,35 +8188,15 @@ It can be either a list of strings or a single string."
   ;; Don't keep track of multiple projects.
   (advice-add 'lsp :before #'wal/first-prevent-adding-other-projects)
 
-  (transient-define-prefix lsp-mode-dispatch ()
-    "Call `lsp-mode' functions."
-    [["Format"
-      ("f" "buffer" lsp-format-buffer)
-      ("F" "region" lsp-format-region)]
-     ["Actions"
-      ("a" "execute" lsp-execute-code-action)
-      ("l" "jump to lens" lsp-avy-lens)
-      ("h" "highlight symbol" lsp-document-highlight)]
-     ["Refactor"
-      ("r" "rename" lsp-rename)
-      ("o" "organize imports" lsp-organize-imports)]
-     ["Go to"
-      ("d" "definition" lsp-find-definition)
-      ("e" "errors" lsp-treemacs-errors-list)
-      ("H" "hierarchy" lsp-treemacs-call-hierarchy)]
-     ["Workspace"
-      ("R" "restart" lsp-workspace-restart)
-      ("Q" "quit" lsp-workspace-shutdown)]])
-
   ;; JavaScript.
   (with-eval-after-load 'js
     (transient-append-suffix 'js-mode-major '(0 0 -1)
       '("r" "rename file" lsp-javascript-rename-file)))
 
   ;; Command map.
-  (setq lsp-keymap-prefix (wal/key-combo-for-leader 'wal/ambassador :key "l" :in-sink t))
+  (setq lsp-keymap-prefix (wal/key-combo-for-leader 'wal/ambassador :key "l"))
   (lsp-enable-which-key-integration t)
-  (wal/ambassador-sink "l" '(:keymap lsp-command-map :wk "LSP"))
+  (wal/ambassador :keymaps 'lsp-mode-map "l" '(:keymap lsp-command-map :wk "LSP"))
 
   :custom
   ;; Simplify visuals.
@@ -8239,9 +8219,6 @@ It can be either a list of strings or a single string."
   (lsp-xml-format-split-attributes t)
   (lsp-xml-format-space-before-empty-close-tag nil)
   (lsp-xml-format-split-attributes-indent-size 1)
-
-  :general
-  (wal/ambassador :keymaps 'lsp-mode-map "l" '(lsp-mode-dispatch :wk "lsp"))
 
   :delight
   (lsp-mode " lsp")
