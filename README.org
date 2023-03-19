@@ -5163,26 +5163,25 @@ This calls `org-content' interactively."
   (with-no-warnings
     (wal/transient-define-major org-mode ()
       "Access `org-mode' commands."
-      [["Commands"
-        ("n" "add note" org-add-note)
+      [["Act"
         ("." "toggle timestamp" org-toggle-timestamp-type
          :inapt-if-not (lambda () (org-at-timestamp-p 'inactive)))
         ("s" "sort" org-sort
          :inapt-if-not (lambda () (or (org-at-item-p) (org-at-heading-p))))
         ("h" "open info (for node)" org-info-find-node)]
+       ["Show"
+        ("i" "indentation" org-indent-mode)
+        ("v a" "show all" org-show-all)
+        ("v l" "up to level" wal/org-content)]
        ["Subtrees"
         ("t w" "cut" org-cut-subtree
          :inapt-if-not org-at-heading-p)
         ("t y" "paste" org-paste-subtree)]
-       ["Visibility"
-        ("v a" "show all" org-show-all)
-        ("v l" "up to level" wal/org-content)]
-       ["Footnotes"
-        ("f a" "add" org-footnote-new
+       ["Notes"
+        ("n" "add note" org-add-note)
+        ("f a" "add footnote" org-footnote-new
          :inapt-if org-in-src-block-p)
-        ("f d" "dwim" org-footnote-action
-         :inapt-if org-in-src-block-p)
-        ("f n" "normalize" org-footnote-normalize)]]))
+        ("f n" "normalize footnotes" org-footnote-normalize)]]))
 
   :custom
   ;; Make it look nice and tidy.
@@ -5582,11 +5581,8 @@ Turn any =org-mode= buffer into a presentation.
    (text-scale-mode . wal/org-tree-slide-text-scale))
 
   :init
-  ;; Insert new group after "Visibility".
-  (transient-append-suffix 'org-mode-major '(0 2)
-    ["Presentation"
-     ("p" "present" org-tree-slide-mode)
-     ("i" "indent" org-indent-mode)])
+  (transient-append-suffix 'org-mode-major '(0 2 -1)
+    '("p" "present" org-tree-slide-mode))
 
   :custom
   (org-tree-slide-never-touch-face t)
