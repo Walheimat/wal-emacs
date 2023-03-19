@@ -9,13 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Pre-narrowing `consult` can now be toggled.
+- Pre-narrowing `consult` can now be toggled; pre-narrowing is off by
+  default.
 - `dap-mode` is now bound in `ambassador` (was bound in `lsp-mode`
   `transient` before).
+- Custom command `wal/org-clock-take-note` was moved to `C-c n`
+  (previoulsy bound in `editor`. Command
+  `wal/kill-ring-save-whole-buffer` was moved to `editor` (previously
+  bound in `triple-minus`).
+- Other bindings to delete, goto and display from `windmove` are now
+  bound.
+- User-prefixed `i` uses `parallel` again to either load or store
+  register.
+- `org-mode` `transient` was simplified slightly.
+- `transient`s `whaler` and `consult` now have top/bottom grouping.
 
 ### Removed
 
 - Package `vterm` has been mothballed.
+
+### Fixed
+
+- Duplicate binding of "f" in `consult` `transient`.
 
 ## [v1.11.3]
 
