@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Pre-narrowing `consult` can now be toggled.
+- `dap-mode` is now bound in `ambassador` (was bound in `lsp-mode`
+  `transient` before).
 
 ### Removed
 
