@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   register.
 - `org-mode` `transient` was simplified slightly.
 - `transient`s `whaler` and `consult` now have top/bottom grouping.
+- Most `wdb/nearby` buffers allow getting targeted by `other-window`
+  again.
 
 ### Removed
 
