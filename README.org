@@ -981,11 +981,12 @@ lines high and visible frames are considered reusable."
          (get-lru-window frame)
          (cdr-safe (assoc 'display (frame-parameters frame)))))
 
-(defun wal/display-buffer-same-place-or-faraway (buffer)
+(cl-defun wal/display-buffer-same-place-or-faraway (buffer &key width)
   "Display BUFFER where it is or far away.
 
 Tries to reuse window first, then checks for another frame and
-lastly pops up a window."
+lastly pops up a window. The (window) WIDTH will be passed as an
+action symbol."
   (let ((condition (wal/display-buffer--condition buffer)))
 
     (add-to-list 'display-buffer-alist
@@ -995,7 +996,8 @@ lastly pops up a window."
                     display-buffer-use-some-frame
                     display-buffer-pop-up-window)
                    (frame-predicate . wal/display-buffer-use-some-frame--with-display-p)
-                   (inhibit-switch-frame . t)))))
+                   (inhibit-switch-frame . t)
+                   (window-width . ,width)))))
 
 (defalias 'wdb/nearby 'wal/display-buffer-same-place-or-nearby)
 (defalias 'wdb/faraway 'wal/display-buffer-same-place-or-faraway)
