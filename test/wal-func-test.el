@@ -323,6 +323,12 @@
 
     (should (equal '("testing" "again") (wal/list-from 'test-target "again")))))
 
+(ert-deftest test-wal/plist-keys--errors-if-invalid ()
+  (should-error (wal/plist-keys '(:test a :best))))
+
+(ert-deftest test-wal/plist-keys--extracts-keys ()
+  (should (equal '(:test :this :function) (wal/plist-keys '(:test "whether" :this "hacky" :function "works")))))
+
 (ert-deftest test-parallel ()
   (match-expansion
    (parallel some-fun other-fun)
