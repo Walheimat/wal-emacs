@@ -4825,6 +4825,7 @@ Keep order.
 (declare-function project-buffers "ext:project.el")
 (declare-function project-name "ext:project.el")
 (declare-function project-root "ext:project.el")
+(declare-function project--value-in-dir "ext:project.el")
 (declare-function rg-read-files "ext:rg.el")
 (declare-function rg-run "ext:rg.el")
 (declare-function rg-read-pattern "ext:rg.el")
@@ -4881,8 +4882,9 @@ Each command will be stored in a per-project history."
          (name (project-name current))
 
          (table (plist-get wal/project-commands cmd))
-         (default-cmd (or (symbol-value
-                           (intern (format "wal/project-%s-default-cmd" cmd)))
+         (default-cmd (or (project--value-in-dir
+                           (intern (format "wal/project-%s-default-cmd" cmd))
+                           root)
                           ""))
          (history (gethash root table (make-ring wal/project-command-history-length)))
          (wal/project-command-history (ring-elements history))

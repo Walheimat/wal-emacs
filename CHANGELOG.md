@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Duplicate binding of "f" in `consult` `transient`.
 - Regex for `junit` errors should now also work in `compile` when run
   by `mvn`.
+- `wal/project-command` now resolves the default command value from
+  the targeted project.
 
 ## [v1.11.3]
 

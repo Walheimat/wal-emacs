@@ -33,6 +33,7 @@
     (with-mock ((project-current . #'always)
                 (project-root . (lambda (_) "/tmp/cmd"))
                 (project-name . (lambda (_) "Test Project"))
+                (project--value-in-dir . (lambda (&rest _) wal/project-test-default-cmd))
                 compile
                 (read-shell-command . (lambda (&rest _) entered-command)))
 
