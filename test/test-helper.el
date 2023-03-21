@@ -7,6 +7,7 @@
 ;;; Code:
 
 (require 'ert-x)
+(require 'compat)
 
 (when (require 'undercover nil t)
   (cond
