@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New command `wal/project-select-command` that replaces
   `wal/project-compile` in `project-switch-commands` to select any
   registered command.
+- New command `wal/rg-project-literal` to do a literal search in
+  project. This command also replaces the `project-switch-commands`
+  search.
 
 ### Changed
 

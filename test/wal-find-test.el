@@ -15,4 +15,18 @@
 
     (was-called-with rg-rerun-toggle-flag (list "--hidden"))))
 
+(ert-deftest test-wal/rg-project-literal ()
+  (defvar rg-command-line-flags-function)
+
+  (with-mock ((rg-read-pattern . (lambda (_) 'pattern))
+              (rg-read-files . (lambda () 'files))
+              (rg-project-root . (lambda (_) "/tmp/test"))
+              rg-run)
+
+    (let ((rg-command-line-flags-function (lambda (_) 'flags)))
+
+      (call-interactively 'wal/rg-project-literal)
+
+      (was-called-with rg-run (list 'pattern 'files "/tmp/test" t nil 'flags)))))
+
 ;;; wal-find-test.el ends here

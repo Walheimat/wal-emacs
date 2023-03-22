@@ -70,19 +70,6 @@
 
     (was-called-with wal/project-command (list 'test))))
 
-(ert-deftest test-wal/project-find-rg ()
-  (with-mock ((rg-read-pattern . #'wal/rt)
-              (rg-read-files . #'wal/rt)
-              (project-root . (lambda (&rest _) "/tmp/project"))
-              project-current
-              rg-run)
-
-    (defvar rg-command-line-flags-function)
-    (let ((rg-command-line-flags-function #'wal/rt))
-      (call-interactively 'wal/project-find-rg))
-
-    (was-called-with rg-run (list 'testing 'testing "/tmp/project" nil nil 'testing))))
-
 (ert-deftest test-wal/project-consult-buffer ()
   (defvar consult-project-buffer-sources)
   (with-mock (consult-buffer)

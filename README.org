@@ -4183,6 +4183,15 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
   (interactive)
 
   (rg-rerun-toggle-flag "--hidden"))
+
+(defun wal/rg-project-literal (query files)
+  "Search in project literally."
+  (interactive (list (rg-read-pattern t) (rg-read-files)))
+
+  (let ((dir (rg-project-root buffer-file-name))
+        (flags (funcall rg-command-line-flags-function 'nil)))
+
+    (rg-run query files dir t nil flags)))
 #+END_SRC
 
 **** Configuration
@@ -4190,6 +4199,9 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 #+BEGIN_SRC emacs-lisp
 (use-package rg
   :commands (rg-project rg-menu rg-read-pattern)
+
+  :init
+  (parallel wal/rg-project-literal rg-project)
 
   :config
   (wdb/faraway "\\*rg\\*\\'")
@@ -4202,7 +4214,7 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
    ("h" . wal/rg-rerun-toggle-hidden))
 
   :wal-bind
-  ("n" . rg-project))
+  ("n" . wal/rg-project-literal||rg-project))
 #+END_SRC
 
 *** dumb-jump
@@ -4969,20 +4981,6 @@ set to filter by project buffers."
 
     (apply fun args)))
 
-(defun wal/project-find-rg (query files)
-  "Run `rg' in project.
-
-Will search using QUERY in FILES."
-  (interactive
-   (list
-    (rg-read-pattern nil)
-    (rg-read-files)))
-
-  (let ((dir (project-root (project-current t)))
-        (flags (funcall rg-command-line-flags-function 'nil)))
-
-      (rg-run query files dir nil nil flags)))
-
 (defun wal/project-consult-buffer ()
   "Find an open project buffer using `consult-buffer'."
   (interactive)
@@ -5059,7 +5057,7 @@ Will search using QUERY in FILES."
                              (project-find-dir "Find dir" ?d)
                              (wal/project-magit-status "Magit" ?m)
                              (wal/project-consult-buffer "Consult buffer" ?j)
-                             (wal/project-find-rg "Find rg" ?n)
+                             (wal/rg-project-literal "Find rg" ?n)
                              (wal/project-dired-root "Find root dir" ?r)
                              (wal/project-select-command "Run command" ?c)))
 
