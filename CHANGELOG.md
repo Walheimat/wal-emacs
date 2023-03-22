@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - New function `wal/plist-keys` to extract keys from a plist.
+- New command `wal/project-select-command` that replaces
+  `wal/project-compile` in `project-switch-commands` to select any
+  registered command.
 
 ### Changed
 

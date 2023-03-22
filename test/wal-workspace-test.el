@@ -63,6 +63,13 @@
         (advice-add 'wal/project-test :around #'wal/with-project-bounded-compilation)
         (bind-key "t" 'wal/project-test wal/project-prefix-map)))))
 
+(ert-deftest test-wal/project-select-command ()
+  (with-mock ((completing-read . (lambda (&rest _) "test"))
+              wal/project-command)
+    (call-interactively 'wal/project-select-command)
+
+    (was-called-with wal/project-command (list 'test))))
+
 (ert-deftest test-wal/project-find-rg ()
   (with-mock ((rg-read-pattern . #'wal/rt)
               (rg-read-files . #'wal/rt)

@@ -4950,6 +4950,14 @@ unles KEY is provided."
 
        (bind-key ,key ',function-name wal/project-prefix-map))))
 
+(defun wal/project-select-command (cmd)
+  "Complete and run CMD."
+  (interactive
+   (list (completing-read "Select command: "
+                          (wal/plist-keys wal/project-commands))))
+
+  (wal/project-command (intern cmd)))
+
 (defun wal/with-project-bounded-compilation (fun &rest args)
   "Run FUN applying ARGS.
 
@@ -5053,7 +5061,7 @@ Will search using QUERY in FILES."
                              (wal/project-consult-buffer "Consult buffer" ?j)
                              (wal/project-find-rg "Find rg" ?n)
                              (wal/project-dired-root "Find root dir" ?r)
-                             (wal/project-compile "Compile" ?c)))
+                             (wal/project-select-command "Run command" ?c)))
 
   (project-vc-ignores '("node_modules/"
                         "build/"
