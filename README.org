@@ -4163,7 +4163,11 @@ I mostly search.
 
 ;;; Code:
 
+(declare-function rg-project-root "ext:rg.el")
+(declare-function rg-read-files "ext:rg.el")
 (declare-function rg-rerun-toggle-flag "ext:rg-result.el")
+(declare-function rg-run "ext:rg.el")
+(declare-function rg-read-pattern "ext:rg.el")
 #+END_SRC
 
 ** Packages
@@ -4185,7 +4189,7 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
   (rg-rerun-toggle-flag "--hidden"))
 
 (defun wal/rg-project-literal (query files)
-  "Search in project literally."
+  "Search in project for FILES using QUERY literally."
   (interactive (list (rg-read-pattern t) (rg-read-files)))
 
   (let ((dir (rg-project-root buffer-file-name))
@@ -4852,13 +4856,11 @@ Keep order.
 (declare-function project-name "ext:project.el")
 (declare-function project-root "ext:project.el")
 (declare-function project--value-in-dir "ext:project.el")
-(declare-function rg-read-files "ext:rg.el")
-(declare-function rg-run "ext:rg.el")
-(declare-function rg-read-pattern "ext:rg.el")
 (declare-function ring-elements "ext:ring.el")
 (declare-function ring-empty-p "ext:ring.el")
 (declare-function ring-insert "ext:ring.el")
 (declare-function ring-ref "ext:ring.el")
+(declare-function wal/plist-keys "wal-func.el")
 (declare-function wal/univ-p "wal-func.el")
 (declare-function wdb/faraway "wal-func.el")
 
@@ -8304,7 +8306,6 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
 
 (defun wal/dap-stopped (_session)
   "(Re-)display the hydra immediately."
-  (message "Session stopped.")
   (dap-hydra))
 #+END_SRC
 
