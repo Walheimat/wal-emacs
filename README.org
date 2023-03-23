@@ -5189,25 +5189,29 @@ This calls `org-content' interactively."
   (with-no-warnings
     (wal/transient-define-major org-mode ()
       "Access `org-mode' commands."
-      [["Act"
+      [["Subtree"
+        ("w" "cut" org-cut-subtree
+         :inapt-if-not org-at-heading-p)
+        ("y" "paste" org-paste-subtree)]
+
+       ["Footnotes"
+        ("f" "add footnote" org-footnote-new
+         :inapt-if org-in-src-block-p)
+        ("F" "normalize footnotes" org-footnote-normalize)]
+
+       ["Other"
+        ("n" "add note" org-add-note)
         ("." "toggle timestamp" org-toggle-timestamp-type
          :inapt-if-not (lambda () (org-at-timestamp-p 'inactive)))
         ("s" "sort" org-sort
-         :inapt-if-not (lambda () (or (org-at-item-p) (org-at-heading-p))))
-        ("h" "open info (for node)" org-info-find-node)]
-       ["Show"
-        ("i" "indentation" org-indent-mode)
-        ("v a" "show all" org-show-all)
-        ("v l" "up to level" wal/org-content)]
-       ["Subtrees"
-        ("t w" "cut" org-cut-subtree
-         :inapt-if-not org-at-heading-p)
-        ("t y" "paste" org-paste-subtree)]
-       ["Notes"
-        ("n" "add note" org-add-note)
-        ("f a" "add footnote" org-footnote-new
-         :inapt-if org-in-src-block-p)
-        ("f n" "normalize footnotes" org-footnote-normalize)]]))
+         :inapt-if-not (lambda () (or (org-at-item-p) (org-at-heading-p))))]]
+
+      [["Levels"
+        ("l" "up to level" wal/org-content)
+        ("L" "show all" org-show-all)]
+       ["Other"
+        ("h" "node info" org-info-find-node)
+        ("i" "indentation" org-indent-mode)]]))
 
   :custom
   ;; Make it look nice and tidy.
@@ -5607,8 +5611,9 @@ Turn any =org-mode= buffer into a presentation.
    (text-scale-mode . wal/org-tree-slide-text-scale))
 
   :init
-  (transient-append-suffix 'org-mode-major '(0 2 -1)
-    '("p" "present" org-tree-slide-mode))
+  (transient-append-suffix 'org-mode-major '(1 -1)
+    '["Presentation"
+      ("p" "present" org-tree-slide-mode)])
 
   :custom
   (org-tree-slide-never-touch-face t)
@@ -5652,7 +5657,7 @@ Editing source blocks.
      ("markdown" . markdown)
      ("fish" . fish)))
 
-  (transient-append-suffix 'org-mode-major '(0 0 1)
+  (transient-append-suffix 'org-mode-major '(0 3 -1)
     '("e" "edit source" org-edit-src-code
       :inapt-if-not org-in-src-block-p))
 
