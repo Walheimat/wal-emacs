@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `dap-mode` is now bound in `ambassador` (was bound in `lsp-mode`
   `transient` before).
 - Custom command `wal/org-clock-take-note` was moved to `C-c n`
-  (previoulsy bound in `editor`. Command
+  (previously bound in `editor`).
   `wal/kill-ring-save-whole-buffer` was moved to `editor` (previously
   bound in `triple-minus`).
 - Other bindings to delete, goto and display from `windmove` are now
@@ -49,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   by `mvn`.
 - `wal/project-command` now resolves the default command value from
   the targeted project.
+- The `Caskfile` now requires `compat` to not run into any
+  compatibility issues in the pipeline.
 
 ## [v1.11.3]
 
