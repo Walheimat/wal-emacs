@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New command `wal/rg-project-literal` to do a literal search in
   project. This command also replaces the `project-switch-commands`
   search.
+- `C-c n` is now a `parallel` command of `wal/org-clock-take-note` and
+  `org-clock-goto`.
 
 ### Changed
 
