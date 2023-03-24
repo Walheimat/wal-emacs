@@ -86,7 +86,8 @@
   (with-mock (visual-fill-column-mode
               mixed-pitch-mode
               (wal/relative-column-width . #'wal/rf)
-              outline-show-all)
+              outline-show-all
+              text-scale-adjust)
 
     (wal/org-tree-slide-play)
 
@@ -106,7 +107,8 @@
 
     (was-called outline-show-all)
     (was-called-with mixed-pitch-mode -1)
-    (was-called-with visual-fill-column-mode -1)))
+    (was-called-with visual-fill-column-mode -1)
+    (was-called-with text-scale-adjust 0)))
 
 (ert-deftest test-wal/org-tree-slide-text-scale ()
   (defvar org-tree-slide-mode)

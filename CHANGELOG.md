@@ -51,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the targeted project.
 - The `Caskfile` now requires `compat` to not run into any
   compatibility issues in the pipeline.
+- `org-tree-slide` resets text-scale adjustments after stopping.
 
 ## [v1.11.3]
 
