@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.11.4]
+
+Group effort
 
 ### Added
 
@@ -34,7 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - User-prefixed `i` uses `parallel` again to either load or store
   register.
 - `org-mode` `transient` was simplified slightly.
-- `transient`s `whaler` and `consult` now have top/bottom grouping.
+- `transient`s `whaler`, `consult` and `org-mode-captain` now have
+  top/bottom grouping.
 - Most `wdb/nearby` buffers allow getting targeted by `other-window`
   again.
 - Renamed `proselint` configuration and disable exclamation check.
