@@ -8610,12 +8610,10 @@ Make requests using Org.
   (add-to-list 'org-tag-alist '("verb" . ?v))
 
   ;; Make sure windows are being kept.
-  (advice-add
-   'verb-kill-all-response-buffers :filter-args
-   #'wal/pick-windows-being-kept)
-  (advice-add
-   'verb-kill-response-buffer-and-window :filter-args
-   #'wal/pick-windows-being-kept)
+  (wal/advise-many
+   'wal/pick-windows-being-kept :filter-args
+   '(verb-kill-all-response-buffers
+     verb-kill-response-buffer-and-window))
 
   :config
   (wal/transient-define-major verb ()
