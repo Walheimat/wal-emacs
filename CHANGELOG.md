@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- All leaders no longer have the `wal/` prefix.
+
 ### Fixed
 
 - Custom `flycheck` checkers are now registered.

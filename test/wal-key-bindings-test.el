@@ -12,10 +12,10 @@
   (with-mock general-define-key
 
     (match-expansion
-     (wal/create-leader-sink wal/tester-sink :definer wal/tester :prefix "C-t")
-     '(defmacro wal/tester-sink
+     (wal/create-leader-sink tester-sink :definer tester :prefix "C-t")
+     '(defmacro tester-sink
           (&rest args)
-        `(,'wal/tester ,@(mapcar (lambda (it)
+        `(,'tester ,@(mapcar (lambda (it)
                                    (if (stringp it)
                                        (concat "t" it)
                                      it))
@@ -24,12 +24,12 @@
     (was-called-with general-define-key
                      (list :prefix "C-t" "t" (list :ignore t :wk "TESTER!")))))
 
-(ert-deftest test-wal/editors ()
+(ert-deftest test-editors ()
   (match-expansion
-   (wal/editors "t" #'ignore #'always)
+   (editors "t" #'ignore #'always)
    '(progn
-      (wal/editor "t" #'ignore)
-      (wal/editor-sink "t" #'always))))
+      (editor "t" #'ignore)
+      (editor-sink "t" #'always))))
 
 (ert-deftest test-wal/key-by-leader ()
   (defvar wal/key-reach)
@@ -55,18 +55,18 @@
               (eval-after-load . #'ignore)
               eval)
 
-    (wal/general-create-definer 'wal/tester)
+    (wal/general-create-definer 'tester)
 
-    (was-called-nth-with eval (list '(general-create-definer wal/tester :prefix "C-t")) 0)
-    (was-called-nth-with eval (list '(wal/create-leader-sink wal/tester-sink :definer wal/tester :prefix "C-t")) 1)))
+    (was-called-nth-with eval (list '(general-create-definer tester :prefix "C-t")) 0)
+    (was-called-nth-with eval (list '(wal/create-leader-sink tester-sink :definer tester :prefix "C-t")) 1)))
 
-(ert-deftest test-wal/major? ()
+(ert-deftest test-major? ()
   (with-mock (message (wal/key-combo-for-leader . (lambda (&rest _) "C-t")))
 
     (with-temp-buffer
       (text-mode)
 
-      (wal/major?)
+      (major?)
 
       (was-called-with message (list "Major (%s) has no binding in %s" "C-t" "text-mode")))))
 

@@ -531,7 +531,7 @@ Make completions look nice.
   (advice-add 'whaler :around 'wal/with-delayed-transient-popup)
 
   ;; Additional `general' bindings.
-  (wal/administrator
+  (administrator
     "w" 'eww
 
     "f" '(:ignore t :wk "find")
@@ -554,16 +554,16 @@ Make completions look nice.
     "pr" 'package-reinstall
     "pd" 'package-delete)
 
-  (global-set-key (kbd (wal/key-combo-for-leader 'wal/whaler)) #'whaler)
+  (global-set-key (kbd (wal/key-combo-for-leader 'whaler)) #'whaler)
 
-  (wal/administrator "n" 'display-line-numbers-mode)
+  (administrator "n" 'display-line-numbers-mode)
 
-  (global-set-key (kbd (wal/key-combo-for-leader 'wal/major)) #'wal/major?)
+  (global-set-key (kbd (wal/key-combo-for-leader 'major)) #'major?)
 
   (when (wal/modern-emacs-p 29)
-    (wal/editor "d" 'duplicate-dwim))
+    (editor "d" 'duplicate-dwim))
 
-  (wal/editor "M-w" 'wal/kill-ring-save-whole-buffer)
+  (editor "M-w" 'wal/kill-ring-save-whole-buffer)
 
   (general-define-key
    :prefix (wal/prefix-user-key "-")
@@ -650,13 +650,13 @@ I use many[fn:10] custom keybindings. You can find an overview [[file:docs/bindi
   :type 'boolean
   :group 'wal-key-bindings)
 
-(defcustom wal/leaders '((";" . wal/editor)
-                         ("." . wal/major)
-                         ("," . wal/consult)
-                         ("/" . wal/ambassador)
-                         ("'" . wal/roamer)
-                         ("[" . wal/whaler)
-                         ("]" . wal/administrator))
+(defcustom wal/leaders '((";" . editor)
+                         ("." . major)
+                         ("," . consult)
+                         ("/" . ambassador)
+                         ("'" . roamer)
+                         ("[" . whaler)
+                         ("]" . administrator))
   "Alist mapping prefix keys to leaders."
   :type '(alist :key-type string :value-type symbol)
   :group 'wal-key-bindings)
@@ -698,7 +698,7 @@ Allows defining custom prefixes.
 **** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/general-leaders '(wal/editor wal/ambassador wal/administrator)
+(defvar wal/general-leaders '(editor ambassador administrator)
   "Leaders that a `general' definer will be created for.")
 
 (cl-defmacro wal/create-leader-sink (name &key definer prefix)
@@ -710,7 +710,7 @@ the sink for and PREFIX is its prefix."
 
   (let* ((defname (symbol-name definer))
          (suffix (substring prefix -1))
-         (wk (upcase (concat (substring defname 4) "!"))))
+         (wk (upcase (concat defname "!"))))
 
     (progn
       (general-define-key :prefix prefix suffix `(:ignore t :wk ,wk))
@@ -722,21 +722,21 @@ the sink for and PREFIX is its prefix."
                                        it))
                                    args))))))
 
-(cl-defmacro wal/editors (key fun mfun &rest args)
+(cl-defmacro editors (key fun mfun &rest args)
   "Bind FUN to KEY, MFUN in the sink.
 
 All ARGS are passed to both definers."
   (declare (indent defun))
 
   `(progn
-    (wal/editor ,@args ,key ,fun)
-    (wal/editor-sink ,@args ,key ,mfun)))
+    (editor ,@args ,key ,fun)
+    (editor-sink ,@args ,key ,mfun)))
 
 (defun wal/general-create-definer (leader)
   "Create a definer for LEADER with a sink."
   (let* ((key (wal/key-combo-for-leader leader))
          (sink (intern (format "%s-sink" leader)))
-         (name (substring (symbol-name leader) 4)))
+         (name (symbol-name leader)))
 
     ;; Queue up `which-key' replacements.
     (eval-after-load 'which-key `(which-key-add-key-based-replacements ,key ,name))
@@ -747,11 +747,11 @@ All ARGS are passed to both definers."
     ;; Also create the sink.
     (eval `(wal/create-leader-sink ,sink :definer ,leader :prefix ,key))))
 
-(defun wal/major? ()
+(defun major? ()
   "Show message when major is not locally bound."
   (interactive)
 
-  (let ((key (propertize (wal/key-combo-for-leader 'wal/major) 'face 'success))
+  (let ((key (propertize (wal/key-combo-for-leader 'major) 'face 'success))
         (mode (propertize (symbol-name major-mode) 'face 'success)))
 
     (message "Major (%s) has no binding in %s" key mode)))
@@ -1936,7 +1936,7 @@ The rest of the BODY will be spliced into the hook function."
                                functions)))
           ,(when major
              `(local-set-key
-               (kbd (wal/key-combo-for-leader 'wal/major))
+               (kbd (wal/key-combo-for-leader 'major))
                ',(intern (concat (symbol-name name) "-major"))))))))
 
 (cl-defmacro harpoon-hook (name)
@@ -2387,7 +2387,7 @@ available candidate from `wal/fixed-fonts'. Does the same for
                          :font (wal/fonts-candidate wal/variable-fonts t)
                          :height wal/variable-font-height))
 
-   (wal/administrator
+   (administrator
      "sf" 'wal/set-fixed-font-height
      "sv" 'wal/set-variable-font-height
      "sF" 'wal/select-fixed-font
@@ -2805,7 +2805,7 @@ Hide blocks.
   :ensure nil
 
   :general
-  (wal/editor :keymaps 'hs-minor-mode-map
+  (editor :keymaps 'hs-minor-mode-map
     "h" 'hs-toggle-hiding))
 #+END_SRC
 
@@ -2835,7 +2835,7 @@ Some people need macros, okay?
   :ensure nil
 
   :general
-  (wal/editor "k" 'wal/kmacro))
+  (editor "k" 'wal/kmacro))
 #+END_SRC
 
 *** register
@@ -3076,7 +3076,7 @@ Look up words.
   (dictionary-server "dict.org")
 
   :general
-  (wal/administrator "d" 'dictionary-lookup-definition))
+  (administrator "d" 'dictionary-lookup-definition))
 #+END_SRC
 
 ** Additional Info Display
@@ -3217,7 +3217,7 @@ Don't you want to edit your buffer in multiple places at once?
   ("<mouse-3>" . mc/add-cursor-on-click)
 
   :general
-  (wal/editors "." 'mc/mark-all-like-this  'mc/edit-ends-of-lines))
+  (editors "." 'mc/mark-all-like-this  'mc/edit-ends-of-lines))
 #+END_SRC
 
 *** iedit
@@ -4123,10 +4123,10 @@ beginning."
 
   :general
   ;; Lines.
-  (wal/editors "c" 'avy-copy-line 'avy-copy-region)
-  (wal/editors "x" 'avy-kill-whole-line 'avy-kill-region)
-  (wal/editors "m" 'avy-move-line 'avy-move-region)
-  (wal/editors "w"
+  (editors "c" 'avy-copy-line 'avy-copy-region)
+  (editors "x" 'avy-kill-whole-line 'avy-kill-region)
+  (editors "m" 'avy-move-line 'avy-move-region)
+  (editors "w"
     'avy-kill-ring-save-whole-line
     'avy-kill-ring-save-region))
 #+END_SRC
@@ -4211,7 +4211,7 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
   (wdb/faraway "\\*rg\\*\\'")
 
   :general
-  (wal/ambassador "n" 'rg-menu)
+  (ambassador "n" 'rg-menu)
 
   :bind
   (:map rg-mode-map
@@ -4810,7 +4810,7 @@ If DISCONTINUE is non-nil, clock in from now."
 
   :general
   (general-define-key
-   (wal/key-combo-for-leader 'wal/consult)
+   (wal/key-combo-for-leader 'consult)
    'consult)
 
   :wal-bind
@@ -4938,7 +4938,7 @@ Each command will be stored in a per-project history."
 (defmacro wal/project-create-command (name &optional key)
   "Create command NAME.
 
-The command will be bound using `wal/ambassador' using its initial
+The command will be bound using `ambassador' using its initial
 unles KEY is provided."
   (let ((function-name (intern (format "wal/project-%s" name)))
         (variable-name (intern (format "wal/project-%s-default-cmd" name)))
@@ -5461,7 +5461,7 @@ If called with numeric prefix `5', set variable
   (setq org-roam-v2-ack t)
 
   (general-define-key
-   (wal/key-combo-for-leader 'wal/roamer)
+   (wal/key-combo-for-leader 'roamer)
    'roamer)
 
   :config
@@ -6196,7 +6196,7 @@ Set up =eshell=. I like the idea of it but I don't really use it.
    #'wal/instead-truncate-buffer)
 
   :general
-  (wal/administrator "e" 'eshell))
+  (administrator "e" 'eshell))
 #+END_SRC
 
 *** eshell-syntax-highlighting
@@ -6284,7 +6284,7 @@ Forget remembering =git= commands, use =transient=.
       ("c" "clone" magit-clone)]])
 
   :general
-  (wal/ambassador "m" 'ma-magit)
+  (ambassador "m" 'ma-magit)
 
   :wal-bind
   ("m" . magit-status)
@@ -7859,7 +7859,7 @@ Please let me know when I screwed up. I promise I will learn.
   (require 'wal-key-bindings (expand-file-name "wal-key-bindings.el" ".")))
 
 (declare-function wal/key-combo-for-leader "wal-key-bindings.el")
-(declare-function wal/ambassador "wal-key-bindings.el")
+(declare-function ambassador "wal-key-bindings.el")
 (declare-function wdb/nearby "wal-func.el")
 (declare-function flycheck-parse-stylelint "ext:flycheck.el")
 (declare-function flycheck-buffer-nonempty-p "ext:flycheck.el")
@@ -7965,7 +7965,7 @@ If KILL-BUFFER is t, kill the file's buffer."
   :hook ((prog-mode prog-like-mode) . flycheck-mode)
 
   :init
-  (that-key "flycheck" :leader (wal/ambassador :key "f"))
+  (that-key "flycheck" :leader (ambassador :key "f"))
 
   :config
   (wdb/nearby flycheck-error-list-buffer)
@@ -7997,7 +7997,7 @@ If KILL-BUFFER is t, kill the file's buffer."
 
   :custom
   (flycheck-mode-line-prefix "fly")
-  (flycheck-keymap-prefix (wal/key-combo-for-leader 'wal/ambassador :key "f" :translate t)))
+  (flycheck-keymap-prefix (wal/key-combo-for-leader 'ambassador :key "f" :translate t)))
 #+END_SRC
 
 *** flyspell
@@ -8232,9 +8232,9 @@ It can be either a list of strings or a single string."
       '("r" "rename file" lsp-javascript-rename-file)))
 
   ;; Command map.
-  (setq lsp-keymap-prefix (wal/key-combo-for-leader 'wal/ambassador :key "l"))
+  (setq lsp-keymap-prefix (wal/key-combo-for-leader 'ambassador :key "l"))
   (lsp-enable-which-key-integration t)
-  (wal/ambassador :keymaps 'lsp-mode-map "l" '(:keymap lsp-command-map :wk "LSP"))
+  (ambassador :keymaps 'lsp-mode-map "l" '(:keymap lsp-command-map :wk "LSP"))
 
   :custom
   ;; Simplify visuals.
@@ -8354,7 +8354,7 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
   (dap-python-debugger 'debugpy)
 
   :general
-  (wal/ambassador :keymaps 'lsp-mode-map "b" '(dap-hydra :wk "dap"))
+  (ambassador :keymaps 'lsp-mode-map "b" '(dap-hydra :wk "dap"))
 
   :delight " dap")
 #+END_SRC
@@ -8490,7 +8490,7 @@ What goes =docker-compose= up, goes =docker-compose= down.
   (docker-show-status nil)
 
   :general
-  (wal/ambassador "d" 'docker))
+  (ambassador "d" 'docker))
 #+END_SRC
 
 *** dockerfile-mode
@@ -8639,7 +8639,7 @@ Make requests using Org.
    ("q" . quit-window))
 
   :general
-  (wal/ambassador :keymaps '(verb-mode-map verb-response-body-mode-map)
+  (ambassador :keymaps '(verb-mode-map verb-response-body-mode-map)
     "v" '(verb-major :wk "verb"))
 
   :delight
@@ -8679,7 +8679,7 @@ You either need to install =maildir-utils= or build from [[https://github.com/dj
   (mu4e-get-mail-command "offlineimap") ; This one works nicely.
 
   :general
-  (wal/ambassador "@" 'mu4e))
+  (ambassador "@" 'mu4e))
 #+END_SRC
 
 *** smtpmail
@@ -9163,7 +9163,7 @@ immediately returned. If you're using Emacs 29, consider using
 =emacsclient -r= to reuse an existing frame.
 
 [fn:6] There are some exceptions, like the macro =harpoon= to create hook
-functions.
+functions and the =general= definers for leader keys.
 
 [fn:7] Not including where =:tangle no= was set.
 

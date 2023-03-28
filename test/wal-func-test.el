@@ -947,7 +947,7 @@
       "Hook into `test-mode'."
       (wal/message-in-a-bottle '("Just testing"))
       (message "hi")
-      (local-set-key (kbd (wal/key-combo-for-leader 'wal/major)) 'test-mode-major))))
+      (local-set-key (kbd (wal/key-combo-for-leader 'major)) 'test-mode-major))))
 
 (ert-deftest test-harpoon--corfu ()
   (match-expansion
