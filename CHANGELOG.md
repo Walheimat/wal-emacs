@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `rg-isearch-current-file` is now bound in `isearch-mode-map` using
+  user-prefixed `n`.
+
 ### Changed
 
 - All leaders no longer have the `wal/` prefix.
