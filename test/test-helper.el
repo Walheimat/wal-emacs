@@ -125,6 +125,13 @@ implementation."
   `(should (pcase (macroexpand-1 ',form)
              ,@(mapcar #'(lambda (x) (list x t)) value))))
 
+(cl-defmacro should-every (forms &key check expected)
+  "CHECK if all FORMS have EXPECTED value using CHECK."
+  (declare (indent defun))
+  (let ((check (or check 'eq)))
+
+    `(progn ,@(mapcar (lambda (it) `(should (,check ,it ,expected))) forms))))
+
 (defmacro wal/with-temp-file (filename &rest body)
   "Create and discard a file.
 

@@ -447,26 +447,29 @@
 
   (wal/set-indent-defaults 1)
 
-  (should (eq python-indent-offset 1))
-  (should (eq js-indent-level 1))
-  (should (eq c-ts-mode-indent-offset 1))
-  (should (eq css-indent-offset 1))
-  (should (eq nxml-child-indent 1))
-  (should (eq sgml-basic-offset 1))
-  (should (eq tab-width 1))
+  (should-every (python-indent-offset
+                 js-indent-level
+                 c-ts-mode-indent-offset
+                 css-indent-offset
+                 nxml-child-indent
+                 sgml-basic-offset
+                 tab-width)
+    :expected 1)
+
   (should (string-equal json-encoding-default-indentation " "))
   (should electric-indent-inhibit)
   (should-not indent-tabs-mode)
 
   (wal/set-indent-defaults)
 
-  (should (eq python-indent-offset 6))
-  (should (eq js-indent-level 6))
-  (should (eq c-ts-mode-indent-offset 6))
-  (should (eq css-indent-offset 6))
-  (should (eq nxml-child-indent 6))
-  (should (eq sgml-basic-offset 6))
-  (should (eq tab-width 6))
+  (should-every (python-indent-offset
+                 js-indent-level
+                 c-ts-mode-indent-offset
+                 css-indent-offset
+                 nxml-child-indent
+                 sgml-basic-offset
+                 tab-width)
+    :expected 6)
   (should (string-equal json-encoding-default-indentation "      "))
   (should electric-indent-inhibit)
   (should-not indent-tabs-mode))
