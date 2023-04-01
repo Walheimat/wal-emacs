@@ -210,6 +210,15 @@
 
     (should-not (window-dedicated-p))))
 
+(ert-deftest test-wal/force-delete-other-windows ()
+  (let ((ignore-window-parameters nil))
+
+    (with-mock (delete-other-windows)
+
+      (wal/force-delete-other-windows)
+
+      (was-called delete-other-windows))))
+
 (ert-deftest test-wal/find-custom-file ()
   (wal/with-temp-file "custom.el"
 

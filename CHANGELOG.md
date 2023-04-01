@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal/org-capture-tasks` and `wal/org-capture-tasks-heading` to find
   the file and heading using new function
   `wal/org-captre-find-location`.
+- Command `wal/force-delete-other-windows`; bound in
+  `other-windnow-repeat-map` using `C-1`.
 
 ### Changed
 

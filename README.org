@@ -550,7 +550,8 @@ Make completions look nice.
   (with-eval-after-load 'window
     (when (boundp 'other-window-repeat-map)
       (define-key other-window-repeat-map "0" 'delete-window)
-      (define-key other-window-repeat-map "1" 'delete-other-windows)))
+      (define-key other-window-repeat-map "1" 'delete-other-windows)
+      (define-key other-window-repeat-map (kbd "C-k") 'wal/force-delete-other-windows)))
 
   ;; Replaces `save-buffers-kill-terminal'.
   (global-set-key (kbd "C-x C-c") #'wal/delete-edit-or-kill))
@@ -1068,6 +1069,15 @@ Un-dedicates if already dedicated."
          (message "Window no longer dedicated to %s" buffer))
     (set-window-dedicated-p window buffer)
     (message "Dedicating window to %s" buffer))))
+
+(defun wal/force-delete-other-windows ()
+  "Call `delete-other-windows' ignoring window parameters."
+  (interactive)
+
+  (defvar ignore-window-parameters)
+  (let ((ignore-window-parameters t))
+
+    (delete-other-windows)))
 #+END_SRC
 
 ** Files
