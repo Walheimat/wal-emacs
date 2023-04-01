@@ -5644,15 +5644,24 @@ Capture templates.
 **** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/org-capture-find-project-tasks ()
-  "Find a project's tasks file.
+(defvar-local wal/org-capture-tasks "tasks.org")
+(defvar-local wal/org-capture-tasks-heading "Tasks")
+
+(defun wal/org-capture-find-tasks ()
+  "Find (a project's) tasks file.
 
 If the project root cannot be determined, use `org-directory'. as
 destination."
   (let ((proj-root (when-let ((current (project-current)))
                      (project-root current))))
 
-    (expand-file-name "tasks.org" (or proj-root org-directory))))
+    (expand-file-name wal/org-capture-tasks (or proj-root org-directory))))
+
+(defun wal/org-capture-find-location ()
+  "Find the location in the file."
+  (when-let ((pos (or (org-find-exact-headline-in-buffer wal/org-capture-tasks-heading nil t)
+                      (point-max))))
+    (goto-char pos)))
 #+END_SRC
 
 **** Configuration
@@ -5671,7 +5680,7 @@ destination."
       (file+olp+datetree ,(concat org-directory "/dailies.org"))
       "%i\n%?")
      ("p" "project task" entry
-      (file+headline wal/org-capture-find-project-tasks "Tasks")
+      (file+function wal/org-capture-find-tasks wal/org-capture-find-location)
       "* TODO %?\n\n%F\n\n%i"
       :empty-lines-before 1)))
   (org-capture-bookmark nil) ; Prevents countless edit buffers since we annotate bookmarks.
