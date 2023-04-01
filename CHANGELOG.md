@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - All leaders no longer have the `wal/` prefix.
+- As the directories were removed, `org-agenda-files` is now single
+  file `.agenda` in the `org-directory`.
 
 ### Fixed
 
@@ -24,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Personal** section in favor of using a `default.el` file in the
   `site-lisp` directory.
+- All custom directories other than the `wal/site-lisp-directory`.
 
 
 ## [v1.11.4]

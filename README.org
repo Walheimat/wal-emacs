@@ -133,28 +133,13 @@ functionality is used.
 
 ;;;; Customization:
 
-(defcustom wal/cache-directory (expand-file-name ".cache" user-emacs-directory)
-  "The cache directory."
-  :type 'string
-  :group 'wal-settings)
-
 (defcustom wal/site-lisp-directory (expand-file-name "site-lisp" user-emacs-directory)
   "Directory of site Lisp packages."
   :type 'string
   :group 'wal-settings)
 
-(defcustom wal/org-directory (expand-file-name "org" "~")
-  "Default directory for org files."
-  :type 'string
-  :group 'wal-settings)
-
-(defcustom wal/agenda-tasks-directory (expand-file-name "tasks" wal/org-directory)
-  "One-size-fits-all directory for agenda tasks."
-  :type 'string
-  :group 'wal-settings)
-
-(defcustom wal/org-roam-directory (expand-file-name "zettelkasten" wal/org-directory)
-  "Directory for Zettelkasten note-taking."
+(defcustom wal/scratch-persist-file (expand-file-name ".wal-scratch-persist" user-emacs-directory)
+  "The file to persist the *scratch* buffer's content in."
   :type 'string
   :group 'wal-settings)
 
@@ -166,11 +151,6 @@ functionality is used.
 (defcustom wal/prefer-tabs nil
   "Whether tabs are preferred for indentation."
   :type 'boolean
-  :group 'wal-settings)
-
-(defcustom wal/scratch-persist-file (expand-file-name "scratch-persist" wal/cache-directory)
-  "The file to persist the *scratch* buffer's content in."
-  :type 'string
   :group 'wal-settings)
 
 (defcustom wal/maximize-new-frames t
@@ -256,27 +236,13 @@ installed from there.
 
 ** Directories
 
-Make sure that custom directories exist. We want:
-
-+ A cache directory to store bookmarks etc.
-+ a directory for site lisp
-+ a default directory for org files
-+ a default directory for agenda tasks
-+ a default directory for notes.
-
-Also create non-existing directories while finding files.
+Prompt to ask directories if a file can't be found.
 
 #+BEGIN_SRC emacs-lisp
-(mapc (lambda (it) (make-directory it t))
-      `(,wal/cache-directory
-        ,wal/org-directory
-        ,wal/agenda-tasks-directory
-        ,wal/org-roam-directory))
-
 (add-to-list 'find-file-not-found-functions #'wal/create-non-existent-directory)
 #+END_SRC
 
-** Site-Lisp
+*** Site-Lisp
 
 Add all sub-directories of the site lisp directory to load path (and
 custom theme load path). I put non-MELPA packages here. You can also
@@ -5123,7 +5089,6 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (defvar text-scale-mode-step)
 (defvar visual-fill-column-width)
 (defvar visual-fill-column-center-text)
-(defvar wal/agenda-tasks-directory)
 (defvar wal/triple-minus-map)
 
 (defgroup wal-org nil
@@ -5223,9 +5188,8 @@ This calls `org-content' interactively."
   (org-log-into-drawer t)
 
   ;; Set up directories.
-  (org-directory wal/org-directory)
-  (org-default-notes-file (concat org-directory "/notes.org"))
-  (org-agenda-files `(,wal/agenda-tasks-directory))
+  (org-default-notes-file (expand-file-name "notes.org" org-directory))
+  (org-agenda-files (expand-file-name ".agenda" org-directory))
 
   ;; Be sure to add archive tag with `org-toggle-archive-tag'.
   (org-archive-location "::* Archived")
@@ -5491,8 +5455,8 @@ If called with numeric prefix `5', set variable
 
   :custom
   ;; Setup directories and file names.
-  (org-roam-directory wal/org-roam-directory)
-  (org-roam-dailies-directory (expand-file-name "tagebuch/" wal/org-roam-directory))
+  (org-roam-directory (expand-file-name "zettelkasten" org-directory))
+  (org-roam-dailies-directory "tagebuch/")
   (org-roam-extract-new-file-path "${slug}.org")
 
   ;; Simple capture templates.
@@ -5683,8 +5647,8 @@ Capture templates.
 (defun wal/org-capture-find-project-tasks ()
   "Find a project's tasks file.
 
-If the project root cannot be determined, use
-`wal/org-directory'. as destination."
+If the project root cannot be determined, use `org-directory'. as
+destination."
   (let ((proj-root (when-let ((current (project-current)))
                      (project-root current))))
 
