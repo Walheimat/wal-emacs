@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Custom `flycheck` checkers are now registered.
 
+### Removed
+
+- **Personal** section in favor of using a `default.el` file in the
+  `site-lisp` directory.
+
+
 ## [v1.11.4]
 
 Group effort
