@@ -200,6 +200,21 @@
 
     (should (eq (point) 9))))
 
+(ert-deftest test-wal/spill-paragraph ()
+  (let ((sentence-end-double-space nil))
+    (with-temp-buffer
+      (insert "This is the first sentence.\nThis is the second one.")
+
+      (call-interactively 'wal/spill-paragraph)
+
+      (should (string-equal "This is the first sentence. This is the second one." (buffer-string)))))
+
+  (with-mock (fill-paragraph)
+
+    (funcall-interactively 'wal/spill-paragraph t)
+
+    (was-called-with fill-paragraph (list nil t))))
+
 (ert-deftest test-wal/l ()
   (with-temp-buffer
     (wal/l)
