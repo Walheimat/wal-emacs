@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal/org-captre-find-location`.
 - Command `wal/force-delete-other-windows`; bound in
   `other-windnow-repeat-map` using `C-1`.
+- Package `jinx`.
 
 ### Changed
 
