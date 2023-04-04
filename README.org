@@ -5131,6 +5131,8 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 **** Utility
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/org-agenda-file ".agenda")
+
 (defun wal/first-require-ox-md (&rest _args)
   "Advise to require `ox-md' before export dispatch."
   (unless (featurep 'ox-md)
@@ -5169,6 +5171,12 @@ This calls `org-content' interactively."
   (advice-add
    'org-export-dispatch :before
    #'wal/first-require-ox-md)
+
+  ;; Create register file if it doesn't yet exist
+  (let ((register (expand-file-name wal/org-agenda-file org-directory)))
+
+    (unless (file-exists-p register)
+      (make-empty-file register)))
 
   (with-no-warnings
     (wal/transient-define-major org-mode ()
@@ -5213,7 +5221,7 @@ This calls `org-content' interactively."
 
   ;; Set up directories.
   (org-default-notes-file (expand-file-name "notes.org" org-directory))
-  (org-agenda-files (expand-file-name ".agenda" org-directory))
+  (org-agenda-files (expand-file-name wal/org-agenda-file org-directory))
 
   ;; Be sure to add archive tag with `org-toggle-archive-tag'.
   (org-archive-location "::* Archived")
