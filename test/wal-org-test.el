@@ -120,35 +120,24 @@
 
       (was-called wal/org-tree-slide-play))))
 
-(ert-deftest test-wal/org-capture-find-tasks ()
-  (with-mock ((project-current . #'always)
-              (project-root . (lambda (_) "/tmp")))
+(ert-deftest test-wal/org-capture-find-project-task-location ()
+  (let ((heading nil))
 
-    (should (string-equal "/tmp/tasks.org" (wal/org-capture-find-tasks))))
+    (with-mock ((org-find-exact-heading-in-directory . (lambda (&rest _) heading))
+                set-buffer
+                goto-char
+                (project-current . #'always)
+                (project-root . #'always)
+                (marker-buffer . (lambda (_) 'buffer))
+                (marker-position . (lambda (_) 'position)))
 
-  (with-mock ((project-root . #'ignore)
-              (project-current . #'always))
+      (should-error (wal/org-capture-find-project-task-location) :type 'user-error)
 
-    (defvar org-directory)
-    (let ((org-directory "/org"))
+      (setq heading 'heading)
 
-      (should (string-equal "/org/tasks.org" (wal/org-capture-find-tasks))))))
+      (wal/org-capture-find-project-task-location)
 
-(ert-deftest test-wal/org-capture-find-location ()
-  (let ((pos nil))
-    (with-mock ((org-find-exact-headline-in-buffer . (lambda (&rest _) pos))
-                (point-max . (lambda () 99))
-                goto-char)
-
-      (wal/org-capture-find-location)
-
-      (was-called-with goto-char (list 99))
-      (wal/clear-mocks)
-
-      (setq pos 12)
-      (wal/org-capture-find-location)
-
-      (was-called-with goto-char (list 12)))))
+      (was-called-with goto-char (list 'position)))))
 
 (ert-deftest test-wal/org-clock-in-switch-to-state ()
   (should (string-equal "IN PROGRESS" (wal/org-clock-in-switch-to-state "OTHER STATE"))))

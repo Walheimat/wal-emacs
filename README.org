@@ -5667,26 +5667,19 @@ Capture templates.
 **** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defvar-local wal/org-capture-tasks "tasks.org")
 (defvar-local wal/org-capture-tasks-heading "Tasks")
 
-(defun wal/org-capture-find-tasks ()
-  "Find (a project's) tasks file.
+(defun wal/org-capture-find-project-task-location ()
+  "Find the location of tasks in the file."
+  (declare-function org-find-exact-heading-in-directory "ext:org.el")
 
-If the project root cannot be determined, use `org-directory'. as
-destination."
-  (let ((proj-root (when-let ((current (project-current)))
-                     (project-root current))))
-
-    (expand-file-name wal/org-capture-tasks (or proj-root org-directory))))
-
-(defun wal/org-capture-find-location ()
-  "Find the location in the file."
-  (declare-function org-find-exact-headline-in-buffer "ext:org.el")
-
-  (when-let ((pos (or (org-find-exact-headline-in-buffer wal/org-capture-tasks-heading nil t)
-                      (point-max))))
-    (goto-char pos)))
+  (if-let* ((project (project-current))
+            (root (project-root project))
+            (marker (org-find-exact-heading-in-directory wal/org-capture-tasks-heading root)))
+      (progn
+        (set-buffer (marker-buffer marker))
+        (goto-char (marker-position marker)))
+    (user-error "Couldn't find heading '%s'" wal/org-capture-tasks-heading)))
 #+END_SRC
 
 **** Configuration
@@ -5705,7 +5698,7 @@ destination."
       (file+olp+datetree ,(concat org-directory "/dailies.org"))
       "%i\n%?")
      ("p" "project task" entry
-      (file+function wal/org-capture-find-tasks wal/org-capture-find-location)
+      (function wal/org-capture-find-project-task-location)
       "* TODO %?\n\n%F\n\n%i"
       :empty-lines-before 1)))
   (org-capture-bookmark nil) ; Prevents countless edit buffers since we annotate bookmarks.
