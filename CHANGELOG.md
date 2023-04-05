@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.11.5]
+
+Plunk into clunk.
 
 ### Added
 
@@ -15,8 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal/org-capture-tasks-heading` to find the file and heading using
   new function `wal/org-capture-find-project-task-location`.
 - Command `wal/force-delete-other-windows`; bound in
-  `other-windnow-repeat-map` using `C-k`.
+  `other-window-repeat-map` using `C-k`.
 - Package `jinx`.
+- Command `wal/spill-paragraph` to do the opposite of
+  `fill-paragraph`.
 
 ### Changed
 
@@ -34,10 +38,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `site-lisp` directory.
 - All custom directories other than the `wal/site-lisp-directory`.
 
-
 ## [v1.11.4]
 
-Group effort
+Group effort.
 
 ### Added
 
