@@ -4943,10 +4943,6 @@ unles KEY is provided."
                                    ',name
                                    ,(make-hash-table :test 'equal)))
 
-       (advice-add
-        ',function-name :around
-        #'wal/with-project-bounded-compilation)
-
        (bind-key ,key ',function-name wal/project-prefix-map))))
 
 (defun wal/project-select-command (cmd)
@@ -5019,7 +5015,8 @@ set to filter by project buffers."
   (wal/advise-many
    'wal/with-project-bounded-compilation :around
    '(project-compile
-     recompile))
+     recompile
+     wal/project-command))
 
   (that-key "project commands" :key "C-c p")
 
