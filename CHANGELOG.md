@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal/with-project-bounded-compilation` to avoid being asked to save
   unrelated buffers when calling a generated command while switching.
 
+### Removed
+
+- Configurations for `tabulated-list-mode`, `hideshow` and
+  `dictionary`.
+
 ## [v1.11.5]
 
 Plunk into clunk.
