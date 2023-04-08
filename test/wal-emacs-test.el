@@ -12,11 +12,11 @@
   (with-mock (flyspell-mode)
 
     (with-temp-buffer
-      (wal/flyspell-commit-messages)
+      (wal/text-mode-flyspell-commit-messages)
       (was-not-called flyspell-mode)
 
       (rename-buffer "COMMIT_EDITMSG")
-      (wal/flyspell-commit-messages)
+      (wal/text-mode-flyspell-commit-messages)
 
       (was-called flyspell-mode))))
 
@@ -26,7 +26,7 @@
     (defvar flycheck-check-syntax-automatically nil)
 
     (with-temp-buffer
-      (wal/flycheck-on-save)
+      (wal/text-mode-flycheck-on-save)
       (was-called flycheck-mode)
 
       (should (equal '(save) flycheck-check-syntax-automatically)))))

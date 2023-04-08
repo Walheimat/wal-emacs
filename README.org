@@ -174,7 +174,7 @@ Customize start-up.
 (setq-unless custom-file (expand-file-name "custom.el" user-emacs-directory))
 
 (unless (file-exists-p custom-file)
-  (write-region "" nil custom-file))
+  (make-empty-file custom-file t))
 
 (when (file-exists-p custom-file)
   (load custom-file))
@@ -432,7 +432,7 @@ Make never leaving Emacs a priority.
 (setq use-dialog-box nil
       disabled-command-function nil
       debugger-bury-or-kill 'kill
-      use-short-answers t ; New in Emacs 28. Otherwise you need an alias.
+      use-short-answers t
       so-long-action 'so-long-minor-mode)
 #+END_SRC
 
@@ -2683,12 +2683,12 @@ No double spaces in sentences.
 **** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/flyspell-commit-messages ()
+(defun wal/text-mode-flyspell-commit-messages ()
   "Activate `flyspell-mode' when editing commit messages."
   (when (string-match "COMMIT_EDITMSG" (buffer-name))
     (flyspell-mode)))
 
-(defun wal/flycheck-on-save ()
+(defun wal/text-mode-flycheck-on-save ()
   "Set up `flycheck-mode' to check syntax only on save."
   (when (fboundp 'flycheck-mode)
     (defvar flycheck-check-syntax-automatically)
@@ -2704,7 +2704,9 @@ No double spaces in sentences.
 
   :init
   (harpoon text-mode
-    :functions (wal/flyspell-commit-messages wal/flycheck-on-save))
+    :functions
+    (wal/text-mode-flyspell-commit-messages
+     wal/text-mode-flycheck-on-save))
 
   :custom
   (sentence-end-double-space nil))
@@ -2929,7 +2931,6 @@ Let's try to be even more =helpful=.
 
   :custom
   (helpful-max-buffers 3)
-  (helpful-switch-buffer-function #'display-buffer)
 
   :bind
   (([remap describe-command] . helpful-command)
@@ -3028,8 +3029,7 @@ Highlighting the current line.
   :hook
   ((tablist-minor-mode
     tabulated-list-mode
-    dired-mode
-    dashboard-mode) . hl-line-mode))
+    dired-mode) . hl-line-mode))
 #+END_SRC
 
 ** Footer
@@ -4127,8 +4127,6 @@ Complete commands and code.
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
-
-Alternative.
 
 **** Utility
 
