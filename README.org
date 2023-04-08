@@ -2856,18 +2856,6 @@ This just means increasing duration, delay, size and brightness."
 Allow restoring window configurations when Emacs decided they should
 be gone.
 
-*** winner
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-#+BEGIN_SRC emacs-lisp
-(use-package winner
-  :ensure nil
-
-  :hook (emacs-startup . winner-mode))
-#+END_SRC
-
 *** async
 :PROPERTIES:
 :UNNUMBERED: t
@@ -3811,106 +3799,17 @@ Everything that has to do with windows.
   (windmove-delete-default-keybindings (cons 'none '(hyper meta)))
   (windmove-display-default-keybindings (cons nil '(hyper control))))
 #+end_src
-*** popper
+
+*** winner
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Treat certain buffers and their windows as pop-ups.
-
-**** Utility
-
 #+BEGIN_SRC emacs-lisp
-(defvar wal/spared-popups '("\\*Messages\\*"))
+(use-package winner
+  :ensure nil
 
-(defun wal/popper--spared-p (buffer)
-  "Check if BUFFER should be spared."
-  (let* ((name (buffer-name buffer))
-         (spared (seq-some (lambda (it) (string-match-p it name)) wal/spared-popups)))
-
-    spared))
-
-(defun wal/kill-some-popups (&optional ask-first)
-  "Kill some popups.
-
-If ASK-FIRST is true uses `kill-some-buffers' instead of `kill-buffer'."
-  (interactive "P")
-
-  (let* ((group (when popper-group-function
-                  (funcall popper-group-function)))
-         (buried (thread-last (alist-get group popper-buried-popup-alist nil nil 'equal)
-                              (mapcar #'cdr)
-                              (cl-remove-if-not #'buffer-live-p)
-                              (cl-remove-if #'wal/popper--spared-p)
-                              (delete-dups))))
-
-    (when buried
-      (if ask-first
-          (kill-some-buffers buried)
-        (dolist (it buried)
-          (kill-buffer it))))
-
-    (setf (alist-get group popper-buried-popup-alist nil nil 'equal)
-          (cl-remove-if-not
-           (lambda (it) (buffer-live-p (cdr it)))
-           (alist-get group popper-buried-popup-alist nil nil 'equal)))))
-#+END_SRC
-
-**** Configuration
-
-#+BEGIN_SRC emacs-lisp
-(use-package popper
-  :wal-ways nil
-
-  :config
-  (popper-mode 1)
-
-  :custom
-  (popper-display-control 'user)
-
-  (popper-reference-buffers '(
-                              ;; Info(-like).
-                              docker-container-mode
-                              "\\*Bookmark Annotation\\*"
-                              "\\*org-roam\\*"
-
-                              ;; Compilation(-like).
-                              compilation-mode
-                              comint-mode
-                              "^\\*docker-compose"
-                              "^\\* docker-compose \\(up\\|run\\|build\\)"
-                              "^\\*wal-async\\*"
-                              "\\*rg\\*\\'"
-
-                              ;; REPL(-like).
-                              dap-ui-repl-mode
-                              cider-repl-mode
-                              inferior-python-mode
-                              python-pytest-mode
-
-                              ;; Log(-like).
-                              "server log\\*$"
-                              "\\*\\(.+\\)out\\*"
-                              "^\\* docker container"
-                              "\\*Messages\\*"
-                              "\\*Flycheck Errors\\*"
-
-                              ;; Debug(-like).
-                              debugger-mode
-
-                              ;; Help(-like).
-                              helpful-mode
-                              help-mode
-                              dictionary-mode
-                              shortdoc-mode))
-
-  :wal-bind
-  (("o" . popper-toggle-latest)
-   ("M-o" . popper-cycle))
-
-  :general
-  (general-define-key :keymaps 'wal/triple-minus-map :wk-full-keys nil
-   "o" 'wal/kill-some-popups))
+  :hook (emacs-startup . winner-mode))
 #+END_SRC
 
 ** Footer

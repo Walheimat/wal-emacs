@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Package `winner` was moved to `wal-windows`.
+
 ### Fixed
 
 - Only wrapping `wal/project-command` is now advised with
@@ -17,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Configurations for `tabulated-list-mode`, `hideshow` and
   `dictionary`.
+- Package `popper`.
 
 ## [v1.11.5]
 
