@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Custom `use-package-ensure-function` that also checks that packages
+  aren't built in nor part of an expansion pack.
+
 ### Changed
 
 - Package `winner` was moved to `wal-windows`.

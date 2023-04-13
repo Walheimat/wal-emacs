@@ -2573,16 +2573,53 @@ use the result further down the line."
         ,@body))))
 #+END_SRC
 
-**** Conditional :hook
+**** Conditional :hook and :ensure
 
-Don't add hooks if the package isn't installed.
+Don't add hooks if the package isn't installed. Don't ensure built-in
+and expansion pack packages.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal/ignore-if-not-installed (package &rest _r)
   "Don't handle hooks if PACKAGE isn't installed."
   (or (package-installed-p package) (package-built-in-p package)))
 
+(defun wal/use-package-ensure-elpa-if-not-built-in-or-expansion (name args _state &optional _no_refresh)
+  "Do the same as `use-package-ensure-elpa' but ignore additional packages.
+
+These are built-in packages and expansion pack packages.
+
+NAME is the package name, ARGS the ensure keywords."
+  (dolist (ensure args)
+    (let ((package
+           (or (and (eq ensure t) (use-package-as-symbol name))
+               ensure)))
+      (when package
+        (require 'package)
+        (when (consp package)
+          (use-package-pin-package (car package) (cdr package))
+          (setq package (car package)))
+        (unless (or (package-installed-p package) (package-built-in-p package) (junk--pack-p package))
+          (condition-case-unless-debug err
+              (progn
+                (when (assoc package (bound-and-true-p
+                                      package-pinned-packages))
+                  (package-read-all-archive-contents))
+                (if (assoc package package-archive-contents)
+                    (package-install package)
+                  (package-refresh-contents)
+                  (when (assoc package (bound-and-true-p
+                                        package-pinned-packages))
+                    (package-read-all-archive-contents))
+                  (package-install package))
+                t)
+            (error
+             (display-warning 'use-package
+                              (format "Failed to install %s: %s"
+                                      name (error-message-string err))
+                              :error))))))))
+
 (wal/on-boot external
+  (setq use-package-ensure-function #'wal/use-package-ensure-elpa-if-not-built-in-or-expansion)
   (advice-add
    'use-package-handler/:hook :before-while
    #'wal/ignore-if-not-installed))
@@ -2700,8 +2737,6 @@ No double spaces in sentences.
 
 #+BEGIN_SRC emacs-lisp
 (use-package text-mode
-  :ensure nil
-
   :init
   (harpoon text-mode
     :functions
@@ -2721,8 +2756,6 @@ Automatic quick expansion.
 
 #+BEGIN_SRC emacs-lisp
 (use-package abbrev
-  :ensure nil
-
   :custom
   (save-abbrevs t)
 
@@ -2738,8 +2771,6 @@ Follow me around.
 
 #+begin_src emacs-lisp
 (use-package follow-mode
-  :ensure nil
-
   :custom
   (follow-mode-line-text " flw"))
 #+end_src
@@ -2753,8 +2784,6 @@ Effing diffing.
 
 #+BEGIN_SRC emacs-lisp
 (use-package diff-mode
-  :ensure nil
-
   :bind
   ;; Remove `diff-goto-source'.
   (:map diff-mode-shared-map
@@ -2784,8 +2813,6 @@ Some people need macros, okay?
 
 #+BEGIN_SRC emacs-lisp
 (use-package kmacro
-  :ensure nil
-
   :general
   (editor "k" 'wal/kmacro))
 #+END_SRC
@@ -2811,8 +2838,6 @@ No offender.
 
 #+BEGIN_SRC emacs-lisp
 (use-package register
-  :ensure nil
-
   :custom
   (register-preview-delay 0.8)
 
@@ -2847,8 +2872,6 @@ This just means increasing duration, delay, size and brightness."
 
 #+BEGIN_SRC emacs-lisp
 (use-package pulse
-  :ensure nil
-
   :bind
   ("C-c <SPC>" . wal/lighthouse))
 #+END_SRC
@@ -2885,8 +2908,6 @@ I'd like to kill shells without a process quickly.
 
 #+BEGIN_SRC emacs-lisp
 (use-package shell
-  :ensure nil
-
   :general
   (general-define-key
    :keymaps '(shell-mode-map comint-mode-map)
@@ -2903,8 +2924,6 @@ Show compilations in a pop-up and scroll output.
 
 #+BEGIN_SRC emacs-lisp
 (use-package compile
-  :ensure nil
-
   :hook
   (compilation-filter . ansi-color-compilation-filter)
 
@@ -2958,8 +2977,6 @@ Leave a bookmark why don't you.
 
 #+BEGIN_SRC emacs-lisp
 (use-package bookmark
-  :ensure nil
-
   :init
   (that-key "bookmark" :key "C-c m")
 
@@ -2988,8 +3005,6 @@ Quick calculations.
 
 #+BEGIN_SRC emacs-lisp
 (use-package calc
-  :ensure nil
-
   :bind
   ("C-c q" . quick-calc))
 #+END_SRC
@@ -3005,8 +3020,6 @@ Contextual information. Package =lsp-mode= use =eldoc= extensively.
 
 #+BEGIN_SRC emacs-lisp
 (use-package eldoc
-  :ensure nil
-
   :custom
   (eldoc-idle-delay 0.2)
   (eldoc-echo-area-prefer-doc-buffer 'maybe)
@@ -3024,8 +3037,6 @@ Highlighting the current line.
 
 #+BEGIN_SRC emacs-lisp
 (use-package hl-line
-  :ensure nil
-
   :hook
   ((tablist-minor-mode
     tabulated-list-mode
@@ -3234,8 +3245,6 @@ Less intrusive pairing mode than =smartparens=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package elec-pair
-  :ensure nil
-
   :hook ((prog-mode prog-like) . electric-pair-local-mode)
 
   :init
@@ -3464,8 +3473,6 @@ Protesilaos' super configurable themes.
 
 #+BEGIN_SRC emacs-lisp
 (use-package modus-themes
-  :ensure nil
-
   :custom
   (modus-themes-slanted-constructs t)
   (modus-themes-bold-constructs t)
@@ -3789,8 +3796,6 @@ Everything that has to do with windows.
 
 #+begin_src emacs-lisp
 (use-package windmove
-  :ensure nil
-
   :hook (emacs-startup . windmove-mode)
 
   :custom
@@ -3807,8 +3812,6 @@ Everything that has to do with windows.
 
 #+BEGIN_SRC emacs-lisp
 (use-package winner
-  :ensure nil
-
   :hook (emacs-startup . winner-mode))
 #+END_SRC
 
@@ -4850,8 +4853,6 @@ set to filter by project buffers."
 
 #+BEGIN_SRC emacs-lisp
 (use-package project
-  :ensure nil
-
   :init
   (wal/advise-many
    'wal/with-project-bounded-compilation :around
@@ -4990,8 +4991,6 @@ This calls `org-content' interactively."
 
 #+BEGIN_SRC emacs-lisp
 (use-package org
-  :ensure nil
-
   :commands (org-add-note)
 
   :hook (org-mode . auto-fill-mode)
@@ -5125,8 +5124,6 @@ This calls `org-content' interactively."
 **** Configuration
 #+BEGIN_SRC emacs-lisp
 (use-package org-agenda
-  :ensure nil
-
   :config
   (wal/replace-in-alist 'org-agenda-prefix-format '((agenda . "  %?-12t%? c%s%b")))
 
@@ -5171,8 +5168,6 @@ This calls `org-content' interactively."
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-habit
-  :ensure nil
-
   :custom
   (org-habit-show-habits-only-for-today nil)
   (org-habit-graph-column 50))
@@ -5276,8 +5271,6 @@ If called with numeric prefix `5', set variable
   :if (executable-find "sqlite3")
   :wal-ways nil
 
-  :ensure nil
-
   :commands
   (org-roam-buffer-display-dedicated
    org-roam-capture
@@ -5359,9 +5352,7 @@ Fancy UI.
 
   :config
   (transient-append-suffix 'roamer '(0 3 0)
-    '("u" "ui" org-roam-ui-mode))
-
-  :ensure nil)
+    '("u" "ui" org-roam-ui-mode)))
 #+END_SRC
 
 ** Presentations
@@ -5476,8 +5467,6 @@ Editing source blocks.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-src
-  :ensure nil
-
   :after org
 
   :config
@@ -5533,8 +5522,6 @@ Capture templates.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-capture
-  :ensure nil
-
   :custom
   (org-capture-templates
    `(("c" "current task" plain
@@ -5562,8 +5549,6 @@ Configure refiling headings.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-refile
-  :ensure nil
-
   :custom
   (org-refile-targets
    '((nil . (:maxlevel . 4))
@@ -5581,8 +5566,6 @@ Convenient (and less safe) source block interaction.
 
 #+BEGIN_SRC emacs-lisp
 (use-package ob
-  :ensure nil
-
   :config
   ;; Load a few more languages.
   (wal/append
@@ -5645,8 +5628,6 @@ You know the drill. Clock in, clock out.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-clock
-  :ensure nil
-
   :after org
 
   :init
@@ -5681,8 +5662,6 @@ Set up durations for a 40-hour week.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-duration
-  :ensure nil
-
   :after org
 
   :config
@@ -5704,8 +5683,6 @@ Add some user speed commands.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-keys
-  :ensure nil
-
   :after org
 
   :custom
@@ -5723,8 +5700,6 @@ Modern look.
 #+begin_src emacs-lisp
 (use-package org-modern
   :wal-ways nil
-
-  :ensure nil
 
   :hook (org-mode . org-modern-mode)
 
@@ -5819,8 +5794,6 @@ Uses the same optional SWITCHES."
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired
-  :ensure nil
-
   :init
   (harpoon dired-mode
     :major t)
@@ -5900,8 +5873,6 @@ Did you know you can edit =dired= buffers using =C-x C-q=?
 
 #+BEGIN_SRC emacs-lisp
 (use-package wdired
-  :ensure nil
-
   :custom
   (wdired-allow-to-change-permissions t)
 
@@ -6017,8 +5988,6 @@ Set up =eshell=. I like the idea of it but I don't really use it.
 
 #+BEGIN_SRC emacs-lisp
 (use-package eshell
-  :ensure nil
-
   :hook
   ((eshell-mode . with-editor-export-editor)
    (eshell-mode . with-editor-export-git-editor))
@@ -6040,8 +6009,6 @@ Set up =eshell=. I like the idea of it but I don't really use it.
 #+BEGIN_SRC emacs-lisp
 (use-package eshell-syntax-highlighting
   :wal-ways nil
-
-  :ensure nil
 
   :hook (eshell-mode . eshell-syntax-highlighting-mode))
 #+END_SRC
@@ -6177,8 +6144,6 @@ When resolving conflicts, using =ours= and =theirs= should be easy.
 
 #+BEGIN_SRC emacs-lisp
 (use-package smerge-mode
-  :ensure nil
-
   :config
   (defvar-keymap smerge-repeat-map
     :doc "Keymap to repeat various `smerge' commands."
@@ -6262,8 +6227,6 @@ Bitches brew.
 (use-package elixir-mode
   :wal-ways nil
 
-  :ensure nil
-
   :init
   (harpoon elixir-mode
     :lsp t
@@ -6288,8 +6251,6 @@ I want to be ready for =jai=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package cc-mode
-  :ensure nil
-
   ;; I don't use C, no need to (often incorrectly) guess.
   :mode ("\\.h\\'" . c++-mode)
 
@@ -6335,8 +6296,6 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
   :if (executable-find "cargo")
   :wal-ways nil
 
-  :ensure nil
-
   :init
   (harpoon rust-mode
     :lsp t
@@ -6364,8 +6323,6 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
 #+BEGIN_SRC emacs-lisp
 (use-package cargo
   :wal-ways nil
-
-  :ensure nil
 
   :demand t
   :after rust-mode)
@@ -6406,7 +6363,6 @@ TOML."
 
 #+BEGIN_SRC emacs-lisp
 (use-package python
-  :ensure nil
 
   :init
   (harpoon python-mode
@@ -6479,8 +6435,6 @@ Did Microsoft do the right thing?
 (use-package lsp-pyright
   :wal-ways nil
 
-  :ensure nil
-
   :demand t
   :after (python lsp-mode))
 #+END_SRC
@@ -6495,8 +6449,6 @@ Sort with =isort=.
 #+begin_src emacs-lisp
 (use-package python-isort
   :wal-ways nil
-
-  :ensure nil
 
   :after python
 
@@ -6516,8 +6468,6 @@ Blacken buffers.
 (use-package python-black
   :wal-ways nil
 
-  :ensure nil
-
   :after python
 
   :init
@@ -6535,8 +6485,6 @@ Work with Jupyter notebooks.
 #+BEGIN_SRC emacs-lisp
 (use-package ein
   :wal-ways nil
-
-  :ensure nil
 
   :after python
 
@@ -6573,8 +6521,6 @@ Takes care[fn:12] of all your virtual environment needs.
 
   :wal-ways nil
 
-  :ensure nil
-
   :hook (python-mode . pet-mode)
 
   :config
@@ -6596,8 +6542,6 @@ Takes care[fn:12] of all your virtual environment needs.
 (use-package poetry
   :wal-ways nil
 
-  :ensure nil
-
   :after python
 
   :init
@@ -6610,8 +6554,6 @@ Takes care[fn:12] of all your virtual environment needs.
 #+BEGIN_SRC emacs-lisp
 (use-package pyvenv
   :wal-ways nil
-
-  :ensure nil
 
   :after python
 
@@ -6646,8 +6588,6 @@ Deal with the parens.
 (use-package puni
   :wal-ways nil
 
-  :ensure nil
-
   :hook (lisp-data-mode . puni-mode)
 
   :init
@@ -6680,8 +6620,6 @@ Deal with the parens.
 
 #+BEGIN_SRC emacs-lisp
 (use-package elisp-mode
-  :ensure nil
-
   :init
   (harpoon emacs-lisp-mode
     :major t
@@ -6709,8 +6647,6 @@ Deal with the parens.
 
 #+BEGIN_SRC emacs-lisp
 (use-package lisp-mode
-  :ensure nil
-
   :init
   (harpoon common-lisp-mode
     :major t)
@@ -6739,8 +6675,6 @@ Get some closure.
 (use-package clojure-mode
   :wal-ways nil
 
-  :ensure nil
-
   :init
   (harpoon clojure-mode
     :lsp t
@@ -6768,8 +6702,6 @@ Can't have closure without REPL.
 (use-package cider
   :wal-ways nil
 
-  :ensure nil
-
   :demand t
   :after clojure-mode
 
@@ -6790,8 +6722,6 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
 #+BEGIN_SRC emacs-lisp
 (use-package slime
   :wal-ways nil
-
-  :ensure nil
 
   :demand t
   :after lisp-mode
@@ -6835,10 +6765,6 @@ Can we have =deno= instead of =node=?
 
 #+BEGIN_SRC emacs-lisp
 (use-package js
-  :wal-ways nil
-
-  :ensure nil
-
   :init
   (harpoon js-mode
     :messages ("NaN !== NaN" "Null falsy values or undefined")
@@ -6892,8 +6818,6 @@ Please use TypeScript.
 (use-package typescript-mode
   :wal-ways nil
 
-  :ensure nil
-
   :mode "\\.ts\\(x\\)?\\'"
 
   :init
@@ -6912,9 +6836,7 @@ Allow accessing a project's =node_modules=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package add-node-modules-path
-  :wal-ways nil
-
-  :ensure nil)
+  :wal-ways nil)
 #+END_SRC
 
 *** prettier
@@ -6962,8 +6884,6 @@ STRING is formatted with OBJECTS."
 (use-package prettier
   :wal-ways nil
 
-  :ensure nil
-
   :config
   (with-eval-after-load 'js
     (transient-append-suffix 'js-mode-major '(0 0 0)
@@ -7006,8 +6926,6 @@ Setup for LSP.
 (use-package go-mode
   :wal-ways nil
 
-  :ensure nil
-
   :init
   (harpoon go-mode
     :lsp t
@@ -7035,8 +6953,6 @@ Bash your head in!
 
 #+BEGIN_SRC emacs-lisp
 (use-package sh-script
-  :ensure nil
-
   :init
   (harpoon sh-mode
     :messages ("Sh..sh..h.." "Bash your head in"))
@@ -7055,9 +6971,7 @@ Sometimes you have to deal with things at their time.
 
 #+BEGIN_SRC emacs-lisp
 (use-package crontab-mode
-  :wal-ways nil
-
-  :ensure nil)
+  :wal-ways nil)
 #+END_SRC
 
 *** fish-mode
@@ -7071,8 +6985,6 @@ Support =fish= functions.
 (use-package fish-mode
   :wal-ways nil
 
-  :ensure nil
-
   :custom
   (fish-indent-offset 2))
 #+END_SRC
@@ -7084,8 +6996,6 @@ Support =fish= functions.
 
 #+BEGIN_SRC emacs-lisp
 (use-package conf-mode
-  :ensure nil
-
   :hook (conf-mode . wal/prog-like))
 #+END_SRC
 
@@ -7128,8 +7038,6 @@ Sometimes things that don't do things need to look nice.
 (use-package markdown-mode
   :wal-ways nil
 
-  :ensure nil
-
   :init
   (harpoon markdown-mode
     :major t)
@@ -7167,8 +7075,6 @@ Yes, you need to install *Android Studio* for some reason.
 #+BEGIN_SRC emacs-lisp
 (use-package dart-mode
   :wal-ways nil
-
-  :ensure nil
 
   :init
   (harpoon dart-mode
@@ -7230,8 +7136,6 @@ LSP support for Dart.
   :if (or (executable-find "flutter") (executable-find "dart"))
   :wal-ways nil
 
-  :ensure nil
-
   :after lsp-mode
 
   :config
@@ -7281,8 +7185,6 @@ For some reason, this is also defined in =cc-mode=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package cc-mode
-  :ensure nil
-
   :init
   (harpoon java-mode
     :lsp (:ignore-dirs (".gradle"))
@@ -7347,8 +7249,6 @@ LSP integration.
 (use-package lsp-java
   :wal-ways nil
 
-  :ensure nil
-
   :config
   (require 'dap-java)
 
@@ -7407,8 +7307,6 @@ Font-locked logs.
 (use-package log4j-mode
   :wal-ways nil
 
-  :ensure nil
-
   :custom-face
   (log4j-font-lock-debug-face ((t (:foreground unspecified :inherit (shadow)))))
   (log4j-font-lock-info-face ((t (:foreground unspecified :inherit (success)))))
@@ -7434,8 +7332,6 @@ The elephant in the room.
 #+BEGIN_SRC emacs-lisp
 (use-package php-mode
   :wal-ways nil
-
-  :ensure nil
 
   :init
   (harpoon php-mode
@@ -7469,8 +7365,6 @@ Does anyone actually like web development?
 
 #+BEGIN_SRC emacs-lisp
 (use-package mhtml-mode
-  :ensure nil
-
   :init
   (harpoon mhtml-mode
     :lsp t
@@ -7485,8 +7379,6 @@ Does anyone actually like web development?
 
 #+begin_src emacs-lisp
 (use-package nxml-mode
-  :ensure nil
-
   :init
   (harpoon nxml-mode
     :lsp t
@@ -7504,8 +7396,6 @@ Sometimes things that do as well.
 
 #+BEGIN_SRC emacs-lisp
 (use-package yaml-mode
-  :ensure nil
-
   :mode "\\.\\(ya?ml\\|tpl\\)\\'" ; Helm templates.
 
   :init
@@ -7545,8 +7435,6 @@ We want quicker suggestions when in CSS modes.
 
 #+BEGIN_SRC emacs-lisp
 (use-package css-mode
-  :ensure nil
-
   :mode ("\\.rasi" . css-mode)
 
   :init
@@ -7565,8 +7453,6 @@ We want quicker suggestions when in CSS modes.
 #+BEGIN_SRC emacs-lisp
 (use-package web-mode
   :wal-ways nil
-
-  :ensure nil
 
   :mode ("\\.vue\\'"
          "\\.blade.php\\'"
@@ -7621,8 +7507,6 @@ replying to the `JSONRPC' request."
 (use-package gdscript-mode
   :wal-ways nil
 
-  :ensure nil
-
   :init
   (harpoon gdscript-mode
     :lsp t
@@ -7645,8 +7529,6 @@ replying to the `JSONRPC' request."
 
 #+BEGIN_SRC emacs-lisp
 (use-package prolog
-  :ensure nil
-
   :config
   (wal/set-ligatures 'prolog-mode '(":-")))
 #+END_SRC
@@ -7860,8 +7742,6 @@ My spelling is bad. Uses American English for =flyspell=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package flyspell
-  :ensure nil
-
   :init
   (defvar wal/flyspell-map (make-sparse-keymap))
 
@@ -8246,8 +8126,6 @@ Some more linting.
 
 #+begin_src emacs-lisp
 (use-package lsp-sonarlint
-  :ensure nil
-
   :wal-ways nil
 
   :config
@@ -8316,8 +8194,6 @@ What goes =docker-compose= up, goes =docker-compose= down.
 (use-package docker
   :wal-ways nil
 
-  :ensure nil
-
   :config
   (wdb/nearby "\\*docker-containers\\*" :side 'top :height 15)
   (wdb/faraway "^\\* docker container")
@@ -8345,8 +8221,6 @@ Make =Dockerfiles= look nice.
 (use-package dockerfile-mode
   :wal-ways nil
 
-  :ensure nil
-
   :init
   (harpoon dockerfile-mode
     :messages ("Have you ever given?")))
@@ -8372,8 +8246,6 @@ Who doesn't like pods and stuff?
   :if (executable-find "kubectl")
 
   :wal-ways nil
-
-  :ensure nil
 
   :custom
   (kubernetes-commands-display-buffer-function 'display-buffer)
@@ -8508,8 +8380,6 @@ You either need to install =maildir-utils= or build from [[https://github.com/dj
   :if (executable-find "mu")
   :wal-ways nil
 
-  :ensure nil
-
   :config
   (setq mail-user-agent 'mu4e-user-agent)
 
@@ -8536,8 +8406,6 @@ your =load-path=.
 #+BEGIN_SRC emacs-lisp
 (use-package smtpmail
   :wal-ways nil
-
-  :ensure nil
 
   :custom
   (message-send-mail-function 'smtpmail-send-it)

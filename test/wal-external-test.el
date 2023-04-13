@@ -65,4 +65,92 @@
             built-in t)
       (should (wal/ignore-if-not-installed 'some-package)))))
 
+(ert-deftest test-wal/use-package-ensure-function ()
+
+  (defvar package-archive-contents)
+  (defvar package-pinned-packages)
+
+  (let ((built-in nil)
+        (installed nil)
+        (expansion nil)
+        (package-archive-contents nil)
+        (package-pinned-packages '((some-package . "test"))))
+
+    (with-mock (use-package-as-symbol
+                use-package-pin-package
+                (package-installed-p . (lambda (&rest _) installed))
+                (package-built-in-p . (lambda (&rest _) built-in))
+                (junk--pack-p . (lambda (&rest _) expansion))
+                package-read-all-archive-contents
+                package-refresh-contents
+                package-install
+                require)
+
+      (wal/use-package-ensure-elpa-if-not-built-in-or-expansion
+       'some-package
+       (list t)
+       nil)
+
+      (was-called-with package-install (list 'some-package))
+
+      (wal/clear-mocks)
+
+      (setq package-archive-contents '((some-package . 'content)))
+
+      (wal/use-package-ensure-elpa-if-not-built-in-or-expansion
+       'some-package
+       (list t)
+       nil)
+
+      (was-called-with package-install (list 'some-package))
+
+      (wal/clear-mocks)
+
+      (setq package-archive-contents nil)
+
+      (wal/use-package-ensure-elpa-if-not-built-in-or-expansion
+       'some-package
+       (list 'truthy)
+       nil)
+
+      (was-called package-refresh-contents)
+
+      (was-called-with package-install (list 'truthy))
+
+      (wal/clear-mocks)
+
+      (setq expansion t)
+
+      (wal/use-package-ensure-elpa-if-not-built-in-or-expansion
+       'some-package
+       (list 'truthy)
+       nil)
+
+      (was-not-called package-install))))
+
+(ert-deftest test-wal/use-package-ensure-function--displays-warning-on-error ()
+  (defvar package-archive-contents nil)
+  (defvar package-pinned-packages '((some-package . 'version)))
+  (defvar debug-on-error)
+
+  (let ((debug-on-error nil))
+
+    (with-mock (use-package-as-symbol
+                use-package-pin-package
+                (package-installed-p . (lambda (&rest _) nil))
+                (package-built-in-p . (lambda (&rest _) nil))
+                (junk--pack-p . (lambda (&rest _) nil))
+                (package-read-all-archive-contents . (lambda () (error "Testing")))
+                package-refresh-contents
+                package-install
+                require
+                display-warning)
+
+      (wal/use-package-ensure-elpa-if-not-built-in-or-expansion
+       'some-package
+       (list t)
+       nil)
+
+      (was-called display-warning))))
+
 ;;; wal-external-test.el ends here
