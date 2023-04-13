@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Only wrapping `wal/project-command` is now advised with
   `wal/with-project-bounded-compilation` to avoid being asked to save
   unrelated buffers when calling a generated command while switching.
+- `prettier` errors are advised to be shown as warnings so that they
+  can be muted once and for all.
 
 ### Removed
 

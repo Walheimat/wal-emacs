@@ -67,6 +67,12 @@
         (was-called cancel-timer)
         (was-called prettier-prettify)))))
 
+(ert-deftest test-wal/instead-delay-prettier-errors ()
+  (with-mock (delay-warning)
+    (wal/instead-delay-prettier-errors "We are just %s %s" "testing" "this")
+
+    (was-called-with delay-warning (list 'prettier "We are just testing this" :warning))))
+
 (ert-deftest test-wal/markdown-view ()
   (with-mock (mixed-pitch-mode
               markdown-mode

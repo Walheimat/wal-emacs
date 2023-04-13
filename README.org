@@ -6946,6 +6946,14 @@ Prettify your ugly JavaScript.
                             (setq wal/prettier-timer nil)
                             (prettier-prettify)
                             (message "Refresh done"))))))
+
+(defun wal/instead-delay-prettier-errors (string &rest objects)
+  "Treat prettier errors like warnings.
+
+STRING is formatted with OBJECTS."
+  (let ((formatted (apply #'format string objects)))
+
+    (delay-warning 'prettier formatted :warning)))
 #+END_SRC
 
 **** Configuration
@@ -6968,6 +6976,10 @@ Prettify your ugly JavaScript.
       'prettier-major-mode-parsers
       (cons it (cdr-safe (assoc 'json-mode prettier-major-mode-parsers)))))
    '(js-json-mode json-ts-mode))
+
+  (advice-add
+   'prettier--show-error :override
+   #'wal/instead-delay-prettier-errors)
 
   :custom
   (prettier-lighter " prt"))
