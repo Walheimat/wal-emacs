@@ -1649,16 +1649,27 @@ Uses `package-install' unless custom INSTALLER is provided."
     (when delete-windows
       (delete-other-windows))))
 
-(defun junk--filter (packages)
-  "Return PACKAGES that are not yet installed."
-  (seq-filter (lambda (it) (not (package-installed-p it))) packages))
+(defun junk-package-vc-install (recipe)
+  "Install package using `package-vc-install'."
+  (if (fboundp 'package-vc-install)
+      (package-vc-install (cadr recipe))
+    (user-error "Recipes can only be installed with `package-vc-install'.")))
+
+(cl-defun junk--filter (packages &key mapper)
+  "Return PACKAGES that are not yet installed.
+
+Apply MAPPER to packages if set."
+  (seq-filter (lambda (it)
+                (let ((package (if mapper
+                                   (funcall mapper it)
+                                 it)))
+                  (not (package-installed-p package))))
+                packages))
 
 (cl-defmacro junk-expand (name docs &key packages extras recipes)
   "Define an expansion pack of PACKAGES under NAME.
 
-Documented using DOCS.
-
-Optionally provide `quelpa' RECIPES and EXTRAS."
+Documented using DOCS."
   (declare (indent defun) (doc-string 2))
 
   `(add-to-list
@@ -1674,7 +1685,7 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
     (list
      (plist-get p :packages)
      (plist-get p :extras)
-     (mapcar #'car (plist-get p :recipes))
+     (plist-get p :recipes)
      (plist-get p :docs))))
 
 (defun junk--packs ()
@@ -1684,7 +1695,7 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
      (cl-destructuring-bind
          (packages extras recipes _)
          (junk--parts it)
-       (append acc packages extras recipes)))
+       (append acc packages extras (mapcar #'car recipes))))
    junk-expansion-packs '()))
 
 (defun junk--pack-p (pack)
@@ -1722,7 +1733,7 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
         (user-error "Unknown pack '%s', check `junk-expansion-packs'" sym))
 
       (let ((normal (junk--filter packages))
-            (from-recipe (junk--filter (mapcar #'car recipes))))
+            (from-recipe (junk--filter recipes :mapper #'car)))
 
         (if (not (append normal from-recipe))
             (if (and (junk--filter extras)
@@ -1730,7 +1741,7 @@ Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
                 (junk--install-extras extras)
               (message "Package '%s' is already installed." pack))
           (junk--install normal :delete-windows t)
-          (junk--install from-recipe :installer 'quelpa)
+          (junk--install from-recipe :installer 'junk-package-vc-install)
           (message "Installed '%s'." pack))))))
 
 (defun junk--stringify (package-list)
@@ -2440,12 +2451,15 @@ needs to be installed.
 
 #+BEGIN_SRC emacs-lisp
 (defconst wal/core-packages '(use-package
-                              quelpa
-                              quelpa-use-package
                               delight
                               general)
   "Packages to install before using `use-package'.
 Such as package `use-package'.")
+
+(defconst wal/core-vc-packages '((wal-line . "https://github.com/Walheimat/wal-line.git"))
+  "Packages to install before using `use-package'.
+
+These packages are installed with `package-vc-install'.")
 
 (wal/on-boot external
   (require 'package)
@@ -2462,6 +2476,16 @@ Such as package `use-package'.")
       (error
        (package-refresh-contents)
        (mapc 'package-install missing))))
+
+  (when (fboundp 'package-vc-install)
+    (let ((missing (seq-filter
+                    (lambda (it) (not (package-installed-p (car it))))
+                    wal/core-vc-packages)))
+
+      (condition-case err
+          (mapc 'package-vc-install (mapcar #'cdr missing))
+        (error
+         (message "Failed to install VC package: %s" (error-message-string err))))))
 
   (eval-when-compile
     (require 'use-package nil t))
@@ -2622,36 +2646,6 @@ NAME is the package name, ARGS the ensure keywords."
   (advice-add
    'use-package-handler/:hook :before-while
    #'wal/ignore-if-not-installed))
-#+END_SRC
-
-** quelpa
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Allows installing from other sources (like GitHub) using recipes.
-
-#+BEGIN_SRC emacs-lisp
-(use-package quelpa
-  :custom
-  (quelpa-update-melpa-p nil))
-#+END_SRC
-
-** quelpa-use-package
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-#+BEGIN_SRC emacs-lisp
-;; NOTE: This package seems no longer maintained.
-(use-package quelpa-use-package
-  :init
-  (setq quelpa-use-package-inhibit-loading-quelpa t)
-
-  :config
-  (declare-function quelpa-use-package-activate-advice "ext:quelpa-use-package")
-
-  (quelpa-use-package-activate-advice))
 #+END_SRC
 
 ** Footer
@@ -3587,8 +3581,10 @@ My own mode line.
 
 #+BEGIN_SRC emacs-lisp
 (use-package wal-line
+  ;; Installed using `project-vc-install'.
+  :if (wal/modern-emacs-p 29)
+
   :wal-ways nil
-  :quelpa (wal-line :fetcher github :repo "Walheimat/wal-line")
 
   :defer 1
 
@@ -8822,9 +8818,10 @@ name are deleted beforehand."
 
 * Footnotes
 
-[fn:1] I currently use this config in =29.0.50=. There's no guarantee
-anything below =28.1= works although some effort is made that it may
-with a few tweaks.
+[fn:1] I use this config with Emacs 29. There's no guarantee anything
+below 28 works although some effort is made that it may with a few
+tweaks. VC packages require 29 since they depend on
+=package-vc-install=.
 
 [fn:2] If you're feeling adventurous, [[https://git.savannah.gnu.org/cgit/emacs.git/tree/INSTALL][build from source]].
 

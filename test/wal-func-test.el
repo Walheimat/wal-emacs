@@ -750,7 +750,7 @@
 (ert-deftest test-junk--install ()
   (with-mock (package-install
               delete-other-windows
-              quelpa)
+              package-vc-install)
 
     (junk--install '(one two) :delete-windows t)
     (was-called-nth-with package-install '(one) 0)
@@ -758,8 +758,8 @@
     (was-called delete-other-windows)
     (wal/clear-mocks)
 
-    (junk--install '(four) :installer 'quelpa)
-    (was-called-with quelpa '(four))
+    (junk--install '(four) :installer 'package-vc-install)
+    (was-called-with package-vc-install '(four))
     (was-not-called delete-other-windows)))
 
 (ert-deftest test-junk-expand ()
@@ -783,7 +783,7 @@
                               (two)
                               :extras (twofer) :docs "That's two." :recipes nil)
                          (three :packages nil :extras nil :docs "That's three." :recipes
-                                ((three-mode :fetcher url :url "https://get-three-mode")))))
+                                ((three-mode "https://get-three-mode")))))
 
 (ert-deftest test-junk--packs ()
   (let ((junk-expansion-packs wal/test-packs))
@@ -794,6 +794,12 @@
   (let ((junk-expansion-packs wal/test-packs))
 
     (should (junk--pack-p 'three-mode))))
+
+(ert-deftest test-junk--filter--items-may-be-mapped ()
+  (with-mock ((package-installed-p . (lambda (p) (memq p '(test best)))))
+
+    (should (equal (junk--filter '((test "test") (rest "rest") (best "best")) :mapper #'car)
+                   '((rest "rest"))))))
 
 (ert-deftest test-junk--install-extras ()
   (let ((extras (plist-get (nth 2 junk-expansion-packs) :extras))
@@ -857,6 +863,18 @@
       (let ((junk-expansion-packs wal/test-packs))
 
         (should (equal (call-interactively 'junk-install) 'extra))))))
+
+(ert-deftest test--junk-package-vc-install ()
+  (with-mock (package-vc-install)
+
+    (junk-package-vc-install '(test "http://test.com"))
+
+    (was-called-with package-vc-install (list "http://test.com"))))
+
+(ert-deftest test--junk-package-vc-install--shows-error-if-not-present ()
+  (with-mock ((fboundp . #'ignore))
+
+    (should-error (junk-package-vc-install '(test "http://test.com")) :type 'user-error)))
 
 (ert-deftest test-junk-install--errors-for-non-existing ()
   (let ((junk-expansion-packs wal/test-packs))
