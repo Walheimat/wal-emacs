@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurations for `tabulated-list-mode`, `hideshow` and
   `dictionary`.
 - Package `popper`.
+- Package `diminish`.
 
 ## [v1.11.5]
 
