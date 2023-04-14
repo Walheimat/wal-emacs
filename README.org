@@ -4557,9 +4557,6 @@ If DISCONTINUE is non-nil, clock in from now."
 (use-package consult
   :commands (consult--multi consult)
 
-  :init
-  (parallel consult-register-load consult-register-store)
-
   :config
   ;; Integrate with `xref'.
   (setq xref-show-xrefs-function #'consult-xref
@@ -4643,7 +4640,8 @@ If DISCONTINUE is non-nil, clock in from now."
    'consult)
 
   :wal-bind
-  (("i" . consult-register-load||consult-register-store)
+  (("i" . consult-register-load)
+   ("o" . consult-register-store)
    ("j" . consult-buffer)
    ("p" . wal/consult-project)))
    #+END_SRC
@@ -8254,9 +8252,8 @@ Who doesn't like pods and stuff?
   (kubernetes-default-overview-view 'deployments)
   (kubernetes-json-mode (if (featurep 'jsonian-mode) 'jsonian-mode 'js-mode))
 
-  :bind
-  (:map wal/zero-in-map
-   ("8" . kubernetes-overview)))
+  :general
+  (ambassador "8" 'kubernetes-overview))
 #+END_SRC
 
 ** Footer
