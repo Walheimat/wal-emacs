@@ -33,14 +33,6 @@
       (should abbrev-mode)
       (should-not wal/mc-disabled))))
 
-(ert-deftest test-wal/tempel-setup-capf ()
-  (let ((completion-at-point-functions '(ignore)))
-
-    (with-temp-buffer
-      (wal/tempel-setup-capf)
-
-      (should (equal completion-at-point-functions '(tempel-complete ignore))))))
-
 (ert-deftest test-wal/tempel-comment ()
   (with-temp-buffer
     (emacs-lisp-mode)

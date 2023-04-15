@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `winner` was moved to `wal-windows`.
 - Package `wal-line` is now installed using `package-vc-install`.
   `junk` recipes also use that function.
+- Templates are now completed using user-prefixed `\`.
 
 ### Fixed
 

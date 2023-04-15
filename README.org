@@ -3161,13 +3161,6 @@ snippets.
 **** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/tempel-setup-capf ()
-  "Prepend `tempel-complete'."
-  (let* ((current completion-at-point-functions)
-         (prepended (cons #'tempel-complete current)))
-
-     (setq-local completion-at-point-functions prepended)))
-
 (defun wal/tempel-comment (elt)
   "Comment the element ELT according to mode."
   (when (eq (car-safe elt) 'c)
@@ -3180,8 +3173,6 @@ snippets.
 
 #+BEGIN_SRC emacs-lisp
 (use-package tempel
-  :hook ((prog-mode prog-like org-mode) . wal/tempel-setup-capf)
-
   :config
   (setq tempel-path (wal/list-from
                      'tempel-path
@@ -3191,7 +3182,6 @@ snippets.
 
   :custom
   (tempel-user-elements '(wal/tempel-comment))
-  (tempel-trigger-prefix ",,")
   (tempel-mark (propertize "░" 'face 'mode-line-highlight))
 
   :bind
@@ -3200,7 +3190,10 @@ snippets.
    ("M-a" . tempel-beginning)
    ("M-e" . tempel-end)
    ("M-n" . tempel-next)
-   ("M-p" . tempel-previous)))
+   ("M-p" . tempel-previous))
+
+  :wal-bind
+  (("\\" . tempel-complete)))
 #+END_SRC
 
 *** elec-pair
