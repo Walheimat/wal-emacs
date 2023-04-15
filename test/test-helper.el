@@ -26,7 +26,7 @@
     (setq undercover-force-coverage t)
     (undercover "wal/*.el"
                 (:report-format 'text)
-                (:report-file "coverage.txt")
+                (:report-file "./coverage/results.txt")
                 (:send-report nil)))))
 
 (defvar wal/booting nil)

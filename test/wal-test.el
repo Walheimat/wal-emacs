@@ -217,7 +217,7 @@
 
     (cl-destructuring-bind (cmd succ fail) (wal/check-coverage)
 
-      (should (string-equal "cask exec ert-runner && cat coverage.txt" cmd))
+      (should (string-equal "cask exec ert-runner && cat coverage/results.txt" cmd))
       (should (equal '("All tests succeeded. Coverage: %s" testing) (funcall succ)))
       (should (equal '("Tests fail: %s" "No they don't") (apply fail '("No they don't")))))))
 
