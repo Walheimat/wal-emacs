@@ -4327,6 +4327,19 @@ completion actions.
 :UNNUMBERED: t
 :END:
 
+**** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/browse-html-file (filename)
+  "Browse FILENAME provided it's an HTML file."
+  (when (not (string= (file-name-extension filename) "html"))
+    (user-error "Can only browse HTML files"))
+
+  (browse-url (expand-file-name filename)))
+#+END_SRC
+
+**** Configuration
+
 Act upon =thing-at-point=, be it in a buffer or minibuffer.
 
 #+BEGIN_SRC emacs-lisp
@@ -4339,6 +4352,10 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
   (define-key embark-region-map
               (kbd "g")
               #'wal/duck-duck-go-region)
+
+  (define-key embark-file-map
+              (kbd "x")
+              #'wal/browse-html-file)
 
   :custom
   (embark-mixed-indicator-delay 0.8)

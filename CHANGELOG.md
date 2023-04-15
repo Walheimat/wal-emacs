@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Custom `use-package-ensure-function` that also checks that packages
   aren't built in nor part of an expansion pack.
+- Function `wal/browse-html-file` is now bound to `x` in
+  `embark-file-map`.
 
 ### Changed
 

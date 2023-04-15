@@ -47,6 +47,13 @@
 
     (should (equal 'test result))))
 
+(ert-deftest test-wal/browse-html-file ()
+  (with-mock (browse-url)
+    (should-error (wal/browse-html-file "~/test/file.txt") :type 'user-error)
+
+    (wal/browse-html-file "/tmp/test.html")
+    (was-called-with browse-url "/tmp/test.html")))
+
 (ert-deftest test-wal/consult-ripgrep-ignored ()
   (with-mock (consult--grep consult--ripgrep-builder)
     (defvar consult-ripgrep-args)
