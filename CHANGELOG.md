@@ -32,7 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `dictionary`.
 - Package `popper`.
 - Package `diminish`.
-- Packages `quelpa` and `quelpa-use-package`.
+- Packages `quelpa` and `quelpa-use-package`
+- Package `iedit`.
 
 ## [v1.11.5]
 
