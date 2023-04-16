@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.12.0]
+
+Fountain boots.
 
 ### Added
 
@@ -13,13 +15,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   aren't built in nor part of an expansion pack.
 - Function `wal/browse-html-file` is now bound to `x` in
   `embark-file-map`.
+- Variable `wal/core-vc-packages` of packages to be installed using
+  `package-vc-install` if present; only package there is `wal-line`.
 
 ### Changed
 
 - Package `winner` was moved to `wal-windows`.
-- Package `wal-line` is now installed using `package-vc-install`.
-  `junk` recipes also use that function.
+- Non (M)ELPA packages are now installed using `package-vc-install`.
+  This only affects package `wal-line` which will no longer be loaded
+  in Emacs < 29. `junk` recipes also use that method with new function
+  `junk-package-vc-install`.
 - Templates are now completed using user-prefixed `\`.
+- All coverage files are now created in `coverage/`.
+- `custom-file` is now created using `make-empty-file`.
+- `helpful-mode` uses `pop-to-buffer` again.
+- User-prefixed `o` is bound to `consult-register-store`.
+- Command `kubernetes-overview` is now bound in `ambassador`.
 
 ### Fixed
 
@@ -28,11 +39,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unrelated buffers when calling a generated command while switching.
 - `prettier` errors are advised to be shown as warnings so that they
   can be muted once and for all.
+- Recipes are now correctly determined as packages in `junk--pack-p`.
+- Package `slime` is now deferred.
 
 ### Removed
 
-- Configurations for `tabulated-list-mode`, `hideshow` and
-  `dictionary`.
+- Configurations for `tabulated-list`, `hideshow`, `ediff` and `dictionary`.
+- All `:ensure t` settings in `use-package` forms that are no longer
+  needed.
 - Package `popper`.
 - Package `diminish`.
 - Packages `quelpa` and `quelpa-use-package`
