@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `eww` and `eshell` are now bound to `C-c b` and `C-c e` respectively
   instead of in `administrator`.
 
+### Fixed
+
+- Added variable `wal/sidecar-packages` that can be used to register
+  packages that are neither installed directly nor built-in. Adds
+  `vertico-directory` to it so its hooks are actually added.
+
 ## [v1.12.0]
 
 Fountain boots.

@@ -2601,9 +2601,18 @@ Don't add hooks if the package isn't installed. Don't ensure built-in
 and expansion pack packages.
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal/sidecar-packages nil
+  "Packages that are part of external packages but not explicitly installed.")
+
+(defun wal/sidecar-package-p (package)
+  "Check if PACKAGE is a sidecar package."
+  (memq package wal/sidecar-packages))
+
 (defun wal/ignore-if-not-installed (package &rest _r)
   "Don't handle hooks if PACKAGE isn't installed."
-  (or (package-installed-p package) (package-built-in-p package)))
+  (or (package-installed-p package)
+      (package-built-in-p package)
+      (wal/sidecar-package-p package)))
 
 (defun wal/use-package-ensure-elpa-if-not-built-in-or-expansion (name args _state &optional _no_refresh)
   "Do the same as `use-package-ensure-elpa' but ignore additional packages.
@@ -4193,6 +4202,9 @@ Provide global option narrowing using the =vertico= family of products.
 #+BEGIN_SRC emacs-lisp
 (use-package vertico
   :defer 1
+
+  :init
+  (add-to-list 'wal/sidecar-packages 'vertico-directory)
 
   :config
   ;; Set up minibuffer.
