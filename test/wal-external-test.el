@@ -52,9 +52,11 @@
 
 (ert-deftest test-wal/ignore-if-not-installed ()
   (let ((installed nil)
-        (built-in nil))
+        (built-in nil)
+        (user nil))
     (with-mock ((package-installed-p . (lambda (_) installed))
-                (package-built-in-p . (lambda (_) built-in)))
+                (package-built-in-p . (lambda (_) built-in))
+                (package--user-selected-p . (lambda (_) user)))
 
       (should-not (wal/ignore-if-not-installed 'some-package))
 
@@ -63,6 +65,11 @@
 
       (setq installed nil
             built-in t)
+      (should (wal/ignore-if-not-installed 'some-package))
+
+      (setq installed nil
+            built-in nil
+            user t)
       (should (wal/ignore-if-not-installed 'some-package)))))
 
 (ert-deftest test-wal/use-package-ensure-function ()

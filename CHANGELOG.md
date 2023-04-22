@@ -14,9 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Added variable `wal/sidecar-packages` that can be used to register
-  packages that are neither installed directly nor built-in. Adds
-  `vertico-directory` to it so its hooks are actually added.
+- Packages installed using `package-vc-install` are now added to
+  `package-selected-packages` using
+  `package--update-selected-packages` to make sure they are persisted.
+- Hooks are no longer ignored for user-selected packages (mainly
+  affects `vertico-directory`).
 
 ## [v1.12.0]
 

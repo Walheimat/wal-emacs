@@ -1651,7 +1651,9 @@ Uses `package-install' unless custom INSTALLER is provided."
 (defun junk-package-vc-install (recipe)
   "Install RECIPE using `package-vc-install'."
   (if (fboundp 'package-vc-install)
-      (package-vc-install (cadr recipe))
+      (cl-destructuring-bind (package url) recipe
+        (package-vc-install url)
+        (package--update-selected-packages (list package) nil))
     (user-error "Recipes can only be installed with `package-vc-install'")))
 
 (cl-defun junk--filter (packages &key mapper)
@@ -2482,7 +2484,13 @@ These packages are installed with `package-vc-install'.")
                     wal/core-vc-packages)))
 
       (condition-case err
-          (mapc 'package-vc-install (mapcar #'cdr missing))
+          (progn
+            (mapc 'package-vc-install (mapcar #'cdr missing))
+
+            (add-hook
+             'after-init-hook
+             (lambda ()
+               (package--update-selected-packages (mapcar #'car missing) nil))))
         (error
          (message "Failed to install VC package: %s" (error-message-string err))))))
 
@@ -2601,18 +2609,11 @@ Don't add hooks if the package isn't installed. Don't ensure built-in
 and expansion pack packages.
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/sidecar-packages nil
-  "Packages that are part of external packages but not explicitly installed.")
-
-(defun wal/sidecar-package-p (package)
-  "Check if PACKAGE is a sidecar package."
-  (memq package wal/sidecar-packages))
-
 (defun wal/ignore-if-not-installed (package &rest _r)
   "Don't handle hooks if PACKAGE isn't installed."
   (or (package-installed-p package)
       (package-built-in-p package)
-      (wal/sidecar-package-p package)))
+      (package--user-selected-p package)))
 
 (defun wal/use-package-ensure-elpa-if-not-built-in-or-expansion (name args _state &optional _no_refresh)
   "Do the same as `use-package-ensure-elpa' but ignore additional packages.
@@ -4202,9 +4203,6 @@ Provide global option narrowing using the =vertico= family of products.
 #+BEGIN_SRC emacs-lisp
 (use-package vertico
   :defer 1
-
-  :init
-  (add-to-list 'wal/sidecar-packages 'vertico-directory)
 
   :config
   ;; Set up minibuffer.

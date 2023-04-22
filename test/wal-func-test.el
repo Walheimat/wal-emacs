@@ -865,11 +865,12 @@
         (should (equal (call-interactively 'junk-install) 'extra))))))
 
 (ert-deftest test--junk-package-vc-install ()
-  (with-mock (package-vc-install)
+  (with-mock (package-vc-install package--update-selected-packages)
 
     (junk-package-vc-install '(test "http://test.com"))
 
-    (was-called-with package-vc-install (list "http://test.com"))))
+    (was-called-with package-vc-install (list "http://test.com"))
+    (was-called-with package--update-selected-packages (list '(test) nil))))
 
 (ert-deftest test--junk-package-vc-install--shows-error-if-not-present ()
   (with-mock ((fboundp . #'ignore))
