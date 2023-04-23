@@ -4221,7 +4221,7 @@ Provide global option narrowing using the =vertico= family of products.
                                 (wal/consult-line buffer)
                                 (consult-mark buffer indexed)
                                 (consult-global-mark buffer indexed)
-                                (consult-org-heading unobtrusive))))
+                                (wal/consult-org-heading unobtrusive))))
 #+END_SRC
 
 *** vertico-directory
@@ -4541,6 +4541,20 @@ If DISCONTINUE is non-nil, clock in from now."
     (if (memq current buffers)
         (cons current (delq current buffers))
       buffers)))
+
+(defun wal/consult-org-heading (&optional in-tree)
+  "Call `org-heading'.
+
+If optional IN-TREE is t, limit scope to current tree."
+  (interactive "P")
+
+  (defvar vertico-multiform-commands)
+
+  (if in-tree
+      (let ((vertico-multiform-commands nil))
+
+        (funcall-interactively 'consult-org-heading nil 'tree))
+    (call-interactively 'consult-org-heading)))
 #+END_SRC
 
 **** Configuration
@@ -4596,7 +4610,7 @@ If DISCONTINUE is non-nil, clock in from now."
     [["Goto"
       ("SPC" "mark" consult-mark)
       ("g" "line" consult-goto-line)
-      ("h" "heading" consult-org-heading
+      ("h" "heading" wal/consult-org-heading
        :inapt-if-not-mode 'org-mode)]
 
      ["Find"

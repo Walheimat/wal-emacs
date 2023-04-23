@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Custom `consult-org-heading` that called with `universal-argument`
+  limits the scope of the completion to the current tree. It also
+  doesn't use unobtrusive `vertico` completion.
+
 ### Changed
 
 - `eww` and `eshell` are now bound to `C-c b` and `C-c e` respectively

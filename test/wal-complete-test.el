@@ -186,4 +186,17 @@
 
       (should (equal '(one two three) (wal/adjust-by-putting-current-buffer-first buffers))))))
 
+(ert-deftest test-wal/consult-org-heading ()
+  (with-mock (consult-org-heading)
+
+    (funcall-interactively 'wal/consult-org-heading t)
+
+    (was-called-with consult-org-heading (list nil 'tree))
+
+    (wal/clear-mocks)
+
+    (funcall-interactively 'wal/consult-org-heading)
+
+    (was-called-with consult-org-heading nil)))
+
 ;;; wal-complete-test.el ends here
