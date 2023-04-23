@@ -187,10 +187,11 @@
       (should (equal '(one two three) (wal/adjust-by-putting-current-buffer-first buffers))))))
 
 (ert-deftest test-wal/consult-org-heading ()
-  (with-mock (consult-org-heading)
+  (with-mock (consult-org-heading org-up-heading-safe)
 
     (funcall-interactively 'wal/consult-org-heading t)
 
+    (was-called org-up-heading-safe)
     (was-called-with consult-org-heading (list nil 'tree))
 
     (wal/clear-mocks)
