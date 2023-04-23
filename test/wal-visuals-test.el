@@ -34,6 +34,20 @@
 
     (was-not-called add-hook)))
 
+(ert-deftest test-wal/dashboard-get-buffer ()
+  (defvar dashboard-force-refresh)
+  (defvar dashboard-buffer-name)
+
+  (let ((dashboard-buffer-name "dash"))
+
+    (with-mock (dashboard-insert-startupify-lists get-buffer)
+
+      (wal/dashboard-get-buffer)
+
+      (was-called dashboard-insert-startupify-lists)
+
+      (was-called-with get-buffer "dash"))))
+
 (ert-deftest test-wal/with-common-ligatures ()
   (defvar wal/common-ligatures)
 
