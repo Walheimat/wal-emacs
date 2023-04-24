@@ -5056,29 +5056,28 @@ This calls `org-content' interactively."
   (with-no-warnings
     (wal/transient-define-major org-mode ()
       "Access `org-mode' commands."
-      [["Subtree"
-        ("w" "cut" org-cut-subtree
+      [["Edit"
+        ("w" "cut subtree" org-cut-subtree
          :inapt-if-not org-at-heading-p)
-        ("y" "paste" org-paste-subtree)]
-
-       ["Footnotes"
-        ("f" "add footnote" org-footnote-new
-         :inapt-if org-in-src-block-p)
-        ("F" "normalize footnotes" org-footnote-normalize)]
-
-       ["Other"
+        ("y" "paste subtree" org-paste-subtree)
         ("n" "add note" org-add-note)
         ("." "toggle timestamp" org-toggle-timestamp-type
          :inapt-if-not (lambda () (org-at-timestamp-p 'inactive)))
         ("s" "sort" org-sort
-         :inapt-if-not (lambda () (or (org-at-item-p) (org-at-heading-p))))]]
+         :inapt-if-not (lambda () (or (org-at-item-p) (org-at-heading-p))))]
 
-      [["Levels"
-        ("l" "up to level" wal/org-content)
-        ("L" "show all" org-show-all)]
-       ["Other"
-        ("h" "node info" org-info-find-node)
-        ("i" "indentation" org-indent-mode)]]))
+       ["Footnotes"
+        ("f" "add footnote" org-footnote-new
+         :inapt-if org-in-src-block-p)
+        ("n" "normalize footnotes" org-footnote-normalize)]]
+
+      [["Visibility"
+        ("c" "show content" wal/org-content)
+        ("a" "show all" org-show-all)
+        ("i" "toggle indentation" org-indent-mode)]
+
+       ["Help"
+        ("h" "node info" org-info-find-node)]]))
 
   :custom
   ;; Make it look nice and tidy.
@@ -5513,7 +5512,7 @@ Editing source blocks.
      ("markdown" . markdown)
      ("fish" . fish)))
 
-  (transient-append-suffix 'org-mode-major '(0 2 -1)
+  (transient-append-suffix 'org-mode-major '(0 0 -1)
     '("e" "edit source" org-edit-src-code
       :inapt-if-not org-in-src-block-p))
 

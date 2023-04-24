@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `eww` and `eshell` are now bound to `C-c b` and `C-c e` respectively
   instead of in `administrator`.
 - User-prefixed `i` is now bound to `avy-goto-char`.
+- The `major` `transient` for `org-mode` was improved.
 
 ### Fixed
 
