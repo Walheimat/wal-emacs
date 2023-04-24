@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instead of in `administrator`.
 - User-prefixed `i` is now bound to `avy-goto-char`.
 - The `major` `transient` for `org-mode` was improved.
+- `wal/org-agenda-file` is now a custom variable.
 
 ### Fixed
 
