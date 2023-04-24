@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Switching tabs has user-prefixed `o` as a convenience binding.
 - `dired-do-query-replace-regexp` is now bound in `dired-mode-map` to
   `% r` to replace duplicate `dired-do-rename-regexp` binding.
+- `treesit` and `lsp` are now enabled for `c-mode`.
 
 ### Changed
 

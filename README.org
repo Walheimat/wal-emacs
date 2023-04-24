@@ -1797,6 +1797,7 @@ set up (major-) modes using hooks.
 
 (defvar harpoon--treesit-modes '((js-mode . javascript)
                                  (c++-mode . cpp)
+                                 (c-mode . c)
                                  (python-mode . python)
                                  (js-json-mode . json)
                                  (yaml-mode . yaml))
@@ -6297,15 +6298,16 @@ I want to be ready for =jai=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package cc-mode
-  ;; I don't use C, no need to (often incorrectly) guess.
-  :mode ("\\.h\\'" . c++-mode)
-
   :init
   (harpoon c++-mode
     :lsp t
     :major t
     :ligatures ("::" "->")
     :messages ("Make tidy! Make clean!" "Serenity now!"))
+
+  (harpoon c-mode
+    :lsp t
+    :ligatures ("->"))
 
   :config
   ;; Eliminate conflicts with `delight'.
@@ -6315,9 +6317,7 @@ I want to be ready for =jai=.
     "Access `c++-mode' commands."
     [["Style"
       ("s" "set" c-set-style)
-      ("g" "guess (using buffer)" c-guess-buffer)]])
-
-  (wal/set-ligatures 'c-mode '("->")))
+      ("g" "guess (using buffer)" c-guess-buffer)]]))
 #+END_SRC
 
 ** Rust
