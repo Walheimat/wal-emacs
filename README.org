@@ -3809,6 +3809,21 @@ Everything that has to do with windows.
 
 Invisible tabs.
 
+**** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/tab-bar-switch-to-buffer-tab (buffer)
+  "If BUFFER is shown in a tab, switch to the tab.
+
+Otherwise switch to the buffer normally."
+  (if-let* ((tab (tab-bar-get-buffer-tab buffer))
+            (tab-name (cdr-safe (assoc 'name tab))))
+      (tab-bar-switch-to-tab tab-name)
+    (switch-to-buffer buffer)))
+#+END_SRC
+
+**** Configuration
+
 #+begin_src emacs-lisp
 (use-package tab-bar
   :hook (emacs-startup . tab-bar-mode)
@@ -4402,6 +4417,10 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
   (define-key embark-file-map
               (kbd "x")
               #'wal/browse-html-file)
+
+  (define-key embark-buffer-map
+              (kbd "t")
+              #'wal/tab-bar-switch-to-buffer-tab)
 
   :custom
   (embark-mixed-indicator-delay 0.8)
