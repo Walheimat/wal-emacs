@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Custom `consult-org-heading` that called with `universal-argument`
-  limits the scope of the completion to the current tree. It also
-  doesn't use unobtrusive `vertico` completion.
+- Custom `consult-org-heading` that when called with
+  `universal-argument` limits the scope of the completion to the
+  current tree and doesn't use unobtrusive `vertico` completion.
 - `tab-bar-mode` is now enabled but the tabs themselves are invisible.
   Switching tabs has user-prefixed `o` as a convenience binding.
 - `dired-do-query-replace-regexp` is now bound in `dired-mode-map` to
@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `treesit` and `lsp` are now enabled for `c-mode`.
 - Function `wal/tab-bar-switch-to-buffer-tab` to switch to an owning
   tab. Bound in `embark-buffer-map` to `t`.
+- Command `wal/org-capture-switch-to-project-tasks` bound in `roamer`
+  using `p`.
 
 ### Changed
 

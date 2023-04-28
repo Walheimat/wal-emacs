@@ -120,24 +120,29 @@
 
       (was-called wal/org-tree-slide-play))))
 
-(ert-deftest test-wal/org-capture-find-project-task-location ()
+(ert-deftest test-wal/org-capture-find-project-task-heading ()
   (let ((heading nil))
 
     (with-mock ((org-find-exact-heading-in-directory . (lambda (&rest _) heading))
                 set-buffer
+                switch-to-buffer
                 goto-char
                 (project-current . #'always)
                 (project-root . #'always)
                 (marker-buffer . (lambda (_) 'buffer))
                 (marker-position . (lambda (_) 'position)))
 
-      (should-error (wal/org-capture-find-project-task-location) :type 'user-error)
+      (should-error (wal/org-capture-locate-project-tasks) :type 'user-error)
+      (should-error (wal/org-capture-switch-to-project-tasks) :type 'user-error)
 
       (setq heading 'heading)
 
-      (wal/org-capture-find-project-task-location)
+      (wal/org-capture-locate-project-tasks)
+      (was-called-with goto-char (list 'position))
 
-      (was-called-with goto-char (list 'position)))))
+
+      (wal/org-capture-switch-to-project-tasks)
+      (was-called-with switch-to-buffer (list 'buffer)))))
 
 (ert-deftest test-wal/org-clock-in-switch-to-state ()
   (should (string-equal "IN PROGRESS" (wal/org-clock-in-switch-to-state "OTHER STATE"))))
