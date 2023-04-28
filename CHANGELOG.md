@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.12.1]
+
+Tab start.
 
 ### Added
 
@@ -13,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `universal-argument` limits the scope of the completion to the
   current tree and doesn't use unobtrusive `vertico` completion.
 - `tab-bar-mode` is now enabled but the tabs themselves are invisible.
-  Switching tabs has user-prefixed `o` as a convenience binding.
+  Switching tabs has user-prefixed `o` as a convenience binding. New
+  tabs start with a `dashboard` buffer.
 - `dired-do-query-replace-regexp` is now bound in `dired-mode-map` to
   `% r` to replace duplicate `dired-do-rename-regexp` binding.
 - `treesit` and `lsp` are now enabled for `c-mode`.
@@ -21,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tab. Bound in `embark-buffer-map` to `t`.
 - Command `wal/org-capture-switch-to-project-tasks` bound in `roamer`
   using `p`.
+- `c-mode` will now run `lsp` and `treesit` if possible.
 
 ### Changed
 
@@ -29,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - User-prefixed `i` is now bound to `avy-goto-char`.
 - The `major` `transient` for `org-mode` was improved.
 - `wal/org-agenda-file` is now a custom variable.
+- `switch-to-buffer-obey-display-actions` is now set to `t`;
+  `switch-to-buffer-in-dedicated-window` to `prompt`.
 
 ### Fixed
 
@@ -37,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `package--update-selected-packages` to make sure they are persisted.
 - Hooks are no longer ignored for user-selected packages (mainly
   affects `vertico-directory`).
+- `diff-hl-magit-pre-refresh` is called on `magit-pre-refresh-hook`.
 
 ## [v1.12.0]
 
