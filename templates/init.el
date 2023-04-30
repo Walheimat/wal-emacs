@@ -17,6 +17,6 @@
       (gc-cons-percentage 0.8)
       (file-name-handler-alist nil)
       (source-dir (expand-file-name "emacs-config" user-emacs-directory)))
-  (wal/bootstrap-config source-dir))
+  (wal-bootstrap-config source-dir))
 
 ;;; init.el ends here

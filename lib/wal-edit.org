@@ -1,6 +1,6 @@
 #+TITLE: Editing
 #+AUTHOR: @Walheimat
-#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-edit.el" wal/emacs-config-package-path)
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-edit.el" wal-emacs-config-package-path)
 
 It's fun to edit things /quickly/.
 
@@ -18,11 +18,11 @@ It's fun to edit things /quickly/.
 
 ;;; Code:
 
-(declare-function wal/list-from "wal-func.el")
+(declare-function wal-list-from "wal-func.el")
 
 (defvar corfu-mode)
-(defvar wal/emacs-config-default-path)
-(defvar wal/use-hyper-prefix)
+(defvar wal-emacs-config-default-path)
+(defvar wal-use-hyper-prefix)
 #+END_SRC
 
 * Packages
@@ -37,25 +37,25 @@ Don't you want to edit your buffer in multiple places at once?
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/mc-conflicting-modes '(puni-mode corfu-mode electric-indent-mode)
+(defvar wal-mc-conflicting-modes '(puni-mode corfu-mode electric-indent-mode)
   "Modes that are in conflict with `multiple-cursors-mode'.")
 
-(defvar-local wal/mc-disabled nil
+(defvar-local wal-mc-disabled nil
   "Modes that were disabled before entering `multiple-cursors-mode'.")
 
-(defun wal/before-mc ()
+(defun wal-before-mc ()
   "Disable conflicting modes before entering mode."
   (seq-each
    (lambda (it)
      (when (and (boundp it) (symbol-value it))
-       (setq wal/mc-disabled (append wal/mc-disabled `(,it)))
+       (setq wal-mc-disabled (append wal-mc-disabled `(,it)))
        (eval `(,it -1))))
-   wal/mc-conflicting-modes))
+   wal-mc-conflicting-modes))
 
-(defun wal/after-mc ()
+(defun wal-after-mc ()
   "Re-enable modes that were disabled before exiting."
-  (seq-each (lambda (it) (eval `(,it 1))) wal/mc-disabled)
-  (setq wal/mc-disabled nil))
+  (seq-each (lambda (it) (eval `(,it 1))) wal-mc-disabled)
+  (setq wal-mc-disabled nil))
 #+END_SRC
 
 *** Configuration
@@ -67,8 +67,8 @@ Don't you want to edit your buffer in multiple places at once?
   (setq mc/keymap (make-sparse-keymap))
 
   :hook
-  ((multiple-cursors-mode-enabled . wal/before-mc)
-   (multiple-cursors-mode-disabled . wal/after-mc))
+  ((multiple-cursors-mode-enabled . wal-before-mc)
+   (multiple-cursors-mode-disabled . wal-after-mc))
 
   :bind
   (("C-." . mc/mark-next-like-this)
@@ -113,7 +113,7 @@ snippets.
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/tempel-comment (elt)
+(defun wal-tempel-comment (elt)
   "Comment the element ELT according to mode."
   (when (eq (car-safe elt) 'c)
     (let ((cs (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start)))
@@ -126,14 +126,14 @@ snippets.
 #+BEGIN_SRC emacs-lisp
 (use-package tempel
   :config
-  (setq tempel-path (wal/list-from
+  (setq tempel-path (wal-list-from
                      'tempel-path
                      (expand-file-name
                       "templates/tempel.eld"
-                      wal/emacs-config-default-path)))
+                      wal-emacs-config-default-path)))
 
   :custom
-  (tempel-user-elements '(wal/tempel-comment))
+  (tempel-user-elements '(wal-tempel-comment))
   (tempel-mark (propertize "░" 'face 'mode-line-highlight))
 
   :bind
@@ -158,7 +158,7 @@ Less intrusive pairing mode than =smartparens=.
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/in-case-of-mc-mode-do-not-default (&rest _args)
+(defun wal-in-case-of-mc-mode-do-not-default (&rest _args)
   "Advise to inhibit if `multiple-cursors-mode' is t."
   (bound-and-true-p multiple-cursors-mode))
 #+END_SRC
@@ -172,7 +172,7 @@ Less intrusive pairing mode than =smartparens=.
   :init
   (advice-add
    'electric-pair-default-inhibit :before-until
-   #'wal/in-case-of-mc-mode-do-not-default))
+   #'wal-in-case-of-mc-mode-do-not-default))
 #+END_SRC
 
 * Footer

@@ -8,7 +8,7 @@
 
 (require 'wal-windows nil t)
 
-(ert-deftest test-wal/tab-bar-switch-to-buffer-tab ()
+(ert-deftest test-wal-tab-bar-switch-to-buffer-tab ()
   (let ((found nil))
 
     (with-mock ((tab-bar-get-buffer-tab . (lambda (_) found))
@@ -17,13 +17,13 @@
                 select-window
                 get-buffer-window)
 
-      (wal/tab-bar-switch-to-buffer-tab 'buffer)
+      (wal-tab-bar-switch-to-buffer-tab 'buffer)
 
       (was-called-with switch-to-buffer (list 'buffer))
-      (wal/clear-mocks)
+      (wal-clear-mocks)
       (setq found '((name . "test-tab")))
 
-      (wal/tab-bar-switch-to-buffer-tab 'buffer)
+      (wal-tab-bar-switch-to-buffer-tab 'buffer)
 
       (was-called-with tab-bar-switch-to-tab "test-tab")
       (was-called-with get-buffer-window (list 'buffer))

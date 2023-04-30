@@ -1,6 +1,6 @@
 #+TITLE: Dired
 #+AUTHOR: @Walheimat
-#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-dired.el" wal/emacs-config-package-path)
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-dired.el" wal-emacs-config-package-path)
 
 Run =dired= with =C-x d=.
 
@@ -24,7 +24,7 @@ Run =dired= with =C-x d=.
 (declare-function dired-read-dir-and-switches "ext:dired.el")
 (declare-function consult--buffer-query "ext:consult.el")
 (declare-function consult--buffer-state "ext:consult.el")
-(declare-function wal/insert-after "wal-func.el")
+(declare-function wal-insert-after "wal-func.el")
 #+END_SRC
 
 * Packages
@@ -39,7 +39,7 @@ The mother of all buffers. You don't need no tree views.
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/dired-from-home (dirname &optional switches)
+(defun wal-dired-from-home (dirname &optional switches)
   "Find DIRNAME local to HOME directory.
 Uses the same optional SWITCHES."
   (interactive
@@ -49,23 +49,23 @@ Uses the same optional SWITCHES."
 
   (pop-to-buffer-same-window (dired-noselect dirname switches)))
 
-(defun wal/image-dired ()
+(defun wal-image-dired ()
   "Run `image-dired' in the `default-directory'."
   (interactive)
 
   (image-dired (expand-file-name default-directory)))
 
-(defun wal/dired-buffer-p (buffer)
+(defun wal-dired-buffer-p (buffer)
   "Check if buffer BUFFER is a Dired buffer."
   (with-current-buffer buffer
     (derived-mode-p 'dired-mode)))
 
-(defun wal/consult-dired-buffer--query ()
+(defun wal-consult-dired-buffer--query ()
   "Get Dired buffer names."
   (consult--buffer-query
    :sort 'visibility
    :as #'buffer-name
-   :predicate #'wal/dired-buffer-p))
+   :predicate #'wal-dired-buffer-p))
 #+END_SRC
 
 *** Configuration
@@ -80,28 +80,28 @@ Uses the same optional SWITCHES."
   ;; We aren't scared of finding alternate files.
   (put 'dired-find-alternate-file 'disabled nil)
 
-  (wal/transient-define-major dired-mode ()
+  (wal-transient-define-major dired-mode ()
     "Access Dired commands."
     [["Utility"
       ("q" "query replace" dired-do-query-replace-regexp)
       ("t" "create empty file" dired-create-empty-file)]
      ["Other"
-      ("v" "show images" wal/image-dired)]])
+      ("v" "show images" wal-image-dired)]])
 
   (with-eval-after-load 'consult
-    (defvar wal/consult--source-dired-buffer
+    (defvar wal-consult--source-dired-buffer
       (list :name "Dired Buffer"
             :narrow ?d
             :category 'buffer
             :state #'consult--buffer-state
             :history 'buffer-name-history
             :face 'font-lock-keyword-face
-            :items #'wal/consult-dired-buffer--query))
+            :items #'wal-consult-dired-buffer--query))
 
-    (wal/insert-after
+    (wal-insert-after
      'consult-buffer-sources
      'consult--source-buffer
-     'wal/consult--source-dired-buffer))
+     'wal-consult--source-dired-buffer))
 
   :custom
   (dired-listing-switches "-lah --group-directories-first")

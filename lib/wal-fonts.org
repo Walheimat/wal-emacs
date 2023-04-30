@@ -1,6 +1,6 @@
 #+TITLE: Fonts
 #+AUTHOR: @Walheimat
-#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-fonts.el" wal/emacs-config-package-path)
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-fonts.el" wal-emacs-config-package-path)
 
 Set fonts (with preference). To get support for ligatures, install the
 symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip][here]].
@@ -24,7 +24,7 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
 
 ;;;; Customization:
 
-(defcustom wal/fixed-fonts
+(defcustom wal-fixed-fonts
   '("JetBrains Mono"
     "Iosevka"
     "Fira Code"
@@ -36,7 +36,7 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
   :type '(repeat string)
   :group 'wal-fonts)
 
-(defcustom wal/variable-fonts
+(defcustom wal-variable-fonts
   '("DeJa Vu Sans"
     "Liberation Serif"
     "Ubuntu")
@@ -44,27 +44,27 @@ symbol font from [[https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regu
   :type '(repeat string)
   :group 'wal-fonts)
 
-(defcustom wal/preferred-fonts nil
+(defcustom wal-preferred-fonts nil
   "List of (fixed and variable width) font names that should be preferred."
   :type '(choice (repeat string) (const nil))
   :group 'wal-fonts)
 
-(defcustom wal/fixed-font-height 120
+(defcustom wal-fixed-font-height 120
   "The font height for fixed fonts.
 The default value is 98."
   :type 'integer
   :group 'wal-fonts)
 
-(defcustom wal/variable-font-height 140
+(defcustom wal-variable-font-height 140
   "The font height for variable fonts.
 This has no default value."
   :type 'integer
   :group 'wal-fonts)
 
-(defvar wal/fonts-updated-hook nil
+(defvar wal-fonts-updated-hook nil
   "Functions to run when fonts were updated.")
 
-(defun wal/font-update (attribute value faces &optional arg)
+(defun wal-font-update (attribute value faces &optional arg)
   "Set ATTRIBUTE to VALUE for FACES.
 
 This returns the made updates. Affects all frames unless ARG is
@@ -76,93 +76,93 @@ t."
               (set-face-attribute it frame attribute value)))
           faces)
 
-    (run-hooks 'wal/fonts-updated-hook)))
+    (run-hooks 'wal-fonts-updated-hook)))
 
-(defun wal/read-sensible-font-height (type)
+(defun wal-read-sensible-font-height (type)
   "Read a sensible font height for TYPE."
-  (let* ((prev (symbol-value (intern (format "wal/%s-font-height" type))))
+  (let* ((prev (symbol-value (intern (format "wal-%s-font-height" type))))
          (num (read-number (format "Set %s font (currently: %s): " type prev))))
 
     (max (min num 300) 80)))
 
-(defun wal/available-fonts (fonts)
+(defun wal-available-fonts (fonts)
   "Filter FONTS down to available fonts."
   (seq-filter (lambda (it) (find-font (font-spec :name it))) fonts))
 
-(defun wal/read-font (type)
+(defun wal-read-font (type)
   "Read a font for TYPE."
   (let* ((name (intern (format "%s-pitch" type)))
          (prev (face-attribute name :family))
-         (fonts (symbol-value (intern (format "wal/%s-fonts" type))))
-         (font (completing-read (format "Select %s font (current: %s) " type prev) (wal/available-fonts fonts))))
+         (fonts (symbol-value (intern (format "wal-%s-fonts" type))))
+         (font (completing-read (format "Select %s font (current: %s) " type prev) (wal-available-fonts fonts))))
 
     font))
 
-(defun wal/select-fixed-font (font)
+(defun wal-select-fixed-font (font)
   "Select fixed (available) FONT."
-  (interactive (list (wal/read-font 'fixed)))
+  (interactive (list (wal-read-font 'fixed)))
 
-  (wal/font-update :font font '(default fixed-pitch)))
+  (wal-font-update :font font '(default fixed-pitch)))
 
-(defun wal/select-variable-font (font)
+(defun wal-select-variable-font (font)
   "Select variable (available) FONT."
-  (interactive (list (wal/read-font 'variable)))
+  (interactive (list (wal-read-font 'variable)))
 
-  (wal/font-update :font font '(variable-pitch)))
+  (wal-font-update :font font '(variable-pitch)))
 
-(defun wal/set-fixed-font-height (height &optional arg)
+(defun wal-set-fixed-font-height (height &optional arg)
   "Set the HEIGHT for fixed fonts.
 
 Affects all frames unless ARG is t."
-  (interactive (list (wal/read-sensible-font-height 'fixed) current-prefix-arg))
+  (interactive (list (wal-read-sensible-font-height 'fixed) current-prefix-arg))
 
-  (setq wal/fixed-font-height height)
-  (wal/font-update :height height '(default fixed-pitch) arg))
+  (setq wal-fixed-font-height height)
+  (wal-font-update :height height '(default fixed-pitch) arg))
 
-(defun wal/set-variable-font-height (height &optional arg)
+(defun wal-set-variable-font-height (height &optional arg)
   "Set the HEIGHT for variable fonts.
 
 Affects all frames unless ARG is t."
-  (interactive (list (wal/read-sensible-font-height 'variable) current-prefix-arg))
+  (interactive (list (wal-read-sensible-font-height 'variable) current-prefix-arg))
 
-  (setq wal/variable-font-height height)
-  (wal/font-update :height height '(variable-pitch) arg))
+  (setq wal-variable-font-height height)
+  (wal-font-update :height height '(variable-pitch) arg))
 
-(defun wal/preferred-fonts (fonts)
+(defun wal-preferred-fonts (fonts)
   "Filter FONTS down to preferred fonts."
-  (seq-filter (lambda (it) (member it wal/preferred-fonts)) fonts))
+  (seq-filter (lambda (it) (member it wal-preferred-fonts)) fonts))
 
-(defun wal/fonts-candidate (fonts &optional prefer)
+(defun wal-fonts-candidate (fonts &optional prefer)
   "Return the first available font from a list of FONTS.
-If PREFER is true, variable `wal/preferred-fonts' is not nil and
+If PREFER is true, variable `wal-preferred-fonts' is not nil and
 preferred fonts are available, return the first of those
 instead."
-  (let* ((available-fonts (wal/available-fonts fonts))
-         (preferred (and prefer (wal/preferred-fonts available-fonts))))
+  (let* ((available-fonts (wal-available-fonts fonts))
+         (preferred (and prefer (wal-preferred-fonts available-fonts))))
 
     (if preferred
         (car preferred)
       (car available-fonts))))
 
 ;; Slanted and enchanted.
-(defun wal/font-lock ()
+(defun wal-font-lock ()
   "Set comment face to italic and keyword face to bold."
   (set-face-attribute 'font-lock-comment-face nil :slant 'italic :weight 'normal)
   (set-face-attribute 'font-lock-keyword-face nil :weight 'bold))
 
-(wal/define-init-setup fonts
+(wal-define-init-setup fonts
   "Set up fonts for GUI Emacs.
 
 This sets `default' and `fixed-pitch' fonts to the first
-available candidate from `wal/fixed-fonts'. Does the same for
-`variable-pitch' using `wal/variable-fonts'."
+available candidate from `wal-fixed-fonts'. Does the same for
+`variable-pitch' using `wal-variable-fonts'."
   :initial
   ((when (or (daemonp) (display-graphic-p))
      (mapc (lambda (it)
              (when (internal-lisp-face-p it)
                (set-face-attribute it nil
-                                   :font (wal/fonts-candidate wal/fixed-fonts t)
-                                   :height wal/fixed-font-height)))
+                                   :font (wal-fonts-candidate wal-fixed-fonts t)
+                                   :height wal-fixed-font-height)))
            '(default fixed-pitch))
      (mapc (lambda (it)
              (when (internal-lisp-face-p it)
@@ -171,18 +171,18 @@ available candidate from `wal/fixed-fonts'. Does the same for
 
      ;; Variable pitch face.
      (set-face-attribute 'variable-pitch nil
-                         :font (wal/fonts-candidate wal/variable-fonts t)
-                         :height wal/variable-font-height))
+                         :font (wal-fonts-candidate wal-variable-fonts t)
+                         :height wal-variable-font-height))
 
    (administrator
-     "sf" 'wal/set-fixed-font-height
-     "sv" 'wal/set-variable-font-height
-     "sF" 'wal/select-fixed-font
-     "sV" 'wal/select-variable-font)
+     "sf" 'wal-set-fixed-font-height
+     "sv" 'wal-set-variable-font-height
+     "sF" 'wal-select-fixed-font
+     "sV" 'wal-select-variable-font)
 
-   (add-hook 'font-lock-mode-hook #'wal/font-lock))
+   (add-hook 'font-lock-mode-hook #'wal-font-lock))
   :always
-  ((run-hooks 'wal/fonts-updated-hook)))
+  ((run-hooks 'wal-fonts-updated-hook)))
 
 (provide 'wal-fonts)
 

@@ -8,14 +8,14 @@
 
 (require 'wal-find nil t)
 
-(ert-deftest test-wal/rg-rerun-toggle-hidden ()
+(ert-deftest test-wal-rg-rerun-toggle-hidden ()
   (with-mock (rg-rerun-toggle-flag)
 
-    (wal/rg-rerun-toggle-hidden)
+    (wal-rg-rerun-toggle-hidden)
 
     (was-called-with rg-rerun-toggle-flag (list "--hidden"))))
 
-(ert-deftest test-wal/rg-project-literal ()
+(ert-deftest test-wal-rg-project-literal ()
   (defvar rg-command-line-flags-function)
 
   (with-mock ((rg-read-pattern . (lambda (_) 'pattern))
@@ -25,7 +25,7 @@
 
     (let ((rg-command-line-flags-function (lambda (_) 'flags)))
 
-      (call-interactively 'wal/rg-project-literal)
+      (call-interactively 'wal-rg-project-literal)
 
       (was-called-with rg-run (list 'pattern 'files "/tmp/test" t nil 'flags)))))
 

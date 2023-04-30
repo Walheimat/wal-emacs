@@ -1,6 +1,6 @@
 #+TITLE: Languages
 #+AUTHOR: @Walheimat
-#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-lang.el" wal/emacs-config-package-path)
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-lang.el" wal-emacs-config-package-path)
 
 Let's greet the world.
 
@@ -22,9 +22,9 @@ Let's greet the world.
   (require 'wal-func (expand-file-name "wal-func.el" ".")))
 
 (declare-function prettier--quit-all-processes "ext:prettier.el")
-(declare-function wal/modern-emacs-p "wal-func.el")
-(declare-function wal/set-ligatures "ext:wal-visuals.el")
-(declare-function wal/transient-grab "wal-key-bindings.el")
+(declare-function wal-modern-emacs-p "wal-func.el")
+(declare-function wal-set-ligatures "ext:wal-visuals.el")
+(declare-function wal-transient-grab "wal-key-bindings.el")
 (declare-function wdb/nearby "wal-func.el")
 
 (defvar prettier-processes)
@@ -93,7 +93,7 @@ I want to be ready for =jai=.
   ;; Eliminate conflicts with `delight'.
   (advice-add 'c-update-modeline :override #'ignore)
 
-  (wal/transient-define-major c++-mode ()
+  (wal-transient-define-major c++-mode ()
     "Access `c++-mode' commands."
     [["Style"
       ("s" "set" c-set-style)
@@ -130,7 +130,7 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
     :messages ("Consider the lobster"))
 
   :config
-  (wal/transient-define-major rust-mode ()
+  (wal-transient-define-major rust-mode ()
     "Access `rust-mode' commands."
     [["Commands"
       ("c" "compile" rust-compile)
@@ -175,7 +175,7 @@ Use snake when you can't =make=.
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/in-python-project-p (&optional marker-file)
+(defun wal-in-python-project-p (&optional marker-file)
   "Check if we're currently in a Python project.
 
 Unless another MARKER-FILE is provided, this will use the usual
@@ -209,7 +209,7 @@ TOML."
   ;; Show inferior shell at the bottom.
   (wdb/nearby 'inferior-python-mode)
 
-  (wal/transient-define-major python-mode ()
+  (wal-transient-define-major python-mode ()
     "Access `python-mode' commands."
     [["Inferior shell"
       ("i r" "send region" python-shell-send-region)
@@ -232,11 +232,11 @@ Did Microsoft do the right thing?
 ** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/lsp-pyright-install-stubs ()
+(defun wal-lsp-pyright-install-stubs ()
   "Install the pyright stubs."
   (interactive)
 
-  (unless (wal/in-python-project-p)
+  (unless (wal-in-python-project-p)
     (user-error "You're not in a Python project!"))
 
   (when-let* ((cur (project-current))
@@ -333,7 +333,7 @@ Takes care[fn:1] of all your virtual environment needs.
 **** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/otherwise-return-argument (arg)
+(defun wal-otherwise-return-argument (arg)
   "Return ARG if original function returned nil."
   arg)
 #+END_SRC
@@ -352,7 +352,7 @@ Takes care[fn:1] of all your virtual environment needs.
   :config
   (advice-add
    'pet-executable-find :after-until
-   #'wal/otherwise-return-argument)
+   #'wal-otherwise-return-argument)
 
   :delight " pet")
 #+END_SRC
@@ -453,7 +453,7 @@ Deal with the parens.
     :functions (prettify-symbols-mode))
 
   :config
-  (wal/transient-define-major emacs-lisp-mode ()
+  (wal-transient-define-major emacs-lisp-mode ()
     "Access `elisp' commands."
     [["Utility"
       ("c" "check parens" check-parens)
@@ -483,7 +483,7 @@ Deal with the parens.
 
   :config
   (with-eval-after-load 'slime
-    (wal/transient-define-major common-lisp-mode ()
+    (wal-transient-define-major common-lisp-mode ()
       "Access `slime' actions."
       [["Slime"
         ("s" "slime" slime-mode)
@@ -510,7 +510,7 @@ Get some closure.
 
   :config
   (with-eval-after-load 'cider
-    (wal/transient-define-major clojure-mode ()
+    (wal-transient-define-major clojure-mode ()
       "Access `clojure-mode' commands."
       [["Cider"
         ("r" "repl" cider-jack-in)
@@ -580,7 +580,7 @@ Can we have =deno= instead of =node=?
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/jest-compilation-error-regexp
+(defvar wal-jest-compilation-error-regexp
   '(jest
     "^[[:blank:]]+at [^\n\r]+ (\\([^\n\r]+\\(?:.spec\\|.test\\)?.\\(?:js\\|jsx\\)\\):\\([0-9]+\\):\\([0-9]+\\))$"
     1 2 3)
@@ -610,14 +610,14 @@ Can we have =deno= instead of =node=?
     :functions (add-node-modules-path prettier-mode))
 
   :config
-  (when (wal/modern-emacs-p 29)
+  (when (wal-modern-emacs-p 29)
     (bind-key "M-." nil js-ts-mode-map))
 
   ;; Load default `dap-mode' templates.
   (with-eval-after-load 'dap-mode
     (require 'dap-node))
 
-  (wal/transient-define-major js-mode ()
+  (wal-transient-define-major js-mode ()
     "Access JS commands."
     [["Actions"
       ("c" "context" js-syntactic-context)]])
@@ -626,7 +626,7 @@ Can we have =deno= instead of =node=?
   (add-to-list 'compilation-error-regexp-alist 'jest)
   (add-to-list
    'compilation-error-regexp-alist-alist
-   wal/jest-compilation-error-regexp)
+   wal-jest-compilation-error-regexp)
 
   :bind
   (:map js-mode-map
@@ -675,27 +675,27 @@ Prettify your ugly JavaScript.
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/prettier-timer nil)
+(defvar wal-prettier-timer nil)
 
-(defun wal/prettier-refresh ()
+(defun wal-prettier-refresh ()
   "Force re-loading configuration and apply."
   (interactive)
 
-  (when wal/prettier-timer
+  (when wal-prettier-timer
     (user-error "Refresh timer already running"))
 
   (prettier--quit-all-processes)
 
-  (setq wal/prettier-timer
+  (setq wal-prettier-timer
         (run-with-timer 0.1 0.1
                         (lambda ()
                           (when (zerop (hash-table-count prettier-processes))
-                            (cancel-timer wal/prettier-timer)
-                            (setq wal/prettier-timer nil)
+                            (cancel-timer wal-prettier-timer)
+                            (setq wal-prettier-timer nil)
                             (prettier-prettify)
                             (message "Refresh done"))))))
 
-(defun wal/instead-delay-prettier-errors (string &rest objects)
+(defun wal-instead-delay-prettier-errors (string &rest objects)
   "Treat prettier errors like warnings.
 
 STRING is formatted with OBJECTS."
@@ -725,7 +725,7 @@ STRING is formatted with OBJECTS."
 
   (advice-add
    'prettier--show-error :override
-   #'wal/instead-delay-prettier-errors)
+   #'wal-instead-delay-prettier-errors)
 
   :custom
   (prettier-lighter " prt"))
@@ -822,7 +822,7 @@ Support =fish= functions.
 
 #+BEGIN_SRC emacs-lisp
 (use-package conf-mode
-  :hook (conf-mode . wal/prog-like))
+  :hook (conf-mode . wal-prog-like))
 #+END_SRC
 
 * Markup
@@ -843,7 +843,7 @@ Sometimes things that don't do things need to look nice.
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/markdown-view ()
+(defun wal-markdown-view ()
   "Toggle between different markdown views."
   (interactive)
 
@@ -869,10 +869,10 @@ Sometimes things that don't do things need to look nice.
     :major t)
 
   :config
-  (wal/transient-define-major markdown-mode ()
+  (wal-transient-define-major markdown-mode ()
     "Access `markdown-mode' commands."
     [["View"
-      ("v" "toggle view" wal/markdown-view)]])
+      ("v" "toggle view" wal-markdown-view)]])
 
   :custom
   (markdown-asymmetric-header t)
@@ -920,27 +920,27 @@ LSP support for Dart.
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/find-dart-flutter-sdk-dir ()
+(defun wal-find-dart-flutter-sdk-dir ()
   "Find the Dart Flutter SDK directory."
   (when-let* ((flutter-bin (executable-find "flutter"))
               (sdk-dir (string-trim (shell-command-to-string "flutter sdk-path"))))
 
     sdk-dir))
 
-(defun wal/find-dart-sdk-dir ()
+(defun wal-find-dart-sdk-dir ()
   "Find the Dart SDK directory."
-  (when-let* ((flutter-sdk-dir (wal/find-dart-flutter-sdk-dir)))
+  (when-let* ((flutter-sdk-dir (wal-find-dart-flutter-sdk-dir)))
 
     (expand-file-name "bin/cache/dart-sdk" flutter-sdk-dir)))
 
-(defun wal/lsp-dart-set-process-query-on-exit-flag ()
+(defun wal-lsp-dart-set-process-query-on-exit-flag ()
   "Set the query-on-exit flag to nil for the Dart language server."
   (defvar lsp-dart-flutter-daemon-buffer-name)
   (when-let (proc (get-buffer-process lsp-dart-flutter-daemon-buffer-name))
 
     (set-process-query-on-exit-flag proc nil)))
 
-(defun wal/lsp-dart-service-uri ()
+(defun wal-lsp-dart-service-uri ()
   "Get the service URI (needed for devtools)."
   (interactive)
 
@@ -968,12 +968,12 @@ LSP support for Dart.
   ;; Kill process without a prompt.
   (add-hook
    'lsp-after-initialize-hook
-   #'wal/lsp-dart-set-process-query-on-exit-flag)
+   #'wal-lsp-dart-set-process-query-on-exit-flag)
 
   ;; Display at the bottom.
   (wdb/nearby "\\*Flutter")
 
-  (wal/transient-define-major dart-mode ()
+  (wal-transient-define-major dart-mode ()
     "Access flutter commands."
     [["Hot-reloading"
       ("R" "restart" lsp-dart-dap-flutter-hot-restart)
@@ -983,11 +983,11 @@ LSP support for Dart.
       ("t a" "all" lsp-dart-run-all-tests)]
      ["Devtools"
       ("d" "open" lsp-dart-open-devtools)
-      ("u" "get service URI" wal/lsp-dart-service-uri)]])
+      ("u" "get service URI" wal-lsp-dart-service-uri)]])
 
   :custom
-  (lsp-dart-flutter-sdk-dir (wal/find-dart-flutter-sdk-dir))
-  (lsp-dart-sdk-dir (wal/find-dart-sdk-dir))
+  (lsp-dart-flutter-sdk-dir (wal-find-dart-flutter-sdk-dir))
+  (lsp-dart-sdk-dir (wal-find-dart-sdk-dir))
   ;; Run `lsp-dart-dap-setup' once to install debugger.
   (lsp-dart-dap-use-sdk-debugger nil))
 #+END_SRC
@@ -1029,25 +1029,25 @@ LSP integration.
 *** Utility
 
 #+begin_src emacs-lisp
-(defun wal/with-bash-shell (fun &rest args)
+(defun wal-with-bash-shell (fun &rest args)
   "Run FUN with ARGS in bash shell."
   (let ((shell-file-name "/bin/bash"))
 
     (apply fun args)))
 
-(defun wal/java-test-dwim ()
+(defun wal-java-test-dwim ()
   "Run or debug test or class depending on ARGS."
   (interactive)
 
-  (if-let* ((mode (wal/transient-grab "mode"))
-            (scope (wal/transient-grab "scope"))
+  (if-let* ((mode (wal-transient-grab "mode"))
+            (scope (wal-transient-grab "scope"))
             (fun (intern (format "dap-java-%s-test-%s" mode scope))))
 
       (progn (transient-set)
              (call-interactively fun))
     (message "Select scope and mode")))
 
-(defun wal/junit-match-file ()
+(defun wal-junit-match-file ()
   "Find the buffer associated with the matched error."
   (save-match-data
     (let* ((file (match-string 2))
@@ -1061,10 +1061,10 @@ LSP integration.
           (buffer-file-name buffer)
         file))))
 
-(defvar wal/junit-compilation-error-regexp
+(defvar wal-junit-compilation-error-regexp
   '(junit
     "^[[:blank:]]+\\(?:at \\)?\\([^\n\r]+\\)(\\([^\n\r]+.java\\):\\([0-9]+\\))"
-    wal/junit-match-file
+    wal-junit-match-file
     3)
   "Regular expression used for JUnit errors.")
 #+END_SRC
@@ -1079,14 +1079,14 @@ LSP integration.
   (require 'dap-java)
 
   ;; Use bash shell for JUnit commands.
-  (wal/advise-many
-   'wal/with-bash-shell :around
+  (wal-advise-many
+   'wal-with-bash-shell :around
    '(dap-java-debug-test-class
      dap-java-debug-test-method
      dap-java-run-test-class
      dap-java-run-test-method))
 
-  (transient-define-argument wal/java-mode-switch ()
+  (transient-define-argument wal-java-mode-switch ()
     "Switch modes."
     :description "Run in"
     :class 'transient-switches
@@ -1094,7 +1094,7 @@ LSP integration.
     :argument-regexp "\\(--mode=\\(run\\|debug\\)\\)"
     :choices '("run" "debug"))
 
-   (transient-define-argument wal/java-scope-switch ()
+   (transient-define-argument wal-java-scope-switch ()
     "Switch scopes."
     :description "Use"
     :class 'transient-switches
@@ -1102,21 +1102,21 @@ LSP integration.
     :argument-regexp "\\(--scope=\\(method\\|class\\)\\)"
     :choices '("method" "class"))
 
-  (wal/transient-define-major java-mode ()
+  (wal-transient-define-major java-mode ()
     "Access `java-mode' commands."
     :value '("--mode=run" "--scope=method")
 
     ["Test"
-     ("m" wal/java-mode-switch)
-     ("s" wal/java-scope-switch)
+     ("m" wal-java-mode-switch)
+     ("s" wal-java-scope-switch)
      ""
-     ("t" "test" wal/java-test-dwim)])
+     ("t" "test" wal-java-test-dwim)])
 
   ;; Add regular expression for JUnit errors.
   (add-to-list 'compilation-error-regexp-alist 'junit)
   (add-to-list
    'compilation-error-regexp-alist-alist
-   wal/junit-compilation-error-regexp)
+   wal-junit-compilation-error-regexp)
 
   :custom
   (lsp-java-format-on-type-enabled nil) ; Suggested fix for failing completion.
@@ -1250,7 +1250,7 @@ We want quicker suggestions when in CSS modes.
 **** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/maybe-use-custom-css-checker ()
+(defun wal-maybe-use-custom-css-checker ()
   "Use custom checker in `scss-mode' and `less-mode'."
   (when (executable-find "stylelint")
     (add-hook
@@ -1258,9 +1258,9 @@ We want quicker suggestions when in CSS modes.
      (lambda ()
        (pcase major-mode
          ('scss-mode
-          (setq-local flycheck-checker 'wal/scss-stylelint))
+          (setq-local flycheck-checker 'wal-scss-stylelint))
          ('less-css-mode
-          (setq-local flycheck-checker 'wal/less-stylelint))
+          (setq-local flycheck-checker 'wal-less-stylelint))
          (_
           (setq-local flycheck-checker 'css-stylelint))))
      nil t)))
@@ -1277,7 +1277,7 @@ We want quicker suggestions when in CSS modes.
     :lsp t
     :corfu (0.1 2)
     :messages ("Centering? It's simple. Here's 15 ways to do it.")
-    :functions (add-node-modules-path wal/maybe-use-custom-css-checker)))
+    :functions (add-node-modules-path wal-maybe-use-custom-css-checker)))
 #+END_SRC
 
 *** web-mode
@@ -1321,7 +1321,7 @@ The engine you've been waiting for.
 
 #+BEGIN_SRC emacs-lisp
 ;; Workaround from https://github.com/godotengine/emacs-gdscript-mode#known-issues
-(defun wal/with-json-data-ignored-for-gdscript (fun &rest args)
+(defun wal-with-json-data-ignored-for-gdscript (fun &rest args)
   "Advise FUN, passing ARGS.
 
 This will ignore the error message resulting from Godot not
@@ -1352,7 +1352,7 @@ replying to the `JSONRPC' request."
   :config
   (advice-add
    'lsp--get-message-type :around
-   #'wal/with-json-data-ignored-for-gdscript)
+   #'wal-with-json-data-ignored-for-gdscript)
 
   (require 'dap-gdscript nil t))
 #+END_SRC
@@ -1367,7 +1367,7 @@ replying to the `JSONRPC' request."
 #+BEGIN_SRC emacs-lisp
 (use-package prolog
   :config
-  (wal/set-ligatures 'prolog-mode '(":-")))
+  (wal-set-ligatures 'prolog-mode '(":-")))
 #+END_SRC
 
 * Footer

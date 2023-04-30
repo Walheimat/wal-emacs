@@ -1,6 +1,6 @@
 #+TITLE: Finding Things
 #+AUTHOR: @Walheimat
-#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-find.el" wal/emacs-config-package-path)
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-find.el" wal-emacs-config-package-path)
 
 I mostly search.
 
@@ -37,13 +37,13 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/rg-rerun-toggle-hidden ()
+(defun wal-rg-rerun-toggle-hidden ()
   "Re-run last search with toggled '--hidden' flag."
   (interactive)
 
   (rg-rerun-toggle-flag "--hidden"))
 
-(defun wal/rg-project-literal (query files)
+(defun wal-rg-project-literal (query files)
   "Search in project for FILES using QUERY literally."
   (interactive (list (rg-read-pattern t) (rg-read-files)))
 
@@ -60,7 +60,7 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
   :commands (rg-project rg-menu rg-read-pattern)
 
   :init
-  (parallel wal/rg-project-literal rg-project)
+  (parallel wal-rg-project-literal rg-project)
 
   :config
   (wdb/faraway "\\*rg\\*\\'")
@@ -70,10 +70,10 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 
   :bind
   (:map rg-mode-map
-   ("h" . wal/rg-rerun-toggle-hidden))
+   ("h" . wal-rg-rerun-toggle-hidden))
 
   :wal-bind
-  (("n" . wal/rg-project-literal||rg-project)
+  (("n" . wal-rg-project-literal||rg-project)
    :map isearch-mode-map
    ("n" . rg-isearch-current-file)))
 #+END_SRC

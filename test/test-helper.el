@@ -29,21 +29,21 @@
                 (:report-file "./coverage/results.txt")
                 (:send-report nil)))))
 
-(defvar wal/booting nil)
+(defvar wal-booting nil)
 
-(defun wal/cold-start-p ()
+(defun wal-cold-start-p ()
   "Check if we're loading this file from a cold start."
   (not (featurep 'use-package)))
 
-(defun wal/rf (a &rest _r)
+(defun wal-rf (a &rest _r)
   "Return first argument passed A."
   a)
 
-(defun wal/ra (&rest r)
+(defun wal-ra (&rest r)
   "Return all arguments R."
   r)
 
-(defun wal/rt (&rest _r)
+(defun wal-rt (&rest _r)
   "Return symbol `testing'."
   'testing)
 
@@ -54,7 +54,7 @@
   `(cl-letf (((symbol-function ',name) ,fun))
      ,@body))
 
-(defvar wal/mock-history nil)
+(defvar wal-mock-history nil)
 
 (defmacro with-mock (to-mock &rest body)
   "Evaluate BODY mocking list of function(s) TO-MOCK.
@@ -70,11 +70,11 @@ is either the argument list or the result of the mock
 implementation."
   (declare (indent defun))
 
-  `(cl-letf* ((wal/mock-history (make-hash-table :test 'equal))
+  `(cl-letf* ((wal-mock-history (make-hash-table :test 'equal))
               (remember (lambda (fun args)
-                          (let* ((prev (gethash fun wal/mock-history))
+                          (let* ((prev (gethash fun wal-mock-history))
                                  (val (if prev (push args prev) (list args))))
-                            (puthash fun val wal/mock-history)
+                            (puthash fun val wal-mock-history)
                             args)))
               ,@(mapcar (lambda (it)
                           (cond
@@ -92,33 +92,33 @@ implementation."
                         (if (listp to-mock) to-mock (list to-mock))))
      ,@body))
 
-(defun wal/clear-mocks ()
+(defun wal-clear-mocks ()
   "Clear mock history."
-  (setq wal/mock-history (make-hash-table :test 'equal)))
+  (setq wal-mock-history (make-hash-table :test 'equal)))
 
 (defmacro was-called-with (fun expected)
   "Check if FUN was called with EXPECTED."
   (let ((safe-exp (if (listp expected) expected `(list ,expected))))
-    `(should (equal ,safe-exp (car (gethash ',fun wal/mock-history))))))
+    `(should (equal ,safe-exp (car (gethash ',fun wal-mock-history))))))
 
 (defmacro was-called-nth-with (fun expected index)
   "Check if FUN was called with EXPECTED on the INDEXth call."
   (let ((safe-exp (if (listp expected) expected `(list ,expected))))
-    `(should (equal ,safe-exp (nth ,index (reverse (gethash ',fun wal/mock-history)))))))
+    `(should (equal ,safe-exp (nth ,index (reverse (gethash ',fun wal-mock-history)))))))
 
 (defmacro was-called (fun)
   "Check if mocked FUN was called."
-  `(let ((actual (gethash ',fun wal/mock-history 'not-called)))
+  `(let ((actual (gethash ',fun wal-mock-history 'not-called)))
      (should-not (equal 'not-called actual))))
 
 (defmacro was-not-called (fun)
   "Check if mocked FUN was not called."
-  `(let ((actual (gethash ',fun wal/mock-history 'not-called)))
+  `(let ((actual (gethash ',fun wal-mock-history 'not-called)))
      (should (equal 'not-called actual))))
 
 (defmacro was-called-n-times (fun expected)
   "Check if mocked FUN was called EXPECTED times."
-  `(should (equal ,expected (length (gethash ',fun wal/mock-history)))))
+  `(should (equal ,expected (length (gethash ',fun wal-mock-history)))))
 
 (defmacro match-expansion (form &rest value)
   "Match expansion of FORM against VALUE."
@@ -132,7 +132,7 @@ implementation."
 
     `(progn ,@(mapcar (lambda (it) `(should (,check ,it ,expected))) forms))))
 
-(defmacro wal/with-temp-file (filename &rest body)
+(defmacro wal-with-temp-file (filename &rest body)
   "Create and discard a file.
 
 FILENAME is the name of the file, BODY the form to execute while
@@ -144,7 +144,7 @@ The associated file buffer is also killed."
   (let ((tmp-file (expand-file-name filename "/tmp")))
 
     `(progn
-       (let ((wal/tmp-file ,tmp-file))
+       (let ((wal-tmp-file ,tmp-file))
 
          (make-empty-file ,tmp-file)
 
@@ -157,15 +157,15 @@ The associated file buffer is also killed."
            (delete-file ,tmp-file)
            (message "Deleted file '%s'." ,tmp-file))))))
 
-(when (wal/cold-start-p)
+(when (wal-cold-start-p)
   (message "Stumping `use-package'.")
 
   (defmacro use-package (package-name &rest _args)
     "Message that PACKAGE-NAME would have been loaded."
     `(message "Would have loaded %s" ',package-name))
 
-  (defvar wal/emacs-config-default-path)
-  (defvar wal/emacs-config-package-path)
+  (defvar wal-emacs-config-default-path)
+  (defvar wal-emacs-config-package-path)
 
   (let* ((source-dir (or (getenv "GITHUB_WORKSPACE") default-directory))
          (package-dir (expand-file-name "wal" source-dir)))
@@ -174,7 +174,7 @@ The associated file buffer is also killed."
 
     (when (getenv "CI")
       (add-to-list 'load-path package-dir))
-    (setq wal/emacs-config-default-path source-dir
-          wal/emacs-config-package-path package-dir)))
+    (setq wal-emacs-config-default-path source-dir
+          wal-emacs-config-package-path package-dir)))
 
 ;;; test-helper.el ends here

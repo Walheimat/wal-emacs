@@ -1,6 +1,6 @@
 #+TITLE: LSP
 #+AUTHOR: @Walheimat
-#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-lsp.el" wal/emacs-config-package-path)
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-lsp.el" wal-emacs-config-package-path)
 
 Language servers are awesome. Thanks, Microsoft.
 
@@ -26,9 +26,9 @@ Language servers are awesome. Thanks, Microsoft.
 (declare-function dap--json-encode "ext:dap-mode.el")
 (declare-function dap-register-debug-template "ext:dap-mode.el")
 (declare-function hydra-disable "ext:hydra.el")
-(declare-function wal/append "wal-func.el")
-(declare-function wal/dap "wal-lsp.el")
-(declare-function wal/tempel-setup-capf "wal-edit.el")
+(declare-function wal-append "wal-func.el")
+(declare-function wal-dap "wal-lsp.el")
+(declare-function wal-tempel-setup-capf "wal-edit.el")
 
 (defvar dap-debug-template-configurations)
 
@@ -37,7 +37,7 @@ Language servers are awesome. Thanks, Microsoft.
   :group 'wal
   :tag "LSP")
 
-(defcustom wal/lsp-slow-modes '()
+(defcustom wal-lsp-slow-modes '()
   "Modes that have slow language servers.
 
 For these modes `corfu' settings will not be adjusted to be
@@ -65,37 +65,37 @@ servers yourself[fn:1].
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/slow-lsp-p (mode)
+(defun wal-slow-lsp-p (mode)
   "Check if MODE is considered slow."
-  (memq mode wal/lsp-slow-modes))
+  (memq mode wal-lsp-slow-modes))
 
-(defun wal/lsp ()
+(defun wal-lsp ()
   "Defer LSP setup for the file.
 
 Sets up completion styles to use `orderless' unless the mode is
 considered slow."
-  (unless (wal/slow-lsp-p major-mode)
+  (unless (wal-slow-lsp-p major-mode)
     (setq-local completion-styles '(orderless partial-completion basic)))
 
   (lsp-deferred))
 
-(defun wal/lsp-completion ()
+(defun wal-lsp-completion ()
   "Make sure completion works well with `corfu' and `orderless'."
-  (unless (wal/slow-lsp-p major-mode)
+  (unless (wal-slow-lsp-p major-mode)
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           completion-styles)))
 
-(defun wal/first-prevent-adding-other-projects (&rest _args)
+(defun wal-first-prevent-adding-other-projects (&rest _args)
   "Prevent adding workspace roots from other projects."
   (eval '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))
 
-(defun wal/lsp-ignore-directory--escape (dir)
+(defun wal-lsp-ignore-directory--escape (dir)
   "Escape directory DIR."
   (if (string-prefix-p "." dir)
       (concat "[/\\\\]\\" dir "\\'")
     (concat "[/\\\\]" dir "\\'")))
 
-(defun wal/lsp-ignore-directory (dir)
+(defun wal-lsp-ignore-directory (dir)
   "Make sure DIR is ignored.
 
 It can be either a list of strings or a single string."
@@ -103,8 +103,8 @@ It can be either a list of strings or a single string."
 
     (thread-last
       dirs
-      (mapcar 'wal/lsp-ignore-directory--escape)
-      (wal/append 'lsp-file-watch-ignored-directories))))
+      (mapcar 'wal-lsp-ignore-directory--escape)
+      (wal-append 'lsp-file-watch-ignored-directories))))
 #+END_SRC
 
 *** Configuration
@@ -113,17 +113,17 @@ It can be either a list of strings or a single string."
 (use-package lsp-mode
   :wal-ways nil
 
-  :hook (lsp-completion-mode . wal/lsp-completion)
+  :hook (lsp-completion-mode . wal-lsp-completion)
 
   :config
   ;; Integrate with other packages.
   (require 'avy nil t)
 
   ;; Additional ignores.
-  (wal/lsp-ignore-directory '("build" "vendor" ".cask"))
+  (wal-lsp-ignore-directory '("build" "vendor" ".cask"))
 
   ;; Don't keep track of multiple projects.
-  (advice-add 'lsp :before #'wal/first-prevent-adding-other-projects)
+  (advice-add 'lsp :before #'wal-first-prevent-adding-other-projects)
 
   ;; JavaScript.
   (with-eval-after-load 'js
@@ -131,7 +131,7 @@ It can be either a list of strings or a single string."
       '("r" "rename file" lsp-javascript-rename-file)))
 
   ;; Command map.
-  (setq lsp-keymap-prefix (wal/key-combo-for-leader 'ambassador :key "l"))
+  (setq lsp-keymap-prefix (wal-key-combo-for-leader 'ambassador :key "l"))
   (lsp-enable-which-key-integration t)
   (ambassador :keymaps 'lsp-mode-map "l" '(:keymap lsp-command-map :wk "LSP"))
 
@@ -196,22 +196,22 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/dap-before nil)
+(defvar wal-dap-before nil)
 
-(defun wal/dap-terminated (_session)
+(defun wal-dap-terminated (_session)
   "Disable hydra and restore window configuration."
   (hydra-disable)
 
-  (when wal/dap-before
-    (set-window-configuration wal/dap-before)))
+  (when wal-dap-before
+    (set-window-configuration wal-dap-before)))
 
-(defun wal/dap-session-created (&rest _r)
+(defun wal-dap-session-created (&rest _r)
   "Save window configuration and delete other windows."
-  (setq wal/dap-before (current-window-configuration))
+  (setq wal-dap-before (current-window-configuration))
 
   (delete-other-windows))
 
-(defun wal/dap-stopped (_session)
+(defun wal-dap-stopped (_session)
   "(Re-)display the hydra immediately."
   (dap-hydra))
 #+END_SRC
@@ -224,17 +224,17 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
 
   :after lsp-mode
 
-  :hook (dap-session-created . wal/dap-session-created)
+  :hook (dap-session-created . wal-dap-session-created)
 
   :config
   ;; Activate UI and configure.
   (dap-auto-configure-mode)
 
   ;; Add hooks at the end.
-  (add-hook 'dap-terminated-hook #'wal/dap-terminated t)
-  (add-hook 'dap-stopped-hook #'wal/dap-stopped t)
+  (add-hook 'dap-terminated-hook #'wal-dap-terminated t)
+  (add-hook 'dap-stopped-hook #'wal-dap-stopped t)
 
-  (wal/replace-in-alist
+  (wal-replace-in-alist
    'dap-ui-buffer-configurations
    `((,dap-ui--repl-buffer . ((side . bottom) (slot . 1) (window-height . 10)))
      (,dap-ui--locals-buffer . ((side . right) (slot . 1)))))
@@ -265,7 +265,7 @@ Jump to symbols with =consult=.
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/ignore-if-no-lsp (&rest _args)
+(defun wal-ignore-if-no-lsp (&rest _args)
   "Don't call the function if `lsp-mode' is nil."
   (if (bound-and-true-p lsp-mode)
       t
@@ -285,7 +285,7 @@ Jump to symbols with =consult=.
   :config
   (advice-add
    'consult-lsp-file-symbols :before-while
-   #'wal/ignore-if-no-lsp)
+   #'wal-ignore-if-no-lsp)
 
   (transient-append-suffix 'consult '(0 0 -1)
     '("y" "symbol" consult-lsp-file-symbols
@@ -330,10 +330,10 @@ Put these templates in a file in your project root, and evaluate them
 there using =C-x C-e=.
 
 #+BEGIN_SRC emacs-lisp :tangle no
-(defun wal/dap-create-launch-json-from-template ()
+(defun wal-dap-create-launch-json-from-template ()
   "Create and write a VSCode launch configuration using a template."
   (interactive)
-  (wal/try dap-mode
+  (wal-try dap-mode
     (let* ((args (-> (dap--completing-read "Select template: "
                                            dap-debug-template-configurations
                                            'cl-first nil t)
@@ -382,12 +382,12 @@ For TypeScript compile your =src= with =--sourceMap= or set =sourceMap= to
 Attach to running process.
 
 #+BEGIN_SRC emacs-lisp :tangle no
-(defun wal/dap-register-debugpy-template (name remote-root)
+(defun wal-dap-register-debugpy-template (name remote-root)
   "Create template for debugpy.
 
 Prompts user for NAME of the template and the REMOTE-ROOT."
   (interactive "sName of the template: \nsRemote root: ")
-  (wal/try dap-mode
+  (wal-try dap-mode
     (let ((mapping `(:localRoot "${workspaceFolder}" :remoteRoot ,remote-root)))
 
       (dap-register-debug-template

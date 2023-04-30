@@ -1,6 +1,6 @@
 #+TITLE: Key Bindings
 #+AUTHOR: @Walheimat
-#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-key-bindings.el" wal/emacs-config-package-path)
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-key-bindings.el" wal-emacs-config-package-path)
 
 I use many[fn:1] custom keybindings.
 
@@ -25,7 +25,7 @@ and command maps:
 + =C-c l= to toggle =display-line-numbers-mode=
 + =C-c m= for =bookmark=
 + =C-c n= to take notes for current =org-clock= task (go-to with =C-u 0=)
-+ =C-c p= for =wal/project-<command>= prefix map
++ =C-c p= for =wal-project-<command>= prefix map
 + =C-c q= to do a =quick-calc= (inserted if called with =C-u=)
 + =C-c r= for =smerge=
 + =C-c s= for =flyspell=
@@ -194,7 +194,7 @@ They are:
 
 (defvar transient-current-command)
 
-(declare-function wal/prefix-user-key "wal-func.el")
+(declare-function wal-prefix-user-key "wal-func.el")
 (declare-function transient-args "ext:transient.el")
 (declare-function transient-arg-value "ext:transient.el")
 
@@ -205,12 +205,12 @@ They are:
 
 ;;;; Customization:
 
-(defcustom wal/use-hyper-prefix t
+(defcustom wal-use-hyper-prefix t
   "Whether the hyper modifier should be used to prefix user keys."
   :type 'boolean
   :group 'wal-key-bindings)
 
-(defcustom wal/leaders '((";" . editor)
+(defcustom wal-leaders '((";" . editor)
                          ("." . major)
                          ("," . consult)
                          ("/" . ambassador)
@@ -225,17 +225,17 @@ They are:
 * Leaders
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/key-by-leader (leader)
+(defun wal-key-by-leader (leader)
   "Get the key for LEADER."
-  (car-safe (rassoc leader wal/leaders)))
+  (car-safe (rassoc leader wal-leaders)))
 
-(cl-defun wal/key-combo-for-leader (leader &key key in-sink translate)
+(cl-defun wal-key-combo-for-leader (leader &key key in-sink translate)
   "Get the key combination for LEADER.
 
 If KEY is non-nil, append it. If IN-SINK is non-nil, infix leader
 key. If TRANSLATE is non-nil, convert using `kbd'."
-  (when-let* ((leader-key (wal/key-by-leader leader))
-              (prefix (wal/prefix-user-key leader-key))
+  (when-let* ((leader-key (wal-key-by-leader leader))
+              (prefix (wal-prefix-user-key leader-key))
               (combo (if key
                          (if in-sink
                              (concat prefix " " leader-key " " key)
@@ -258,10 +258,10 @@ Allows defining custom prefixes.
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/general-leaders '(editor ambassador administrator)
+(defvar wal-general-leaders '(editor ambassador administrator)
   "Leaders that a `general' definer will be created for.")
 
-(cl-defmacro wal/create-leader-sink (name &key definer prefix)
+(cl-defmacro wal-create-leader-sink (name &key definer prefix)
   "Macro to create a leader sink `NAME-sink'.
 
 NAME is the name of the macro. DEFINER is the definer to create
@@ -292,9 +292,9 @@ All ARGS are passed to both definers."
     (editor ,@args ,key ,fun)
     (editor-sink ,@args ,key ,mfun)))
 
-(defun wal/general-create-definer (leader)
+(defun wal-general-create-definer (leader)
   "Create a definer for LEADER with a sink."
-  (let* ((key (wal/key-combo-for-leader leader))
+  (let* ((key (wal-key-combo-for-leader leader))
          (sink (intern (format "%s-sink" leader)))
          (name (symbol-name leader)))
 
@@ -305,13 +305,13 @@ All ARGS are passed to both definers."
     (eval `(general-create-definer ,leader :prefix ,key))
 
     ;; Also create the sink.
-    (eval `(wal/create-leader-sink ,sink :definer ,leader :prefix ,key))))
+    (eval `(wal-create-leader-sink ,sink :definer ,leader :prefix ,key))))
 
 (defun major? ()
   "Show message when major is not locally bound."
   (interactive)
 
-  (let ((key (propertize (wal/key-combo-for-leader 'major) 'face 'success))
+  (let ((key (propertize (wal-key-combo-for-leader 'major) 'face 'success))
         (mode (propertize (symbol-name major-mode) 'face 'success)))
 
     (message "Major (%s) has no binding in %s" key mode)))
@@ -324,7 +324,7 @@ All ARGS are passed to both definers."
   :demand t
 
   :config
-  (seq-do #'wal/general-create-definer wal/general-leaders))
+  (seq-do #'wal-general-create-definer wal-general-leaders))
 #+END_SRC
 
 ** transient
@@ -334,25 +334,25 @@ All ARGS are passed to both definers."
 
 Another nice way of grouping keys.
 
-Some transients are bound directly, others are =wal/univ= variants (see
+Some transients are bound directly, others are =wal-univ= variants (see
 above).
 
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/transient-grab (arg)
+(defun wal-transient-grab (arg)
   "Grab argument ARG from current command."
   (transient-arg-value
    (format "--%s=" arg)
    (transient-args transient-current-command)))
 
-(defun wal/transient-command-or-major ()
+(defun wal-transient-command-or-major ()
   "Show only major if command includes it."
   (if (string-match "major" mode-line-buffer-identification)
       "major"
     mode-line-buffer-identification))
 
-(defun wal/with-delayed-transient-popup (fun &rest args)
+(defun wal-with-delayed-transient-popup (fun &rest args)
   "Delay the transient FUN before calling it with ARGS."
   (defvar transient-show-popup)
   (let ((transient-show-popup 0.8))
@@ -370,7 +370,7 @@ above).
   (transient-hide-during-minibuffer-read t)
   (transient-mode-line-format '("%e"
                                 mode-line-front-space
-                                (:eval (wal/transient-command-or-major)))))
+                                (:eval (wal-transient-command-or-major)))))
 #+END_SRC
 
 ** which-key
@@ -390,9 +390,9 @@ If CONDITION is non-nil, surround the replacement with it.
 USER-KEY and LEADER can be used to prefix the key."
   (let ((key (cond
               (user-key
-               (wal/prefix-user-key user-key))
+               (wal-prefix-user-key user-key))
               (leader
-               (apply 'wal/key-combo-for-leader leader))
+               (apply 'wal-key-combo-for-leader leader))
               (key key)
               (t ""))))
     `(with-eval-after-load 'which-key

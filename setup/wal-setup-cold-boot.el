@@ -16,7 +16,7 @@
 
 (let ((source-dir (getenv "EMACS_SOURCE_DIR")))
 
-  (when (fboundp 'wal/bootstrap-config)
-    (wal/bootstrap-config source-dir nil t)))
+  (when (fboundp 'wal-bootstrap-config)
+    (wal-bootstrap-config source-dir nil t)))
 
 ;;; wal-setup-cold-boot.el ends here

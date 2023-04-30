@@ -1,6 +1,6 @@
 #+TITLE: Completion
 #+AUTHOR: @Walheimat
-#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-complete.el" wal/emacs-config-package-path)
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-complete.el" wal-emacs-config-package-path)
 
 Complete commands and code.
 
@@ -23,15 +23,15 @@ Complete commands and code.
 
 (declare-function org-clock-in "ext:org-clock.el")
 (declare-function org-up-heading-safe "ext:org.el")
-(declare-function wal/append "wal-func.el")
-(declare-function wal/org-clock-in-from-now "wal-org.el")
-(declare-function wal/project--buffer-root "wal-workspace.el")
-(declare-function wal/univ-p "wal-func.el")
+(declare-function wal-append "wal-func.el")
+(declare-function wal-org-clock-in-from-now "wal-org.el")
+(declare-function wal-project--buffer-root "wal-workspace.el")
+(declare-function wal-univ-p "wal-func.el")
 
 (defvar consult-register--narrow)
 (defvar project--list)
 (defvar savehist-additional-variables)
-(defvar wal/active-theme)
+(defvar wal-active-theme)
 
 ;;; Customization:
 
@@ -51,12 +51,12 @@ Complete commands and code.
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/corfu-enable-in-minibuffer ()
+(defun wal-corfu-enable-in-minibuffer ()
   "Enable Corfu in the minibuffer if `completion-at-point' is bound."
   (when (where-is-internal #'completion-at-point (list (current-local-map)))
     (corfu-mode 1)))
 
-(defun wal/corfu-auto (values)
+(defun wal-corfu-auto (values)
   "Set delay and minimum prefix using VALUES.
 
 This a list of (DELAY PREFIX-LENGTH)."
@@ -71,7 +71,7 @@ This a list of (DELAY PREFIX-LENGTH)."
 (use-package corfu
   :hook
   (((org-mode prog-mode prog-like eshell-mode) . corfu-mode)
-   (minibuffer-setup . wal/corfu-enable-in-minibuffer))
+   (minibuffer-setup . wal-corfu-enable-in-minibuffer))
 
   :custom
   (corfu-auto t)
@@ -160,10 +160,10 @@ Provide global option narrowing using the =vertico= family of products.
   (vertico-sort-function #'vertico-sort-history-alpha)
 
   (vertico-multiform-commands '((consult-ripgrep buffer)
-                                (wal/consult-line buffer)
+                                (wal-consult-line buffer)
                                 (consult-mark buffer indexed)
                                 (consult-global-mark buffer indexed)
-                                (wal/consult-org-heading unobtrusive))))
+                                (wal-consult-org-heading unobtrusive))))
 #+END_SRC
 
 ** vertico-directory
@@ -174,17 +174,17 @@ Provide global option narrowing using the =vertico= family of products.
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defvar-local wal/command nil
+(defvar-local wal-command nil
   "Command that started completion session.")
 
-(defun wal/record-this-command ()
+(defun wal-record-this-command ()
   "Record the command which opened the minibuffer."
-  (setq-local wal/command this-command))
+  (setq-local wal-command this-command))
 
-(defun wal/with-dired-goto-file-ignored (fun &rest args)
+(defun wal-with-dired-goto-file-ignored (fun &rest args)
   "Advise FUN using ARGS to exit if we came from `dired-goto-file'."
   (unless (and (eq (car args) 'category)
-               (eq wal/command 'dired-goto-file))
+               (eq wal-command 'dired-goto-file))
     (apply fun args)))
 #+END_SRC
 
@@ -199,13 +199,13 @@ Provide global option narrowing using the =vertico= family of products.
 
   :hook
   ((rfn-eshadow-update-overlay . vertico-directory-tidy)
-   (minibuffer-setup . wal/record-this-command))
+   (minibuffer-setup . wal-record-this-command))
 
   :config
   ;; We don't want to enter directories when we go to file with Dired.
   (advice-add
    'vertico--metadata-get :around
-   #'wal/with-dired-goto-file-ignored)
+   #'wal-with-dired-goto-file-ignored)
 
   :bind
   (:map vertico-map
@@ -284,7 +284,7 @@ completion actions.
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/browse-html-file (filename)
+(defun wal-browse-html-file (filename)
   "Browse FILENAME provided it's an HTML file."
   (when (not (string= (file-name-extension filename) "html"))
     (user-error "Can only browse HTML files"))
@@ -305,15 +305,15 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
   ;; Search using region.
   (define-key embark-region-map
               (kbd "g")
-              #'wal/duck-duck-go-region)
+              #'wal-duck-duck-go-region)
 
   (define-key embark-file-map
               (kbd "x")
-              #'wal/browse-html-file)
+              #'wal-browse-html-file)
 
   (define-key embark-buffer-map
               (kbd "t")
-              #'wal/tab-bar-switch-to-buffer-tab)
+              #'wal-tab-bar-switch-to-buffer-tab)
 
   :custom
   (embark-mixed-indicator-delay 0.8)
@@ -346,7 +346,7 @@ Heavy lifting with =consult=.
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/consult-ripgrep-ignored (&optional dir initial)
+(defun wal-consult-ripgrep-ignored (&optional dir initial)
   "Search for regexp with rg in DIR with INITIAL input.
 Do not ignore hidden files."
   (interactive "P")
@@ -359,7 +359,7 @@ Do not ignore hidden files."
 
     (consult--grep "Ripgrep (ignored)" #'consult--ripgrep-builder dir initial)))
 
-(defun wal/consult-unregister ()
+(defun wal-consult-unregister ()
   "Remove KEY from the register."
   (interactive)
 
@@ -377,7 +377,7 @@ Do not ignore hidden files."
 
     (setq register-alist (assoc-delete-all key register-alist))))
 
-(defun wal/consult-line (&optional at-point)
+(defun wal-consult-line (&optional at-point)
   "Call `consult-line'.
 
 If AT-POINT is t, call `consult-line' with `thing-at-point'."
@@ -387,7 +387,7 @@ If AT-POINT is t, call `consult-line' with `thing-at-point'."
       (consult-line (thing-at-point 'symbol))
     (consult-line)))
 
-(defun wal/consult-clock-in (&optional discontinue)
+(defun wal-consult-clock-in (&optional discontinue)
   "Clock into an Org agenda heading.
 
 If DISCONTINUE is non-nil, clock in from now."
@@ -396,38 +396,38 @@ If DISCONTINUE is non-nil, clock in from now."
   (save-window-excursion
     (consult-org-agenda)
     (if discontinue
-        (wal/org-clock-in-from-now)
+        (wal-org-clock-in-from-now)
       (org-clock-in))))
 
-(defun wal/then-set-active-theme (theme)
-  "Advise to set `wal/active-theme' to THEME."
-  (setq wal/active-theme theme)
-  (run-hooks 'wal/theme-hook))
+(defun wal-then-set-active-theme (theme)
+  "Advise to set `wal-active-theme' to THEME."
+  (setq wal-active-theme theme)
+  (run-hooks 'wal-theme-hook))
 
-(defun wal/with-big-vertico (fun &rest args)
+(defun wal-with-big-vertico (fun &rest args)
   "Call FUN with ARGS but increase the `vertico-count'."
   (defvar vertico-count)
   (let ((vertico-count 20))
 
     (apply fun args)))
 
-(defvar wal/consult-pre-narrow nil
+(defvar wal-consult-pre-narrow nil
   "Whether `consult' commands should be pre-narrowed.")
 
-(defun wal/consult-toggle-pre-narrowing ()
+(defun wal-consult-toggle-pre-narrowing ()
   "Toggle pre-narrowing of `consult' commands."
   (interactive)
 
-  (setq wal/consult-pre-narrow (not wal/consult-pre-narrow)))
+  (setq wal-consult-pre-narrow (not wal-consult-pre-narrow)))
 
-(defun wal/consult--pre-narrow ()
+(defun wal-consult--pre-narrow ()
   "Pre-narrow `consult' commands."
   (declare-function consult--buffer-query "ext:consult.el")
   (declare-function consult--project-root "ext:consult.el")
 
-  (and-let* ((should-narrow (if wal/consult-pre-narrow
-                                (not (wal/univ-p))
-                              (wal/univ-p)))
+  (and-let* ((should-narrow (if wal-consult-pre-narrow
+                                (not (wal-univ-p))
+                              (wal-univ-p)))
              (char (pcase this-command
                      ('consult-buffer
                       (when-let* ((root (consult--project-root))
@@ -438,7 +438,7 @@ If DISCONTINUE is non-nil, clock in from now."
 
                         ?p))
 
-                     ('wal/consult-project
+                     ('wal-consult-project
                       (when (consult--open-project-items) ?o)))))
 
     (setq unread-command-events (append unread-command-events (list char 32)))))
@@ -457,7 +457,7 @@ If DISCONTINUE is non-nil, clock in from now."
   "Get the open projects."
   (cl-remove-duplicates
    (cl-loop for buffer being the buffers
-            for project = (wal/project--buffer-root buffer)
+            for project = (wal-project--buffer-root buffer)
             if project
             collect project)
    :test 'string=))
@@ -470,7 +470,7 @@ If DISCONTINUE is non-nil, clock in from now."
         :action 'project-switch-project
         :items 'consult--open-project-items))
 
-(defun wal/consult-project ()
+(defun wal-consult-project ()
   "Enhanced `project-switch-project' command."
   (interactive)
 
@@ -480,7 +480,7 @@ If DISCONTINUE is non-nil, clock in from now."
    '(consult--source-open-projects consult--source-projects)
    :prompt "Select project: "))
 
-(defun wal/adjust-by-putting-current-buffer-first (buffers)
+(defun wal-adjust-by-putting-current-buffer-first (buffers)
   "Return BUFFERS with the current buffer first."
   (let ((current (current-buffer)))
 
@@ -488,7 +488,7 @@ If DISCONTINUE is non-nil, clock in from now."
         (cons current (delq current buffers))
       buffers)))
 
-(defun wal/consult-org-heading (&optional in-tree)
+(defun wal-consult-org-heading (&optional in-tree)
   "Call `org-heading'.
 
 If optional IN-TREE is t, limit scope to current tree."
@@ -521,34 +521,34 @@ If optional IN-TREE is t, limit scope to current tree."
    consult--source-project-recent-file
    consult--source-bookmark
    consult-recent-file
-   wal/consult-clock-in
+   wal-consult-clock-in
    consult-org-heading
    :preview-key "C-."
 
    consult--source-project-recent-file
    :narrow ?r
 
-   wal/consult-clock-in
+   wal-consult-clock-in
    :prompt "Clock in: ")
 
   ;; Be sure to set the active them after switching.
-  (advice-add 'consult-theme :after #'wal/then-set-active-theme)
+  (advice-add 'consult-theme :after #'wal-then-set-active-theme)
 
   ;; Use a bigger `vertico' when grepping.
-  (advice-add 'consult-ripgrep :around #'wal/with-big-vertico)
+  (advice-add 'consult-ripgrep :around #'wal-with-big-vertico)
 
   ;; Stay on first buffer before input.
   (advice-add
    'consult--buffer-sort-visibility :filter-return
-   'wal/adjust-by-putting-current-buffer-first)
+   'wal-adjust-by-putting-current-buffer-first)
 
-  (advice-add 'consult :around 'wal/with-delayed-transient-popup)
+  (advice-add 'consult :around 'wal-with-delayed-transient-popup)
 
   ;; Pre-narrow `consult' commands.
-  (add-hook 'minibuffer-setup-hook #'wal/consult--pre-narrow)
+  (add-hook 'minibuffer-setup-hook #'wal-consult--pre-narrow)
 
   (with-eval-after-load 'org-keys
-    (wal/replace-in-alist
+    (wal-replace-in-alist
      'org-speed-commands
      '(("j" . consult-org-heading))))
 
@@ -557,7 +557,7 @@ If optional IN-TREE is t, limit scope to current tree."
     [["Goto"
       ("SPC" "mark" consult-mark)
       ("g" "line" consult-goto-line)
-      ("h" "heading" wal/consult-org-heading
+      ("h" "heading" wal-consult-org-heading
        :inapt-if-not-mode 'org-mode)]
 
      ["Find"
@@ -567,17 +567,17 @@ If optional IN-TREE is t, limit scope to current tree."
       ("a" "agenda" consult-org-agenda)]
 
      ["Search"
-      ("s" "line" wal/consult-line)
+      ("s" "line" wal-consult-line)
       ("n" "grep" consult-ripgrep)
       ("l" "locate" consult-locate)]
 
      ["Register"
       ("r l" "load" consult-register-load)
       ("r s" "store" consult-register-store)
-      ("r u" "unregister" wal/consult-unregister)]
+      ("r u" "unregister" wal-consult-unregister)]
 
      ["Do"
-      ("c" "clock in" wal/consult-clock-in)
+      ("c" "clock in" wal-consult-clock-in)
       ("k" "call macro" consult-kmacro)
       ("t" "change theme" consult-theme)]]
 
@@ -585,7 +585,7 @@ If optional IN-TREE is t, limit scope to current tree."
       ("+" "major mode command" consult-mode-command)
       ("-" "toggle minor mode" consult-minor-mode-menu)]
      ["Utility"
-      ("N" "toggle pre-narrowing" wal/consult-toggle-pre-narrowing)]])
+      ("N" "toggle pre-narrowing" wal-consult-toggle-pre-narrowing)]])
 
   :custom
   (consult-buffer-filter'("\\` "
@@ -596,12 +596,12 @@ If optional IN-TREE is t, limit scope to current tree."
 
   :general
   (general-define-key
-   (wal/key-combo-for-leader 'consult)
+   (wal-key-combo-for-leader 'consult)
    'consult)
 
   :wal-bind
   (("j" . consult-buffer)
-   ("p" . wal/consult-project)))
+   ("p" . wal-consult-project)))
    #+END_SRC
 
 * Footer

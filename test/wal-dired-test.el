@@ -8,35 +8,35 @@
 
 (require 'wal-dired nil t)
 
-(ert-deftest tes-wal/dired-from-home ()
+(ert-deftest tes-wal-dired-from-home ()
   (with-mock ((dired-read-dir-and-switches . (lambda (&rest _) (list  "/tmp")))
               (dired-noselect . (lambda (&rest _) "/tmp/test"))
               pop-to-buffer-same-window)
 
-    (call-interactively 'wal/dired-from-home)
+    (call-interactively 'wal-dired-from-home)
 
     (was-called-with dired-noselect (list "/tmp" nil))
     (was-called-with pop-to-buffer-same-window "/tmp/test")))
 
-(ert-deftest test-wal/image-dired ()
+(ert-deftest test-wal-image-dired ()
   (with-mock image-dired
 
-    (wal/image-dired)
+    (wal-image-dired)
 
     (let ((expected (expand-file-name default-directory)))
 
       (was-called-with image-dired expected))))
 
-(ert-deftest test-wal/dired-buffer-p ()
+(ert-deftest test-wal-dired-buffer-p ()
   (with-temp-buffer
     (dired-mode)
 
-    (should (wal/dired-buffer-p (current-buffer)))))
+    (should (wal-dired-buffer-p (current-buffer)))))
 
-(ert-deftest test-wal/consult-dired-buffer--query ()
+(ert-deftest test-wal-consult-dired-buffer--query ()
   (cl-defun consult--buffer-query (&key sort as predicate)
     (list sort as predicate))
 
-  (should (equal (wal/consult-dired-buffer--query) '(visibility buffer-name wal/dired-buffer-p))))
+  (should (equal (wal-consult-dired-buffer--query) '(visibility buffer-name wal-dired-buffer-p))))
 
 ;;; wal-dired-test.el ends here

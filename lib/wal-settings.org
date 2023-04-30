@@ -1,6 +1,6 @@
 #+TITLE: Settings
 #+AUTHOR: @Walheimat
-#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-settings.el" wal/emacs-config-package-path)
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-settings.el" wal-emacs-config-package-path)
 
 Set things up.
 
@@ -27,14 +27,14 @@ functionality is used.
 
 (declare-function junk--stringify "wal-func.el")
 (declare-function junk--parts "wal-func.el")
-(declare-function wal/bytes-per-mb "wal-func.el")
-(declare-function wal/create-non-existent-directory "wal-func.el")
-(declare-function wal/insert-after "wal-func.el")
-(declare-function wal/modern-emacs-p "wal-func.el")
-(declare-function wal/persist-scratch "wal-key-bindings.el")
-(declare-function wal/rehydrate-scratch "wal-key-bindings.el")
-(declare-function wal/reset-to-standard "wal-func.el")
-(declare-function wal/set-indent-defaults "wal-func.el")
+(declare-function wal-bytes-per-mb "wal-func.el")
+(declare-function wal-create-non-existent-directory "wal-func.el")
+(declare-function wal-insert-after "wal-func.el")
+(declare-function wal-modern-emacs-p "wal-func.el")
+(declare-function wal-persist-scratch "wal-key-bindings.el")
+(declare-function wal-rehydrate-scratch "wal-key-bindings.el")
+(declare-function wal-reset-to-standard "wal-func.el")
+(declare-function wal-set-indent-defaults "wal-func.el")
 (declare-function wdb/faraway "wal-func.el")
 (declare-function wdb/nearby "wal-func.el")
 
@@ -57,32 +57,32 @@ functionality is used.
 
 ;;;; Customization:
 
-(defcustom wal/site-lisp-directory (expand-file-name "site-lisp" user-emacs-directory)
+(defcustom wal-site-lisp-directory (expand-file-name "site-lisp" user-emacs-directory)
   "Directory of site Lisp packages."
   :type 'string
   :group 'wal-settings)
 
-(defcustom wal/scratch-persist-file (expand-file-name ".wal-scratch-persist" user-emacs-directory)
+(defcustom wal-scratch-persist-file (expand-file-name ".wal-scratch-persist" user-emacs-directory)
   "The file to persist the *scratch* buffer's content in."
   :type 'string
   :group 'wal-settings)
 
-(defcustom wal/indent-offset 4
+(defcustom wal-indent-offset 4
   "The indent offset in spaces."
   :type 'integer
   :group 'wal-settings)
 
-(defcustom wal/prefer-tabs nil
+(defcustom wal-prefer-tabs nil
   "Whether tabs are preferred for indentation."
   :type 'boolean
   :group 'wal-settings)
 
-(defcustom wal/maximize-new-frames t
+(defcustom wal-maximize-new-frames t
   "Whether to maximize new frames by default."
   :type 'boolean
   :group 'wal-settings)
 
-(defcustom wal/ack-warnings nil
+(defcustom wal-ack-warnings nil
   "Acknowledge all warnings."
   :type 'boolean
   :group 'wal-settings)
@@ -106,7 +106,7 @@ Customize start-up.
 ;; Maximize frame.
 (setq frame-resize-pixelwise t)
 (add-to-list 'initial-frame-alist '(fullscreen . maximized))
-(when wal/maximize-new-frames
+(when wal-maximize-new-frames
   (add-to-list 'default-frame-alist '(fullscreen . maximized)))
 
 ;; No splash.
@@ -117,24 +117,24 @@ Customize start-up.
 (setq ad-redefinition-action 'accept)
 
 ;; Warn Mac/Windows users.
-(unless (or (eq system-type 'gnu/linux) wal/ack-warnings)
+(unless (or (eq system-type 'gnu/linux) wal-ack-warnings)
   (warn "\
      Warning: Config only tested on Linux. The configuration may
      not work correctly on your system.
 
-     Set `wal/ack-warnings' to t to ignore this warning."))
+     Set `wal-ack-warnings' to t to ignore this warning."))
 #+END_SRC
 
 * Command Line
 
 #+BEGIN_SRC emacs-lisp
-(wal/capture-flag doctor
+(wal-capture-flag doctor
   "Will set up `use-package' to collect statistics.")
 
-(wal/capture-flag mini
+(wal-capture-flag mini
   "Will packages that are part of the minimal configuration.")
 
-(wal/capture-flag ensure
+(wal-capture-flag ensure
   "Will set up `use-package' to ensure packages.")
 #+END_SRC
 
@@ -147,10 +147,10 @@ installed from there.
 ;; Always defer, maybe ensure.
 (setq use-package-always-defer t)
 
-(when wal/flag-ensure
+(when wal-flag-ensure
   (setq use-package-always-ensure t))
 
-(when wal/flag-doctor
+(when wal-flag-doctor
   (setq use-package-compute-statistics t)
 
   (declare-function use-package-report "ext:use-package.el")
@@ -163,7 +163,7 @@ installed from there.
 Prompt to ask directories if a file can't be found.
 
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'find-file-not-found-functions #'wal/create-non-existent-directory)
+(add-to-list 'find-file-not-found-functions #'wal-create-non-existent-directory)
 #+END_SRC
 
 ** Site-Lisp
@@ -173,10 +173,10 @@ custom theme load path). I put non-MELPA packages here. You can also
 put additional initialization into a =default.el= here.
 
 #+BEGIN_SRC emacs-lisp
-(make-directory wal/site-lisp-directory t)
+(make-directory wal-site-lisp-directory t)
 
-(let ((root (list wal/site-lisp-directory))
-      (subdirs (directory-files wal/site-lisp-directory t "\\w+")))
+(let ((root (list wal-site-lisp-directory))
+      (subdirs (directory-files wal-site-lisp-directory t "\\w+")))
 
   (dolist (project (append root subdirs))
     (when (file-directory-p project)
@@ -208,13 +208,13 @@ Make things shorter and snappier. These settings don't belong to
 packages.
 
 #+BEGIN_SRC emacs-lisp
-(setq read-process-output-max (wal/bytes-per-mb 1)
+(setq read-process-output-max (wal-bytes-per-mb 1)
       echo-keystrokes 0.2
 
       ;; Undo limits.
-      undo-limit (wal/bytes-per-mb 1)
-      undo-strong-limit (wal/bytes-per-mb 1.5)
-      undo-outer-limit (wal/bytes-per-mb 150)
+      undo-limit (wal-bytes-per-mb 1)
+      undo-strong-limit (wal-bytes-per-mb 1.5)
+      undo-outer-limit (wal-bytes-per-mb 150)
 
       ;; Mouse.
       mouse-yank-at-point t
@@ -276,7 +276,7 @@ Any mode that should be on/off no matter what.
 (scroll-bar-mode -1)
 
 ;; Emacs 29.
-(when (wal/modern-emacs-p 29)
+(when (wal-modern-emacs-p 29)
   (pixel-scroll-precision-mode 1))
 #+END_SRC
 
@@ -285,20 +285,20 @@ Any mode that should be on/off no matter what.
 Advise to maybe add hook to delete trailing whitespace.
 
 #+BEGIN_SRC emacs-lisp
-(defvar-local wal/delete-trailing-whitespace t
+(defvar-local wal-delete-trailing-whitespace t
   "Whether to delete trailing whitespace.")
 
-(defun wal/then-add-delete-trailing-whitespace-hook (&rest _args)
+(defun wal-then-add-delete-trailing-whitespace-hook (&rest _args)
   "Advise to conditionally add before save hook.
 
-When `wal/delete-trailing-whitespace' is t, trailing whitespace
+When `wal-delete-trailing-whitespace' is t, trailing whitespace
 is deleted."
-  (when wal/delete-trailing-whitespace
+  (when wal-delete-trailing-whitespace
     (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)))
 
 (advice-add
  'hack-local-variables :after
- #'wal/then-add-delete-trailing-whitespace-hook)
+ #'wal-then-add-delete-trailing-whitespace-hook)
 #+END_SRC
 
 * Garbage Collection
@@ -306,11 +306,11 @@ is deleted."
 Increase the =gc-cons-threshold= after start-up.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal/increase-gc-cons-threshold ()
+(defun wal-increase-gc-cons-threshold ()
   "Increase `gc-cons-threshold' to maximum on minibuffer setup."
-  (setq gc-cons-threshold (wal/bytes-per-mb 100)))
+  (setq gc-cons-threshold (wal-bytes-per-mb 100)))
 
-(add-hook 'emacs-startup-hook #'wal/increase-gc-cons-threshold)
+(add-hook 'emacs-startup-hook #'wal-increase-gc-cons-threshold)
 #+END_SRC
 
 
@@ -319,7 +319,7 @@ Increase the =gc-cons-threshold= after start-up.
 Set up an easy way to switch between tabs and spaces for indentation[fn:1].
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal/indent-vars '(python-indent-offset
+(defvar wal-indent-vars '(python-indent-offset
                           js-indent-level
                           c-ts-mode-indent-offset
                           css-indent-offset
@@ -330,15 +330,15 @@ Set up an easy way to switch between tabs and spaces for indentation[fn:1].
                           electric-indent-inhibit
                           indent-tabs-mode))
 
-(defun wal/reset-indent-defaults ()
+(defun wal-reset-indent-defaults ()
   "Reset indent defaults.
 Resets all variables that were initially set by
-`wal/set-indent-defaults'."
+`wal-set-indent-defaults'."
   (interactive)
 
-  (mapc #'wal/reset-to-standard wal/indent-vars))
+  (mapc #'wal-reset-to-standard wal-indent-vars))
 
-(add-hook 'emacs-startup-hook #'wal/set-indent-defaults)
+(add-hook 'emacs-startup-hook #'wal-set-indent-defaults)
 #+END_SRC
 
 * Scratch Buffer
@@ -349,8 +349,8 @@ Let's keep the scratch contents.
 ;; Empty scratch message.
 (setq initial-scratch-message "")
 
-(add-hook 'emacs-startup-hook #'wal/rehydrate-scratch)
-(add-hook 'kill-emacs-hook #'wal/persist-scratch)
+(add-hook 'emacs-startup-hook #'wal-rehydrate-scratch)
+(add-hook 'kill-emacs-hook #'wal-persist-scratch)
 #+END_SRC
 
 * Minimize Annoyances
@@ -402,26 +402,26 @@ Make completions look nice.
   (transient-define-prefix whaler ()
     "Facilitate the usage of or the working on Walheimat's config."
     [["Do"
-      ("h" "consult config heading" wal/config-consult-org-heading)
-      ("t" "tangle" wal/tangle-config)
+      ("h" "consult config heading" wal-config-consult-org-heading)
+      ("t" "tangle" wal-tangle-config)
       ("x" "install expansion pack" junk-install)
-      ("c" "customize group" wal/customize-group)
-      ("m" "show diff" wal/show-config-diff-range)]
+      ("c" "customize group" wal-customize-group)
+      ("m" "show diff" wal-show-config-diff-range)]
      ["Check"
-      ("d" "checkdoc" wal/checkdoc-config-packages)
-      ("p" "pacify" wal/run-pacify)
-      ("o" "coverage" wal/check-coverage)
-      ("j" "JSON coverage" wal/create-json-coverage)
-      ("b" "cold boot" wal/run-cold-boot)]]
+      ("d" "checkdoc" wal-checkdoc-config-packages)
+      ("p" "pacify" wal-run-pacify)
+      ("o" "coverage" wal-check-coverage)
+      ("j" "JSON coverage" wal-create-json-coverage)
+      ("b" "cold boot" wal-run-cold-boot)]]
     ["Fluff"
-     ("w" "toggle animation" wal/ascii-whale-toggle-display)])
+     ("w" "toggle animation" wal-ascii-whale-toggle-display)])
 
-  (advice-add 'whaler :around 'wal/with-delayed-transient-popup)
+  (advice-add 'whaler :around 'wal-with-delayed-transient-popup)
   ;; Additional `general' bindings.
   (administrator
     "f" '(:ignore t :wk "find")
-    "fc" 'wal/find-custom-file
-    "fi" 'wal/find-init
+    "fc" 'wal-find-custom-file
+    "fi" 'wal-find-init
     "fl" 'find-library
 
     "l" '(:ignore t :wk "list")
@@ -429,8 +429,8 @@ Make completions look nice.
     "lt" 'list-timers
 
     "s" '(:ignore t :wk "set")
-    "st" 'wal/set-transparency
-    "sc" 'wal/set-cursor-type
+    "st" 'wal-set-transparency
+    "sc" 'wal-set-cursor-type
 
     "p" '(:ignore t :wk "package")
     "pf" 'package-refresh-contents
@@ -439,43 +439,43 @@ Make completions look nice.
     "pr" 'package-reinstall
     "pd" 'package-delete)
 
-  (global-set-key (kbd (wal/key-combo-for-leader 'whaler)) #'whaler)
+  (global-set-key (kbd (wal-key-combo-for-leader 'whaler)) #'whaler)
 
-  (global-set-key (kbd (wal/key-combo-for-leader 'major)) #'major?)
+  (global-set-key (kbd (wal-key-combo-for-leader 'major)) #'major?)
 
-  (when (wal/modern-emacs-p 29)
+  (when (wal-modern-emacs-p 29)
     (editor "d" 'duplicate-dwim))
 
-  (editor "M-w" 'wal/kill-ring-save-whole-buffer)
+  (editor "M-w" 'wal-kill-ring-save-whole-buffer)
 
-  (editor "M-q" 'wal/spill-paragraph)
-
-  (general-define-key
-   :prefix (wal/prefix-user-key "-")
-   :prefix-map 'wal/triple-minus-map
-   :wk-full-keys nil
-   "b" 'wal/kill-some-file-buffers
-   "d" 'wal/l
-   "f" 'wal/fundamental-mode
-   "i" 'wal/set-indent-defaults
-   "I" 'wal/reset-indent-defaults
-   "1" 'wal/force-delete-other-windows)
+  (editor "M-q" 'wal-spill-paragraph)
 
   (general-define-key
-   :prefix (wal/prefix-user-key "0")
-   :prefix-map 'wal/zero-in-map
+   :prefix (wal-prefix-user-key "-")
+   :prefix-map 'wal-triple-minus-map
    :wk-full-keys nil
-   "f" 'wal/find-fish-config
-   "h" 'wal/dired-from-home
+   "b" 'wal-kill-some-file-buffers
+   "d" 'wal-l
+   "f" 'wal-fundamental-mode
+   "i" 'wal-set-indent-defaults
+   "I" 'wal-reset-indent-defaults
+   "1" 'wal-force-delete-other-windows)
+
+  (general-define-key
+   :prefix (wal-prefix-user-key "0")
+   :prefix-map 'wal-zero-in-map
+   :wk-full-keys nil
+   "f" 'wal-find-fish-config
+   "h" 'wal-dired-from-home
    "s" 'find-sibling-file)
 
   (that-key "triple-minus" :user-key "-")
   (that-key "zero-in" :user-key "0")
   (that-key "wal" :key "C-c w" :condition (not (display-graphic-p)))
 
-  (global-set-key [remap kill-line] #'wal/kwim)
-  (global-set-key [remap move-beginning-of-line] #'wal/mwim-beginning)
-  (global-set-key (kbd "C-c x") #'wal/scratch-buffer)
+  (global-set-key [remap kill-line] #'wal-kwim)
+  (global-set-key [remap move-beginning-of-line] #'wal-mwim-beginning)
+  (global-set-key (kbd "C-c x") #'wal-scratch-buffer)
   (global-set-key (kbd "C-c b") #'eww)
   (global-set-key (kbd "C-c l") #'display-line-numbers-mode)
 
@@ -484,9 +484,9 @@ Make completions look nice.
     (when (boundp 'other-window-repeat-map)
       (define-key other-window-repeat-map "0" 'delete-window)
       (define-key other-window-repeat-map "1" 'delete-other-windows)
-      (define-key other-window-repeat-map (kbd "C-k") 'wal/force-delete-other-windows)))
+      (define-key other-window-repeat-map (kbd "C-k") 'wal-force-delete-other-windows)))
 
-  (global-set-key [remap save-buffers-kill-terminal] #'wal/delete-edit-or-kill))
+  (global-set-key [remap save-buffers-kill-terminal] #'wal-delete-edit-or-kill))
 #+END_SRC
 
 * Footer

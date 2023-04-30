@@ -12,7 +12,7 @@
 
 (let ((source-dir (getenv "GITHUB_WORKSPACE")))
 
-  (when (fboundp 'wal/bootstrap-config)
-    (wal/bootstrap-config source-dir t)))
+  (when (fboundp 'wal-bootstrap-config)
+    (wal-bootstrap-config source-dir t)))
 
 ;;; wal-setup-ci.el ends here

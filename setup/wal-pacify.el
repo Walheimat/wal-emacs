@@ -13,14 +13,14 @@
 
 (let ((source-dir (getenv "EMACS_SOURCE_DIR")))
 
-  (when (fboundp 'wal/bootstrap-config)
-    (wal/bootstrap-config source-dir t)))
+  (when (fboundp 'wal-bootstrap-config)
+    (wal-bootstrap-config source-dir t)))
 
-(defvar wal/emacs-config-package-path)
-(declare-function wal/package-files "ext:wal.el")
-(declare-function wal/directory-files "ext:wal-prelude.el")
+(defvar wal-emacs-config-package-path)
+(declare-function wal-package-files "ext:wal.el")
+(declare-function wal-directory-files "ext:wal-prelude.el")
 
-(add-to-list 'load-path wal/emacs-config-package-path)
+(add-to-list 'load-path wal-emacs-config-package-path)
 
 (require 'wal nil t)
 
@@ -61,7 +61,7 @@
 
 (message "Checking package files")
 
-(dolist (it (wal/package-files))
+(dolist (it (wal-package-files))
   (wal-pacify--check-file it))
 
 (sit-for 5)

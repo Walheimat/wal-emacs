@@ -15,7 +15,7 @@
 
 (declare-function org-babel-tangle-file "ob-tangle")
 
-(defconst wal/packages '(wal
+(defconst wal-packages '(wal
                          wal-func
                          wal-external
                          wal-key-bindings
@@ -44,30 +44,30 @@
 
 The order determines the load order as well.")
 
-(defvar wal/booting nil
+(defvar wal-booting nil
   "Set to t during bootstrapping.")
 
-(defvar wal/init-error nil
+(defvar wal-init-error nil
   "Set to the error message if initialization failed.")
 
-(defvar wal/emacs-config-default-path nil
+(defvar wal-emacs-config-default-path nil
   "The root path of the configuration.
 
-This variable will be set when calling `wal/bootstrap-config'.")
+This variable will be set when calling `wal-bootstrap-config'.")
 
-(defvar wal/emacs-config-lib-path nil
+(defvar wal-emacs-config-lib-path nil
   "The path to the config's library.
 
-This variable will be set when calling `wal/bootstrap-config'")
+This variable will be set when calling `wal-bootstrap-config'")
 
-(defvar wal/emacs-config-package-path nil
+(defvar wal-emacs-config-package-path nil
   "The path to the config's packages.
 
-This variable will be set when calling `wal/bootstrap-config'.")
+This variable will be set when calling `wal-bootstrap-config'.")
 
 ;;;; Utility:
 
-(defun wal/find-or-create-directory (dir)
+(defun wal-find-or-create-directory (dir)
   "Find (or create) directory DIR.
 
 Returns the path to the directory or nil (if created)."
@@ -75,13 +75,13 @@ Returns the path to the directory or nil (if created)."
       dir
     (make-directory dir)))
 
-(defun wal/directory-files (directory)
+(defun wal-directory-files (directory)
   "Get all non-dot-directory files in DIRECTORY."
   (nthcdr 2 (directory-files directory t)))
 
 ;;;; Entry-points:
 
-(defun wal/tangle-config ()
+(defun wal-tangle-config ()
   "Tangle the config."
   (interactive)
 
@@ -90,42 +90,42 @@ Returns the path to the directory or nil (if created)."
   (defvar org-confirm-babel-evaluate)
 
   (let ((org-confirm-babel-evaluate nil)
-        (sources (wal/directory-files wal/emacs-config-lib-path)))
+        (sources (wal-directory-files wal-emacs-config-lib-path)))
 
-    (advice-add #'wal/message-in-a-bottle :override #'ignore)
+    (advice-add #'wal-message-in-a-bottle :override #'ignore)
 
     (dolist (it sources)
-      (org-babel-tangle-file (expand-file-name it wal/emacs-config-default-path)))
+      (org-babel-tangle-file (expand-file-name it wal-emacs-config-default-path)))
 
-    (advice-remove #'wal/message-in-a-bottle #'ignore)))
+    (advice-remove #'wal-message-in-a-bottle #'ignore)))
 
-(defun wal/load-config (&optional package-dir)
+(defun wal-load-config (&optional package-dir)
   "Load the config from PACKAGE-DIR."
   (interactive)
 
   (let ((dir (or package-dir
-                 wal/emacs-config-package-path
+                 wal-emacs-config-package-path
                  default-directory))
         (current nil))
 
-    (setq wal/booting t)
+    (setq wal-booting t)
 
     (add-to-list 'load-path dir)
 
     (condition-case err
-        (dolist (it wal/packages)
+        (dolist (it wal-packages)
           (setq current it)
           (require it))
       (error
        (message "Failed to load package '%s': %s"
                 current
                 (error-message-string err))
-       (setq wal/init-error err
-             wal/booting nil)))
+       (setq wal-init-error err
+             wal-booting nil)))
 
-    (setq wal/booting nil)))
+    (setq wal-booting nil)))
 
-(defun wal/bootstrap-config (source-dir &optional no-load cold-boot)
+(defun wal-bootstrap-config (source-dir &optional no-load cold-boot)
   "Bootstrap the configuration in SOURCE-DIR.
 
 This will tangle the config if it hasn't been yet.
@@ -136,17 +136,17 @@ If COLD-BOOT is t, a temp folder will be used as a
 `package-user-dir' to test the behavior of a cold boot."
   (let* ((package-dir (expand-file-name "wal" source-dir))
          (lib-dir (expand-file-name "lib" source-dir))
-         (created-dir (wal/find-or-create-directory package-dir)))
+         (created-dir (wal-find-or-create-directory package-dir)))
 
     (message "Boostrapping config from '%s'" source-dir)
 
     ;; These variables are also used in `wal' package.
-    (setq wal/emacs-config-default-path source-dir)
-    (setq wal/emacs-config-lib-path lib-dir)
-    (setq wal/emacs-config-package-path package-dir)
+    (setq wal-emacs-config-default-path source-dir)
+    (setq wal-emacs-config-lib-path lib-dir)
+    (setq wal-emacs-config-package-path package-dir)
 
     (unless created-dir
-      (wal/tangle-config))
+      (wal-tangle-config))
 
     (when cold-boot
       (setq package-user-dir (make-temp-file nil t))
@@ -154,14 +154,14 @@ If COLD-BOOT is t, a temp folder will be used as a
       (message "Cold-boot using '%s'" package-user-dir))
 
     (unless no-load
-      (wal/load-config)
+      (wal-load-config)
 
-      (when wal/init-error
+      (when wal-init-error
         (if cold-boot
             (kill-emacs 1)
           (delay-warning
            'wal
-           (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal/init-error)
+           (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal-init-error)
            :error))))))
 
 (provide 'wal-prelude)
