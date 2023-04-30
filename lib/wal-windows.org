@@ -1,0 +1,100 @@
+#+TITLE: Windows
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-windows.el" wal/emacs-config-package-path)
+
+Everything that has to do with windows.
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-windows.el --- Windows. -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Provide window packages.
+
+;;; Code:
+
+(defvar popper-buried-popup-alist)
+(defvar popper-group-function)
+#+END_SRC
+
+* Packages
+
+** windmove
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+begin_src emacs-lisp
+(use-package windmove
+  :hook (emacs-startup . windmove-mode)
+
+  :custom
+  (windmove-default-keybindings (cons nil '(hyper)))
+  (windmove-swap-states-default-keybindings (cons nil '(hyper shift)))
+  (windmove-delete-default-keybindings (cons 'none '(hyper meta)))
+  (windmove-display-default-keybindings (cons nil '(hyper control))))
+#+end_src
+
+** winner
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package winner
+  :hook (emacs-startup . winner-mode))
+#+END_SRC
+
+** tab-bar
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Invisible tabs.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/tab-bar-switch-to-buffer-tab (buffer)
+  "If BUFFER is shown in a tab, switch to the tab.
+
+Otherwise switch to the buffer normally."
+  (if-let* ((tab (tab-bar-get-buffer-tab buffer))
+            (tab-name (cdr-safe (assoc 'name tab))))
+      (progn
+        (tab-bar-switch-to-tab tab-name)
+        (select-window (get-buffer-window buffer)))
+    (switch-to-buffer buffer)))
+#+END_SRC
+
+*** Configuration
+
+#+begin_src emacs-lisp
+(use-package tab-bar
+  :hook (emacs-startup . tab-bar-mode)
+
+  :custom
+  (tab-bar-show nil)
+
+  (tab-bar-new-tab-choice #'wal/dashboard-get-buffer)
+  (tab-bar-new-tab-group nil)
+
+  :wal-bind
+  ("o" . tab-switch))
+#+end_src
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-windows)
+
+;;; wal-windows.el ends here
+#+END_SRC

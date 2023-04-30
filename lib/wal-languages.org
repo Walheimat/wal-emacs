@@ -1,0 +1,1386 @@
+#+TITLE: Languages
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-lang.el" wal/emacs-config-package-path)
+
+Let's greet the world.
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-lang.el --- Languages. -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Provide Emacs settings/configurations.
+
+;;; Code:
+
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+
+(declare-function prettier--quit-all-processes "ext:prettier.el")
+(declare-function wal/modern-emacs-p "wal-func.el")
+(declare-function wal/set-ligatures "ext:wal-visuals.el")
+(declare-function wal/transient-grab "wal-key-bindings.el")
+(declare-function wdb/nearby "wal-func.el")
+
+(defvar prettier-processes)
+
+(defgroup wal-lang nil
+  "Change language-specific settings."
+  :group 'wal
+  :tag "Langauge")
+#+END_SRC
+
+* Elixir
+
+Bitches brew.
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand elixir
+  "For Elixir developers."
+  :packages (elixir-mode))
+#+END_SRC
+
+** elixir-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package elixir-mode
+  :wal-ways nil
+
+  :init
+  (harpoon elixir-mode
+    :lsp t
+    :messages ("Mixin' potions" "A hex on you")
+    :functions (abbrev-mode)
+    :ligatures ("|>" "->" "<-" "=>"
+                "::" "<>" "#{" "\\\\"
+                "===" "!==" ".."))
+
+  :config
+  (define-abbrev-table 'elixir-mode-abbrev-table '(("p" "|>"))))
+#+END_SRC
+
+* C/C++
+
+I want to be ready for =jai=.
+
+** c++-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package cc-mode
+  :init
+  (harpoon c++-mode
+    :lsp t
+    :major t
+    :ligatures ("::" "->")
+    :messages ("Make tidy! Make clean!" "Serenity now!"))
+
+  (harpoon c-mode
+    :lsp t
+    :ligatures ("->"))
+
+  :config
+  ;; Eliminate conflicts with `delight'.
+  (advice-add 'c-update-modeline :override #'ignore)
+
+  (wal/transient-define-major c++-mode ()
+    "Access `c++-mode' commands."
+    [["Style"
+      ("s" "set" c-set-style)
+      ("g" "guess (using buffer)" c-guess-buffer)]]))
+#+END_SRC
+
+* Rust
+
+Consider the lobster.
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand rust
+  "For Rust developers."
+  :packages (rust-mode cargo))
+#+END_SRC
+
+** rust-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-server-binary][these instructions]] to download the =rust-analyzer= binary.
+
+#+BEGIN_SRC emacs-lisp
+(use-package rust-mode
+  :if (executable-find "cargo")
+  :wal-ways nil
+
+  :init
+  (harpoon rust-mode
+    :lsp t
+    :major t
+    :ligatures ("///" "->" "=>" "::" ".." "#[")
+    :messages ("Consider the lobster"))
+
+  :config
+  (wal/transient-define-major rust-mode ()
+    "Access `rust-mode' commands."
+    [["Commands"
+      ("c" "compile" rust-compile)
+      ("r" "run" rust-run)]
+     ["Test"
+      ("t a" "test all" rust-test)
+      ("t c" "current" cargo-process-current-test)
+      ("t f" "file" cargo-process-current-file-tests)]]))
+#+END_SRC
+
+** cargo
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package cargo
+  :wal-ways nil
+
+  :demand t
+  :after rust-mode)
+#+END_SRC
+
+* Python
+
+Hide those details from me.
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand python
+  "Virtual environment, isort, poetry and notebook support."
+  :packages (pet python-isort python-black)
+  :extras (lsp-pyright ein poetry))
+#+END_SRC
+
+** python
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Use snake when you can't =make=.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/in-python-project-p (&optional marker-file)
+  "Check if we're currently in a Python project.
+
+Unless another MARKER-FILE is provided, this will use the usual
+TOML."
+  (and-let* ((marker (or marker-file "pyproject.toml"))
+             (current default-directory)
+             (project-directory (locate-dominating-file current marker)))))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package python
+
+  :init
+  (harpoon python-mode
+    :major t
+    :lsp
+    (:ignore-dirs (".pytype" "__pycache__" ".pytest_cache" "typings"))
+    :corfu (0.1 1)
+    :ligatures ("->" "__")
+    :messages ("Watch out for snakes!" "Vegetation, aggravation")
+
+    (setq-local comment-inline-offset 2))
+
+  :config
+  ;; Load default `dap-mode' templates.
+  (with-eval-after-load 'dap-mode
+    (require 'dap-python))
+
+  ;; Show inferior shell at the bottom.
+  (wdb/nearby 'inferior-python-mode)
+
+  (wal/transient-define-major python-mode ()
+    "Access `python-mode' commands."
+    [["Inferior shell"
+      ("i r" "send region" python-shell-send-region)
+      ("i b" "send buffer" python-shell-send-buffer)
+      ("i f" "send file" python-shell-send-file)]
+     ["Commands"
+      ("r" "run shell" run-python)]])
+
+  :custom
+  (python-indent-guess-indent-offset nil))
+#+END_SRC
+
+** lsp-pyright
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Did Microsoft do the right thing?
+
+** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/lsp-pyright-install-stubs ()
+  "Install the pyright stubs."
+  (interactive)
+
+  (unless (wal/in-python-project-p)
+    (user-error "You're not in a Python project!"))
+
+  (when-let* ((cur (project-current))
+              (dir (project-root cur))
+              (stub-dir (expand-file-name "typings" dir)))
+
+    (if (file-directory-p stub-dir)
+        (user-error "Stubs directory already exists!")
+      (make-directory stub-dir))
+
+    (let ((cmd (concat "git clone https://github.com/microsoft/python-type-stubs "
+                       stub-dir))
+          (buffer (get-buffer-create "*Pyright Stubs*")))
+
+      (display-buffer-in-side-window buffer '((side . bottom)))
+      (async-shell-command cmd buffer))))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package lsp-pyright
+  :wal-ways nil
+
+  :demand t
+  :after (python lsp-mode))
+#+END_SRC
+
+** python-isort
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Sort with =isort=.
+
+#+begin_src emacs-lisp
+(use-package python-isort
+  :wal-ways nil
+
+  :after python
+
+  :init
+  (transient-append-suffix 'python-mode-major '(0 1 -1)
+    '("s" "isort" python-isort-buffer)))
+#+end_src
+
+** python-black
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Blacken buffers.
+
+#+BEGIN_SRC emacs-lisp
+(use-package python-black
+  :wal-ways nil
+
+  :after python
+
+  :init
+  (transient-append-suffix 'python-mode-major '(0 1 -1)
+    '("b" "black" python-black-buffer)))
+#+END_SRC
+
+** ein
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Work with Jupyter notebooks.
+
+#+BEGIN_SRC emacs-lisp
+(use-package ein
+  :wal-ways nil
+
+  :after python
+
+  :init
+  (transient-append-suffix 'python-mode-major '(0 1 -1)
+    '("e" "ein" ein:run)))
+#+END_SRC
+
+** Virtual Envs
+
+It takes more than one environment to make sense of Python code.
+
+*** pet
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Takes care[fn:1] of all your virtual environment needs.
+
+**** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/otherwise-return-argument (arg)
+  "Return ARG if original function returned nil."
+  arg)
+#+END_SRC
+
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package pet
+  :if (and (executable-find "dasel")
+           (executable-find "sqlite3"))
+
+  :wal-ways nil
+
+  :hook (python-mode . pet-mode)
+
+  :config
+  (advice-add
+   'pet-executable-find :after-until
+   #'wal/otherwise-return-argument)
+
+  :delight " pet")
+#+END_SRC
+
+*** poetry
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+=poetry= is like =npm= for Python, it's why it rhymes.
+
+#+BEGIN_SRC emacs-lisp
+(use-package poetry
+  :wal-ways nil
+
+  :after python
+
+  :init
+  (transient-append-suffix 'python-mode-major '(0 1 -1)
+    '("p" "poetry" poetry)))
+#+END_SRC
+
+*** pyvenv
+
+#+BEGIN_SRC emacs-lisp
+(use-package pyvenv
+  :wal-ways nil
+
+  :after python
+
+  :init
+  (transient-append-suffix 'python-mode-major '(0 1 -1)
+    '("v" "activate venv" pyvenv-activate)))
+#+END_SRC
+
+* Lisp
+
+The philosopher's choice.
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand lisp
+  "For (common-) Lisp developers using sbcl."
+  :packages (puni)
+  :extras (slime))
+
+(junk-expand clojure
+  "For Clojure developers using cider with lein."
+  :packages (clojure-mode cider))
+#+END_SRC
+
+** puni
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Deal with the parens.
+
+#+BEGIN_SRC emacs-lisp
+(use-package puni
+  :wal-ways nil
+
+  :hook (lisp-data-mode . puni-mode)
+
+  :init
+  ;; This package doesn't have a lighter.
+  (add-to-list 'minor-mode-alist (list 'puni-mode " pni"))
+
+  :bind
+  (:map puni-mode-map
+   ("C-M-." . puni-barf-forward)
+   ("C-M-," . puni-barf-backward)
+
+   ("C-M-'" . puni-slurp-forward)
+   ("C-M-;" . puni-slurp-backward)
+
+   ("C-M-<" . puni-squeeze)
+   ("C-M->" . puni-splice)
+
+   ("C-M-(" . puni-wrap-round)
+   ("C-M-[" . puni-wrap-angle)
+   ("C-M-{" . puni-wrap-curly)
+
+   ("C-M--" . puni-raise)
+   ("C-M-=" . puni-convolute)))
+#+END_SRC
+
+** elisp-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package elisp-mode
+  :init
+  (harpoon emacs-lisp-mode
+    :major t
+    :messages ("So it's just a bunch of lists?" "List your lambdas")
+    :functions (prettify-symbols-mode))
+
+  :config
+  (wal/transient-define-major emacs-lisp-mode ()
+    "Access `elisp' commands."
+    [["Utility"
+      ("c" "check parens" check-parens)
+      ("d" "edebug function" edebug-defun)
+      ("h" "helpful" helpful-at-point)
+      ("m" "expand macro" emacs-lisp-macroexpand)]])
+
+  (with-eval-after-load 'puni
+    (transient-append-suffix 'emacs-lisp-mode-major '(0 0 -1)
+      '("p" "puni" puni-mode))))
+#+END_SRC
+
+** lisp-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package lisp-mode
+  :init
+  (harpoon common-lisp-mode
+    :major t)
+
+  (harpoon lisp-data-mode
+    :corfu (0.1 1)
+    :ligatures (";;"))
+
+  :config
+  (with-eval-after-load 'slime
+    (wal/transient-define-major common-lisp-mode ()
+      "Access `slime' actions."
+      [["Slime"
+        ("s" "slime" slime-mode)
+        ("r" "open REPL" slime)]])))
+#+END_SRC
+
+** clojure-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Get some closure.
+
+#+begin_src emacs-lisp
+(use-package clojure-mode
+  :wal-ways nil
+
+  :init
+  (harpoon clojure-mode
+    :lsp t
+    :major t
+    :ligatures (";;" "->" "->>")
+    :messages ("Cider brew"))
+
+  :config
+  (with-eval-after-load 'cider
+    (wal/transient-define-major clojure-mode ()
+      "Access `clojure-mode' commands."
+      [["Cider"
+        ("r" "repl" cider-jack-in)
+        ("n" "set namespace" cider-repl-set-ns)]])))
+#+end_src
+
+** cider
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Can't have closure without REPL.
+
+#+begin_src emacs-lisp
+(use-package cider
+  :wal-ways nil
+
+  :demand t
+  :after clojure-mode
+
+  :config
+  (wdb/nearby 'cider-repl-mode)
+
+  :custom
+  (cider-jack-in-default 'lein))
+#+end_src
+
+** slime
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html][lisp cookbook]] for =slime=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package slime
+  :wal-ways nil
+
+  :defer 2
+  :after lisp-mode
+
+  :config
+  (when (executable-find "sbcl")
+    (setq inferior-lisp-program "sbcl"))
+
+  (slime-setup '(slime-fancy slime-quicklisp slime-asdf))
+
+  :delight " slm")
+#+END_SRC
+
+* JavaScript
+
+Can we have =deno= instead of =node=?
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand javascript
+  "For Node.js developers."
+  :packages (add-node-modules-path prettier)
+  :extras (typescript-mode))
+#+END_SRC
+
+** js
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/jest-compilation-error-regexp
+  '(jest
+    "^[[:blank:]]+at [^\n\r]+ (\\([^\n\r]+\\(?:.spec\\|.test\\)?.\\(?:js\\|jsx\\)\\):\\([0-9]+\\):\\([0-9]+\\))$"
+    1 2 3)
+  "Regular expression used for jest errors.")
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package js
+  :init
+  (harpoon js-mode
+    :messages ("NaN !== NaN" "Null falsy values or undefined")
+    :major t
+    :tabs t
+    :lsp t
+    :corfu (0.1 2)
+    :ligatures ("=>" "!==" "===" "!!")
+    :functions (add-node-modules-path prettier-mode)
+
+    (setq-local compilation-error-screen-columns nil))
+
+  (harpoon js-json-mode
+    :messages ("JSON! JSON? JSON!?")
+    :tabs t
+    :lsp t
+    :functions (add-node-modules-path prettier-mode))
+
+  :config
+  (when (wal/modern-emacs-p 29)
+    (bind-key "M-." nil js-ts-mode-map))
+
+  ;; Load default `dap-mode' templates.
+  (with-eval-after-load 'dap-mode
+    (require 'dap-node))
+
+  (wal/transient-define-major js-mode ()
+    "Access JS commands."
+    [["Actions"
+      ("c" "context" js-syntactic-context)]])
+
+  ;; Add regular expression for jest errors.
+  (add-to-list 'compilation-error-regexp-alist 'jest)
+  (add-to-list
+   'compilation-error-regexp-alist-alist
+   wal/jest-compilation-error-regexp)
+
+  :bind
+  (:map js-mode-map
+   ("M-." . nil)))
+#+END_SRC
+
+** typescript-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Please use TypeScript.
+
+#+BEGIN_SRC emacs-lisp
+(use-package typescript-mode
+  :wal-ways nil
+
+  :mode "\\.ts\\(x\\)?\\'"
+
+  :init
+  (harpoon typescript-mode
+    :lsp t
+    :messages ("This is any, that is any, everything is any!")
+    :functions (add-node-modules-path)))
+#+END_SRC
+
+** add-node-modules-path
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Allow accessing a project's =node_modules=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package add-node-modules-path
+  :wal-ways nil)
+#+END_SRC
+
+** prettier
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Prettify your ugly JavaScript.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/prettier-timer nil)
+
+(defun wal/prettier-refresh ()
+  "Force re-loading configuration and apply."
+  (interactive)
+
+  (when wal/prettier-timer
+    (user-error "Refresh timer already running"))
+
+  (prettier--quit-all-processes)
+
+  (setq wal/prettier-timer
+        (run-with-timer 0.1 0.1
+                        (lambda ()
+                          (when (zerop (hash-table-count prettier-processes))
+                            (cancel-timer wal/prettier-timer)
+                            (setq wal/prettier-timer nil)
+                            (prettier-prettify)
+                            (message "Refresh done"))))))
+
+(defun wal/instead-delay-prettier-errors (string &rest objects)
+  "Treat prettier errors like warnings.
+
+STRING is formatted with OBJECTS."
+  (let ((formatted (apply #'format string objects)))
+
+    (delay-warning 'prettier formatted :warning)))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package prettier
+  :wal-ways nil
+
+  :config
+  (with-eval-after-load 'js
+    (transient-append-suffix 'js-mode-major '(0 0 0)
+      '("p" "prettier" prettier-prettify)))
+
+  ;; Copy JSON parsers for newer major modes.
+  (mapc
+   (lambda (it)
+     (add-to-list
+      'prettier-major-mode-parsers
+      (cons it (cdr-safe (assoc 'json-mode prettier-major-mode-parsers)))))
+   '(js-json-mode json-ts-mode))
+
+  (advice-add
+   'prettier--show-error :override
+   #'wal/instead-delay-prettier-errors)
+
+  :custom
+  (prettier-lighter " prt"))
+#+END_SRC
+
+* Go
+
+Ogling new languages.
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand go
+  "For Go developers."
+  :packages (go-mode))
+#+END_SRC
+
+** go-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Setup for LSP.
+
+#+BEGIN_SRC emacs-lisp
+(use-package go-mode
+  :wal-ways nil
+
+  :init
+  (harpoon go-mode
+    :lsp t
+    :messages ("What does Sonic say?" "Put a golang under your tongue")))
+#+END_SRC
+
+* Scripting
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand fish
+  "For fish shell users."
+  :packages (fish-mode))
+
+(junk-expand cli
+  "For CLI power users."
+  :packages (crontab-mode))
+#+END_SRC
+
+** sh-script
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Bash your head in!
+
+#+BEGIN_SRC emacs-lisp
+(use-package sh-script
+  :init
+  (harpoon sh-mode
+    :messages ("Sh..sh..h.." "Bash your head in"))
+
+  :custom
+  (sh-basic-offset 2)
+  (sh-indent-after-continuation nil))
+#+END_SRC
+
+** crontab-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Sometimes you have to deal with things at their time.
+
+#+BEGIN_SRC emacs-lisp
+(use-package crontab-mode
+  :wal-ways nil)
+#+END_SRC
+
+** fish-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Support =fish= functions.
+
+#+BEGIN_SRC emacs-lisp
+(use-package fish-mode
+  :wal-ways nil
+
+  :custom
+  (fish-indent-offset 2))
+#+END_SRC
+
+** conf-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package conf-mode
+  :hook (conf-mode . wal/prog-like))
+#+END_SRC
+
+* Markup
+
+Sometimes things that don't do things need to look nice.
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand markdown
+  "For MD users."
+  :packages (markdown-mode))
+#+END_SRC
+
+** markdown-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/markdown-view ()
+  "Toggle between different markdown views."
+  (interactive)
+
+  (cond
+   ((eq major-mode 'markdown-mode)
+    (markdown-view-mode)
+    (mixed-pitch-mode 1))
+   ((eq major-mode 'markdown-view-mode)
+    (markdown-mode)
+    (mixed-pitch-mode -1))
+   (t
+    (error "Can't change view outside of markdown modes"))))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package markdown-mode
+  :wal-ways nil
+
+  :init
+  (harpoon markdown-mode
+    :major t)
+
+  :config
+  (wal/transient-define-major markdown-mode ()
+    "Access `markdown-mode' commands."
+    [["View"
+      ("v" "toggle view" wal/markdown-view)]])
+
+  :custom
+  (markdown-asymmetric-header t)
+
+  :bind
+  (:map markdown-mode-map
+   ("M-<up>" . markdown-move-list-item-up)
+   ("M-<down>" . markdown-move-list-item-down)))
+#+END_SRC
+
+* Flutter
+
+Yes, you need to install *Android Studio* for some reason.
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand flutter
+  "Dart major mode and LSP package."
+  :packages (dart-mode lsp-dart))
+#+END_SRC
+
+** dart-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package dart-mode
+  :wal-ways nil
+
+  :init
+  (harpoon dart-mode
+    :lsp t
+    :major t
+    :messages ("Bull's eye!")
+    :ligatures ("=>" "///" ".?" "??" "??=" "..")))
+#+END_SRC
+
+** lsp-dart
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+LSP support for Dart.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/find-dart-flutter-sdk-dir ()
+  "Find the Dart Flutter SDK directory."
+  (when-let* ((flutter-bin (executable-find "flutter"))
+              (sdk-dir (string-trim (shell-command-to-string "flutter sdk-path"))))
+
+    sdk-dir))
+
+(defun wal/find-dart-sdk-dir ()
+  "Find the Dart SDK directory."
+  (when-let* ((flutter-sdk-dir (wal/find-dart-flutter-sdk-dir)))
+
+    (expand-file-name "bin/cache/dart-sdk" flutter-sdk-dir)))
+
+(defun wal/lsp-dart-set-process-query-on-exit-flag ()
+  "Set the query-on-exit flag to nil for the Dart language server."
+  (defvar lsp-dart-flutter-daemon-buffer-name)
+  (when-let (proc (get-buffer-process lsp-dart-flutter-daemon-buffer-name))
+
+    (set-process-query-on-exit-flag proc nil)))
+
+(defun wal/lsp-dart-service-uri ()
+  "Get the service URI (needed for devtools)."
+  (interactive)
+
+  (declare-function lsp-workspace-get-metadata "ext:lsp-workspace.el")
+
+  (condition-case err
+      (let ((uri (lsp-workspace-get-metadata "devtools-vm-service-uri")))
+
+        (kill-new uri)
+        (message "Service URI (%s) copied to kill ring" uri))
+    (error
+      (message "Couldn't get service URI: %s" (error-message-string err)))))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package lsp-dart
+  :if (or (executable-find "flutter") (executable-find "dart"))
+  :wal-ways nil
+
+  :after lsp-mode
+
+  :config
+  ;; Kill process without a prompt.
+  (add-hook
+   'lsp-after-initialize-hook
+   #'wal/lsp-dart-set-process-query-on-exit-flag)
+
+  ;; Display at the bottom.
+  (wdb/nearby "\\*Flutter")
+
+  (wal/transient-define-major dart-mode ()
+    "Access flutter commands."
+    [["Hot-reloading"
+      ("R" "restart" lsp-dart-dap-flutter-hot-restart)
+      ("r" "reload" lsp-dart-dap-flutter-hot-reload)]
+     ["Test"
+      ("t c" "current" lsp-dart-run-test-at-point)
+      ("t a" "all" lsp-dart-run-all-tests)]
+     ["Devtools"
+      ("d" "open" lsp-dart-open-devtools)
+      ("u" "get service URI" wal/lsp-dart-service-uri)]])
+
+  :custom
+  (lsp-dart-flutter-sdk-dir (wal/find-dart-flutter-sdk-dir))
+  (lsp-dart-sdk-dir (wal/find-dart-sdk-dir))
+  ;; Run `lsp-dart-dap-setup' once to install debugger.
+  (lsp-dart-dap-use-sdk-debugger nil))
+#+END_SRC
+
+* Java
+
+It's a =JavaEmacsPackageConfigurationSectionFactory=, mate.
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand java
+  "Java expansions."
+  :packages (lsp-java log4j-mode))
+#+END_SRC
+
+** java-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+For some reason, this is also defined in =cc-mode=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package cc-mode
+  :init
+  (harpoon java-mode
+    :lsp (:ignore-dirs (".gradle"))
+    :major t
+    :messages ("Mmmh ... maven")
+    :ligatures ("::" "->")))
+#+END_SRC
+
+** lsp-java
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+LSP integration.
+
+*** Utility
+
+#+begin_src emacs-lisp
+(defun wal/with-bash-shell (fun &rest args)
+  "Run FUN with ARGS in bash shell."
+  (let ((shell-file-name "/bin/bash"))
+
+    (apply fun args)))
+
+(defun wal/java-test-dwim ()
+  "Run or debug test or class depending on ARGS."
+  (interactive)
+
+  (if-let* ((mode (wal/transient-grab "mode"))
+            (scope (wal/transient-grab "scope"))
+            (fun (intern (format "dap-java-%s-test-%s" mode scope))))
+
+      (progn (transient-set)
+             (call-interactively fun))
+    (message "Select scope and mode")))
+
+(defun wal/junit-match-file ()
+  "Find the buffer associated with the matched error."
+  (save-match-data
+    (let* ((file (match-string 2))
+           (buffer (cl-find-if
+                    (lambda (it)
+                      (when-let ((name (buffer-file-name it)))
+                        (string-match file name)))
+                    (buffer-list))))
+
+      (if buffer
+          (buffer-file-name buffer)
+        file))))
+
+(defvar wal/junit-compilation-error-regexp
+  '(junit
+    "^[[:blank:]]+\\(?:at \\)?\\([^\n\r]+\\)(\\([^\n\r]+.java\\):\\([0-9]+\\))"
+    wal/junit-match-file
+    3)
+  "Regular expression used for JUnit errors.")
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package lsp-java
+  :wal-ways nil
+
+  :config
+  (require 'dap-java)
+
+  ;; Use bash shell for JUnit commands.
+  (wal/advise-many
+   'wal/with-bash-shell :around
+   '(dap-java-debug-test-class
+     dap-java-debug-test-method
+     dap-java-run-test-class
+     dap-java-run-test-method))
+
+  (transient-define-argument wal/java-mode-switch ()
+    "Switch modes."
+    :description "Run in"
+    :class 'transient-switches
+    :argument-format "--mode=%s"
+    :argument-regexp "\\(--mode=\\(run\\|debug\\)\\)"
+    :choices '("run" "debug"))
+
+   (transient-define-argument wal/java-scope-switch ()
+    "Switch scopes."
+    :description "Use"
+    :class 'transient-switches
+    :argument-format "--scope=%s"
+    :argument-regexp "\\(--scope=\\(method\\|class\\)\\)"
+    :choices '("method" "class"))
+
+  (wal/transient-define-major java-mode ()
+    "Access `java-mode' commands."
+    :value '("--mode=run" "--scope=method")
+
+    ["Test"
+     ("m" wal/java-mode-switch)
+     ("s" wal/java-scope-switch)
+     ""
+     ("t" "test" wal/java-test-dwim)])
+
+  ;; Add regular expression for JUnit errors.
+  (add-to-list 'compilation-error-regexp-alist 'junit)
+  (add-to-list
+   'compilation-error-regexp-alist-alist
+   wal/junit-compilation-error-regexp)
+
+  :custom
+  (lsp-java-format-on-type-enabled nil) ; Suggested fix for failing completion.
+  (lsp-java-references-code-lens-enabled t)
+  (lsp-java-implementations-code-lens-enabled t)
+  (lsp-java-signature-help-enabled nil))
+#+end_src
+
+** log4j-mode
+
+Font-locked logs.
+
+#+BEGIN_SRC emacs-lisp
+(use-package log4j-mode
+  :wal-ways nil
+
+  :custom-face
+  (log4j-font-lock-debug-face ((t (:foreground unspecified :inherit (shadow)))))
+  (log4j-font-lock-info-face ((t (:foreground unspecified :inherit (success)))))
+  (log4j-font-lock-error-face ((t (:foreground unspecified :inherit (error)))))
+  (log4j-font-lock-warn-face ((t (:foreground unspecified :inherit (warning))))))
+#+END_SRC
+
+*** Using =log4j-mode=
+
+Use special key =auto-mode-alist= in your =.dir-locals.el= file.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+((auto-mode-alist . (("\\.log\\'" . log4j-mode)))
+#+END_SRC
+
+
+* PHP
+
+The elephant in the room.
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand php
+  "Major mode and web mode for templates."
+  :packages (php-mode))
+#+END_SRC
+
+** php-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package php-mode
+  :wal-ways nil
+
+  :init
+  (harpoon php-mode
+    :lsp t
+    :messages ("Stampy, no!")
+    :ligatures ("::" "=>" "->" "??"
+                "__" "<>" "!==" "<=>"
+                "==="))
+
+  :config
+  (require 'dap-php) ; Run `dap-php-setup'.
+
+  (wdb/nearby "\\*Php SOE"))
+#+END_SRC
+
+** Web
+
+Does anyone actually like web development?
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand web
+  "For web developers."
+  :packages (yaml-mode)
+  :extras (pug-mode po-mode web-mode))
+#+END_SRC
+
+*** mhtml-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package mhtml-mode
+  :init
+  (harpoon mhtml-mode
+    :lsp t
+    :messages ("Hodge-podge mark-up language")
+    :ligatures ("<!--" "-->" "</" "/>")))
+#+END_SRC
+
+*** nxml-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+begin_src emacs-lisp
+(use-package nxml-mode
+  :init
+  (harpoon nxml-mode
+    :lsp t
+    :messages ("Extreme mark-up language")
+    :ligatures ("<!--" "-->" "</" "/>")
+    :prog-like t))
+#+end_src
+
+*** yaml-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Sometimes things that do as well.
+
+#+BEGIN_SRC emacs-lisp
+(use-package yaml-mode
+  :mode "\\.\\(ya?ml\\|tpl\\)\\'" ; Helm templates.
+
+  :init
+  (harpoon yaml-mode
+    :messages ("JSON?! ... Ah, thank God it's you, YAML!")
+    :lsp t
+    :prog-like t))
+#+END_SRC
+
+*** css-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+We want quicker suggestions when in CSS modes.
+
+**** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/maybe-use-custom-css-checker ()
+  "Use custom checker in `scss-mode' and `less-mode'."
+  (when (executable-find "stylelint")
+    (add-hook
+     'lsp-after-open-hook
+     (lambda ()
+       (pcase major-mode
+         ('scss-mode
+          (setq-local flycheck-checker 'wal/scss-stylelint))
+         ('less-css-mode
+          (setq-local flycheck-checker 'wal/less-stylelint))
+         (_
+          (setq-local flycheck-checker 'css-stylelint))))
+     nil t)))
+#+END_SRC
+
+**** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package css-mode
+  :mode ("\\.rasi" . css-mode)
+
+  :init
+  (harpoon css-mode
+    :lsp t
+    :corfu (0.1 2)
+    :messages ("Centering? It's simple. Here's 15 ways to do it.")
+    :functions (add-node-modules-path wal/maybe-use-custom-css-checker)))
+#+END_SRC
+
+*** web-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package web-mode
+  :wal-ways nil
+
+  :mode ("\\.vue\\'"
+         "\\.blade.php\\'"
+         "\\.component.html\\'")
+
+  :init
+  (harpoon web-mode
+    :lsp t
+    :messages ("This is the Internet"))
+
+  :custom
+  (web-mode-comment-style 2))
+#+END_SRC
+
+* Games
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand games
+  "For game developers."
+  :packages (gdscript-mode))
+#+END_SRC
+
+** gdscript-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+The engine you've been waiting for.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+;; Workaround from https://github.com/godotengine/emacs-gdscript-mode#known-issues
+(defun wal/with-json-data-ignored-for-gdscript (fun &rest args)
+  "Advise FUN, passing ARGS.
+
+This will ignore the error message resulting from Godot not
+replying to the `JSONRPC' request."
+  (if (string-equal major-mode "gdscript-mode")
+      (let ((json-data (nth 0 args)))
+
+        (unless (and (string= (gethash "jsonrpc" json-data "") "2.0")
+                     (not (gethash "id" json-data nil))
+                     (not (gethash "method" json-data nil)))
+          (apply fun args)))
+    (apply fun args)))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package gdscript-mode
+  :wal-ways nil
+
+  :init
+  (harpoon gdscript-mode
+    :lsp t
+    :tabs always
+    :corfu (0.2 3)
+    :messages ("I wish you were Estra-gone"))
+
+  :config
+  (advice-add
+   'lsp--get-message-type :around
+   #'wal/with-json-data-ignored-for-gdscript)
+
+  (require 'dap-gdscript nil t))
+#+END_SRC
+
+* Prolog
+
+** prolog-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package prolog
+  :config
+  (wal/set-ligatures 'prolog-mode '(":-")))
+#+END_SRC
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-lang)
+
+;;; wal-lang.el ends here
+#+END_SRC
+
+* Footnotes
+
+[fn:1] Currently requires [[https://daseldocs.tomwright.me/installation#manual ][dasel]].

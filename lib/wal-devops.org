@@ -1,0 +1,118 @@
+#+TITLE: DevOps
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-devops.el" wal/emacs-config-package-path)
+
+Put it into a container and throw it in the garbage that is the
+Internet.
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-devops.el --- DevOps. -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Provide DevOps packages.
+
+;;; Code:
+
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+#+END_SRC
+
+* Docker
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand docker
+  "Docker and Kubernetes."
+  :packages (docker dockerfile-mode))
+#+END_SRC
+
+** docker
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+What goes =docker-compose= up, goes =docker-compose= down.
+
+#+BEGIN_SRC emacs-lisp
+(use-package docker
+  :wal-ways nil
+
+  :config
+  (wdb/nearby "\\*docker-containers\\*" :side 'top :height 15)
+  (wdb/faraway "^\\* docker container")
+  (wdb/faraway "^\\* docker-compose")
+
+  :custom
+  (docker-run-async-with-buffer-function 'docker-run-async-with-buffer-shell)
+  (docker-container-default-sort-key '("Names"))
+  (docker-image-default-sort-key '("Created" . t))
+  (docker-volume-default-sort-key '("Name"))
+  (docker-show-status nil)
+
+  :general
+  (ambassador "d" 'docker))
+#+END_SRC
+
+** dockerfile-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Make =Dockerfiles= look nice.
+
+#+BEGIN_SRC emacs-lisp
+(use-package dockerfile-mode
+  :wal-ways nil
+
+  :init
+  (harpoon dockerfile-mode
+    :messages ("Have you ever given?")))
+#+END_SRC
+
+* Kubernetes
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand kubernetes
+  "Kubernetes."
+  :packages (kubernetes))
+#+END_SRC
+
+** kubernetes
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Who doesn't like pods and stuff?
+
+#+BEGIN_SRC emacs-lisp
+(use-package kubernetes
+  :if (executable-find "kubectl")
+
+  :wal-ways nil
+
+  :custom
+  (kubernetes-commands-display-buffer-function 'display-buffer)
+  (kubernetes-poll-frequency 3600)
+  (kubernetes-redraw-frequency 3600)
+  (kubernetes-default-overview-view 'deployments)
+  (kubernetes-json-mode (if (featurep 'jsonian-mode) 'jsonian-mode 'js-mode))
+
+  :general
+  (ambassador "8" 'kubernetes-overview))
+#+END_SRC
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-devops)
+
+;;; wal-devops.el ends here
+#+END_SRC

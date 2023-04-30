@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `wal/config-consult-org-heading` to find a heading in any of the
+  library files (see below).
+
+### Changed
+
+- All code is now under `lib/` in separate org-files. The library
+  files are prefixed with `wal-` so their buffers can be ignored in
+  `consult`.
+- Documents other than `style.org` and `cheat-sheet.org` have been
+  merged into their respective library files.
+
+### Removed
+
+- `wal/find-config` (which no longer makes sense, see above).
+
 ## [v1.12.1]
 
 Tab start.

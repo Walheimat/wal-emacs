@@ -1,0 +1,488 @@
+#+TITLE: Settings
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-settings.el" wal/emacs-config-package-path)
+
+Set things up.
+
+Confer also the eponymous [[file:wal-func.org][functionality]] package if custom
+functionality is used.
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-settings.el --- Settings. -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; The global settings.
+
+;;; Code:
+
+(eval-when-compile
+  (require 'marginalia nil t)
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+
+(declare-function junk--stringify "wal-func.el")
+(declare-function junk--parts "wal-func.el")
+(declare-function wal/bytes-per-mb "wal-func.el")
+(declare-function wal/create-non-existent-directory "wal-func.el")
+(declare-function wal/insert-after "wal-func.el")
+(declare-function wal/modern-emacs-p "wal-func.el")
+(declare-function wal/persist-scratch "wal-key-bindings.el")
+(declare-function wal/rehydrate-scratch "wal-key-bindings.el")
+(declare-function wal/reset-to-standard "wal-func.el")
+(declare-function wal/set-indent-defaults "wal-func.el")
+(declare-function wdb/faraway "wal-func.el")
+(declare-function wdb/nearby "wal-func.el")
+
+(defvar debugger-bury-or-kill)
+(defvar display-time-default-load-average)
+(defvar display-time-format)
+(defvar native-comp-async-report-warnings-errors)
+(defvar recentf-filename-handlers)
+(defvar recentf-max-saved-items)
+(defvar so-long-action)
+(defvar use-package-defaults)
+(defvar use-package-always-defer)
+(defvar use-package-always-ensure)
+(defvar use-package-compute-statistics)
+
+(defgroup wal-settings nil
+  "Change core settings."
+  :group 'wal
+  :tag "Settings")
+
+;;;; Customization:
+
+(defcustom wal/site-lisp-directory (expand-file-name "site-lisp" user-emacs-directory)
+  "Directory of site Lisp packages."
+  :type 'string
+  :group 'wal-settings)
+
+(defcustom wal/scratch-persist-file (expand-file-name ".wal-scratch-persist" user-emacs-directory)
+  "The file to persist the *scratch* buffer's content in."
+  :type 'string
+  :group 'wal-settings)
+
+(defcustom wal/indent-offset 4
+  "The indent offset in spaces."
+  :type 'integer
+  :group 'wal-settings)
+
+(defcustom wal/prefer-tabs nil
+  "Whether tabs are preferred for indentation."
+  :type 'boolean
+  :group 'wal-settings)
+
+(defcustom wal/maximize-new-frames t
+  "Whether to maximize new frames by default."
+  :type 'boolean
+  :group 'wal-settings)
+
+(defcustom wal/ack-warnings nil
+  "Acknowledge all warnings."
+  :type 'boolean
+  :group 'wal-settings)
+#+END_SRC
+
+* Start-Up
+
+Customize start-up.
+
+#+BEGIN_SRC emacs-lisp
+;; Load custom file. Create it if it doesn't yet exist.
+
+(setq-unless custom-file (expand-file-name "custom.el" user-emacs-directory))
+
+(unless (file-exists-p custom-file)
+  (make-empty-file custom-file t))
+
+(when (file-exists-p custom-file)
+  (load custom-file))
+
+;; Maximize frame.
+(setq frame-resize-pixelwise t)
+(add-to-list 'initial-frame-alist '(fullscreen . maximized))
+(when wal/maximize-new-frames
+  (add-to-list 'default-frame-alist '(fullscreen . maximized)))
+
+;; No splash.
+(setq inhibit-startup-message t)
+(setq initial-major-mode 'fundamental-mode) ; Avoids loading `prog-mode' derivatives.
+
+;; Accept redefinitions.
+(setq ad-redefinition-action 'accept)
+
+;; Warn Mac/Windows users.
+(unless (or (eq system-type 'gnu/linux) wal/ack-warnings)
+  (warn "\
+     Warning: Config only tested on Linux. The configuration may
+     not work correctly on your system.
+
+     Set `wal/ack-warnings' to t to ignore this warning."))
+#+END_SRC
+
+* Command Line
+
+#+BEGIN_SRC emacs-lisp
+(wal/capture-flag doctor
+  "Will set up `use-package' to collect statistics.")
+
+(wal/capture-flag mini
+  "Will packages that are part of the minimal configuration.")
+
+(wal/capture-flag ensure
+  "Will set up `use-package' to ensure packages.")
+#+END_SRC
+
+* Packages
+
+Add MELPA to the package archives. Most (if not all) packages will be
+installed from there.
+
+#+BEGIN_SRC emacs-lisp
+;; Always defer, maybe ensure.
+(setq use-package-always-defer t)
+
+(when wal/flag-ensure
+  (setq use-package-always-ensure t))
+
+(when wal/flag-doctor
+  (setq use-package-compute-statistics t)
+
+  (declare-function use-package-report "ext:use-package.el")
+
+  (add-hook 'after-init-hook #'use-package-report))
+#+END_SRC
+
+* Directories
+
+Prompt to ask directories if a file can't be found.
+
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'find-file-not-found-functions #'wal/create-non-existent-directory)
+#+END_SRC
+
+** Site-Lisp
+
+Add all sub-directories of the site lisp directory to load path (and
+custom theme load path). I put non-MELPA packages here. You can also
+put additional initialization into a =default.el= here.
+
+#+BEGIN_SRC emacs-lisp
+(make-directory wal/site-lisp-directory t)
+
+(let ((root (list wal/site-lisp-directory))
+      (subdirs (directory-files wal/site-lisp-directory t "\\w+")))
+
+  (dolist (project (append root subdirs))
+    (when (file-directory-p project)
+      (add-to-list 'load-path project)
+      (add-to-list 'custom-theme-load-path project))))
+#+END_SRC
+
+* Saving and Backups
+
+Don't clutter up workspaces.
+
+#+BEGIN_SRC emacs-lisp
+;; Store backups in backups folder and back up by copying.
+(setq backup-directory-alist
+      `(("." . ,(expand-file-name (concat user-emacs-directory "backups"))))
+      backup-by-copying t)
+
+;; Store autosaves in temp folder.
+(setq auto-save-file-name-transforms
+      `((".*" ,temporary-file-directory t)))
+
+;; We don't want this to mess with git.
+(setq create-lockfiles nil)
+#+END_SRC
+
+* Reasonable Values
+
+Make things shorter and snappier. These settings don't belong to
+packages.
+
+#+BEGIN_SRC emacs-lisp
+(setq read-process-output-max (wal/bytes-per-mb 1)
+      echo-keystrokes 0.2
+
+      ;; Undo limits.
+      undo-limit (wal/bytes-per-mb 1)
+      undo-strong-limit (wal/bytes-per-mb 1.5)
+      undo-outer-limit (wal/bytes-per-mb 150)
+
+      ;; Mouse.
+      mouse-yank-at-point t
+
+      ;; Native compilation.
+      package-native-compile t
+      native-comp-async-report-warnings-errors 'silent
+
+      ;; Time.
+      display-time-format " %H:%M"
+      display-time-default-load-average nil
+      save-interprogram-paste-before-kill t
+
+      ;; Mark ring (halve it).
+      mark-ring-max 8
+      global-mark-ring-max 8
+
+      ;; Search.
+      isearch-lazy-count t
+      isearch-allow-motion t
+      isearch-allow-scroll t
+
+      ;; Parentheses.
+      show-paren-delay 0.1
+      show-paren-context-when-offscreen t ; New in Emacs 29.
+
+      ;; Editing.
+      backward-delete-char-untabify-method 'hungry
+
+      ;; Recent files.
+      ;; Otherwise source `consult--source-project-recent-file' won't work.
+      recentf-filename-handlers nil
+      recentf-max-saved-items 100
+
+      ;; Buffers and windows.
+      switch-to-buffer-obey-display-actions t
+      switch-to-buffer-in-dedicated-window 'prompt)
+#+END_SRC
+
+* Global Modes
+
+Any mode that should be on/off no matter what.
+
+#+BEGIN_SRC emacs-lisp
+;; A bunch of useful modes.
+(show-paren-mode 1)
+(global-auto-revert-mode 1)
+(save-place-mode 1)
+(delete-selection-mode 1)
+(column-number-mode 1)
+(global-so-long-mode 1)
+(savehist-mode 1)
+(recentf-mode 1)
+(repeat-mode 1)
+
+;; No need for bars.
+(tool-bar-mode -1)
+(menu-bar-mode -1)
+(scroll-bar-mode -1)
+
+;; Emacs 29.
+(when (wal/modern-emacs-p 29)
+  (pixel-scroll-precision-mode 1))
+#+END_SRC
+
+* Editing
+
+Advise to maybe add hook to delete trailing whitespace.
+
+#+BEGIN_SRC emacs-lisp
+(defvar-local wal/delete-trailing-whitespace t
+  "Whether to delete trailing whitespace.")
+
+(defun wal/then-add-delete-trailing-whitespace-hook (&rest _args)
+  "Advise to conditionally add before save hook.
+
+When `wal/delete-trailing-whitespace' is t, trailing whitespace
+is deleted."
+  (when wal/delete-trailing-whitespace
+    (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)))
+
+(advice-add
+ 'hack-local-variables :after
+ #'wal/then-add-delete-trailing-whitespace-hook)
+#+END_SRC
+
+* Garbage Collection
+
+Increase the =gc-cons-threshold= after start-up.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/increase-gc-cons-threshold ()
+  "Increase `gc-cons-threshold' to maximum on minibuffer setup."
+  (setq gc-cons-threshold (wal/bytes-per-mb 100)))
+
+(add-hook 'emacs-startup-hook #'wal/increase-gc-cons-threshold)
+#+END_SRC
+
+
+* Indentation
+
+Set up an easy way to switch between tabs and spaces for indentation[fn:1].
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/indent-vars '(python-indent-offset
+                          js-indent-level
+                          c-ts-mode-indent-offset
+                          css-indent-offset
+                          nxml-child-indent
+                          sgml-basic-offset
+                          tab-width
+                          json-encoding-default-indentation
+                          electric-indent-inhibit
+                          indent-tabs-mode))
+
+(defun wal/reset-indent-defaults ()
+  "Reset indent defaults.
+Resets all variables that were initially set by
+`wal/set-indent-defaults'."
+  (interactive)
+
+  (mapc #'wal/reset-to-standard wal/indent-vars))
+
+(add-hook 'emacs-startup-hook #'wal/set-indent-defaults)
+#+END_SRC
+
+* Scratch Buffer
+
+Let's keep the scratch contents.
+
+#+BEGIN_SRC emacs-lisp
+;; Empty scratch message.
+(setq initial-scratch-message "")
+
+(add-hook 'emacs-startup-hook #'wal/rehydrate-scratch)
+(add-hook 'kill-emacs-hook #'wal/persist-scratch)
+#+END_SRC
+
+* Minimize Annoyances
+
+Make never leaving Emacs a priority.
+
+#+BEGIN_SRC emacs-lisp
+(setq use-dialog-box nil
+      disabled-command-function nil
+      debugger-bury-or-kill 'kill
+      use-short-answers t
+      so-long-action 'so-long-minor-mode)
+#+END_SRC
+
+* Expansion Packs
+
+Make completions look nice.
+
+#+BEGIN_SRC emacs-lisp
+(with-eval-after-load 'marginalia
+  (defun junk-annotate (candidate)
+    "Annotate CANDIDATE expansion pack."
+    (let* ((item (assoc (intern candidate) junk-expansion-packs))
+           (parts (junk--parts item)))
+
+      (cl-destructuring-bind (packages extras recipes docs) parts
+
+        (marginalia--fields
+         (docs :face 'marginalia-documentation :truncate 0.6)
+         ((junk--stringify (append packages recipes)) :face 'marginalia-value :truncate 0.8)
+         ((junk--stringify extras) :face 'marginalia-value :truncate 0.4)))))
+
+  (add-to-list 'marginalia-annotator-registry '(expansion-pack junk-annotate builtin none))
+  (add-to-list 'marginalia-command-categories '(junk-install . expansion-pack)))
+#+END_SRC
+
+* Buffer Display
+
+#+BEGIN_SRC emacs-lisp
+(wdb/faraway "^\\*wal-async\\*")
+(wdb/faraway "^\\*Messages\\*")
+#+END_SRC
+
+* Key Bindings
+
+#+BEGIN_SRC emacs-lisp
+(with-no-warnings
+  ;; Additional `general' bindings.
+  (administrator
+    "f" '(:ignore t :wk "find")
+    "fc" 'wal/find-custom-file
+    "fi" 'wal/find-init
+    "fl" 'find-library
+
+    "l" '(:ignore t :wk "list")
+    "lp" 'list-processes
+    "lt" 'list-timers
+
+    "s" '(:ignore t :wk "set")
+    "st" 'wal/set-transparency
+    "sc" 'wal/set-cursor-type
+
+    "p" '(:ignore t :wk "package")
+    "pf" 'package-refresh-contents
+    "pi" 'package-install
+    "pl" 'list-packages
+    "pr" 'package-reinstall
+    "pd" 'package-delete)
+
+  (global-set-key (kbd (wal/key-combo-for-leader 'whaler)) #'whaler)
+
+  (global-set-key (kbd (wal/key-combo-for-leader 'major)) #'major?)
+
+  (when (wal/modern-emacs-p 29)
+    (editor "d" 'duplicate-dwim))
+
+  (editor "M-w" 'wal/kill-ring-save-whole-buffer)
+
+  (editor "M-q" 'wal/spill-paragraph)
+
+  (general-define-key
+   :prefix (wal/prefix-user-key "-")
+   :prefix-map 'wal/triple-minus-map
+   :wk-full-keys nil
+   "b" 'wal/kill-some-file-buffers
+   "d" 'wal/l
+   "f" 'wal/fundamental-mode
+   "i" 'wal/set-indent-defaults
+   "I" 'wal/reset-indent-defaults
+   "1" 'wal/force-delete-other-windows)
+
+  (general-define-key
+   :prefix (wal/prefix-user-key "0")
+   :prefix-map 'wal/zero-in-map
+   :wk-full-keys nil
+   "f" 'wal/find-fish-config
+   "h" 'wal/dired-from-home
+   "s" 'find-sibling-file)
+
+  (that-key "triple-minus" :user-key "-")
+  (that-key "zero-in" :user-key "0")
+  (that-key "wal" :key "C-c w" :condition (not (display-graphic-p)))
+
+  (global-set-key [remap kill-line] #'wal/kwim)
+  (global-set-key [remap move-beginning-of-line] #'wal/mwim-beginning)
+  (global-set-key (kbd "C-c x") #'wal/scratch-buffer)
+  (global-set-key (kbd "C-c b") #'eww)
+  (global-set-key (kbd "C-c l") #'display-line-numbers-mode)
+
+  ;; Allow deleting windows while repeating other-window.
+  (with-eval-after-load 'window
+    (when (boundp 'other-window-repeat-map)
+      (define-key other-window-repeat-map "0" 'delete-window)
+      (define-key other-window-repeat-map "1" 'delete-other-windows)
+      (define-key other-window-repeat-map (kbd "C-k") 'wal/force-delete-other-windows)))
+
+  (global-set-key [remap save-buffers-kill-terminal] #'wal/delete-edit-or-kill))
+#+END_SRC
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-settings)
+
+;;; wal-settings.el ends here
+#+END_SRC
+
+* Footnotes
+
+[fn:1] Sometimes you have to play using other people's rules. You can run
+=add-dir-local-variable= to do so. Check out the =.dir-locals.el= template
+found in the =/templates= folder for an example using spaces.

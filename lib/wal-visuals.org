@@ -1,0 +1,508 @@
+#+TITLE: Visuals
+#+AUTHOR @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-visuals.el" wal/emacs-config-package-path)
+
+I like nice-looking things.
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-visuals.el --- Visuals. -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Provide visual packages.
+
+;;; Code:
+
+(declare-function dashboard-insert-startupify-lists "ext:dashboard.el")
+(declare-function wal/biased-random "wal-func.el")
+
+(defvar dashboard-footer-messages)
+(defvar wal/ascii-cachalot-whale)
+(defvar wal/emacs-config-default-path)
+
+(defgroup wal-visuals nil
+  "Change settings used for visual packages."
+  :group 'wal
+  :tag "Visuals")
+
+;;;; Customization:
+
+(defcustom wal/major-delight t
+  "Whether some major modes are delighted beyond reason."
+  :type 'boolean
+  :group 'wal-visuals)
+
+(defcustom wal/zone-when-idle nil
+  "Determine whether to zone out when idling."
+  :type 'boolean
+  :group 'wal-visuals)
+
+(defcustom wal/zone-timer (* 5 60)
+  "The time in seconds when we will zone out."
+  :type 'integer
+  :group 'wal-visuals)
+#+END_SRC
+
+* Dashboard
+
+** dashboard
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Let's have a dash of board.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/with-recent-files-excluded (fun &rest args)
+  "Advise FUN to ignore certain directories, applying ARGS."
+  (defvar recentf-exclude)
+
+  (let ((recentf-exclude '("bookmarks\\'" "zettelkasten" "org/tasks")))
+
+    (apply fun args)))
+
+(defun wal/instead-show-biased-random (&rest _args)
+  "Advise to use biased random footer message."
+  (nth (wal/biased-random (length dashboard-footer-messages)) dashboard-footer-messages))
+
+(defun wal/in-case-of-daemonp-add-different-hook ()
+  "Setup the dashboard in a daemon-friendly way."
+  (require 'all-the-icons nil t)
+  (when (daemonp)
+    (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
+
+    (add-hook
+     'server-after-make-frame-hook
+     #'dashboard-insert-startupify-lists)))
+
+(defun wal/dashboard-get-buffer ()
+  "Get the a refreshed dashboard buffer."
+  (defvar dashboard-buffer-name)
+  (defvar dashboard-force-refresh)
+
+  (let ((dashboard-force-refresh t))
+
+    (dashboard-insert-startupify-lists)
+    (get-buffer dashboard-buffer-name)))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package dashboard
+  :wal-ways nil
+
+  :hook (after-init . dashboard-setup-startup-hook)
+
+  :init
+  (advice-add
+   'dashboard-insert-startupify-lists :around
+   #'wal/with-recent-files-excluded)
+  (advice-add
+   'dashboard-random-footer :override
+   #'wal/instead-show-biased-random)
+  (advice-add
+   'dashboard-setup-startup-hook :before-until
+   #'wal/in-case-of-daemonp-add-different-hook)
+
+  :config
+  (setq dashboard-banner-logo-title (wal/describe-config-version))
+
+  ;; TEMP: Prevent empty dashboard for default sessions.
+  (unless (daemonp)
+    (dashboard-refresh-buffer))
+
+  :custom
+  (dashboard-items '((recents . 5)
+                     (projects . 3)
+                     (bookmarks . 3)))
+  (dashboard-projects-backend 'project-el)
+
+  (dashboard-image-banner-max-height (if wal/hidpi 0 300))
+  (dashboard-startup-banner (let ((ext (if (or (daemonp) (display-graphic-p))
+                                           ".png"
+                                         ".txt")))
+
+                              (expand-file-name
+                               (concat "assets/logo" ext)
+                               wal/emacs-config-default-path)))
+
+  (dashboard-footer-icon (if (or (daemonp) (display-graphic-p))
+                             "🐋"
+                           wal/ascii-cachalot-whale))
+  (dashboard-footer-messages '("breaching your favorite stupid framework"
+                               "I propel myself forward on nothing but flukes"
+                               "devout and up the spout"
+                               "krill, filter feeders and hit sulphur bottom"
+                               "the founder of retiring gentlemen"
+                               "the loud keyboard shall vanquish the muscular mouse"
+                               "answering all C-calls in sweeping, overflowing song"
+                               "infinite whale loop"
+                               "from echo location to perimeter expansion"
+                               "a mystic of profounder divings"
+                               "superior, clear and fine code; but there's little of it"
+                               "formed by intertwisting, slanting folds"
+                               "a register for distant jets"
+                               "the most majestic in affect, the most valuable in commiseration"
+                               "unshared, sourceless immensities"))
+
+  (dashboard-week-agenda nil)
+  (dashboard-agenda-time-string-format "%d/%m/%y")
+  (dashboard-agenda-release-buffers t)
+
+  (dashboard-center-content t)
+  (dashboard-set-file-icons t)
+  (dashboard-set-navigator t)
+  (dashboard-path-style 'truncate-beginning)
+
+  :bind
+  (("C-c d" . dashboard-refresh-buffer)))
+#+END_SRC
+
+* Themes
+
+** doom-themes
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+The nicest theme packages out there. It supports many, many packages'
+=face= variants.
+
+#+BEGIN_SRC emacs-lisp
+(use-package doom-themes
+  :wal-ways nil
+
+  :config
+  (doom-themes-org-config))
+#+END_SRC
+
+** kaolin-themes
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Another collection of beautiful themes, but it doesn't color every
+=face=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package kaolin-themes
+  :wal-ways nil
+
+  :config
+  (kaolin-treemacs-theme)
+
+  :custom
+  (kaolin-themes-italic-comments t)
+  (kaolin-themes-git-gutter-solid t)
+  (kaolin-themes-modeline-border nil)
+  (kaolin-themes-distinct-fringe t)
+  (kaolin-themes-org-scale-headings nil))
+#+END_SRC
+
+** modus-themes
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Protesilaos' super configurable themes.
+
+#+BEGIN_SRC emacs-lisp
+(use-package modus-themes
+  :custom
+  (modus-themes-slanted-constructs t)
+  (modus-themes-bold-constructs t)
+  (modus-themes-mode-line '(borderless))
+  (modus-themes-org-blocks 'tinted-background))
+#+END_SRC
+
+** ef-themes
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Color over configuration from the same author.
+
+#+BEGIN_SRC emacs-lisp
+(use-package ef-themes
+  :wal-ways nil)
+#+END_SRC
+
+** base16-themes
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Check out the [[https://base16-project.github.io/base16-gallery/][gallery]].
+
+#+BEGIN_SRC emacs-lisp
+(use-package base16-theme
+  :wal-ways nil
+
+  :custom
+  (base16-theme-distinct-fringe-background nil))
+#+END_SRC
+
+* Highlighting
+
+** diff-hl
+:PROPERTIES:
+:UNNUMBERED:
+:END:
+
+Show diffs in the fringe (also in =dired= buffers).
+
+#+BEGIN_SRC emacs-lisp
+(use-package diff-hl
+  :defer 2
+
+  :hook
+  ((magit-post-refresh . diff-hl-magit-post-refresh)
+   (magit-pre-refresh . diff-hl-magit-pre-refresh)
+   (dired-mode . diff-hl-dired-mode))
+
+  :config
+  (global-diff-hl-mode))
+#+END_SRC
+
+** hl-todo
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Highlight =TODO=, =FIXME= etc. in =prog= modes.
+
+#+BEGIN_SRC emacs-lisp
+(use-package hl-todo
+  :wal-ways nil
+
+  :hook ((prog-mode prog-like) . hl-todo-mode)
+
+  :custom
+  (hl-todo-highlight-punctuation ":")
+  (hl-todo-require-punctuation t))
+#+END_SRC
+
+** rainbow-delimiters
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Make delimiters stand out.
+
+#+BEGIN_SRC emacs-lisp
+(use-package rainbow-delimiters
+  :wal-ways nil
+
+  :hook ((prog-mode prog-like) . rainbow-delimiters-mode))
+#+END_SRC
+
+** rainbow-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Show colors colorfully.
+
+#+BEGIN_SRC emacs-lisp
+(use-package rainbow-mode
+  :wal-ways nil
+
+  :delight " rbm")
+#+END_SRC
+
+* Modeline
+
+Minor modes are white-listed, hidden and delighted. Meaning that, if
+not white-listed, they are not shown, if they are shown, they are
+delighted.
+
+** wal-line
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+My own mode line.
+
+#+BEGIN_SRC emacs-lisp
+(use-package wal-line
+  ;; Installed using `project-vc-install'.
+  :if (wal/modern-emacs-p 29)
+
+  :wal-ways nil
+
+  :defer 1
+
+  :config
+  (wal-line-mode 1)
+
+  :custom
+  (wal-line-icons-prettify-buffer-status t)
+  (wal-line-animation-key-frames wal/ascii-blue-whale-key-frames)
+  (wal-line-icons-project-icon '(octicon . "package")))
+#+END_SRC
+
+** delight
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Refine a couple of major and minor mode names.
+
+#+BEGIN_SRC emacs-lisp
+(use-package delight
+  :config
+  (delight 'dired-mode "Dired" :major)
+  (delight 'emacs-lisp-mode "Elisp" :major)
+  (delight 'lisp-interaction-mode "Elisp?" :major)
+  (delight 'wdired-mode "DirEd" :major)
+  (delight 'c++-mode "CPP" :major)
+  (delight 'compilation-shell-minor-mode " csh" "compile")
+  (delight 'auto-fill-function " aff" t)
+  (delight 'with-editor-mode " w/e" "with-editor")
+
+  ;; Only confuse/delight if allowed.
+  (when wal/major-delight
+    (delight 'elixir-mode "Homebrew" :major)
+    (delight 'c++-mode "*&" :major)
+    (delight 'python-mode "Snake" :major)
+    (delight 'js-mode "NaNsense" :major)
+    (delight 'inferior-python-mode "Bite" :major)))
+#+END_SRC
+
+** minions
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Sometimes the list of minor modes overcrowds the modeline.
+
+#+BEGIN_SRC emacs-lisp
+(use-package minions
+  :wal-ways nil
+
+  :defer 3
+
+  :config
+  (minions-mode 1)
+
+  :custom
+  (minions-prominent-modes '(smerge-mode
+                             git-timemachine-mode
+                             with-editor-mode
+                             typo-mode
+                             auto-fill-function
+                             flyspell-mode
+                             org-tree-slide-mode
+                             wal/config-mode
+                             verb-mode
+                             verb-response-body-mode
+                             puni-mode
+                             pet-mode
+                             prettier-mode)))
+#+END_SRC
+
+* Ligatures
+
+Font *JetBrains Mono* has the best support for ligatures.
+
+** ligature
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defconst wal/common-ligatures
+  '(
+    "==" "!=" ">=" "<="        ; Comparison.
+    "+=" "-=" "/=" "%=" "*="   ; Assignment.
+    "||" "&&"                  ; Logical.
+    "/*" "*/" "//" "/**" "**/" ; Comments.
+    "++" "--"                  ; Increment/decrement.
+    ">>=" "<<=" "&=" "|=" "^=" ; Bitwise assignments.
+    "<<" ">>"                  ; Bitwise shifts.
+    "..."                      ; Spread.
+    )
+  "A list of ligatures available in all programming modes.")
+
+(defun wal/set-ligatures (modes ligatures)
+  "Set LIGATURES for MODES.
+
+All ligatures in `wal/common-ligatures' will be appended to
+LIGATURES."
+  (when (require 'ligature nil t)
+    (ligature-set-ligatures modes (append ligatures wal/common-ligatures))))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package ligature
+  :wal-ways nil
+
+  :hook ((prog-mode prog-like) . ligature-mode))
+#+END_SRC
+
+* Icons
+
+** all-the-icons
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+You need to install the icons yourself[fn:1].
+
+#+BEGIN_SRC emacs-lisp
+(use-package all-the-icons
+  :wal-ways nil)
+#+END_SRC
+
+* Other
+
+** mixed-pitch
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Allow using variable and fixed fonts in the same buffer.
+
+#+BEGIN_SRC emacs-lisp
+(use-package mixed-pitch
+  :wal-ways nil
+
+  :config
+  (add-to-list 'mixed-pitch-fixed-pitch-faces 'markdown-pre)
+
+  :custom
+  (mixed-pitch-variable-pitch-cursor nil)
+
+  :delight " mpm")
+#+END_SRC
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-visuals)
+
+;;; wal-visuals.el ends here
+#+END_SRC
+
+* Footnotes
+
+[fn:1] The =all-the-icons= icons need to be downloaded manually by
+running =M-x all-the-icons-install-fonts= and selecting =yes=.
+
+If the installation process should fail for any reason, close Emacs
+and re-run it.

@@ -1,0 +1,108 @@
+#+TITLE: Finding Things
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-find.el" wal/emacs-config-package-path)
+
+I mostly search.
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-find.el --- Finding things. -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Provide packages to find things.
+
+;;; Code:
+
+(declare-function rg-project-root "ext:rg.el")
+(declare-function rg-read-files "ext:rg.el")
+(declare-function rg-rerun-toggle-flag "ext:rg-result.el")
+(declare-function rg-run "ext:rg.el")
+(declare-function rg-read-pattern "ext:rg.el")
+#+END_SRC
+
+* Packages
+
+** rg
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][here]].
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/rg-rerun-toggle-hidden ()
+  "Re-run last search with toggled '--hidden' flag."
+  (interactive)
+
+  (rg-rerun-toggle-flag "--hidden"))
+
+(defun wal/rg-project-literal (query files)
+  "Search in project for FILES using QUERY literally."
+  (interactive (list (rg-read-pattern t) (rg-read-files)))
+
+  (let ((dir (rg-project-root buffer-file-name))
+        (flags (funcall rg-command-line-flags-function 'nil)))
+
+    (rg-run query files dir t nil flags)))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package rg
+  :commands (rg-project rg-menu rg-read-pattern)
+
+  :init
+  (parallel wal/rg-project-literal rg-project)
+
+  :config
+  (wdb/faraway "\\*rg\\*\\'")
+
+  :general
+  (ambassador "n" 'rg-menu)
+
+  :bind
+  (:map rg-mode-map
+   ("h" . wal/rg-rerun-toggle-hidden))
+
+  :wal-bind
+  (("n" . wal/rg-project-literal||rg-project)
+   :map isearch-mode-map
+   ("n" . rg-isearch-current-file)))
+#+END_SRC
+
+** dumb-jump
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Look up definitions when no LSP is already doing it. Jumping is done
+using =xref-find-definitions= (=M-.=).
+
+#+BEGIN_SRC emacs-lisp
+(use-package dumb-jump
+  :init
+  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
+
+  :custom
+  (dumb-jump-force-searcher 'rg)
+  (dumb-jump-selector 'completing-read))
+#+END_SRC
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-find)
+
+;;; wal-find.el ends here
+#+END_SRC

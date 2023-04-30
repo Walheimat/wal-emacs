@@ -1,0 +1,819 @@
+#+TITLE: Org Mode
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-org.el" wal/emacs-config-package-path)
+
+The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]] or run =org-info=.
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-org.el --- Org. -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Provide org packages/configurations.
+
+;;; Code:
+
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+
+(declare-function consult--buffer-state "ext:consult.el")
+(declare-function consult--buffer-query "ext:consult.el")
+(declare-function org-roam-buffer-p "ext:org-roam.el")
+(declare-function project-root "ext:project.el")
+(declare-function wal/append "wal-func.el")
+(declare-function wal/insert-after "wal-func.el")
+(declare-function wal/replace-in-alist "wal-fun.el")
+(declare-function wal/truncate "wal-func.el")
+(declare-function wal/univ-p "wal-func.el")
+
+(defvar text-scale-mode-step)
+(defvar visual-fill-column-width)
+(defvar visual-fill-column-center-text)
+(defvar wal/triple-minus-map)
+
+;;;; Customization:
+
+(defgroup wal-org nil
+  "Change settings used for org packages."
+  :group 'wal
+  :tag "Org")
+
+(defcustom wal/org-agenda-file ".agenda"
+  "The index of the agenda.
+This variable is relative to the `org-directory'."
+  :group 'wal-org
+  :type 'string)
+#+END_SRC
+
+* The Mode Itself
+
+** org
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/first-require-ox-md (&rest _args)
+  "Advise to require `ox-md' before export dispatch."
+  (unless (featurep 'ox-md)
+    (require 'ox-md nil t)))
+
+(defun wal/org-content (level)
+  "Show up to given LEVEL.
+This calls `org-content' interactively."
+  (interactive "nShow content up to level: ")
+
+  (declare-function org-content "ext:org-cycle.el")
+
+  (org-content level))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package org
+  :commands (org-add-note)
+
+  :hook (org-mode . auto-fill-mode)
+
+  :init
+  (harpoon org-mode
+    :messages ("Organize! Seize the means of production!")
+    :major t)
+
+  :config
+  ;; TEMP: Getting missing face errors otherwise.
+  (require 'org-indent)
+
+  ;; Require `ox-md' before calling dispatch as it might not be loaded.
+  (advice-add
+   'org-export-dispatch :before
+   #'wal/first-require-ox-md)
+
+  ;; Create register file if it doesn't yet exist
+  (let ((register (expand-file-name wal/org-agenda-file org-directory)))
+
+    (unless (file-exists-p register)
+      (make-empty-file register)))
+
+  (with-no-warnings
+    (wal/transient-define-major org-mode ()
+      "Access `org-mode' commands."
+      [["Edit"
+        ("w" "cut subtree" org-cut-subtree
+         :inapt-if-not org-at-heading-p)
+        ("y" "paste subtree" org-paste-subtree)
+        ("n" "add note" org-add-note)
+        ("." "toggle timestamp" org-toggle-timestamp-type
+         :inapt-if-not (lambda () (org-at-timestamp-p 'inactive)))
+        ("s" "sort" org-sort
+         :inapt-if-not (lambda () (or (org-at-item-p) (org-at-heading-p))))]
+
+       ["Footnotes"
+        ("f" "add footnote" org-footnote-new
+         :inapt-if org-in-src-block-p)
+        ("n" "normalize footnotes" org-footnote-normalize)]]
+
+      [["Visibility"
+        ("c" "show content" wal/org-content)
+        ("a" "show all" org-show-all)
+        ("i" "toggle indentation" org-indent-mode)]
+
+       ["Help"
+        ("h" "node info" org-info-find-node)]]))
+
+  :custom
+  ;; Make it look nice and tidy.
+  (org-adapt-indentation nil)
+  (org-ellipsis "↷")
+  (org-hide-emphasis-markers t)
+  (org-startup-with-inline-images t)
+  (org-startup-folded 'nofold)
+  (org-cycle-separator-lines 1)
+
+  ;; Logging.
+  (org-log-done 'time)
+  (org-log-note-clock-out t)
+  (org-log-into-drawer t)
+
+  ;; Set up directories.
+  (org-default-notes-file (expand-file-name "notes.org" org-directory))
+  (org-agenda-files (expand-file-name wal/org-agenda-file org-directory))
+
+  ;; Be sure to add archive tag with `org-toggle-archive-tag'.
+  (org-archive-location "::* Archived")
+
+  ;; Adapt keywords, tags and speed commands.
+  (org-todo-keywords
+   '((sequence "TODO(t)" "IN PROGRESS(p)" "WAITING(w)" "BLOCKED(b)" "|" "DONE(d)" "CANCELED(c)")))
+  (org-tag-alist
+   '(;; Depth.
+     ("@immersive" . ?i)
+     ("@process" . ?p)
+     ;; Context.
+     ("@work" . ?w)
+     ("@home" . ?h)
+     ("@away" . ?a)
+     ("@repeated" . ?r)
+     ("@unbillable" . ?u)
+     ("@intermittent" . ?m)
+     ;; Energy.
+     ("@easy" . ?1)
+     ("@average" . ?2)
+     ("@challenge" . ?3)
+     ;; Category.
+     ("@development" . ?d)
+     ("@talk" . ?t)
+     ("@contribution" . ?c)
+     ("@growth" . ?g)
+     ("@education" . ?e)
+     ("@chore" . ?o)))
+
+  ;; Warn late about upcoming deadlines.
+  (org-deadline-warning-days 2)
+
+  :bind
+  (:map org-mode-map
+   ("M-p" . org-previous-visible-heading)
+   ("M-n" . org-next-visible-heading)))
+#+END_SRC
+
+* Agendas
+
+** org-agenda
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/agenda-buffer-p (buffer)
+  "Check if BUFFER contributes to the agenda."
+  (with-current-buffer buffer
+    (memq (buffer-file-name buffer) org-agenda-contributing-files)))
+
+(defun wal/consult-agenda-buffer--query ()
+  "Get contributing Org Agenda buffer names."
+  (consult--buffer-query
+   :sort 'visibility
+   :as #'buffer-name
+   :predicate #'wal/agenda-buffer-p))
+#+END_SRC
+
+*** Configuration
+#+BEGIN_SRC emacs-lisp
+(use-package org-agenda
+  :config
+  (wal/replace-in-alist 'org-agenda-prefix-format '((agenda . "  %?-12t%? c%s%b")))
+
+  (with-eval-after-load 'consult
+    (defvar wal/consult--source-agenda-buffer
+      (list :name "Agenda Buffer"
+            :narrow ?a
+            :category 'buffer
+            :state #'consult--buffer-state
+            :history 'buffer-name-history
+            :face 'font-lock-keyword-face
+            :items #'wal/consult-agenda-buffer--query))
+
+    (wal/insert-after
+     'consult-buffer-sources
+     'consult--source-buffer
+     'wal/consult--source-agenda-buffer))
+
+  :custom
+  (org-agenda-hide-tags-regexp "^@")
+  (org-agenda-span 'day)
+  (org-agenda-restore-windows-after-quit t)
+  (org-agenda-time-leading-zero t)
+  (org-agenda-log-mode-items '(clock))
+  (org-agenda-start-with-clockreport-mode t)
+  (org-agenda-start-with-log-mode t)
+  (org-agenda-clockreport-parameter-plist
+   '(:link t
+     :maxlevel 3
+     :fileskip0 t
+     :emphasize t
+     :match "-@unbillable"))
+
+  :bind
+  ("C-c a" . org-agenda))
+#+END_SRC
+
+** org-habit
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-habit
+  :custom
+  (org-habit-show-habits-only-for-today nil)
+  (org-habit-graph-column 50))
+#+END_SRC
+
+** org-super-agenda
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Allow for better grouping.
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-super-agenda
+  :wal-ways nil
+
+  :demand t
+  :after org-agenda
+
+  :config
+  (org-super-agenda-mode)
+
+  :custom
+  (org-super-agenda-groups
+   '((:name "Schedule" :time-grid t)
+     (:name "Unscheduled"
+      :and (:scheduled nil
+            :not (:tag "@intermittent" :todo "BLOCKED")))
+     (:name "Leftovers"
+      :and (:todo ("IN PROGRESS" "WAITING")
+            :scheduled past
+            :not (:tag "@repeated" :tag "@education")))
+     (:name "Blocked" :todo "BLOCKED")
+     (:name "Education" :and (:habit t :tag "@education"))
+
+     ;; Habits.
+     (:name "Contribution"
+      :and (:habit t
+            :tag "@contribution"))
+     (:name "Growth"
+      :and (:habit t
+            :tag "@growth"))
+     (:name "Chores"
+      :and (:habit t
+            :tag "@chore"))
+     (:name "Other habits"
+            :habit t)
+
+     ;; Discard the rest.
+     (:discard (:anything t))))
+  (org-super-agenda-final-group-separator "\n"))
+#+END_SRC
+
+* Zettelkasten
+
+Trying to organize my thoughts using Zettelkästen.
+
+/Note/ that you will need to install =sqlite3= manually.
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand org-roam
+  "Note rhizome."
+  :packages (org-roam)
+  :extras (org-roam-ui))
+#+END_SRC
+
+** org-roam
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/org-refile (&optional arg)
+  "Refile using ARG, but use `org-roam-directory' for its files.
+
+If called with numeric prefix `5', set variable
+`org-agenda-files' to the `org-roam-directory'."
+  (interactive "P")
+
+  (declare-function org-refile "ext:org.el")
+  (defvar org-roam-directory)
+
+  (cond
+   ((and (org-roam-buffer-p) (not (equal arg 5)))
+    (let ((org-agenda-files (list org-roam-directory)))
+
+      (org-refile arg)))
+
+   ((equal arg 5)
+    (org-refile))
+
+   (t (org-refile arg))))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-roam
+  :if (executable-find "sqlite3")
+  :wal-ways nil
+
+  :commands
+  (org-roam-buffer-display-dedicated
+   org-roam-capture
+   org-roam-node-create
+   org-roam-node-find
+   org-roam-node-read
+   roamer)
+
+  :init
+  (setq org-roam-v2-ack t)
+
+  (general-define-key
+   (wal/key-combo-for-leader 'roamer)
+   'roamer)
+
+  :config
+  ;; Show roam buffer on the right.
+  (wdb/nearby org-roam-buffer :side 'right :no-other t)
+
+  ;; Refile differently for these files.
+  (wal/replace-in-alist 'org-speed-commands '(("w" . wal/org-refile)))
+
+  (transient-define-prefix roamer ()
+    "Run `org-roam' commands."
+    [["Capture"
+      ("c" "roam" org-roam-capture)
+      ("C" "default" org-capture)
+      ("t" "today" org-roam-dailies-capture-today)]
+     ["Find"
+      ("f" "node" org-roam-node-find)
+      ("d" "daily" org-roam-dailies-goto-date)
+      ("D" "daily directory" org-roam-dailies-find-directory)
+      ("p" "project tasks" wal/org-capture-switch-to-project-tasks)]
+     ["Actions"
+      ("b" "toggle roam buffer" org-roam-buffer-toggle)
+      ("w" "roam refile" org-roam-refile
+       :inapt-if-not-mode 'org-mode)
+      ("i" "insert node" org-roam-node-insert
+       :inapt-if-not-mode 'org-mode)
+      ("@" "add tag" org-roam-tag-add
+       :inapt-if-not-mode 'org-mode)]
+     ["Visualization"
+      ("g" "graph" org-roam-graph)]])
+
+  (org-roam-db-autosync-enable)
+
+  :custom
+  ;; Setup directories and file names.
+  (org-roam-directory (expand-file-name "zettelkasten" org-directory))
+  (org-roam-dailies-directory "tagebuch/")
+  (org-roam-extract-new-file-path "${slug}.org")
+
+  ;; Simple capture templates.
+  (org-roam-capture-templates
+   '(("d" "default" plain "%?"
+      :target (file+head "${slug}.org"
+                         "#+title: ${title}\n")
+      :unnarrowed t)))
+  (org-roam-dailies-capture-templates
+   '(("d" "default" entry
+      "* %?\n:PROPERTIES:\n:CREATED_AT: %U\n:TASK: %k\n:END:"
+      :target (file+head "%<%Y-%m-%d>.org"
+                         "#+title: %<%Y-%m-%d>\n")
+      :empty-lines 1))))
+#+END_SRC
+
+** org-roam-ui
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Fancy UI.
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-roam-ui
+  :wal-ways nil
+
+  :defer 3
+  :after org-roam
+
+  :config
+  (transient-append-suffix 'roamer '(0 3 0)
+    '("u" "ui" org-roam-ui-mode)))
+#+END_SRC
+
+* Presentations
+
+** org-tree-slide
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Turn any =org-mode= buffer into a presentation.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/relative-column-width (&optional target-width)
+  "Get the relative column width of TARGET-WIDTH."
+  (let ((width (or target-width 160))
+        (scale (if (and (boundp 'text-scale-mode-amount)
+                        (numberp text-scale-mode-amount))
+                   (expt text-scale-mode-step text-scale-mode-amount)
+                 1)))
+
+    (ceiling (/ width scale))))
+
+(defun wal/org-tree-slide-toggle-visibility ()
+  "Toggle visibility of cursor."
+  (interactive)
+
+  (if cursor-type
+      (setq cursor-type nil)
+    (setq cursor-type t)))
+
+(defvar wal/org-tree-slide-disabled-modes '())
+
+(defun wal/org-tree-slide-play ()
+  "Hook into `org-tree-slide-play'."
+  (setq visual-fill-column-width (wal/relative-column-width 160)
+        visual-fill-column-center-text t
+        cursor-type nil)
+  (visual-fill-column-mode 1)
+
+  (mixed-pitch-mode 1))
+
+(defun wal/org-tree-slide-stop ()
+  "Hook into `org-tree-slide-stop'."
+  (setq visual-fill-column-width nil
+        visual-fill-column-center-text nil
+        cursor-type t)
+  (visual-fill-column-mode -1)
+
+  (declare-function outline-show-all "ext:outline.el")
+
+  (outline-show-all)
+
+  (setq wal/org-tree-slide-disabled-modes '())
+
+  (mixed-pitch-mode -1)
+
+  (text-scale-adjust 0))
+
+(defun wal/org-tree-slide-text-scale ()
+  "Hook into `text-scale-mode-hook' for `org-tree-slide'."
+  (when (and (boundp 'org-tree-slide-mode) org-tree-slide-mode)
+    (wal/org-tree-slide-play)))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-tree-slide
+  :wal-ways nil
+
+  :after org
+
+  :hook
+  ((org-tree-slide-play . wal/org-tree-slide-play)
+   (org-tree-slide-stop . wal/org-tree-slide-stop)
+   (text-scale-mode . wal/org-tree-slide-text-scale))
+
+  :init
+  (transient-append-suffix 'org-mode-major '(1 -1)
+    '["Presentation"
+      ("p" "present" org-tree-slide-mode)])
+
+  :custom
+  (org-tree-slide-never-touch-face t)
+  (org-tree-slide-cursor-init nil)
+  (org-tree-slide-activate-message "We're on a road to nowhere")
+  (org-tree-slide-deactivate-message "Take you here, take you there")
+  (org-tree-slide-indicator '(:next "   >>>" :previous "<<<" :content "< Here is where time is on our side >"))
+
+  :bind
+  (:map org-tree-slide-mode-map
+   ("q" . org-tree-slide-mode) ; To close it again.
+   ("n" . org-tree-slide-move-next-tree)
+   ("p" . org-tree-slide-move-previous-tree)
+   ("i" . text-scale-increase)
+   ("d" . text-scale-decrease)
+   ("v" . wal/org-tree-slide-toggle-visibility)))
+#+END_SRC
+
+* Editing
+
+** org-src
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Editing source blocks.
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-src
+  :after org
+
+  :config
+  (wal/append
+   'org-src-lang-modes
+   '(("dockerfile" . dockerfile)
+     ("conf" . conf)
+     ("markdown" . markdown)
+     ("fish" . fish)))
+
+  (transient-append-suffix 'org-mode-major '(0 0 -1)
+    '("e" "edit source" org-edit-src-code
+      :inapt-if-not org-in-src-block-p))
+
+  :custom
+  (org-src-tab-acts-natively nil)
+  (org-edit-src-content-indentation 0)
+  (org-src-window-setup 'split-window-below)
+
+  :bind
+  (:map org-src-mode-map
+   ("C-c C-c" . org-edit-src-exit))
+
+  :delight " osc")
+#+END_SRC
+
+** org-capture
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Capture templates.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defvar-local wal/org-capture-tasks-heading "Tasks")
+
+(defun wal/org-capture--find-project-tasks-heading ()
+  "Find the heading of the current project's tasks."
+  (declare-function org-find-exact-heading-in-directory "ext:org.el")
+
+  (if-let* ((project (project-current))
+            (root (project-root project))
+            (marker (org-find-exact-heading-in-directory wal/org-capture-tasks-heading root)))
+      marker
+    (user-error "Couldn't find heading '%s'" wal/org-capture-tasks-heading)))
+
+(defun wal/org-capture-locate-project-tasks ()
+  "Locate the current project's tasks."
+  (let ((marker (wal/org-capture--find-project-tasks-heading)))
+
+    (set-buffer (marker-buffer marker))
+    (goto-char (marker-position marker))))
+
+(defun wal/org-capture-switch-to-project-tasks ()
+  "Switch to the current project's tasks."
+  (interactive)
+
+  (let ((marker (wal/org-capture--find-project-tasks-heading)))
+
+    (switch-to-buffer (marker-buffer marker))))
+  #+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-capture
+  :custom
+  (org-capture-templates
+   `(("c" "current task" plain
+      (clock)
+      "\n%?\n"
+      :empty-lines-before 1)
+     ("d" "daily" plain
+      (file+olp+datetree ,(concat org-directory "/dailies.org"))
+      "%i\n%?")
+     ("p" "project task" entry
+      (function wal/org-capture-locate-project-tasks)
+      "* TODO %?\n\n%F\n\n%i"
+      :empty-lines-before 1)))
+  (org-capture-bookmark nil) ; Prevents countless edit buffers since we annotate bookmarks.
+
+  :delight " cap")
+#+END_SRC
+
+** org-refile
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Configure refiling headings.
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-refile
+  :custom
+  (org-refile-targets
+   '((nil . (:maxlevel . 4))
+     (org-agenda-files . (:maxlevel . 3)))))
+#+END_SRC
+
+* Other
+
+** org-babel
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Convenient (and less safe) source block interaction.
+
+#+BEGIN_SRC emacs-lisp
+(use-package ob
+  :config
+  ;; Load a few more languages.
+  (wal/append
+   'org-babel-load-languages
+   '((shell . t)
+     (python . t)
+     (latex . t)
+     (js . t)))
+
+  :custom
+  (org-confirm-babel-evalute nil))
+#+end_src
+
+** org-clock
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+You know the drill. Clock in, clock out.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/org-clock-in-switch-to-state (todo-state)
+  "Only switch state to IN PROGRESS if TODO-STATE was given."
+  (when todo-state
+    "IN PROGRESS"))
+
+(defun wal/org-clock-heading ()
+  "Render a truncated heading for modeline."
+  (declare-function org-link-display-format "ext:org-link.el")
+  (declare-function org-get-heading "ext:org.el")
+
+  (let ((heading (org-link-display-format
+	              (org-no-properties (org-get-heading t t t t)))))
+
+    (wal/truncate heading 12)))
+
+(defun wal/org-clock-in-from-now ()
+  "Force `org-clock-in' without continuous logging."
+  (defvar org-clock-continuously)
+  (declare-function org-clock-in "ext:org-clock.el")
+
+  (let ((org-clock-continuously nil))
+
+    (org-clock-in)))
+
+(defun wal/org-clock-take-note ()
+  "Take a note for the currently clocked-in entry."
+  (interactive)
+
+  (declare-function org-clock-goto "ext:org-clock.el")
+
+  (save-window-excursion
+    (org-clock-goto)
+    (org-add-note)))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-clock
+  :after org
+
+  :init
+  (with-eval-after-load 'org-keys
+    (add-to-list 'org-speed-commands '("N" . wal/org-clock-in-from-now)))
+
+  (parallel wal/org-clock-take-note org-clock-goto)
+
+  :custom
+  ;; We want a continuous, persistent clock.
+  (org-clock-idle-time 60)
+  (org-clock-continuously t)
+  (org-clock-persist t)
+  (org-clock-in-switch-to-state 'wal/org-clock-in-switch-to-state)
+  (org-clock-in-resume t)
+  (org-clock-report-include-clocking-task t)
+  (org-clock-out-remove-zero-time-clocks t)
+
+  ;; Truncate overly long tasks.
+  (org-clock-heading-function #'wal/org-clock-heading)
+
+  :bind
+  ("C-c n" . wal/org-clock-take-note||org-clock-goto))
+#+END_SRC
+
+** org-duration
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Set up durations for a 40-hour week.
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-duration
+  :after org
+
+  :config
+  ;; 40h working week, one month of vacation.
+  (wal/replace-in-alist
+    'org-duration-units
+    `(("d" . ,(* 60 8))
+      ("w" . ,(* 60 8 5))
+      ("m" . ,(* 60 8 5 4))
+      ("y" . ,(* 60 8 5 4 11)))))
+#+END_SRC
+
+** org-keys
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Add some user speed commands.
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-keys
+  :after org
+
+  :custom
+  (org-use-speed-commands t)
+  (org-return-follows-link t))
+#+END_SRC
+
+** org-modern
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Modern look.
+
+#+begin_src emacs-lisp
+(use-package org-modern
+  :wal-ways nil
+
+  :hook (org-mode . org-modern-mode)
+
+  :custom
+  (org-modern-hide-stars " ")
+  (org-modern-star '("◆" "◈" "►" "▻" "▸" "▹" "•")))
+#+end_src
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-org)
+
+;;; wal-org.el ends here
+#+END_SRC

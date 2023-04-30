@@ -1,0 +1,152 @@
+#+TITLE: The Internet
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-web.el" wal/emacs-config-package-path)
+
+I browse, I request.
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-web.el --- The Internet. -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Provide web packages.
+
+;;; Code:
+
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+#+END_SRC
+
+* Requests
+
+** verb
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Make requests using Org.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/pick-windows-being-kept (&rest _args)
+  "Provide t to `verb-kill-*' functions to keep window."
+  (list t))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package verb
+  :wal-ways nil
+
+  :after org
+
+  :init
+  ;; Make the tag available.
+  (add-to-list 'org-tag-alist '("verb" . ?v))
+
+  ;; Make sure windows are being kept.
+  (wal/advise-many
+   'wal/pick-windows-being-kept :filter-args
+   '(verb-kill-all-response-buffers
+     verb-kill-response-buffer-and-window))
+
+  :config
+  (wal/transient-define-major verb ()
+    "Dispatch `verb' commands."
+    [["Request"
+      ("r" "send" verb-send-request-on-point
+       :inapt-if-non-nil verb-response-body-mode)
+      ("e" "export" verb-export-request-on-point
+       :inapt-if-non-nil verb-response-body-mode)]
+     ["Response"
+      ("R" "resend" verb-re-send-request
+       :inapt-if-nil verb-response-body-mode)
+      ("k" "kill all" verb-kill-all-response-buffers)]
+     ["Variables"
+      ("v" "set" verb-set-var)
+      ("V" "show" verb-show-vars)]])
+
+  :bind
+  (:map verb-response-body-mode-map
+   ("k" . verb-kill-buffer-and-window)
+   ("q" . quit-window))
+
+  :general
+  (ambassador :keymaps '(verb-mode-map verb-response-body-mode-map)
+    "v" '(verb-major :wk "verb"))
+
+  :delight
+  (verb-mode " vrb")
+  (verb-response-body-mode " vRb"))
+#+END_SRC
+
+* E-Mails
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand mailing
+  "For people reading/writing emails in Emacs."
+  :packages (smtpmail))
+#+END_SRC
+
+** mu4e
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+You either need to install =maildir-utils= or build from [[https://github.com/djcb/mu][source]].
+
+#+BEGIN_SRC emacs-lisp
+(use-package mu4e
+  :if (executable-find "mu")
+  :wal-ways nil
+
+  :config
+  (setq mail-user-agent 'mu4e-user-agent)
+
+  :custom
+  (mu4e-confirm-quit nil)
+  (mu4e-completing-read-function 'completing-read)
+  (mu4e-compose-dont-reply-to-self t)
+  (mu4e-get-mail-command "offlineimap") ; This one works nicely.
+
+  :general
+  (ambassador "@" 'mu4e))
+#+END_SRC
+
+** smtpmail
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+This configuration is from a (kind of) working [[https://www.djcbsoftware.nl/code/mu/mu4e/Gmail-configuration.html][Gmail setup]].
+
+I recommend putting personal data in a =site-start.el= file somewhere in
+your =load-path=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package smtpmail
+  :wal-ways nil
+
+  :custom
+  (message-send-mail-function 'smtpmail-send-it)
+  (message-kill-buffer-on-exit t)
+  (starttls-use-gnutls t))
+#+END_SRC
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-web)
+
+;;; wal-web.el ends here
+#+END_SRC

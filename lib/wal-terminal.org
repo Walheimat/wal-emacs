@@ -1,0 +1,109 @@
+#+TITLE: Terminal
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-terminal.el" wal/emacs-config-package-path)
+
+#+BEGIN_QUOTE
+I am convinced that we are in a terminal process.
+— E. P. Thompson
+#+END_QUOTE
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-terminal.el --- Terminal. -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Provide terminal packages.
+
+;;; Code:
+
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+
+(declare-function project-buffers "ext:project.el")
+#+END_SRC
+
+* Packages
+
+** with-editor
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package with-editor
+  :custom
+  (with-editor-mode-lighter " w/e"))
+#+END_SRC
+
+* Eshell
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand eshell
+  "Make eshell feel like a feature-complete shell."
+  :packages (eshell-syntax-highlighting))
+#+END_SRC
+
+** eshell
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Set up =eshell=. I like the idea of it but I don't really use it.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/instead-truncate-buffer (&rest _r)
+  "Advise to truncate buffer."
+  (defvar eshell-buffer-maximum-lines)
+  (declare-function eshell-truncate-buffer "ext:eshell.el")
+
+  (let ((eshell-buffer-maximum-lines 0))
+
+    (eshell-truncate-buffer)))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package eshell
+  :hook
+  ((eshell-mode . with-editor-export-editor)
+   (eshell-mode . with-editor-export-git-editor))
+
+  :config
+  (advice-add
+   'eshell/clear :override
+   #'wal/instead-truncate-buffer)
+
+  :bind
+  (("C-c e" . eshell)))
+#+END_SRC
+
+** eshell-syntax-highlighting
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package eshell-syntax-highlighting
+  :wal-ways nil
+
+  :hook (eshell-mode . eshell-syntax-highlighting-mode))
+#+END_SRC
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-terminal)
+
+;;; wal-terminal.el ends here
+#+END_SRC

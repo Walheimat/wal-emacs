@@ -1,0 +1,431 @@
+#+TITLE: Config Package
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal.el" wal/emacs-config-package-path)
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal.el --- Walheimat's literate Emacs configuration. -*- lexical-binding: t -*-
+
+;; Version: 1.7.12
+;; Package-Requires: ((emacs "28.1"))
+
+;;; Commentary:
+;;
+;; Require all sub-packages.
+
+;;; Code:
+
+(declare-function posframe-delete "ext:posframe.el")
+(declare-function wal/async-process "wal-func.el")
+(declare-function wal/directory-files "init.el")
+(declare-function wal/flycheck-file "wal-fix.el")
+(declare-function wal/flycheck-file--erase "wal-fix.el")
+(declare-function wal/flycheck-file--get-buffer "wal-fix.el")
+(declare-function wal/matches-in-string "wal-func.el")
+(declare-function wal/tangle-config "wal-prelude.el")
+
+(defvar wal/emacs-config-default-path)
+(defvar wal/emacs-config-package-path)
+
+(defgroup wal nil
+  "Walheimat's configuration."
+  :group 'convenience
+  :prefix "wal/")
+
+(defgroup wal-config nil
+  "Customize configuring the packages."
+  :group 'wal
+  :tag "Configuration")
+
+(defcustom wal/config-show-whale-animation t
+  "Whether to show an animated whale while editing the config."
+  :type 'boolean
+  :group 'wal-config)
+
+(defcustom wal/config-ascii-whale 'blue
+  "The whale to use in the config animation."
+  :type '(choice (const :tag "Blue whale" blue)
+                 (const :tag "Cachalot" cachalot))
+  :group 'wal-config)
+#+END_SRC
+
+* Lovable Things
+
+** Whale Animation
+
+Animate a swimming whale in a =posframe=.
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/ascii-whale--fins (list "-" "'" "-" ","))
+
+(defun wal/ascii-whale--build-key-frames (pattern)
+  "Build key frames using PATTERN."
+  (seq--into-vector
+   (seq-map (lambda (it)
+              (format pattern it))
+            wal/ascii-whale--fins)))
+
+(defvar wal/ascii-cachalot-whale-key-frames
+  (wal/ascii-whale--build-key-frames "(__.%s >{"))
+
+(defvar wal/ascii-blue-whale-key-frames
+  (wal/ascii-whale--build-key-frames "⎝   ﬞ %s    {"))
+
+(defvar wal/ascii-whale-key-frames nil)
+
+(defvar wal/ascii-whale-frame-index 0)
+(defvar wal/ascii-whale-animation-speed 0.4)
+
+(defvar wal/ascii-whale-buffer "*swimming-whale*")
+(defvar wal/ascii-whale-timer nil)
+(defvar wal/ascii-whale-parent-buffer nil)
+
+(defun wal/ascii-whale-animate ()
+  "Animate the ASCII whale."
+  (with-current-buffer (get-buffer-create wal/ascii-whale-buffer)
+    ;; Clear.
+    (erase-buffer)
+
+    ;; Render current frame.
+    (let* ((frame (aref wal/ascii-whale-key-frames wal/ascii-whale-frame-index))
+           (colored (propertize frame 'face `(:foreground ,(face-attribute 'default :background)
+                                              :background ,(face-attribute 'cursor :background)))))
+
+      (insert colored)
+
+      ;; Advance to the next frame.
+      (setq wal/ascii-whale-frame-index
+            (mod
+             (1+ wal/ascii-whale-frame-index)
+             (length wal/ascii-whale-key-frames))))))
+
+(defun wal/ascii-whale-setup ()
+  "Set up the animated whale."
+  (require 'posframe nil t)
+
+  (when (featurep 'posframe)
+    ;; Integrate in current window configuration.
+    (setq wal/ascii-whale-parent-buffer (current-buffer))
+
+    (pcase wal/config-ascii-whale
+      ('blue
+       (setq wal/ascii-whale-key-frames wal/ascii-blue-whale-key-frames))
+      ('cachalot
+       (setq wal/ascii-whale-key-frames wal/ascii-cachalot-whale-key-frames))
+      (_ (user-error "Unknown whale %s" wal/config-ascii-whale)))
+
+    (add-hook 'kill-buffer-hook #'wal/ascii-whale-clean-up nil t)
+    (add-hook 'window-configuration-change-hook #'wal/ascii-whale-display nil t)
+
+    ;; Queue up timer.
+    (unless wal/ascii-whale-timer
+      (setq wal/ascii-whale-timer (run-with-timer
+                                   0
+                                   wal/ascii-whale-animation-speed
+                                   #'wal/ascii-whale-animate)))
+
+    ;; Increase the font size.
+    (with-current-buffer (get-buffer-create wal/ascii-whale-buffer)
+      (defvar wal/fixed-font-height)
+      (let ((fheight (* 2 wal/fixed-font-height)))
+
+        (face-remap-add-relative 'default :height fheight)))
+
+    ;; Make sure the first frame is animated before we display.
+    (wal/ascii-whale-animate)
+
+    (wal/ascii-whale-display)))
+
+(defun wal/ascii-whale-clean-up ()
+  "Clean up the animation."
+  ;; Cancel and void the timer.
+  (when wal/ascii-whale-timer
+    (cancel-timer wal/ascii-whale-timer)
+    (setq wal/ascii-whale-timer nil))
+
+  ;; Delete the frame.
+  (posframe-delete wal/ascii-whale-buffer)
+
+  ;; Remove animation and re-positioning hooks.
+  (remove-hook 'kill-buffer-hook #'wal/ascii-whale-clean-up t)
+  (remove-hook 'window-configuration-change-hook #'wal/ascii-whale-display t))
+
+(defun wal/ascii-whale-poshandler (info)
+  "Position handler for ASCII whale.
+
+INFO contains positioning information."
+  (let* ((window-left (plist-get info :parent-window-left))
+         (window-top (plist-get info :parent-window-top))
+         (window-width (plist-get info :parent-window-width))
+         (posframe-width (plist-get info :posframe-width))
+
+         ;; Offset the frame, taking the pixel-height of a line into
+         ;; account.
+         (p-window (plist-get info :parent-window))
+         (p-line-height (with-selected-window p-window (line-pixel-height)))
+         (offset-x p-line-height)
+         (offset-y p-line-height))
+
+    (cons (- (+ window-left window-width
+                (- 0 posframe-width))
+             offset-x)
+          (+ window-top offset-y))))
+
+(defun wal/ascii-whale-hidehandler (info)
+  "Check INFO whether the parent buffer is invisible."
+  (and-let* ((parent (cdr (plist-get info :posframe-parent-buffer)))
+             (invisible (not (get-buffer-window parent t))))))
+
+(defun wal/ascii-whale-display ()
+  "Display the running animation in a posframe."
+  (let ((default-frame-alist nil))
+
+    (posframe-show
+     wal/ascii-whale-buffer
+     :accept-focus nil
+     :border-width (pcase wal/config-ascii-whale ('blue 12) ('cachalot 6) (_ 6))
+     :border-color (face-attribute 'cursor :background)
+     :poshandler 'wal/ascii-whale-poshandler
+     :posframe-parent-buffer (or wal/ascii-whale-parent-buffer (current-buffer))
+     :hidehandler 'wal/ascii-whale-hidehandler)))
+
+(defun wal/ascii-whale-toggle-display ()
+  "Toggle the animation."
+  (interactive)
+
+  (if wal/ascii-whale-timer
+      (wal/ascii-whale-clean-up)
+    (wal/ascii-whale-setup)))
+#+END_SRC
+
+* Editing the Config
+
+Minor mode for editing this config.
+
+** Version Info
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/tangle-do-prompt t
+  "Whether to prompt user to tangle config.")
+
+(defvar wal/config-mode-map (make-sparse-keymap)
+  "Map for `wal/config-mode'.")
+
+(defun wal/describe-config-version ()
+  "Describe the config's version.
+
+This returns the tag and its annotation as propertized strings."
+  (interactive)
+
+  (let* ((default-directory wal/emacs-config-default-path)
+         (version (propertize
+                   (string-trim
+                    (shell-command-to-string "git describe --abbrev=0"))
+                   'face 'bold))
+         (cat (propertize
+               (string-trim
+                (shell-command-to-string (format "git cat-file tag %s" version)))
+               'face 'italic))
+         (out (concat version ": " (car (last (string-lines cat))))))
+
+    (cond
+     (noninteractive out)
+     (t (message out)))))
+
+(defun wal/show-config-diff-range ()
+  "Call `magit-diff-range' with the latest tag."
+  (interactive)
+
+  (let ((version (shell-command-to-string "git describe --abbrev=0")))
+
+    (magit-diff-range (string-trim version) '("--stat"))))
+#+END_SRC
+
+** Tangling
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/tangle-config-prompt ()
+  "Prompt the user to tangle the config.
+If the answer is no, there will be no additional prompt."
+  (interactive)
+
+  (let ((help-form (message "This will update your packages. Restart Emacs afterwards.")))
+
+    (if (and wal/tangle-do-prompt (y-or-n-p "Config changed, want to tangle? "))
+        (wal/tangle-config)
+      (if wal/tangle-do-prompt
+          (progn
+            (setq-local wal/tangle-do-prompt nil)
+            (message "To tangle, call `wal/tangle-config'"))
+        (message "Config changed. To tangle, call `wal/tangle-config'")))))
+#+END_SRC
+
+** The Config Itself
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/config-consult-org-heading ()
+  "Find a heading in any of library file."
+  (interactive)
+
+  (let ((libs (wal/directory-files wal/emacs-config-lib-path)))
+
+    (consult-org-heading nil libs)))
+
+(defun wal/customize-group ()
+  "Customize `wal' group."
+  (interactive)
+
+  (customize-group 'wal t))
+#+END_SRC
+
+** Scripts
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/run-pacify ()
+  "Run the pacify script."
+  (interactive)
+
+  (wal/run-script "pacify"))
+
+(defun wal/run-cold-boot ()
+  "Run the cold-boot script."
+  (interactive)
+
+  (wal/run-script "cold-boot"))
+
+(defun wal/run-script (name)
+  "Run script named NAME."
+  (let* ((command (format "./%s.sh" name))
+         (setup-dir (expand-file-name "setup" wal/emacs-config-default-path))
+         (full-command (concat "cd " setup-dir " && " command)))
+
+    (wal/async-process
+     full-command
+     (wal/run-script--on-success name)
+     (wal/run-script--on-failure name)
+     t)))
+
+(defun wal/run-script--on-success (name)
+  "Display success message for script NAME."
+  (lambda () (message "Script '%s' succeeded." name)))
+
+(defun wal/run-script--on-failure (name)
+  "Display failure message for script NAME."
+  (lambda (err) (message "Script '%s' failed.\n\n%s" name err)))
+
+(defun wal/check-coverage ()
+  "Check the current coverage for custom functionality."
+  (interactive)
+
+  (let* ((command "cask exec ert-runner && cat coverage/results.txt"))
+
+    (wal/coverage--execute
+     command
+     (lambda ()
+       (let ((average (wal/check-coverage--calculate-coverage)))
+
+         (message "All tests succeeded. Coverage: %s" average)))
+     (lambda (str) (message "Tests fail: %s" str)))))
+
+(defun wal/create-json-coverage ()
+  "Create a JSON report file."
+  (interactive)
+
+  (let ((command "export COVERAGE_WITH_JSON=true && cask exec ert-runner"))
+
+    (wal/coverage--execute
+     command
+     (lambda () (message "Coverage created"))
+     (lambda (str) (message "Failed to create coverage: %s" str)))))
+
+(defun wal/coverage--execute (command on-success on-failure)
+  "Execute coverage command.
+
+Runs COMMAND asynchronously and passes ON-SUCCESS and ON-FAILURE
+handlers.
+
+BUFFER-SUFFIX is a string to make sure existing buffers of that
+name are deleted beforehand."
+  (unless (executable-find "cask")
+    (user-error "You need to install `cask' binary"))
+
+  (let ((full-command (concat "cd " wal/emacs-config-default-path " && " command)))
+
+    (wal/async-process full-command on-success on-failure t)))
+
+
+(defun wal/check-coverage--add (buf type)
+  "Add all numbers of TYPE in buffer BUF."
+  (let* ((regex (concat type ": \\(?1:[[:digit:]]+\\)"))
+         (content (with-current-buffer buf (buffer-string)))
+         (numbers (wal/matches-in-string regex content)))
+
+    (apply '+ (mapcar #'string-to-number numbers))))
+
+(defun wal/check-coverage--calculate-coverage ()
+  "Calculate the full coverage."
+  (when-let* ((buffer (get-buffer "*wal-async*"))
+              (relevant (wal/check-coverage--add buffer "Relevant"))
+              (covered (wal/check-coverage--add buffer "Covered")))
+
+    (format "%.2f%%" (* 100 (/ (float covered) relevant)))))
+
+(defun wal/checkdoc-config-packages ()
+  "Run `checkdoc-file' on all package files."
+  (interactive)
+
+  (require 'checkdoc nil t)
+
+  (dolist (it (wal/package-files))
+    (checkdoc-file it)))
+
+(defun wal/package-files ()
+  "Get the package files."
+  (let* ((package-files (wal/directory-files wal/emacs-config-package-path))
+         (el-files (seq-filter
+                    (lambda (it)
+                      (string-equal (file-name-extension it)
+                                    "el"))
+                    package-files)))
+
+    el-files))
+#+END_SRC
+
+** Keymap
+
+#+BEGIN_SRC emacs-lisp
+;; Create `transient' for config package.
+(transient-define-prefix whaler ()
+  "Facilitate the usage of or the working on Walheimat's config."
+  [["Do"
+    ("h" "consult config heading" wal/config-consult-org-heading)
+    ("t" "tangle" wal/tangle-config)
+    ("x" "install expansion pack" junk-install)
+    ("c" "customize group" wal/customize-group)
+    ("m" "show diff" wal/show-config-diff-range)]
+   ["Check"
+    ("d" "checkdoc" wal/checkdoc-config-packages)
+    ("p" "pacify" wal/run-pacify)
+    ("o" "coverage" wal/check-coverage)
+    ("j" "JSON coverage" wal/create-json-coverage)
+    ("b" "cold boot" wal/run-cold-boot)]]
+  ["Fluff"
+   ("w" "toggle animation" wal/ascii-whale-toggle-display)])
+
+(advice-add 'whaler :around 'wal/with-delayed-transient-popup)
+#+END_SRC
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal)
+
+;;; wal.el ends here
+#+END_SRC

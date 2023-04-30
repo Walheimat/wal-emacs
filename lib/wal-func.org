@@ -1,0 +1,1262 @@
+#+TITLE: Functionality
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-func.el" wal/emacs-config-package-path)
+
+Custom functionality.
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-func.el --- Utilities. -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Provides functions and macros to simplify various configurations.
+
+;;; Code:
+
+(require 'compile)
+(require 'treesit nil t)
+
+(declare-function server-edit "ext:server.el")
+(declare-function server-edit-abort "ext:server.el")
+
+(defvar global-text-scale-adjust--default-height)
+(defvar wal/indent-offset)
+(defvar wal/prefer-tabs)
+(defvar wal/scratch-persist-file)
+(defvar wal/use-hyper-prefix)
+#+END_SRC
+
+* Emacs
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/modern-emacs-p (&optional min-version)
+  "Check if we're using a modern version of Emacs.
+
+If MIN-VERSION is set to a number, verify that current version is
+at or above it."
+  (if min-version
+      (if (and (numberp min-version) (>= min-version 28))
+          (>= emacs-major-version min-version)
+        (user-error "Provided minimum version not acceptable"))
+    (>= emacs-major-version 28)))
+#+END_SRC
+
+* Directories
+
+Finding files should =mkdir -p= its parents.
+
+#+BEGIN_SRC emacs-lisp
+;; Creating parent dirs.
+(defun wal/create-non-existent-directory ()
+  "Ask whether to create non-existent directory.
+If a file is found in a not (yet) existing directory, ask if it
+should get created."
+  (let ((parent-directory (file-name-directory buffer-file-name)))
+
+    (when (and (not (file-exists-p parent-directory))
+               (y-or-n-p (format "Create non-existing directory `%s'? " parent-directory)))
+      (make-directory parent-directory t))))
+#+END_SRC
+
+* Buffer Display
+
+Utility functions to configure displaying buffers of a certain type.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/display-buffer--condition (buffer-or-mode)
+  "Get a display buffer condition for BUFFER-OR-MODE."
+  (pcase buffer-or-mode
+    ((pred stringp) buffer-or-mode)
+    ((pred symbolp) `(major-mode . ,buffer-or-mode))
+    (_ (user-error "Call with string or symbol"))))
+
+;; The next two functions make sense for `popper' buffers.
+
+(cl-defun wal/display-buffer-same-place-or-nearby (buffer &key side loose no-other height)
+  "Display BUFFER where it is or nearby.
+
+This window will be on SIDE (on the bottom by default), not
+delete other windows, dedicated to the buffer (unless LOOSE),
+available to `other-window' (unless NO-OTHER) 20 (or HEIGHT)
+lines high and visible frames are considered reusable."
+  (let ((condition (wal/display-buffer--condition buffer)))
+
+    (add-to-list 'display-buffer-alist
+                 `(,condition
+                   (display-buffer-reuse-window display-buffer-in-side-window)
+                   (side . ,(or side 'bottom))
+                   (dedicated . ,(not loose))
+                   (reusable-frames . visible)
+                   (window-height . ,(or height 10))
+                   (window-parameters . ((no-other-window . ,no-other)))))))
+
+(defun wal/display-buffer-use-some-frame--with-display-p (frame)
+  "Check that FRAME is not the selected frame and has a display entry."
+    (and (not (eq frame (selected-frame)))
+         (get-lru-window frame)
+         (cdr-safe (assoc 'display (frame-parameters frame)))))
+
+(cl-defun wal/display-buffer-same-place-or-faraway (buffer &key width)
+  "Display BUFFER where it is or far away.
+
+Tries to reuse window first, then checks for another frame and
+lastly pops up a window. The (window) WIDTH will be passed as an
+action symbol."
+  (let ((condition (wal/display-buffer--condition buffer)))
+
+    (add-to-list 'display-buffer-alist
+                 `(,condition
+                   (display-buffer-reuse-window
+                    display-buffer-reuse-mode-window
+                    display-buffer-use-some-frame
+                    display-buffer-pop-up-window)
+                   (frame-predicate . wal/display-buffer-use-some-frame--with-display-p)
+                   (inhibit-switch-frame . t)
+                   (window-width . ,width)))))
+
+(defalias 'wdb/nearby 'wal/display-buffer-same-place-or-nearby)
+(defalias 'wdb/faraway 'wal/display-buffer-same-place-or-faraway)
+#+END_SRC
+
+* Buffer Hygiene
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/kill-some-file-buffers ()
+  "Kill some buffers associated with files."
+  (interactive)
+
+  (let ((file-buffers (seq-filter #'buffer-file-name (buffer-list))))
+
+    (kill-some-buffers file-buffers)))
+#+END_SRC
+
+* Editing
+
+More convenient editing.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/kill-ring-save-whole-buffer ()
+  "Call `kill-ring-save' on the entire buffer."
+  (interactive)
+
+  (kill-ring-save (point-min) (point-max)))
+
+(defconst wal/cursor-types '(box hollow bar hbar)
+  "Cursor types that can be set using `completing-read'.")
+
+(defun wal/set-cursor-type (&optional reset)
+  "Set the `cursor-type'.
+
+Optionally RESET the type when called with `universal-argument'."
+  (interactive "P")
+
+  (if reset
+      (setq-local cursor-type t)
+    (let* ((type-string (completing-read "Select cursor type: " wal/cursor-types))
+           (type (intern type-string)))
+
+      (setq-local cursor-type type))))
+
+(defun wal/kwim (&optional arg)
+  "Kill what I mean.
+
+If there's an active region, kill it.
+
+If we're at the (actual) end or (actual) beginning of a line,
+kill the whole line, otherwise kill forward.
+
+If a whole line is killed, move to the beginning of text on the
+next line.
+
+ARG is passed to `kill-line' and function `kill-whole-line'."
+  (interactive "P")
+
+  (if (region-active-p)
+      (kill-region nil nil t)
+    (let ((p-before (point))
+          (p-end nil)
+          (p-beg nil))
+
+      (save-excursion
+        (end-of-line)
+        (setq p-end (point))
+
+        (beginning-of-line)
+        (setq p-beg (point)))
+
+      (if (and (/= p-before p-beg) (/= p-before p-end))
+          (kill-line arg)
+        (kill-whole-line arg)
+        (beginning-of-line-text)))))
+
+(defun wal/mwim-beginning (arg)
+  "Call `move-beginning-of-line' with ARG.
+
+If we're already at the beginning, move to the beginning of the
+line text."
+  (interactive "P")
+
+  (let ((p-before (point))
+        (p-after nil))
+
+    (move-beginning-of-line arg)
+
+    (setq p-after (point))
+
+    (when (= p-before p-after)
+      (beginning-of-line-text))))
+
+(defun wal/spill-paragraph (&optional region)
+  "Fit the paragraph on a single line.
+
+Apply to REGION if t."
+  (interactive "P")
+
+  (let ((fill-column most-positive-fixnum))
+
+    (funcall-interactively 'fill-paragraph nil region)))
+#+END_SRC
+
+* Windows
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/l ()
+  "Dedicate the window to the current buffer.
+
+Un-dedicates if already dedicated."
+  (interactive)
+
+  (let ((window (selected-window))
+        (buffer (current-buffer)))
+
+    (if (window-dedicated-p window)
+        (progn
+         (set-window-dedicated-p window nil)
+         (message "Window no longer dedicated to %s" buffer))
+    (set-window-dedicated-p window buffer)
+    (message "Dedicating window to %s" buffer))))
+
+(defun wal/force-delete-other-windows ()
+  "Call `delete-other-windows' ignoring window parameters."
+  (interactive)
+
+  (defvar ignore-window-parameters)
+  (let ((ignore-window-parameters t))
+
+    (delete-other-windows)))
+#+END_SRC
+
+* Files
+
+Handling of files.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/find-custom-file ()
+  "Find the custom file."
+  (interactive)
+
+  (switch-to-buffer (find-file-noselect (file-truename custom-file))))
+
+(defun wal/find-init ()
+  "Find and switch to the `user-init-file'."
+  (interactive)
+
+  (switch-to-buffer (find-file-noselect (file-truename user-init-file))))
+
+(defconst wal/fish-config-locations '("~/.config/fish/config.fish"
+                                      "~/.config/omf"))
+
+(defun wal/find-fish-config ()
+  "Find the fish shell config file."
+  (interactive)
+
+  (let* ((files wal/fish-config-locations)
+         (init-file (cl-find-if
+                     'file-exists-p
+                     (mapcar 'expand-file-name files))))
+
+    (if init-file
+        (switch-to-buffer (find-file-noselect (file-truename init-file)))
+      (user-error "Couldn't find fish config file"))))
+#+END_SRC
+
+* Command Line
+
+Capture custom command line flags.
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/flag-doctor nil)
+(defvar wal/flag-mini nil)
+(defvar wal/flag-ensure nil)
+
+(defconst wal/custom-flags '((doctor . "--doctor")
+                             (mini . "--mini")
+                             (ensure . "--ensure"))
+  "Alist of custom flags that can be passed to Emacs.")
+
+(defmacro wal/capture-flag (flag docs)
+  "Check for custom FLAG.
+
+DOCS will be passed on to `message'.
+
+This will delete the flag from the command line arguments and set
+the associated variable."
+  (declare (indent defun) (doc-string 2))
+
+  `(when-let* ((flags wal/custom-flags)
+               (dash-flag (cdr (assoc ',flag flags)))
+               (found (member dash-flag command-line-args)))
+
+     (message ,docs)
+
+     (setq command-line-args (delete dash-flag command-line-args))
+     (setq ,(intern (concat "wal/flag-" (symbol-name flag))) t)))
+#+END_SRC
+
+* Lists
+
+Manipulating lists.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/append (target seq)
+  "Set TARGET to it with SEQ appended.
+
+Duplicate items are removed."
+  (let ((val (symbol-value target)))
+
+    (set target (delq nil (delete-dups (append val seq))))))
+
+(defun wal/replace-in-alist (target values)
+  "Edit TARGET alist in-place using VALUES."
+  (let ((val (symbol-value target)))
+
+    (if (seq-every-p (lambda (it) (assoc (car it) val)) values)
+        (seq-each (lambda (it) (map-put! val (car it) (cdr it))) values)
+      (let ((keys (mapcar #'car values)))
+
+        (user-error "All keys %s must already be present in %s" keys target)))))
+
+(defun wal/insert-after (target preceding item &optional no-duplicates)
+  "Insert ITEM in TARGET after PRECEDING.
+
+If NO-DUPLICATES is t, trying to re-add an existing item will
+raise an error."
+  (let ((val (symbol-value target)))
+
+    (when (and no-duplicates (memq item val))
+      (user-error "Can't insert after %s: %s is already in target %s" preceding item target))
+
+    (if (memq preceding val)
+        (let* ((remainder (nthcdr (cl-position preceding val) val)))
+
+          (setcdr remainder (cons item (cdr remainder))))
+      (user-error "Can't insert after %s as it is not in %s" preceding target))))
+
+(defun wal/list-from (target item)
+  "Create a list from TARGET appending ITEM.
+
+If TARGET already is a list ITEM is appended. Duplicates are
+removed."
+  (let ((val (symbol-value target)))
+
+    (cond
+     ((listp val)
+      (delq nil (delete-dups (append val `(,item)))))
+     (t
+      (list val item)))))
+
+(defun wal/plist-keys (plist)
+  "Get all keys from PLIST."
+  (unless (plistp plist)
+    (user-error "Not a plist"))
+
+  (let ((elements plist)
+        (keys nil))
+
+    (while elements
+      (push (car elements) keys)
+      (setq elements (cddr elements)))
+
+    (reverse keys)))
+#+END_SRC
+
+* Commands
+
+Make function calls even more versatile.
+
+#+BEGIN_SRC emacs-lisp
+(defvar parallel--separator "||"
+  "Separator betwee the two `parallel' function names.")
+
+(cl-defmacro parallel (a b &key universalize)
+  "Define a function composing A and B.
+
+Both functions are called interactively.
+
+By default, A is called. B will be called if the prefix argument
+is numeric. This allows both commands to consume the prefix.
+
+If UNIVERSALIZE is t, the prefix argument is set to mimic the
+`universal-argument' for B."
+  (declare (indent defun))
+
+  (let ((a-name (symbol-name a))
+        (b-name (symbol-name b)))
+
+    `(defun ,(intern (concat a-name parallel--separator b-name)) (&optional arg)
+       ,(concat (format "Call `%s' or `%s' depending on prefix argument."
+                        a-name
+                        b-name)
+                "\n"
+                "No argument means: call the prior. "
+                "Numeric prefix `0' means: call the latter."
+                "\n\n"
+                "For all other prefix values: numeric prefixes call the latter,"
+                " `universal-argument' prefixes call the prior"
+                (if universalize ".\n\nThis function is universalized." "."))
+       (interactive "P")
+
+       (cond
+        ((not arg)
+         (call-interactively ',a))
+        ((equal 0 arg)
+         (setq current-prefix-arg nil)
+         (prefix-command-update)
+         (call-interactively ',b))
+        ((equal (prefix-numeric-value arg) arg)
+         ,(if (not universalize)
+              `(call-interactively ',b)
+            `(progn
+               (setq current-prefix-arg (list arg))
+               (prefix-command-update)
+               (call-interactively ',b))))
+        (t
+         (call-interactively ',a))))))
+#+END_SRC
+
+* Scratch Buffer
+
+Make the scratch buffer contents persist between sessions.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/scratch-buffer (&optional session)
+  "Switch to the scratch buffer.
+
+If SESSION is non-nil, switch to (or create) it."
+  (interactive "P")
+
+  (let* ((name "*scratch*")
+         (buf (cond ((numberp session)
+                     (get-buffer-create (format "%s<%d>" name session)))
+                    (session
+                     (generate-new-buffer name))
+                    (t
+                     (get-buffer-create name)))))
+
+    (pop-to-buffer buf '(display-buffer-same-window))))
+
+(defun wal/persist-scratch ()
+  "Persist content of all *scratch* buffers.
+
+The contents are stored in `wal/scratch-persist-file' if non-nil. The
+order of buffers is not persisted."
+  (when wal/scratch-persist-file
+
+    (unless (file-exists-p wal/scratch-persist-file)
+      (make-empty-file wal/scratch-persist-file t))
+
+    (with-temp-buffer
+      (thread-last
+        (buffer-list)
+        (seq-filter (lambda (it) (string-match-p "\\*scratch" (buffer-name it))))
+        (reverse)
+        (apply (lambda (&rest seq) (mapconcat (lambda (it) (with-current-buffer it (buffer-string))) seq "\n\n")))
+        (string-trim)
+        (insert))
+
+      (write-region (point-min) (point-max) wal/scratch-persist-file))))
+
+(defun wal/rehydrate-scratch ()
+  "Re-hydrate scratch buffer (if persisted).
+
+This overrides the scratch buffer with the content stored in
+`wal/scratch-persist' if non-nil."
+  (when (file-exists-p wal/scratch-persist-file)
+    (with-current-buffer (get-buffer "*scratch*")
+      (delete-region (point-min) (point-max))
+      (insert-file-contents wal/scratch-persist-file))))
+#+END_SRC
+
+* Indentation
+
+Toggle indentation, allow for automatic activation from local
+variables.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/disable-tabs ()
+  "Disable tabs.
+
+Sets variable `indent-tabs-mode' to nil."
+  (interactive "p")
+
+  (setq indent-tabs-mode nil))
+
+(defun wal/enable-tabs ()
+  "Enable tabs.
+
+Sets tab variable `indent-tabs-mode' to t."
+  (interactive)
+
+  (setq indent-tabs-mode t))
+
+(defun wal/maybe-enable-tabs ()
+  "Maybe enable tabs."
+  (if wal/prefer-tabs
+      (wal/enable-tabs)
+    (wal/disable-tabs)))
+
+(defun wal/set-indent-defaults (&optional num)
+  "Set indent defaults.
+All offsets are set to `wal/indent-offset' or optionally to NUM."
+  (interactive "nSet tab width to: ")
+
+  (let ((offset (or num wal/indent-offset)))
+
+    (setq-default python-indent-offset offset
+                  js-indent-level offset
+                  c-ts-mode-indent-offset offset
+                  css-indent-offset offset
+                  nxml-child-indent offset
+                  sgml-basic-offset offset
+                  tab-width offset
+                  json-encoding-default-indentation (make-string offset ? )
+                  electric-indent-inhibit t
+                  indent-tabs-mode wal/prefer-tabs)))
+#+END_SRC
+
+* Helpers
+
+Some more helper functions.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/biased-random (limit &optional bias-low throws)
+  "Return a biased random number using LIMIT.
+
+The bias is the high end unless BIAS-LOW is passed. The number of
+throws are 3 or THROWS."
+  (let ((results (list))
+        (throws (or throws 3)))
+
+    (dotimes (_i throws)
+      (push (random limit) results))
+
+    (if bias-low
+        (seq-min results)
+      (seq-max results))))
+
+(defun wal/bytes-per-mb (num)
+  "Return the integer value of NUM megabytes in bytes.
+
+This function may be used to set variables that expect bytes."
+  (floor (* 1024 1024 num)))
+
+(defun wal/truncate (text &optional max-len)
+  "Truncate TEXT if longer than MAX-LEN.
+
+Truncates to 8 characters if no MAX-LEN is provided."
+  (let ((len (or max-len 8)))
+
+    (if (> (length text) len)
+        (concat (substring text 0 (max (- len 3) 1)) "...")
+      text)))
+
+(defun wal/pad-string (string &optional right)
+  "Advise to pad STRING.
+
+Padding is on the left unless RIGHT is t."
+  (let ((trimmed (string-trim string))
+        (padding " "))
+
+    (if right
+        (concat trimmed padding)
+      (concat padding trimmed))))
+
+(defun wal/univ-p ()
+  "Check if the `current-prefix-arg' is the `universal-argument'.
+
+This is mainly useful for non-interactive functions."
+  (equal current-prefix-arg '(4)))
+
+(defun wal/reset-to-standard (sym &optional locally)
+  "Reset symbol SYM to its standard value.
+If LOCALLY is t, the local variable is killed while its global
+value is left untouched."
+  (if locally
+      (if (local-variable-p sym)
+          (kill-local-variable sym)
+        (user-error "'%s' has no local binding" sym))
+    (set-default sym (eval (car (get sym 'standard-value))))))
+
+(defmacro wal/try (package &rest body)
+  "Exceute BODY if PACKAGE can be required."
+  (declare (indent 1))
+
+  `(when (require ',package nil :no-error) ,@body))
+
+(defun wal/server-edit-p ()
+  "Check if we're (likely) editing from outside of Emacs.
+
+We also make sure we're not in `with-editor-mode' as to not to
+intefere with `magit' and friends."
+  (and (bound-and-true-p server-buffer-clients)
+       (not (bound-and-true-p with-editor-mode))))
+
+(defun wal/delete-edit-or-kill (&optional abort)
+  "Delete frame, be done (or ABORT) or kill Emacs."
+  (interactive "P")
+
+  (cond
+   ((wal/server-edit-p)
+    (if abort (server-edit-abort) (server-edit)))
+   ((daemonp)
+    (delete-frame))
+   (t
+    (save-buffers-kill-terminal))))
+
+(defun wal/dead-shell-p ()
+  "Check if the current buffer is a shell or comint buffer with no process."
+  (let ((buffer (current-buffer)))
+
+    (with-current-buffer buffer
+      (and (derived-mode-p 'comint-mode)
+           (not (comint-check-proc buffer))))))
+
+(defun wal/prefix-user-key (user-key)
+  "Prefix USER-KEY.
+
+The default prefix is the hyper key unless Emacs is not running
+in GUI mode or `wal/use-hyper-prefix' is nil."
+  (let ((prefix (if (and wal/use-hyper-prefix
+                         (or (daemonp) (display-graphic-p)))
+                    "H-"
+                  "C-c w ")))
+
+    (concat prefix user-key)))
+
+(defmacro wal/on-boot (name &rest body)
+  "Only expand BODY in NAME on boot."
+  (declare (indent defun))
+
+  (if (bound-and-true-p wal/booting)
+      `(progn ,@body)
+    `(message "Ignoring statements in '%s'" ',name)))
+
+(defvar wal/transient-may-redefine nil)
+
+(defmacro wal/transient-define-major (name arglist &rest args)
+  "Make sure that prefix NAME called with ARGLIST and ARGS is only defined once."
+  (declare (debug (&define name lambda-list
+                           [&optional lambda-doc]
+                           [&rest keywordp sexp]
+                           [&rest vectorp]
+                           [&optional ("interactive" interactive) def-body]))
+           (indent defun)
+           (doc-string 3))
+
+  (let ((composite-name (intern (concat (symbol-name name) "-major"))))
+
+    (unless (and (fboundp composite-name) (not wal/transient-may-redefine))
+      `(transient-define-prefix ,composite-name ,arglist ,@args))))
+
+(defmacro setq-unless (&rest pairs)
+  "Set variable/value PAIRS if they're currently nil."
+  (declare (debug setq))
+
+  (let ((exps nil))
+
+    (while pairs
+      (let ((sym (car pairs)))
+
+        (if (and (boundp sym) (symbol-value sym))
+            (progn
+              (pop pairs)
+              (pop pairs))
+          (push `(setq ,(pop pairs) ,(pop pairs)) exps))))
+    `(progn . ,(nreverse exps))))
+#+END_SRC
+
+* Setup
+
+Allow differentiating between initial and repeated setups.
+
+#+BEGIN_SRC emacs-lisp
+(defmacro wal/when-ready (&rest body)
+  "Execute BODY when Emacs is ready."
+  (if (daemonp)
+      `(add-hook 'server-after-make-frame-hook (lambda () ,@body))
+    `(add-hook 'emacs-startup-hook (lambda () ,@body))))
+
+(defvar wal/performed-setups '()
+  "List of already performed setups.")
+
+(cl-defmacro wal/define-init-setup (name docs &key initial always immediately)
+  "Define an initial setup for NAME documented by DOCS.
+
+The INITIAL setup is only run once. The ALWAYS one on every call.
+
+In daemon-mode the function may be called IMMEDIATELY. An
+appropriate hook is chosen for the original call."
+  (declare (indent defun) (doc-string 2))
+
+  (let ((func-name (intern (concat "wal/init-setup-" (symbol-name name)))))
+
+    `(wal/on-boot ,name
+       (defun ,func-name ()
+         ,(format "Do base setup for %s. Do minimal setup on repeats.\n%s" name docs)
+         (unless (memq ',name wal/performed-setups)
+           (progn
+             (message "Initial setup of '%s'" ,(symbol-name name))
+             ,@initial
+             (add-to-list 'wal/performed-setups ',name)))
+         ,@always)
+       (if (daemonp)
+           (progn
+             (when ,immediately
+               (funcall ',func-name))
+             (add-hook 'server-after-make-frame-hook #',func-name))
+         (add-hook 'emacs-startup-hook #',func-name)))))
+#+END_SRC
+
+* Regions
+
+Act on regions.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/duck-duck-go-region ()
+  "Query duckduckgo with active region."
+  (interactive)
+
+  (if mark-active
+      (let* ((beg (region-beginning))
+             (end (region-end))
+             (str (buffer-substring-no-properties beg end))
+             (hex-str (url-hexify-string str)))
+
+        (browse-url
+         (concat "https://duckduckgo.com/html/?q=" hex-str)))
+    (user-error "No active region")))
+#+END_SRC
+
+* Messages
+
+Show messages without cluttering.
+
+#+BEGIN_SRC emacs-lisp
+(defconst wal/ascii-cachalot-whale (propertize "}< ,.__)" 'face 'mode-line-emphasis)
+  "A small, highlighted ASCII cachalot whale.")
+
+(defconst wal/ascii-blue-whale (propertize "}    , ﬞ   ⎠" 'face 'mode-line-emphasis)
+  "A small, highlighted ASCII blue whale.")
+
+(defun wal/message-in-a-bottle (bottle &optional whale)
+  "Randomly display a message from the given BOTTLE.
+
+That bottle is just an array of strings.
+
+WHALE is the string used to prefix the message with or the blue
+whale by default."
+  (let* ((message-log-max nil) ; Don't clutter.
+         (message (nth (wal/biased-random (length bottle)) bottle))
+         (whale (or whale wal/ascii-blue-whale)))
+
+    (message (concat
+              whale
+              " "
+              (propertize message 'face 'italic)))))
+#+END_SRC
+
+* Expansion Packs
+
+Some packages are opt-in (will not be ensured) and belong to one or
+several so-called expansion packs[fn:1].
+
+#+BEGIN_SRC emacs-lisp
+(defvar junk-expansion-packs nil
+  "Packs of expansion packages to be installed using `junk-install'.
+
+Individual languages build this list using macro `junk'.")
+
+(cl-defun junk--install (packages &key delete-windows installer)
+  "Install PACKAGES.
+
+Calls `delete-other-windows' if DELETE-WINDOWS is t.
+
+Uses `package-install' unless custom INSTALLER is provided."
+  (let ((installer (or installer #'package-install)))
+
+    (mapc installer packages)
+
+    (when delete-windows
+      (delete-other-windows))))
+
+(defun junk-package-vc-install (recipe)
+  "Install RECIPE using `package-vc-install'."
+  (if (fboundp 'package-vc-install)
+      (cl-destructuring-bind (package url) recipe
+        (package-vc-install url)
+        (package--update-selected-packages (list package) nil))
+    (user-error "Recipes can only be installed with `package-vc-install'")))
+
+(cl-defun junk--filter (packages &key mapper)
+  "Return PACKAGES that are not yet installed.
+
+Apply MAPPER to packages if set."
+  (seq-filter (lambda (it)
+                (let ((package (if mapper
+                                   (funcall mapper it)
+                                 it)))
+                  (not (package-installed-p package))))
+                packages))
+
+(cl-defmacro junk-expand (name docs &key packages extras recipes)
+  "Define an expansion pack of PACKAGES under NAME.
+
+Documented using DOCS."
+  (declare (indent defun) (doc-string 2))
+
+  `(add-to-list
+    'junk-expansion-packs
+    '(,name . (:packages ,packages :extras ,extras :docs ,docs :recipes ,recipes))))
+
+(defun junk--parts (pack)
+  "Get the parts from expansion pack PACK.
+
+Returns a list of (PACKAGES EXTRAS RECIPES DOCS)."
+  (let ((p (cdr pack)))
+
+    (list
+     (plist-get p :packages)
+     (plist-get p :extras)
+     (plist-get p :recipes)
+     (plist-get p :docs))))
+
+(defun junk--packs ()
+  "Get a list of all expansion packs."
+  (seq-reduce
+   (lambda (acc it)
+     (cl-destructuring-bind
+         (packages extras recipes _)
+         (junk--parts it)
+       (append acc packages extras (mapcar #'car recipes))))
+   junk-expansion-packs '()))
+
+(defun junk--pack-p (pack)
+  "Check if PACK is an expansion pack package."
+  (memq pack (junk--packs)))
+
+(defun junk--install-extras (extras)
+  "Install one or all packages in EXTRAS."
+  (let* ((selection (intern-soft
+                     (completing-read
+                      "Select extra to install: " (append extras '(all))))))
+
+    (pcase selection
+      ('all
+       (junk--install extras)
+       (message "Installed all extras."))
+      (_
+       (junk--install (list selection))
+       (message (format "Installed extra '%s'." selection))))))
+
+(defun junk-install (pack)
+  "Install the given expansion PACK."
+  (interactive
+   (list (completing-read "Select pack to install: "
+                          (mapcar (lambda (pack) (car pack)) junk-expansion-packs))))
+
+  (let* ((sym (intern-soft pack))
+         (item (assoc sym junk-expansion-packs)))
+
+    (cl-destructuring-bind
+        (packages extras recipes _)
+        (junk--parts item)
+
+      (when (not item)
+        (user-error "Unknown pack '%s', check `junk-expansion-packs'" sym))
+
+      (let ((normal (junk--filter packages))
+            (from-recipe (junk--filter recipes :mapper #'car)))
+
+        (if (not (append normal from-recipe))
+            (if (and (junk--filter extras)
+                     (yes-or-no-p (format "Want to install an extra for '%s'?" pack)))
+                (junk--install-extras extras)
+              (message "Package '%s' is already installed." pack))
+          (junk--install normal :delete-windows t)
+          (junk--install from-recipe :installer 'junk-package-vc-install)
+          (message "Installed '%s'." pack))))))
+
+(defun junk--stringify (package-list)
+  "Stringify PACKAGE-LIST."
+  (if package-list
+      (mapconcat (lambda (it) (format "%s" it)) package-list ", ")
+    ""))
+#+END_SRC
+
+* Hooks
+
+** prog-like
+
+Custom hook used by =harpoon= to make it easier to set up
+non-=prog-mode=-derived modes as if they were.
+
+#+BEGIN_SRC emacs-lisp
+(defvar prog-like-hook nil
+  "Commands that should be run for prog-like modes.")
+
+(defun wal/prog-like ()
+  "Run `prog-like-hook' functions."
+  (run-hooks 'prog-like-hook))
+#+END_SRC
+
+** harpoon
+
+The =harpoon= macro allows the creation of =use-package=-like templates to
+set up (major-) modes using hooks.
+
+#+BEGIN_SRC emacs-lisp
+(defvar harpoon--keywords
+  '(:major
+    :corfu
+    :functions
+    :ligatures
+    :lsp
+    :messages
+    :prog-like
+    :tabs))
+
+(defun harpoon--safe-body (body)
+  "Collect everything from BODY that's a key."
+  (cl-loop for (key val)
+           on body by 'cddr
+           unless (memq key harpoon--keywords)
+           collect key
+           and collect val))
+
+(defvar harpoon--treesit-modes '((js-mode . javascript)
+                                 (c++-mode . cpp)
+                                 (c-mode . c)
+                                 (python-mode . python)
+                                 (js-json-mode . json)
+                                 (yaml-mode . yaml))
+  "Alist mapping languages to major modes.")
+
+(defvar harpoon--treesit-aliases '((js-mode . javascript-mode))
+  "Alist mapping modes to their alias.")
+
+(defvar harpoon--treesit-replacements '((js-json-mode . json-mode))
+  "Alist mapping modes to those replacing them.")
+
+(defun harpoon--treesit-ready-p (name)
+  "Check if treesit is available for NAME."
+  (and (wal/modern-emacs-p 29)
+       (require 'treesit nil t)
+       (treesit-available-p)
+       (treesit-ready-p (harpoon--treesit-language name) t)))
+
+(defun harpoon--treesit-language (name)
+  "Get language for NAME."
+  (cdr-safe (assoc name harpoon--treesit-modes)))
+
+(defun harpoon--treesit-maybe-alias (name)
+  "Get the potentially aliased mode name for NAME."
+  (or (cdr-safe (assoc name harpoon--treesit-aliases))
+      name))
+
+(defun harpoon--treesit-maybe-replace (name)
+  "Get the potentially replaced mode name for NAME."
+  (or (cdr-safe (assoc name harpoon--treesit-replacements))
+      name))
+
+(defun harpoon--treesit-name (name)
+  "Get treesit name for NAME."
+  (let* ((name (harpoon--treesit-maybe-replace name))
+         (segment (thread-first
+                    name
+                    (symbol-name)
+                    (split-string "-mode")
+                    (car))))
+
+    (intern (concat segment "-ts-mode"))))
+
+(defun harpoon--mode-name (name)
+  "Get mode name for NAME."
+  (if-let* ((ready (harpoon--treesit-ready-p name)))
+      (harpoon--treesit-name name)
+    name))
+
+(defun harpoon--function-name (mode &optional harpoon)
+  "Get the name of the target hook for MODE.
+
+The suffix is `-hook' unless HARPOON is t, then it is `-harpoon'."
+  (let ((suffix (if harpoon "harpoon" "hook")))
+
+    (thread-first
+      mode
+      (harpoon--mode-name)
+      (symbol-name)
+      (concat "-" suffix)
+      (intern))))
+
+;;; Macros:
+
+(cl-defmacro harpoon-function
+    (name
+     &body
+     body
+     &key
+     major
+     corfu
+     functions
+     lsp
+     messages
+     prog-like
+     tabs
+     &allow-other-keys)
+  "Create hook function for NAME.
+
+MAJOR is either t or nil. If it is t, a prefixed function
+will be mapped to the major key.
+
+CORFU is a list of (IDLE-DELAY PREFIX-LENGTH).
+
+FUNCTIONS is a list of functions (for example modes) that should
+be called if they are bound.
+
+LSP is either nil, t or a plist. For the purpose of this macro,
+any non-nil value will enable `lsp-mode'.
+
+MESSAGES is a list of strings to randomly choose from and
+display.
+
+PROG-LIKE is either nil or t. If it's t, the created function
+will run `prog-like-hook'.
+
+TABS is either nil, t, `always' or `never'. Nil (or missing)
+means: do nothing. The symbol t will call
+`wal/maybe-enable-tabs'; the symbol `always' will call
+`wal/enable-tabs' and the symbol `never' will call
+`wal/disable-tabs'.
+
+The rest of the BODY will be spliced into the hook function."
+  (declare (indent defun))
+
+  `(defun ,(harpoon--function-name name t) ()
+     ,(format "Hook into `%s'." name)
+     ,@(delete
+        nil
+        `(,(when messages `(wal/message-in-a-bottle ',messages))
+
+          ,(cond
+            ((equal 'never tabs)
+             '(wal/disable-tabs))
+
+            ((equal 'always tabs)
+             '(wal/enable-tabs))
+
+            ((not tabs) nil)
+
+            (t
+             '(progn
+                (hack-local-variables)
+                (wal/maybe-enable-tabs))))
+
+          ,@(harpoon--safe-body body)
+
+          ,(when lsp '(wal/lsp))
+          ,(when corfu
+             `(progn
+                (wal/corfu-auto ',corfu)
+                (local-set-key (kbd "C-M-i") #'completion-at-point)))
+          ,(when prog-like '(run-hooks 'prog-like-hook))
+          ,(when functions
+             `(progn ,@(mapcar (lambda (it)
+                                 `(when (fboundp ',it) (,it)))
+                               functions)))
+          ,(when major
+             `(local-set-key
+               (kbd (wal/key-combo-for-leader 'major))
+               ',(intern (concat (symbol-name name) "-major"))))))))
+
+(cl-defmacro harpoon-hook (name)
+  "Create the hook call for NAME."
+  `(add-hook
+    ',(harpoon--function-name name)
+    ',(harpoon--function-name name t)))
+
+(cl-defmacro harpoon-ligatures (name &key ligatures &allow-other-keys)
+  "Set up ligatures for NAME.
+
+LIGATURES is a list of strings that should be set using
+`ligatures-set-ligatures'."
+  (declare (indent defun))
+
+  (when-let ((non-empty ligatures))
+
+    `(wal/set-ligatures ',(harpoon--mode-name name) ',ligatures)))
+
+(cl-defmacro harpoon-lsp (&key lsp &allow-other-keys)
+  "Set up LSP.
+
+LSP is either nil, t or a plist. If it is a plist, key
+`:ignore-dirs' can be used to add additional paths to variable
+`lsp-file-watch-ignored-directories'."
+  (when (and lsp (listp lsp) (plist-member lsp :ignore-dirs))
+    `(with-eval-after-load 'lsp-mode
+       (wal/lsp-ignore-directory ',(plist-get lsp :ignore-dirs)))))
+
+(cl-defmacro harpoon-treesit (name)
+  "Remap mode NAME to tree-sitter variant if possible."
+  (declare (indent defun))
+
+  (when-let* ((ready (harpoon--treesit-ready-p name))
+              (mode-name name)
+              (ts-mode-name (harpoon--treesit-name name)))
+
+    `(progn
+       (message "Remapping %s to %s" ',mode-name ',ts-mode-name)
+       (add-to-list 'major-mode-remap-alist ',(cons (harpoon--treesit-maybe-alias mode-name) ts-mode-name))
+
+       (with-eval-after-load 'all-the-icons
+         (defvar all-the-icons-mode-icon-alist)
+
+         (when-let ((setting (cdr (assoc ',mode-name all-the-icons-mode-icon-alist)))
+                    (name ',ts-mode-name))
+
+           (add-to-list 'all-the-icons-mode-icon-alist (cons name setting)))))))
+
+(cl-defmacro harpoon (name &rest args)
+  "Hook into mode NAME.
+
+The ARGS are a keyword plist provided to sub-macros.
+
+See documentation of macros `harpoon-function',
+`harpoon-ligatures' and `harpoon-lsp' for the available keywords."
+  (declare (indent defun))
+  `(progn
+     (harpoon-function ,name ,@args)
+
+     (harpoon-hook ,name)
+
+     (harpoon-ligatures ,name ,@args)
+
+     (harpoon-lsp ,@args)
+
+     (harpoon-treesit ,name)))
+#+END_SRC
+
+* Additional Mode Controls
+
+Turning on/off certain major modes switching between =major-mode= and
+=fundamental-mode=.
+
+#+BEGIN_SRC emacs-lisp
+(defvar-local wal/before-fundamental-mode nil
+  "The major mode before fundamental was engaged.")
+
+(defun wal/fundamental-mode ()
+  "Switch from `major-mode' to `fundamental-mode' and back."
+  (interactive)
+
+  (let ((m-mode major-mode))
+
+    (if wal/before-fundamental-mode
+        (progn
+          (funcall wal/before-fundamental-mode)
+          (setq-local wal/before-fundamental-mode nil))
+      (fundamental-mode)
+      (setq-local wal/before-fundamental-mode m-mode))))
+#+END_SRC
+
+* Shell Commands
+
+#+BEGIN_SRC emacs-lisp
+(defconst wal/async-process-buffer-name "*wal-async*")
+
+(defun wal/async-process--buffer-name (_name-or-mode)
+  "Return constant buffer name."
+  wal/async-process-buffer-name)
+
+(defun wal/async-process (command callback error-callback &optional interrupt)
+  "Start async process COMMAND with CALLBACK and ERROR-CALLBACK.
+
+Optonally, interrupt any running process if INTERRUPT is t."
+  (when interrupt (wal/async-process--maybe-interrupt))
+
+  (let ((finalizer (wal/async-process--finalize callback error-callback)))
+
+    (with-current-buffer (get-buffer-create wal/async-process-buffer-name)
+      (compilation-start command nil 'wal/async-process--buffer-name)
+      (add-hook 'compilation-finish-functions finalizer nil t))))
+
+(defun wal/async-process--maybe-interrupt ()
+  "Interrupt process without erroring."
+  (when-let* ((comp-buffer (compilation-find-buffer))
+              (proc (get-buffer-process comp-buffer)))
+    (interrupt-process proc)))
+
+(defun wal/async-process--finalize (callback error-callback)
+  "Get finalizer that will call CALLBACK or ERROR-CALLBACK."
+  (lambda (buf status)
+       (if (string= "finished\n" status)
+           (condition-case err
+               (funcall callback)
+             (error
+              (funcall error-callback (concat
+                                       (error-message-string err)
+                                       (buffer-name buf)))))
+         (funcall error-callback (string-trim status)))))
+#+END_SRC
+
+* Strings
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/matches-in-string (regexp str)
+  "Return all matches of REGEXP in STR."
+  (let ((matches nil))
+
+    (with-temp-buffer
+      (insert str)
+      (goto-char (point-min))
+      (while (re-search-forward regexp nil t)
+        (push (match-string 1) matches)))
+    matches))
+#+END_SRC
+
+* Advice
+
+#+begin_src emacs-lisp
+(defun wal/advise-many (advice combinator advised)
+  "Advise ADVISED using ADVICE and COMBINATOR."
+  (mapc (lambda (it) (advice-add it combinator advice)) advised))
+#+end_src
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-func)
+
+;;; wal-func.el ends here
+#+END_SRC
+
+* Footnotes
+
+[fn:1] Alternate spelling is "expansion pak".

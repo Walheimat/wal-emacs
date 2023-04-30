@@ -1,0 +1,270 @@
+#+TITLE: External Packages
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-external.el" wal/emacs-config-package-path)
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-external.el --- External packages -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Set up installing external packages.
+
+;;; Code:
+
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+
+(declare-function junk--pack-p "wal-func.el")
+(declare-function wal/prefix-user-key "wal-func.el")
+
+(defgroup wal-external nil
+  "Change settings for external packages."
+  :group 'wal
+  :tag "Settings")
+
+(defcustom wal/minimal nil
+  "Whether to use a minimal configuration."
+  :type 'boolean
+  :group 'wal-external)
+
+(defcustom wal/minimal-exclude '()
+  "Packages that are not part of a minimal configuration but should be installed."
+  :type '(repeat symbol)
+  :group 'wal-external)
+#+END_SRC
+
+* Packages
+
+** use-package
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Before =use-package= macro can be used to configure other packages it
+needs to be installed.
+
+#+BEGIN_SRC emacs-lisp
+(defconst wal/core-packages '(use-package
+                              delight
+                              general)
+  "Packages to install before using `use-package'.
+Such as package `use-package'.")
+
+(defconst wal/core-vc-packages '((wal-line . "https://github.com/Walheimat/wal-line.git"))
+  "Packages to install before using `use-package'.
+
+These packages are installed with `package-vc-install'.")
+
+(wal/on-boot external
+  (require 'package)
+
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+
+  ;; Try to install. On fail refresh and install again.
+  (let ((missing (seq-filter
+                  (lambda (it) (not (package-installed-p it)))
+                  wal/core-packages)))
+
+    (condition-case nil
+        (mapc 'package-install missing)
+      (error
+       (package-refresh-contents)
+       (mapc 'package-install missing))))
+
+  (when (fboundp 'package-vc-install)
+    (let ((missing (seq-filter
+                    (lambda (it) (not (package-installed-p (car it))))
+                    wal/core-vc-packages)))
+
+      (condition-case err
+          (progn
+            (mapc 'package-vc-install (mapcar #'cdr missing))
+
+            (add-hook
+             'after-init-hook
+             (lambda ()
+               (package--update-selected-packages (mapcar #'car missing) nil))))
+        (error
+         (message "Failed to install VC package: %s" (error-message-string err))))))
+
+  (eval-when-compile
+    (require 'use-package nil t))
+
+  (wal/insert-after 'use-package-keywords :bind-keymap* :wal-bind)
+  (wal/insert-after 'use-package-keywords :wal-bind :wal-bind-keymap)
+
+  (wal/insert-after 'use-package-keywords :pin :wal-ways)
+  (add-to-list 'use-package-defaults '(:wal-ways t t)))
+#+END_SRC
+
+** Extensions
+
+*** use-package/:wal-bind
+
+We'll add keyword =:wal-bind= to =use-package= in order to create bindings
+prefixed by =wal/prefix-user-key=.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/use-package-normalize-binder (name keyword args)
+  "Normalize NAME, KEYWORD, ARGS.
+
+This normalizer is a copy of the normalizer for `:bind'. There
+are two differences:
+
+1. It prefixes the key strings with `wal/prefix-user-key'.
+2. On recursion it calls this normalizer."
+  (declare-function use-package-recognize-function "ext:use-package.el")
+  (declare-function use-package-error "ext:use-package.el")
+
+  (let ((arg args)
+        args*)
+    (while arg
+      (let ((x (car arg)))
+        (cond
+         ((and (consp x)
+               (or (stringp (car x))
+                   (vectorp (car x)))
+               (or (use-package-recognize-function (cdr x) t #'stringp)))
+          ;; This is where we deviate from the `:bind' normalizer.
+          (setq args* (nconc args* (list (cons (wal/prefix-user-key (car x)) (cdr x)))))
+          (setq arg (cdr arg)))
+         ((or (and (eq x :map) (symbolp (cadr arg)))
+              (and (eq x :prefix) (stringp (cadr arg)))
+              (and (eq x :prefix-map) (symbolp (cadr arg)))
+              (and (eq x :prefix-docstring) (stringp (cadr arg)))
+              (eq x :filter)
+              (and (eq x :menu-name) (stringp (cadr arg)))
+              (and (eq x :package) (symbolp (cadr arg))))
+          (setq args* (nconc args* (list x (cadr arg))))
+          (setq arg (cddr arg)))
+         ((listp x)
+          (setq args*
+                (nconc args* (use-package-normalize/:wal-bind name keyword x)))
+          (setq arg (cdr arg)))
+         (t
+          (use-package-error
+           (concat (symbol-name name)
+                   " wants arguments acceptable to the `bind-keys' macro,"
+                   " or a list of such values"))))))
+    args*))
+
+(defalias 'use-package-normalize/:wal-bind 'wal/use-package-normalize-binder)
+(defalias 'use-package-normalize/:wal-bind-keymap 'wal/use-package-normalize-binder)
+
+;; We can use the same handler as `:bind' and `:bind-keymap'.
+(defalias 'use-package-handler/:wal-bind 'use-package-handler/:bind)
+(defalias 'use-package-handler/:wal-bind-keymap 'use-package-handler/:bind-keymap)
+
+;; Make sure that functions are autoloaded.
+(defalias 'use-package-autoloads/:wal-bind 'use-package-autoloads-mode)
+#+END_SRC
+
+*** use-package/:wal-ways
+
+Certain packages do not belong to a minimal setup, these are tagged
+with =:wal-ways nil=.
+
+#+BEGIN_SRC emacs-lisp
+(defalias 'use-package-normalize/:wal-ways 'use-package-normalize-predicate)
+
+(defun use-package-handler/:wal-ways (name _keyword pred rest state)
+  "Only expand conditionally.
+
+The conditions for normal packages are: (1) the PRED is t, (2)
+`wal/minimal' is nil or (3) NAME is never excluded.
+
+If NAME is an expansion pack package, the conditions are: (1) the
+PRED is t or (2) NAME is installed.
+
+The STATE is updated as well before parsing REST if we want to
+use the result further down the line."
+  (declare-function use-package-process-keywords "ext:use-package.el")
+  (declare-function use-package-plist-maybe-put "ext:use-package.el")
+
+  (let* ((active (or pred
+                     (if (junk--pack-p name)
+                         (not (null (package-installed-p name)))
+                       (or (not (or wal/minimal wal/flag-mini))
+                           (not (null (memq name wal/minimal-exclude)))))))
+
+         (body (use-package-process-keywords
+                 name
+                 rest
+                 (use-package-plist-maybe-put state :wal-ways active))))
+
+    `((when ,active
+        ,@body))))
+#+END_SRC
+
+*** Conditional :hook and :ensure
+
+Don't add hooks if the package isn't installed. Don't ensure built-in
+and expansion pack packages.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/ignore-if-not-installed (package &rest _r)
+  "Don't handle hooks if PACKAGE isn't installed."
+  (or (package-installed-p package)
+      (package-built-in-p package)
+      (package--user-selected-p package)))
+
+(defun wal/use-package-ensure-elpa-if-not-built-in-or-expansion (name args _state &optional _no_refresh)
+  "Do the same as `use-package-ensure-elpa' but ignore additional packages.
+
+These are built-in packages and expansion pack packages.
+
+NAME is the package name, ARGS the ensure keywords."
+  (declare-function use-package-as-symbol "ext:use-package.el")
+  (declare-function use-package-pin-package "ext:use-package.el")
+
+  (dolist (ensure args)
+    (let ((package
+           (or (and (eq ensure t) (use-package-as-symbol name))
+               ensure)))
+      (when package
+        (require 'package)
+        (when (consp package)
+          (use-package-pin-package (car package) (cdr package))
+          (setq package (car package)))
+        (unless (or (package-installed-p package) (package-built-in-p package) (junk--pack-p package))
+          (condition-case-unless-debug err
+              (progn
+                (when (assoc package (bound-and-true-p
+                                      package-pinned-packages))
+                  (package-read-all-archive-contents))
+                (if (assoc package package-archive-contents)
+                    (package-install package)
+                  (package-refresh-contents)
+                  (when (assoc package (bound-and-true-p
+                                        package-pinned-packages))
+                    (package-read-all-archive-contents))
+                  (package-install package))
+                t)
+            (error
+             (display-warning 'use-package
+                              (format "Failed to install %s: %s"
+                                      name (error-message-string err))
+                              :error))))))))
+
+(wal/on-boot external
+  (setq use-package-ensure-function #'wal/use-package-ensure-elpa-if-not-built-in-or-expansion)
+  (advice-add
+   'use-package-handler/:hook :before-while
+   #'wal/ignore-if-not-installed))
+#+END_SRC
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-external)
+
+;;; wal-external.el ends here
+#+END_SRC

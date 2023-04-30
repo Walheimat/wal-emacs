@@ -1,0 +1,145 @@
+#+TITLE: Version Control
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-vc.el" wal/emacs-config-package-path)
+
+I'm becoming an old git.
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-vc.el --- Version control. -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Provide version control packages.
+
+;;; Code:
+
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+#+END_SRC
+
+* Magit
+
+Forget remembering =git= commands, use =transient=.
+
+#+BEGIN_SRC emacs-lisp
+(junk-expand magit
+  "Support pull requests and code reviews."
+  :packages (forge code-review))
+#+END_SRC
+
+** magit
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package magit
+  :config
+  (transient-define-prefix ma-magit ()
+    "Call `magit' commands in a `magit'-y way."
+    [["Core"
+      ("m" "status" magit-status)
+      ("q" "status (quick)" magit-status-quick)
+      ("b" "blame" magit-blame)]
+     ["Files"
+      ("f" "find" magit-find-file)
+      ("o" "find other window" magit-find-file-other-window)]
+     ["Diff"
+      ("d" "file" magit-diff-buffer-file)
+      ("r" "range" magit-diff-range)]
+     ["Other"
+      ("x" "run" magit-run)
+      ("c" "clone" magit-clone)]])
+
+  :general
+  (ambassador "m" 'ma-magit)
+
+  :wal-bind
+  ("m" . magit-status)
+
+  :custom
+  (magit-blame-mode-lighter " mbl")
+  (magit-bury-buffer-function 'magit-restore-window-configuration))
+#+END_SRC
+
+* Other
+
+** git-timemachine
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+If you want to go back in time and point fingers at the progenitors of
+doom.
+
+#+BEGIN_SRC emacs-lisp
+(use-package git-timemachine
+  :wal-ways nil
+
+  :config
+  (transient-append-suffix 'ma-magit #'magit-clone
+    '("t" "time machine" git-timemachine-toggle))
+
+  :defer 2
+  :after magit
+
+  :delight " gtm")
+#+END_SRC
+
+** git-modes
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Syntax highlighting.
+
+#+BEGIN_SRC emacs-lisp
+(use-package git-modes
+  :mode (("/\\.npmignore\\'" . gitignore-mode)
+         ("/\\.dockerignore" . gitignore-mode))
+
+  :init
+  (harpoon gitignore-mode
+    :messages ("I don't think I know you")))
+#+END_SRC
+
+** smerge-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+When resolving conflicts, using =ours= and =theirs= should be easy.
+
+#+BEGIN_SRC emacs-lisp
+(use-package smerge-mode
+  :config
+  (defvar-keymap smerge-repeat-map
+    :doc "Keymap to repeat various `smerge' commands."
+    :repeat t
+    "n" 'smerge-next
+    "p" 'smerge-prev
+    "l" 'smerge-keep-lower
+    "u" 'smerge-keep-upper
+    "a" 'smerge-keep-all)
+
+  :custom
+  (smerge-command-prefix (kbd "C-c r"))
+
+  :delight " smg")
+#+END_SRC
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-vc)
+
+;;; wal-vc.el ends here
+#+END_SRC

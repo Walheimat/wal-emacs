@@ -1,0 +1,616 @@
+#+TITLE: Completion
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-complete.el" wal/emacs-config-package-path)
+
+Complete commands and code.
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-complete.el --- Completion. -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Provide Emacs completion packages.
+
+;;; Code:
+
+(eval-when-compile
+  (require 'transient nil t))
+
+(declare-function org-clock-in "ext:org-clock.el")
+(declare-function org-up-heading-safe "ext:org.el")
+(declare-function wal/append "wal-func.el")
+(declare-function wal/org-clock-in-from-now "wal-org.el")
+(declare-function wal/project--buffer-root "wal-workspace.el")
+(declare-function wal/univ-p "wal-func.el")
+
+(defvar consult-register--narrow)
+(defvar project--list)
+(defvar savehist-additional-variables)
+(defvar wal/active-theme)
+
+;;; Customization:
+
+(defgroup wal-complete nil
+  "Change completion settings."
+  :group 'wal
+  :tag "Completion")
+#+END_SRC
+
+* Inline Completion
+
+** corfu
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/corfu-enable-in-minibuffer ()
+  "Enable Corfu in the minibuffer if `completion-at-point' is bound."
+  (when (where-is-internal #'completion-at-point (list (current-local-map)))
+    (corfu-mode 1)))
+
+(defun wal/corfu-auto (values)
+  "Set delay and minimum prefix using VALUES.
+
+This a list of (DELAY PREFIX-LENGTH)."
+  (cl-destructuring-bind (delay prefix) values
+    (setq-local corfu-auto-delay delay
+                corfu-auto-prefix prefix)))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package corfu
+  :hook
+  (((org-mode prog-mode prog-like eshell-mode) . corfu-mode)
+   (minibuffer-setup . wal/corfu-enable-in-minibuffer))
+
+  :custom
+  (corfu-auto t)
+  (corfu-cycle t))
+#+END_SRC
+
+** corfu-quick
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package corfu-quick
+  :ensure nil
+
+  :demand t
+  :after corfu
+
+  :bind
+  (:map corfu-map
+   ("M-q" . corfu-quick-complete)))
+#+END_SRC
+
+** corfu-history
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package corfu-history
+  :ensure nil
+
+  :demand t
+  :after corfu
+
+  :config
+  (add-to-list 'savehist-additional-variables 'corfu-history)
+  (corfu-history-mode)
+
+  :custom
+  (corfu-history-length 200))
+#+END_SRC
+
+** corfu-doc
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Show docs while selecting.
+
+#+BEGIN_SRC emacs-lisp
+(use-package corfu-doc
+  :after corfu
+
+  :bind
+  (:map corfu-map
+   ("M-p" . corfu-doc-scroll-down)
+   ("M-n" . corfu-doc-scroll-up)
+   ("M-d" . corfu-doc-toggle)))
+#+END_SRC
+
+* Minibuffer Completion
+
+** vertico
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Provide global option narrowing using the =vertico= family of products.
+
+#+BEGIN_SRC emacs-lisp
+(use-package vertico
+  :defer 1
+
+  :config
+  ;; Set up minibuffer.
+  (setq read-extended-command-predicate #'command-completion-default-include-p
+        minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+
+  (vertico-mode)
+  (vertico-multiform-mode)
+
+  :custom
+  (vertico-cycle t)
+  (vertico-sort-function #'vertico-sort-history-alpha)
+
+  (vertico-multiform-commands '((consult-ripgrep buffer)
+                                (wal/consult-line buffer)
+                                (consult-mark buffer indexed)
+                                (consult-global-mark buffer indexed)
+                                (wal/consult-org-heading unobtrusive))))
+#+END_SRC
+
+** vertico-directory
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defvar-local wal/command nil
+  "Command that started completion session.")
+
+(defun wal/record-this-command ()
+  "Record the command which opened the minibuffer."
+  (setq-local wal/command this-command))
+
+(defun wal/with-dired-goto-file-ignored (fun &rest args)
+  "Advise FUN using ARGS to exit if we came from `dired-goto-file'."
+  (unless (and (eq (car args) 'category)
+               (eq wal/command 'dired-goto-file))
+    (apply fun args)))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package vertico-directory
+  :ensure nil
+
+  :demand t
+  :after vertico
+
+  :hook
+  ((rfn-eshadow-update-overlay . vertico-directory-tidy)
+   (minibuffer-setup . wal/record-this-command))
+
+  :config
+  ;; We don't want to enter directories when we go to file with Dired.
+  (advice-add
+   'vertico--metadata-get :around
+   #'wal/with-dired-goto-file-ignored)
+
+  :bind
+  (:map vertico-map
+   ("RET" . vertico-directory-enter)
+   ("DEL" . vertico-directory-delete-char)
+   ("M-DEL" . vertico-directory-delete-word)))
+#+END_SRC
+
+** vertico-quick
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package vertico-quick
+  :ensure nil
+
+  :demand t
+  :after vertico
+
+  :custom
+  (vertico-quick1 "jkl;h")
+  (vertico-quick2 "asdfg")
+
+  :bind
+  (:map vertico-map
+   ("M-." . vertico-quick-exit)
+   ("C-M-." . vertico-quick-insert)))
+#+END_SRC
+
+** orderless
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Fuzzy matches.
+
+#+BEGIN_SRC emacs-lisp
+(use-package orderless
+  :demand t
+  :after vertico
+
+  :config
+  ;; Setup basic completion and category defaults/overrides.
+  (setq completion-styles '(orderless partial-completion basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion)))))
+#+END_SRC
+
+** marginalia
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Contextual information during completion, partial completion and
+completion actions.
+
+#+BEGIN_SRC emacs-lisp
+(use-package marginalia
+  :demand t
+  :after vertico
+
+  :config
+  (marginalia-mode)
+
+  :bind
+  (:map minibuffer-local-map
+   ("C-," . marginalia-cycle)))
+#+END_SRC
+
+** embark
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/browse-html-file (filename)
+  "Browse FILENAME provided it's an HTML file."
+  (when (not (string= (file-name-extension filename) "html"))
+    (user-error "Can only browse HTML files"))
+
+  (browse-url (expand-file-name filename)))
+#+END_SRC
+
+*** Configuration
+
+Act upon =thing-at-point=, be it in a buffer or minibuffer.
+
+#+BEGIN_SRC emacs-lisp
+(use-package embark
+  :init
+  (parallel embark-act embark-dwim)
+
+  :config
+  ;; Search using region.
+  (define-key embark-region-map
+              (kbd "g")
+              #'wal/duck-duck-go-region)
+
+  (define-key embark-file-map
+              (kbd "x")
+              #'wal/browse-html-file)
+
+  (define-key embark-buffer-map
+              (kbd "t")
+              #'wal/tab-bar-switch-to-buffer-tab)
+
+  :custom
+  (embark-mixed-indicator-delay 0.8)
+  (embark-cycle-key "C-,")
+
+  :wal-bind
+  ("k" . embark-act||embark-dwim))
+#+END_SRC
+
+** embark-consult
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package embark-consult
+  :demand t
+  :after (embark consult)
+
+  :hook (embark-collect-mode . consult-preview-at-point-mode))
+#+END_SRC
+
+** consult
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Heavy lifting with =consult=.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/consult-ripgrep-ignored (&optional dir initial)
+  "Search for regexp with rg in DIR with INITIAL input.
+Do not ignore hidden files."
+  (interactive "P")
+
+  (declare-function consult--grep "ext:consult.el")
+  (declare-function consult--ripgrep-builder "ext:consult.el")
+
+  (let ((consult-ripgrep-args
+         (concat (substring consult-ripgrep-args 0 -1) "--no-ignore .")))
+
+    (consult--grep "Ripgrep (ignored)" #'consult--ripgrep-builder dir initial)))
+
+(defun wal/consult-unregister ()
+  "Remove KEY from the register."
+  (interactive)
+
+  (let ((key (with-no-warnings
+               (consult--read
+                (consult-register--candidates)
+                :prompt "Unregister: "
+                :category 'multi-category
+                :group (consult--type-group consult-register--narrow)
+                :narrow (consult--type-narrow consult-register--narrow)
+                :sort nil
+                :require-match t
+                :history t
+                :lookup #'consult--lookup-candidate))))
+
+    (setq register-alist (assoc-delete-all key register-alist))))
+
+(defun wal/consult-line (&optional at-point)
+  "Call `consult-line'.
+
+If AT-POINT is t, call `consult-line' with `thing-at-point'."
+  (interactive "P")
+
+  (if at-point
+      (consult-line (thing-at-point 'symbol))
+    (consult-line)))
+
+(defun wal/consult-clock-in (&optional discontinue)
+  "Clock into an Org agenda heading.
+
+If DISCONTINUE is non-nil, clock in from now."
+  (interactive "P")
+
+  (save-window-excursion
+    (consult-org-agenda)
+    (if discontinue
+        (wal/org-clock-in-from-now)
+      (org-clock-in))))
+
+(defun wal/then-set-active-theme (theme)
+  "Advise to set `wal/active-theme' to THEME."
+  (setq wal/active-theme theme)
+  (run-hooks 'wal/theme-hook))
+
+(defun wal/with-big-vertico (fun &rest args)
+  "Call FUN with ARGS but increase the `vertico-count'."
+  (defvar vertico-count)
+  (let ((vertico-count 20))
+
+    (apply fun args)))
+
+(defvar wal/consult-pre-narrow nil
+  "Whether `consult' commands should be pre-narrowed.")
+
+(defun wal/consult-toggle-pre-narrowing ()
+  "Toggle pre-narrowing of `consult' commands."
+  (interactive)
+
+  (setq wal/consult-pre-narrow (not wal/consult-pre-narrow)))
+
+(defun wal/consult--pre-narrow ()
+  "Pre-narrow `consult' commands."
+  (declare-function consult--buffer-query "ext:consult.el")
+  (declare-function consult--project-root "ext:consult.el")
+
+  (and-let* ((should-narrow (if wal/consult-pre-narrow
+                                (not (wal/univ-p))
+                              (wal/univ-p)))
+             (char (pcase this-command
+                     ('consult-buffer
+                      (when-let* ((root (consult--project-root))
+                                  (buffers (consult--buffer-query
+                                            :sort 'visibility
+                                            :directory root
+                                            :as #'buffer-name)))
+
+                        ?p))
+
+                     ('wal/consult-project
+                      (when (consult--open-project-items) ?o)))))
+
+    (setq unread-command-events (append unread-command-events (list char 32)))))
+
+(defvar consult--project-history nil)
+
+(defvar consult--source-projects
+  (list :name "Projects"
+        :category 'project
+        :history 'consult--project-history
+        :action 'project-switch-project
+        :preview-key "C-."
+        :items (lambda () (mapcar #'car project--list))))
+
+(defun consult--open-project-items ()
+  "Get the open projects."
+  (cl-remove-duplicates
+   (cl-loop for buffer being the buffers
+            for project = (wal/project--buffer-root buffer)
+            if project
+            collect project)
+   :test 'string=))
+
+(defvar consult--source-open-projects
+  (list :name "Open projects"
+        :category 'project
+        :narrow ?o
+        :history 'consult--project-history
+        :action 'project-switch-project
+        :items 'consult--open-project-items))
+
+(defun wal/consult-project ()
+  "Enhanced `project-switch-project' command."
+  (interactive)
+
+  (declare-function consult--multi "ext:consult.el")
+
+  (consult--multi
+   '(consult--source-open-projects consult--source-projects)
+   :prompt "Select project: "))
+
+(defun wal/adjust-by-putting-current-buffer-first (buffers)
+  "Return BUFFERS with the current buffer first."
+  (let ((current (current-buffer)))
+
+    (if (memq current buffers)
+        (cons current (delq current buffers))
+      buffers)))
+
+(defun wal/consult-org-heading (&optional in-tree)
+  "Call `org-heading'.
+
+If optional IN-TREE is t, limit scope to current tree."
+  (interactive "P")
+
+  (defvar vertico-multiform-commands)
+
+  (if in-tree
+      (let ((vertico-multiform-commands nil))
+
+        (org-up-heading-safe)
+        (funcall-interactively 'consult-org-heading nil 'tree))
+    (call-interactively 'consult-org-heading)))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package consult
+  :commands (consult--multi consult)
+
+  :config
+  ;; Integrate with `xref'.
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref)
+
+  ;; Customize sources.
+  (consult-customize
+   consult--source-recent-file
+   consult--source-project-recent-file
+   consult--source-bookmark
+   consult-recent-file
+   wal/consult-clock-in
+   consult-org-heading
+   :preview-key "C-."
+
+   consult--source-project-recent-file
+   :narrow ?r
+
+   wal/consult-clock-in
+   :prompt "Clock in: ")
+
+  ;; Be sure to set the active them after switching.
+  (advice-add 'consult-theme :after #'wal/then-set-active-theme)
+
+  ;; Use a bigger `vertico' when grepping.
+  (advice-add 'consult-ripgrep :around #'wal/with-big-vertico)
+
+  ;; Stay on first buffer before input.
+  (advice-add
+   'consult--buffer-sort-visibility :filter-return
+   'wal/adjust-by-putting-current-buffer-first)
+
+  (advice-add 'consult :around 'wal/with-delayed-transient-popup)
+
+  ;; Pre-narrow `consult' commands.
+  (add-hook 'minibuffer-setup-hook #'wal/consult--pre-narrow)
+
+  (with-eval-after-load 'org-keys
+    (wal/replace-in-alist
+     'org-speed-commands
+     '(("j" . consult-org-heading))))
+
+  (transient-define-prefix consult ()
+    "Run `consult' commands."
+    [["Goto"
+      ("SPC" "mark" consult-mark)
+      ("g" "line" consult-goto-line)
+      ("h" "heading" wal/consult-org-heading
+       :inapt-if-not-mode 'org-mode)]
+
+     ["Find"
+      ("m" "bookmark" consult-bookmark)
+      ("@" "global mark" consult-global-mark)
+      ("f" "recent file" consult-recent-file)
+      ("a" "agenda" consult-org-agenda)]
+
+     ["Search"
+      ("s" "line" wal/consult-line)
+      ("n" "grep" consult-ripgrep)
+      ("l" "locate" consult-locate)]
+
+     ["Register"
+      ("r l" "load" consult-register-load)
+      ("r s" "store" consult-register-store)
+      ("r u" "unregister" wal/consult-unregister)]
+
+     ["Do"
+      ("c" "clock in" wal/consult-clock-in)
+      ("k" "call macro" consult-kmacro)
+      ("t" "change theme" consult-theme)]]
+
+    [["Modes"
+      ("+" "major mode command" consult-mode-command)
+      ("-" "toggle minor mode" consult-minor-mode-menu)]
+     ["Utility"
+      ("N" "toggle pre-narrowing" wal/consult-toggle-pre-narrowing)]])
+
+  :custom
+  (consult-buffer-filter'("\\` "
+                          "\\`\\*"
+                          "\\`magit"
+                          ;; Ignore this config's library files
+                          "\\wal-[[:ascii:]]+\\.org"))
+
+  :general
+  (general-define-key
+   (wal/key-combo-for-leader 'consult)
+   'consult)
+
+  :wal-bind
+  (("j" . consult-buffer)
+   ("p" . wal/consult-project)))
+   #+END_SRC
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-complete)
+
+;;; wal-complete.el ends here
+#+END_SRC

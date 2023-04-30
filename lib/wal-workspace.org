@@ -1,0 +1,255 @@
+#+TITLE: Workspace
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-workspace.el" wal/emacs-config-package-path)
+
+Keep order.
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-workspace.el --- Workspace. -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Provide workspace packages.
+
+;;; Code:
+
+(declare-function consult--buffer-query "ext:consult.el")
+(declare-function project-buffers "ext:project.el")
+(declare-function project-name "ext:project.el")
+(declare-function project-root "ext:project.el")
+(declare-function project--value-in-dir "ext:project.el")
+(declare-function ring-elements "ext:ring.el")
+(declare-function ring-empty-p "ext:ring.el")
+(declare-function ring-insert "ext:ring.el")
+(declare-function ring-ref "ext:ring.el")
+(declare-function wal/plist-keys "wal-func.el")
+(declare-function wal/univ-p "wal-func.el")
+(declare-function wdb/faraway "wal-func.el")
+
+(defvar compilation-save-buffers-predicate)
+(defvar org-agenda-files)
+
+(defgroup wal-workspace nil
+  "Change settings used for workspace packages."
+  :group 'wal
+  :tag "Workspace")
+#+END_SRC
+
+* Packages
+
+
+** project
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Built-in project management.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/project-commands nil
+  "Hash maps for compilation commands.")
+
+(defvar wal/project-current-command nil)
+(defvar wal/project-command-history nil)
+(defconst wal/project-command-history-length 5)
+
+(defun wal/project-command--buffer-name (_major-mode)
+  "Get the buffer name for the current command."
+  (if wal/project-current-command
+      (concat "*" "project-" wal/project-current-command "*")
+    "*project-compile*"))
+
+(defun wal/project-command (cmd)
+  "Run CMD for the current project.
+
+Each command will be stored in a per-project history."
+  (defvar project-vc-name)
+
+  (let* ((project-vc-name nil)
+         (current (project-current t))
+         (root (project-root current))
+         (name (project-name current))
+
+         (table (plist-get wal/project-commands cmd))
+         (default-cmd (or (project--value-in-dir
+                           (intern (format "wal/project-%s-default-cmd" cmd))
+                           root)
+                          ""))
+         (history (gethash root table (make-ring wal/project-command-history-length)))
+         (wal/project-command-history (ring-elements history))
+
+         (initial (if (ring-empty-p history)
+                      default-cmd
+                    (ring-ref history 0)))
+         (wal/project-current-command (symbol-name cmd))
+         (prompt (concat (capitalize wal/project-current-command) " project (" name "): "))
+         (command (read-shell-command prompt initial 'wal/project-command-history))
+
+         (default-directory (project-root current))
+         (compilation-buffer-name-function 'wal/project-command--buffer-name))
+
+    ;; Store the entered command.
+    (ring-insert history command)
+    (puthash root history table)
+
+    (compile command)))
+
+(defvar wal/project-prefix-map (make-sparse-keymap))
+
+(defmacro wal/project-create-command (name &optional key)
+  "Create command NAME.
+
+The command will be bound using `ambassador' using its initial
+unles KEY is provided."
+  (let ((function-name (intern (format "wal/project-%s" name)))
+        (variable-name (intern (format "wal/project-%s-default-cmd" name)))
+        (key (or key (substring (symbol-name name) 0 1))))
+
+    `(progn
+       (defvar-local ,variable-name nil)
+
+       (defun ,function-name ()
+         ,(concat (capitalize (symbol-name name)) " the current project.")
+         (interactive)
+
+         (wal/project-command ',name))
+
+       (setq wal/project-commands (plist-put
+                                   wal/project-commands
+                                   ',name
+                                   ,(make-hash-table :test 'equal)))
+
+       (bind-key ,key ',function-name wal/project-prefix-map))))
+
+(defun wal/project-select-command (cmd)
+  "Complete and run CMD."
+  (interactive
+   (list (completing-read "Select command: "
+                          (wal/plist-keys wal/project-commands))))
+
+  (wal/project-command (intern cmd)))
+
+(defun wal/with-project-bounded-compilation (fun &rest args)
+  "Run FUN applying ARGS.
+
+Makes sure this is done with `compilation-save-buffers-predicate'
+set to filter by project buffers."
+  (let* ((buffers (project-buffers (project-current)))
+         (pred (lambda () (memq (current-buffer) buffers)))
+         (compilation-save-buffers-predicate pred))
+
+    (apply fun args)))
+
+(defun wal/project-consult-buffer ()
+  "Find an open project buffer using `consult-buffer'."
+  (interactive)
+
+  (defvar consult-project-buffer-sources)
+  (let ((confirm-nonexistent-file-or-buffer t))
+
+    (consult-buffer consult-project-buffer-sources)))
+
+(defun wal/project-magit-status ()
+  "Show `magit-status' for the current project."
+  (interactive)
+
+  (if-let* ((current (project-current t))
+            (root (project-root current))
+            (is-vc (cadr current)))
+      (magit-status root)
+    (message "Project at '%s' is not version-controlled" root)))
+
+(defun wal/project-dired-root ()
+  "Open the root directory using Dired."
+  (interactive)
+
+  (let* ((current (project-current t))
+         (root (project-root current)))
+
+    (dired root)))
+
+(defun wal/project--buffer-root (buffer)
+  "Get the project root for BUFFER."
+  (with-current-buffer buffer
+    (when-let* ((dir (cond
+                      (buffer-file-name
+                       (file-name-directory buffer-file-name))
+                      (dired-directory dired-directory)
+                      (t nil)))
+                (project (project-current nil dir)))
+
+      (project-root project))))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package project
+  :init
+  (wal/advise-many
+   'wal/with-project-bounded-compilation :around
+   '(project-compile
+     recompile
+     wal/project-command))
+
+  (that-key "project commands" :key "C-c p")
+
+  :config
+  (wdb/faraway "\\*project")
+
+  (wal/project-create-command test)
+  (wal/project-create-command lint)
+  (wal/project-create-command publish)
+  (wal/project-create-command install)
+  (wal/project-create-command compile)
+  (wal/project-create-command build)
+
+  :custom
+  (project-vc-extra-root-markers '("pom.xml"
+                                   "package.json"
+                                   "project.godot"
+                                   "pyproject.toml"
+                                   ".project-marker"))
+
+  (project-switch-commands '((project-find-file "Find file" ?f)
+                             (project-find-dir "Find dir" ?d)
+                             (wal/project-magit-status "Magit" ?m)
+                             (wal/project-consult-buffer "Consult buffer" ?j)
+                             (wal/rg-project-literal "Find rg" ?n)
+                             (wal/project-dired-root "Find root dir" ?r)
+                             (wal/project-select-command "Run command" ?c)))
+
+  (project-vc-ignores '("node_modules/"
+                        "build/"
+                        "android/"
+                        "*.lock"
+                        "bundle.js"
+                        "*.min.js"
+                        "*.js.map"
+                        ".ccls-cache/"
+                        "coverage/"))
+
+  :bind-keymap
+  ("C-c p" . wal/project-prefix-map)
+
+  :wal-bind
+  (("h" . project-find-file)))
+#+END_SRC
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-workspace)
+
+;;; wal-workspace.el ends here
+#+END_SRC

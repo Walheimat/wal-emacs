@@ -1,0 +1,105 @@
+#+TITLE: Look
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-look.el" wal/emacs-config-package-path)
+
+Make frame transparent and set themes. [[https://peach-melpa.org/][PeachMelpa]] has more themes.
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-look.el --- Look.
+
+;;; Commentary:
+;;
+;; Provide packages for the look of the config.
+
+;;; Code:
+
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+
+(declare-function wal/modern-emacs-p "wal-func.el")
+
+(defgroup wal-look nil
+  "Change the look."
+  :group 'wal
+  :tag "Look")
+
+;;;; Customization:
+
+(defcustom wal/transparency 90
+  "The default frame transparency."
+  :type 'integer
+  :group 'wal-look)
+
+(defcustom wal/theme nil
+  "The theme."
+  :type '(choice symbol (const nil))
+  :group 'wal-look)
+
+(defcustom wal/hidpi nil
+  "Whether the display is considered HiDPI."
+  :type 'boolean
+  :group 'wal-look)
+
+(defun wal/transparency--param ()
+  "Get the transparency parameter for this Emacs version."
+  (if (wal/modern-emacs-p 29)
+      'alpha-background
+    'alpha))
+
+(defun wal/set-transparency (&optional value)
+  "Set the transparency of the frame to VALUE.
+
+1 being (almost) completely transparent, 100 being opaque.
+
+This also updates variable `wal/transparency' during the session."
+  (interactive
+   (list
+    (read-number (format "Set transparency (currently %s%%): " wal/transparency))))
+
+  (let ((transparency (min (max (or value wal/transparency) 1) 100))
+        (param (wal/transparency--param)))
+
+    (setq wal/transparency transparency)
+
+    (modify-all-frames-parameters `((,param . ,transparency)))))
+
+(defvar wal/active-theme nil)
+
+(defvar wal/theme-hook nil)
+
+(defun wal/load-active-theme ()
+  "Load the currently active theme."
+  (interactive)
+
+  (when wal/active-theme
+    (condition-case err
+        (progn
+          (load-theme wal/active-theme t)
+          (run-hooks 'wal/theme-hook))
+      (error
+       (message "Failed to load theme: %s" (error-message-string err))))))
+
+(wal/define-init-setup visuals
+  "Set up visual frills like theme and transparency."
+  :initial
+  ((add-to-list 'default-frame-alist `(,(wal/transparency--param) . ,wal/transparency))
+
+   ;; Mix of old and new.
+   (setq frame-title-format '(multiple-frames "%b" ("%b@" system-name)))
+
+   ;; Some themes require configuration, so we only load after initialization.
+   (when wal/theme
+     (setq wal/active-theme wal/theme)
+     (wal/load-active-theme))
+
+   (when wal/hidpi
+     (set-fringe-mode 18)))
+  :always
+  ((wal/set-transparency)
+   (wal/load-active-theme))
+  :immediately t)
+
+(provide 'wal-look)
+
+;;; wal-look.el ends here
+#+END_SRC

@@ -1,0 +1,144 @@
+#+TITLE: Movement
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-movement.el" wal/emacs-config-package-path)
+
+Moving around should be fun.
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-movement.el --- Movement. -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Provide movement packages.
+
+;;; Code:
+
+(eval-when-compile
+  (require 'avy nil t))
+
+(declare-function avy--line "ext:avy.el")
+(declare-function avy-jump "ext:avy.el")
+(declare-function org-at-heading-p "ext:org.el")
+(declare-function wal/univ-p "wal-func.el")
+#+END_SRC
+
+* Packages
+
+** avy
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Who needs a mouse.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/avy-goto-word (&optional scope)
+  "Jump to a word.
+
+SCOPE will consume `universal-argument' to determine whether to
+jump to a word in the buffer or anywhere."
+  (interactive "P")
+
+  (if scope
+      (let ((flip (or (and (listp scope) (> 5 (prefix-numeric-value scope)))
+                      (and (numberp scope) (> 2 scope)))))
+
+        (setq current-prefix-arg nil)
+        (avy-goto-word-0 flip))
+    (avy-with avy-goto-word-0
+      (avy-jump avy-goto-word-0-regexp
+                :beg (line-beginning-position)
+                :end (line-end-position)
+                :window-flip t))))
+
+(defun wal/avy-goto-line (&optional beginning)
+  "Go to line or BEGINNING of line."
+  (interactive "P")
+
+  (if beginning
+      (progn
+        (avy-goto-line)
+        (beginning-of-line-text))
+    (avy-goto-end-of-line)))
+
+(defun wal/avy-mark-region ()
+  "Select two lines and mark the region between them."
+  (interactive)
+
+  (avy-with wal/avy-mark-region
+    (let* ((beg (avy--line))
+           (end (avy--line)))
+
+      (when (> beg end)
+        (cl-rotatef beg end))
+
+      (set-mark beg)
+      (goto-char end)
+      (forward-visible-line 1)
+      (point))))
+
+(defun avy-action-zip-to-char (pt)
+  "Zip (just mark) from current point up to PT."
+  (set-mark (point))
+  (goto-char pt))
+
+(defun wal/then-goto-beginning-for-org-headings (&rest _args)
+  "Advise `avy-goto-end-of-line' to go to beginning for `org' headings.
+
+When called with `universal-argument', this also goes to the
+beginning."
+  (when (or (wal/univ-p)
+            (and (eq major-mode 'org-mode) (org-at-heading-p)))
+    (goto-char (line-beginning-position))))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package avy
+  :commands (avy-with)
+
+  :config
+  ;; Extend the dispatch with a way to delete up to a char.
+  (add-to-list 'avy-dispatch-alist '(?q . avy-action-zip-to-char))
+
+  ;; Make sure we go to the start of the line for org headings.
+  (advice-add
+   'avy-goto-end-of-line :after
+   #'wal/then-goto-beginning-for-org-headings)
+
+  :custom
+  (avy-background t)
+
+  :wal-bind
+  (("l" . wal/avy-goto-line)
+   ("u" . wal/avy-goto-word)
+   ("i" . avy-goto-char))
+
+  :general
+  ;; Lines.
+  (editors "c" 'avy-copy-line 'avy-copy-region)
+  (editors "x" 'avy-kill-whole-line 'avy-kill-region)
+  (editors "m" 'avy-move-line 'avy-move-region)
+  (editors "w"
+    'avy-kill-ring-save-whole-line
+    'avy-kill-ring-save-region))
+#+END_SRC
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-movement)
+
+;;; wal-movement.el ends here
+#+END_SRC

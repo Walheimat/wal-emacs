@@ -1,0 +1,446 @@
+#+TITLE: Key Bindings
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-key-bindings.el" wal/emacs-config-package-path)
+
+I use many[fn:1] custom keybindings.
+
+* Bindings
+
+** Control
+
+There are some non-standard control sequences. Anywhere:
+
++ =C->=/=C-<= expands/contracts region
++ =C-.= marks next like this allowing
+  + =C-,= to delete last mark and
+  + =C-/= to move it downward.
+
+User-reserved combinations are used for (mostly built-in) commands
+and command maps:
+
++ =C-c a= for =org-agenda=
++ =C-c b= for =eww=
++ =C-c d= opens the =dashboard=
++ =C-c e= for =eshell=
++ =C-c l= to toggle =display-line-numbers-mode=
++ =C-c m= for =bookmark=
++ =C-c n= to take notes for current =org-clock= task (go-to with =C-u 0=)
++ =C-c p= for =wal/project-<command>= prefix map
++ =C-c q= to do a =quick-calc= (inserted if called with =C-u=)
++ =C-c r= for =smerge=
++ =C-c s= for =flyspell=
++ =C-c <SPC>= for a heavy =pulse=
++ =C-c x= opens a scratch buffer (can be called with numeric argument).
+
+** Hyper
+
+I [[Rebinding Hyper][rebound]] my =<CAPS>= (caps-lock) key to =Hyper_L= to use the hyper
+bindings below. Therefore, all following keys should be right hand
+keys.
+
+Most hyper[fn:2] bindings are quick-access actions:
+
++ =H-\= complete =tempel= templates
++ =H-h= finds project file
++ =H-j= switches buffer
++ =H-k= acts on the current point with =embark= (immediately if called
+  with =C-u=)
++ =H-l= jumps to line with =avy= (beginning of line if called with =C-u=)
++ =H-m= for =magit-status=
++ =H-<mouse3>= adds another =multiple-cursor= at point
++ =H-n= searches project with =rg= (=C-u= searches using regex)
++ =H-o= switches tabs by name
++ =H-p= switches projects
++ =H-u= jumps to word with =avy= (within line if called with =C-u=)
++ =H-{up,down,left,right}= moves with =windmove= (swap with shift, delete
+  with meta, and prep display with control).
+
+*** Rebinding Hyper
+
+**** XServer
+
+Assuming you use Xorg Display server, create an =.Xmodmap= file in your
+home folder containing the following lines.
+
+#+BEGIN_SRC conf :tangle no
+! Assign Hyper_L to Caps_Lock
+keycode 66 = Hyper_L
+! Remove caps lock
+remove lock = Caps_Lock
+! Set hyper to mod3 from mod4
+remove mod4 = Hyper_L
+add mod3 = Hyper_L
+#+END_SRC
+
+Add a script (also in your home folder) containing the following
+command and call it during start-up.
+
+#+begin_src shell :tangle no
+[[ -f ~/.Xmodmap ]] && xmodmap ~/.Xmodmap
+#+end_src
+
+This assumes that =Hyper_L= was assigned to modifier =Mod4= that's already
+used by =Super_L= and modifier =Mod3= is an empty group.
+
+**** Unsafe Alternative
+
+A much riskier[fn:1] way, provided the recipe above doesn't work,
+would be to edit your =/usr/share/X11/xkb/symbols/pc= file like so:
+
+#+BEGIN_SRC :tangle no
+...
+// key <CAPS> {    [ Caps_Lock     ]   };
+key <CAPS> {    [ Hyper_L       ]   };
+...
+// modifier_map Lock   { Caps_Lock };
+modifier_map Mod3   { Hyper_L, Hyper_R };
+...
+// modifier_map Mod4   { <HYPR> };
+modifier_map Mod3   { <HYPR> };
+#+END_SRC
+
+* Leader Keys
+
+There are seven leader keys (three of them =general= leaders), each
+serving its unique purpose by prefixing (groups of) actions by common
+context or scope.
+
+The =general= leader keys have so-called sinks for additional commands.
+
+** Administrator
+
+Leader key =administrator= is responsible for Emacs actions like loading
+a theme, finding a library, quitting.
+
+** Whaler
+
+Leader key =whaler= is responsible for this configuration.
+
+** Roamer
+
+Leader key =roamer= invokes a dispatch for =org-roam=.
+
+** Ambassador
+
+Leader key =ambassador= deals with the (buffer-, project-)local context.
+
+If the respective buffer-local =minor-mode= is active, the following
+commands and command maps are bound:
+
++ =8= for =kubernetes=
++ =b= for =dap-mode=
++ =d= for =docker=
++ =f= for =flycheck=
++ =@= for =mu4e=
++ =l= for =lsp-mode=
++ =m= for a =magit= menu
++ =n= for an =rg= menu
++ =v= for =verb=.
+
+** Major
+
+Leader key =major= invokes a dispatch if the underlying major-mode has
+it defined.
+
+** Consult
+
+Leader key =consult= is a command map for the package of the same name.
+
+** Editor
+
+Leader key =editor= provides a layer of useful editing actions.
+
+They are:
+
++ =c= to copy a line
++ =d= to duplicate lines (in Emacs 29)
++ =k= for to start/stop =kmacro= recording
++ =M-q= to "spill" a paragraph
++ =m= to move a line
++ =M-w= to kill-save whole buffer
++ =s= to correct with =jinx=
++ =.= to mark all "like this"
++ =w= to kill-save a line
++ =x= to kill a line.
+
+The sink for =editor= provides alternative version of these calls.
+
+They are:
+
++ =c= to copy a region
++ =m= to move a region
++ =s= to change =jinx= language
++ =.= to mark all ends in a region
++ =w= to kill a region
++ =x= to delete a region.
+
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-key-bindings.el --- Key bindings. -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Key bindings package.
+
+;;; Code:
+
+(eval-when-compile
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+
+(defvar transient-current-command)
+
+(declare-function wal/prefix-user-key "wal-func.el")
+(declare-function transient-args "ext:transient.el")
+(declare-function transient-arg-value "ext:transient.el")
+
+(defgroup wal-key-bindings nil
+  "Change key bindings settings."
+  :group 'wal
+  :tag "Key bindings")
+
+;;;; Customization:
+
+(defcustom wal/use-hyper-prefix t
+  "Whether the hyper modifier should be used to prefix user keys."
+  :type 'boolean
+  :group 'wal-key-bindings)
+
+(defcustom wal/leaders '((";" . editor)
+                         ("." . major)
+                         ("," . consult)
+                         ("/" . ambassador)
+                         ("'" . roamer)
+                         ("[" . whaler)
+                         ("]" . administrator))
+  "Alist mapping prefix keys to leaders."
+  :type '(alist :key-type string :value-type symbol)
+  :group 'wal-key-bindings)
+#+END_SRC
+
+* Leaders
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/key-by-leader (leader)
+  "Get the key for LEADER."
+  (car-safe (rassoc leader wal/leaders)))
+
+(cl-defun wal/key-combo-for-leader (leader &key key in-sink translate)
+  "Get the key combination for LEADER.
+
+If KEY is non-nil, append it. If IN-SINK is non-nil, infix leader
+key. If TRANSLATE is non-nil, convert using `kbd'."
+  (when-let* ((leader-key (wal/key-by-leader leader))
+              (prefix (wal/prefix-user-key leader-key))
+              (combo (if key
+                         (if in-sink
+                             (concat prefix " " leader-key " " key)
+                           (concat prefix " " key))
+                       prefix)))
+    (if translate
+        (kbd combo)
+      combo)))
+#+END_SRC
+
+* Packages
+
+** general
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Allows defining custom prefixes.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/general-leaders '(editor ambassador administrator)
+  "Leaders that a `general' definer will be created for.")
+
+(cl-defmacro wal/create-leader-sink (name &key definer prefix)
+  "Macro to create a leader sink `NAME-sink'.
+
+NAME is the name of the macro. DEFINER is the definer to create
+the sink for and PREFIX is its prefix."
+  (declare (indent defun))
+
+  (let* ((defname (symbol-name definer))
+         (suffix (substring prefix -1))
+         (wk (upcase (concat defname "!"))))
+
+    (progn
+      (general-define-key :prefix prefix suffix `(:ignore t :wk ,wk))
+
+      `(defmacro ,name (&rest args)
+         `(, ',definer ,@,`(mapcar (lambda (it)
+                                     (if (stringp it)
+                                         (concat ,suffix it)
+                                       it))
+                                   args))))))
+
+(cl-defmacro editors (key fun mfun &rest args)
+  "Bind FUN to KEY, MFUN in the sink.
+
+All ARGS are passed to both definers."
+  (declare (indent defun))
+
+  `(progn
+    (editor ,@args ,key ,fun)
+    (editor-sink ,@args ,key ,mfun)))
+
+(defun wal/general-create-definer (leader)
+  "Create a definer for LEADER with a sink."
+  (let* ((key (wal/key-combo-for-leader leader))
+         (sink (intern (format "%s-sink" leader)))
+         (name (symbol-name leader)))
+
+    ;; Queue up `which-key' replacements.
+    (eval-after-load 'which-key `(which-key-add-key-based-replacements ,key ,name))
+
+    ;; Create the normal definer.
+    (eval `(general-create-definer ,leader :prefix ,key))
+
+    ;; Also create the sink.
+    (eval `(wal/create-leader-sink ,sink :definer ,leader :prefix ,key))))
+
+(defun major? ()
+  "Show message when major is not locally bound."
+  (interactive)
+
+  (let ((key (propertize (wal/key-combo-for-leader 'major) 'face 'success))
+        (mode (propertize (symbol-name major-mode) 'face 'success)))
+
+    (message "Major (%s) has no binding in %s" key mode)))
+#+END_SRC
+
+** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package general
+  :demand t
+
+  :config
+  (seq-do #'wal/general-create-definer wal/general-leaders))
+#+END_SRC
+
+** transient
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Another nice way of grouping keys.
+
+Some transients are bound directly, others are =wal/univ= variants (see
+above).
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/transient-grab (arg)
+  "Grab argument ARG from current command."
+  (transient-arg-value
+   (format "--%s=" arg)
+   (transient-args transient-current-command)))
+
+(defun wal/transient-command-or-major ()
+  "Show only major if command includes it."
+  (if (string-match "major" mode-line-buffer-identification)
+      "major"
+    mode-line-buffer-identification))
+
+(defun wal/with-delayed-transient-popup (fun &rest args)
+  "Delay the transient FUN before calling it with ARGS."
+  (defvar transient-show-popup)
+  (let ((transient-show-popup 0.8))
+
+    (apply fun args)))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package transient
+  :demand t
+
+  :custom
+  (transient-hide-during-minibuffer-read t)
+  (transient-mode-line-format '("%e"
+                                mode-line-front-space
+                                (:eval (wal/transient-command-or-major)))))
+#+END_SRC
+
+** which-key
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Show the next possible key presses towards a command.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(cl-defmacro that-key (description &key key condition user-key leader)
+  "Add DESCRIPTION for KEY after loading `which-key'.
+
+If CONDITION is non-nil, surround the replacement with it.
+USER-KEY and LEADER can be used to prefix the key."
+  (let ((key (cond
+              (user-key
+               (wal/prefix-user-key user-key))
+              (leader
+               (apply 'wal/key-combo-for-leader leader))
+              (key key)
+              (t ""))))
+    `(with-eval-after-load 'which-key
+       ,(if condition
+            `(when ,condition
+               (which-key-add-key-based-replacements ,key ,description))
+          `(which-key-add-key-based-replacements ,key ,description)))))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package which-key
+  :defer 2
+
+  :config
+  (which-key-mode 1)
+
+  :custom
+  (which-key-lighter " wk?")
+
+  (which-key-idle-delay 0.8)
+  (which-key-idle-secondary-delay 0.2)
+
+  (which-key-sort-uppercase-first nil)
+  (which-key-sort-order #'which-key-prefix-then-key-order)
+
+  (which-key-show-docstrings t)
+  (which-key-preserve-window-configuration t)
+  (which-key-show-early-on-C-h t))
+#+END_SRC
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-key-bindings)
+
+;;; wal-key-bindings.el ends here
+#+END_SRC
+
+* Footnotes
+
+[fn:1] To get a full overview you'll have to call
+=describe-personal-keybindings= and =general-describe-keybindings=.
+
+[fn:2] If hyper can't be used (or shouldn't be used if Emacs is run in
+=no-window-system=), it is replaced by =C-c w <key>= for both leader keys
+and other bindings.

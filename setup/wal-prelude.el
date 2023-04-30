@@ -55,6 +55,11 @@ The order determines the load order as well.")
 
 This variable will be set when calling `wal/bootstrap-config'.")
 
+(defvar wal/emacs-config-lib-path nil
+  "The path to the config's library.
+
+This variable will be set when calling `wal/bootstrap-config'")
+
 (defvar wal/emacs-config-package-path nil
   "The path to the config's packages.
 
@@ -84,9 +89,15 @@ Returns the path to the directory or nil (if created)."
   (require 'ob-tangle)
   (defvar org-confirm-babel-evaluate)
 
-  (let ((org-confirm-babel-evaluate nil))
+  (let ((org-confirm-babel-evaluate nil)
+        (sources (wal/directory-files wal/emacs-config-lib-path)))
 
-    (org-babel-tangle-file (expand-file-name "README.org" wal/emacs-config-default-path))))
+    (advice-add #'wal/message-in-a-bottle :override #'ignore)
+
+    (dolist (it sources)
+      (org-babel-tangle-file (expand-file-name it wal/emacs-config-default-path)))
+
+    (advice-remove #'wal/message-in-a-bottle #'ignore)))
 
 (defun wal/load-config (&optional package-dir)
   "Load the config from PACKAGE-DIR."
@@ -124,12 +135,14 @@ Unless NO-LOAD is t, this will load the `wal' package.
 If COLD-BOOT is t, a temp folder will be used as a
 `package-user-dir' to test the behavior of a cold boot."
   (let* ((package-dir (expand-file-name "wal" source-dir))
+         (lib-dir (expand-file-name "lib" source-dir))
          (created-dir (wal/find-or-create-directory package-dir)))
 
     (message "Boostrapping config from '%s'" source-dir)
 
     ;; These variables are also used in `wal' package.
     (setq wal/emacs-config-default-path source-dir)
+    (setq wal/emacs-config-lib-path lib-dir)
     (setq wal/emacs-config-package-path package-dir)
 
     (unless created-dir

@@ -181,16 +181,14 @@
       (was-called-with message "Config changed. To tangle, call `wal/tangle-config'"))))
 
 (ert-deftest test-wal/find-config ()
-  (defvar wal/emacs-config-default-path)
-  (defvar wal/config-show-whale-animation)
-  (let ((wal/config-show-whale-animation t))
+  (defvar wal/emacs-config-lib-path)
+  (let ((wal/emacs-config-lib-path nil))
 
-    (with-mock (add-hook wal/ascii-whale-setup)
+    (with-mock (consult-org-heading (wal/directory-files . (lambda (_) '("/tmp/test.org" "/tmp/test-2.org"))))
 
-      (wal/find-config)
+      (wal/config-consult-org-heading)
 
-      (was-called-with add-hook (list 'after-revert-hook #'wal/tangle-config-prompt nil t))
-      (was-called wal/ascii-whale-setup))))
+      (was-called-with consult-org-heading (list nil '("/tmp/test.org" "/tmp/test-2.org"))))))
 
 (ert-deftest test-wal/check-coverage--calculate-coverage ()
   (kill-buffer "*wal-async*")

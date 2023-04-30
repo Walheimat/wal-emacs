@@ -1,0 +1,449 @@
+#+TITLE: LSP
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-lsp.el" wal/emacs-config-package-path)
+
+Language servers are awesome. Thanks, Microsoft.
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-lsp.el --- LSP. -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Provide LSP packages.
+
+;;; Code:
+
+(eval-when-compile
+  (require 'dash nil t)
+  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+
+(declare-function dap--completing-read "ext:dap-mode.el")
+(declare-function dap--json-encode "ext:dap-mode.el")
+(declare-function dap-register-debug-template "ext:dap-mode.el")
+(declare-function hydra-disable "ext:hydra.el")
+(declare-function wal/append "wal-func.el")
+(declare-function wal/dap "wal-lsp.el")
+(declare-function wal/tempel-setup-capf "wal-edit.el")
+
+(defvar dap-debug-template-configurations)
+
+(defgroup wal-lsp nil
+  "Change settings for LSP packages."
+  :group 'wal
+  :tag "LSP")
+
+(defcustom wal/lsp-slow-modes '()
+  "Modes that have slow language servers.
+
+For these modes `corfu' settings will not be adjusted to be
+smaller."
+  :type '(repeat symbol)
+  :group 'wal-lsp)
+#+END_SRC
+
+* Packages
+
+#+begin_src emacs-lisp
+(junk-expand lsp
+  "Docker and Kubernetes."
+  :extras (lsp-sonarlint))
+#+end_src
+
+** lsp-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+=lsp-mode= is the fancy version. You'll have to install some language
+servers yourself[fn:1].
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/slow-lsp-p (mode)
+  "Check if MODE is considered slow."
+  (memq mode wal/lsp-slow-modes))
+
+(defun wal/lsp ()
+  "Defer LSP setup for the file.
+
+Sets up completion styles to use `orderless' unless the mode is
+considered slow."
+  (unless (wal/slow-lsp-p major-mode)
+    (setq-local completion-styles '(orderless partial-completion basic)))
+
+  (lsp-deferred))
+
+(defun wal/lsp-completion ()
+  "Make sure completion works well with `corfu' and `orderless'."
+  (unless (wal/slow-lsp-p major-mode)
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          completion-styles)))
+
+(defun wal/first-prevent-adding-other-projects (&rest _args)
+  "Prevent adding workspace roots from other projects."
+  (eval '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))
+
+(defun wal/lsp-ignore-directory--escape (dir)
+  "Escape directory DIR."
+  (if (string-prefix-p "." dir)
+      (concat "[/\\\\]\\" dir "\\'")
+    (concat "[/\\\\]" dir "\\'")))
+
+(defun wal/lsp-ignore-directory (dir)
+  "Make sure DIR is ignored.
+
+It can be either a list of strings or a single string."
+  (let ((dirs (if (listp dir) dir (list dir))))
+
+    (thread-last
+      dirs
+      (mapcar 'wal/lsp-ignore-directory--escape)
+      (wal/append 'lsp-file-watch-ignored-directories))))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package lsp-mode
+  :wal-ways nil
+
+  :hook (lsp-completion-mode . wal/lsp-completion)
+
+  :config
+  ;; Integrate with other packages.
+  (require 'avy nil t)
+
+  ;; Additional ignores.
+  (wal/lsp-ignore-directory '("build" "vendor" ".cask"))
+
+  ;; Don't keep track of multiple projects.
+  (advice-add 'lsp :before #'wal/first-prevent-adding-other-projects)
+
+  ;; JavaScript.
+  (with-eval-after-load 'js
+    (transient-append-suffix 'js-mode-major '(0 0 -1)
+      '("r" "rename file" lsp-javascript-rename-file)))
+
+  ;; Command map.
+  (setq lsp-keymap-prefix (wal/key-combo-for-leader 'ambassador :key "l"))
+  (lsp-enable-which-key-integration t)
+  (ambassador :keymaps 'lsp-mode-map "l" '(:keymap lsp-command-map :wk "LSP"))
+
+  :custom
+  ;; Simplify visuals.
+  (lsp-headerline-breadcrumb-enable nil)
+  (lsp-signature-render-documentation nil)
+  (lsp-signature-function 'lsp-signature-posframe)
+  (lsp-signature-auto-activate '(:on-server-request))
+
+  ;; Play nice with `corfu'.
+  (lsp-completion-provider :none)
+
+  (lsp-enable-snippet nil)
+
+  (lsp-keep-workspace-alive nil)
+
+  ;; Individual servers.
+  (lsp-pylsp-plugins-jedi-use-pyenv-environment t)
+  (lsp-clients-typescript-log-verbosity "off")
+  (lsp-rust-analyzer-cargo-watch-command "clippy")
+  (lsp-xml-format-split-attributes t)
+  (lsp-xml-format-space-before-empty-close-tag nil)
+  (lsp-xml-format-split-attributes-indent-size 1)
+
+  :delight
+  (lsp-mode " lsp")
+  (lsp-lens-mode " lns"))
+#+END_SRC
+
+** lsp-ui
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Don't clutter things up too much.
+
+#+BEGIN_SRC emacs-lisp
+(use-package lsp-ui
+  :wal-ways nil
+
+  :after lsp-mode
+
+  :custom
+  (lsp-ui-doc-show-with-cursor t)
+
+  ;; No sideline stuff.
+  (lsp-ui-sideline-enable nil)
+
+  ;; Allow for more text.
+  (lsp-ui-doc-text-scale-level -2))
+#+END_SRC
+
+** dap-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
+[[Debug Templates][templates]].
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defvar wal/dap-before nil)
+
+(defun wal/dap-terminated (_session)
+  "Disable hydra and restore window configuration."
+  (hydra-disable)
+
+  (when wal/dap-before
+    (set-window-configuration wal/dap-before)))
+
+(defun wal/dap-session-created (&rest _r)
+  "Save window configuration and delete other windows."
+  (setq wal/dap-before (current-window-configuration))
+
+  (delete-other-windows))
+
+(defun wal/dap-stopped (_session)
+  "(Re-)display the hydra immediately."
+  (dap-hydra))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package dap-mode
+  :wal-ways nil
+
+  :after lsp-mode
+
+  :hook (dap-session-created . wal/dap-session-created)
+
+  :config
+  ;; Activate UI and configure.
+  (dap-auto-configure-mode)
+
+  ;; Add hooks at the end.
+  (add-hook 'dap-terminated-hook #'wal/dap-terminated t)
+  (add-hook 'dap-stopped-hook #'wal/dap-stopped t)
+
+  (wal/replace-in-alist
+   'dap-ui-buffer-configurations
+   `((,dap-ui--repl-buffer . ((side . bottom) (slot . 1) (window-height . 10)))
+     (,dap-ui--locals-buffer . ((side . right) (slot . 1)))))
+
+  (wdb/nearby dap-ui--repl-buffer)
+  (wdb/nearby dap-ui--locals-buffer :side 'right)
+
+  :custom
+  (dap-auto-show-output nil)
+  (dap-auto-configure-features nil)
+
+  (dap-python-executable "python3")
+  (dap-python-debugger 'debugpy)
+
+  :general
+  (ambassador :keymaps 'lsp-mode-map "b" '(dap-hydra :wk "dap"))
+
+  :delight " dap")
+#+END_SRC
+
+** consult-lsp
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Jump to symbols with =consult=.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal/ignore-if-no-lsp (&rest _args)
+  "Don't call the function if `lsp-mode' is nil."
+  (if (bound-and-true-p lsp-mode)
+      t
+    (message "Not in a LSP buffer")
+    nil))
+#+END_SRC
+
+*** Configuration
+
+#+begin_src emacs-lisp
+(use-package consult-lsp
+  :wal-ways nil
+
+  :demand t
+  :after (consult lsp-mode)
+
+  :config
+  (advice-add
+   'consult-lsp-file-symbols :before-while
+   #'wal/ignore-if-no-lsp)
+
+  (transient-append-suffix 'consult '(0 0 -1)
+    '("y" "symbol" consult-lsp-file-symbols
+      :inapt-if-not (lambda () (bound-and-true-p lsp-mode)))))
+#+end_src
+
+** lsp-sonarlint
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Some more linting.
+
+#+begin_src emacs-lisp
+(use-package lsp-sonarlint
+  :wal-ways nil
+
+  :config
+  (require 'lsp-sonarlint-java)
+
+  :custom
+  (lsp-sonarlint-java-enabled t)
+
+  :demand t
+  :after lsp-mode)
+#+end_src
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-lsp)
+
+;;; wal-lsp.el ends here
+#+END_SRC
+
+* Debug Templates
+
+Put these templates in a file in your project root, and evaluate them
+there using =C-x C-e=.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defun wal/dap-create-launch-json-from-template ()
+  "Create and write a VSCode launch configuration using a template."
+  (interactive)
+  (wal/try dap-mode
+    (let* ((args (-> (dap--completing-read "Select template: "
+                                           dap-debug-template-configurations
+                                           'cl-first nil t)
+                     cl-rest
+                     copy-tree))
+
+           (serialized (dap--json-encode args))
+           (file-args (find-file-read-args "Find file (deleting other windows): "
+                                           (confirm-nonexistent-file-or-buffer)))
+           (filename (car file-args)))
+      (with-temp-buffer
+        (insert serialized)
+        (json-pretty-print-buffer)
+        (write-region (buffer-string) nil filename)))))
+#+END_SRC
+
+** Node.js
+
+This for attaching to a remote host (Docker container) using =nodemon=.
+
+For TypeScript compile your =src= with =--sourceMap= or set =sourceMap= to
+=true= in your =tsconfig.json=.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(when (require 'dap-mode nil 'noerror)
+  (progn
+    (let* ((use-source-maps t)          ; Turn off if not needed.
+           (build-directory "build")    ; Set to `nil' if this isn't transpiled JavaScript.
+           (remote-root "/usr/src/app") ; If this is running remotely.
+           (local-root (if build-directory
+                           (concat (file-name-directory buffer-file-name) build-directory)
+                         (file-name-directory buffer-file-name))))
+
+      (dap-register-debug-template
+       "attach::node"
+       (list :type "node"
+             :request "attach"
+             :sourceMaps use-source-maps
+             :remoteRoot remote-root
+             :localRoot local-root
+             :port 9229)))))
+#+END_SRC
+
+** Python
+
+Attach to running process.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defun wal/dap-register-debugpy-template (name remote-root)
+  "Create template for debugpy.
+
+Prompts user for NAME of the template and the REMOTE-ROOT."
+  (interactive "sName of the template: \nsRemote root: ")
+  (wal/try dap-mode
+    (let ((mapping `(:localRoot "${workspaceFolder}" :remoteRoot ,remote-root)))
+
+      (dap-register-debug-template
+       name
+       (list :type "python"
+             :request "attach"
+             :connect (list :host "localhost" :port 5678)
+             :pathMappings (vector mapping))))))
+#+END_SRC
+
+** Flutter
+
+Debugging without sound null safety.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(when (require 'dap-mode nil 'noerror)
+  (dap-register-debug-template
+   "flutter::unsound"
+   (list
+    :type "flutter"
+    :program "lib/main.dart"
+    :args '("--no-sound-null-safety"))))
+#+END_SRC
+
+** Laravel
+
+Make sure you expose port =9003=.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(when (require 'dap-mode nil 'noerror)
+  (let ((mapping '(:/var/www/html "${workspaceFolder}")))
+
+    (dap-register-debug-template
+     "laravel::launch"
+     (list
+      :type "php"
+      :request "launch"
+      :port 9003
+      :pathMappings mapping))))
+#+END_SRC
+
+*** XDebug Config
+
+Put the following into your =php.ini=.
+
+#+BEGIN_SRC conf :tangle no
+[XDebug]
+xdebug.start_with_request = yes
+xdebug.show_local_vars = on
+xdebug.discover_client_host = true
+xdebug.client_host = 0.0.0.0
+xdebug.client_port = 9003
+#+END_SRC
+
+
+
+* Footnotes
+
+[fn:1] All languages listed [[https://emacs-lsp.github.io/lsp-mode/page/languages/][here]].
