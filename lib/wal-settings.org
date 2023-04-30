@@ -398,6 +398,25 @@ Make completions look nice.
 
 #+BEGIN_SRC emacs-lisp
 (with-no-warnings
+  ;; Create `transient' for config package.
+  (transient-define-prefix whaler ()
+    "Facilitate the usage of or the working on Walheimat's config."
+    [["Do"
+      ("h" "consult config heading" wal/config-consult-org-heading)
+      ("t" "tangle" wal/tangle-config)
+      ("x" "install expansion pack" junk-install)
+      ("c" "customize group" wal/customize-group)
+      ("m" "show diff" wal/show-config-diff-range)]
+     ["Check"
+      ("d" "checkdoc" wal/checkdoc-config-packages)
+      ("p" "pacify" wal/run-pacify)
+      ("o" "coverage" wal/check-coverage)
+      ("j" "JSON coverage" wal/create-json-coverage)
+      ("b" "cold boot" wal/run-cold-boot)]]
+    ["Fluff"
+     ("w" "toggle animation" wal/ascii-whale-toggle-display)])
+
+  (advice-add 'whaler :around 'wal/with-delayed-transient-popup)
   ;; Additional `general' bindings.
   (administrator
     "f" '(:ignore t :wk "find")
