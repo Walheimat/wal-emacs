@@ -5,9 +5,7 @@
 
 * About
 
-** Heads-Up
-
-This project is my personal literate Emacs[fn:1] configuration.
+This project is my personal literate Emacs 29[fn:1] configuration.
 
 If you're a complete beginner, you will find [[https://github.com/emacs-tw/awesome-emacs#starter-kit][more user-friendly and
 less tailor-made configs]] out there.
@@ -21,14 +19,12 @@ config. Just know that nothing in this config should be considered
 If you're interested in trying out Emacs using my config, here are the
 necessary steps:
 
-+ first
-  + install Emacs[fn:2] if you haven't
-  + =git clone= this repository into your =user-emacs-directory=[fn:3]
-+ in Emacs
-  + =M-x load-file= and navigate to =setup/wal-setup=
-  + =M-x =wal-setup=, select =init file= and choose =link= or =copy=
-  + finally close and re-run Emacs with the =--ensure= flag which should
-    install all[fn:4] packages and load the config[fn:5]
++ install Emacs[fn:2] if you haven't
++ =git clone= this repository into your =user-emacs-directory=
++ =make install= which will tangle the libraries and setup your
+  =user-init-file=[fn:3]
++ finally run Emacs with the =--ensure= flag which should install all[fn:4]
+  packages and load the config
 
 You can then use =customize-group= to change settings for various
 aspects of the config.
@@ -41,12 +37,12 @@ This config is /daemon-ready/, i.e. if you start Emacs with the =--daemon=
 flag, the config will make sure that any customization that requires a
 frame will only be loaded once a frame was created.
 
-You can install either a =systemd= service using =wal-setup= (described
-above) or just execute =emacs --daemon= in a terminal or your login
-shell's configuration.
+You can install either a =systemd= service using [[file:templates/emacs.service][this template]][fn:5] or
+just execute =emacs --daemon= in a terminal (or your login shell's
+configuration).
 
-In any case, an Emacs daemon will start (on start-up). To connect, you
-can use, for example, =emacsclient -c -n=[fn:5].
+In any case, an Emacs daemon will start. To connect, you can use, for
+example, =emacsclient -cn=.
 
 *** Package-Like
 
@@ -69,6 +65,12 @@ section or several sections grouping packages.
 
 * Libraries
 
+The configuration is subdivided into several libraries/packages.
+The order of evaluation of the libraries is determined by =wal-packages=
+that is defined in the [[file:setup/wal-prelude.el][prelude]] package.
+
+The library consists of:
+
 - general [[file:lib/wal-settings.org][settings]]
 - [[file:lib/wal-func.org][functional]] extensions
 - setting up [[file:lib/wal-external.org][external]] packages
@@ -87,37 +89,20 @@ section or several sections grouping packages.
 
 * Footnotes
 
-[fn:1] I use this config with Emacs 29. There's no guarantee below works
-although some effort is made that it may with a few tweaks. VC
-packages require 29 since they depend on =package-vc-install=.
+[fn:1] There's no guarantee anything below works although some effort is
+made that it may with a few tweaks. VC packages require 29 since they
+depend on =package-vc-install=.
 
 [fn:2] If you're feeling adventurous, [[https://git.savannah.gnu.org/cgit/emacs.git/tree/INSTALL][build from source]].
 
-[fn:3] If you're not sure where your =user-emacs-directory= might be,
-you can do the following:
-
-+ Run Emacs
-+ hit =M-x= (that is your Alt/Option key followed by the letter =x=)
-+ type =describe-variable= and hit return
-+ type =user-emacs-directory= and hit return again.
-
-A window should pop up telling you the path.
-
-Finally run =git clone git@gitlab.com:Walheimat/emacs-config.git
-~/.emacs.d= (replace =~/.emacs.d= with your actual path if it differs).
-
-If you do not wish to =clone= this repo in your =user-emacs-directory= or
-use the default name, you will need to adapt the variable
-=wal-emacs-config-default-path= in the example init file you just
-copied.
+[fn:3] If your =user-init-file= is not =~/.emacs.d/init.el= you need to run
+=make EMACS_INIT_FILE=<path_to_your_init> install=.
 
 [fn:4] Packages that belong to an expansion pack (mainly
 language-specific packages) or its extras need to be installed
 manually by calling =wal-install-expansion-pack=.
 
-[fn:5] The configuration is subdivided into several libraries/packages.
-The order of evaluation of the libraries is determined by the [[file:setup/wal-prelude.el][prelude]]
-which is the file loaded in the =init.el= you just copied/linked.
+[fn:5] Also confer the [[info:emacs#Emacs Server][manual]].
 
 [fn:6] There are some exceptions, like the macro =harpoon= to create hook
 functions and the =general= definers for leader keys.

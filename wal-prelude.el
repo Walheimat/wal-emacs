@@ -1,13 +1,10 @@
-;;; wal-prelude.el --- Config setup functionality. -*- lexical-binding: t -*-
+;;; wal-prelude.el --- Bootstrap the configuration. -*- lexical-binding: t -*-
 
 ;;; Commentary:
 
-;; This file bootstraps Walheimat's literate configuration by tangling
-;; the base Org file's source blocks and subsequently loading package
-;; `wal'.
-;;
-;; Refer to the provided init.el file in templates for an example of
-;; its usage.
+;; This package bootstraps Walheimat's literate configuration by
+;; tangling the libraries and setting up the init file to load the
+;; packages.
 
 ;;; Code:
 
@@ -47,23 +44,20 @@ The order determines the load order as well.")
 (defvar wal-booting nil
   "Set to t during bootstrapping.")
 
-(defvar wal-init-error nil
-  "Set to the error message if initialization failed.")
-
 (defvar wal-emacs-config-default-path nil
   "The root path of the configuration.
 
-This variable will be set when calling `wal-bootstrap-config'.")
+This variable will be set when calling `wal-prelude-bootstrap'.")
 
 (defvar wal-emacs-config-lib-path nil
   "The path to the config's library.
 
-This variable will be set when calling `wal-bootstrap-config'")
+This variable will be set when calling `wal-prelude-bootstrap'")
 
 (defvar wal-emacs-config-package-path nil
   "The path to the config's packages.
 
-This variable will be set when calling `wal-bootstrap-config'.")
+This variable will be set when calling `wal-prelude-bootstrap'.")
 
 ;;;; Utility:
 
@@ -79,27 +73,50 @@ Returns the path to the directory or nil (if created)."
   "Get all non-dot-directory files in DIRECTORY."
   (nthcdr 2 (directory-files directory t)))
 
-;;;; Entry-points:
+;;;; Init file setup:
 
-(defun wal-tangle-config ()
-  "Tangle the config."
-  (interactive)
+(defconst wal-prelude--init-marker ";; wal-prelude-bootstrap"
+  "The marker used to insert and delete in the user's init file.")
 
-  (require 'org)
-  (require 'ob-tangle)
-  (defvar org-confirm-babel-evaluate)
+(defun wal-prelude--ensure-init (init-file source-dir)
+  "Ensure that the INIT-FILE knows how to bootstrap.
 
-  (let ((org-confirm-babel-evaluate nil)
-        (sources (wal-directory-files wal-emacs-config-lib-path)))
+This verifies the bootstrapping block was created by the current
+version. It is otherwise (re-)created.
 
-    (advice-add #'wal-message-in-a-bottle :override #'ignore)
+Files are looked up relative to SOURCE-DIR."
+  (unless (file-exists-p init-file)
+    (user-error "Init file %s doesn't exist" init-file))
 
-    (dolist (it sources)
-      (org-babel-tangle-file (expand-file-name it wal-emacs-config-default-path)))
+  (let* ((cmd (format "cd %s && git describe --abbrev=0" source-dir))
+         (description (string-trim (shell-command-to-string cmd)))
+         (hashed (base64-encode-string description))
+         (init-buffer (find-file-noselect init-file))
+         (marker (concat "\n" wal-prelude--init-marker ":" hashed "\n"))
+         (template (expand-file-name "templates/init.eld" source-dir))
+         (template-buffer (find-file-noselect template))
+         (ready nil))
 
-    (advice-remove #'wal-message-in-a-bottle #'ignore)))
+    (with-current-buffer init-buffer
+      (if (string-search hashed (buffer-string))
+          (progn
+            (setq ready t)
+            (message "Bootstrap in '%s' is up-to-date" init-file))
+        (when-let* ((start (string-search wal-prelude--init-marker (buffer-string))))
+          (message "Deleting existing bootstrap in '%s'" init-file)
+          (delete-region start (point-max))
+          (save-buffer))))
 
-(defun wal-load-config (&optional package-dir)
+    (unless ready
+      (message "Setting up bootstrap in '%s'" init-file)
+      (with-current-buffer template-buffer
+        (append-to-file marker nil init-file)
+        (append-to-file (buffer-string) nil init-file)))))
+
+(defvar wal-prelude-init-error nil
+  "Set to the error message if initialization failed.")
+
+(defun wal-prelude--load-config (&optional package-dir)
   "Load the config from PACKAGE-DIR."
   (interactive)
 
@@ -120,12 +137,36 @@ Returns the path to the directory or nil (if created)."
        (message "Failed to load package '%s': %s"
                 current
                 (error-message-string err))
-       (setq wal-init-error err
+       (setq wal-prelude-init-error err
              wal-booting nil)))
 
     (setq wal-booting nil)))
 
-(defun wal-bootstrap-config (source-dir &optional no-load cold-boot)
+;;;; Entry-points:
+
+(defun wal-tangle-config ()
+  "Tangle the configuration's libraries.
+
+Note that `message' is silenced during tangling."
+  (interactive)
+
+  (require 'org)
+  (require 'ob-tangle)
+  (defvar org-confirm-babel-evaluate)
+
+  (let ((org-confirm-babel-evaluate nil)
+        (sources (wal-directory-files wal-emacs-config-lib-path)))
+
+    (advice-add #'message :override #'ignore)
+
+    (dolist (it sources)
+      (org-babel-tangle-file (expand-file-name it wal-emacs-config-default-path)))
+
+    (advice-remove #'message #'ignore)
+
+    (message "All library files tangled")))
+
+(defun wal-prelude-bootstrap (source-dir &optional no-load cold-boot)
   "Bootstrap the configuration in SOURCE-DIR.
 
 This will tangle the config if it hasn't been yet.
@@ -149,19 +190,23 @@ If COLD-BOOT is t, a temp folder will be used as a
       (wal-tangle-config))
 
     (when cold-boot
+      (require 'cl-macs)
+      (require 'seq)
+      (require 'scroll-bar)
+
       (setq package-user-dir (make-temp-file nil t))
 
       (message "Cold-boot using '%s'" package-user-dir))
 
     (unless no-load
-      (wal-load-config)
+      (wal-prelude--load-config)
 
-      (when wal-init-error
+      (when wal-prelude-init-error
         (if cold-boot
             (kill-emacs 1)
           (delay-warning
            'wal
-           (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal-init-error)
+           (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal-prelude-init-error)
            :error))))))
 
 (provide 'wal-prelude)
