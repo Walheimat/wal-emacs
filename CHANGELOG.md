@@ -5,23 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v2.0.0]
+
+Crank action.
 
 ### Added
 
-- `wal/config-consult-org-heading` to find a heading in any of the
-  library files (see below).
+- Command `wal/config-consult-org-heading` to find a heading in any of
+  the library files (see below).
+
+### Breaking Changes
+
+- Installation now uses a `Makefile`; running `make install` should
+  prepare everything (other than installing external packages).
+- All code is now under `lib/` in separate Org files. The library
+  files are prefixed with `wal-` so their buffers can be ignored in
+  `consult`.
 
 ### Changed
 
-- All code is now under `lib/` in separate org-files. The library
-  files are prefixed with `wal-` so their buffers can be ignored in
-  `consult`.
-- Documents other than `style.org` and `cheat-sheet.org` have been
-  merged into their respective library files.
+- The `pacify` utilities were moved to `tools/wal-pacify.el`.
 
 ### Removed
 
+- All files under `setup/`; all scripts other than the daemon setup
+  have entries in the `Makefile`.
+- Documents under `documents/`; the style-guide was integrated in
+  `lib/wal-config.el`, the bindings and hyper guide in
+  `lib/wal-key-bindings.el`, the debug templates in `lib/wal-lsp.org`.
 - `wal/find-config` (which no longer makes sense, see above).
 
 ## [v1.12.1]

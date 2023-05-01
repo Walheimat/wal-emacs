@@ -26,17 +26,13 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Tangle the configuration
-        run: |
-          emacs --batch -l ./setup/wal-setup-ci.el
-          ls -al ./wal
+        run: make ci-install
 
       - name: Install dependencies
         run: cask install
 
       - name: Check files
-        run: |
-          export EMACS_SOURCE_DIR=$GITHUB_WORKSPACE
-          cask emacs --batch -l ./setup/wal-pacify.el
+        run: make pacify
 
   cold-boot:
     runs-on: ubuntu-latest
@@ -59,6 +55,4 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Execute cold boot
-        run: |
-          export EMACS_SOURCE_DIR=$GITHUB_WORKSPACE
-          emacs --batch -l ./setup/wal-setup-cold-boot.el
+        run: make cold-boot

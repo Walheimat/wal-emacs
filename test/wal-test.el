@@ -276,35 +276,35 @@
       (was-called-nth-with checkdoc-file (list "/tmp/one") 0)
       (was-called-nth-with checkdoc-file (list "/tmp/two") 1))))
 
-(ert-deftest test-wal-run-script--handlers ()
+(ert-deftest test-wal-make--handlers ()
   (ert-with-message-capture messages
-    (funcall (wal-run-script--on-success "cold-boot"))
-    (funcall (wal-run-script--on-failure "cold-boot") "test")
+    (funcall (wal-make--on-success "cold-boot"))
+    (funcall (wal-make--on-failure "cold-boot") "test")
 
     (should (string= messages "Script ’cold-boot’ succeeded.\nScript ’cold-boot’ failed.\n\ntest\n"))))
 
-(ert-deftest test-wal-run-script ()
+(ert-deftest test-wal-make ()
   (defvar wal-emacs-config-default-path)
-  (let ((wal-emacs-config-default-path "/tmp"))
+  (let ((wal-emacs-config-default-path "/tmp/default"))
 
     (with-mock (wal-async-process
-                (wal-run-script--on-success . (lambda (_) 'success))
-                (wal-run-script--on-failure . (lambda (_) 'failure)))
+                (wal-make--on-success . (lambda (_) 'success))
+                (wal-make--on-failure . (lambda (_) 'failure)))
 
-      (wal-run-script "cold-boot")
+      (wal-make "cold-boot")
 
-      (was-called-with wal-async-process '("cd /tmp/setup && ./cold-boot.sh"
+      (was-called-with wal-async-process '("cd /tmp/default && make cold-boot"
                                            success
                                            failure
                                            t)))))
 
-(ert-deftest test-wal-run-script--scripts ()
-  (with-mock (wal-run-script)
+(ert-deftest test-wal-make--scripts ()
+  (with-mock (wal-make)
 
     (wal-run-pacify)
-    (was-called-with wal-run-script "pacify")
+    (was-called-with wal-make "pacify")
 
     (wal-run-cold-boot)
-    (was-called-with wal-run-script "cold-boot")))
+    (was-called-with wal-make "cold-boot")))
 
 ;;; wal-test.el ends here

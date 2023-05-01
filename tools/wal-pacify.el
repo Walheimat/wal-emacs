@@ -6,16 +6,6 @@
 
 ;;; Code:
 
-(require 'wal-prelude (expand-file-name
-                       "setup/wal-prelude.el"
-                       (getenv "EMACS_SOURCE_DIR"))
-         t)
-
-(let ((source-dir (getenv "EMACS_SOURCE_DIR")))
-
-  (when (fboundp 'wal-bootstrap-config)
-    (wal-bootstrap-config source-dir t)))
-
 (defvar wal-emacs-config-package-path)
 (declare-function wal-package-files "ext:wal.el")
 (declare-function wal-directory-files "ext:wal-prelude.el")
