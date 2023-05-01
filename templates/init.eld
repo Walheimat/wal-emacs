@@ -6,7 +6,7 @@
       (gc-cons-percentage 0.8)
       (file-name-handler-alist nil))
 
-  (add-to-list 'load-path (expand-file-name "setup" base-dir))
+  (add-to-list 'load-path base-dir)
   (require 'wal-prelude)
 
   (when (fboundp 'wal-prelude-bootstrap)

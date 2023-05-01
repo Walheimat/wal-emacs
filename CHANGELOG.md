@@ -21,6 +21,7 @@ Crank action.
 - All code is now under `lib/` in separate Org files. The library
   files are prefixed with `wal-` so their buffers can be ignored in
   `consult`.
+- The base package is now called `wal-config`, not just `wal`.
 
 ### Changed
 

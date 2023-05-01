@@ -6,13 +6,13 @@
 
 ;;; Code:
 
-(defvar wal-emacs-config-package-path)
-(declare-function wal-package-files "ext:wal.el")
+(defvar wal-emacs-config-build-path)
+(declare-function wal-package-files "ext:wal-config.el")
 (declare-function wal-directory-files "ext:wal-prelude.el")
 
-(add-to-list 'load-path wal-emacs-config-package-path)
+(add-to-list 'load-path wal-emacs-config-build-path)
 
-(require 'wal nil t)
+(require 'wal-config nil t)
 
 (package-initialize)
 (require 'flycheck)

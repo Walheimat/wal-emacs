@@ -12,19 +12,19 @@
 (when (require 'undercover nil t)
   (cond
    ((getenv "CI")
-    (undercover "wal/*.el"
+    (undercover "build/*.el"
                 (:report-format 'lcov)
                 (:send-report nil)))
    ((getenv "COVERAGE_WITH_JSON")
     (setq undercover-force-coverage t
           undercover--merge-report nil)
-    (undercover "wal/*.el"
+    (undercover "build/*.el"
                 (:report-format 'simplecov)
                 (:report-file "./coverage/.resultset.json")
                 (:send-report nil)))
    (t
     (setq undercover-force-coverage t)
-    (undercover "wal/*.el"
+    (undercover "build/*.el"
                 (:report-format 'text)
                 (:report-file "./coverage/results.txt")
                 (:send-report nil)))))
@@ -165,16 +165,16 @@ The associated file buffer is also killed."
     `(message "Would have loaded %s" ',package-name))
 
   (defvar wal-emacs-config-default-path)
-  (defvar wal-emacs-config-package-path)
+  (defvar wal-emacs-config-build-path)
 
   (let* ((source-dir (or (getenv "GITHUB_WORKSPACE") default-directory))
-         (package-dir (expand-file-name "wal" source-dir)))
+         (build-dir (expand-file-name "build" source-dir)))
 
-    (message "Setting source dir to %s, package dir to %s" source-dir package-dir)
+    (message "Setting source dir to %s, build dir to %s" source-dir build-dir)
 
     (when (getenv "CI")
-      (add-to-list 'load-path package-dir))
+      (add-to-list 'load-path build-dir))
     (setq wal-emacs-config-default-path source-dir
-          wal-emacs-config-package-path package-dir)))
+          wal-emacs-config-build-path build-dir)))
 
 ;;; test-helper.el ends here

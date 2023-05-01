@@ -1,57 +1,6 @@
 #+TITLE: Config Package
 #+AUTHOR: @Walheimat
-#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal.el" wal-emacs-config-package-path)
-
-* Header
-:PROPERTIES:
-:VISIBILITY: folded
-:END:
-
-#+BEGIN_SRC emacs-lisp
-;;; wal.el --- Walheimat's literate Emacs configuration. -*- lexical-binding: t -*-
-
-;; Version: 1.7.12
-;; Package-Requires: ((emacs "28.1"))
-
-;;; Commentary:
-;;
-;; Require all sub-packages.
-
-;;; Code:
-
-(declare-function posframe-delete "ext:posframe.el")
-(declare-function wal-async-process "wal-func.el")
-(declare-function wal-directory-files "init.el")
-(declare-function wal-flycheck-file "wal-fix.el")
-(declare-function wal-flycheck-file--erase "wal-fix.el")
-(declare-function wal-flycheck-file--get-buffer "wal-fix.el")
-(declare-function wal-matches-in-string "wal-func.el")
-(declare-function wal-tangle-config "wal-prelude.el")
-
-(defvar wal-emacs-config-default-path)
-(defvar wal-emacs-config-package-path)
-
-(defgroup wal nil
-  "Walheimat's configuration."
-  :group 'convenience
-  :prefix "wal-")
-
-(defgroup wal-config nil
-  "Customize configuring the packages."
-  :group 'wal
-  :tag "Configuration")
-
-(defcustom wal-config-show-whale-animation t
-  "Whether to show an animated whale while editing the config."
-  :type 'boolean
-  :group 'wal-config)
-
-(defcustom wal-config-ascii-whale 'blue
-  "The whale to use in the config animation."
-  :type '(choice (const :tag "Blue whale" blue)
-                 (const :tag "Cachalot" cachalot))
-  :group 'wal-config)
-#+END_SRC
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-config.el" wal-emacs-config-build-path)
 
 * Style Guide
 :PROPERTIES:
@@ -215,6 +164,57 @@ Example for advising =:around=.
 (advice-add
  'consult-ripgrep :around
  #'wal-with-big-vertico)
+#+END_SRC
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-config.el --- Walheimat's literate Emacs configuration. -*- lexical-binding: t -*-
+
+;; Version: 1.7.12
+;; Package-Requires: ((emacs "28.1"))
+
+;;; Commentary:
+;;
+;; Require all sub-packages.
+
+;;; Code:
+
+(declare-function posframe-delete "ext:posframe.el")
+(declare-function wal-async-process "wal-func.el")
+(declare-function wal-directory-files "init.el")
+(declare-function wal-flycheck-file "wal-fix.el")
+(declare-function wal-flycheck-file--erase "wal-fix.el")
+(declare-function wal-flycheck-file--get-buffer "wal-fix.el")
+(declare-function wal-matches-in-string "wal-func.el")
+(declare-function wal-tangle-config "wal-prelude.el")
+
+(defvar wal-emacs-config-default-path)
+(defvar wal-emacs-config-build-path)
+
+(defgroup wal nil
+  "Walheimat's configuration."
+  :group 'convenience
+  :prefix "wal-")
+
+(defgroup wal-config nil
+  "Customize configuring the packages."
+  :group 'wal
+  :tag "Configuration")
+
+(defcustom wal-config-show-whale-animation t
+  "Whether to show an animated whale while editing the config."
+  :type 'boolean
+  :group 'wal-config)
+
+(defcustom wal-config-ascii-whale 'blue
+  "The whale to use in the config animation."
+  :type '(choice (const :tag "Blue whale" blue)
+                 (const :tag "Cachalot" cachalot))
+  :group 'wal-config)
 #+END_SRC
 
 * Lovable Things
@@ -431,6 +431,12 @@ If the answer is no, there will be no additional prompt."
 ** The Config Itself
 
 #+BEGIN_SRC emacs-lisp
+(defun wal-config-root ()
+  "Open the configuration's root directory."
+  (interactive)
+
+  (dired wal-emacs-config-default-path))
+
 (defun wal-config-consult-org-heading ()
   "Find a heading in any of library file."
   (interactive)
@@ -550,7 +556,7 @@ name are deleted beforehand."
 
 (defun wal-package-files ()
   "Get the package files."
-  (let* ((package-files (wal-directory-files wal-emacs-config-package-path))
+  (let* ((package-files (wal-directory-files wal-emacs-config-build-path))
          (el-files (seq-filter
                     (lambda (it)
                       (string-equal (file-name-extension it)
@@ -566,7 +572,7 @@ name are deleted beforehand."
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(provide 'wal)
+(provide 'wal-config)
 
-;;; wal.el ends here
+;;; wal-config.el ends here
 #+END_SRC

@@ -12,7 +12,7 @@
 
 (declare-function org-babel-tangle-file "ob-tangle")
 
-(defconst wal-packages '(wal
+(defconst wal-packages '(wal-config
                          wal-func
                          wal-external
                          wal-key-bindings
@@ -54,8 +54,8 @@ This variable will be set when calling `wal-prelude-bootstrap'.")
 
 This variable will be set when calling `wal-prelude-bootstrap'")
 
-(defvar wal-emacs-config-package-path nil
-  "The path to the config's packages.
+(defvar wal-emacs-config-build-path nil
+  "The path to the config's built packages.
 
 This variable will be set when calling `wal-prelude-bootstrap'.")
 
@@ -116,12 +116,12 @@ Files are looked up relative to SOURCE-DIR."
 (defvar wal-prelude-init-error nil
   "Set to the error message if initialization failed.")
 
-(defun wal-prelude--load-config (&optional package-dir)
-  "Load the config from PACKAGE-DIR."
+(defun wal-prelude--load-config (&optional build-dir)
+  "Load the config from BUILD-DIR."
   (interactive)
 
-  (let ((dir (or package-dir
-                 wal-emacs-config-package-path
+  (let ((dir (or build-dir
+                 wal-emacs-config-build-path
                  default-directory))
         (current nil))
 
@@ -175,16 +175,16 @@ Unless NO-LOAD is t, this will load the `wal' package.
 
 If COLD-BOOT is t, a temp folder will be used as a
 `package-user-dir' to test the behavior of a cold boot."
-  (let* ((package-dir (expand-file-name "wal" source-dir))
-         (lib-dir (expand-file-name "lib" source-dir))
-         (created-dir (wal-find-or-create-directory package-dir)))
+  (let* ((lib-dir (expand-file-name "lib" source-dir))
+         (build-dir (expand-file-name "build" source-dir))
+         (created-dir (wal-find-or-create-directory build-dir)))
 
     (message "Boostrapping config from '%s'" source-dir)
 
     ;; These variables are also used in `wal' package.
     (setq wal-emacs-config-default-path source-dir)
     (setq wal-emacs-config-lib-path lib-dir)
-    (setq wal-emacs-config-package-path package-dir)
+    (setq wal-emacs-config-build-path build-dir)
 
     (unless created-dir
       (wal-tangle-config))

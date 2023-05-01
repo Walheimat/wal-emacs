@@ -6,7 +6,7 @@
 
 ;;; Code:
 
-(require 'wal nil t)
+(require 'wal-config nil t)
 
 (ert-deftest test-wal-ascii-whale-animate ()
   (let ((wal-ascii-whale-key-frames ["testing"])
@@ -180,7 +180,17 @@
 
       (was-called-with message "Config changed. To tangle, call `wal-tangle-config'"))))
 
-(ert-deftest test-wal-find-config ()
+(ert-deftest test-wal-config-root ()
+  (defvar wal-emacs-config-default-path)
+  (let ((wal-emacs-config-default-path "/tmp/config"))
+
+    (with-mock (dired)
+
+      (wal-config-root)
+
+      (was-called-with dired (list "/tmp/config")))))
+
+(ert-deftest test-wal-config-consult-org-heading ()
   (defvar wal-emacs-config-lib-path)
   (let ((wal-emacs-config-lib-path nil))
 
@@ -262,7 +272,7 @@
        (funcall clean)))))
 
 (ert-deftest test-wal-checkdoc-config-packages ()
-  (defvar wal-emacs-config-package-path)
+  (defvar wal-emacs-config-build-path)
   (let* ((in '("/tmp/one" "/tmp/two")))
 
     (with-mock (require

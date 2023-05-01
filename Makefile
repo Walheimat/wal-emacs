@@ -21,7 +21,7 @@ pacify:
 # Remove the build folder
 clean:
 	$(info Removing build folder)
-	rm -rf ./wal
+	rm -rf ./build
 
 # Tangle all library files
 tangle:
@@ -36,3 +36,4 @@ install: clean ensure tangle
 	$(info Run $(EMACS) with flag --ensure to install packages)
 
 ci-install: tangle
+	cask install
