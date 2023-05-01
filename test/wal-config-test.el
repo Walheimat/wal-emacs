@@ -156,7 +156,7 @@
 (ert-deftest test-wal-tangle-config-prompt ()
   (with-mock ((wal-tangle-do-prompt . #'always)
               (y-or-n-p . #'always)
-              (wal-tangle-config . #'wal-rt))
+              (wal-prelude-tangle-config . #'wal-rt))
 
     (let ((wal-tangle-do-prompt t))
 
@@ -165,20 +165,20 @@
 (ert-deftest test-wal-tangle-config-prompt--after ()
   (with-mock ((wal-tangle-do-prompt . #'always)
               (y-or-n-p . #'ignore)
-              (wal-tangle-config . #'wal-rt)
+              (wal-prelude-tangle-config . #'wal-rt)
               message)
 
     (let ((wal-tangle-do-prompt t))
 
       (wal-tangle-config-prompt)
 
-      (was-called-with message "To tangle, call `wal-tangle-config'")
+      (was-called-with message "To tangle, call `wal-prelude-tangle-config'")
       (should-not wal-tangle-do-prompt)
 
       (wal-clear-mocks)
       (wal-tangle-config-prompt)
 
-      (was-called-with message "Config changed. To tangle, call `wal-tangle-config'"))))
+      (was-called-with message "Config changed. To tangle, call `wal-prelude-tangle-config'"))))
 
 (ert-deftest test-wal-config-root ()
   (defvar wal-emacs-config-default-path)
@@ -194,7 +194,7 @@
   (defvar wal-emacs-config-lib-path)
   (let ((wal-emacs-config-lib-path nil))
 
-    (with-mock (consult-org-heading (wal-directory-files . (lambda (_) '("/tmp/test.org" "/tmp/test-2.org"))))
+    (with-mock (consult-org-heading (directory-files . (lambda (&rest _) '("." ".." "/tmp/test.org" "/tmp/test-2.org"))))
 
       (wal-config-consult-org-heading)
 
@@ -263,7 +263,7 @@
     (make-empty-file other-file)
 
     (condition-case nil
-        (with-mock ((wal-directory-files . (lambda (_) (list file))))
+        (with-mock ((directory-files . (lambda (&rest _) (list "." ".." file))))
 
           (should (equal (list file) (wal-package-files)))
 

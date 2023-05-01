@@ -185,12 +185,11 @@ Example for advising =:around=.
 
 (declare-function posframe-delete "ext:posframe.el")
 (declare-function wal-async-process "wal-func.el")
-(declare-function wal-directory-files "init.el")
 (declare-function wal-flycheck-file "wal-fix.el")
 (declare-function wal-flycheck-file--erase "wal-fix.el")
 (declare-function wal-flycheck-file--get-buffer "wal-fix.el")
 (declare-function wal-matches-in-string "wal-func.el")
-(declare-function wal-tangle-config "wal-prelude.el")
+(declare-function wal-prelude-tangle-config "wal-prelude.el")
 
 (defvar wal-emacs-config-default-path)
 (defvar wal-emacs-config-build-path)
@@ -414,18 +413,19 @@ This returns the tag and its annotation as propertized strings."
 #+BEGIN_SRC emacs-lisp
 (defun wal-tangle-config-prompt ()
   "Prompt the user to tangle the config.
+
 If the answer is no, there will be no additional prompt."
   (interactive)
 
   (let ((help-form (message "This will update your packages. Restart Emacs afterwards.")))
 
     (if (and wal-tangle-do-prompt (y-or-n-p "Config changed, want to tangle? "))
-        (wal-tangle-config)
+        (wal-prelude-tangle-config)
       (if wal-tangle-do-prompt
           (progn
             (setq-local wal-tangle-do-prompt nil)
-            (message "To tangle, call `wal-tangle-config'"))
-        (message "Config changed. To tangle, call `wal-tangle-config'")))))
+            (message "To tangle, call `wal-prelude-tangle-config'"))
+        (message "Config changed. To tangle, call `wal-prelude-tangle-config'")))))
 #+END_SRC
 
 ** The Config Itself
@@ -443,7 +443,7 @@ If the answer is no, there will be no additional prompt."
 
   (defvar wal-emacs-config-lib-path)
 
-  (let ((libs (wal-directory-files wal-emacs-config-lib-path)))
+  (let ((libs (nthcdr 2 (directory-files wal-emacs-config-lib-path t))))
 
     (consult-org-heading nil libs)))
 
@@ -556,7 +556,7 @@ name are deleted beforehand."
 
 (defun wal-package-files ()
   "Get the package files."
-  (let* ((package-files (wal-directory-files wal-emacs-config-build-path))
+  (let* ((package-files (nthcdr 2 (directory-files wal-emacs-config-build-path t)))
          (el-files (seq-filter
                     (lambda (it)
                       (string-equal (file-name-extension it)

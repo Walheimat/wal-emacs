@@ -8,7 +8,6 @@
 
 (defvar wal-emacs-config-build-path)
 (declare-function wal-package-files "ext:wal-config.el")
-(declare-function wal-directory-files "ext:wal-prelude.el")
 
 (add-to-list 'load-path wal-emacs-config-build-path)
 

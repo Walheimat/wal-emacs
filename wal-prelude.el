@@ -59,20 +59,6 @@ This variable will be set when calling `wal-prelude-bootstrap'")
 
 This variable will be set when calling `wal-prelude-bootstrap'.")
 
-;;;; Utility:
-
-(defun wal-find-or-create-directory (dir)
-  "Find (or create) directory DIR.
-
-Returns the path to the directory or nil (if created)."
-  (if (file-directory-p dir)
-      dir
-    (make-directory dir)))
-
-(defun wal-directory-files (directory)
-  "Get all non-dot-directory files in DIRECTORY."
-  (nthcdr 2 (directory-files directory t)))
-
 ;;;; Init file setup:
 
 (defconst wal-prelude--init-marker ";; wal-prelude-bootstrap"
@@ -144,7 +130,7 @@ Files are looked up relative to SOURCE-DIR."
 
 ;;;; Entry-points:
 
-(defun wal-tangle-config ()
+(defun wal-prelude-tangle-config ()
   "Tangle the configuration's libraries.
 
 Note that `message' is silenced during tangling."
@@ -155,7 +141,7 @@ Note that `message' is silenced during tangling."
   (defvar org-confirm-babel-evaluate)
 
   (let ((org-confirm-babel-evaluate nil)
-        (sources (wal-directory-files wal-emacs-config-lib-path)))
+        (sources (nthcdr 2 (directory-files wal-emacs-config-lib-path t))))
 
     (advice-add #'message :override #'ignore)
 
@@ -176,8 +162,7 @@ Unless NO-LOAD is t, this will load the `wal' package.
 If COLD-BOOT is t, a temp folder will be used as a
 `package-user-dir' to test the behavior of a cold boot."
   (let* ((lib-dir (expand-file-name "lib" source-dir))
-         (build-dir (expand-file-name "build" source-dir))
-         (created-dir (wal-find-or-create-directory build-dir)))
+         (build-dir (expand-file-name "build" source-dir)))
 
     (message "Boostrapping config from '%s'" source-dir)
 
@@ -186,8 +171,10 @@ If COLD-BOOT is t, a temp folder will be used as a
     (setq wal-emacs-config-lib-path lib-dir)
     (setq wal-emacs-config-build-path build-dir)
 
-    (unless created-dir
-      (wal-tangle-config))
+    (if (file-directory-p build-dir)
+        (message "Found build directory, will not tangle")
+      (make-directory build-dir)
+      (wal-prelude-tangle-config))
 
     (when cold-boot
       (require 'cl-macs)
@@ -198,7 +185,8 @@ If COLD-BOOT is t, a temp folder will be used as a
 
       (message "Cold-boot using '%s'" package-user-dir))
 
-    (unless no-load
+    (if no-load
+        (message "Not loading configuration")
       (wal-prelude--load-config)
 
       (when wal-prelude-init-error
