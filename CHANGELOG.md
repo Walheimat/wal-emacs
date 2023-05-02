@@ -5,13 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Command `wal-org-capture-switch-to-project-tasks` is now bound in
+  `project-switch-commands` to `t`.
+- Local variable `wal-project-parent-project` used in
+  `wal-org-capture--find-project-tasks-heading`.
+
+### Changed
+
+- Function `wal-org-capture--find-project-tasks-heading` now gets the
+  buffer-local heading as well buffer-local
+  `wal-project-parent-project`.
+
 ## [v2.0.0]
 
 Crank action.
 
 ### Added
 
-- Command `wal/config-consult-org-heading` to find a heading in any of
+- Command `wal-config-consult-org-heading` to find a heading in any of
   the library files (see below).
 
 ### Breaking Changes

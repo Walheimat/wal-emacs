@@ -34,6 +34,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (defvar text-scale-mode-step)
 (defvar visual-fill-column-width)
 (defvar visual-fill-column-center-text)
+(defvar wal-project-parent-project)
 (defvar wal-triple-minus-map)
 
 ;;;; Customization:
@@ -79,7 +80,7 @@ This calls `org-content' interactively."
 
 #+BEGIN_SRC emacs-lisp
 (use-package org
-  :commands (org-add-note)
+  :commands (org-add-note org-find-exact-heading-in-directory)
 
   :hook (org-mode . auto-fill-mode)
 
@@ -597,7 +598,10 @@ Capture templates.
 
   (if-let* ((project (project-current))
             (root (project-root project))
-            (marker (org-find-exact-heading-in-directory wal-org-capture-tasks-heading root)))
+            (root-buffer (find-file-noselect root))
+            (heading (buffer-local-value 'wal-org-capture-tasks-heading root-buffer))
+            (dir (or (buffer-local-value 'wal-project-parent-project root-buffer) root))
+            (marker (org-find-exact-heading-in-directory heading dir)))
       marker
     (user-error "Couldn't find heading '%s'" wal-org-capture-tasks-heading)))
 

@@ -127,6 +127,13 @@
                 set-buffer
                 switch-to-buffer
                 goto-char
+                find-file-noselect
+                (buffer-local-value . (lambda (it _)
+                                        (message "it is %s" it)
+                                        (pcase it
+                                          ('wal-org-capture-tasks-heading heading)
+                                          ('wal-project-parent-project nil)
+                                          (_ nil))))
                 (project-current . #'always)
                 (project-root . #'always)
                 (marker-buffer . (lambda (_) 'buffer))
