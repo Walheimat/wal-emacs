@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Function `wal-org-capture--find-project-tasks-heading` now gets the
   buffer-local heading as well buffer-local
   `wal-project-parent-project`.
+- Package `diff-hl` was moved to `wal-vc`.
+
+### Fixed
+
+- Package `diff-hl` is now loaded after `magit` again to avoid the
+  hooks being possibly overridden.
 
 ## [v2.0.0]
 
