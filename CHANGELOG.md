@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `diff-hl` is now loaded after `magit` again to avoid the
   hooks being possibly overridden.
 
+### Removed
+
+- Templates in `templates/` directory (data files were moved, see
+  above).
+
 ## [v2.0.0]
 
 Crank action.
