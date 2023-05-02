@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   buffer-local heading as well buffer-local
   `wal-project-parent-project`.
 - Package `diff-hl` was moved to `wal-vc`.
+- Data files `init.eld` and `tempel.eld` now live in `data/`
+  directory.
 
 ### Fixed
 

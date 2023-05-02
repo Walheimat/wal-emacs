@@ -79,7 +79,7 @@ Files are looked up relative to SOURCE-DIR."
          (hashed (base64-encode-string description))
          (init-buffer (find-file-noselect init-file))
          (marker (concat "\n" wal-prelude--init-marker ":" hashed "\n"))
-         (template (expand-file-name "templates/init.eld" source-dir))
+         (template (expand-file-name "data/init.eld" source-dir))
          (template-buffer (find-file-noselect template))
          (ready nil))
 
