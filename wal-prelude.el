@@ -72,7 +72,7 @@ version. It is otherwise (re-)created.
 
 Files are looked up relative to SOURCE-DIR."
   (unless (file-exists-p init-file)
-    (user-error "Init file %s doesn't exist" init-file))
+    (user-error "Init file '%s' doesn't exist" init-file))
 
   (let* ((cmd (format "cd %s && git describe --abbrev=0" source-dir))
          (description (string-trim (shell-command-to-string cmd)))
@@ -150,7 +150,7 @@ Note that `message' is silenced during tangling."
 
     (advice-remove #'message #'ignore)
 
-    (message "All library files tangled")))
+    (message "All library files in '%s' tangled" wal-emacs-config-lib-path)))
 
 (defun wal-prelude-bootstrap (source-dir &optional no-load cold-boot)
   "Bootstrap the configuration in SOURCE-DIR.
@@ -164,16 +164,17 @@ If COLD-BOOT is t, a temp folder will be used as a
   (let* ((lib-dir (expand-file-name "lib" source-dir))
          (build-dir (expand-file-name "build" source-dir)))
 
-    (message "Boostrapping config from '%s'" source-dir)
+    (message "Bootstrapping config from '%s'" source-dir)
 
     ;; These variables are also used in `wal' package.
     (setq wal-emacs-config-default-path source-dir)
     (setq wal-emacs-config-lib-path lib-dir)
     (setq wal-emacs-config-build-path build-dir)
 
-    (if (file-directory-p build-dir)
-        (message "Found build directory, will not tangle")
-      (make-directory build-dir)
+    (if (and (file-directory-p build-dir)
+             (not (directory-empty-p build-dir)))
+        (message "Found non-empty build directory '%s', will not tangle" build-dir)
+      (make-directory build-dir t)
       (wal-prelude-tangle-config))
 
     (when cold-boot
@@ -186,7 +187,7 @@ If COLD-BOOT is t, a temp folder will be used as a
       (message "Cold-boot using '%s'" package-user-dir))
 
     (if no-load
-        (message "Not loading configuration")
+        (message "Will not load configuration")
       (wal-prelude--load-config)
 
       (when wal-prelude-init-error
