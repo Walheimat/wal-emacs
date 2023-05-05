@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command `wal-config-root` was replaced with
   `wal-config-switch-project` to make use of
   `project-switch-commands`.
+- User-prefixed `k` quick-completes during `vertico` and `corfu`
+  completion.
 
 ### Fixed
 
