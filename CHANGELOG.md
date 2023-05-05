@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `project-switch-commands` to `t`.
 - Local variable `wal-project-parent-project` used in
   `wal-org-capture--find-project-tasks-heading`.
+- Command `wal-project-switch-to-parent-project` using local
+  `wal-project-parent-project`.
 
 ### Changed
 

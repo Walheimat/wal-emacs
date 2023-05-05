@@ -8,6 +8,19 @@
 
 (require 'wal-workspace nil t)
 
+(ert-deftest test-wal-project-switch-toparent-project ()
+  (with-mock (project-switch-project)
+    (let ((wal-project-parent-project "/tmp/parent"))
+
+      (wal-project-switch-to-parent-project)
+
+      (was-called-with project-switch-project (list "/tmp/parent"))
+
+      (setq wal-project-parent-project nil)
+      (wal-clear-mocks)
+
+      (should-error (wal-project-switch-to-parent-project) :type 'user-error))))
+
 (ert-deftest test-wal-with-project-bounded-compilation ()
   (with-mock ((project-current . #'ignore)
               (project-buffers . #'buffer-list))

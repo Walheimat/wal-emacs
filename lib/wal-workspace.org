@@ -56,6 +56,14 @@ Built-in project management.
 (defvar-local wal-project-parent-project nil
   "The current project's parent project.")
 
+(defun wal-project-switch-to-parent-project ()
+  "Switch to the current project's parent project."
+  (interactive)
+
+  (if-let ((parent wal-project-parent-project))
+      (project-switch-project parent)
+    (user-error "You need to set `wal-project-parent-project'")))
+
 (defvar wal-project-commands nil
   "Hash maps for compilation commands.")
 
@@ -242,6 +250,10 @@ set to filter by project buffers."
 
   :bind-keymap
   ("C-c p" . wal-project-prefix-map)
+
+  :bind
+  (:map wal-project-prefix-map
+   ("C-p" . wal-project-switch-to-parent-project))
 
   :wal-bind
   (("h" . project-find-file)))
