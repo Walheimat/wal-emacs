@@ -180,15 +180,15 @@
 
       (was-called-with message "Config changed. To tangle, call `wal-prelude-tangle-config'"))))
 
-(ert-deftest test-wal-config-root ()
+(ert-deftest test-wal-config-switch-project ()
   (defvar wal-emacs-config-default-path)
   (let ((wal-emacs-config-default-path "/tmp/config"))
 
-    (with-mock (dired)
+    (with-mock (project-switch-project)
 
-      (wal-config-root)
+      (wal-config-switch-project)
 
-      (was-called-with dired (list "/tmp/config")))))
+      (was-called-with project-switch-project (list "/tmp/config")))))
 
 (ert-deftest test-wal-config-consult-org-heading ()
   (defvar wal-emacs-config-lib-path)

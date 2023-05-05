@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `diff-hl` was moved to `wal-vc`.
 - Data files `init.eld` and `tempel.eld` now live in `data/`
   directory.
+- Command `wal-config-root` was replaced with
+  `wal-config-switch-project` to make use of
+  `project-switch-commands`.
 
 ### Fixed
 
