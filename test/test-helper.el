@@ -13,18 +13,21 @@
   (cond
    ((getenv "CI")
     (undercover "build/*.el"
+                "wal-prelude.el"
                 (:report-format 'lcov)
                 (:send-report nil)))
    ((getenv "COVERAGE_WITH_JSON")
     (setq undercover-force-coverage t
           undercover--merge-report nil)
     (undercover "build/*.el"
+                "wal-prelude.el"
                 (:report-format 'simplecov)
                 (:report-file "./coverage/.resultset.json")
                 (:send-report nil)))
    (t
     (setq undercover-force-coverage t)
-    (undercover "build/*.el"
+    (undercover "build/*el"
+                "wal-prelude.el"
                 (:report-format 'text)
                 (:report-file "./coverage/results.txt")
                 (:send-report nil)))))
@@ -172,8 +175,9 @@ The associated file buffer is also killed."
 
     (message "Setting source dir to %s, build dir to %s" source-dir build-dir)
 
-    (when (getenv "CI")
-      (add-to-list 'load-path build-dir))
+    (add-to-list 'load-path source-dir)
+    (add-to-list 'load-path build-dir)
+
     (setq wal-emacs-config-default-path source-dir
           wal-emacs-config-build-path build-dir)))
 

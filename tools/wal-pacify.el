@@ -6,15 +6,11 @@
 
 ;;; Code:
 
-(defvar wal-emacs-config-build-path)
-(declare-function wal-package-files "ext:wal-config.el")
-
-(add-to-list 'load-path wal-emacs-config-build-path)
-
-(require 'wal-config nil t)
-
 (package-initialize)
 (require 'flycheck)
+
+(defvar wal-emacs-config-build-path)
+(declare-function wal-prelude-package-files "ext:wal-prelude.el")
 
 ;;; Functionality:
 
@@ -50,7 +46,7 @@
 
 (message "Checking package files")
 
-(dolist (it (wal-package-files))
+(dolist (it (wal-prelude-package-files))
   (wal-pacify--check-file it))
 
 (sit-for 5)

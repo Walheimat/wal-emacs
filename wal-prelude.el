@@ -61,6 +61,17 @@ This variable will be set when calling `wal-prelude-bootstrap'.")
 
 ;;;; Init file setup:
 
+(defun wal-prelude-package-files ()
+  "Get the package files."
+  (let* ((package-files (nthcdr 2 (directory-files wal-emacs-config-build-path t)))
+         (el-files (seq-filter
+                    (lambda (it)
+                      (string-equal (file-name-extension it)
+                                    "el"))
+                    package-files)))
+
+    el-files))
+
 (defconst wal-prelude--init-marker ";; wal-prelude-bootstrap"
   "The marker used to insert and delete in the user's init file.")
 

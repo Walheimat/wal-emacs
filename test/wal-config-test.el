@@ -252,31 +252,12 @@
 
       (was-called-with wal-async-process '("cd /tmp && test" success failure t)))))
 
-(ert-deftest test-wal-package-files ()
-  (let* ((dir "/tmp/package")
-         (file "/tmp/package/test.el")
-         (other-file "/tmp/package/test.txt")
-         (clean (lambda () (delete-directory dir t))))
-
-    (make-directory dir)
-    (make-empty-file file)
-    (make-empty-file other-file)
-
-    (condition-case nil
-        (with-mock ((directory-files . (lambda (&rest _) (list "." ".." file))))
-
-          (should (equal (list file) (wal-package-files)))
-
-          (funcall clean))
-      (error
-       (funcall clean)))))
-
 (ert-deftest test-wal-checkdoc-config-packages ()
   (defvar wal-emacs-config-build-path)
   (let* ((in '("/tmp/one" "/tmp/two")))
 
     (with-mock (require
-                (wal-package-files . (lambda () in))
+                (wal-prelude-package-files . (lambda () in))
                 checkdoc-file)
 
       (wal-checkdoc-config-packages)
