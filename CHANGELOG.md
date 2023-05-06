@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v2.0.1]
+
+Pleasure island.
 
 ### Added
 
@@ -15,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal-org-capture--find-project-tasks-heading`.
 - Command `wal-project-switch-to-parent-project` using local
   `wal-project-parent-project`.
+- `wal-prelude` now has a test suite and full coverage.
+- `js-mode` and `java-mode` now enable `subword-mode`.
 
 ### Changed
 
