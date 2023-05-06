@@ -7,34 +7,12 @@
 ;;; Code:
 
 (require 'ert-x)
-(require 'compat)
-
-(when (require 'undercover nil t)
-  (cond
-   ((getenv "CI")
-    (undercover "build/*.el"
-                "wal-prelude.el"
-                (:report-format 'lcov)
-                (:send-report nil)))
-   ((getenv "COVERAGE_WITH_JSON")
-    (setq undercover-force-coverage t
-          undercover--merge-report nil)
-    (undercover "build/*.el"
-                "wal-prelude.el"
-                (:report-format 'simplecov)
-                (:report-file "./coverage/.resultset.json")
-                (:send-report nil)))
-   (t
-    (setq undercover-force-coverage t)
-    (undercover "build/*el"
-                "wal-prelude.el"
-                (:report-format 'text)
-                (:report-file "./coverage/results.txt")
-                (:send-report nil)))))
+(require 'compat nil t)
+(require 'undercover nil t)
 
 (defvar wal-booting nil)
 
-(defun wal-cold-start-p ()
+(defun wal-test-helper--cold-p ()
   "Check if we're loading this file from a cold start."
   (not (featurep 'use-package)))
 
@@ -155,30 +133,75 @@ The associated file buffer is also killed."
              (progn ,@body)
            (when (get-buffer ,filename)
              (kill-buffer ,filename)
-             (message "Killed buffer '%s'." ,filename))
+             (message "Killed buffer '%s'" ,filename))
 
            (delete-file ,tmp-file)
-           (message "Deleted file '%s'." ,tmp-file))))))
+           (message "Deleted file '%s'" ,tmp-file))))))
 
-(when (wal-cold-start-p)
-  (message "Stumping `use-package'.")
+;; Entrypoints:
 
-  (defmacro use-package (package-name &rest _args)
-    "Message that PACKAGE-NAME would have been loaded."
-    `(message "Would have loaded %s" ',package-name))
+(defun wal-test-helper--undercover-setup ()
+  "Set up `undercover'."
+  (when (featurep 'undercover)
+    (message "Setting up `undercover'")
 
+    (cond
+     ((getenv "CI")
+      (undercover "build/*.el"
+                  "wal-prelude.el"
+                  (:report-format 'lcov)
+                  (:send-report nil)))
+     ((getenv "COVERAGE_WITH_JSON")
+      (setq undercover-force-coverage t
+            undercover--merge-report nil)
+      (undercover "build/*.el"
+                  "wal-prelude.el"
+                  (:report-format 'simplecov)
+                  (:report-file "./coverage/.resultset.json")
+                  (:send-report nil)))
+     (t
+      (setq undercover-force-coverage t)
+      (undercover "build/*el"
+                  "wal-prelude.el"
+                  (:report-format 'text)
+                  (:report-file "./coverage/results.txt")
+                  (:send-report nil))))))
+
+(defun wal-test-helper--path-setup ()
+  "Set up paths."
   (defvar wal-emacs-config-default-path)
   (defvar wal-emacs-config-build-path)
 
-  (let* ((source-dir (or (getenv "GITHUB_WORKSPACE") default-directory))
+  (let* ((source-dir (expand-file-name (or (getenv "GITHUB_WORKSPACE")
+                                           default-directory)))
          (build-dir (expand-file-name "build" source-dir)))
 
-    (message "Setting source dir to %s, build dir to %s" source-dir build-dir)
+    (message "Setting `wal-emacs-config-default-path' to %s" source-dir)
 
     (add-to-list 'load-path source-dir)
     (add-to-list 'load-path build-dir)
 
     (setq wal-emacs-config-default-path source-dir
           wal-emacs-config-build-path build-dir)))
+
+(defun wal-test-helper--maybe-stump-use-package ()
+  "Maybe stump `use-package'."
+
+  (message "Stumping `use-package'")
+
+  (defmacro use-package (package-name &rest _args)
+    "Message that PACKAGE-NAME would have been loaded."
+    `(message "Would have loaded %s" ',package-name)))
+
+(defun wal-test-helper--setup ()
+  "Set up everything."
+  (when (wal-test-helper--cold-p)
+    (message "Setting up test helper")
+
+    (wal-test-helper--path-setup)
+    (wal-test-helper--undercover-setup)
+    (wal-test-helper--maybe-stump-use-package)))
+
+(wal-test-helper--setup)
 
 ;;; test-helper.el ends here
