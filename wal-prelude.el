@@ -92,23 +92,25 @@ Files are looked up relative to SOURCE-DIR."
          (marker (concat "\n" wal-prelude--init-marker ":" hashed "\n"))
          (template (expand-file-name "data/init.eld" source-dir))
          (template-buffer (find-file-noselect template))
+         (template-contents (with-current-buffer template-buffer
+                              (buffer-string)))
          (ready nil))
 
     (with-current-buffer init-buffer
       (if (string-search hashed (buffer-string))
           (progn
-            (setq ready t)
-            (message "Bootstrap in '%s' is up-to-date" init-file))
+            (message "Bootstrap in '%s' is up-to-date" init-file)
+            (setq ready t))
         (when-let* ((start (string-search wal-prelude--init-marker (buffer-string))))
           (message "Deleting existing bootstrap in '%s'" init-file)
           (delete-region start (point-max))
           (save-buffer))))
+    (kill-buffer init-buffer)
 
     (unless ready
       (message "Setting up bootstrap in '%s'" init-file)
-      (with-current-buffer template-buffer
-        (append-to-file marker nil init-file)
-        (append-to-file (buffer-string) nil init-file)))))
+      (append-to-file marker nil init-file)
+      (append-to-file template-contents nil init-file))))
 
 (defvar wal-prelude-init-error nil
   "Set to the error message if initialization failed.")
@@ -139,6 +141,27 @@ Files are looked up relative to SOURCE-DIR."
 
     (setq wal-booting nil)))
 
+(defun wal-prelude--set-paths (source-dir)
+  "Set all directories based on SOURCE-DIR."
+   (let* ((lib-dir (expand-file-name "lib" source-dir))
+          (build-dir (expand-file-name "build" source-dir)))
+
+     ;; These variables are also used in `wal' package.
+     (setq wal-emacs-config-default-path source-dir
+           wal-emacs-config-lib-path lib-dir
+           wal-emacs-config-build-path build-dir)))
+
+(defun wal-prelude--configure-cold-boot ()
+  "Configure cold-booting."
+  (require 'cl-macs)
+  (require 'seq)
+  (require 'scroll-bar)
+
+  (let ((temp-dir (make-temp-file nil t)))
+
+    (setq package-user-dir temp-dir)
+    (message "Cold-boot using '%s'" temp-dir)))
+
 ;;;; Entry-points:
 
 (defun wal-prelude-tangle-config ()
@@ -154,12 +177,12 @@ Note that `message' is silenced during tangling."
   (let ((org-confirm-babel-evaluate nil)
         (sources (nthcdr 2 (directory-files wal-emacs-config-lib-path t))))
 
-    (advice-add #'message :override #'ignore)
+    (advice-add 'message :override #'ignore)
 
     (dolist (it sources)
       (org-babel-tangle-file (expand-file-name it wal-emacs-config-default-path)))
 
-    (advice-remove #'message #'ignore)
+    (advice-remove 'message #'ignore)
 
     (message "All library files in '%s' tangled" wal-emacs-config-lib-path)))
 
@@ -172,42 +195,30 @@ Unless NO-LOAD is t, this will load the `wal' package.
 
 If COLD-BOOT is t, a temp folder will be used as a
 `package-user-dir' to test the behavior of a cold boot."
-  (let* ((lib-dir (expand-file-name "lib" source-dir))
-         (build-dir (expand-file-name "build" source-dir)))
+  (message "Bootstrapping config from '%s'" source-dir)
 
-    (message "Bootstrapping config from '%s'" source-dir)
+  (wal-prelude--set-paths source-dir)
 
-    ;; These variables are also used in `wal' package.
-    (setq wal-emacs-config-default-path source-dir)
-    (setq wal-emacs-config-lib-path lib-dir)
-    (setq wal-emacs-config-build-path build-dir)
+  (if (and (file-directory-p wal-emacs-config-build-path)
+           (not (directory-empty-p wal-emacs-config-build-path)))
+      (message "Found non-empty build directory '%s', will not tangle" wal-emacs-config-build-path)
+    (make-directory wal-emacs-config-build-path t)
+    (wal-prelude-tangle-config))
 
-    (if (and (file-directory-p build-dir)
-             (not (directory-empty-p build-dir)))
-        (message "Found non-empty build directory '%s', will not tangle" build-dir)
-      (make-directory build-dir t)
-      (wal-prelude-tangle-config))
+  (when cold-boot
+    (wal-prelude--configure-cold-boot))
 
-    (when cold-boot
-      (require 'cl-macs)
-      (require 'seq)
-      (require 'scroll-bar)
+  (if no-load
+      (message "Will not load configuration")
+    (wal-prelude--load-config)
 
-      (setq package-user-dir (make-temp-file nil t))
-
-      (message "Cold-boot using '%s'" package-user-dir))
-
-    (if no-load
-        (message "Will not load configuration")
-      (wal-prelude--load-config)
-
-      (when wal-prelude-init-error
-        (if cold-boot
-            (kill-emacs 1)
-          (delay-warning
-           'wal
-           (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal-prelude-init-error)
-           :error))))))
+    (when wal-prelude-init-error
+      (if cold-boot
+          (kill-emacs 1)
+        (delay-warning
+         'wal
+         (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal-prelude-init-error)
+         :error)))))
 
 (provide 'wal-prelude)
 

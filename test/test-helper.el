@@ -171,10 +171,12 @@ The associated file buffer is also killed."
   "Set up paths."
   (defvar wal-emacs-config-default-path)
   (defvar wal-emacs-config-build-path)
+  (defvar wal-emacs-config-lib-path)
 
   (let* ((source-dir (expand-file-name (or (getenv "GITHUB_WORKSPACE")
                                            default-directory)))
-         (build-dir (expand-file-name "build" source-dir)))
+         (build-dir (expand-file-name "build" source-dir))
+         (lib-dir (expand-file-name "lib" source-dir)))
 
     (message "Setting `wal-emacs-config-default-path' to %s" source-dir)
 
@@ -182,7 +184,8 @@ The associated file buffer is also killed."
     (add-to-list 'load-path build-dir)
 
     (setq wal-emacs-config-default-path source-dir
-          wal-emacs-config-build-path build-dir)))
+          wal-emacs-config-build-path build-dir
+          wal-emacs-config-lib-path lib-dir)))
 
 (defun wal-test-helper--maybe-stump-use-package ()
   "Maybe stump `use-package'."
