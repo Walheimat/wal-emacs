@@ -19,7 +19,7 @@ cold-boot:
 
 # Check the package files with flycheck
 pacify:
-	$(WITH_PRELUDE) $(BOOTSTRAP) -l ./tools/wal-pacify.el
+	$(WITH_PRELUDE) $(BOOTSTRAP) -l ./tools/wal-pacify.el -f wal-pacify-check
 
 # Remove the build folder
 clean:

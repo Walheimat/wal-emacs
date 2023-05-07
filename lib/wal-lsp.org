@@ -20,11 +20,13 @@ Language servers are awesome. Thanks, Microsoft.
 
 (eval-when-compile
   (require 'dash nil t)
-  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+  (require 'wal-func nil t))
 
 (declare-function dap--completing-read "ext:dap-mode.el")
 (declare-function dap--json-encode "ext:dap-mode.el")
+(declare-function dap-hydra "ext:dap-mode.el")
 (declare-function dap-register-debug-template "ext:dap-mode.el")
+(declare-function lsp-deferred "ext:lsp-mode.el")
 (declare-function hydra-disable "ext:hydra.el")
 (declare-function wal-append "wal-func.el")
 (declare-function wal-dap "wal-lsp.el")
@@ -159,7 +161,9 @@ It can be either a list of strings or a single string."
 
   :delight
   (lsp-mode " lsp")
-  (lsp-lens-mode " lns"))
+  (lsp-lens-mode " lns")
+
+  :functions (lsp-deferred))
 #+END_SRC
 
 ** lsp-ui
@@ -252,7 +256,9 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
   :general
   (ambassador :keymaps 'lsp-mode-map "b" '(dap-hydra :wk "dap"))
 
-  :delight " dap")
+  :delight " dap"
+
+  :functions (dap-hydra))
 #+END_SRC
 
 ** consult-lsp

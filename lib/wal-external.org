@@ -17,9 +17,12 @@
 ;;; Code:
 
 (eval-when-compile
-  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+  (require 'wal-func nil t))
 
 (declare-function junk--pack-p "wal-func.el")
+(declare-function package-built-in-p "package.el")
+(declare-function package-read-all-archive-contents "package.el")
+(declare-function package--user-selected-p "package.el")
 (declare-function wal-prefix-user-key "wal-func.el")
 
 (defgroup wal-external nil
@@ -221,6 +224,8 @@ These are built-in packages and expansion pack packages.
 NAME is the package name, ARGS the ensure keywords."
   (declare-function use-package-as-symbol "ext:use-package.el")
   (declare-function use-package-pin-package "ext:use-package.el")
+
+  (defvar package-archive-contents)
 
   (dolist (ensure args)
     (let ((package

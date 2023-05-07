@@ -196,7 +196,7 @@ They are:
 ;;; Code:
 
 (eval-when-compile
-  (require 'wal-func (expand-file-name "wal-func.el" ".")))
+  (require 'wal-func nil t))
 
 (defvar transient-current-command)
 
@@ -330,7 +330,9 @@ All ARGS are passed to both definers."
   :demand t
 
   :config
-  (seq-do #'wal-general-create-definer wal-general-leaders))
+  (seq-do #'wal-general-create-definer wal-general-leaders)
+
+  :functions (general-define-key))
 #+END_SRC
 
 ** transient
@@ -402,6 +404,8 @@ USER-KEY and LEADER can be used to prefix the key."
               (key key)
               (t ""))))
     `(with-eval-after-load 'which-key
+       (declare-function which-key-add-key-based-replacements "ext:which-key.el")
+
        ,(if condition
             `(when ,condition
                (which-key-add-key-based-replacements ,key ,description))
@@ -428,7 +432,9 @@ USER-KEY and LEADER can be used to prefix the key."
 
   (which-key-show-docstrings t)
   (which-key-preserve-window-configuration t)
-  (which-key-show-early-on-C-h t))
+  (which-key-show-early-on-C-h t)
+
+  :functions (which-key-mode))
 #+END_SRC
 
 * Footer

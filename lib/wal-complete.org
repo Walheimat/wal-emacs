@@ -21,6 +21,8 @@ Complete commands and code.
 (eval-when-compile
   (require 'transient nil t))
 
+(declare-function consult-line "ext:consult.el")
+(declare-function consult-org-agenda "ext:consult.el")
 (declare-function org-clock-in "ext:org-clock.el")
 (declare-function org-up-heading-safe "ext:org.el")
 (declare-function wal-append "wal-func.el")
@@ -92,7 +94,9 @@ This a list of (DELAY PREFIX-LENGTH)."
 
   :wal-bind
   (:map corfu-map
-   ("u" . corfu-quick-complete)))
+   ("u" . corfu-quick-complete))
+
+  :defines (corfu-map))
 #+END_SRC
 
 ** corfu-history
@@ -112,7 +116,10 @@ This a list of (DELAY PREFIX-LENGTH)."
   (corfu-history-mode)
 
   :custom
-  (corfu-history-length 200))
+  (corfu-history-length 200)
+
+  :defines (corfu-map)
+  :functions (corfu-history-mode))
 #+END_SRC
 
 ** corfu-doc
@@ -162,7 +169,10 @@ Provide global option narrowing using the =vertico= family of products.
   (vertico-multiform-commands '((consult-ripgrep buffer)
                                 (wal-consult-line buffer)
                                 (consult-mark buffer indexed)
-                                (consult-global-mark buffer indexed))))
+                                (consult-global-mark buffer indexed)))
+
+  :defines (vertico-map)
+  :functions (vertico-mode vertico-multiform-mode))
 #+END_SRC
 
 ** vertico-directory
@@ -271,7 +281,9 @@ completion actions.
 
   :bind
   (:map minibuffer-local-map
-   ("C-," . marginalia-cycle)))
+   ("C-," . marginalia-cycle))
+
+  :functions (marginalia-mode))
 #+END_SRC
 
 ** embark
@@ -351,6 +363,8 @@ Do not ignore hidden files."
 
   (declare-function consult--grep "ext:consult.el")
   (declare-function consult--ripgrep-builder "ext:consult.el")
+
+  (defvar consult-ripgrep-args)
 
   (let ((consult-ripgrep-args
          (concat (substring consult-ripgrep-args 0 -1) "--no-ignore .")))

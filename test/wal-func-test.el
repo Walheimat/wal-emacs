@@ -357,7 +357,7 @@
   (match-expansion
    (parallel some-fun other-fun)
    `(defun some-fun||other-fun (&optional arg)
-      "Call `some-fun' or `other-fun' depending on prefix argument.\nNo argument means: call the prior. Numeric prefix `0' means: call the latter.\n\nFor all other prefix values: numeric prefixes call the latter, `universal-argument' prefixes call the prior."
+      "Call `some-fun' or `other-fun' depending on prefix argument.\nNo argument means: call the prior. Numeric prefix `0' means: call the latter.\n\nFor all other prefix values: numeric prefixes call the latter,\n`universal-argument' prefixes call the prior."
       (interactive "P")
 
       (cond
@@ -376,7 +376,7 @@
   (match-expansion
    (parallel some-fun other-fun :universalize t)
    `(defun some-fun||other-fun (&optional arg)
-      "Call `some-fun' or `other-fun' depending on prefix argument.\nNo argument means: call the prior. Numeric prefix `0' means: call the latter.\n\nFor all other prefix values: numeric prefixes call the latter, `universal-argument' prefixes call the prior.\n\nThis function is universalized."
+      "Call `some-fun' or `other-fun' depending on prefix argument.\nNo argument means: call the prior. Numeric prefix `0' means: call the latter.\n\nFor all other prefix values: numeric prefixes call the latter,\n`universal-argument' prefixes call the prior.\n\nThis function is universalized."
       (interactive "P")
 
       (cond

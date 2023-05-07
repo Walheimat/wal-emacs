@@ -1,64 +1,132 @@
-;;; wal-pacify.el --- Set up checking package files.
+;;; wal-pacify.el --- Check files with `flymake'. -*- lexical-binding: t; -*-
 
 ;;; Commentary:
-
-;; This will just check the packages.
+;;
+;; Checks Lisp files for warnings and errors.
 
 ;;; Code:
 
-(package-initialize)
-(require 'flycheck)
-
-(defvar wal-emacs-config-build-path)
 (declare-function wal-prelude-package-files "ext:wal-prelude.el")
 
-;;; Functionality:
+(require 'warnings)
+(require 'flymake)
 
-(defvar wal-pacify-errors nil)
+(defun wp--get-state (state)
+  "Get the STATE."
+  (when (hash-table-p flymake--state)
+    (gethash state flymake--state)))
 
-(defun wal-pacify--callback ()
-  "Exit with errors."
-  (lambda (_status &optional errors)
-    (when errors
-      (seq-do
-       (lambda (err)
-         (when-let ((file (flycheck-error-filename err))
-                    (line (flycheck-error-line err))
-                    (col (flycheck-error-column err))
-                    (mess (flycheck-error-message err)))
+(defun wp--ready-p ()
+  "Check if the report concluded."
+  (when-let ((b-state (wp--get-state 'elisp-flymake-byte-compile))
+             (d-state (wp--get-state 'elisp-flymake-checkdoc)))
 
-           (add-to-list 'wal-pacify-errors (format "%s %d:%d %s\n" file line col mess))))
-       errors))))
+    (and (flymake--state-reported-p b-state)
+         (flymake--state-reported-p d-state))))
 
-(defun wal-pacify--check-file (file)
-  "Check FILE with flycheck."
-  (with-current-buffer (find-file-noselect file)
-    (let ((checker (flycheck-get-checker-for-buffer)))
+(defun wp--get-diags ()
+  "Get all all state dialogs."
+  (append (flymake--state-diags (wp--get-state 'elisp-flymake-byte-compile))
+          (flymake--state-diags (wp--get-state 'elisp-flymake-checkdoc))))
 
-      (let ((check (flycheck-syntax-check-new
-                    :buffer (current-buffer)
-                    :checker checker
-                    :context nil
-                    :working-directory (flycheck-compute-working-directory checker)))
-            (callback (wal-pacify--callback)))
+(defun wp--get-severity-diags (severity)
+  "Get all dialogs of SEVERITY."
+  (cl-loop for diag in (wp--get-diags)
+           if (eq (flymake--severity (flymake-diagnostic-type diag)) severity)
+           collect (wp--get-info diag)))
 
-        (flycheck-syntax-check-start check callback)))))
+(defvar wp--infos nil)
+(defvar wp--debugs nil)
+(defvar wp--warnings nil)
+(defvar wp--errors nil)
 
-(message "Checking package files")
+(defvar wp--info 0)
+(defvar wp--debug (warning-numeric-level :debug))
+(defvar wp--warning (warning-numeric-level :warning))
+(defvar wp--error (warning-numeric-level :error))
 
-(dolist (it (wal-prelude-package-files))
-  (wal-pacify--check-file it))
+(defun wp--get-info (diag)
+  "Get the relevant info from DIAG."
+  (let ((text (flymake--diag-text diag))
+        (beg (flymake--diag-beg diag))
+        (locus (flymake--diag-locus diag)))
 
-(sit-for 5)
+    (list :file (buffer-file-name locus) :line (line-number-at-pos beg) :text text)))
 
-(flycheck-safe-delete-temporaries)
+(defconst wp--checkers '(elisp-flymake-byte-compile elisp-flymake-checkdoc))
 
-(when wal-pacify-errors
-  (message "Check failed!")
+(defun wp--collect (file)
+  "Collect reports for FILE."
+  (let ((counter 0))
 
-  (dolist (it wal-pacify-errors)
-    (message it))
+    (with-current-buffer (find-file-noselect file)
+      (setq sentence-end-double-space nil)
+      (setq flymake-diagnostic-functions wp--checkers)
 
-  (kill-emacs 1))
+      (flymake-mode)
+      (flymake-start nil)
+
+      (while (and (not (wp--ready-p)) (< counter 100))
+        (setq counter (1+ counter))
+        (sit-for 0.05))
+
+      (unless (wp--ready-p)
+        (error "Waited for five seconds for check to complete"))
+
+      (let ((warnings (wp--get-severity-diags wp--warning))
+            (errors (wp--get-severity-diags wp--error))
+            (debugs (wp--get-severity-diags wp--debug))
+            (infos (wp--get-severity-diags wp--info)))
+
+        (setq wp--warnings (append wp--warnings warnings)
+              wp--errors (append wp--errors errors)
+              wp--debugs (append wp--debugs debugs)
+              wp--infos (append wp--infos infos))))))
+
+(defun wp--format (info)
+  "Format INFO for output."
+  (let ((file (plist-get info :file))
+        (line (plist-get info :line))
+        (text (plist-get info :text)))
+
+    (format "%s:%s: %s" file line text)))
+
+(defun wp-check--get-package-files ()
+  "Get all testable package files."
+  (seq-filter
+   (lambda (it) (not (string-match "movement\\|fix\\|settings" it)))
+   (wal-prelude-package-files)))
+
+(defun wp-check ()
+  "Check all package files."
+  (message "Checking package files with `flymake'")
+
+  (condition-case err
+      (dolist (it (wp-check--get-package-files))
+        (wp--collect it))
+    (err
+     (message "Failed to check all of the packages: %s" (error-message-string err))
+     (kill-emacs 0)))
+
+  (let* ((severe (append wp--errors wp--warnings))
+         (other (append wp--debugs wp--infos)))
+
+    (when other
+      (message "Found %s notes" (length other))
+      (dolist (it other)
+        (message (wp--format it))))
+
+    (when severe
+      (message "Found %s errors" (length severe))
+
+      (dolist (it severe)
+        (message (wp--format it)))
+      (kill-emacs 1))))
+
+(provide 'wal-pacify)
 
 ;;; wal-pacify.el ends here
+
+;; Local Variables:
+;; read-symbol-shorthands: (("wp-" . "wal-pacify-"))
+;; End:
