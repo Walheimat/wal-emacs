@@ -4,6 +4,7 @@ EMACS_INIT_FILE?=$(HOME)/.emacs.d/init.el
 
 WITH_PRELUDE=$(EMACS) --batch -l ./wal-prelude.el
 BOOTSTRAP=--eval "(wal-prelude-bootstrap \"$(WAL_SOURCE_DIR)\" t)"
+TEST_ARGS=
 
 # Run `make V=1 {cmd}` to print commands
 $(V).SILENT:
@@ -44,6 +45,6 @@ cask-install:
 
 # Run tests using cask
 cask-test:
-	cask exec ert-runner
+	cask exec ert-runner $(TEST_ARGS)
 
 ci: tangle cask-install cask-test
