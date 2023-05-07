@@ -199,13 +199,15 @@ The associated file buffer is also killed."
 
 (defun wal-test-helper--report (&rest _)
   "Show the stumped packages."
-  (message
-   "\nStumped the following `use-package' forms:\n%s"
-   wal-test-helper--stumps)
+  (when wal-test-helper--stumps
+    (message
+     "\nStumped the following `use-package' forms:\n%s"
+     wal-test-helper--stumps))
 
-  (message
-   "\nCreated the following temp files:\n%s"
-   wal-test-helper--temp-files))
+  (when wal-test-helper--temp-files
+    (message
+     "\nCreated the following temp files:\n%s"
+     wal-test-helper--temp-files)))
 
 (defun wal-test-helper--setup ()
   "Set up everything."

@@ -12,13 +12,13 @@
 
 (declare-function org-babel-tangle-file "ob-tangle")
 
-(defconst wal-packages '(wal-config
-                         wal-func
-                         wal-external
+(defconst wal-packages '(wal-func
                          wal-key-bindings
-                         wal-settings
-                         wal-look
+                         wal-external
                          wal-fonts
+                         wal-look
+                         wal-settings
+                         wal-config
                          ;; The following packages are optional.
                          wal-emacs
                          wal-edit
@@ -58,6 +58,11 @@ This variable will be set when calling `wal-prelude-bootstrap'")
   "The path to the config's built packages.
 
 This variable will be set when calling `wal-prelude-bootstrap'.")
+
+(defgroup wal nil
+  "Walheimat's configuration."
+  :group 'convenience
+  :prefix "wal-")
 
 ;;;; Init file setup:
 

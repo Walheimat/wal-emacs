@@ -201,7 +201,8 @@
       (was-called-with consult-org-heading (list nil '("/tmp/test.org" "/tmp/test-2.org"))))))
 
 (ert-deftest test-wal-check-coverage--calculate-coverage ()
-  (kill-buffer "*wal-async*")
+  (when (get-buffer "*wal-async*")
+    (kill-buffer "*wal-async*"))
 
   (with-temp-buffer
     (rename-buffer "*wal-async*")
@@ -269,6 +270,18 @@
                                            success
                                            failure
                                            t)))))
+
+(ert-deftest run-test-file--passes-file-as-args ()
+  (defvar wal-emacs-config-default-path)
+  (let ((wal-emacs-config-default-path "/tmp/default"))
+
+    (with-mock (wal-async-process
+                (wal-make--on-success . (lambda (_) 'success))
+                (wal-make--on-failure . (lambda (_) 'failure)))
+
+      (funcall-interactively 'wal-run-test-file "/tmp/tests/test.el")
+
+      (was-called-with wal-async-process '("cd /tmp/default && make cask-test TEST_ARGS=/tmp/tests/test.el && cat coverage/results.txt" success failure t)))))
 
 (ert-deftest run-test-success-handler--checks-coverage ()
   (with-mock ((wal-check-coverage--calculate-coverage . (lambda () "999%"))
