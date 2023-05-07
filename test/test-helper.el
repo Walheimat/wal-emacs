@@ -113,6 +113,8 @@ implementation."
 
     `(progn ,@(mapcar (lambda (it) `(should (,check ,it ,expected))) forms))))
 
+(defvar wal-test-helper--temp-files nil)
+
 (defmacro wal-with-temp-file (filename &rest body)
   "Create and discard a file.
 
@@ -133,10 +135,8 @@ The associated file buffer is also killed."
              (progn ,@body)
            (when (get-buffer ,filename)
              (kill-buffer ,filename)
-             (message "Killed buffer '%s'" ,filename))
-
-           (delete-file ,tmp-file)
-           (message "Deleted file '%s'" ,tmp-file))))))
+             (push ,filename wal-test-helper--temp-files))
+           (delete-file ,tmp-file))))))
 
 ;; Entrypoints:
 
@@ -187,14 +187,25 @@ The associated file buffer is also killed."
           wal-emacs-config-build-path build-dir
           wal-emacs-config-lib-path lib-dir)))
 
-(defun wal-test-helper--maybe-stump-use-package ()
-  "Maybe stump `use-package'."
+(defvar wal-test-helper--stumps nil)
 
+(defun wal-test-helper--use-package-setup ()
+  "Stump `use-package' forms."
   (message "Stumping `use-package'")
 
   (defmacro use-package (package-name &rest _args)
-    "Message that PACKAGE-NAME would have been loaded."
-    `(message "Would have loaded %s" ',package-name)))
+    "Push message that PACKAGE-NAME would have been loaded."
+    `(push ',package-name wal-test-helper--stumps)))
+
+(defun wal-test-helper--report (&rest _)
+  "Show the stumped packages."
+  (message
+   "\nStumped the following `use-package' forms:\n%s"
+   wal-test-helper--stumps)
+
+  (message
+   "\nCreated the following temp files:\n%s"
+   wal-test-helper--temp-files))
 
 (defun wal-test-helper--setup ()
   "Set up everything."
@@ -203,7 +214,11 @@ The associated file buffer is also killed."
 
     (wal-test-helper--path-setup)
     (wal-test-helper--undercover-setup)
-    (wal-test-helper--maybe-stump-use-package)))
+    (wal-test-helper--use-package-setup))
+
+  (add-hook
+   'ert-runner-reporter-run-ended-functions
+   #'wal-test-helper--report))
 
 (wal-test-helper--setup)
 
