@@ -112,12 +112,12 @@
          (other (append wp--debugs wp--infos)))
 
     (when other
-      (message "Found %s notes" (length other))
+      (message "Found %s note(s)" (length other))
       (dolist (it other)
         (message (wp--format it))))
 
     (when severe
-      (message "Found %s errors" (length severe))
+      (message "Found %s error(s)" (length severe))
 
       (dolist (it severe)
         (message (wp--format it)))
