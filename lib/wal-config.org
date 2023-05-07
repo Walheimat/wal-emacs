@@ -473,15 +473,45 @@ If the answer is no, there will be no additional prompt."
 
   (wal-make "cold-boot"))
 
-(defun wal-make (name)
+(defun wal-run-test (&optional json)
+  "Run the test script.
+
+If JSON is t, create JSON coverage instead."
+  (interactive "P")
+
+  (wal-make
+   "cask-test"
+   (when json "export COVERAGE_WITH_JSON=true")
+   (unless json "cat coverage/results.txt")
+   (unless json (wal-run-test--on-success))
+   (unless json (wal-run-test--on-failure))))
+
+(defun wal-run-test--on-success ()
+  "Show average test coverage."
+  (lambda ()
+    (let ((average (wal-check-coverage--calculate-coverage)))
+
+      (message "All tests succeeded. Coverage: %s" average))))
+
+(defun wal-run-test--on-failure ()
+  "Show failure reason."
+  (lambda (str) (message "Tests fail: %s" str)))
+
+(defun wal-make (name &optional pre-command post-command on-success on-failure)
   "Run script defined by goal NAME."
-  (let* ((command (format "make %s" name))
-         (full-command (format "cd %s && %s" wal-emacs-config-default-path command)))
+  (let* ((command (format "cd %s && make %s" wal-emacs-config-default-path name))
+         (full-command command))
+
+    (when pre-command
+      (setq full-command (concat pre-command " && " full-command)))
+
+    (when post-command
+      (setq full-command (concat full-command " && " post-command)))
 
     (wal-async-process
      full-command
-     (wal-make--on-success name)
-     (wal-make--on-failure name)
+     (or on-success (wal-make--on-success name))
+     (or on-failure (wal-make--on-failure name))
      t)))
 
 (defun wal-make--on-success (name)
@@ -492,55 +522,6 @@ If the answer is no, there will be no additional prompt."
   "Display failure message for script NAME."
   (lambda (err) (message "Script '%s' failed.\n\n%s" name err)))
 
-(defun wal-check-coverage ()
-  "Check the current coverage for custom functionality."
-  (interactive)
-
-  (let* ((command "cask exec ert-runner && cat coverage/results.txt"))
-
-    (wal-coverage--execute
-     command
-     (lambda ()
-       (let ((average (wal-check-coverage--calculate-coverage)))
-
-         (message "All tests succeeded. Coverage: %s" average)))
-     (lambda (str) (message "Tests fail: %s" str)))))
-
-(defun wal-create-json-coverage ()
-  "Create a JSON report file."
-  (interactive)
-
-  (let ((command "export COVERAGE_WITH_JSON=true && cask exec ert-runner"))
-
-    (wal-coverage--execute
-     command
-     (lambda () (message "Coverage created"))
-     (lambda (str) (message "Failed to create coverage: %s" str)))))
-
-(defun wal-coverage--execute (command on-success on-failure)
-  "Execute coverage command.
-
-Runs COMMAND asynchronously and passes ON-SUCCESS and ON-FAILURE
-handlers.
-
-BUFFER-SUFFIX is a string to make sure existing buffers of that
-name are deleted beforehand."
-  (unless (executable-find "cask")
-    (user-error "You need to install `cask' binary"))
-
-  (let ((full-command (concat "cd " wal-emacs-config-default-path " && " command)))
-
-    (wal-async-process full-command on-success on-failure t)))
-
-
-(defun wal-check-coverage--add (buf type)
-  "Add all numbers of TYPE in buffer BUF."
-  (let* ((regex (concat type ": \\(?1:[[:digit:]]+\\)"))
-         (content (with-current-buffer buf (buffer-string)))
-         (numbers (wal-matches-in-string regex content)))
-
-    (apply '+ (mapcar #'string-to-number numbers))))
-
 (defun wal-check-coverage--calculate-coverage ()
   "Calculate the full coverage."
   (when-let* ((buffer (get-buffer "*wal-async*"))
@@ -549,14 +530,13 @@ name are deleted beforehand."
 
     (format "%.2f%%" (* 100 (/ (float covered) relevant)))))
 
-(defun wal-checkdoc-config-packages ()
-  "Run `checkdoc-file' on all package files."
-  (interactive)
+(defun wal-check-coverage--add (buf type)
+  "Add all numbers of TYPE in buffer BUF."
+  (let* ((regex (concat type ": \\(?1:[[:digit:]]+\\)"))
+         (content (with-current-buffer buf (buffer-string)))
+         (numbers (wal-matches-in-string regex content)))
 
-  (require 'checkdoc nil t)
-
-  (dolist (it (wal-prelude-package-files))
-    (checkdoc-file it)))
+    (apply '+ (mapcar #'string-to-number numbers))))
 #+END_SRC
 
 * Footer

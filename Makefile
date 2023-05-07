@@ -38,10 +38,12 @@ ensure:
 install: clean ensure tangle
 	$(info Run $(EMACS) with flag --ensure to install packages)
 
-# Install with cask (used in CI)
-cask-install: tangle
+# Install with cask
+cask-install:
 	cask install
 
-# Run tests using cask (used in CI)
-test: cask-install
+# Run tests using cask
+cask-test:
 	cask exec ert-runner
+
+ci: tangle cask-install cask-test

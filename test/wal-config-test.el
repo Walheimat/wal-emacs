@@ -218,55 +218,6 @@
 
     (was-called-with customize-group (list 'wal t))))
 
-(ert-deftest test-wal-check-coverage ()
-  (with-mock (wal-coverage--execute
-              (wal-check-coverage--calculate-coverage . #'wal-rt)
-              message)
-
-    (cl-destructuring-bind (cmd succ fail) (wal-check-coverage)
-
-      (should (string-equal "cask exec ert-runner && cat coverage/results.txt" cmd))
-      (should (equal '("All tests succeeded. Coverage: %s" testing) (funcall succ)))
-      (should (equal '("Tests fail: %s" "No they don't") (apply fail '("No they don't")))))))
-
-(ert-deftest test-wal-create-json-coverage ()
-  (with-mock (wal-coverage--execute message)
-    (cl-destructuring-bind (cmd succ fail) (wal-create-json-coverage)
-
-      (should (string-equal "export COVERAGE_WITH_JSON=true && cask exec ert-runner" cmd))
-      (should (equal '("Coverage created") (funcall succ)))
-      (should (equal '("Failed to create coverage: %s" "No you didn't") (apply fail '("No you didn't")))))))
-
-(ert-deftest test-wal-coverage--execute--fails-without-cask ()
-  (with-mock ((executable-find . #'ignore))
-
-    (should-error (wal-coverage--execute nil nil nil))))
-
-(ert-deftest test-wal-coverage--execute ()
-  (defvar wal-emacs-config-default-path)
-  (let ((wal-emacs-config-default-path "/tmp"))
-
-    (with-mock (wal-async-process)
-
-      (wal-coverage--execute "test" 'success 'failure)
-
-      (was-called-with wal-async-process '("cd /tmp && test" success failure t)))))
-
-(ert-deftest test-wal-checkdoc-config-packages ()
-  (defvar wal-emacs-config-build-path)
-  (let* ((in '("/tmp/one" "/tmp/two")))
-
-    (with-mock (require
-                (wal-prelude-package-files . (lambda () in))
-                checkdoc-file)
-
-      (wal-checkdoc-config-packages)
-
-      (was-called-with require (list 'checkdoc nil t))
-
-      (was-called-nth-with checkdoc-file (list "/tmp/one") 0)
-      (was-called-nth-with checkdoc-file (list "/tmp/two") 1))))
-
 (ert-deftest test-wal-make--handlers ()
   (ert-with-message-capture messages
     (funcall (wal-make--on-success "cold-boot"))
@@ -288,6 +239,50 @@
                                            success
                                            failure
                                            t)))))
+
+(ert-deftest run-test--adds-post-command ()
+  (defvar wal-emacs-config-default-path)
+  (let ((wal-emacs-config-default-path "/tmp/default"))
+
+    (with-mock (wal-async-process
+                (wal-run-test--on-success . (lambda () 'success))
+                (wal-run-test--on-failure . (lambda () 'failure)))
+
+      (wal-run-test)
+
+      (was-called-with wal-async-process '("cd /tmp/default && make cask-test && cat coverage/results.txt"
+                                           success
+                                           failure
+                                           t)))))
+
+(ert-deftest run-test--adds-pre-command ()
+  (defvar wal-emacs-config-default-path)
+  (let ((wal-emacs-config-default-path "/tmp/default"))
+
+    (with-mock (wal-async-process
+                (wal-make--on-success . (lambda (_) 'success))
+                (wal-make--on-failure . (lambda (_) 'failure)))
+
+      (funcall-interactively 'wal-run-test t)
+
+      (was-called-with wal-async-process '("export COVERAGE_WITH_JSON=true && cd /tmp/default && make cask-test"
+                                           success
+                                           failure
+                                           t)))))
+
+(ert-deftest run-test-success-handler--checks-coverage ()
+  (with-mock ((wal-check-coverage--calculate-coverage . (lambda () "999%"))
+              message)
+    (funcall (wal-run-test--on-success))
+
+    (was-called wal-check-coverage--calculate-coverage)
+    (was-called-with message (list "All tests succeeded. Coverage: %s" "999%"))))
+
+(ert-deftest run-test-failure-handler--messages ()
+  (with-mock (message)
+    (funcall (wal-run-test--on-failure) "because")
+
+    (was-called-with message (list "Tests fail: %s" "because"))))
 
 (ert-deftest test-wal-make--scripts ()
   (with-mock (wal-make)
