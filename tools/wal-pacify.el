@@ -97,8 +97,11 @@
    (lambda (it) (not (string-match "movement\\|fix\\|settings" it)))
    (wal-prelude-package-files)))
 
-(defun wp-check ()
-  "Check all package files."
+(defun wp-check (&optional allow-failure)
+  "Check all package files.
+
+Unless ALLOW-FAILURE is t, any warning or error encountered will
+kill the Emacs process."
   (message "Checking package files with `flymake'")
 
   (condition-case err
@@ -121,7 +124,8 @@
 
       (dolist (it severe)
         (message (wp--format it)))
-      (kill-emacs 1))))
+      (unless allow-failure
+        (kill-emacs 1)))))
 
 (provide 'wal-pacify)
 

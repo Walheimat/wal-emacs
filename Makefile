@@ -5,6 +5,7 @@ EMACS_INIT_FILE?=$(HOME)/.emacs.d/init.el
 WITH_PRELUDE=$(EMACS) --batch -l ./wal-prelude.el
 BOOTSTRAP=--eval "(wal-prelude-bootstrap \"$(WAL_SOURCE_DIR)\" t)"
 TEST_ARGS=
+ALLOW_PACIFY_FAILURE=nil
 
 # Run `make V=1 {cmd}` to print commands
 $(V).SILENT:
@@ -20,7 +21,7 @@ cold-boot:
 
 # Check the package files with flycheck
 pacify:
-	$(WITH_PRELUDE) $(BOOTSTRAP) -l ./tools/wal-pacify.el -f wal-pacify-check
+	$(WITH_PRELUDE) $(BOOTSTRAP) -l ./tools/wal-pacify.el --eval "(wal-pacify-check $(ALLOW_PACIFY_FAILURE))"
 
 # Remove the build folder
 clean:
@@ -47,4 +48,4 @@ cask-install:
 cask-test:
 	cask exec ert-runner $(TEST_ARGS)
 
-ci: tangle cask-install cask-test
+ci: tangle cask-install cask-test pacify
