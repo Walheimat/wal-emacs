@@ -251,7 +251,7 @@
 
       (wal-run-test)
 
-      (was-called-with wal-async-process '("cd /tmp/default && make cask-test && cat coverage/results.txt"
+      (was-called-with wal-async-process '("cd /tmp/default && make test && cat coverage/results.txt"
                                            success
                                            failure
                                            t)))))
@@ -266,7 +266,7 @@
 
       (funcall-interactively 'wal-run-test t)
 
-      (was-called-with wal-async-process '("export COVERAGE_WITH_JSON=true && cd /tmp/default && make cask-test"
+      (was-called-with wal-async-process '("export COVERAGE_WITH_JSON=true && cd /tmp/default && make test"
                                            success
                                            failure
                                            t)))))
@@ -281,7 +281,7 @@
 
       (funcall-interactively 'wal-run-test-file "/tmp/tests/test.el")
 
-      (was-called-with wal-async-process '("cd /tmp/default && make cask-test TEST_ARGS=/tmp/tests/test.el && cat coverage/results.txt" success failure t)))))
+      (was-called-with wal-async-process '("cd /tmp/default && make test TEST_ARGS=/tmp/tests/test.el && cat coverage/results.txt" success failure t)))))
 
 (ert-deftest run-test-success-handler--checks-coverage ()
   (with-mock ((wal-check-coverage--calculate-coverage . (lambda () "999%"))

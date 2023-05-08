@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tool `wal-pacify` now uses `flymake` instead of `flycheck` to prep
   it for running in CI.
 - Commands `wal-check-coverage` and `wal-create-json-coverage` were
-  replaced by `wal-run-test` that runs `make cask-test` and will
+  replaced by `wal-run-test` that runs `make test` and will
   create JSON coverage when called with `C-u`.
 - Command `wal-run-test-file` to select a single file to run.
 

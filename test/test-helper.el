@@ -10,11 +10,9 @@
 (require 'compat nil t)
 (require 'undercover nil t)
 
-(defvar wal-booting nil)
-
 (defun wal-test-helper--cold-p ()
   "Check if we're loading this file from a cold start."
-  (not (featurep 'use-package)))
+  (not (bound-and-true-p wal-loaded)))
 
 (defun wal-rf (a &rest _r)
   "Return first argument passed A."
@@ -212,7 +210,7 @@ The associated file buffer is also killed."
 (defun wal-test-helper--setup ()
   "Set up everything."
   (when (wal-test-helper--cold-p)
-    (message "Setting up test helper")
+    (message "Cold start, setting up test helper")
 
     (wal-test-helper--path-setup)
     (wal-test-helper--undercover-setup)

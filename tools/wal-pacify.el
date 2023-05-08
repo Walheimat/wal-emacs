@@ -97,11 +97,20 @@
    (lambda (it) (not (string-match "movement\\|fix\\|settings" it)))
    (wal-prelude-package-files)))
 
-(defun wp-check (&optional allow-failure)
-  "Check all package files.
+(defvar wp--stumps nil)
 
-Unless ALLOW-FAILURE is t, any warning or error encountered will
-kill the Emacs process."
+(defun wp--use-package-setup ()
+  "Stump `use-package' forms."
+  (message "Stumping `use-package'")
+
+  (defmacro use-package (package-name &rest _args)
+    "Push message that PACKAGE-NAME would have been loaded."
+    `(push ',package-name wp--stumps)))
+
+(defun wp-check ()
+  "Check all package files."
+  (wp--use-package-setup)
+
   (message "Checking package files with `flymake'")
 
   (condition-case err
@@ -124,8 +133,7 @@ kill the Emacs process."
 
       (dolist (it severe)
         (message (wp--format it)))
-      (unless allow-failure
-        (kill-emacs 1)))))
+      (kill-emacs 1))))
 
 (provide 'wal-pacify)
 

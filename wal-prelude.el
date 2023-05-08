@@ -44,6 +44,9 @@ The order determines the load order as well.")
 (defvar wal-booting nil
   "Set to t during bootstrapping.")
 
+(defvar wal-loaded nil
+  "Set to t after loading.")
+
 (defvar wal-emacs-config-default-path nil
   "The root path of the configuration.
 
@@ -144,7 +147,8 @@ Files are looked up relative to SOURCE-DIR."
        (setq wal-prelude-init-error err
              wal-booting nil)))
 
-    (setq wal-booting nil)))
+    (setq wal-booting nil
+          wal-loaded t)))
 
 (defun wal-prelude--set-paths (source-dir)
   "Set all directories based on SOURCE-DIR."
