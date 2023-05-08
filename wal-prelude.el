@@ -13,11 +13,11 @@
 (declare-function org-babel-tangle-file "ob-tangle")
 
 (defconst wal-packages '(wal-func
+                         wal-settings
                          wal-key-bindings
                          wal-external
                          wal-fonts
                          wal-look
-                         wal-settings
                          wal-config
                          ;; The following packages are optional.
                          wal-emacs
