@@ -8,6 +8,6 @@
          (consult-buffer-filter . ("\\` " "\\`\\*" "\\`magit"))
          (wal-project-build-default-cmd . "make tangle")
          (wal-project-install-default-cmd . "make install")
-         (wal-project-test-default-cmd . "make test")
+         (wal-project-test-default-cmd . "make cask-test")
          (wal-project-lint-default-cmd . "make pacify")))
  (markdown-mode . ((eval . (auto-fill-mode t)))))
