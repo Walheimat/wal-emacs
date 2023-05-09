@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Command `recompile` is now bound to `C-c c`.
+
 ### Changed
 
 - Tool `wal-pacify` now uses `flymake` instead of `flycheck` to prep
