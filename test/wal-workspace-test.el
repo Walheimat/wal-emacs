@@ -8,8 +8,8 @@
 
 (require 'wal-workspace nil t)
 
-(ert-deftest test-wal-project-switch-toparent-project ()
-  (with-mock (project-switch-project)
+(ert-deftest test-wal-project-switch-to-parent-project ()
+  (with-mock (project-switch-project (wal-project-local-value . #'symbol-value))
     (let ((wal-project-parent-project "/tmp/parent"))
 
       (wal-project-switch-to-parent-project)
@@ -137,5 +137,15 @@
 
       (was-called-with project-current '(nil "/tmp/test-buffer/"))
       (was-called-with project-root (list '(vc Git "/tmp"))))))
+
+(ert-deftest wal-project-local-value ()
+  (wal-with-temp-file "project"
+
+    (with-mock ((project-current . #'always) (project-root . (lambda (_) wal-tmp-file)))
+
+      (with-current-buffer (find-file-noselect wal-tmp-file)
+        (setq-local major-mode 'text-mode))
+
+      (should (equal (wal-project-local-value 'major-mode) 'text-mode)))))
 
 ;;; wal-workspace-test.el ends here

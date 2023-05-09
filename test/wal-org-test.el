@@ -128,11 +128,11 @@
                 switch-to-buffer
                 goto-char
                 find-file-noselect
-                (buffer-local-value . (lambda (it _)
-                                        (pcase it
-                                          ('wal-org-capture-tasks-heading heading)
-                                          ('wal-project-parent-project nil)
-                                          (_ nil))))
+                (wal-project-local-value . (lambda (it)
+                                             (pcase it
+                                               ('wal-org-capture-tasks-heading heading)
+                                               ('wal-project-parent-project nil)
+                                               (_ nil))))
                 (project-current . #'always)
                 (project-root . #'always)
                 (marker-buffer . (lambda (_) 'buffer))

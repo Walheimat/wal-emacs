@@ -62,7 +62,7 @@ Built-in project management.
   "Switch to the current project's parent project."
   (interactive)
 
-  (if-let ((parent wal-project-parent-project))
+  (if-let ((parent (wal-project-local-value 'wal-project-parent-project)))
       (project-switch-project parent)
     (user-error "You need to set `wal-project-parent-project'")))
 
@@ -199,6 +199,13 @@ set to filter by project buffers."
                 (project (project-current nil dir)))
 
       (project-root project))))
+
+(defun wal-project-local-value (symbol)
+  "Get the project-local value of SYMBOL."
+  (when-let* ((project (project-current))
+              (root (project-root project))
+              (root-buffer (find-file-noselect root)))
+    (buffer-local-value symbol root-buffer)))
 #+END_SRC
 
 *** Configuration
