@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command `recompile` is now bound to `C-c c`.
 - Utility function `wal-project-local-value` that uses
   `buffer-local-value` on the project's root folder.
+- Script `tools/update-version.sh` to update references to old tags.
 
 ### Changed
 

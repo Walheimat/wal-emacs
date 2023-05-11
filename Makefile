@@ -4,6 +4,7 @@ EMACS_INIT_FILE?=$(HOME)/.emacs.d/init.el
 
 WITH_PRELUDE=$(EMACS) --batch -l ./wal-prelude.el
 BOOTSTRAP=--eval "(wal-prelude-bootstrap \"$(WAL_SOURCE_DIR)\" t)"
+UPDATE_VERSION=./tools/update-version.sh
 TEST_ARGS=
 
 # Run `make V=1 {cmd}` to print commands
@@ -17,6 +18,11 @@ commits:
 # Simulate a cold boot
 cold-boot:
 	$(WITH_PRELUDE) --eval "(wal-prelude-bootstrap \"$(WAL_SOURCE_DIR)\" nil t)"
+
+# Update references to old version
+update-version:
+	$(UPDATE_VERSION) Cask
+	$(UPDATE_VERSION) lib/wal-config.org
 
 # Check the package files with flycheck
 pacify:
