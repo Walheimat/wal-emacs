@@ -14,8 +14,8 @@
 
 (defconst wal-packages '(wal-func
                          wal-settings
-                         wal-key-bindings
                          wal-external
+                         wal-key-bindings
                          wal-fonts
                          wal-look
                          wal-config

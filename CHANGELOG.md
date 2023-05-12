@@ -27,6 +27,10 @@ Check make.
   create JSON coverage when called with `C-u`.
 - Command `wal-run-test-file` to select a single file to run.
 
+### Fixed
+
+- Order in `wal-prelude` to allow `cold-boot` to work again.
+
 ## [v2.0.1]
 
 Pleasure island.
