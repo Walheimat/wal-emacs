@@ -1,4 +1,4 @@
-name: Trunk
+name: Verify
 on:
   push:
     branches:
@@ -6,13 +6,12 @@ on:
     paths-ignore:
       - 'assets/**'
       - '.gitignore'
-      - 'CHANGELOG.md'
       - 'package.json'
       - 'package-lock.json'
       - 'commitlint.config.js'
 
 jobs:
-  test-coverage:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Set environment to allow unsecure commands
@@ -37,11 +36,15 @@ jobs:
       - name: Run tests
         run: make test
 
-      - name: Run byte-compiler check (allowed to fail)
-        continue-on-error: true
-        run: make pacify
-
       - name: Submit coverage
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run byte-compiler check (allowed to fail)
+        continue-on-error: true
+        run: make pacify
+
+      - name: Simulate cold boot
+        if: ${{ contains(github.event.head_commit.message, 'prep') }}
+        run: make cold-boot
