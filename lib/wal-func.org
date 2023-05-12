@@ -251,6 +251,21 @@ Un-dedicates if already dedicated."
   (let ((ignore-window-parameters t))
 
     (delete-other-windows)))
+
+(defvar wal-supernova--markers '("\\`\\*" "\\` ")
+  "Markers used to find target buffers.")
+
+(defun wal-supernova ()
+  "Quit windows with star buffers."
+  (interactive)
+
+  (let ((windows (window-list-1))
+        (reg (mapconcat (lambda (it) (concat "\\(?:" it "\\)")) wal-supernova--markers "\\|"))
+        (check (lambda (name) (string-match-p "\\(?:\\`\\*\\)\\|\\(?:\\` \\)" name))))
+
+    (dolist (window windows)
+      (when (funcall check (buffer-name (window-buffer window)))
+        (quit-window nil window)))))
 #+END_SRC
 
 * Files

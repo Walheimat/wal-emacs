@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Utility function `wal-project-local-value` that uses
   `buffer-local-value` on the project's root folder.
 - Script `tools/update-version.sh` to update references to old tags.
+- Command `wal-supernova` to quit windows displaying otherwise hidden
+  buffers. Bound to `C-c o`.
 
 ### Changed
 

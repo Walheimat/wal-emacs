@@ -234,6 +234,21 @@
 
       (was-called delete-other-windows))))
 
+(ert-deftest supernova ()
+  (let ((a (get-buffer-create "stays"))
+        (b (get-buffer-create "*goes*"))
+        (c (get-buffer-create " also goes")))
+
+    (display-buffer-full-frame a nil)
+    (display-buffer-pop-up-window b nil)
+    (display-buffer-below-selected c nil)
+
+    (should (eq (length (window-list-1)) 3))
+
+    (wal-supernova)
+
+    (should (eq (length (window-list-1)) 1))))
+
 (ert-deftest test-wal-find-custom-file ()
   (wal-with-temp-file "custom.el"
 
