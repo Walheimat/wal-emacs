@@ -60,7 +60,7 @@ test: build
 	cask exec ert-runner $(TEST_ARGS)
 
 # CI setup
-.cask:
+.cask: build
 	cask install
 
 ci: .cask
