@@ -18,9 +18,13 @@ I like nice-looking things.
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'wal-func nil t))
+
 (declare-function dashboard-insert-startupify-lists "ext:dashboard.el")
 (declare-function ligature-set-ligatures "ext:ligature.el")
 (declare-function wal-biased-random "wal-func.el")
+(declare-function wal-modern-emacs-p "wal-func.el")
 
 (defvar dashboard-footer-messages)
 (defvar wal-ascii-cachalot-whale)
@@ -33,21 +37,224 @@ I like nice-looking things.
 
 ;;;; Customization:
 
+(defcustom wal-transparency 90
+  "The default frame transparency."
+  :type 'integer
+  :group 'wal-visuals)
+
+(defcustom wal-theme nil
+  "The theme."
+  :type '(choice symbol (const nil))
+  :group 'wal-visuals)
+
+(defcustom wal-hidpi nil
+  "Whether the display is considered HiDPI."
+  :type 'boolean
+  :group 'wal-visuals)
+
+(defcustom wal-fixed-fonts
+  '("JetBrains Mono"
+    "Iosevka"
+    "Fira Code"
+    "mononoki"
+    "Input Mono"
+    "Source Code Pro"
+    "DejaVu Sans Mono")
+  "Fixed fonts ordered by preference."
+  :type '(repeat string)
+  :group 'wal-visuals)
+
+(defcustom wal-variable-fonts
+  '("DeJa Vu Sans"
+    "Liberation Serif"
+    "Ubuntu")
+  "Variable fonts ordered by preference."
+  :type '(repeat string)
+  :group 'wal-visuals)
+
+(defcustom wal-preferred-fonts nil
+  "List of (fixed and variable width) font names that should be preferred."
+  :type '(choice (repeat string) (const nil))
+  :group 'wal-visuals)
+
+(defcustom wal-fixed-font-height 120
+  "The font height for fixed fonts.
+The default value is 98."
+  :type 'integer
+  :group 'wal-visuals)
+
+(defcustom wal-variable-font-height 140
+  "The font height for variable fonts.
+This has no default value."
+  :type 'integer
+  :group 'wal-visuals)
+
 (defcustom wal-major-delight t
   "Whether some major modes are delighted beyond reason."
   :type 'boolean
   :group 'wal-visuals)
-
-(defcustom wal-zone-when-idle nil
-  "Determine whether to zone out when idling."
-  :type 'boolean
-  :group 'wal-visuals)
-
-(defcustom wal-zone-timer (* 5 60)
-  "The time in seconds when we will zone out."
-  :type 'integer
-  :group 'wal-visuals)
 #+END_SRC
+
+* Fonts
+
+Font *JetBrains Mono* has the best support for ligatures.
+
+#+begin_src emacs-lisp
+(defvar wal-fonts-updated-hook nil
+  "Functions to run when fonts were updated.")
+
+(defun wal-font-update (attribute value faces &optional arg)
+  "Set ATTRIBUTE to VALUE for FACES.
+
+This returns the made updates. Affects all frames unless ARG is
+t."
+  (let ((frame (when arg (selected-frame))))
+
+    (mapc (lambda (it)
+            (when (internal-lisp-face-p it)
+              (set-face-attribute it frame attribute value)))
+          faces)
+
+    (run-hooks 'wal-fonts-updated-hook)))
+
+(defun wal-read-sensible-font-height (type)
+  "Read a sensible font height for TYPE."
+  (let* ((prev (symbol-value (intern (format "wal-%s-font-height" type))))
+         (num (read-number (format "Set %s font (currently: %s): " type prev))))
+
+    (max (min num 300) 80)))
+
+(defun wal-available-fonts (fonts)
+  "Filter FONTS down to available fonts."
+  (seq-filter (lambda (it) (find-font (font-spec :name it))) fonts))
+
+(defun wal-read-font (type)
+  "Read a font for TYPE."
+  (let* ((name (intern (format "%s-pitch" type)))
+         (prev (face-attribute name :family))
+         (fonts (symbol-value (intern (format "wal-%s-fonts" type))))
+         (font (completing-read (format "Select %s font (current: %s) " type prev) (wal-available-fonts fonts))))
+
+    font))
+
+(defun wal-select-fixed-font (font)
+  "Select fixed (available) FONT."
+  (interactive (list (wal-read-font 'fixed)))
+
+  (wal-font-update :font font '(default fixed-pitch)))
+
+(defun wal-select-variable-font (font)
+  "Select variable (available) FONT."
+  (interactive (list (wal-read-font 'variable)))
+
+  (wal-font-update :font font '(variable-pitch)))
+
+(defun wal-set-fixed-font-height (height &optional arg)
+  "Set the HEIGHT for fixed fonts.
+
+Affects all frames unless ARG is t."
+  (interactive (list (wal-read-sensible-font-height 'fixed) current-prefix-arg))
+
+  (setq wal-fixed-font-height height)
+  (wal-font-update :height height '(default fixed-pitch) arg))
+
+(defun wal-set-variable-font-height (height &optional arg)
+  "Set the HEIGHT for variable fonts.
+
+Affects all frames unless ARG is t."
+  (interactive (list (wal-read-sensible-font-height 'variable) current-prefix-arg))
+
+  (setq wal-variable-font-height height)
+  (wal-font-update :height height '(variable-pitch) arg))
+
+(defun wal-preferred-fonts (fonts)
+  "Filter FONTS down to preferred fonts."
+  (seq-filter (lambda (it) (member it wal-preferred-fonts)) fonts))
+
+(defun wal-fonts-candidate (fonts &optional prefer)
+  "Return the first available font from a list of FONTS.
+If PREFER is true, variable `wal-preferred-fonts' is not nil and
+preferred fonts are available, return the first of those
+instead."
+  (let* ((available-fonts (wal-available-fonts fonts))
+         (preferred (and prefer (wal-preferred-fonts available-fonts))))
+
+    (if preferred
+        (car preferred)
+      (car available-fonts))))
+
+;; Slanted and enchanted.
+(defun wal-font-lock ()
+  "Set comment face to italic and keyword face to bold."
+  (set-face-attribute 'font-lock-comment-face nil :slant 'italic :weight 'normal)
+  (set-face-attribute 'font-lock-keyword-face nil :weight 'bold))
+#+end_src
+
+** ligature
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defconst wal-common-ligatures
+  '(
+    "==" "!=" ">=" "<="        ; Comparison.
+    "+=" "-=" "/=" "%=" "*="   ; Assignment.
+    "||" "&&"                  ; Logical.
+    "/*" "*/" "//" "/**" "**/" ; Comments.
+    "++" "--"                  ; Increment/decrement.
+    ">>=" "<<=" "&=" "|=" "^=" ; Bitwise assignments.
+    "<<" ">>"                  ; Bitwise shifts.
+    "..."                      ; Spread.
+    )
+  "A list of ligatures available in all programming modes.")
+
+(defun wal-set-ligatures (modes ligatures)
+  "Set LIGATURES for MODES.
+
+All ligatures in `wal-common-ligatures' will be appended to
+LIGATURES."
+  (when (require 'ligature nil t)
+    (ligature-set-ligatures modes (append ligatures wal-common-ligatures))))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package ligature
+  :wal-ways nil
+
+  :hook ((prog-mode prog-like) . ligature-mode))
+#+END_SRC
+
+* Transparency
+
+#+begin_src emacs-lisp
+(defun wal-transparency--param ()
+  "Get the transparency parameter for this Emacs version."
+  (if (wal-modern-emacs-p 29)
+      'alpha-background
+    'alpha))
+
+(defun wal-set-transparency (&optional value)
+  "Set the transparency of the frame to VALUE.
+
+1 being (almost) completely transparent, 100 being opaque.
+
+This also updates variable `wal-transparency' during the session."
+  (interactive
+   (list
+    (read-number (format "Set transparency (currently %s%%): " wal-transparency))))
+
+  (let ((transparency (min (max (or value wal-transparency) 1) 100))
+        (param (wal-transparency--param)))
+
+    (setq wal-transparency transparency)
+
+    (modify-all-frames-parameters `((,param . ,transparency)))))
+#+end_src
 
 * Dashboard
 
@@ -168,6 +375,26 @@ Let's have a dash of board.
 #+END_SRC
 
 * Themes
+
+[[https://peach-melpa.org/][PeachMelpa]] has more themes.
+
+#+begin_src emacs-lisp
+(defvar wal-active-theme nil)
+
+(defvar wal-theme-hook nil)
+
+(defun wal-load-active-theme ()
+  "Load the currently active theme."
+  (interactive)
+
+  (when wal-active-theme
+    (condition-case err
+        (progn
+          (load-theme wal-active-theme t)
+          (run-hooks 'wal-theme-hook))
+      (error
+       (message "Failed to load theme: %s" (error-message-string err))))))
+#+end_src
 
 ** doom-themes
 :PROPERTIES:
@@ -392,49 +619,6 @@ Sometimes the list of minor modes overcrowds the modeline.
                              prettier-mode)))
 #+END_SRC
 
-* Ligatures
-
-Font *JetBrains Mono* has the best support for ligatures.
-
-** ligature
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-*** Utility
-
-#+BEGIN_SRC emacs-lisp
-(defconst wal-common-ligatures
-  '(
-    "==" "!=" ">=" "<="        ; Comparison.
-    "+=" "-=" "/=" "%=" "*="   ; Assignment.
-    "||" "&&"                  ; Logical.
-    "/*" "*/" "//" "/**" "**/" ; Comments.
-    "++" "--"                  ; Increment/decrement.
-    ">>=" "<<=" "&=" "|=" "^=" ; Bitwise assignments.
-    "<<" ">>"                  ; Bitwise shifts.
-    "..."                      ; Spread.
-    )
-  "A list of ligatures available in all programming modes.")
-
-(defun wal-set-ligatures (modes ligatures)
-  "Set LIGATURES for MODES.
-
-All ligatures in `wal-common-ligatures' will be appended to
-LIGATURES."
-  (when (require 'ligature nil t)
-    (ligature-set-ligatures modes (append ligatures wal-common-ligatures))))
-#+END_SRC
-
-*** Configuration
-
-#+BEGIN_SRC emacs-lisp
-(use-package ligature
-  :wal-ways nil
-
-  :hook ((prog-mode prog-like) . ligature-mode))
-#+END_SRC
-
 * Icons
 
 ** all-the-icons
@@ -481,6 +665,66 @@ Allow using variable and fixed fonts in the same buffer.
 
 ;;; wal-visuals.el ends here
 #+END_SRC
+
+* Setups
+
+Make frame transparent and set themes.
+
+#+begin_src emacs-lisp
+(wal-define-init-setup visuals
+  "Set up visual frills like theme and transparency."
+  :initial
+  ((add-to-list 'default-frame-alist `(,(wal-transparency--param) . ,wal-transparency))
+
+   ;; Mix of old and new.
+   (setq frame-title-format '(multiple-frames "%b" ("%b@" system-name)))
+
+   ;; Some themes require configuration, so we only load after initialization.
+   (when wal-theme
+     (setq wal-active-theme wal-theme)
+     (wal-load-active-theme))
+
+   (when wal-hidpi
+     (set-fringe-mode 18)))
+  :always
+  ((wal-set-transparency)
+   (wal-load-active-theme))
+  :immediately t)
+
+(wal-define-init-setup fonts
+  "Set up fonts for GUI Emacs.
+
+This sets `default' and `fixed-pitch' fonts to the first
+available candidate from `wal-fixed-fonts'. Does the same for
+`variable-pitch' using `wal-variable-fonts'."
+  :initial
+  ((when (or (daemonp) (display-graphic-p))
+     (mapc (lambda (it)
+             (when (internal-lisp-face-p it)
+               (set-face-attribute it nil
+                                   :font (wal-fonts-candidate wal-fixed-fonts t)
+                                   :height wal-fixed-font-height)))
+           '(default fixed-pitch))
+     (mapc (lambda (it)
+             (when (internal-lisp-face-p it)
+               (set-face-attribute it nil :inherit 'mode-line)))
+           '(mode-line-active mode-line-inactive))
+
+     ;; Variable pitch face.
+     (set-face-attribute 'variable-pitch nil
+                         :font (wal-fonts-candidate wal-variable-fonts t)
+                         :height wal-variable-font-height))
+
+   (administrator
+     "sf" 'wal-set-fixed-font-height
+     "sv" 'wal-set-variable-font-height
+     "sF" 'wal-select-fixed-font
+     "sV" 'wal-select-variable-font)
+
+   (add-hook 'font-lock-mode-hook #'wal-font-lock))
+  :always
+  ((run-hooks 'wal-fonts-updated-hook)))
+#+end_src
 
 * Footnotes
 

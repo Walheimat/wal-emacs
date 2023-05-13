@@ -16,12 +16,11 @@
                          wal-settings
                          wal-external
                          wal-key-bindings
-                         wal-fonts
-                         wal-look
                          wal-config
                          ;; The following packages are optional.
                          wal-emacs
                          wal-edit
+                         wal-visuals
                          wal-movement
                          wal-find
                          wal-complete
@@ -31,7 +30,6 @@
                          wal-dired
                          wal-terminal
                          wal-vc
-                         wal-visuals
                          wal-lang
                          wal-fix
                          wal-lsp
