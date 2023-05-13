@@ -480,39 +480,6 @@
 
     (should (eq indent-tabs-mode nil))))
 
-(defvar wal-indent-offset 6)
-(ert-deftest test-wal-set-indent-defaults ()
-  (setq wal-prefer-tabs nil)
-
-  (wal-set-indent-defaults 1)
-
-  (should-every (python-indent-offset
-                 js-indent-level
-                 c-ts-mode-indent-offset
-                 css-indent-offset
-                 nxml-child-indent
-                 sgml-basic-offset
-                 tab-width)
-    :expected 1)
-
-  (should (string-equal json-encoding-default-indentation " "))
-  (should electric-indent-inhibit)
-  (should-not indent-tabs-mode)
-
-  (wal-set-indent-defaults)
-
-  (should-every (python-indent-offset
-                 js-indent-level
-                 c-ts-mode-indent-offset
-                 css-indent-offset
-                 nxml-child-indent
-                 sgml-basic-offset
-                 tab-width)
-    :expected 6)
-  (should (string-equal json-encoding-default-indentation "      "))
-  (should electric-indent-inhibit)
-  (should-not indent-tabs-mode))
-
 (ert-deftest test-wal-biased-random ()
   (let ((vals '(1 2 3 4)))
 

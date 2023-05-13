@@ -34,7 +34,6 @@ functionality is used.
 (declare-function wal-persist-scratch "wal-key-bindings.el")
 (declare-function wal-rehydrate-scratch "wal-key-bindings.el")
 (declare-function wal-reset-to-standard "wal-func.el")
-(declare-function wal-set-indent-defaults "wal-func.el")
 (declare-function wdb/faraway "wal-func.el")
 (declare-function wdb/nearby "wal-func.el")
 
@@ -65,11 +64,6 @@ functionality is used.
 (defcustom wal-scratch-persist-file (expand-file-name ".wal-scratch-persist" user-emacs-directory)
   "The file to persist the *scratch* buffer's content in."
   :type 'string
-  :group 'wal-settings)
-
-(defcustom wal-indent-offset 4
-  "The indent offset in spaces."
-  :type 'integer
   :group 'wal-settings)
 
 (defcustom wal-prefer-tabs nil
@@ -243,6 +237,7 @@ packages.
 
       ;; Editing.
       backward-delete-char-untabify-method 'hungry
+      tab-width 4
 
       ;; Recent files.
       ;; Otherwise source `consult--source-project-recent-file' won't work.
@@ -311,34 +306,6 @@ Increase the =gc-cons-threshold= after start-up.
   (setq gc-cons-threshold (wal-bytes-per-mb 100)))
 
 (add-hook 'emacs-startup-hook #'wal-increase-gc-cons-threshold)
-#+END_SRC
-
-
-* Indentation
-
-Set up an easy way to switch between tabs and spaces for indentation[fn:1].
-
-#+BEGIN_SRC emacs-lisp
-(defvar wal-indent-vars '(python-indent-offset
-                          js-indent-level
-                          c-ts-mode-indent-offset
-                          css-indent-offset
-                          nxml-child-indent
-                          sgml-basic-offset
-                          tab-width
-                          json-encoding-default-indentation
-                          electric-indent-inhibit
-                          indent-tabs-mode))
-
-(defun wal-reset-indent-defaults ()
-  "Reset indent defaults.
-Resets all variables that were initially set by
-`wal-set-indent-defaults'."
-  (interactive)
-
-  (mapc #'wal-reset-to-standard wal-indent-vars))
-
-(add-hook 'emacs-startup-hook #'wal-set-indent-defaults)
 #+END_SRC
 
 * Scratch Buffer
@@ -458,8 +425,6 @@ Make completions look nice.
      "b" 'wal-kill-some-file-buffers
      "d" 'wal-l
      "f" 'wal-fundamental-mode
-     "i" 'wal-set-indent-defaults
-     "I" 'wal-reset-indent-defaults
      "1" 'wal-force-delete-other-windows)
 
     (general-define-key

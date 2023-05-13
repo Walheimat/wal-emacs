@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Packages `font` and `look` were folded into `visuals`.
 
+### Removed
+
+- Commands `wal-set-indent-defaults` and `wal-reset-indent-defaults`.
+  Indentation variables are customized in their respective packages
+  instead.
+
 ## [v2.0.2]
 
 Check make.
