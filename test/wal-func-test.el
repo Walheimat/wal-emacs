@@ -263,7 +263,7 @@
 
     (wal-find-init)
 
-    (should (string-equal (buffer-name) "emacs-config"))))
+    (should (string-match-p (buffer-name) wal-emacs-config-default-path))))
 
 (ert-deftest test-wal-find-fish-config ()
   (wal-with-temp-file "config.fish"
