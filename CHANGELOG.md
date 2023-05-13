@@ -17,6 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Indentation variables are customized in their respective packages
   instead.
 
+### Fixed
+
+- `wal-prelude` now renders the contents of the `init.el` template
+  using the source directory. This should allow for the clone not
+  having to live in the `user-emacs-directory` and have any chosen
+  name.
+
 ## [v2.0.2]
 
 Check make.

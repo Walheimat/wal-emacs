@@ -116,7 +116,7 @@ Files are looked up relative to SOURCE-DIR."
     (unless ready
       (message "Setting up bootstrap in '%s'" init-file)
       (append-to-file marker nil init-file)
-      (append-to-file template-contents nil init-file))))
+      (append-to-file (format template-contents source-dir) nil init-file))))
 
 (defvar wal-prelude-init-error nil
   "Set to the error message if initialization failed.")
