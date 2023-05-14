@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the same key arguments. `wdb-faraway` now has key parameter `below`
   to use `display-buffer-below-selected`. `wdb-nearby` now allows
   setting either `direction` or `side`.
+- `python-mode-major` no longer binds individual `send` commands.
+  `inferior-python-mode` now enables `corfu`.
 
 ### Removed
 
