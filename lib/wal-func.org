@@ -81,11 +81,10 @@ Utility functions to configure displaying buffers of a certain type.
 (defun wal-display-buffer--actions (&optional width height dedicated no-other)
   "Get (defaulting) `display-buffer' actions.
 
-If DEDICATED is a boolean, if WIDTH is nil, default to 50%, if
-HEIGHT is nil default to 10 lines, if NO-OTHER is t set the
-`window-parameter'."
-  `((window-width . ,(or width 0.5))
-	(window-height . ,(or height 10))
+If DEDICATED is a boolean, WIDTH and HEIGHT are set as-is, if
+NO-OTHER is t set the `window-parameter'."
+  `((window-width . ,width)
+	(window-height . ,height)
 	(dedicated . ,dedicated)
 	(window-parameters . ((no-other-window . ,no-other)))))
 
@@ -120,11 +119,12 @@ HEIGHT and NO-OTHER."
          (get-lru-window frame)
          (cdr-safe (assoc 'display (frame-parameters frame)))))
 
-(cl-defun wal-display-buffer-same-place-or-faraway (buffer &key width height below dedicated no-other)
+(cl-defun wal-display-buffer-same-place-or-faraway (buffer &key width height bottom dedicated no-other)
   "Display BUFFER where it is or far away.
 
-If BELOW is t, display below. Otherwise tries to reuse window
-first, then checks for another frame and lastly pops up a window.
+If BOTTOM is t, display at bottom. Otherwise tries to reuse
+window first, then checks for another frame and lastly pops up a
+window.
 
 See `wal-display-buffer--actions' for explanations of WIDTH,
 HEIGHT, DEDICATED and NO-OTHER."
@@ -134,7 +134,7 @@ HEIGHT, DEDICATED and NO-OTHER."
                  `(,condition
 				   ,(delq nil `(display-buffer-reuse-window
 								display-buffer-reuse-mode-window
-								,(when below 'display-buffer-below-selected)
+								,(when bottom 'display-buffer-at-bottom)
 								display-buffer-use-some-frame
 								display-buffer-pop-up-window))
 

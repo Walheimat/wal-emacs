@@ -11,9 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Packages `font` and `look` were folded into `visuals`.
 - `wdb-nearby` and `wdb-faraway` were refactored to accept (mostly)
-  the same key arguments. `wdb-faraway` now has key parameter `below`
-  to use `display-buffer-below-selected`. `wdb-nearby` now allows
-  setting either `direction` or `side`.
+  the same key arguments. `wdb-faraway` now has key parameter `bottom`
+  to use `display-buffer-at-bottom`. `wdb-nearby` now allows setting
+  either `direction` or `side`. Window widths and heights are no
+  longer defaulted.
 - `python-mode-major` no longer binds individual `send` commands.
   `inferior-python-mode` now enables `corfu`.
 

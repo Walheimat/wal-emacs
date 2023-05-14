@@ -66,22 +66,22 @@
                      (display-buffer-reuse-window display-buffer-in-side-window display-buffer-in-direction)
                      (side . top)
 					 (direction . right)
-					 (window-width . 0.5)
+					 (window-width)
                      (window-height . 12)
 					 (dedicated . t)
                      (window-parameters . ((no-other-window . t))))))
 
     (setq display-buffer-list '())
 
-    (wal-display-buffer-same-place-or-nearby 'test-mode :loose t :direction 'below)
+    (wal-display-buffer-same-place-or-nearby 'test-mode :loose t :direction 'below :width 0.4)
 
     (should (equal (car display-buffer-alist)
                    '((major-mode . test-mode)
                      (display-buffer-reuse-window display-buffer-in-direction display-buffer-in-side-window)
                      (side . bottom)
 					 (direction . below)
-					 (window-width . 0.5)
-					 (window-height . 10)
+					 (window-width . 0.4)
+					 (window-height)
 					 (dedicated)
                      (window-parameters . ((no-other-window))))))))
 
@@ -116,28 +116,26 @@
 					  display-buffer-pop-up-window)
                      (frame-predicate . wal-display-buffer-use-some-frame--with-display-p)
                      (inhibit-switch-frame . t)
-
-					 (window-width . 0.5)
-					 (window-height . 10)
+					 (window-width)
+					 (window-height)
 					 (dedicated)
 					 (window-parameters . ((no-other-window))))))
 
 	(setq display-buffer-list '())
 
-    (wal-display-buffer-same-place-or-faraway 'test-mode :below t)
+    (wal-display-buffer-same-place-or-faraway 'test-mode :bottom t)
 
     (should (equal (car display-buffer-alist)
                    '((major-mode . test-mode)
                      (display-buffer-reuse-window
                       display-buffer-reuse-mode-window
-					  display-buffer-below-selected
+					  display-buffer-at-bottom
                       display-buffer-use-some-frame
 					  display-buffer-pop-up-window)
                      (frame-predicate . wal-display-buffer-use-some-frame--with-display-p)
                      (inhibit-switch-frame . t)
-
-					 (window-width . 0.5)
-					 (window-height . 10)
+					 (window-width)
+					 (window-height)
 					 (dedicated)
 					 (window-parameters . ((no-other-window))))))))
 
