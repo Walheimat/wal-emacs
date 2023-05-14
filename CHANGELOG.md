@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   name.
 - The messages buffer no longer has conflicting `display-buffer`
   entries.
+- `lsp-ui-doc-show-with-mouse` is now disabled to avoid messing with
+  help echos.
 
 ## [v2.0.2]
 
