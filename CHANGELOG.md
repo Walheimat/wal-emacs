@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Packages `font` and `look` were folded into `visuals`.
+- `wdb-nearby` and `wdb-faraway` were refactored to accept (mostly)
+  the same key arguments. `wdb-faraway` now has key parameter `below`
+  to use `display-buffer-below-selected`. `wdb-nearby` now allows
+  setting either `direction` or `side`.
 
 ### Removed
 
@@ -23,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   using the source directory. This should allow for the clone not
   having to live in the `user-emacs-directory` and have any chosen
   name.
+- The messages buffer no longer has conflicting `display-buffer`
+  entries.
 
 ## [v2.0.2]
 

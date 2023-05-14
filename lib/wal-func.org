@@ -78,23 +78,41 @@ Utility functions to configure displaying buffers of a certain type.
 
 ;; The next two functions make sense for `popper' buffers.
 
-(cl-defun wal-display-buffer-same-place-or-nearby (buffer &key side loose no-other height)
+(defun wal-display-buffer--actions (&optional width height dedicated no-other)
+  "Get (defaulting) `display-buffer' actions.
+
+If DEDICATED is a boolean, if WIDTH is nil, default to 50%, if
+HEIGHT is nil default to 10 lines, if NO-OTHER is t set the
+`window-parameter'."
+  `((window-width . ,(or width 0.5))
+	(window-height . ,(or height 10))
+	(dedicated . ,dedicated)
+	(window-parameters . ((no-other-window . ,no-other)))))
+
+(cl-defun wal-display-buffer-same-place-or-nearby (buffer &key side direction width height loose no-other)
   "Display BUFFER where it is or nearby.
 
-This window will be on SIDE (on the bottom by default), not
-delete other windows, dedicated to the buffer (unless LOOSE),
-available to `other-window' (unless NO-OTHER) 20 (or HEIGHT)
-lines high and visible frames are considered reusable."
+This window will be on SIDE (on the bottom by default) or in
+DIRECTION (right by default). The window will be dedicated unless
+LOOSE is t.
+
+See `wal-display-buffer--actions' for explanations of WIDTH,
+HEIGHT and NO-OTHER."
   (let ((condition (wal-display-buffer--condition buffer)))
 
     (add-to-list 'display-buffer-alist
                  `(,condition
-                   (display-buffer-reuse-window display-buffer-in-side-window)
+                   ,(if direction
+				        '(display-buffer-reuse-window
+						  display-buffer-in-direction
+						  display-buffer-in-side-window)
+					  '(display-buffer-reuse-window
+						display-buffer-in-side-window
+						display-buffer-in-direction))
                    (side . ,(or side 'bottom))
-                   (dedicated . ,(not loose))
-                   (reusable-frames . visible)
-                   (window-height . ,(or height 10))
-                   (window-parameters . ((no-other-window . ,no-other)))))))
+				   (direction . ,(or direction 'right))
+
+				   ,@(wal-display-buffer--actions width height (not loose) no-other)))))
 
 (defun wal-display-buffer-use-some-frame--with-display-p (frame)
   "Check that FRAME is not the selected frame and has a display entry."
@@ -102,26 +120,31 @@ lines high and visible frames are considered reusable."
          (get-lru-window frame)
          (cdr-safe (assoc 'display (frame-parameters frame)))))
 
-(cl-defun wal-display-buffer-same-place-or-faraway (buffer &key width)
+(cl-defun wal-display-buffer-same-place-or-faraway (buffer &key width height below dedicated no-other)
   "Display BUFFER where it is or far away.
 
-Tries to reuse window first, then checks for another frame and
-lastly pops up a window. The (window) WIDTH will be passed as an
-action symbol."
+If BELOW is t, display below. Otherwise tries to reuse window
+first, then checks for another frame and lastly pops up a window.
+
+See `wal-display-buffer--actions' for explanations of WIDTH,
+HEIGHT, DEDICATED and NO-OTHER."
   (let ((condition (wal-display-buffer--condition buffer)))
 
     (add-to-list 'display-buffer-alist
                  `(,condition
-                   (display-buffer-reuse-window
-                    display-buffer-reuse-mode-window
-                    display-buffer-use-some-frame
-                    display-buffer-pop-up-window)
+				   ,(delq nil `(display-buffer-reuse-window
+								display-buffer-reuse-mode-window
+								,(when below 'display-buffer-below-selected)
+								display-buffer-use-some-frame
+								display-buffer-pop-up-window))
+
                    (frame-predicate . wal-display-buffer-use-some-frame--with-display-p)
                    (inhibit-switch-frame . t)
-                   (window-width . ,width)))))
 
-(defalias 'wdb/nearby 'wal-display-buffer-same-place-or-nearby)
-(defalias 'wdb/faraway 'wal-display-buffer-same-place-or-faraway)
+				   ,@(wal-display-buffer--actions width height dedicated no-other)))))
+
+(defalias 'wdb-nearby 'wal-display-buffer-same-place-or-nearby)
+(defalias 'wdb-faraway 'wal-display-buffer-same-place-or-faraway)
 #+END_SRC
 
 * Buffer Hygiene

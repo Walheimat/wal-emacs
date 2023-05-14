@@ -56,33 +56,34 @@
 (ert-deftest test-wal-display-buffer--condition--errors-for-unsupported-types ()
   (should-error (wal-display-buffer--condition '(hello world)) :type 'user-error))
 
-(ert-deftest test-wal-display-buffer-same-place-or-nearby ()
+(ert-deftest wal-display-buffer-same-place-or-nearby ()
   (let ((display-buffer-alist '()))
 
     (wal-display-buffer-same-place-or-nearby 'test-mode :side 'top :loose nil :no-other t :height 12)
 
     (should (equal (car display-buffer-alist)
                    '((major-mode . test-mode)
-                     (display-buffer-reuse-window display-buffer-in-side-window)
+                     (display-buffer-reuse-window display-buffer-in-side-window display-buffer-in-direction)
                      (side . top)
-                     (dedicated . t)
-                     (reusable-frames . visible)
+					 (direction . right)
+					 (window-width . 0.5)
                      (window-height . 12)
+					 (dedicated . t)
                      (window-parameters . ((no-other-window . t))))))
 
     (setq display-buffer-list '())
 
-    (wal-display-buffer-same-place-or-nearby 'test-mode :loose t)
+    (wal-display-buffer-same-place-or-nearby 'test-mode :loose t :direction 'below)
 
     (should (equal (car display-buffer-alist)
                    '((major-mode . test-mode)
-                     (display-buffer-reuse-window display-buffer-in-side-window)
+                     (display-buffer-reuse-window display-buffer-in-direction display-buffer-in-side-window)
                      (side . bottom)
-                     (dedicated)
-                     (reusable-frames . visible)
-                     (window-height . 10)
-                     (window-parameters . ((no-other-window))))))
-    ))
+					 (direction . below)
+					 (window-width . 0.5)
+					 (window-height . 10)
+					 (dedicated)
+                     (window-parameters . ((no-other-window))))))))
 
 (ert-deftest test-wal-display-buffer-use-some-frame--with-display-p ()
   (let ((frame nil)
@@ -112,10 +113,33 @@
                      (display-buffer-reuse-window
                       display-buffer-reuse-mode-window
                       display-buffer-use-some-frame
-                      display-buffer-pop-up-window)
+					  display-buffer-pop-up-window)
                      (frame-predicate . wal-display-buffer-use-some-frame--with-display-p)
                      (inhibit-switch-frame . t)
-                     (window-width . nil))))))
+
+					 (window-width . 0.5)
+					 (window-height . 10)
+					 (dedicated)
+					 (window-parameters . ((no-other-window))))))
+
+	(setq display-buffer-list '())
+
+    (wal-display-buffer-same-place-or-faraway 'test-mode :below t)
+
+    (should (equal (car display-buffer-alist)
+                   '((major-mode . test-mode)
+                     (display-buffer-reuse-window
+                      display-buffer-reuse-mode-window
+					  display-buffer-below-selected
+                      display-buffer-use-some-frame
+					  display-buffer-pop-up-window)
+                     (frame-predicate . wal-display-buffer-use-some-frame--with-display-p)
+                     (inhibit-switch-frame . t)
+
+					 (window-width . 0.5)
+					 (window-height . 10)
+					 (dedicated)
+					 (window-parameters . ((no-other-window))))))))
 
 (ert-deftest wal-kill-some-file-buffers ()
   (wal-with-temp-file "to-be-killed"
