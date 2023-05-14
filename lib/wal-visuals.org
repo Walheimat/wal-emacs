@@ -229,149 +229,24 @@ LIGATURES."
   :hook ((prog-mode prog-like) . ligature-mode))
 #+END_SRC
 
-* Transparency
-
-#+begin_src emacs-lisp
-(defun wal-transparency--param ()
-  "Get the transparency parameter for this Emacs version."
-  (if (wal-modern-emacs-p 29)
-      'alpha-background
-    'alpha))
-
-(defun wal-set-transparency (&optional value)
-  "Set the transparency of the frame to VALUE.
-
-1 being (almost) completely transparent, 100 being opaque.
-
-This also updates variable `wal-transparency' during the session."
-  (interactive
-   (list
-    (read-number (format "Set transparency (currently %s%%): " wal-transparency))))
-
-  (let ((transparency (min (max (or value wal-transparency) 1) 100))
-        (param (wal-transparency--param)))
-
-    (setq wal-transparency transparency)
-
-    (modify-all-frames-parameters `((,param . ,transparency)))))
-#+end_src
-
-* Dashboard
-
-** dashboard
+** mixed-pitch
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Let's have a dash of board.
-
-*** Utility
+Allow using variable and fixed fonts in the same buffer.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal-with-recent-files-excluded (fun &rest args)
-  "Advise FUN to ignore certain directories, applying ARGS."
-  (defvar recentf-exclude)
-
-  (let ((recentf-exclude '("bookmarks\\'" "zettelkasten" "org/tasks")))
-
-    (apply fun args)))
-
-(defun wal-instead-show-biased-random (&rest _args)
-  "Advise to use biased random footer message."
-  (nth (wal-biased-random (length dashboard-footer-messages)) dashboard-footer-messages))
-
-(defun wal-in-case-of-daemonp-add-different-hook ()
-  "Setup the dashboard in a daemon-friendly way."
-  (require 'all-the-icons nil t)
-  (when (daemonp)
-    (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
-
-    (add-hook
-     'server-after-make-frame-hook
-     #'dashboard-insert-startupify-lists)))
-
-(defun wal-dashboard-get-buffer ()
-  "Get the a refreshed dashboard buffer."
-  (defvar dashboard-buffer-name)
-  (defvar dashboard-force-refresh)
-
-  (let ((dashboard-force-refresh t))
-
-    (dashboard-insert-startupify-lists)
-    (get-buffer dashboard-buffer-name)))
-#+END_SRC
-
-*** Configuration
-
-#+BEGIN_SRC emacs-lisp
-(use-package dashboard
+(use-package mixed-pitch
   :wal-ways nil
 
-  :hook (after-init . dashboard-setup-startup-hook)
-
-  :init
-  (advice-add
-   'dashboard-insert-startupify-lists :around
-   #'wal-with-recent-files-excluded)
-  (advice-add
-   'dashboard-random-footer :override
-   #'wal-instead-show-biased-random)
-  (advice-add
-   'dashboard-setup-startup-hook :before-until
-   #'wal-in-case-of-daemonp-add-different-hook)
-
   :config
-  (setq dashboard-banner-logo-title (wal-describe-config-version))
-
-  ;; TEMP: Prevent empty dashboard for default sessions.
-  (unless (daemonp)
-    (dashboard-refresh-buffer))
+  (add-to-list 'mixed-pitch-fixed-pitch-faces 'markdown-pre)
 
   :custom
-  (dashboard-items '((recents . 5)
-                     (projects . 3)
-                     (bookmarks . 3)))
-  (dashboard-projects-backend 'project-el)
+  (mixed-pitch-variable-pitch-cursor nil)
 
-  (dashboard-image-banner-max-height (if wal-hidpi 0 300))
-  (dashboard-startup-banner (let ((ext (if (or (daemonp) (display-graphic-p))
-                                           ".png"
-                                         ".txt")))
-
-                              (expand-file-name
-                               (concat "assets/logo" ext)
-                               wal-emacs-config-default-path)))
-
-  (dashboard-footer-icon (if (or (daemonp) (display-graphic-p))
-                             "🐋"
-                           wal-ascii-cachalot-whale))
-  (dashboard-footer-messages '("breaching your favorite stupid framework"
-                               "I propel myself forward on nothing but flukes"
-                               "devout and up the spout"
-                               "krill, filter feeders and hit sulphur bottom"
-                               "the founder of retiring gentlemen"
-                               "the loud keyboard shall vanquish the muscular mouse"
-                               "answering all C-calls in sweeping, overflowing song"
-                               "infinite whale loop"
-                               "from echo location to perimeter expansion"
-                               "a mystic of profounder divings"
-                               "superior, clear and fine code; but there's little of it"
-                               "formed by intertwisting, slanting folds"
-                               "a register for distant jets"
-                               "the most majestic in affect, the most valuable in commiseration"
-                               "unshared, sourceless immensities"))
-
-  (dashboard-week-agenda nil)
-  (dashboard-agenda-time-string-format "%d/%m/%y")
-  (dashboard-agenda-release-buffers t)
-
-  (dashboard-center-content t)
-  (dashboard-set-file-icons t)
-  (dashboard-set-navigator t)
-  (dashboard-path-style 'truncate-beginning)
-
-  :bind
-  (("C-c d" . dashboard-refresh-buffer)))
+  :delight " mpm")
 #+END_SRC
 
 * Themes
@@ -619,6 +494,124 @@ Sometimes the list of minor modes overcrowds the modeline.
                              prettier-mode)))
 #+END_SRC
 
+* Dashboard
+
+** dashboard
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Let's have a dash of board.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal-with-recent-files-excluded (fun &rest args)
+  "Advise FUN to ignore certain directories, applying ARGS."
+  (defvar recentf-exclude)
+
+  (let ((recentf-exclude '("bookmarks\\'" "zettelkasten" "org/tasks")))
+
+    (apply fun args)))
+
+(defun wal-instead-show-biased-random (&rest _args)
+  "Advise to use biased random footer message."
+  (nth (wal-biased-random (length dashboard-footer-messages)) dashboard-footer-messages))
+
+(defun wal-in-case-of-daemonp-add-different-hook ()
+  "Setup the dashboard in a daemon-friendly way."
+  (require 'all-the-icons nil t)
+  (when (daemonp)
+    (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
+
+    (add-hook
+     'server-after-make-frame-hook
+     #'dashboard-insert-startupify-lists)))
+
+(defun wal-dashboard-get-buffer ()
+  "Get the a refreshed dashboard buffer."
+  (defvar dashboard-buffer-name)
+  (defvar dashboard-force-refresh)
+
+  (let ((dashboard-force-refresh t))
+
+    (dashboard-insert-startupify-lists)
+    (get-buffer dashboard-buffer-name)))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package dashboard
+  :wal-ways nil
+
+  :hook (after-init . dashboard-setup-startup-hook)
+
+  :init
+  (advice-add
+   'dashboard-insert-startupify-lists :around
+   #'wal-with-recent-files-excluded)
+  (advice-add
+   'dashboard-random-footer :override
+   #'wal-instead-show-biased-random)
+  (advice-add
+   'dashboard-setup-startup-hook :before-until
+   #'wal-in-case-of-daemonp-add-different-hook)
+
+  :config
+  (setq dashboard-banner-logo-title (wal-describe-config-version))
+
+  ;; TEMP: Prevent empty dashboard for default sessions.
+  (unless (daemonp)
+    (dashboard-refresh-buffer))
+
+  :custom
+  (dashboard-items '((recents . 5)
+                     (projects . 3)
+                     (bookmarks . 3)))
+  (dashboard-projects-backend 'project-el)
+
+  (dashboard-image-banner-max-height (if wal-hidpi 0 300))
+  (dashboard-startup-banner (let ((ext (if (or (daemonp) (display-graphic-p))
+                                           ".png"
+                                         ".txt")))
+
+                              (expand-file-name
+                               (concat "assets/logo" ext)
+                               wal-emacs-config-default-path)))
+
+  (dashboard-footer-icon (if (or (daemonp) (display-graphic-p))
+                             "🐋"
+                           wal-ascii-cachalot-whale))
+  (dashboard-footer-messages '("breaching your favorite stupid framework"
+                               "I propel myself forward on nothing but flukes"
+                               "devout and up the spout"
+                               "krill, filter feeders and hit sulphur bottom"
+                               "the founder of retiring gentlemen"
+                               "the loud keyboard shall vanquish the muscular mouse"
+                               "answering all C-calls in sweeping, overflowing song"
+                               "infinite whale loop"
+                               "from echo location to perimeter expansion"
+                               "a mystic of profounder divings"
+                               "superior, clear and fine code; but there's little of it"
+                               "formed by intertwisting, slanting folds"
+                               "a register for distant jets"
+                               "the most majestic in affect, the most valuable in commiseration"
+                               "unshared, sourceless immensities"))
+
+  (dashboard-week-agenda nil)
+  (dashboard-agenda-time-string-format "%d/%m/%y")
+  (dashboard-agenda-release-buffers t)
+
+  (dashboard-center-content t)
+  (dashboard-set-file-icons t)
+  (dashboard-set-navigator t)
+  (dashboard-path-style 'truncate-beginning)
+
+  :bind
+  (("C-c d" . dashboard-refresh-buffer)))
+#+END_SRC
+
 * Icons
 
 ** all-the-icons
@@ -633,38 +626,32 @@ You need to install the icons yourself[fn:1].
   :wal-ways nil)
 #+END_SRC
 
-* Other
+* Transparency
 
-** mixed-pitch
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
+#+begin_src emacs-lisp
+(defun wal-transparency--param ()
+  "Get the transparency parameter for this Emacs version."
+  (if (wal-modern-emacs-p 29)
+      'alpha-background
+    'alpha))
 
-Allow using variable and fixed fonts in the same buffer.
+(defun wal-set-transparency (&optional value)
+  "Set the transparency of the frame to VALUE.
 
-#+BEGIN_SRC emacs-lisp
-(use-package mixed-pitch
-  :wal-ways nil
+1 being (almost) completely transparent, 100 being opaque.
 
-  :config
-  (add-to-list 'mixed-pitch-fixed-pitch-faces 'markdown-pre)
+This also updates variable `wal-transparency' during the session."
+  (interactive
+   (list
+    (read-number (format "Set transparency (currently %s%%): " wal-transparency))))
 
-  :custom
-  (mixed-pitch-variable-pitch-cursor nil)
+  (let ((transparency (min (max (or value wal-transparency) 1) 100))
+        (param (wal-transparency--param)))
 
-  :delight " mpm")
-#+END_SRC
+    (setq wal-transparency transparency)
 
-* Footer
-:PROPERTIES:
-:VISIBILITY: folded
-:END:
-
-#+BEGIN_SRC emacs-lisp
-(provide 'wal-visuals)
-
-;;; wal-visuals.el ends here
-#+END_SRC
+    (modify-all-frames-parameters `((,param . ,transparency)))))
+#+end_src
 
 * Setups
 
@@ -725,6 +712,17 @@ available candidate from `wal-fixed-fonts'. Does the same for
   :always
   ((run-hooks 'wal-fonts-updated-hook)))
 #+end_src
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(provide 'wal-visuals)
+
+;;; wal-visuals.el ends here
+#+END_SRC
 
 * Footnotes
 
