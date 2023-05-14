@@ -2,6 +2,8 @@
 
 # Get the latest two revisions
 REV_LIST=$(git rev-list --tags --max-count=2)
+
+# shellcheck disable=SC2086
 IFS=$'\n' read -r -d '' -a TAGS < <(git describe --abbrev=0 --tags $REV_LIST)
 
 # Remove prefix
@@ -12,7 +14,7 @@ FILE=$1
 
 function wal::update_and_replace {
   local base
-  base=$(basename $FILE)
+  base=$(basename "$FILE")
 
   echo "Updating ${base@Q}"
 
