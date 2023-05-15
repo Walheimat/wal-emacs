@@ -103,7 +103,7 @@ Files are looked up relative to SOURCE-DIR."
          (template-buffer (find-file-noselect template))
          (template-contents (with-current-buffer template-buffer
                               (buffer-string)))
-         (bootstrap (concat marker template-contents))
+         (bootstrap (concat marker (format template-contents source-dir)))
          (ready nil))
 
     (with-current-buffer init-buffer
