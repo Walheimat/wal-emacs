@@ -14,7 +14,7 @@
 
 (defconst wal-packages '(wal-useful
                          wal-settings
-                         wal-external
+                         wal-package
                          wal-key-bindings
                          wal-config
                          ;; The following packages are optional.

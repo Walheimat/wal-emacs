@@ -1,4 +1,4 @@
-;;; wal-external-test.el --- Tests for external package. -*- lexical-binding: t; -*-
+;;; wal-package-test.el --- Tests for external package. -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;;
@@ -6,7 +6,7 @@
 
 ;;; Code:
 
-(require 'wal-external nil t)
+(require 'wal-package nil t)
 
 (ert-deftest test-wal-use-package-normalize-binder ()
   (with-mock ((use-package-recognize-function . #'always)
@@ -160,4 +160,4 @@
 
       (was-called display-warning))))
 
-;;; wal-external-test.el ends here
+;;; wal-package-test.el ends here
