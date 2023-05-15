@@ -1,4 +1,4 @@
-;;; wal-func-test.el --- Tests for custom functionality. -*- lexical-binding: t; -*-
+;;; wal-useful-test.el --- Tests for custom functionality. -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;;
@@ -6,7 +6,7 @@
 
 ;;; Code:
 
-(require 'wal-func nil t)
+(require 'wal-useful nil t)
 
 (ert-deftest test-wal-modern-emacs-p ()
   (let ((emacs-major-version 30))
@@ -1166,4 +1166,4 @@
   (should (and (advice--p (advice--symbol-function 'wal-test-fun-1))
                (advice--p (advice--symbol-function 'wal-test-fun-2)))))
 
-;;; wal-func-test.el ends here
+;;; wal-useful-test.el ends here

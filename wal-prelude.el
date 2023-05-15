@@ -12,7 +12,7 @@
 
 (declare-function org-babel-tangle-file "ob-tangle")
 
-(defconst wal-packages '(wal-func
+(defconst wal-packages '(wal-useful
                          wal-settings
                          wal-external
                          wal-key-bindings

@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   longer defaulted.
 - `python-mode-major` no longer binds individual `send` commands.
   `inferior-python-mode` now enables `corfu`.
+- Package `wal-func` was renamed to `wal-useful`.
 
 ### Removed
 
