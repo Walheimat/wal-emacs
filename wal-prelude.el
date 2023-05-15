@@ -81,6 +81,9 @@ This variable will be set when calling `wal-prelude-bootstrap'.")
 (defconst wal-prelude--init-marker ";; wal-prelude-bootstrap"
   "The marker used to insert and delete in the user's init file.")
 
+(defconst wal-prelude--init-marker-fs (concat "\n" wal-prelude--init-marker ":%s\n")
+  "String to format new markers.")
+
 (defun wal-prelude--ensure-init (init-file source-dir)
   "Ensure that the INIT-FILE knows how to bootstrap.
 
@@ -95,11 +98,12 @@ Files are looked up relative to SOURCE-DIR."
          (description (string-trim (shell-command-to-string cmd)))
          (hashed (base64-encode-string description))
          (init-buffer (find-file-noselect init-file))
-         (marker (concat "\n" wal-prelude--init-marker ":" hashed "\n"))
+         (marker (format wal-prelude--init-marker-fs hashed))
          (template (expand-file-name "data/init.eld" source-dir))
          (template-buffer (find-file-noselect template))
          (template-contents (with-current-buffer template-buffer
                               (buffer-string)))
+         (bootstrap (concat marker template-contents))
          (ready nil))
 
     (with-current-buffer init-buffer
@@ -115,8 +119,7 @@ Files are looked up relative to SOURCE-DIR."
 
     (unless ready
       (message "Setting up bootstrap in '%s'" init-file)
-      (append-to-file marker nil init-file)
-      (append-to-file (format template-contents source-dir) nil init-file))))
+      (append-to-file bootstrap nil init-file))))
 
 (defvar wal-prelude-init-error nil
   "Set to the error message if initialization failed.")
