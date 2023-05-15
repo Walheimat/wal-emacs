@@ -25,6 +25,7 @@ clean-commits:
 commits: node_modules .husky/_/husky.sh
 
 # Simulate a cold boot
+.PHONY: cold-boot
 cold-boot:
 	$(WITH_PRELUDE) --eval "(wal-prelude-bootstrap \"$(WAL_SOURCE_DIR)\" nil t)"
 
@@ -33,18 +34,15 @@ update-version:
 	$(UPDATE_VERSION) Cask
 	$(UPDATE_VERSION) lib/wal-config.org
 
-# Check the package files with flycheck
-pacify: build
-	$(WITH_PRELUDE) $(BOOTSTRAP) -l ./tools/wal-pacify.el -f wal-pacify-check
-
-# Remove the build folder
-clean:
-	$(info Removing build folder)
-	rm -rf ./build
-
 # Tangle all library files
 build:
 	$(WITH_PRELUDE) $(BOOTSTRAP)
+
+# Remove the build folder
+.PHONY: clean
+clean:
+	$(info Removing build folder)
+	rm -rf ./build
 
 # Ensure that the user's init file contains the necessary code to
 # bootstrap and load the configuration
@@ -53,6 +51,13 @@ ensure:
 
 install: build ensure
 	$(info Run $(EMACS) with flag --ensure to install packages)
+
+clean-install: clean install
+
+# Check the package files with flycheck
+.PHONY: pacify
+pacify: build
+	$(WITH_PRELUDE) $(BOOTSTRAP) -l ./tools/wal-pacify.el -f wal-pacify-check
 
 # Run tests using cask
 .PHONY: test
