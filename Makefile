@@ -12,12 +12,20 @@ $(V).SILENT:
 
 # -- Default goal
 
+ifdef CI
+install: .cask
+else
 install: build ensure
 	$(info Run $(EMACS) with flag --ensure to install packages)
+endif
 
 # Tangle all library files
 build:
 	$(WITH_PRELUDE) $(BOOTSTRAP)
+
+# Install Cask dependencies
+.cask: build
+	cask install
 
 # Ensure that the user's init file contains the necessary code to
 # bootstrap and load the configuration
@@ -28,7 +36,12 @@ ensure:
 .PHONY: clean
 clean:
 	$(info Removing build folder)
-	rm -rf ./build
+	rm -rf build
+
+.PHONY: clobber
+clobber: clean
+	$(info Removing Cask folder)
+	rm -rf .cask
 
 clean-install: clean install
 
@@ -36,7 +49,7 @@ clean-install: clean install
 
 # Run tests using cask
 .PHONY: test
-test: build
+test: build .cask
 	cask exec ert-runner $(TEST_ARGS)
 
 # Check the package files with flycheck
@@ -69,10 +82,3 @@ clean-commits:
 	$(info Removing node modules and husky script)
 	rm -rf ./node_modules
 	rm -rf ./.husky/_
-
-# -- CI
-
-.cask: build
-	cask install
-
-ci: .cask
