@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   entries.
 - `lsp-ui-doc-show-with-mouse` is now disabled to avoid messing with
   help echos.
+- Running Emacs with `--ensure` should no longer attempt to install
+  built-in packages.
 
 ## [v2.0.2]
 
