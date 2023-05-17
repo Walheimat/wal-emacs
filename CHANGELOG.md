@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `inferior-python-mode` now enables `corfu`.
 - Package `wal-func` was renamed to `wal-useful`.
 - Package `wal-external` was renamed to `wal-package`.
+- Running `make` alone should install everything now, including
+  packages.
 
 ### Removed
 

@@ -1,6 +1,7 @@
 EMACS?=emacs
 WAL_SOURCE_DIR?=$(CURDIR)
 EMACS_INIT_FILE?=$(HOME)/.emacs.d/init.el
+PACKAGE_MARKER=$(HOME)/.emacs.d/elpa/wal-line/wal-line.el
 
 WITH_PRELUDE=$(EMACS) --batch -l ./wal-prelude.el
 BOOTSTRAP=--eval "(wal-prelude-bootstrap \"$(WAL_SOURCE_DIR)\" t)"
@@ -16,7 +17,6 @@ ifdef CI
 install: .cask
 else
 install: build ensure
-	$(info Run $(EMACS) with flag --ensure to install packages)
 endif
 
 # Tangle all library files
@@ -28,9 +28,16 @@ build:
 	cask install
 
 # Ensure that the user's init file contains the necessary code to
-# bootstrap and load the configuration
-ensure:
+# bootstrap and load the configuration; also ensure that packages are
+# installed by checking for the existence of a marker package.
+ensure: ensure-init $(PACKAGE_MARKER)
+
+ensure-init:
 	$(WITH_PRELUDE) --eval "(wal-prelude--ensure-init \"$(EMACS_INIT_FILE)\" \"$(WAL_SOURCE_DIR)\")"
+
+$(PACKAGE_MARKER):
+	$(info Package $(PACKAGE_MARKER) missing, will ensure)
+	$(WITH_PRELUDE) -f package-initialize --eval "(setq wal-flag-ensure t)" --eval "(wal-prelude-bootstrap \"$(WAL_SOURCE_DIR)\")"
 
 
 .PHONY: clean
