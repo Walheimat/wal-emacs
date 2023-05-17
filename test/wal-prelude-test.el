@@ -190,6 +190,23 @@
 
       (was-called wal-prelude-tangle-config))))
 
+(ert-deftest bootstrap--would-ensure ()
+  (defvar wal-emacs-config-build-path)
+
+  (let ((wal-emacs-config "/tmp"))
+
+    (with-mock ((file-directory-p . #'always)
+                (directory-empty-p . #'always)
+                make-directory
+                wal-prelude-tangle-config
+                wal-prelude--set-paths
+                wal-prelude--load-config
+                package-initialize)
+
+      (wal-prelude-bootstrap "/tmp" nil nil t)
+
+      (was-called package-initialize))))
+
 (ert-deftest bootstrap--handles-errors ()
   (defvar wal-prelude-init-error)
 

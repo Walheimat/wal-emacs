@@ -45,6 +45,7 @@ build:
 	$(WITH_PRELUDE) $(BOOTSTRAP)
 
 # Make sure the user's init file contains the bootstrapper
+.PHONY: ensure-init
 ensure-init:
 	$(WITH_PRELUDE) $(INIT)
 
