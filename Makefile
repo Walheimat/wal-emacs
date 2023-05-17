@@ -14,43 +14,35 @@ $(V).SILENT:
 # -- Default goal
 
 ifdef CI
-install: .cask
+install: ci
 else
-install: build ensure
+install: local
 endif
 
-# Tangle all library files
-build:
-	$(WITH_PRELUDE) $(BOOTSTRAP)
+# Do everything necessary for a local installation
+.PHONY: local
+local: build ensure-init $(PACKAGE_MARKER)
+
+# Do everything necessary for a installation in CI environment
+.PHONY: ci
+ci: .cask
 
 # Install Cask dependencies
 .cask: build
 	cask install
 
-# Ensure that the user's init file contains the necessary code to
-# bootstrap and load the configuration; also ensure that packages are
-# installed by checking for the existence of a marker package.
-ensure: ensure-init $(PACKAGE_MARKER)
+# Tangle all library files
+build:
+	$(WITH_PRELUDE) $(BOOTSTRAP)
 
+# Make sure the user's init file contains the bootstrapper
 ensure-init:
-	$(WITH_PRELUDE) --eval "(wal-prelude--ensure-init \"$(EMACS_INIT_FILE)\" \"$(WAL_SOURCE_DIR)\")"
+	$(WITH_PRELUDE) --eval "(wal-prelude-init \"$(EMACS_INIT_FILE)\" \"$(WAL_SOURCE_DIR)\")"
 
+# Make sure packages have been installed
 $(PACKAGE_MARKER):
 	$(info Package $(PACKAGE_MARKER) missing, will ensure)
 	$(WITH_PRELUDE) -f package-initialize --eval "(setq wal-flag-ensure t)" --eval "(wal-prelude-bootstrap \"$(WAL_SOURCE_DIR)\")"
-
-
-.PHONY: clean
-clean:
-	$(info Removing build folder)
-	rm -rf build
-
-.PHONY: clobber
-clobber: clean
-	$(info Removing Cask folder)
-	rm -rf .cask
-
-clean-install: clean install
 
 # -- Checks
 
@@ -85,7 +77,18 @@ node_modules:
 .husky/_/husky.sh:
 	npx husky install
 
-clean-commits:
-	$(info Removing node modules and husky script)
-	rm -rf ./node_modules
-	rm -rf ./.husky/_
+# -- Cleaning
+
+.PHONY: clean
+clean:
+	rm -rf build
+
+.PHONY: clobber
+clobber: clean
+	rm -rf .cask
+	rm -rf node_modules
+	rm .husky/_/husky.sh
+
+.PHONY: uninstall
+uninstall: clobber
+	$(WITH_PRELUDE) --eval "(wal-prelude-init \"$(EMACS_INIT_FILE)\" \"$(WAL_SOURCE_DIR)\" t)"

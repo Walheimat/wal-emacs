@@ -8,8 +8,6 @@
 
 ;;; Code:
 
-;;;; Variables:
-
 (declare-function org-babel-tangle-file "ob-tangle")
 
 (defconst wal-packages '(wal-useful
@@ -65,8 +63,6 @@ This variable will be set when calling `wal-prelude-bootstrap'.")
   :group 'convenience
   :prefix "wal-")
 
-;;;; Init file setup:
-
 (defun wal-prelude-package-files ()
   "Get the package files."
   (let* ((package-files (nthcdr 2 (directory-files wal-emacs-config-build-path t)))
@@ -84,13 +80,15 @@ This variable will be set when calling `wal-prelude-bootstrap'.")
 (defconst wal-prelude--init-marker-fs (concat "\n" wal-prelude--init-marker ":%s\n")
   "String to format new markers.")
 
-(defun wal-prelude--ensure-init (init-file source-dir)
+(defun wal-prelude-init (init-file source-dir &optional clear)
   "Ensure that the INIT-FILE knows how to bootstrap.
 
 This verifies the bootstrapping block was created by the current
 version. It is otherwise (re-)created.
 
-Files are looked up relative to SOURCE-DIR."
+Files are looked up relative to SOURCE-DIR.
+
+If CLEAR is t, make sure the INIT-FILE no longer knows."
   (unless (file-exists-p init-file)
     (user-error "Init file '%s' doesn't exist" init-file))
 
@@ -107,7 +105,8 @@ Files are looked up relative to SOURCE-DIR."
          (ready nil))
 
     (with-current-buffer init-buffer
-      (if (string-search hashed (buffer-string))
+      (if (and (not clear)
+               (string-search hashed (buffer-string)))
           (progn
             (message "Bootstrap in '%s' is up-to-date" init-file)
             (setq ready t))
@@ -117,7 +116,7 @@ Files are looked up relative to SOURCE-DIR."
           (save-buffer))))
     (kill-buffer init-buffer)
 
-    (unless ready
+    (unless (or ready clear)
       (message "Setting up bootstrap in '%s'" init-file)
       (append-to-file bootstrap nil init-file))))
 
@@ -171,8 +170,6 @@ Files are looked up relative to SOURCE-DIR."
 
     (setq package-user-dir temp-dir)
     (message "Cold-boot using '%s'" temp-dir)))
-
-;;;; Entry-points:
 
 (defun wal-prelude-tangle-config ()
   "Tangle the configuration's libraries.
