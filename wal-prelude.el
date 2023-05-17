@@ -43,6 +43,9 @@ The order determines the load order as well.")
 (defvar wal-loaded nil
   "Set to t after loading.")
 
+(defvar wal-prelude-ensure nil
+  "Ensure packages after bootstrapping.")
+
 (defvar wal-emacs-config-default-path nil
   "The root path of the configuration.
 
@@ -193,15 +196,17 @@ Note that `message' is silenced during tangling."
 
     (message "All library files in '%s' tangled" wal-emacs-config-lib-path)))
 
-(defun wal-prelude-bootstrap (source-dir &optional no-load cold-boot)
+(defun wal-prelude-bootstrap (source-dir &optional plain cold-boot ensure)
   "Bootstrap the configuration in SOURCE-DIR.
 
 This will tangle the config if it hasn't been yet.
 
-Unless NO-LOAD is t, this will load the `wal' package.
+If PLAIN is t, packages will not be loaded.
 
 If COLD-BOOT is t, a temp folder will be used as a
-`package-user-dir' to test the behavior of a cold boot."
+`package-user-dir' to test the behavior of a cold boot.
+
+If ENSURE is t, packages are ensured after loading."
   (message "Bootstrapping config from '%s'" source-dir)
 
   (wal-prelude--set-paths source-dir)
@@ -215,8 +220,13 @@ If COLD-BOOT is t, a temp folder will be used as a
   (when cold-boot
     (wal-prelude--configure-cold-boot))
 
-  (if no-load
+  (if plain
       (message "Will not load configuration")
+
+    (when ensure
+      (package-initialize)
+      (setq wal-prelude-ensure t))
+
     (wal-prelude--load-config)
 
     (when wal-prelude-init-error

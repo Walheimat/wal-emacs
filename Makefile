@@ -4,8 +4,17 @@ EMACS_INIT_FILE?=$(HOME)/.emacs.d/init.el
 PACKAGE_MARKER=$(HOME)/.emacs.d/elpa/wal-line/wal-line.el
 
 WITH_PRELUDE=$(EMACS) --batch -l ./wal-prelude.el
-BOOTSTRAP=--eval "(wal-prelude-bootstrap \"$(WAL_SOURCE_DIR)\" t)"
+
+BOOTSTRAP_PLAIN=t
+BOOTSTRAP_COLD=nil
+BOOTSTRAP_ENSURE=nil
+BOOTSTRAP=--eval "(wal-prelude-bootstrap \"$(WAL_SOURCE_DIR)\" $(BOOTSTRAP_PLAIN) $(BOOTSTRAP_COLD) $(BOOTSTRAP_ENSURE))"
+
+INIT_CLEAR=nil
+INIT=--eval "(wal-prelude-init \"$(EMACS_INIT_FILE)\" \"$(WAL_SOURCE_DIR)\" $(INIT_CLEAR))"
+
 UPDATE_VERSION=./tools/update-version.sh
+
 TEST_ARGS=
 
 # Run `make V=1 {cmd}` to print commands
@@ -37,12 +46,13 @@ build:
 
 # Make sure the user's init file contains the bootstrapper
 ensure-init:
-	$(WITH_PRELUDE) --eval "(wal-prelude-init \"$(EMACS_INIT_FILE)\" \"$(WAL_SOURCE_DIR)\")"
+	$(WITH_PRELUDE) $(INIT)
 
 # Make sure packages have been installed
+$(PACKAGE_MARKER): BOOTSTRAP_PLAIN=nil
+$(PACKAGE_MARKER): BOOTSTRAP_ENSURE=t
 $(PACKAGE_MARKER):
-	$(info Package $(PACKAGE_MARKER) missing, will ensure)
-	$(WITH_PRELUDE) -f package-initialize --eval "(setq wal-flag-ensure t)" --eval "(wal-prelude-bootstrap \"$(WAL_SOURCE_DIR)\")"
+	$(WITH_PRELUDE) $(BOOTSTRAP)
 
 # -- Checks
 
@@ -58,17 +68,21 @@ pacify: build
 
 # Simulate a cold boot
 .PHONY: cold-boot
+cold-boot: BOOTSTRAP_COLD=t
+cold-boot: BOOTSTRAP_PLAIN=nil
 cold-boot:
-	$(WITH_PRELUDE) --eval "(wal-prelude-bootstrap \"$(WAL_SOURCE_DIR)\" nil t)"
+	$(WITH_PRELUDE) $(BOOTSTRAP)
 
 # -- Utility
 
+.PHONY: update-version
 update-version:
 	$(UPDATE_VERSION) Cask
 	$(UPDATE_VERSION) lib/wal-config.org
 
 # -- Commit linting setup
 
+.PHONY: commits
 commits: node_modules .husky/_/husky.sh
 
 node_modules:
@@ -82,13 +96,15 @@ node_modules:
 .PHONY: clean
 clean:
 	rm -rf build
+	rm -rf .cask
 
 .PHONY: clobber
 clobber: clean
-	rm -rf .cask
+	git config --unset core.hooksPath
 	rm -rf node_modules
-	rm .husky/_/husky.sh
+	rm -f .husky/_/husky.sh
 
 .PHONY: uninstall
+uninstall: INIT_CLEAR=t
 uninstall: clobber
-	$(WITH_PRELUDE) --eval "(wal-prelude-init \"$(EMACS_INIT_FILE)\" \"$(WAL_SOURCE_DIR)\" t)"
+	$(WITH_PRELUDE) $(INIT)
