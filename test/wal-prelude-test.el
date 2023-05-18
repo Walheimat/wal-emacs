@@ -183,6 +183,31 @@
 
         (was-called-n-times shell-command 1)))))
 
+(ert-deftest maybe-tangle--tangles-for-empty-directory ()
+  (let ((wal-emacs-config "/tmp"))
+
+    (with-mock ((file-directory-p . #'always)
+                (directory-empty-p . #'always)
+                make-directory
+                wal-prelude-tangle-config)
+
+      (wal-prelude--maybe-tangle)
+
+      (was-called wal-prelude-tangle-config))))
+
+(ert-deftest maybe-tangle--does-not-tangle ()
+  (let ((wal-emacs-config "/tmp"))
+
+    (with-mock ((file-directory-p . #'always)
+                (directory-empty-p . #'ignore)
+                make-directory
+                wal-prelude-tangle-config)
+
+      (wal-prelude--maybe-tangle)
+
+      (was-not-called wal-prelude-tangle-config)
+      (was-not-called make-directory))))
+
 (ert-deftest tangle-config--tangles-all-sources ()
   (with-mock (require org-babel-tangle-file wal-prelude--touch)
 
@@ -200,9 +225,11 @@
   (let ((wal-emacs-config-build-path "/tmp"))
 
     (with-mock (wal-prelude--configure-cold-boot
-                wal-prelude--set-paths)
+                wal-prelude--set-paths
+                wal-prelude--maybe-tangle
+                wal-prelude--load-config)
 
-      (wal-prelude-bootstrap "/tmp" t t)
+      (wal-prelude-bootstrap "/tmp" 'cold)
 
       (was-called wal-prelude--configure-cold-boot))))
 
@@ -212,6 +239,7 @@
   (let ((wal-emacs-config-build-path "/tmp"))
 
     (with-mock (wal-prelude--set-paths
+                wal-prelude--maybe-tangle
                 wal-prelude--load-config)
 
       (wal-prelude-bootstrap "/tmp")
@@ -229,7 +257,7 @@
                 wal-prelude-tangle-config
                 wal-prelude--set-paths)
 
-      (wal-prelude-bootstrap "/tmp" t)
+      (wal-prelude-bootstrap "/tmp" 'plain)
 
       (was-called wal-prelude-tangle-config))))
 
@@ -238,15 +266,13 @@
 
   (let ((wal-emacs-config "/tmp"))
 
-    (with-mock ((file-directory-p . #'always)
-                (directory-empty-p . #'always)
-                make-directory
-                wal-prelude-tangle-config
+    (with-mock (wal-prelude-tangle-config
                 wal-prelude--set-paths
+                wal-prelude--maybe-tangle
                 wal-prelude--load-config
                 package-initialize)
 
-      (wal-prelude-bootstrap "/tmp" nil nil t)
+      (wal-prelude-bootstrap "/tmp" 'ensure)
 
       (was-called package-initialize))))
 
@@ -255,17 +281,16 @@
 
   (let ((wal-prelude-init-error nil))
 
-    (with-mock ((file-directory-p . #'always)
-                (directory-empty-p . #'ignore)
-                wal-prelude--set-paths
+    (with-mock (wal-prelude--set-paths
                 wal-prelude--configure-cold-boot
                 wal-prelude--load-config
+                wal-prelude--maybe-tangle
                 kill-emacs
                 delay-warning)
 
       (setq wal-prelude-init-error 'some-error)
 
-      (wal-prelude-bootstrap "/tmp" nil t)
+      (wal-prelude-bootstrap "/tmp" 'cold)
 
       (was-called kill-emacs)
 

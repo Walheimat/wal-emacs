@@ -226,46 +226,63 @@ Note that `message' is silenced during tangling."
 
     (message "All library files in '%s' tangled" wal-emacs-config-lib-path)))
 
-(defun wal-prelude-bootstrap (source-dir &optional plain cold-boot ensure)
-  "Bootstrap the configuration in SOURCE-DIR.
+(defun wal-prelude--handle-error (exit)
+  "Handle the error that occurred during initialization.
 
-This will tangle the config if it hasn't been yet.
+If EXIT is t, exit on error."
+  (when wal-prelude-init-error
+    (if exit
+        (kill-emacs 1)
+      (delay-warning
+       'wal
+       (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal-prelude-init-error)
+       :error))))
 
-If PLAIN is t, packages will not be loaded.
-
-If COLD-BOOT is t, a temp folder will be used as a
-`package-user-dir' to test the behavior of a cold boot.
-
-If ENSURE is t, packages are ensured after loading."
-  (message "Bootstrapping config from '%s'" source-dir)
-
-  (wal-prelude--set-paths source-dir)
-
+(defun wal-prelude--maybe-tangle ()
+  "Maybe tangle the configuration."
   (if (and (file-directory-p wal-emacs-config-build-path)
            (not (directory-empty-p wal-emacs-config-build-path)))
       (message "Found non-empty build directory '%s', will not tangle" wal-emacs-config-build-path)
     (make-directory wal-emacs-config-build-path t)
-    (wal-prelude-tangle-config))
+    (wal-prelude-tangle-config)))
 
-  (when cold-boot
-    (wal-prelude--configure-cold-boot))
+(defun wal-prelude-bootstrap (source-dir &optional mode)
+  "Bootstrap the configuration in SOURCE-DIR.
 
-  (if plain
-      (message "Will not load configuration")
+This will tangle the config if it hasn't been yet.
 
-    (when ensure
-      (package-initialize)
-      (setq wal-prelude-ensure t))
+Optional MODE can be one of symbols `plain', `cold' and `ensure'.
 
-    (wal-prelude--load-config)
+Plain means the configuration will not be loaded.
 
-    (when wal-prelude-init-error
-      (if cold-boot
-          (kill-emacs 1)
-        (delay-warning
-         'wal
-         (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal-prelude-init-error)
-         :error)))))
+Cold means a temp folder will be used as `package-user-dir' to
+test the behavior of a cold boot.
+
+Ensure means that packages will be installed after loading."
+  (let ((mode (or mode 'normal))
+        (load t)
+        (exit nil))
+
+    (message "Bootstrapping config from '%s' in '%s' mode" source-dir mode)
+
+    (wal-prelude--set-paths source-dir)
+    (wal-prelude--maybe-tangle)
+
+    (pcase mode
+      ('ensure
+       (package-initialize)
+       (setq wal-prelude-ensure t))
+
+      ('cold
+       (wal-prelude--configure-cold-boot)
+       (setq exit t))
+
+      ('plain
+       (setq load nil)))
+
+    (when load
+      (wal-prelude--load-config)
+      (wal-prelude--handle-error exit))))
 
 (provide 'wal-prelude)
 

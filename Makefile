@@ -5,10 +5,8 @@ PACKAGE_MARKER=$(HOME)/.emacs.d/elpa/wal-line/wal-line.el
 
 WITH_PRELUDE=$(EMACS) --batch -l ./wal-prelude.el
 
-BOOTSTRAP_PLAIN=t
-BOOTSTRAP_COLD=nil
-BOOTSTRAP_ENSURE=nil
-BOOTSTRAP=--eval "(wal-prelude-bootstrap \"$(WAL_SOURCE_DIR)\" $(BOOTSTRAP_PLAIN) $(BOOTSTRAP_COLD) $(BOOTSTRAP_ENSURE))"
+BOOTSTRAP_MODE=plain
+BOOTSTRAP=--eval "(wal-prelude-bootstrap \"$(WAL_SOURCE_DIR)\" '$(BOOTSTRAP_MODE))"
 
 INIT_CLEAR=nil
 INIT=--eval "(wal-prelude-init \"$(EMACS_INIT_FILE)\" \"$(WAL_SOURCE_DIR)\" $(INIT_CLEAR))"
@@ -50,8 +48,7 @@ ensure-init:
 	$(WITH_PRELUDE) $(INIT)
 
 # Make sure packages have been installed
-$(PACKAGE_MARKER): BOOTSTRAP_PLAIN=nil
-$(PACKAGE_MARKER): BOOTSTRAP_ENSURE=t
+$(PACKAGE_MARKER): BOOTSTRAP_MODE=ensure
 $(PACKAGE_MARKER):
 	$(WITH_PRELUDE) $(BOOTSTRAP)
 
@@ -69,8 +66,7 @@ pacify: build
 
 # Simulate a cold boot
 .PHONY: cold-boot
-cold-boot: BOOTSTRAP_COLD=t
-cold-boot: BOOTSTRAP_PLAIN=nil
+cold-boot: BOOTSTRAP_MODE=cold
 cold-boot:
 	$(WITH_PRELUDE) $(BOOTSTRAP)
 
