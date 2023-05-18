@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Tab buffers. Tabs that have been explicitly named now have a history
+  of buffers found in their context. This is used in a `consult`
+  buffer source that can be narrowed to using `t`.
+
 ### Changed
 
 - Packages `font` and `look` were folded into `visuals`.
@@ -21,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package `wal-external` was renamed to `wal-package`.
 - Running `make` alone should install everything now, including
   packages.
+- Default setup for `org-src` is used.
 
 ### Removed
 
@@ -40,6 +47,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   help echos.
 - Running Emacs with `--ensure` should no longer attempt to install
   built-in packages.
+- Running `wal-prelude-tangle-config` now touches files in
+  `wal-prelude--phony-build-dependencies` to avoid needless `cask
+  install` runs.
+- Resorting `consult` buffers so that the current buffer is shown was
+  removed since it (now? always?) moves the mark to the initial
+  position.
 
 ## [v2.0.2]
 
