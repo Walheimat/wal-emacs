@@ -185,7 +185,8 @@ These files will be touched after tangling.")
 
     (let ((expanded (expand-file-name it wal-emacs-config-default-path)))
 
-      (shell-command (format "touch %s" expanded)))))
+      (when (file-exists-p expanded)
+        (shell-command (format "touch %s" expanded))))))
 
 (defun wal-prelude-tangle-config ()
   "Tangle the configuration's libraries.

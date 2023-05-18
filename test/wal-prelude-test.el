@@ -142,14 +142,24 @@
 
       (should (string= "/tmp/package" package-user-dir)))))
 
-(ert-deftest touch ()
+(ert-deftest touch--does-not-for-non-existing ()
   (let ((wal-emacs-config-default-path "/tmp/default")
         (wal-prelude--phony-build-dependencies '("test" "testing")))
 
     (with-mock (shell-command)
       (wal-prelude--touch)
 
-      (was-called-n-times shell-command 2))))
+      (was-not-called shell-command))))
+
+(ert-deftest touch--touches-existing ()
+  (wal-with-temp-file "touchable"
+    (let ((wal-emacs-config-default-path "/tmp")
+          (wal-prelude--phony-build-dependencies (list wal-tmp-file "testing")))
+
+      (with-mock (shell-command)
+        (wal-prelude--touch)
+
+        (was-called-n-times shell-command 1)))))
 
 (ert-deftest tangle-config--tangles-all-sources ()
   (with-mock (require org-babel-tangle-file wal-prelude--touch)
