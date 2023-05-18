@@ -174,6 +174,19 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
     (setq package-user-dir temp-dir)
     (message "Cold-boot using '%s'" temp-dir)))
 
+(defconst wal-prelude--phony-build-dependencies '(".cask")
+  "Files or directories that are phony dependencies.
+
+These files will be touched after tangling.")
+
+(defun wal-prelude--touch ()
+  "Touch directories to make sure they aren't considered outated."
+  (dolist (it wal-prelude--phony-build-dependencies)
+
+    (let ((expanded (expand-file-name it wal-emacs-config-default-path)))
+
+      (shell-command (format "touch %s" expanded)))))
+
 (defun wal-prelude-tangle-config ()
   "Tangle the configuration's libraries.
 
@@ -193,6 +206,8 @@ Note that `message' is silenced during tangling."
       (org-babel-tangle-file (expand-file-name it wal-emacs-config-default-path)))
 
     (advice-remove 'message #'ignore)
+
+    (wal-prelude--touch)
 
     (message "All library files in '%s' tangled" wal-emacs-config-lib-path)))
 

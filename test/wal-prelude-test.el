@@ -142,14 +142,25 @@
 
       (should (string= "/tmp/package" package-user-dir)))))
 
+(ert-deftest touch ()
+  (let ((wal-emacs-config-default-path "/tmp/default")
+        (wal-prelude--phony-build-dependencies '("test" "testing")))
+
+    (with-mock (shell-command)
+      (wal-prelude--touch)
+
+      (was-called-n-times shell-command 2))))
+
 (ert-deftest tangle-config--tangles-all-sources ()
-  (with-mock (require org-babel-tangle-file)
+  (with-mock (require org-babel-tangle-file wal-prelude--touch)
 
     (message "current error %s" wal-prelude-init-error)
 
     (wal-prelude-tangle-config)
 
-    (was-called-n-times org-babel-tangle-file (length wal-packages))))
+    (was-called-n-times org-babel-tangle-file (length wal-packages))
+
+    (was-called wal-prelude--touch)))
 
 (ert-deftest bootstrap--configures-cold-boot ()
 (defvar wal-emacs-config-build-path)

@@ -39,7 +39,6 @@ ci: .cask
 # Install Cask dependencies
 .cask: build
 	cask install
-	touch .cask
 
 # Tangle all library files
 build:
