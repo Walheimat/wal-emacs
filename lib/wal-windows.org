@@ -18,8 +18,12 @@ Everything that has to do with windows.
 
 ;;; Code:
 
-(defvar popper-buried-popup-alist)
-(defvar popper-group-function)
+(require 'ring)
+(require 'cl-macs)
+(require 'subr-x)
+
+(declare-function consult--buffer-query "ext:consult.el")
+(declare-function consult--buffer-state "ext:consult.el")
 #+END_SRC
 
 * Packages
@@ -70,13 +74,105 @@ Otherwise switch to the buffer normally."
         (tab-bar-switch-to-tab tab-name)
         (select-window (get-buffer-window buffer)))
     (switch-to-buffer buffer)))
+
+(defvar wal-tab-buffers--table (make-hash-table))
+(defconst wal-tab-buffers--history-size 10)
+
+(defun wal-tab-buffers--explicit-name ()
+  "Get the explicit name of the current tab."
+  (when-let* ((tab (tab-bar--current-tab))
+              ((cdr-safe (assq 'explicit-name tab)))
+              (tab-name (cdr-safe (assq 'name tab))))
+    tab-name))
+
+(defun wal-tab-buffers--remember ()
+  "Remember the current buffer for this tab."
+  (when-let* ((tab-name (wal-tab-buffers--explicit-name))
+
+              (buffer (current-buffer))
+
+              (table wal-tab-buffers--table)
+              (history (gethash
+                         tab-name
+                         table
+                         (make-ring wal-tab-buffers--history-size))))
+
+    (unless (ring-member history buffer)
+      (ring-insert history buffer)
+      (puthash tab-name history table))))
+
+(defun wal-tab-buffers--forget ()
+  "Forget the current buffer."
+  (let* ((buffer (current-buffer))
+
+         (table wal-tab-buffers--table)
+         (maybe-remove (lambda (tab-name history)
+                         (when-let ((index (ring-member history buffer)))
+
+                           (ring-remove history index)
+                           (puthash tab-name history table)))))
+
+    (maphash maybe-remove table)))
+
+(defun wal-tab-buffers--on-close (tab only)
+  "Remove TAB from table if it is not the ONLY one."
+  (when-let* ((tab-name (cdr-safe (assq 'name tab)))
+              (table wal-tab-buffers--table))
+
+    (when (and (not only)
+               (gethash tab-name table))
+      (remhash tab-name table))))
+
+(defun wal-tab-buffers--history ()
+  "Get the buffer history for the current tab."
+  (when-let* ((tab-name (wal-tab-buffers--explicit-name))
+
+              (table wal-tab-buffers--table)
+              (history (gethash tab-name table)))
+    history))
+
+(defun wal-tab-buffers--current-p (buffer)
+  "Check if BUFFER belongs to the current tab."
+  (when-let ((history (wal-tab-buffers--history)))
+
+    (ring-member history buffer)))
+
+(defun wal-tab-buffers--has-buffers-p ()
+  "Check if there are buffers associated with the current tab."
+  (when-let ((history (wal-tab-buffers--history)))
+
+    (not (ring-empty-p history))))
+
+(defvar wal-consult--source-tab-buffer
+  (list :name "Tab buffer"
+        :narrow ?t
+        :category 'buffer
+        :state #'consult--buffer-state
+        :history 'buffer-name-history
+        :items
+        #'(lambda () (consult--buffer-query :sort 'visibility
+                                       :predicate #'wal-tab-buffers--current-p
+                                       :as #'buffer-name)))
+  "Buffers that are associated with the current tab.")
 #+END_SRC
 
 *** Configuration
 
 #+begin_src emacs-lisp
 (use-package tab-bar
-  :hook (emacs-startup . tab-bar-mode)
+  :hook
+  ((emacs-startup . tab-bar-mode)
+   (find-file . wal-tab-buffers--remember)
+   (kill-buffer . wal-tab-buffers--forget))
+
+  :config
+  (with-eval-after-load 'consult
+    (wal-insert-after
+     'consult-buffer-sources
+     'consult--source-buffer
+     'wal-consult--source-tab-buffer))
+
+  (add-to-list 'tab-bar-tab-pre-close-functions #'wal-tab-buffers--on-close)
 
   :custom
   (tab-bar-show nil)
