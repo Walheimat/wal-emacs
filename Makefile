@@ -103,5 +103,5 @@ clobber: clean
 
 .PHONY: uninstall
 uninstall: INIT_CLEAR=t
-uninstall: clobber
+uninstall:
 	$(WITH_PRELUDE) $(INIT)
