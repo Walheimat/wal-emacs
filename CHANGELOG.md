@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Running `make` alone should install everything now, including
   packages.
 - Default setup for `org-src` is used.
+- Customization is no longer part of `wal-settings`. It's now part of
+  `wal-prelude` which makes the settings package optional.
 
 ### Removed
 

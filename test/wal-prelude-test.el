@@ -77,14 +77,34 @@
       (with-current-buffer (find-file-noselect wal-tmp-file)
         (should-not (string-match hashed (buffer-string)))))))
 
+(ert-deftest configure-customization ()
+  (let ((custom-file nil)
+        (user-emacs-directory "/tmp")
+        (exists nil))
+
+    (with-mock ((file-exists-p . (lambda (&rest _)
+                                   (let ((before exists))
+                                     (setq exists (not exists))
+                                     before)))
+                make-empty-file
+                load)
+
+      (wal-prelude--configure-customization)
+
+      (should (string= custom-file "/tmp/custom.el"))
+
+      (was-called-with make-empty-file (list "/tmp/custom.el" t))
+      (was-called-with load "/tmp/custom.el"))))
+
 (ert-deftest load-config--requires-packages ()
   (defvar wal-packages)
 
   (let ((wal-packages '(one two)))
 
-    (with-mock (require add-to-list)
+    (with-mock (require add-to-list wal-prelude--configure-customization)
       (wal-prelude--load-config)
 
+      (was-called wal-prelude--configure-customization)
       (was-called-nth-with require (list 'one) 0)
       (was-called-nth-with require (list 'two) 1))))
 
@@ -96,7 +116,7 @@
         (default-directory "/tmp")
         (wal-emacs-config-build-path nil))
 
-    (with-mock (require add-to-list)
+    (with-mock (require add-to-list wal-prelude--configure-customization)
 
       (wal-prelude--load-config)
 
@@ -109,7 +129,9 @@
   (let ((wal-packages '(fails))
         (wal-prelude-init-error nil))
 
-    (with-mock (add-to-list (require . (lambda (&rest _) (error "Oops"))))
+    (with-mock (add-to-list
+                (require . (lambda (&rest _) (error "Oops")))
+                wal-prelude--configure-customization)
 
       (wal-prelude--load-config)
 

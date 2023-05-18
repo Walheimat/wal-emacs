@@ -10,29 +10,29 @@
 
 (declare-function org-babel-tangle-file "ob-tangle")
 
-(defconst wal-packages '(wal-useful
-                         wal-settings
-                         wal-package
-                         wal-key-bindings
-                         wal-config
-                         ;; The following packages are optional.
-                         wal-emacs
-                         wal-edit
-                         wal-visuals
-                         wal-movement
-                         wal-find
-                         wal-complete
-                         wal-workspace
-                         wal-windows
-                         wal-org
-                         wal-dired
-                         wal-terminal
-                         wal-vc
-                         wal-lang
-                         wal-fix
-                         wal-lsp
-                         wal-devops
-                         wal-web)
+(defvar wal-packages '(wal-useful
+                       wal-package
+                       wal-key-bindings
+                       ;; The following packages are optional.
+                       wal-settings
+                       wal-config
+                       wal-emacs
+                       wal-edit
+                       wal-visuals
+                       wal-movement
+                       wal-find
+                       wal-complete
+                       wal-workspace
+                       wal-windows
+                       wal-org
+                       wal-dired
+                       wal-terminal
+                       wal-vc
+                       wal-lang
+                       wal-fix
+                       wal-lsp
+                       wal-devops
+                       wal-web)
   "List of sub-packages that will be loaded.
 
 The order determines the load order as well.")
@@ -126,6 +126,18 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
 (defvar wal-prelude-init-error nil
   "Set to the error message if initialization failed.")
 
+(defun wal-prelude--configure-customization ()
+  "Configure custom file and load it."
+  (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+
+  (message "Setting up custom file '%s" custom-file)
+
+  (unless (file-exists-p custom-file)
+    (make-empty-file custom-file t))
+
+  (when (file-exists-p custom-file)
+    (load custom-file)))
+
 (defun wal-prelude--load-config (&optional build-dir)
   "Load the config from BUILD-DIR."
   (interactive)
@@ -136,6 +148,8 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
         (current nil))
 
     (setq wal-booting t)
+
+    (wal-prelude--configure-customization)
 
     (add-to-list 'load-path dir)
 
