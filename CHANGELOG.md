@@ -50,9 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Running `wal-prelude-tangle-config` now touches files in
   `wal-prelude--phony-build-dependencies` to avoid needless `cask
   install` runs.
-- Resorting `consult` buffers so that the current buffer is shown was
-  removed since it (now? always?) moves the mark to the initial
-  position.
+- `switch-to-buffer-obey-display-actions` is no longer set to `t`
+  since it leads to buffer position being lost on `switch-to-buffer`.
 
 ## [v2.0.2]
 

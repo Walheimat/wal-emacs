@@ -492,6 +492,14 @@ If DISCONTINUE is non-nil, clock in from now."
    '(consult--source-open-projects consult--source-projects)
    :prompt "Select project: "))
 
+(defun wal-adjust-by-putting-current-buffer-first (buffers)
+  "Return BUFFERS with the current buffer first."
+  (let ((current (current-buffer)))
+
+    (if (memq current buffers)
+        (cons current (delq current buffers))
+      buffers)))
+
 (defun wal-consult-org-heading (&optional in-tree)
   "Call `org-heading'.
 
@@ -537,6 +545,11 @@ If optional IN-TREE is t, limit scope to current tree."
 
   ;; Use a bigger `vertico' when grepping.
   (advice-add 'consult-ripgrep :around #'wal-with-big-vertico)
+
+  ;; Stay on first buffer before input.
+  (advice-add
+   'consult--buffer-sort-visibility :filter-return
+   'wal-adjust-by-putting-current-buffer-first)
 
   (advice-add 'consult :around 'wal-with-delayed-transient-popup)
 
