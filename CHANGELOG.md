@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Tabs now get a custom key that is created on tab creation to keep
+  track of their buffer history. This means tabs no longer need an
+  explicit name to have one and that renaming them doesn't wipe out
+  their association with their history.
+
 ## [v2.0.3]
 
 Name face.

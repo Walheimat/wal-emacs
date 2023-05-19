@@ -29,12 +29,29 @@
       (was-called-with get-buffer-window (list 'buffer))
       (was-called select-window))))
 
-(defvar test-tab '(current-tab (name . "test-tab") (explicit-name . t)))
-(defvar test-tab-non-explicit '(current-tab (name . "test-tab") (explicit-name)))
+(defvar test-tab '(current-tab (name . "test-tab") (explicit-name . t) (wtb . "test-hash")))
 
-(ert-deftest wtb--explicit-name--returns-if-set ()
+(ert-deftest wtb--create-hash-key ()
+  (with-mock ((random . (lambda () 42))
+              (emacs-pid . (lambda () 1))
+              (recent-keys . (lambda () 'keys))
+              md5)
+
+    (wal-tab-buffers--create-hash-key "test")
+    (was-called-with md5 (list "test421keys"))))
+
+(ert-deftest wtb--on-create--sets-cdr ()
+  (with-mock ((wal-tab-buffers--create-hash-key . (lambda (_) "test")))
+
+    (let ((tab '(current-tab (name . "test-tab") (explicit-name))))
+
+      (wal-tab-buffers--on-create tab)
+
+      (should (string= "test" (alist-get 'wtb tab))))))
+
+(ert-deftest wtb--key--returns-if-set ()
   (with-mock ((tab-bar--current-tab . (lambda (&rest _) test-tab)))
-    (should (string= "test-tab" (wal-tab-buffers--explicit-name)))))
+    (should (string= "test-hash" (wal-tab-buffers--key)))))
 
 (defmacro with-tab-history (&rest body)
   "Run BODY with a clear tab history and a temp buffer."
@@ -44,24 +61,22 @@
        (with-temp-buffer
          ,@body))))
 
-(ert-deftest wtb--explicit-name--nil-if-not-set ()
-  (with-mock ((tab-bar--current-tab . (lambda (&rest _) test-tab-non-explicit)))
-    (should-not (wal-tab-buffers--explicit-name))))
-
-(ert-deftest wtb--remember--remembers-for-explicit ()
+(ert-deftest wtb--remember--remembers ()
   (with-tab-history
+
    (wal-tab-buffers--remember)
 
-   (should-not (null (gethash (cdr-safe (assq 'name test-tab)) wal-tab-buffers--table)))))
+   (should-not (null (gethash (alist-get 'wtb test-tab) wal-tab-buffers--table)))))
 
 (ert-deftest wtb--remember--inserts-once ()
   (defvar wal-tab-buffers--table)
 
   (with-tab-history
+
     (wal-tab-buffers--remember)
     (wal-tab-buffers--remember)
 
-    (should (eq 1 (ring-length (gethash (cdr-safe (assq 'name test-tab)) wal-tab-buffers--table))))))
+    (should (eq 1 (ring-length (gethash (alist-get 'wtb test-tab) wal-tab-buffers--table))))))
 
 (ert-deftest wtb--forget--forgets ()
     (with-tab-history
@@ -69,7 +84,7 @@
 
       (wal-tab-buffers--forget)
 
-      (should (eq 0 (ring-length (gethash (cdr-safe (assq 'name test-tab)) wal-tab-buffers--table))))))
+      (should (eq 0 (ring-length (gethash (alist-get 'wtb test-tab) wal-tab-buffers--table))))))
 
 (ert-deftest wtb--on-close ()
   (with-tab-history
@@ -105,6 +120,5 @@
     (wal-tab-buffers--remember)
 
     (should (wal-tab-buffers--has-buffers-p))))
-
 
 ;;; wal-windows-test.el ends here

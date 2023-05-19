@@ -18,6 +18,9 @@ Everything that has to do with windows.
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'wal-useful nil t))
+
 (require 'ring)
 (require 'cl-macs)
 (require 'subr-x)
@@ -78,28 +81,43 @@ Otherwise switch to the buffer normally."
 (defvar wal-tab-buffers--table (make-hash-table))
 (defconst wal-tab-buffers--history-size 10)
 
-(defun wal-tab-buffers--explicit-name ()
-  "Get the explicit name of the current tab."
-  (when-let* ((tab (tab-bar--current-tab))
-              ((cdr-safe (assq 'explicit-name tab)))
-              (tab-name (cdr-safe (assq 'name tab))))
-    tab-name))
+(defun wal-tab-buffers--key (&optional tab)
+  "Get the hash key of TAB."
+  (when-let* ((tab (or tab (tab-bar--current-tab)))
+              (key (alist-get 'wtb tab)))
+    key))
+
+(defun wal-tab-buffers--create-hash-key (tab)
+  "Create the key for TAB.
+
+This uses a message digest of the tab, a random number, the Emacs
+PID and `recent-keys' vector."
+  (let ((object (format "%s%s%s%s" tab (random) (emacs-pid) (recent-keys))))
+
+    (md5 object)))
+
+(defun wal-tab-buffers--on-create (tab)
+  "Equip TAB with a unique hash key."
+  (let ((key (wal-tab-buffers--create-hash-key tab))
+        (state (cdr tab)))
+
+    (setcdr tab (push (cons 'wtb key) state))))
 
 (defun wal-tab-buffers--remember ()
   "Remember the current buffer for this tab."
-  (when-let* ((tab-name (wal-tab-buffers--explicit-name))
+  (when-let* ((tab-key (wal-tab-buffers--key))
 
               (buffer (current-buffer))
 
               (table wal-tab-buffers--table)
               (history (gethash
-                         tab-name
+                         tab-key
                          table
                          (make-ring wal-tab-buffers--history-size))))
 
     (unless (ring-member history buffer)
       (ring-insert history buffer)
-      (puthash tab-name history table))))
+      (puthash tab-key history table))))
 
 (defun wal-tab-buffers--forget ()
   "Forget the current buffer."
@@ -116,19 +134,19 @@ Otherwise switch to the buffer normally."
 
 (defun wal-tab-buffers--on-close (tab only)
   "Remove TAB from table if it is not the ONLY one."
-  (when-let* ((tab-name (cdr-safe (assq 'name tab)))
+  (when-let* ((tab-key (wal-tab-buffers--key tab))
               (table wal-tab-buffers--table))
 
     (when (and (not only)
-               (gethash tab-name table))
-      (remhash tab-name table))))
+               (gethash tab-key table))
+      (remhash tab-key table))))
 
 (defun wal-tab-buffers--history ()
   "Get the buffer history for the current tab."
-  (when-let* ((tab-name (wal-tab-buffers--explicit-name))
+  (when-let* ((tab-key (wal-tab-buffers--key))
 
               (table wal-tab-buffers--table)
-              (history (gethash tab-name table)))
+              (history (gethash tab-key table)))
     history))
 
 (defun wal-tab-buffers--current-p (buffer)
@@ -154,6 +172,16 @@ Otherwise switch to the buffer normally."
                                        :predicate #'wal-tab-buffers--current-p
                                        :as #'buffer-name)))
   "Buffers that are associated with the current tab.")
+
+(wal-define-init-setup tab-bar
+  "Set up the original tab."
+  :always
+  ((when-let* ((mode tab-bar-mode)
+               (tabs (funcall tab-bar-tabs-function))
+               (original (nth 0 tabs)))
+
+   (unless (wal-tab-buffers--key original)
+     (wal-tab-buffers--on-create original)))))
 #+END_SRC
 
 *** Configuration
@@ -173,6 +201,7 @@ Otherwise switch to the buffer normally."
      'wal-consult--source-tab-buffer))
 
   (add-to-list 'tab-bar-tab-pre-close-functions #'wal-tab-buffers--on-close)
+  (add-to-list 'tab-bar-tab-post-open-functions #'wal-tab-buffers--on-create)
 
   :custom
   (tab-bar-show nil)
