@@ -302,6 +302,14 @@
 
     (was-called-with message (list "Tests fail: %s" "because"))))
 
+(ert-deftest load-test-helper ()
+  (with-mock (load-file)
+
+    (let ((wal-emacs-config-default-path "/tmp"))
+
+      (wal-config-load-test-helper)
+      (was-called-with load-file (list "/tmp/test/test-helper.el")))))
+
 (ert-deftest test-wal-make--scripts ()
   (with-mock (wal-make)
 

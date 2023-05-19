@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom variable `wal-consult-buffer-narrow-source` with options
   `tab` (the new default) and `project` that determines which source
   to pre-narrow to.
+- Convenience command `wal-config-load-test-helper` to do just that.
+  Bound to `e` in `whaler`.
 
 ### Changed
 
