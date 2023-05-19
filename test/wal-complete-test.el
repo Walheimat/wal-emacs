@@ -47,6 +47,22 @@
 
     (should (equal 'test result))))
 
+;; Mock implementation
+(defmacro marginalia--fields (&rest body)
+  "Mock implementation of `marginalia--fields'."
+  `(progn
+     (cons 'result ',body)))
+
+(ert-deftest wal-marginalia-junk-annotate ()
+  (let ((junk-expansion-packs nil)
+        (expected '(result ("test" :face 'marginalia-documentation :truncate 0.6)
+                           ("" :face 'marginalia-value :truncate 0.8)
+                           ("" :face 'marginalia-value :truncate 0.4))))
+
+    (with-mock ((junk--parts . (lambda (_) '(nil nil nil "test"))))
+
+      (should (equal expected (wal-marginalia-junk-annotate "test"))))))
+
 (ert-deftest test-wal-browse-html-file ()
   (with-mock (browse-url)
     (should-error (wal-browse-html-file "~/test/file.txt") :type 'user-error)

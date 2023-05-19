@@ -22,11 +22,8 @@ functionality is used.
 ;;; Code:
 
 (eval-when-compile
-  (require 'marginalia nil t)
   (require 'wal-useful nil t))
 
-(declare-function junk--stringify "wal-useful.el")
-(declare-function junk--parts "wal-useful.el")
 (declare-function wal-bytes-per-mb "wal-useful.el")
 (declare-function wal-create-non-existent-directory "wal-useful.el")
 (declare-function wal-insert-after "wal-useful.el")
@@ -324,28 +321,6 @@ Make never leaving Emacs a priority.
       debugger-bury-or-kill 'kill
       use-short-answers t
       so-long-action 'so-long-minor-mode)
-#+END_SRC
-
-* Expansion Packs
-
-Make completions look nice.
-
-#+BEGIN_SRC emacs-lisp
-(with-eval-after-load 'marginalia
-  (defun junk-annotate (candidate)
-    "Annotate CANDIDATE expansion pack."
-    (let* ((item (assoc (intern candidate) junk-expansion-packs))
-           (parts (junk--parts item)))
-
-      (cl-destructuring-bind (packages extras recipes docs) parts
-
-        (marginalia--fields
-         (docs :face 'marginalia-documentation :truncate 0.6)
-         ((junk--stringify (append packages recipes)) :face 'marginalia-value :truncate 0.8)
-         ((junk--stringify extras) :face 'marginalia-value :truncate 0.4)))))
-
-  (add-to-list 'marginalia-annotator-registry '(expansion-pack junk-annotate builtin none))
-  (add-to-list 'marginalia-command-categories '(junk-install . expansion-pack)))
 #+END_SRC
 
 * Buffer Display
