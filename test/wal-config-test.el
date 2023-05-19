@@ -277,9 +277,14 @@
 
     (with-mock (wal-async-process
                 (wal-make--on-success . (lambda (_) 'success))
-                (wal-make--on-failure . (lambda (_) 'failure)))
+                (wal-make--on-failure . (lambda (_) 'failure))
+                (read-file-name . (lambda (_p _d _d _m _i pred &rest _)
+                                    (let ((selected "/tmp/tests/test.el"))
+                                      (if (funcall pred selected)
+                                          selected
+                                        nil)))))
 
-      (funcall-interactively 'wal-run-test-file "/tmp/tests/test.el")
+      (call-interactively 'wal-run-test-file)
 
       (was-called-with wal-async-process '("cd /tmp/default && make test TEST_ARGS=/tmp/tests/test.el && cat coverage/results.txt" success failure t)))))
 
