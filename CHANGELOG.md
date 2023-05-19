@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The ASCII whale animation is now done using indirect buffers meaning
   it can be enabled and disabled for individual buffers.
 
+### Fixed
+
+- Settings package no longer attempts to create a site-lisp directory
+  to make sure it only actually sets things (it will still recursively
+  load it).
+
 ## [v2.0.3]
 
 Name face.

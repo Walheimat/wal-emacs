@@ -55,7 +55,9 @@ functionality is used.
 ;;;; Customization:
 
 (defcustom wal-site-lisp-directory (expand-file-name "site-lisp" user-emacs-directory)
-  "Directory of site Lisp packages."
+  "Directory of site Lisp packages.
+
+Needs to be an existing directory."
   :type 'string
   :group 'wal-settings)
 
@@ -157,15 +159,15 @@ custom theme load path). I put non-MELPA packages here. You can also
 put additional initialization into a =default.el= here.
 
 #+BEGIN_SRC emacs-lisp
-(make-directory wal-site-lisp-directory t)
+(when (and wal-site-lisp-directory
+           (file-exists-p wal-site-lisp-directory))
+  (let ((root (list wal-site-lisp-directory))
+        (subdirs (directory-files wal-site-lisp-directory t "\\w+")))
 
-(let ((root (list wal-site-lisp-directory))
-      (subdirs (directory-files wal-site-lisp-directory t "\\w+")))
-
-  (dolist (project (append root subdirs))
-    (when (file-directory-p project)
-      (add-to-list 'load-path project)
-      (add-to-list 'custom-theme-load-path project))))
+    (dolist (project (append root subdirs))
+      (when (file-directory-p project)
+        (add-to-list 'load-path project)
+        (add-to-list 'custom-theme-load-path project)))))
 #+END_SRC
 
 * Saving and Backups
