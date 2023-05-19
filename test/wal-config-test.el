@@ -8,72 +8,115 @@
 
 (require 'wal-config nil t)
 
-(ert-deftest test-wal-ascii-whale-animate ()
-  (let ((wal-ascii-whale-key-frames ["testing"])
+(ert-deftest waw-animate ()
+  (let ((wal-ascii-whale-key-frames ["testing" "resting"])
         (wal-ascii-whale-frame-index 0))
 
     (wal-ascii-whale-animate)
 
     (with-current-buffer (get-buffer-create wal-ascii-whale-buffer)
-      (should (string-equal "testing" (buffer-string))))))
+      (should (string-equal "testing" (buffer-string))))
 
-(ert-deftest test-wal-ascii-whale-setup--fails-for-unknown-whale ()
-  (with-mock ((featurep . #'always))
+    (should (eq 1 wal-ascii-whale-frame-index))))
 
-    (let ((wal-config-ascii-whale 'testing))
+(defmacro waw-with-animation (&rest body)
+  "Execute BODY with animation mocked."
+  (declare (indent 0))
+  `(progn
+     (defvar wal-config-ascii-whale)
+     (let ((wal-ascii-whale-timer nil)
+           (wal-ascii-whale-key-frames nil)
+           (wal-config-ascii-whale nil)
+           (wal-ascii-cachalot-whale-key-frames ["cachalot"])
+           (wal-ascii-blue-whale-key-frames ["blue"]))
 
-      (should-error (wal-ascii-whale-setup) :type 'user-error))))
+       (with-mock (wal-ascii-whale-animate run-with-timer cancel-timer kill-buffer)
+         ,@body))))
 
-(ert-deftest test-wal-ascii-whale-setup ()
-  (with-mock (featurep
-              add-hook
-              run-with-timer
-              wal-ascii-whale-animate
-              wal-ascii-whale-display)
+(ert-deftest waw--start-animation--no-op-for-timer ()
+  (waw-with-animation
+    (setq wal-ascii-whale-timer 'timer)
 
-    (let ((wal-ascii-whale-animation-speed 8))
+    (wal-ascii-whale--start-animation)
 
+    (should-not wal-ascii-whale-key-frames)))
+
+(ert-deftest waw--start-animation ()
+  (waw-with-animation
+    (wal-ascii-whale--start-animation)
+
+    (should wal-ascii-whale-timer)
+    (was-called wal-ascii-whale-animate)
+    (should (string= (aref wal-ascii-whale-key-frames 0) "blue"))))
+
+(ert-deftest waw--start-animation--cachalot ()
+  (waw-with-animation
+    (setq wal-config-ascii-whale 'cachalot)
+    (wal-ascii-whale--start-animation)
+
+    (should wal-ascii-whale-timer)
+    (was-called wal-ascii-whale-animate)
+    (should (string= (aref wal-ascii-whale-key-frames 0) "cachalot"))))
+
+(ert-deftest waw--start-animation--blue ()
+  (waw-with-animation
+    (setq wal-config-ascii-whale 'blue)
+    (wal-ascii-whale--start-animation)
+
+    (should wal-ascii-whale-timer)
+    (was-called wal-ascii-whale-animate)
+    (should (string= (aref wal-ascii-whale-key-frames 0) "blue"))))
+
+(ert-deftest waw--stop-animation--no-op-for-no-timer ()
+  (waw-with-animation
+    (wal-ascii-whale--stop-animation)
+
+    (should-not wal-ascii-whale-timer)))
+
+(ert-deftest waw--stop-animation--no-op-if-buffers-exist ()
+  (waw-with-animation
+    (with-temp-buffer
+      (setq wal-ascii-whale-timer 'timer)
+      (setq wal-ascii-whale-parent-buffer (current-buffer))
+
+      (wal-ascii-whale--stop-animation))
+
+    (should wal-ascii-whale-timer)))
+
+(ert-deftest waw--stop-animation ()
+  (waw-with-animation
+    (setq wal-ascii-whale-timer 'timer)
+
+    (wal-ascii-whale--stop-animation)
+
+    (should-not wal-ascii-whale-timer)
+
+    (was-called cancel-timer)
+    (was-called kill-buffer)))
+
+(ert-deftest waw-setup ()
+  (with-mock (wal-ascii-whale--start-animation)
+    (with-temp-buffer
       (wal-ascii-whale-setup)
 
-      (was-called-with featurep (list 'posframe))
-      (was-called-nth-with add-hook (list 'kill-buffer-hook #'wal-ascii-whale-clean-up nil t) 0)
-      (was-called-nth-with add-hook (list 'window-configuration-change-hook #'wal-ascii-whale-display nil t) 1)
+      (was-called wal-ascii-whale--start-animation)
 
-      (was-called-with run-with-timer (list 0 8 #'wal-ascii-whale-animate))
-      (was-called wal-ascii-whale-animate)
-      (was-called wal-ascii-whale-display))
+      (should (buffer-local-value 'kill-buffer-hook (current-buffer)))
+      (should (buffer-local-value 'window-configuration-change-hook (current-buffer))))))
 
-    (wal-clear-mocks)
-
-    (let ((wal-config-ascii-whale 'cachalot)
-          (wal-ascii-whale-timer 'exists))
-
+(ert-deftest waw-clean-up ()
+  (with-mock (posframe-delete
+              wal-ascii-whale--start-animation
+              wal-ascii-whale--stop-animation)
+    (with-temp-buffer
       (wal-ascii-whale-setup)
-
-      (was-called wal-ascii-whale-display))))
-
-(ert-deftest test-wal-ascii-whale-clean-up ()
-   (let ((wal-ascii-whale-timer 'timer))
-
-    (with-mock (cancel-timer
-                posframe-delete
-                remove-hook)
 
       (wal-ascii-whale-clean-up)
 
-      (should-not wal-ascii-whale-timer)
-      (was-called-with cancel-timer (list 'timer))
-      (was-called-with posframe-delete wal-ascii-whale-buffer)
-      (was-called-nth-with remove-hook (list 'kill-buffer-hook #'wal-ascii-whale-clean-up t) 0)
-      (was-called-nth-with remove-hook (list 'window-configuration-change-hook #'wal-ascii-whale-display t) 1)
+      (was-called posframe-delete)
+      (was-called wal-ascii-whale--stop-animation))))
 
-      (wal-clear-mocks)
-
-      (wal-ascii-whale-clean-up)
-
-      (was-not-called cancel-timer))))
-
-(ert-deftest test-wal-ascii-whale-poshandler ()
+(ert-deftest waw-poshandler ()
   (let ((result (wal-ascii-whale-poshandler `(:parent-window-left 4
                                               :parent-window-top 4
                                               :parent-window-width 8
@@ -82,43 +125,34 @@
 
     (should (equal '(9 . 5) result))))
 
-(ert-deftest test-wal-ascii-whale-hidehandler ()
+(ert-deftest waw-hidehandler ()
   (with-mock ((get-buffer-window . #'ignore))
 
     (should (wal-ascii-whale-hidehandler '(:posframe-parent-buffer '(nil nil))))))
 
-(ert-deftest test-wal-ascii-whale-display ()
-  (let ((wal-ascii-whale-parent-buffer 'parent))
+(ert-deftest waw-display ()
+  (let ((wal-ascii-whale-parent-buffer 'parent)
+        (wal-ascii-whale-indirect-buffer 'indirect))
+
     (with-mock (posframe-show (face-attribute . #'wal-rf))
 
       (wal-ascii-whale-display)
 
-      (was-called-with posframe-show (list wal-ascii-whale-buffer
+      (was-called-with posframe-show (list 'indirect
                                            :accept-focus nil
                                            :border-width 12
                                            :border-color 'cursor
                                            :poshandler 'wal-ascii-whale-poshandler
                                            :posframe-parent-buffer 'parent
-                                           :hidehandler 'wal-ascii-whale-hidehandler))
-
-      (wal-clear-mocks)
-
-      (setq wal-ascii-whale-parent-buffer nil)
-
-      (wal-ascii-whale-display)
-
-      (was-called-with posframe-show (list wal-ascii-whale-buffer
-                                           :accept-focus nil
-                                           :border-width 12
-                                           :border-color 'cursor
-                                           :poshandler 'wal-ascii-whale-poshandler
-                                           :posframe-parent-buffer (current-buffer)
                                            :hidehandler 'wal-ascii-whale-hidehandler)))))
 
-(ert-deftest test-wal-ascii-whale-toggle-display ()
-  (with-mock (wal-ascii-whale-clean-up wal-ascii-whale-setup)
+(ert-deftest waw-toggle-display ()
+  (with-mock (wal-ascii-whale-clean-up
+              wal-ascii-whale-setup
+              wal-ascii-whale-display
+              (require . #'always))
 
-    (let ((wal-ascii-whale-timer t))
+    (let ((wal-ascii-whale-parent-buffer t))
 
       (wal-ascii-whale-toggle-display)
 
@@ -126,13 +160,13 @@
       (was-not-called wal-ascii-whale-setup))
 
     (wal-clear-mocks)
+    (setq wal-ascii-whale-parent-buffer nil)
 
-    (let ((wal-ascii-whale-timer nil))
+    (wal-ascii-whale-toggle-display)
 
-      (wal-ascii-whale-toggle-display)
-
-      (was-called wal-ascii-whale-setup)
-      (was-not-called wal-ascii-whale-clean-up))))
+    (was-called wal-ascii-whale-setup)
+    (was-called wal-ascii-whale-display)
+    (was-not-called wal-ascii-whale-clean-up)))
 
 (ert-deftest test-wal-describe-config-version ()
   (defvar wal-emacs-config-default-path)

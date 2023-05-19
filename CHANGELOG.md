@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   explicit name to have one and that renaming them doesn't wipe out
   their association with their history.
 - `whaler` was restructured.
+- The ASCII whale animation is now done using indirect buffers meaning
+  it can be enabled and disabled for individual buffers.
 
 ## [v2.0.3]
 

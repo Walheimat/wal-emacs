@@ -242,13 +242,13 @@ Animate a swimming whale in a =posframe=.
   (wal-ascii-whale--build-key-frames "⎝   ﬞ %s    {"))
 
 (defvar wal-ascii-whale-key-frames nil)
-
 (defvar wal-ascii-whale-frame-index 0)
 (defvar wal-ascii-whale-animation-speed 0.4)
-
 (defvar wal-ascii-whale-buffer "*swimming-whale*")
 (defvar wal-ascii-whale-timer nil)
-(defvar wal-ascii-whale-parent-buffer nil)
+
+(defvar-local wal-ascii-whale-indirect-buffer nil)
+(defvar-local wal-ascii-whale-parent-buffer nil)
 
 (defun wal-ascii-whale-animate ()
   "Animate the ASCII whale."
@@ -269,56 +269,79 @@ Animate a swimming whale in a =posframe=.
              (1+ wal-ascii-whale-frame-index)
              (length wal-ascii-whale-key-frames))))))
 
-(defun wal-ascii-whale-setup ()
-  "Set up the animated whale."
-  (require 'posframe nil t)
+(defun wal-ascii-whale--start-animation ()
+  "Start the animation.
 
-  (when (featurep 'posframe)
-    ;; Integrate in current window configuration.
-    (setq wal-ascii-whale-parent-buffer (current-buffer))
-
-    (pcase wal-config-ascii-whale
-      ('blue
-       (setq wal-ascii-whale-key-frames wal-ascii-blue-whale-key-frames))
-      ('cachalot
-       (setq wal-ascii-whale-key-frames wal-ascii-cachalot-whale-key-frames))
-      (_ (user-error "Unknown whale %s" wal-config-ascii-whale)))
-
-    (add-hook 'kill-buffer-hook #'wal-ascii-whale-clean-up nil t)
-    (add-hook 'window-configuration-change-hook #'wal-ascii-whale-display nil t)
-
-    ;; Queue up timer.
-    (unless wal-ascii-whale-timer
-      (setq wal-ascii-whale-timer (run-with-timer
-                                   0
-                                   wal-ascii-whale-animation-speed
-                                   #'wal-ascii-whale-animate)))
-
-    ;; Increase the font size.
-    (with-current-buffer (get-buffer-create wal-ascii-whale-buffer)
-      (defvar wal-fixed-font-height)
-      (let ((fheight (* 2 wal-fixed-font-height)))
-
-        (face-remap-add-relative 'default :height fheight)))
+No-op if it is already running."
+  (unless wal-ascii-whale-timer
+    ;; Set up key frames.
+    (setq wal-ascii-whale-key-frames
+          (pcase wal-config-ascii-whale
+            ('cachalot wal-ascii-cachalot-whale-key-frames)
+            ('blue wal-ascii-blue-whale-key-frames)
+            (_ wal-ascii-blue-whale-key-frames)))
 
     ;; Make sure the first frame is animated before we display.
     (wal-ascii-whale-animate)
 
-    (wal-ascii-whale-display)))
+    ;; Start timer.
+    (setq wal-ascii-whale-timer (run-with-timer
+                                 0
+                                 wal-ascii-whale-animation-speed
+                                 #'wal-ascii-whale-animate))))
+
+(defun wal-ascii-whale--stop-animation ()
+  "Stop the animation if it is running.
+
+Will not do anything if there are still buffers who display the
+whale."
+  (when (and wal-ascii-whale-timer
+             (not (seq-find
+                   (lambda (it) (buffer-local-value 'wal-ascii-whale-parent-buffer it))
+                   (buffer-list))))
+
+    (cancel-timer wal-ascii-whale-timer)
+    (setq wal-ascii-whale-timer nil)
+
+    (kill-buffer wal-ascii-whale-buffer)))
+
+(defun wal-ascii-whale-setup ()
+  "Set up the animated whale."
+  ;; Queue up timer if it isn't running.
+  (wal-ascii-whale--start-animation)
+
+  ;; Set this buffer as the parent and create an indirect buffer of
+  ;; the animation buffer.
+  (setq wal-ascii-whale-parent-buffer (current-buffer)
+        wal-ascii-whale-indirect-buffer (make-indirect-buffer
+                                         (get-buffer wal-ascii-whale-buffer)
+                                         (generate-new-buffer-name wal-ascii-whale-buffer)))
+
+  ;; Set font size for indirect buffer.
+  (with-current-buffer wal-ascii-whale-indirect-buffer
+    (defvar wal-fixed-font-height)
+    (let ((fheight (* 2 wal-fixed-font-height)))
+
+      (face-remap-add-relative 'default :height fheight)))
+
+  ;; Set up hooks to clean up and re-display.
+  (add-hook 'kill-buffer-hook #'wal-ascii-whale-clean-up nil t)
+  (add-hook 'window-configuration-change-hook #'wal-ascii-whale-display nil t))
 
 (defun wal-ascii-whale-clean-up ()
   "Clean up the animation."
-  ;; Cancel and void the timer.
-  (when wal-ascii-whale-timer
-    (cancel-timer wal-ascii-whale-timer)
-    (setq wal-ascii-whale-timer nil))
+  ;; Delete the buffer.
+  (posframe-delete wal-ascii-whale-indirect-buffer)
 
-  ;; Delete the frame.
-  (posframe-delete wal-ascii-whale-buffer)
+  (setq wal-ascii-whale-parent-buffer nil
+        wal-ascii-whale-indirect-buffer nil)
 
-  ;; Remove animation and re-positioning hooks.
+    ;; Remove animation and re-positioning hooks.
   (remove-hook 'kill-buffer-hook #'wal-ascii-whale-clean-up t)
-  (remove-hook 'window-configuration-change-hook #'wal-ascii-whale-display t))
+  (remove-hook 'window-configuration-change-hook #'wal-ascii-whale-display t)
+
+  ;; Maybe cancel the timer.
+  (wal-ascii-whale--stop-animation))
 
 (defun wal-ascii-whale-poshandler (info)
   "Position handler for ASCII whale.
@@ -351,21 +374,23 @@ INFO contains positioning information."
   (let ((default-frame-alist nil))
 
     (posframe-show
-     wal-ascii-whale-buffer
+     wal-ascii-whale-indirect-buffer
      :accept-focus nil
      :border-width (pcase wal-config-ascii-whale ('blue 12) ('cachalot 6) (_ 6))
      :border-color (face-attribute 'cursor :background)
      :poshandler 'wal-ascii-whale-poshandler
-     :posframe-parent-buffer (or wal-ascii-whale-parent-buffer (current-buffer))
+     :posframe-parent-buffer wal-ascii-whale-parent-buffer
      :hidehandler 'wal-ascii-whale-hidehandler)))
 
 (defun wal-ascii-whale-toggle-display ()
   "Toggle the animation."
   (interactive)
 
-  (if wal-ascii-whale-timer
-      (wal-ascii-whale-clean-up)
-    (wal-ascii-whale-setup)))
+  (when (require 'posframe nil t)
+    (if wal-ascii-whale-parent-buffer
+        (wal-ascii-whale-clean-up)
+      (wal-ascii-whale-setup)
+      (wal-ascii-whale-display))))
 #+END_SRC
 
 * Editing the Config
