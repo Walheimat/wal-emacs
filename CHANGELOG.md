@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   track of their buffer history. This means tabs no longer need an
   explicit name to have one and that renaming them doesn't wipe out
   their association with their history.
+- `whaler` was restructured.
 
 ## [v2.0.3]
 
