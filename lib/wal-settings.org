@@ -109,7 +109,10 @@ Customize start-up.
      Set `wal-ack-warnings' to t to ignore this warning."))
 #+END_SRC
 
-* Command Line
+* Packages
+
+Add MELPA to the package archives. Most (if not all) packages will be
+installed from there.
 
 #+BEGIN_SRC emacs-lisp
 (wal-capture-flag doctor
@@ -120,14 +123,7 @@ Customize start-up.
 
 (wal-capture-flag ensure
   "Will set up `use-package' to ensure packages.")
-#+END_SRC
 
-* Packages
-
-Add MELPA to the package archives. Most (if not all) packages will be
-installed from there.
-
-#+BEGIN_SRC emacs-lisp
 ;; Always defer, maybe ensure.
 (setq use-package-always-defer t)
 
@@ -273,17 +269,6 @@ Any mode that should be on/off no matter what.
 Advise to maybe add hook to delete trailing whitespace.
 
 #+BEGIN_SRC emacs-lisp
-(defvar-local wal-delete-trailing-whitespace t
-  "Whether to delete trailing whitespace.")
-
-(defun wal-then-add-delete-trailing-whitespace-hook (&rest _args)
-  "Advise to conditionally add before save hook.
-
-When `wal-delete-trailing-whitespace' is t, trailing whitespace
-is deleted."
-  (when wal-delete-trailing-whitespace
-    (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)))
-
 (advice-add
  'hack-local-variables :after
  #'wal-then-add-delete-trailing-whitespace-hook)
@@ -294,10 +279,6 @@ is deleted."
 Increase the =gc-cons-threshold= after start-up.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal-increase-gc-cons-threshold ()
-  "Increase `gc-cons-threshold' to maximum on minibuffer setup."
-  (setq gc-cons-threshold (wal-bytes-per-mb 100)))
-
 (add-hook 'emacs-startup-hook #'wal-increase-gc-cons-threshold)
 #+END_SRC
 

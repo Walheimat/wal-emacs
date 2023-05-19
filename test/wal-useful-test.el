@@ -159,6 +159,22 @@
 
     (should (string-equal "I hope I don't get killed" (car kill-ring)))))
 
+(ert-deftest wal-then-add-delete-trailing-whitespace-hook--does-nothing-if-unset ()
+  (let ((wal-delete-trailing-whitespace nil))
+
+    (with-temp-buffer
+      (wal-then-add-delete-trailing-whitespace-hook)
+
+      (should-not (buffer-local-value 'before-save-hook (current-buffer))))))
+
+(ert-deftest wal-then-add-delete-trailing-whitespace-hook ()
+  (let ((wal-delete-trailing-whitespace t))
+
+    (with-temp-buffer
+      (wal-then-add-delete-trailing-whitespace-hook)
+
+      (should (buffer-local-value 'before-save-hook (current-buffer))))))
+
 (ert-deftest test-wal-set-cursor-type--sets-and-resets ()
   (with-temp-buffer
     (with-mock ((completing-read . (lambda (&rest _) "hollow")))
@@ -236,6 +252,13 @@
     (funcall-interactively 'wal-spill-paragraph t)
 
     (was-called-with fill-paragraph (list nil t))))
+
+(ert-deftest wal-increase-gc-cons-threshold ()
+  (defvar gc-cons-threshold)
+  (let ((gc-cons-threshold 0))
+    (wal-increase-gc-cons-threshold)
+
+    (should (eq 104857600 gc-cons-threshold))))
 
 (ert-deftest test-wal-l ()
   (with-temp-buffer
