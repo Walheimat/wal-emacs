@@ -123,37 +123,53 @@
     (should (equal 20 (wal-with-big-vertico fun)))))
 
 (ert-deftest test-wal-consult--pre-narrow ()
-    (defvar wal-consult-pre-narrow)
+  (defvar wal-consult-pre-narrow)
+  (defvar wal-consult-buffer-narrow-source)
+
+  (let ((wal-consult-buffer-narrow-source 'project))
+
     (with-mock ((consult--project-root . #'always)
                 (consult--buffer-query . #'always)
-                (consult--open-project-items . #'always))
+                (consult--open-project-items . #'always)
+                (wal-tab-buffers--has-buffers-p . #'always))
 
-      (setq wal-consult-pre-narrow t
-            unread-command-events nil)
+        (setq wal-consult-pre-narrow t
+              unread-command-events nil)
 
-      (wal-consult--pre-narrow)
+        (wal-consult--pre-narrow)
 
-      (should-not unread-command-events)
+        (should-not unread-command-events)
 
-      (setq this-command 'consult-buffer)
+        (setq this-command 'consult-buffer)
 
-      (wal-consult--pre-narrow)
+        (wal-consult--pre-narrow)
 
-      (should unread-command-events)
+        (should unread-command-events)
+        (was-called consult--project-root)
 
-      (setq unread-command-events nil
-            this-command 'wal-consult-project)
+        (wal-clear-mocks)
 
-      (wal-consult--pre-narrow)
+        (setq wal-consult-buffer-narrow-source 'tab)
 
-      (should unread-command-events)
+        (wal-consult--pre-narrow)
 
-      (setq wal-consult-pre-narrow nil
-            unread-command-events nil)
+        (should unread-command-events)
+        (was-not-called consult--project-root)
+        (was-called wal-tab-buffers--has-buffers-p)
 
-      (wal-consult--pre-narrow)
+        (setq unread-command-events nil
+              this-command 'wal-consult-project)
 
-      (should-not unread-command-events)))
+        (wal-consult--pre-narrow)
+
+        (should unread-command-events)
+
+        (setq wal-consult-pre-narrow nil
+              unread-command-events nil)
+
+        (wal-consult--pre-narrow)
+
+        (should-not unread-command-events))))
 
 (ert-deftest test-wal-consult-toggle-pre-narrow ()
   (defvar wal-consult-pre-narrow)

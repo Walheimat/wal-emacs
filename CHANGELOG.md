@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Custom variable `wal-consult-buffer-narrow-source` with options
+  `tab` (the new default) and `project` that determines which source
+  to pre-narrow to.
+
 ### Changed
 
 - Tabs now get a custom key that is created on tab creation to keep

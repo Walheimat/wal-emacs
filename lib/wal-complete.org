@@ -28,6 +28,7 @@ Complete commands and code.
 (declare-function wal-append "wal-useful.el")
 (declare-function wal-org-clock-in-from-now "wal-org.el")
 (declare-function wal-project--buffer-root "wal-workspace.el")
+(declare-function wal-tab-buffers--has-buffers-p "wal-windows.el")
 (declare-function wal-univ-p "wal-useful.el")
 
 (defvar consult-register--narrow)
@@ -41,6 +42,11 @@ Complete commands and code.
   "Change completion settings."
   :group 'wal
   :tag "Completion")
+
+(defcustom wal-consult-buffer-narrow-source 'tab
+  "Source to use when pre-narrowing `consult-buffer'."
+  :type '(choice (const :tag "Tab buffers" tab)
+                 (const :tag "Project buffers" project)))
 #+END_SRC
 
 * Inline Completion
@@ -442,13 +448,17 @@ If DISCONTINUE is non-nil, clock in from now."
                               (wal-univ-p)))
              (char (pcase this-command
                      ('consult-buffer
-                      (when-let* ((root (consult--project-root))
-                                  (buffers (consult--buffer-query
-                                            :sort 'visibility
-                                            :directory root
-                                            :as #'buffer-name)))
+                      (pcase wal-consult-buffer-narrow-source
+                        ('project
+                         (when-let* ((root (consult--project-root))
+                                     (buffers (consult--buffer-query
+                                               :sort 'visibility
+                                               :directory root
+                                               :as #'buffer-name)))
 
-                        ?p))
+                           ?p))
+                        ('tab
+                         (when (wal-tab-buffers--has-buffers-p) ?t))))
 
                      ('wal-consult-project
                       (when (consult--open-project-items) ?o)))))
