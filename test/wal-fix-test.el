@@ -9,10 +9,11 @@
 (require 'wal-fix nil t)
 
 (ert-deftest test-wal-flycheck-file--get-buffer ()
-  (with-current-buffer (wal-flycheck-file--get-buffer)
+  (with-mock (view-mode)
+    (with-current-buffer (wal-flycheck-file--get-buffer)
 
-    (should view-mode)
-    (should (string-equal wal-flycheck-file--buffer (buffer-name))))
+      (should view-mode)
+      (should (string-equal wal-flycheck-file--buffer (buffer-name)))))
 
   (kill-buffer wal-flycheck-file--buffer))
 
@@ -102,7 +103,7 @@
       (should-error (wal-flycheck-file wal-tmp-file) :type 'user-error))))
 
 (ert-deftest test-wal-flyspell ()
-  (defvar flyspell-mode)
+  (defvar flyspell-mode nil)
   (with-mock (flyspell-mode flyspell-prog-mode)
 
     (let ((flyspell-mode t))
@@ -120,12 +121,12 @@
       (wal-clear-mocks)
 
       (with-temp-buffer
-        (prog-mode)
 
-        (wal-flyspell)
+        (with-mock ((derived-mode-p . #'always))
+          (wal-flyspell)
 
-        (was-not-called flyspell-mode)
-        (was-called flyspell-prog-mode)))))
+          (was-not-called flyspell-mode)
+          (was-called flyspell-prog-mode))))))
 
 (ert-deftest test-wal-flyspell-goto-previous-error ()
   (with-mock (flyspell-goto-next-error)

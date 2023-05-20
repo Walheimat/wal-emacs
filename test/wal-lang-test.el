@@ -94,7 +94,7 @@
       (was-called markdown-mode)
       (was-called-with mixed-pitch-mode -1)
 
-      (text-mode)
+      (setq major-mode 'text-mode)
 
       (should-error (wal-markdown-view)))))
 
@@ -204,7 +204,7 @@
 
       (should (wal-with-json-data-ignored-for-gdscript #'always table))
 
-      (text-mode)
+      (setq major-mode 'text-mode)
       (puthash "jsonrpc" "2.0" table)
 
       (should (wal-with-json-data-ignored-for-gdscript #'always table)))))

@@ -12,9 +12,7 @@
   (let ((wal-mc-conflicting-modes '(abbrev-mode)))
 
     (with-temp-buffer
-      (abbrev-mode)
-
-      (should abbrev-mode)
+      (setq abbrev-mode t)
 
       (wal-before-mc)
 
@@ -24,27 +22,29 @@
 (ert-deftest test-wal-after-mc ()
   (let ((wal-mc-disabled '(abbrev-mode)))
 
-    (with-temp-buffer
+    (with-mock (abbrev-mode)
+      (with-temp-buffer
 
-      (should-not abbrev-mode)
+        (should-not abbrev-mode)
 
-      (wal-after-mc)
+        (wal-after-mc)
 
-      (should abbrev-mode)
-      (should-not wal-mc-disabled))))
+        (was-called abbrev-mode)
+        (should-not wal-mc-disabled)))))
 
 (ert-deftest test-wal-tempel-comment ()
   (with-temp-buffer
-    (emacs-lisp-mode)
+    (setq major-mode 'emacs-lisp-mode)
 
     (should (string-equal (wal-tempel-comment (list 'c "testing")) ";; testing")))
   (with-temp-buffer
-    (js-mode)
+    (setq comment-start "// ")
 
     (should (string-equal (wal-tempel-comment (list 'c "testing")) "// testing"))))
 
 (ert-deftest test-wal-in-case-of-mc-mode-do-not-default ()
-  (defvar multiple-cursors-mode)
+  (defvar multiple-cursors-mode nil)
+
   (let ((multiple-cursors-mode t))
 
     (should (wal-in-case-of-mc-mode-do-not-default)))

@@ -123,6 +123,7 @@
     (was-called wal-org-clock-in-from-now)))
 
 (ert-deftest test-wal-then-set-active-theme ()
+  (defvar wal-active-theme nil)
   (let ((out nil)
         (wal-active-theme nil))
     (with-temp-buffer

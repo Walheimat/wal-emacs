@@ -11,71 +11,56 @@
 (ert-deftest package-files ()
   (let* ((dir "/tmp/package")
          (file "/tmp/package/test.el")
-         (other-file "/tmp/package/test.txt")
-         (clean (lambda () (delete-directory dir t))))
+         (other-file "/tmp/package/test.txt"))
 
-    (make-directory dir)
-    (make-empty-file file)
-    (make-empty-file other-file)
+    (with-mock ((directory-files . (lambda (&rest _) (list "." ".." file other-file))))
 
-    (condition-case nil
-        (with-mock ((directory-files . (lambda (&rest _) (list "." ".." file))))
-
-          (should (equal (list file) (wal-prelude-package-files)))
-
-          (funcall clean))
-      (error
-       (funcall clean)))))
+      (should (equal (list file) (wal-prelude-package-files))))))
 
 (ert-deftest init-fails-if-no-init ()
   (should-error (wal-prelude-init "/tmp/no-exist.el" "/tmp") :type 'user-error))
 
-(ert-deftest init-sets-up-bootstrap ()
-  (with-mock ((shell-command-to-string . (lambda (_cmd) "test")))
-    (wal-with-temp-file "bootstrap.el"
-      (wal-prelude-init wal-tmp-file wal-emacs-config-default-path)
+(defvar valid-init (ert-resource-file "valid-init.txt"))
 
-      (with-current-buffer (find-file-noselect wal-tmp-file)
-        (should (string-match "wal-prelude-bootstrap" (buffer-string)))))))
+(defmacro with-bootstrap (shell-result &rest body)
+  "Evaluate BODY with SHELL-RESULT in a temporary file."
+  (declare (indent 1))
+  `(with-mock ((shell-command-to-string . (lambda (&rest _) ,shell-result))
+               append-to-file
+               delete-region)
+     (wal-with-temp-file "bootstrap"
+       ,@body)))
+
+(ert-deftest init-sets-up-bootstrap ()
+  (with-bootstrap "test"
+    (wal-prelude-init wal-tmp-file wal-emacs-config-default-path)
+
+    (was-called append-to-file)))
 
 (ert-deftest init-does-not-set-up-for-valid-bootstrap ()
   (defvar wal-prelude--init-marker)
+  (with-bootstrap "test"
+    (with-current-buffer (find-file-noselect wal-tmp-file)
+      (insert-file-contents valid-init))
 
-  (with-mock ((shell-command-to-string . (lambda (_cmd) "test")))
-    (wal-with-temp-file "bootstrap.el"
-      (let* ((hashed (base64-encode-string "test"))
-             (marker (concat "\n" wal-prelude--init-marker hashed "\n")))
-
-        (append-to-file marker nil wal-tmp-file))
-
-      (with-mock (append-to-file)
-        (wal-prelude-init wal-tmp-file wal-emacs-config-default-path)
-
-        (was-not-called append-to-file)))))
+    (wal-prelude-init wal-tmp-file wal-emacs-config-default-path)
+    (was-not-called append-to-file)))
 
 (ert-deftest init-deletes-outdated-bootstrap ()
-  (wal-with-temp-file "bootstrap.el"
-    (let* ((hashed (base64-encode-string "best"))
-           (marker (concat "\n" wal-prelude--init-marker hashed "\n")))
+  (with-bootstrap "best"
+    (with-current-buffer (find-file-noselect wal-tmp-file)
+      (insert-file-contents valid-init))
 
-      (append-to-file marker nil wal-tmp-file)
-
-      (wal-prelude-init wal-tmp-file wal-emacs-config-default-path)
-
-      (with-current-buffer (find-file-noselect wal-tmp-file)
-        (should-not (string-match hashed (buffer-string)))))))
+    (wal-prelude-init wal-tmp-file wal-emacs-config-default-path)
+    (was-called delete-region)))
 
 (ert-deftest init--clears ()
-  (wal-with-temp-file "bootstrap.el"
-    (let* ((hashed (base64-encode-string "best"))
-           (marker (concat "\n" wal-prelude--init-marker hashed "\n")))
+  (with-bootstrap "test"
+    (with-current-buffer (find-file-noselect wal-tmp-file)
+      (insert-file-contents valid-init))
 
-      (append-to-file marker nil wal-tmp-file)
-
-      (wal-prelude-init wal-tmp-file wal-emacs-config-default-path t)
-
-      (with-current-buffer (find-file-noselect wal-tmp-file)
-        (should-not (string-match hashed (buffer-string)))))))
+    (wal-prelude-init wal-tmp-file wal-emacs-config-default-path t)
+    (was-called delete-region)))
 
 (ert-deftest configure-customization ()
   (let ((custom-file nil)
@@ -210,9 +195,6 @@
 
 (ert-deftest tangle-config--tangles-all-sources ()
   (with-mock (require org-babel-tangle-file wal-prelude--touch)
-
-    (message "current error %s" wal-prelude-init-error)
-
     (wal-prelude-tangle-config)
 
     (was-called-n-times org-babel-tangle-file (length wal-packages))

@@ -19,7 +19,9 @@
     (let ((wal-lsp-slow-modes '(text-mode)))
 
       (with-temp-buffer
-        (text-mode)
+
+        (setq major-mode 'text-mode)
+
         (wal-lsp)
 
         (was-called lsp-deferred)
@@ -31,7 +33,8 @@
     (let ((wal-lsp-slow-modes nil))
 
       (with-temp-buffer
-        (text-mode)
+        (setq major-mode 'text-mode)
+
         (wal-lsp)
 
         (was-called lsp-deferred)
