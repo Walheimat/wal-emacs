@@ -198,9 +198,11 @@ They are:
 ;;; Code:
 
 (eval-when-compile
-  (require 'wal-useful nil t))
+  (require 'wal-useful nil t)
+  (require 'wal-package nil t))
 
 (defvar transient-current-command)
+(defvar wal-use-hyper-prefix)
 
 (declare-function wal-prefix-user-key "wal-useful.el")
 (declare-function transient-args "ext:transient.el")
@@ -437,6 +439,107 @@ USER-KEY and LEADER can be used to prefix the key."
   (which-key-show-early-on-C-h t)
 
   :functions (which-key-mode))
+#+END_SRC
+
+* Key Bindings
+
+#+BEGIN_SRC emacs-lisp
+(with-no-warnings
+  (with-eval-after-load 'transient
+    ;; Create `transient' for config package.
+    (transient-define-prefix whaler ()
+      "Facilitate the usage of or the working on Walheimat's config."
+      [["Find"
+        ("f" "project" wal-config-switch-project)
+        ("h" "heading" wal-config-consult-org-heading)]
+       ["Act"
+        ("t" "tangle" wal-prelude-tangle-config)
+        ("x" "install expansion pack" junk-install)
+        ("c" "customize group" wal-customize-group)]
+       ["Help"
+        ("m" "show diff" wal-show-config-diff-range)
+        ("e" "load test helper" wal-config-load-test-helper)]
+       ["Check"
+        ("o" "test" wal-run-test)
+        ("O" "test file" wal-run-test-file)
+        ("p" "pacify" wal-run-pacify)
+        ("b" "cold boot" wal-run-cold-boot)]]
+      ["Fluff"
+       ("w" "toggle animation" wal-ascii-whale-toggle-display)])
+
+    (advice-add 'whaler :around 'wal-with-delayed-transient-popup))
+
+
+  (with-eval-after-load 'general
+    ;; Additional `general' bindings.
+    (administrator
+      "f" '(:ignore t :wk "find")
+      "fc" 'wal-find-custom-file
+      "fi" 'wal-find-init
+      "fl" 'find-library
+
+      "l" '(:ignore t :wk "list")
+      "lp" 'list-processes
+      "lt" 'list-timers
+
+      "s" '(:ignore t :wk "set")
+      "st" 'wal-set-transparency
+      "sc" 'wal-set-cursor-type
+
+      "p" '(:ignore t :wk "package")
+      "pf" 'package-refresh-contents
+      "pi" 'package-install
+      "pl" 'list-packages
+      "pr" 'package-reinstall
+      "pd" 'package-delete)
+
+    (global-set-key (kbd (wal-key-combo-for-leader 'whaler)) #'whaler)
+
+    (global-set-key (kbd (wal-key-combo-for-leader 'major)) #'major?)
+
+    (when (wal-modern-emacs-p 29)
+      (editor "d" 'duplicate-dwim))
+
+    (editor "M-w" 'wal-kill-ring-save-whole-buffer)
+
+    (editor "M-q" 'wal-spill-paragraph)
+
+    (general-define-key
+     :prefix (wal-prefix-user-key "-")
+     :prefix-map 'wal-triple-minus-map
+     :wk-full-keys nil
+     "b" 'wal-kill-some-file-buffers
+     "d" 'wal-l
+     "f" 'wal-fundamental-mode
+     "1" 'wal-force-delete-other-windows)
+
+    (general-define-key
+     :prefix (wal-prefix-user-key "0")
+     :prefix-map 'wal-zero-in-map
+     :wk-full-keys nil
+     "f" 'wal-find-fish-config
+     "h" 'wal-dired-from-home
+     "s" 'find-sibling-file)
+
+    (that-key "triple-minus" :user-key "-")
+    (that-key "zero-in" :user-key "0")
+    (that-key "wal" :key "C-c w" :condition (not (display-graphic-p))))
+
+  (global-set-key [remap kill-line] #'wal-kwim)
+  (global-set-key [remap move-beginning-of-line] #'wal-mwim-beginning)
+  (global-set-key (kbd "C-c x") #'wal-scratch-buffer)
+  (global-set-key (kbd "C-c b") #'eww)
+  (global-set-key (kbd "C-c l") #'display-line-numbers-mode)
+  (global-set-key (kbd "C-c o") #'wal-supernova)
+
+  ;; Allow deleting windows while repeating other-window.
+  (with-eval-after-load 'window
+    (when (boundp 'other-window-repeat-map)
+      (define-key other-window-repeat-map "0" 'delete-window)
+      (define-key other-window-repeat-map "1" 'delete-other-windows)
+      (define-key other-window-repeat-map (kbd "C-k") 'wal-force-delete-other-windows)))
+
+  (global-set-key [remap save-buffers-kill-terminal] #'wal-delete-edit-or-kill))
 #+END_SRC
 
 * Footer

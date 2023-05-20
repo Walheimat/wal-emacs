@@ -32,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   recursively load it).
 - Package `wal-settings` no longer defines any functions (moved to
   `wal-useful`).
+- Package `wal-settings` no longer creates key bindings; this was
+  moved to `wal-key-bindings`.
+- All packages now explicitly require the packages they depend on.
+  Only relevant if `wal-packages` is altered before bootstrapping.
 
 ## [v2.0.3]
 

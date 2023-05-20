@@ -19,7 +19,8 @@ Moving around should be fun.
 ;;; Code:
 
 (eval-when-compile
-  (require 'avy nil t))
+  (require 'wal-useful nil t)
+  (require 'wal-key-bindings nil t))
 
 (declare-function avy--line "ext:avy.el")
 (declare-function avy-jump "ext:avy.el")
@@ -52,11 +53,13 @@ jump to a word in the buffer or anywhere."
 
         (setq current-prefix-arg nil)
         (avy-goto-word-0 flip))
-    (avy-with avy-goto-word-0
-      (avy-jump avy-goto-word-0-regexp
-                :beg (line-beginning-position)
-                :end (line-end-position)
-                :window-flip t))))
+
+    (eval (macroexpand
+           '(avy-with avy-goto-word-0
+              (avy-jump avy-goto-word-0-regexp
+                        :beg (line-beginning-position)
+                        :end (line-end-position)
+                        :window-flip t))))))
 
 (defun wal-avy-goto-line (&optional beginning)
   "Go to line or BEGINNING of line."
@@ -72,17 +75,18 @@ jump to a word in the buffer or anywhere."
   "Select two lines and mark the region between them."
   (interactive)
 
-  (avy-with wal-avy-mark-region
-    (let* ((beg (avy--line))
-           (end (avy--line)))
+  (eval (macroexpand
+         '(avy-with wal-avy-mark-region
+            (let* ((beg (avy--line))
+                   (end (avy--line)))
 
-      (when (> beg end)
-        (cl-rotatef beg end))
+             (when (> beg end)
+               (cl-rotatef beg end))
 
-      (set-mark beg)
-      (goto-char end)
-      (forward-visible-line 1)
-      (point))))
+             (set-mark beg)
+             (goto-char end)
+             (forward-visible-line 1)
+             (point))))))
 
 (defun avy-action-zip-to-char (pt)
   "Zip (just mark) from current point up to PT."
