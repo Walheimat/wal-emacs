@@ -214,7 +214,9 @@ The associated file buffer is also killed."
 
     (wal-test-helper--path-setup)
     (wal-test-helper--undercover-setup)
-    (wal-test-helper--use-package-setup))
+    (wal-test-helper--use-package-setup)
+
+    (setq auto-mode-alist nil))
 
   (add-hook
    'ert-runner-reporter-run-ended-functions
