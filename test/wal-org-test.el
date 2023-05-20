@@ -25,8 +25,8 @@
     (was-called-with org-content (list 8))))
 
 (ert-deftest test-wal-org-refile ()
-  (defvar org-roam-directory)
-  (defvar org-agenda-files)
+  (defvar org-roam-directory nil)
+  (defvar org-agenda-files nil)
 
   (let ((org-agenda-files '("/tmp/agenda"))
         (org-roam-directory "/tmp/roam"))
@@ -47,13 +47,10 @@
       (should (equal '("/tmp/agenda") (wal-org-refile)))
       (was-called org-refile))))
 
-(ert-deftest test-wal-agenda-buffer-p ()
-  (defvar org-agenda-contributing-files)
-  (wal-with-temp-file "test-agenda.org"
-    (let ((org-agenda-contributing-files `(,wal-tmp-file))
-          (buf (find-file-noselect wal-tmp-file)))
-
-      (should (wal-agenda-buffer-p buf)))))
+(ert-deftest wal-agenda-buffer-p ()
+  (with-temp-buffer
+    (with-mock ((org-agenda-file-p . #'always))
+      (should (wal-agenda-buffer-p (current-buffer))))))
 
 (ert-deftest test-wal-consult-agenda-buffer--query ()
   (cl-defun consult--buffer-query (&key sort as predicate)
