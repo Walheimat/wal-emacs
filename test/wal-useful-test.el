@@ -151,13 +151,15 @@
 
       (was-called-with kill-buffer-ask (list (get-buffer "to-be-killed"))))))
 
+(defvar useful-killing (ert-resource-file "killing.txt"))
+
 (ert-deftest test-wal-kill-ring-save-buffer ()
   (with-temp-buffer
-    (insert "I hope I don't get killed")
+    (insert-file-contents useful-killing)
 
     (wal-kill-ring-save-whole-buffer)
 
-    (should (string-equal "I hope I don't get killed" (car kill-ring)))))
+    (should (string-equal "I hope I don't get killed\nThat would be terrible\n" (car kill-ring)))))
 
 (ert-deftest wal-then-add-delete-trailing-whitespace-hook--does-nothing-if-unset ()
   (let ((wal-delete-trailing-whitespace nil))
@@ -189,31 +191,32 @@
 
 (ert-deftest test-wal-kwim--kills-forward-in-line ()
   (with-temp-buffer
-    (insert "I hope I don't get killed")
+    (insert-file-contents useful-killing)
     (goto-char 7)
 
     (wal-kwim)
 
-    (should (equal (buffer-string) "I hope"))))
+    (should (equal (buffer-string) "I hope\nThat would be terrible\n"))))
 
 (ert-deftest test-wal-kwim--kills-line-at-end ()
   (with-temp-buffer
-    (insert "This is a nice line\nThis will stay")
+    (insert-file-contents useful-killing)
     (goto-char 0)
     (end-of-line)
 
     (wal-kwim)
 
-    (should (equal (buffer-string) "This will stay"))))
+    (should (equal (buffer-string) "That would be terrible\n"))))
 
 (ert-deftest test-wal-kwim--kills-line-at-beg ()
   (with-temp-buffer
-    (insert "This is a nice line\nThis will stay")
+    (insert-file-contents useful-killing)
+
     (goto-char 0)
 
     (wal-kwim)
 
-    (should (equal (buffer-string) "This will stay"))))
+    (should (equal (buffer-string) "That would be terrible\n"))))
 
 (ert-deftest test-wal-kwim--kills-region-if-active ()
   (with-mock ((region-active-p . #'always) kill-region)
@@ -647,6 +650,8 @@
     (should (string-equal (wal-prefix-user-key "k") "C-c w k"))))
 
 (ert-deftest test-wal-on-boot ()
+  (defvar wal-booting nil)
+
   (let ((wal-booting t))
     (match-expansion
      (wal-on-boot test
