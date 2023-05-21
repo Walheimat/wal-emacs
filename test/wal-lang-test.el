@@ -17,29 +17,31 @@
 
     (should-error (wal-lsp-pyright-install-stubs) :type 'user-error))
 
-  (with-mock ((wal-in-python-project-p . #'always)
-              (project-root . (lambda () default-directory))
-              display-buffer-in-side-window
-              async-shell-command)
+  (let ((directory-exists t))
 
-    (make-directory "typings")
+    (with-mock ((wal-in-python-project-p . #'always)
+                (project-current . #'always)
+                make-directory
+                (project-root . (lambda (_) default-directory))
+                display-buffer-in-side-window
+                async-shell-command
+                (file-directory-p . (lambda (_) directory-exists)))
 
-    (should-error (wal-lsp-pyright-install-stubs) :type 'user-error)
+      (should-error (wal-lsp-pyright-install-stubs) :type 'user-error)
 
-    (delete-directory "typings")
+      (setq directory-exists nil)
 
-    (wal-lsp-pyright-install-stubs)
+      (wal-lsp-pyright-install-stubs)
+      (was-called make-directory)
 
-    (let ((buf (get-buffer "*Pyright Stubs*"))
-          (cmd (concat
-                "git clone https://github.com/microsoft/python-type-stubs "
-                (expand-file-name "typings" default-directory))))
+      (let ((buf (get-buffer "*Pyright Stubs*"))
+            (cmd (concat
+                  "git clone https://github.com/microsoft/python-type-stubs "
+                  (expand-file-name "typings" default-directory))))
 
-      (was-called-with display-buffer-in-side-window (list buf '((side . bottom))))
+        (was-called-with display-buffer-in-side-window (list buf '((side . bottom))))
 
-      (was-called-with async-shell-command (list cmd buf)))
-
-    (delete-directory "typings")))
+        (was-called-with async-shell-command (list cmd buf))))))
 
 (ert-deftest test-wal-otherwise-return-argument ()
   (should (equal 'testing (wal-otherwise-return-argument 'testing))))

@@ -37,15 +37,10 @@
       (was-called-with make-directory (list temp-dir t)))))
 
 (ert-deftest test-wal-create-non-existent-directory--aborts ()
-  (let ((temp-dir "/tmp/some-other/dir/"))
+  (with-mock (file-name-directory
+              (file-exists-p . #'always))
 
-    (make-directory temp-dir t)
-
-    (with-mock ((file-name-directory . (lambda (&rest _r) temp-dir)))
-
-      (should-not (wal-create-non-existent-directory)))
-
-    (delete-directory temp-dir)))
+    (should-not (wal-create-non-existent-directory))))
 
 (ert-deftest test-wal-display-buffer--condition--passes-strings ()
   (should (string-equal "testing" (wal-display-buffer--condition "testing"))))
