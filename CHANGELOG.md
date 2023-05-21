@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `whaler` was restructured.
 - The ASCII whale animation is now done using indirect buffers meaning
   it can be enabled and disabled for individual buffers.
+- `wal-run-test-file` now reads from test directory.
 
 ### Fixed
 
@@ -37,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All packages now explicitly require the packages they depend on.
   Only relevant if `wal-packages` is altered before bootstrapping.
 - `wal-agenda-buffer-p` now uses `org-agenda-file-p`.
+- Some unnecessary code was replaced in tests to make them run faster.
 
 ## [v2.0.3]
 
