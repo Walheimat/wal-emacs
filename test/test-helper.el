@@ -10,9 +10,13 @@
 (require 'compat nil t)
 (require 'undercover nil t)
 
+;; Utility:
+
 (defun wal-test-helper--cold-p ()
   "Check if we're loading this file from a cold start."
   (not (bound-and-true-p wal-loaded)))
+
+;; Helper macros
 
 (defun wal-rf (a &rest _r)
   "Return first argument passed A."
@@ -136,34 +140,39 @@ The associated file buffer is also killed."
              (push ,filename wal-test-helper--temp-files))
            (delete-file ,tmp-file))))))
 
-;; Entrypoints:
+;; Setup:
+
+(defvar undercover-force-coverage)
+(defvar undercover--merge-report)
+(declare-function undercover--setup "ext:undercover.el")
 
 (defun wal-test-helper--undercover-setup ()
   "Set up `undercover'."
   (when (featurep 'undercover)
     (message "Setting up `undercover'")
 
-    (cond
-     ((getenv "CI")
-      (undercover "build/*.el"
-                  "wal-prelude.el"
-                  (:report-format 'lcov)
-                  (:send-report nil)))
-     ((getenv "COVERAGE_WITH_JSON")
-      (setq undercover-force-coverage t
-            undercover--merge-report nil)
-      (undercover "build/*.el"
-                  "wal-prelude.el"
-                  (:report-format 'simplecov)
-                  (:report-file "./coverage/.resultset.json")
-                  (:send-report nil)))
-     (t
+    (let ((report-format 'text)
+          (report-file "./coverage/results.txt"))
+
       (setq undercover-force-coverage t)
-      (undercover "build/*el"
-                  "wal-prelude.el"
-                  (:report-format 'text)
-                  (:report-file "./coverage/results.txt")
-                  (:send-report nil))))))
+
+      (cond
+       ((getenv "CI")
+        (setq report-format 'lcov
+              report-file nil))
+
+       ((getenv "COVERAGE_WITH_JSON")
+        (setq undercover--merge-report nil
+              report-format 'simplecov
+              report-file "./coverage/.resultset.json")))
+
+      (undercover--setup
+       (list "build/*.el"
+             "wal-prelude.el"
+             "tools/wal-pacify.el"
+             (list :report-format report-format)
+             (list :report-file report-file)
+             (list :send-report nil))))))
 
 (defun wal-test-helper--path-setup ()
   "Set up paths."
