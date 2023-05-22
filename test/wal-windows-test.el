@@ -121,4 +121,30 @@
 
     (should (wal-tab-buffers--has-buffers-p))))
 
+(ert-deftest wtb--known-buffer-p ()
+  (with-tab-history
+    (wal-tab-buffers--remember)
+
+    (should (wal-tab-buffers--known-buffer-p (current-buffer)))))
+
+(ert-deftest wtb--maybe-remember ()
+  (with-tab-history
+    (with-mock (wal-tab-buffers--remember
+                (buffer-file-name . #'always)
+                (buffer-list . (lambda () '(buffer)))
+                (wal-tab-buffers--known-buffer-p . #'ignore))
+
+      (wal-tab-buffers--maybe-remember)
+      (was-called wal-tab-buffers--remember))))
+
+(ert-deftest wtb--on-frame-delete ()
+  (defvar tab-bar-tabs-function nil)
+
+  (let ((tab-bar-tabs-function (lambda (_) '(one two))))
+    (with-mock (wal-tab-buffers--on-close)
+
+      (wal-tab-buffers--on-frame-delete 'frame)
+
+      (was-called-n-times wal-tab-buffers--on-close 2))))
+
 ;;; wal-windows-test.el ends here

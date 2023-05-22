@@ -105,11 +105,13 @@ PID and `recent-keys' vector."
 
     (setcdr tab (push (cons 'wtb key) state))))
 
-(defun wal-tab-buffers--remember ()
-  "Remember the current buffer for this tab."
+(defun wal-tab-buffers--remember (&optional buffer)
+  "Remember the BUFFER for this tab.
+
+If no buffer is passed, the current buffer is used."
   (when-let* ((tab-key (wal-tab-buffers--key))
 
-              (buffer (current-buffer))
+              (buffer (or buffer (current-buffer)))
 
               (table wal-tab-buffers--table)
               (history (gethash
@@ -163,6 +165,20 @@ PID and `recent-keys' vector."
 
     (not (ring-empty-p history))))
 
+(defun wal-tab-buffers--known-buffer-p (buffer)
+  "Check if BUFFER belongs to a buffer group."
+  (let ((known (cl-loop for k being the hash-keys of wal-tab-buffers--table
+                        using (hash-values v)
+                        append (ring-elements v))))
+    (memq buffer known)))
+
+(defun wal-tab-buffers--maybe-remember ()
+  "Remember the current file buffer if it's unknown."
+  (and-let* ((buffer (nth 0 (buffer-list)))
+             (file-name (buffer-file-name buffer))
+             (unknown (not (wal-tab-buffers--known-buffer-p buffer))))
+    (wal-tab-buffers--remember buffer)))
+
 (defun wal-tab-buffers--on-frame-delete (frame)
   "Clear hashes associated with FRAME."
   (let ((tabs (funcall tab-bar-tabs-function frame)))
@@ -200,7 +216,8 @@ PID and `recent-keys' vector."
   :hook
   ((emacs-startup . tab-bar-mode)
    (find-file . wal-tab-buffers--remember)
-   (kill-buffer . wal-tab-buffers--forget))
+   (kill-buffer . wal-tab-buffers--forget)
+   (buffer-list-update . wal-tab-buffers--maybe-remember))
 
   :config
   (with-eval-after-load 'consult
