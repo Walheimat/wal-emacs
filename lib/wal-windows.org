@@ -163,6 +163,13 @@ PID and `recent-keys' vector."
 
     (not (ring-empty-p history))))
 
+(defun wal-tab-buffers--on-frame-delete (frame)
+  "Clear hashes associated with FRAME."
+  (let ((tabs (funcall tab-bar-tabs-function frame)))
+
+    (dolist (tab tabs)
+      (wal-tab-buffers--on-close tab nil))))
+
 (defvar wal-consult--source-tab-buffer
   (list :name "Tab buffer"
         :narrow ?t
@@ -204,6 +211,7 @@ PID and `recent-keys' vector."
 
   (add-to-list 'tab-bar-tab-pre-close-functions #'wal-tab-buffers--on-close)
   (add-to-list 'tab-bar-tab-post-open-functions #'wal-tab-buffers--on-create)
+  (add-to-list 'delete-frame-functions #'wal-tab-buffers--on-frame-delete)
 
   :custom
   (tab-bar-show nil)

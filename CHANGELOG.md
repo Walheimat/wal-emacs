@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Only relevant if `wal-packages` is altered before bootstrapping.
 - `wal-agenda-buffer-p` now uses `org-agenda-file-p`.
 - Some unnecessary code was replaced in tests to make them run faster.
+- Tab buffer table entries are deleted on `delete-frame`.
 
 ## [v2.0.3]
 
