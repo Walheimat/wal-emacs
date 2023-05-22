@@ -73,15 +73,15 @@ js-mode
 js-ts-mode
 
 (docstring
- "/**" n
- " * " q > n
+ "/**" n>
+ " * " q n>
  " */" >)
 
 java-mode
 
 (docstring
- "/**" n
- " * " q > n
+ "/**" n>
+ " * " q n>
  " */" >)
 
 ;; Local Variables:
