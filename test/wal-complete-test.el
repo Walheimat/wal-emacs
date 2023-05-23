@@ -148,7 +148,7 @@
     (with-mock ((consult--project-root . #'always)
                 (consult--buffer-query . #'always)
                 (consult--open-project-items . #'always)
-                (wal-tab-buffers--has-buffers-p . #'always))
+                (wal-partial-recall--has-buffers-p . #'always))
 
         (setq wal-consult-pre-narrow t
               unread-command-events nil)
@@ -166,13 +166,13 @@
 
         (wal-clear-mocks)
 
-        (setq wal-consult-buffer-narrow-source 'tab)
+        (setq wal-consult-buffer-narrow-source 'recall)
 
         (wal-consult--pre-narrow)
 
         (should unread-command-events)
         (was-not-called consult--project-root)
-        (was-called wal-tab-buffers--has-buffers-p)
+        (was-called wal-partial-recall--has-buffers-p)
 
         (setq unread-command-events nil
               this-command 'wal-consult-project)

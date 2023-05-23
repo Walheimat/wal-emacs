@@ -80,16 +80,16 @@ Otherwise switch to the buffer normally."
         (select-window (get-buffer-window buffer)))
     (switch-to-buffer buffer)))
 
-(defvar wal-tab-buffers--table (make-hash-table))
-(defconst wal-tab-buffers--history-size 10)
+(defvar wal-partial-recall--table (make-hash-table))
+(defconst wal-partial-recall--history-size 10)
 
-(defun wal-tab-buffers--key (&optional tab)
+(defun wal-partial-recall--key (&optional tab)
   "Get the hash key of TAB."
   (when-let* ((tab (or tab (tab-bar--current-tab)))
-              (key (alist-get 'wtb tab)))
+              (key (alist-get 'wpr tab)))
     key))
 
-(defun wal-tab-buffers--create-hash-key (tab)
+(defun wal-partial-recall--create-hash-key (tab)
   "Create the key for TAB.
 
 This uses a message digest of the tab, a random number, the Emacs
@@ -98,36 +98,36 @@ PID and `recent-keys' vector."
 
     (md5 object)))
 
-(defun wal-tab-buffers--on-create (tab)
+(defun wal-partial-recall--on-create (tab)
   "Equip TAB with a unique hash key."
-  (let ((key (wal-tab-buffers--create-hash-key tab))
+  (let ((key (wal-partial-recall--create-hash-key tab))
         (state (cdr tab)))
 
-    (setcdr tab (push (cons 'wtb key) state))))
+    (setcdr tab (push (cons 'wpr key) state))))
 
-(defun wal-tab-buffers--remember (&optional buffer)
+(defun wal-partial-recall--remember (&optional buffer)
   "Remember the BUFFER for this tab.
 
 If no buffer is passed, the current buffer is used."
-  (when-let* ((tab-key (wal-tab-buffers--key))
+  (when-let* ((tab-key (wal-partial-recall--key))
 
               (buffer (or buffer (current-buffer)))
 
-              (table wal-tab-buffers--table)
+              (table wal-partial-recall--table)
               (history (gethash
                          tab-key
                          table
-                         (make-ring wal-tab-buffers--history-size))))
+                         (make-ring wal-partial-recall--history-size))))
 
     (unless (ring-member history buffer)
       (ring-insert history buffer)
       (puthash tab-key history table))))
 
-(defun wal-tab-buffers--forget ()
+(defun wal-partial-recall--forget ()
   "Forget the current buffer."
   (let* ((buffer (current-buffer))
 
-         (table wal-tab-buffers--table)
+         (table wal-partial-recall--table)
          (maybe-remove (lambda (tab-name history)
                          (when-let ((index (ring-member history buffer)))
 
@@ -136,67 +136,67 @@ If no buffer is passed, the current buffer is used."
 
     (maphash maybe-remove table)))
 
-(defun wal-tab-buffers--on-close (tab only)
+(defun wal-partial-recall--on-close (tab only)
   "Remove TAB from table if it is not the ONLY one."
-  (when-let* ((tab-key (wal-tab-buffers--key tab))
-              (table wal-tab-buffers--table))
+  (when-let* ((tab-key (wal-partial-recall--key tab))
+              (table wal-partial-recall--table))
 
     (when (and (not only)
                (gethash tab-key table))
       (remhash tab-key table))))
 
-(defun wal-tab-buffers--history ()
+(defun wal-partial-recall--history ()
   "Get the buffer history for the current tab."
-  (when-let* ((tab-key (wal-tab-buffers--key))
+  (when-let* ((tab-key (wal-partial-recall--key))
 
-              (table wal-tab-buffers--table)
+              (table wal-partial-recall--table)
               (history (gethash tab-key table)))
     history))
 
-(defun wal-tab-buffers--current-p (buffer)
+(defun wal-partial-recall--current-p (buffer)
   "Check if BUFFER belongs to the current tab."
-  (when-let ((history (wal-tab-buffers--history)))
+  (when-let ((history (wal-partial-recall--history)))
 
     (ring-member history buffer)))
 
-(defun wal-tab-buffers--has-buffers-p ()
+(defun wal-partial-recall--has-buffers-p ()
   "Check if there are buffers associated with the current tab."
-  (when-let ((history (wal-tab-buffers--history)))
+  (when-let ((history (wal-partial-recall--history)))
 
     (not (ring-empty-p history))))
 
-(defun wal-tab-buffers--known-buffer-p (buffer)
-  "Check if BUFFER belongs to a buffer group."
-  (let ((known (cl-loop for k being the hash-keys of wal-tab-buffers--table
+(defun wal-partial-recall--known-buffer-p (buffer)
+  "Check if BUFFER is recalled at all."
+  (let ((known (cl-loop for _k being the hash-keys of wal-partial-recall--table
                         using (hash-values v)
                         append (ring-elements v))))
     (memq buffer known)))
 
-(defun wal-tab-buffers--maybe-remember ()
+(defun wal-partial-recall--maybe-remember ()
   "Remember the current file buffer if it's unknown."
   (and-let* ((buffer (nth 0 (buffer-list)))
              (file-name (buffer-file-name buffer))
-             (unknown (not (wal-tab-buffers--known-buffer-p buffer))))
-    (wal-tab-buffers--remember buffer)))
+             (unknown (not (wal-partial-recall--known-buffer-p buffer))))
+    (wal-partial-recall--remember buffer)))
 
-(defun wal-tab-buffers--on-frame-delete (frame)
+(defun wal-partial-recall--on-frame-delete (frame)
   "Clear hashes associated with FRAME."
   (let ((tabs (funcall tab-bar-tabs-function frame)))
 
     (dolist (tab tabs)
-      (wal-tab-buffers--on-close tab nil))))
+      (wal-partial-recall--on-close tab nil))))
 
-(defvar wal-consult--source-tab-buffer
-  (list :name "Tab buffer"
-        :narrow ?t
+(defvar wal-consult--source-partial-recall
+  (list :name "Partiall Recall"
+        :narrow ?r
         :category 'buffer
         :state #'consult--buffer-state
         :history 'buffer-name-history
         :items
         #'(lambda () (consult--buffer-query :sort 'visibility
-                                       :predicate #'wal-tab-buffers--current-p
+                                       :predicate #'wal-partial-recall--current-p
                                        :as #'buffer-name)))
-  "Buffers that are associated with the current tab.")
+  "Buffers that are recalled from the current tab.")
 
 (wal-define-init-setup tab-bar
   "Set up the original tab."
@@ -205,8 +205,8 @@ If no buffer is passed, the current buffer is used."
                (tabs (funcall tab-bar-tabs-function))
                (original (nth 0 tabs)))
 
-   (unless (wal-tab-buffers--key original)
-     (wal-tab-buffers--on-create original)))))
+   (unless (wal-partial-recall--key original)
+     (wal-partial-recall--on-create original)))))
 #+END_SRC
 
 *** Configuration
@@ -215,20 +215,20 @@ If no buffer is passed, the current buffer is used."
 (use-package tab-bar
   :hook
   ((emacs-startup . tab-bar-mode)
-   (find-file . wal-tab-buffers--remember)
-   (kill-buffer . wal-tab-buffers--forget)
-   (buffer-list-update . wal-tab-buffers--maybe-remember))
+   (find-file . wal-partial-recall--remember)
+   (kill-buffer . wal-partial-recall--forget)
+   (buffer-list-update . wal-partial-recall--maybe-remember))
 
   :config
   (with-eval-after-load 'consult
     (wal-insert-after
      'consult-buffer-sources
      'consult--source-buffer
-     'wal-consult--source-tab-buffer))
+     'wal-consult--source-partial-recall))
 
-  (add-to-list 'tab-bar-tab-pre-close-functions #'wal-tab-buffers--on-close)
-  (add-to-list 'tab-bar-tab-post-open-functions #'wal-tab-buffers--on-create)
-  (add-to-list 'delete-frame-functions #'wal-tab-buffers--on-frame-delete)
+  (add-to-list 'tab-bar-tab-pre-close-functions #'wal-partial-recall--on-close)
+  (add-to-list 'tab-bar-tab-post-open-functions #'wal-partial-recall--on-create)
+  (add-to-list 'delete-frame-functions #'wal-partial-recall--on-frame-delete)
 
   :custom
   (tab-bar-show nil)

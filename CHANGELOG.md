@@ -10,13 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Custom variable `wal-consult-buffer-narrow-source` with options
-  `tab` (the new default) and `project` that determines which source
+  `recall` (the new default) and `project` that determines which source
   to pre-narrow to.
 - Convenience command `wal-config-load-test-helper` to do just that.
   Bound to `e` in `whaler`.
 
 ### Changed
 
+- `wal-tab-buffers-*` functionality was renamed to
+  `wal-partial-recall-*`. It is still associated with tabs.
 - Tabs now get a custom key that is created on tab creation to keep
   track of their buffer history. This means tabs no longer need an
   explicit name to have one and that renaming them doesn't wipe out
@@ -39,7 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Only relevant if `wal-packages` is altered before bootstrapping.
 - `wal-agenda-buffer-p` now uses `org-agenda-file-p`.
 - Some unnecessary code was replaced in tests to make them run faster.
-- Tab buffer table entries are deleted on `delete-frame`.
+- Table entries for `wal-partial-recall` are deleted on
+  `delete-frame`.
 
 ## [v2.0.3]
 
