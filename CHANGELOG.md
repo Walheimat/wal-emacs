@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   track of their buffer history. This means tabs no longer need an
   explicit name to have one and that renaming them doesn't wipe out
   their association with their history.
+- Recall limit can now be customized through `wal-total-recall-limit`.
 - `whaler` was restructured.
 - The ASCII whale animation is now done using indirect buffers meaning
   it can be enabled and disabled for individual buffers.

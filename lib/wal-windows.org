@@ -29,6 +29,11 @@ Everything that has to do with windows.
 
 (declare-function consult--buffer-query "ext:consult.el")
 (declare-function consult--buffer-state "ext:consult.el")
+
+(defcustom wal-partial-recall-limit 10
+  "The amount of buffers to recall."
+  :type 'integer
+  :group 'wal-windows)
 #+END_SRC
 
 * Packages
@@ -81,7 +86,6 @@ Otherwise switch to the buffer normally."
     (switch-to-buffer buffer)))
 
 (defvar wal-partial-recall--table (make-hash-table))
-(defconst wal-partial-recall--history-size 10)
 
 (defun wal-partial-recall--key (&optional tab)
   "Get the hash key of TAB."
@@ -117,7 +121,7 @@ If no buffer is passed, the current buffer is used."
               (history (gethash
                          tab-key
                          table
-                         (make-ring wal-partial-recall--history-size))))
+                         (make-ring wal-partial-recall-limit))))
 
     (unless (ring-member history buffer)
       (ring-insert history buffer)
