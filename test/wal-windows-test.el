@@ -76,15 +76,30 @@
     (wal-partial-recall--remember)
     (wal-partial-recall--remember)
 
-    (should (eq 1 (ring-length (gethash (alist-get 'wpr test-tab) wal-partial-recall--table))))))
+    (let* ((memory (gethash (alist-get 'wpr test-tab) wal-partial-recall--table))
+           (ring (wal-partial-recall--memory-ring memory)))
+
+      (should (eq 1 (ring-length ring))))))
+
+(ert-deftest wpr--remember--extends-ring ()
+  (with-tab-history
+    (with-mock ((wal-partial-recall--at-capacity . #'always)
+                (wal-partial-recall--should-extend-p . #'always)
+                ring-extend)
+
+      (wal-partial-recall--remember (current-buffer))
+      (was-called ring-extend))))
 
 (ert-deftest wpr--forget--forgets ()
-    (with-tab-history
-      (wal-partial-recall--remember)
+  (with-tab-history
+    (wal-partial-recall--remember)
 
-      (wal-partial-recall--forget)
+    (wal-partial-recall--forget)
 
-      (should (eq 0 (ring-length (gethash (alist-get 'wpr test-tab) wal-partial-recall--table))))))
+    (let* ((memory (gethash (alist-get 'wpr test-tab) wal-partial-recall--table))
+           (ring (wal-partial-recall--memory-ring memory)))
+
+      (should (eq 0 (ring-length ring))))))
 
 (ert-deftest wpr--on-close ()
   (with-tab-history
@@ -102,11 +117,11 @@
 
 (ert-deftest wpr--history ()
   (with-tab-history
-    (should-not (wal-partial-recall--history))
+    (should-not (wal-partial-recall--moments))
 
     (wal-partial-recall--remember)
 
-    (should (wal-partial-recall--history))))
+    (should (wal-partial-recall--moments))))
 
 (ert-deftest wpr--current-p ()
   (with-tab-history
@@ -130,12 +145,41 @@
 (ert-deftest wpr--maybe-remember ()
   (with-tab-history
     (with-mock (wal-partial-recall--remember
-                (buffer-file-name . #'always)
-                (buffer-list . (lambda () '(buffer)))
+                (buffer-live-p . #'always)
                 (wal-partial-recall--known-buffer-p . #'ignore))
 
-      (wal-partial-recall--maybe-remember)
+      (wal-partial-recall--maybe-remember (current-buffer))
       (was-called wal-partial-recall--remember))))
+
+(ert-deftest wpr--should-extend-p ()
+  (let ((seconds '(10 11 12))
+        (wal-partial-recall-limit 1)
+        (wal-partial-recall-threshold 2))
+
+    (with-tab-history
+      (with-mock ((time-to-seconds . (lambda (&rest _) (pop seconds))))
+
+        (wal-partial-recall--remember)
+
+        (let ((memory (wal-partial-recall--get-or-create-memory (wal-partial-recall--key))))
+
+          (should (wal-partial-recall--should-extend-p memory))
+          (should-not (wal-partial-recall--should-extend-p memory)))))))
+
+(ert-deftest wpr--on-buffer-list-update--cancels-running-timer ()
+  (let ((wal-partial-recall--timer nil))
+
+    (with-mock ((buffer-file-name . #'always)
+                (wal-partial-recall--known-buffer-p . #'ignore)
+                cancel-timer
+                run-at-time)
+
+      (setq wal-partial-recall--timer 'timer)
+      (wal-partial-recall--on-buffer-list-update)
+
+      (was-called cancel-timer)
+
+      (was-called run-at-time))))
 
 (ert-deftest wpr--on-frame-delete ()
   (defvar tab-bar-tabs-function nil)

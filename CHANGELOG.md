@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to pre-narrow to.
 - Convenience command `wal-config-load-test-helper` to do just that.
   Bound to `e` in `whaler`.
+-  The internal structure of `wal-partial-recall` (see below) now uses
+  `cl-defstruct` to create memories and moments; memories are rings of
+  moments and an original size; moments are buffers and timestamps
+  that refer to when they were added; the ring will now grow if adding
+  a new buffer would kick an existing buffer but that buffer is not
+  older than `wal-partial-recall-threshold` (new custom variable,
+  defaults to 60) seconds.
 
 ### Changed
 
