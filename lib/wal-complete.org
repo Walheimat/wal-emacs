@@ -50,7 +50,15 @@ Complete commands and code.
 (defcustom wal-consult-buffer-narrow-source 'recall
   "Source to use when pre-narrowing `consult-buffer'."
   :type '(choice (const :tag "Partial recall buffers" recall)
-                 (const :tag "Project buffers" project)))
+                 (const :tag "Project buffers" project))
+  :group 'wal-complete)
+
+(defcustom wal-consult-pre-narrowed-commands '(consult-buffer)
+  "Commands that should be pre-narrowed when toggled.
+
+See `wal-consult--pre-narrow' for covered commands."
+  :type '(repeat symbol)
+  :group 'wal-complete)
 #+END_SRC
 
 * Inline Completion
@@ -471,9 +479,10 @@ If DISCONTINUE is non-nil, clock in from now."
   (declare-function consult--buffer-query "ext:consult.el")
   (declare-function consult--project-root "ext:consult.el")
 
-  (and-let* ((should-narrow (if wal-consult-pre-narrow
-                                (not (wal-univ-p))
-                              (wal-univ-p)))
+  (and-let* ((should-narrow (and (memq this-command wal-consult-pre-narrowed-commands)
+                                 (if wal-consult-pre-narrow
+                                     (not (wal-univ-p))
+                                   (wal-univ-p))))
              (char (pcase this-command
                      ('consult-buffer
                       (pcase wal-consult-buffer-narrow-source

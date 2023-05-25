@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a new buffer would kick an existing buffer but that buffer is not
   older than `wal-partial-recall-threshold` (new custom variable,
   defaults to 60) seconds.
+- Custom variable `wal-consult-pre-narrowed` commands that is set to
+  `consult-buffer` to give more control of which commands should be
+  narrowed if toggled on.
 
 ### Changed
 

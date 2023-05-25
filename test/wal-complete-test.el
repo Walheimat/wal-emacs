@@ -142,8 +142,10 @@
 (ert-deftest test-wal-consult--pre-narrow ()
   (defvar wal-consult-pre-narrow)
   (defvar wal-consult-buffer-narrow-source)
+  (defvar wal-consult-pre-narrowed-commands)
 
-  (let ((wal-consult-buffer-narrow-source 'project))
+  (let ((wal-consult-buffer-narrow-source 'project)
+        (wal-consult-pre-narrowed-commands '(consult-buffer wal-consult-project)))
 
     (with-mock ((consult--project-root . #'always)
                 (consult--buffer-query . #'always)
