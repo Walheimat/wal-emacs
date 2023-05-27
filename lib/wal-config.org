@@ -185,7 +185,7 @@ Example for advising =:around=.
 
 (eval-when-compile
   (require 'wal-useful nil t)
-  (require 'wal-fonts nil t))
+  (require 'wal-visuals nil t))
 
 (declare-function consult-org-heading "ext:consult.el")
 (declare-function magit-diff-range "ext:magit.el")
@@ -497,18 +497,39 @@ If the answer is no, there will be no additional prompt."
 
   (wal-make "cold-boot"))
 
-(defun wal-run-test (&optional json)
-  "Run the test script.
+(defvar wal-run-test--coverage-format 'text
+  "The format of the coverage.")
 
-If JSON is t, create JSON coverage instead."
-  (interactive "P")
+(defun wal-run-test-toggle-format ()
+  "Toggle the format used in `wal-run-test'."
+  (interactive)
 
-  (wal-make
-   "test"
-   (when json "export COVERAGE_WITH_JSON=true")
-   (unless json "cat coverage/results.txt")
-   (unless json (wal-run-test--on-success))
-   (unless json (wal-run-test--on-failure))))
+  (setq wal-run-test--coverage-format
+        (pcase wal-run-test--coverage-format
+          ('text 'json)
+          ('json 'text)
+          (_ 'text)))
+
+  (message "Test format is '%s'" wal-run-test--coverage-format))
+
+(defun wal-run-test (&optional cmd)
+  "Run the test script using CMD."
+  (interactive)
+
+  (let ((cmd (or cmd "test")))
+
+    (pcase wal-run-test--coverage-format
+      ('text
+       (wal-make
+        cmd
+        nil
+        "cat coverage/results.txt"
+        (wal-run-test--on-success)
+        (wal-run-test--on-failure)))
+      ('json
+       (wal-make
+        cmd
+        "export COVERAGE_WITH_JSON=true")))))
 
 (defun wal-run-test-file (file)
   "Run test routine for FILE."
@@ -519,12 +540,8 @@ If JSON is t, create JSON coverage instead."
                   t
                   nil
                   (lambda (it) (not (string= "test-helper.el" it))))))
-  (wal-make
-   (format "test TEST_ARGS=%s" file)
-   nil
-   "cat coverage/results.txt"
-   nil
-   nil))
+
+  (wal-run-test (format "test TEST_ARGS=%s" file)))
 
 (defun wal-run-test--on-success ()
   "Show average test coverage."

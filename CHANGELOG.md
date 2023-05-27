@@ -27,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom variable `wal-consult-pre-narrowed` commands that is set to
   `consult-buffer` to give more control of which commands should be
   narrowed if toggled on.
+- The format used in `wal-run-test` and `wal-run-test-file` can now be
+  toggled between `text` and `json` using
+  `wal-run-test-toggle-format`.
 
 ### Changed
 

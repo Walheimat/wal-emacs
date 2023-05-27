@@ -290,15 +290,17 @@
                                            failure
                                            t)))))
 
-(ert-deftest run-test--adds-pre-command ()
+(ert-deftest run-test--adds-pre-command-for-json ()
   (defvar wal-emacs-config-default-path)
-  (let ((wal-emacs-config-default-path "/tmp/default"))
+  (defvar wal-run-test--coverage-format)
+  (let ((wal-emacs-config-default-path "/tmp/default")
+        (wal-run-test--coverage-format 'json))
 
     (with-mock (wal-async-process
                 (wal-make--on-success . (lambda (_) 'success))
                 (wal-make--on-failure . (lambda (_) 'failure)))
 
-      (funcall-interactively 'wal-run-test t)
+      (wal-run-test)
 
       (was-called-with wal-async-process '("export COVERAGE_WITH_JSON=true && cd /tmp/default && make test"
                                            success
@@ -307,11 +309,12 @@
 
 (ert-deftest run-test-file--passes-file-as-args ()
   (defvar wal-emacs-config-default-path)
-  (let ((wal-emacs-config-default-path "/tmp/default"))
+  (defvar wal-run-test--coverage-format)
 
-    (with-mock (wal-async-process
-                (wal-make--on-success . (lambda (_) 'success))
-                (wal-make--on-failure . (lambda (_) 'failure))
+  (let ((wal-emacs-config-default-path "/tmp/default")
+        (wal-run-test--coverage-format 'text))
+
+    (with-mock (wal-run-test
                 (read-file-name . (lambda (_p _d _d _m _i pred &rest _)
                                     (let ((selected "/tmp/tests/test.el"))
                                       (if (funcall pred selected)
@@ -320,7 +323,26 @@
 
       (call-interactively 'wal-run-test-file)
 
-      (was-called-with wal-async-process '("cd /tmp/default && make test TEST_ARGS=/tmp/tests/test.el && cat coverage/results.txt" success failure t)))))
+      (was-called-with wal-run-test "test TEST_ARGS=/tmp/tests/test.el"))))
+
+(ert-deftest run-test-toggle-format ()
+  (defvar wal-run-test--coverage-format)
+
+  (let ((wal-run-test--coverage-format 'text))
+
+    (wal-run-test-toggle-format)
+
+    (should (eq 'json wal-run-test--coverage-format))
+
+    (wal-run-test-toggle-format)
+
+    (should (eq 'text wal-run-test--coverage-format))
+
+    (setq wal-run-test--coverage-format 'else)
+
+    (wal-run-test-toggle-format)
+
+    (should (eq 'text wal-run-test--coverage-format))))
 
 (ert-deftest run-test-success-handler--checks-coverage ()
   (with-mock ((wal-check-coverage--calculate-coverage . (lambda () "999%"))
@@ -339,6 +361,7 @@
 (ert-deftest load-test-helper ()
   (with-mock (load-file)
 
+    (defvar wal-emacs-config-default-path)
     (let ((wal-emacs-config-default-path "/tmp"))
 
       (wal-config-load-test-helper)
