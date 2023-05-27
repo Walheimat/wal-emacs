@@ -163,7 +163,6 @@ If no buffer is passed, the current buffer is used."
               (ring (wal-partial-recall--memory-ring memory)))
 
     (unless (wal-partial-recall--ring-member ring buffer)
-      ;; FIXME: Actually only expand conditionally.
       (when (and (wal-partial-recall--at-capacity memory)
                  (wal-partial-recall--should-extend-p memory))
         (ring-extend ring 1))
@@ -257,24 +256,22 @@ If no buffer is passed, the current buffer is used."
 
 (defun wal-partial-recall--maybe-reclaim (buffer)
   "Check if BUFFER could be reclaimed."
-  (when-let* ((memories (hash-table-values wal-partial-recall--table))
-              (current-memory (gethash (wal-partial-recall--key) wal-partial-recall--table))
-              (other-memories (seq-filter (lambda (it) (not (eq it current-memory))) memories))
-              (memory (seq-find (lambda (it) (wal-partial-recall--memory-buffer-p it buffer)) other-memories))
-              (ring (wal-partial-recall--memory-ring memory))
-              (moment (seq-find (lambda (it) (wal-partial-recall--moment-buffer-p it buffer)) (ring-elements ring))))
+  (and-let* ((current-memory (wal-partial-recall-current))
+             (owner (wal-partial-recall-owner buffer))
+             ((not (eq current-memory owner)))
+             (ring (wal-partial-recall--memory-ring owner))
+             (moment (seq-find (lambda (it) (wal-partial-recall--moment-buffer-p it buffer)) (ring-elements ring)))
+             ((< wal-partial-recall-reclaim-threshold
+                 (- (floor (time-to-seconds))
+                    (wal-partial-recall--moment-timestamp moment))))
+             (index (wal-partial-recall--ring-member ring buffer)))
 
-    (when (< wal-partial-recall-reclaim-threshold
-             (- (floor (time-to-seconds))
-                (wal-partial-recall--moment-timestamp moment)))
-      (let ((index (wal-partial-recall--ring-member ring buffer)))
+    ;; Forget in the old memory.
+    (ring-remove ring index)
 
-        ;; Forget in the old memory.
-        (ring-remove ring index)
-
-        ;; Remember in the current one.
-        (wal-partial-recall--remember buffer)
-        (message "Reclaimed %s" buffer)))))
+    ;; Remember in the current one.
+    (wal-partial-recall--remember buffer)
+    (message "Reclaimed %s" buffer)))
 
 (defvar wal-partial-recall--last-checked nil)
 
@@ -286,6 +283,27 @@ If no buffer is passed, the current buffer is used."
     (if (wal-partial-recall--known-buffer-p buffer)
         (wal-partial-recall--maybe-reclaim buffer)
       (wal-partial-recall--remember buffer))))
+
+(defun wal-partial-recall-owner (&optional buffer)
+  "Return the memory that owns BUFFER.
+
+Defaults to the current buffer."
+  (interactive)
+
+  (let* ((buffer (or buffer (current-buffer)))
+         (memories (hash-table-values wal-partial-recall--table))
+         (memory (seq-find (lambda (it) (wal-partial-recall--memory-buffer-p it buffer)) memories)))
+
+    (message "Owner is %s" memory)
+    memory))
+
+(defun wal-partial-recall-current ()
+  "Get the current memory."
+  (interactive)
+
+  (let ((memories (hash-table-values wal-partial-recall--table)))
+
+    (gethash (wal-partial-recall--key) wal-partial-recall--table)))
 
 (defun wal-partial-recall--on-buffer-list-update ()
   "Schedule maybe remembering the current buffer."

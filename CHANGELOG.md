@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   defaults to 60) seconds; buffers that belong to a different memory
   are reclaimed if visited when `wal-partial-recall-reclaim-threshold`
   (5 minutes by default) is exceeded.
+- Command `wal-partial-recall-owner` to get the owner of a buffer.
 - Custom variable `wal-consult-pre-narrowed` commands that is set to
   `consult-buffer` to give more control of which commands should be
   narrowed if toggled on.

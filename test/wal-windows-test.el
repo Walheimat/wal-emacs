@@ -186,7 +186,7 @@
       (with-mock ((time-to-seconds . (lambda (&rest _) (pop seconds))))
         (wal-partial-recall--remember)
 
-        (with-mock ((seq-filter . (lambda (_p l) l))
+        (with-mock ((wal-partial-recall-current . (lambda () 'other))
                     wal-partial-recall--remember)
 
           (wal-partial-recall--maybe-reclaim (current-buffer))
@@ -217,6 +217,14 @@
 
           (should (wal-partial-recall--should-extend-p memory))
           (should-not (wal-partial-recall--should-extend-p memory)))))))
+
+(ert-deftest wpr-recall-owner ()
+  (with-tab-history
+    (wal-partial-recall--remember)
+
+    (let ((memory (wal-partial-recall--get-or-create-memory (wal-partial-recall--key))))
+
+      (should (eq memory (wal-partial-recall-owner))))))
 
 (ert-deftest wpr--on-buffer-list-update--cancels-running-timer ()
   (let ((wal-partial-recall--timer nil))
