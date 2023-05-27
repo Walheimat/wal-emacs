@@ -11,6 +11,13 @@
 (require 'warnings)
 (require 'flymake)
 
+(defvar wp--stumps nil)
+
+(unless (featurep 'use-package)
+  (defmacro use-package (package-name &rest _args)
+    "Push message that PACKAGE-NAME would have been loaded."
+    `(push ',package-name wp--stumps)))
+
 (defun wp--get-state (state)
   "Get the STATE."
   (when (hash-table-p flymake--state)
@@ -91,32 +98,23 @@
 
     (format "%s:%s: %s" file line text)))
 
+(defvar wp-check--not-testable "movement\\|fix\\|settings"
+  "Regex matching files that are currently not testable.")
+
 (defun wp-check--get-package-files ()
   "Get all testable package files."
   (seq-filter
-   (lambda (it) (not (string-match "movement\\|fix\\|settings" it)))
+   (lambda (it) (not (string-match wp-check--not-testable it)))
    (wal-prelude-package-files)))
-
-(defvar wp--stumps nil)
-
-(defun wp--use-package-setup ()
-  "Stump `use-package' forms."
-  (message "Stumping `use-package'")
-
-  (defmacro use-package (package-name &rest _args)
-    "Push message that PACKAGE-NAME would have been loaded."
-    `(push ',package-name wp--stumps)))
 
 (defun wp-check ()
   "Check all package files."
-  (wp--use-package-setup)
-
   (message "Checking package files with `flymake'")
 
   (condition-case err
       (dolist (it (wp-check--get-package-files))
         (wp--collect it))
-    (err
+    (error
      (message "Failed to check all of the packages: %s" (error-message-string err))
      (kill-emacs 0)))
 

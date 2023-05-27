@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The format used in `wal-run-test` and `wal-run-test-file` can now be
   toggled between `text` and `json` using
   `wal-run-test-toggle-format`.
+- Tool package `wal-pacify` that checks all tangled files for
+  byte-compile and doc issues using `flymake` now has a test suite.
 
 ### Changed
 

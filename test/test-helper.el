@@ -169,7 +169,7 @@ The associated file buffer is also killed."
       (undercover--setup
        (list "build/*.el"
              "wal-prelude.el"
-             "tools/wal-pacify.el"
+             "tools/*.el"
              (list :report-format report-format)
              (list :report-file report-file)
              (list :send-report nil))))))
@@ -183,12 +183,14 @@ The associated file buffer is also killed."
   (let* ((source-dir (expand-file-name (or (getenv "GITHUB_WORKSPACE")
                                            default-directory)))
          (build-dir (expand-file-name "build" source-dir))
-         (lib-dir (expand-file-name "lib" source-dir)))
+         (lib-dir (expand-file-name "lib" source-dir))
+         (tools-dir (expand-file-name "tools" source-dir)))
 
     (message "Setting `wal-emacs-config-default-path' to %s" source-dir)
 
     (add-to-list 'load-path source-dir)
     (add-to-list 'load-path build-dir)
+    (add-to-list 'load-path tools-dir)
 
     (setq wal-emacs-config-default-path source-dir
           wal-emacs-config-build-path build-dir
