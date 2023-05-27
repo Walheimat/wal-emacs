@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The ASCII whale animation is now done using indirect buffers meaning
   it can be enabled and disabled for individual buffers.
 - `wal-run-test-file` now reads from test directory.
+- The config buffers are no longer ignored by `consult`.
 
 ### Fixed
 
