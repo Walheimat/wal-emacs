@@ -5,16 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v2.1.0]
+
+Pizza time.
 
 ### Added
 
-- Custom variable `wal-consult-buffer-narrow-source` with options
-  `recall` (the new default) and `project` that determines which source
-  to pre-narrow to.
-- Convenience command `wal-config-load-test-helper` to do just that.
-  Bound to `e` in `whaler`.
--  The internal structure of `wal-partial-recall` (see below) now uses
+- The internal structure of `wal-partial-recall` (see below) now uses
   `cl-defstruct` to create memories and moments; memories are rings of
   moments and an original size; moments are buffers and timestamps
   that refer to when they were added; the ring will now grow if adding
@@ -23,7 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   defaults to 60) seconds; buffers that belong to a different memory
   are reclaimed if visited when `wal-partial-recall-reclaim-threshold`
   (5 minutes by default) is exceeded.
-- Command `wal-partial-recall-owner` to get the owner of a buffer.
+- Custom variable `wal-consult-buffer-narrow-source` with options
+  `recall` (the new default) and `project` that determines which source
+  to pre-narrow to.
 - Custom variable `wal-consult-pre-narrowed` commands that is set to
   `consult-buffer` to give more control of which commands should be
   narrowed if toggled on.
@@ -32,15 +31,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `wal-run-test-toggle-format`.
 - Tool package `wal-pacify` that checks all tangled files for
   byte-compile and doc issues using `flymake` now has a test suite.
+- Convenience command `wal-config-load-test-helper` to do just that.
+  Bound to `e` in `whaler`.
 
 ### Changed
 
 - `wal-tab-buffers-*` functionality was renamed to
-  `wal-partial-recall-*`. It is still associated with tabs.
-- Tabs now get a custom key that is created on tab creation to keep
-  track of their buffer history. This means tabs no longer need an
-  explicit name to have one and that renaming them doesn't wipe out
-  their association with their history.
+  `wal-partial-recall-*`. It is still associated with tabs. See above
+  for new functionality. Tabs now get a custom key that is created on
+  tab creation to keep track of their buffer history. This means tabs
+  no longer need an explicit name to have one and that renaming them
+  doesn't wipe out their association with their history.
 - Recall limit can now be customized through `wal-total-recall-limit`.
 - `whaler` was restructured.
 - The ASCII whale animation is now done using indirect buffers meaning
