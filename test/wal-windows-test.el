@@ -189,7 +189,7 @@
         (with-mock ((wal-partial-recall--current . (lambda () 'other))
                     wal-partial-recall-remember)
 
-          (wal-partial-recall-reclaim (current-buffer))
+          (wal-partial-recall-reclaim nil (current-buffer))
 
           (was-called wal-partial-recall-remember))))))
 

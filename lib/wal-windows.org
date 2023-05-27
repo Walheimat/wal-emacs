@@ -207,7 +207,7 @@ construction."
     (setq wal-partial-recall--last-checked buffer)
 
     (if (wal-partial-recall--known-buffer-p buffer)
-        (wal-partial-recall-reclaim buffer)
+        (wal-partial-recall-reclaim nil buffer)
       (wal-partial-recall-remember buffer))))
 
 (defun wal-partial-recall--should-extend-p (memory)
@@ -295,9 +295,11 @@ If no buffer is passed, the current buffer is used."
 
       (ring-insert ring (wal-partial-recall--moment-create buffer)))))
 
-(defun wal-partial-recall-reclaim (&optional buffer)
-  "Reclaim BUFFER if possible."
-  (interactive)
+(defun wal-partial-recall-reclaim (&optional force buffer)
+  "Reclaim BUFFER if possible.
+
+If FORCE is t, will reclaim even if the threshold wasn't passed.."
+  (interactive "P")
 
   (and-let* ((buffer (or buffer (current-buffer)))
              (current-memory (wal-partial-recall--current))
@@ -305,9 +307,9 @@ If no buffer is passed, the current buffer is used."
              ((not (eq current-memory owner)))
              (ring (wal-partial-recall--memory-ring owner))
              (moment (seq-find (lambda (it) (wal-partial-recall--moment-buffer-p it buffer)) (ring-elements ring)))
-             ((< wal-partial-recall-reclaim-threshold
-                 (- (floor (time-to-seconds))
-                    (wal-partial-recall--moment-timestamp moment))))
+             ((or force (< wal-partial-recall-reclaim-threshold
+                           (- (floor (time-to-seconds))
+                              (wal-partial-recall--moment-timestamp moment)))))
              (index (wal-partial-recall--ring-member ring buffer)))
 
     ;; Forget in the old memory.
@@ -316,7 +318,6 @@ If no buffer is passed, the current buffer is used."
     ;; Remember in the current one.
     (wal-partial-recall-remember buffer)
     (message "Reclaimed %s" buffer)))
-
 
 (defun wal-partial-recall-forget (&optional buffer)
   "Forget BUFFER.
