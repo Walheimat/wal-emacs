@@ -20,7 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that refer to when they were added; the ring will now grow if adding
   a new buffer would kick an existing buffer but that buffer is not
   older than `wal-partial-recall-threshold` (new custom variable,
-  defaults to 60) seconds.
+  defaults to 60) seconds; buffers that belong to a different memory
+  are reclaimed if visited when `wal-partial-recall-reclaim-threshold`
+  (5 minutes by default) is exceeded.
 - Custom variable `wal-consult-pre-narrowed` commands that is set to
   `consult-buffer` to give more control of which commands should be
   narrowed if toggled on.

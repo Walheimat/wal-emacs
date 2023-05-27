@@ -142,6 +142,24 @@
 
     (should (wal-partial-recall--known-buffer-p (current-buffer)))))
 
+(ert-deftest wpr--memory-buffer-p ()
+  (with-tab-history
+    (wal-partial-recall--remember)
+
+    (let ((memory (gethash (alist-get 'wpr test-tab) wal-partial-recall--table)))
+
+      (should (wal-partial-recall--memory-buffer-p memory (current-buffer))))))
+
+(ert-deftest wpr-moment-buffer-p ()
+  (with-tab-history
+    (wal-partial-recall--remember)
+
+    (let* ((memory (gethash (alist-get 'wpr test-tab) wal-partial-recall--table))
+           (ring (wal-partial-recall--memory-ring memory))
+           (moment (ring-ref ring 0)))
+
+      (should (wal-partial-recall--moment-buffer-p moment (current-buffer))))))
+
 (ert-deftest wpr--maybe-remember ()
   (with-tab-history
     (with-mock (wal-partial-recall--remember
@@ -150,6 +168,40 @@
 
       (wal-partial-recall--maybe-remember (current-buffer))
       (was-called wal-partial-recall--remember))))
+
+(ert-deftest wpr--maybe-remember--reclaims ()
+  (with-tab-history
+    (with-mock (wal-partial-recall--remember
+                wal-partial-recall--maybe-reclaim
+                (buffer-live-p . #'always)
+                (wal-partial-recall--known-buffer-p . #'always))
+
+      (wal-partial-recall--maybe-remember (current-buffer))
+      (was-called wal-partial-recall--maybe-reclaim))))
+
+(ert-deftest wpr--maybe-reclaim--reclaims-from-other ()
+  (let ((seconds '(10 12))
+        (wal-partial-recall-reclaim-threshold 0))
+    (with-tab-history
+      (with-mock ((time-to-seconds . (lambda (&rest _) (pop seconds))))
+        (wal-partial-recall--remember)
+
+        (with-mock ((seq-filter . (lambda (_p l) l))
+                    wal-partial-recall--remember)
+
+          (wal-partial-recall--maybe-reclaim (current-buffer))
+
+          (was-called wal-partial-recall--remember))))))
+
+(ert-deftest wpr--maybe-reclaim--no-op-for-same ()
+  (with-tab-history
+    (wal-partial-recall--remember)
+
+    (with-mock (wal-partial-recall--remember)
+
+        (wal-partial-recall--maybe-reclaim (current-buffer))
+
+        (was-not-called wal-partial-recall--remember))))
 
 (ert-deftest wpr--should-extend-p ()
   (let ((seconds '(10 11 12))

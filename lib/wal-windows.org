@@ -39,6 +39,11 @@ Everything that has to do with windows.
   "Threshold in seconds that will allow a memory to grow."
   :type 'integer
   :group 'wal-windows)
+
+(defcustom wal-partial-recall-reclaim-threshold (* 5 60)
+  "Threshold in seconds that when exceeded allows reclaiming."
+  :type 'integer
+  :group 'wal-windows)
 #+END_SRC
 
 * Packages
@@ -190,10 +195,11 @@ If no buffer is passed, the current buffer is used."
   (let* ((buffer (or buffer (current-buffer)))
 
          (table wal-partial-recall--table)
-         (maybe-remove (lambda (_tab-name memory)
+         (maybe-remove (lambda (key memory)
                          (when-let* ((ring (wal-partial-recall--memory-ring memory))
                                      (index (wal-partial-recall--ring-member ring buffer)))
 
+                           (message "Removed %s from %s" buffer key)
                            (ring-remove ring index)))))
 
     (maphash maybe-remove table)))
@@ -239,26 +245,61 @@ If no buffer is passed, the current buffer is used."
 
 (defvar wal-partial-recall--timer nil)
 
+(defun wal-partial-recall--memory-buffer-p (memory buffer)
+  "Check if MEMORY does contain BUFFER."
+  (wal-partial-recall--ring-member
+   (wal-partial-recall--memory-ring memory)
+   buffer))
+
+(defun wal-partial-recall--moment-buffer-p (moment buffer)
+  "Check if MOMENT does contain BUFFER."
+  (eq (wal-partial-recall--moment-buffer moment) buffer))
+
+(defun wal-partial-recall--maybe-reclaim (buffer)
+  "Check if BUFFER could be reclaimed."
+  (when-let* ((memories (hash-table-values wal-partial-recall--table))
+              (current-memory (gethash (wal-partial-recall--key) wal-partial-recall--table))
+              (other-memories (seq-filter (lambda (it) (not (eq it current-memory))) memories))
+              (memory (seq-find (lambda (it) (wal-partial-recall--memory-buffer-p it buffer)) other-memories))
+              (ring (wal-partial-recall--memory-ring memory))
+              (moment (seq-find (lambda (it) (wal-partial-recall--moment-buffer-p it buffer)) (ring-elements ring))))
+
+    (when (< wal-partial-recall-reclaim-threshold
+             (- (floor (time-to-seconds))
+                (wal-partial-recall--moment-timestamp moment)))
+      (let ((index (wal-partial-recall--ring-member ring buffer)))
+
+        ;; Forget in the old memory.
+        (ring-remove ring index)
+
+        ;; Remember in the current one.
+        (wal-partial-recall--remember buffer)
+        (message "Reclaimed %s" buffer)))))
+
+(defvar wal-partial-recall--last-checked nil)
+
 (defun wal-partial-recall--maybe-remember (buffer)
   "Maybe remember BUFFER."
-  (and-let* ((live (buffer-live-p buffer))
-             (unknown (not (wal-partial-recall--known-buffer-p buffer))))
+  (when (buffer-live-p buffer)
+    (setq wal-partial-recall--last-checked buffer)
 
-    (wal-partial-recall--remember buffer)))
+    (if (wal-partial-recall--known-buffer-p buffer)
+        (wal-partial-recall--maybe-reclaim buffer)
+      (wal-partial-recall--remember buffer))))
 
 (defun wal-partial-recall--on-buffer-list-update ()
   "Schedule maybe remembering the current buffer."
   (with-current-buffer (window-buffer)
     (and-let* ((buffer (current-buffer))
-               (file-name (buffer-file-name buffer))
-               (unknown (not (wal-partial-recall--known-buffer-p buffer))))
+               (new (not (eq wal-partial-recall--last-checked buffer)))
+               (file-name (buffer-file-name buffer)))
 
-      (when wal-partial-recall--timer
-        (cancel-timer wal-partial-recall--timer)
-        (setq wal-partial-recall--timer nil))
+       (when wal-partial-recall--timer
+         (cancel-timer wal-partial-recall--timer)
+         (setq wal-partial-recall--timer nil))
 
-      (setq wal-partial-recall--timer
-            (run-at-time 0.5 nil #'wal-partial-recall--maybe-remember buffer)))))
+       (setq wal-partial-recall--timer
+             (run-at-time 0.5 nil #'wal-partial-recall--maybe-remember buffer)))))
 
 (defun wal-partial-recall--on-frame-delete (frame)
   "Clear hashes associated with FRAME."
