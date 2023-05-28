@@ -150,7 +150,7 @@
     (with-mock ((consult--project-root . #'always)
                 (consult--buffer-query . #'always)
                 (consult--open-project-items . #'always)
-                (wal-partial-recall--has-buffers-p . #'always))
+                (partial-recall--has-buffers-p . #'always))
 
         (setq wal-consult-pre-narrow t
               unread-command-events nil)
@@ -174,7 +174,7 @@
 
         (should unread-command-events)
         (was-not-called consult--project-root)
-        (was-called wal-partial-recall--has-buffers-p)
+        (was-called partial-recall--has-buffers-p)
 
         (setq unread-command-events nil
               this-command 'wal-consult-project)

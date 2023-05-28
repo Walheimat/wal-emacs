@@ -27,28 +27,6 @@ Everything that has to do with windows.
 (require 'cl-macs)
 (require 'subr-x)
 
-(declare-function consult--buffer-query "ext:consult.el")
-(declare-function consult--buffer-state "ext:consult.el")
-
-(defgroup wal-windows nil
-  "Change windows-specific settings."
-  :group 'wal
-  :tag "Windows")
-
-(defcustom wal-partial-recall-limit 10
-  "The amount of buffers to recall."
-  :type 'integer
-  :group 'wal-windows)
-
-(defcustom wal-partial-recall-threshold 60
-  "Threshold in seconds that will allow a memory to grow."
-  :type 'integer
-  :group 'wal-windows)
-
-(defcustom wal-partial-recall-reclaim-threshold (* 5 60)
-  "Threshold in seconds that when exceeded allows reclaiming."
-  :type 'integer
-  :group 'wal-windows)
 #+END_SRC
 
 * Packages
@@ -99,291 +77,13 @@ Otherwise switch to the buffer normally."
         (tab-bar-switch-to-tab tab-name)
         (select-window (get-buffer-window buffer)))
     (switch-to-buffer buffer)))
-
-;; Table:
-
-(defvar wal-partial-recall--table (make-hash-table))
-
-(defun wal-partial-recall--key (&optional tab)
-  "Get the hash key of TAB."
-  (when-let* ((tab (or tab (tab-bar--current-tab)))
-              (key (alist-get 'wpr tab)))
-    key))
-
-(defun wal-partial-recall--create-hash-key (tab)
-  "Create the key for TAB.
-
-This uses a message digest of the tab, a random number, the Emacs
-PID and `recent-keys' vector."
-  (let ((object (format "%s%s%s%s" tab (random) (emacs-pid) (recent-keys))))
-
-    (md5 object)))
-
-;; Structures:
-
-(cl-defstruct (wal-partial-recall--moment
-               (:constructor wal-partial-recall--moment-create
-                             (buffer &aux (timestamp (floor (time-to-seconds))))))
-  "A moment of partial recall.
-
-A moment is defined by a buffer and a timestamp when the buffer
-was remembered."
-  buffer timestamp)
-
-(cl-defstruct (wal-partial-recall--memory
-               (:constructor wal-partial-recall--memory-create
-                             (&aux
-                              (ring (make-ring wal-partial-recall-limit))
-                              (orig-size wal-partial-recall-limit))))
-  "A memory of partial recall.
-
-A memory is a ring of moments and the size it had upon
-construction."
-  ring orig-size)
-
-(defun wal-partial-recall--ring-member (ring buffer)
-  "Check if BUFFER is a member of RING."
-  (catch 'found
-    (dotimes (ind (ring-length ring))
-      (when (equal buffer (wal-partial-recall--moment-buffer (ring-ref ring ind)))
-        (throw 'found ind)))))
-
-(defun wal-partial-recall--at-capacity (memory)
-  "Check if MEMORY is at capacity."
-  (let ((ring (wal-partial-recall--memory-ring memory)))
-    (eq (ring-length ring) (ring-size ring))))
-
-(defun wal-partial-recall--moments ()
-  "Get the moments from the current memory."
-  (when-let* ((tab-key (wal-partial-recall--key))
-
-              (table wal-partial-recall--table)
-              (memory (gethash tab-key table)))
-
-    (wal-partial-recall--memory-ring memory)))
-
-(defun wal-partial-recall--current-p (buffer)
-  "Check if BUFFER belongs to the current tab."
-  (when-let ((moments (wal-partial-recall--moments)))
-
-    (wal-partial-recall--ring-member moments buffer)))
-
-(defun wal-partial-recall--has-buffers-p ()
-  "Check if there are buffers associated with the current tab."
-  (when-let ((moments (wal-partial-recall--moments)))
-
-    (not (ring-empty-p moments))))
-
-(defun wal-partial-recall--known-buffer-p (buffer)
-  "Check if BUFFER is recalled at all."
-  (let* ((known (cl-loop for _k being the hash-keys of wal-partial-recall--table
-                        using (hash-values memory)
-                        append (ring-elements (wal-partial-recall--memory-ring memory))))
-         (buffers (mapcar #'wal-partial-recall--moment-buffer known)))
-
-    (memq buffer buffers)))
-
-(defun wal-partial-recall--memory-buffer-p (memory buffer)
-  "Check if MEMORY does contain BUFFER."
-  (wal-partial-recall--ring-member
-   (wal-partial-recall--memory-ring memory)
-   buffer))
-
-(defun wal-partial-recall--moment-buffer-p (moment buffer)
-  "Check if MOMENT does contain BUFFER."
-  (eq (wal-partial-recall--moment-buffer moment) buffer))
-
-(defun wal-partial-recall--get-or-create-memory (tab-key)
-  "Get or create the memory for TAB-KEY."
-  (if-let* ((table wal-partial-recall--table)
-            (memory (gethash tab-key table)))
-      memory
-    (let ((new-memory (wal-partial-recall--memory-create)))
-      (puthash tab-key new-memory table)
-      new-memory)))
-
-;; Helpers:
-
-(defvar wal-partial-recall--last-checked nil)
-
-(defun wal-partial-recall--maybe-remember (buffer)
-  "Maybe remember BUFFER."
-  (when (buffer-live-p buffer)
-    (setq wal-partial-recall--last-checked buffer)
-
-    (if (wal-partial-recall--known-buffer-p buffer)
-        (wal-partial-recall-reclaim nil buffer)
-      (wal-partial-recall-remember buffer))))
-
-(defun wal-partial-recall--should-extend-p (memory)
-  "Check if MEMORY should extend its ring size."
-  (when-let* ((ring (wal-partial-recall--memory-ring memory))
-              (to-remove (ring-ref ring (1- (ring-length ring)))))
-
-    (> wal-partial-recall-threshold
-       (- (floor (time-to-seconds))
-          (wal-partial-recall--moment-timestamp to-remove)))))
-
-(defun wal-partial-recall--current ()
-  "Get the current memory."
-  (gethash (wal-partial-recall--key) wal-partial-recall--table))
-
-(defun wal-partial-recall--owner (&optional buffer)
-  "Return the memory that owns BUFFER.
-
-Defaults to the current buffer."
-  (let* ((buffer (or buffer (current-buffer)))
-         (memories (hash-table-values wal-partial-recall--table)))
-
-    (seq-find (lambda (it) (wal-partial-recall--memory-buffer-p it buffer)) memories)))
-
-;; Handlers:
-
-(defun wal-partial-recall--on-create (tab)
-  "Equip TAB with a unique hash key."
-  (let ((key (wal-partial-recall--create-hash-key tab))
-        (state (cdr tab)))
-
-    (setcdr tab (push (cons 'wpr key) state))))
-
-(defun wal-partial-recall--on-close (tab only)
-  "Remove TAB from table if it is not the ONLY one."
-  (when-let* ((tab-key (wal-partial-recall--key tab))
-              (table wal-partial-recall--table))
-
-    (when (and (not only)
-               (gethash tab-key table))
-      (remhash tab-key table))))
-
-(defvar wal-partial-recall--timer nil)
-
-(defun wal-partial-recall--on-buffer-list-update ()
-  "Schedule maybe remembering the current buffer."
-  (with-current-buffer (window-buffer)
-    (and-let* ((buffer (current-buffer))
-               (new (not (eq wal-partial-recall--last-checked buffer)))
-               (file-name (buffer-file-name buffer)))
-
-       (when wal-partial-recall--timer
-         (cancel-timer wal-partial-recall--timer)
-         (setq wal-partial-recall--timer nil))
-
-       (setq wal-partial-recall--timer
-             (run-at-time 0.5 nil #'wal-partial-recall--maybe-remember buffer)))))
-
-(defun wal-partial-recall--on-frame-delete (frame)
-  "Clear hashes associated with FRAME."
-  (let ((tabs (funcall tab-bar-tabs-function frame)))
-
-    (dolist (tab tabs)
-      (wal-partial-recall--on-close tab nil))))
-
-;; API
-
-(defun wal-partial-recall-remember (&optional buffer)
-  "Remember the BUFFER for this tab.
-
-If no buffer is passed, the current buffer is used."
-  (interactive)
-
-  (when-let* ((tab-key (wal-partial-recall--key))
-
-              (buffer (or buffer (current-buffer)))
-
-              (memory (wal-partial-recall--get-or-create-memory tab-key))
-              (ring (wal-partial-recall--memory-ring memory)))
-
-    (unless (wal-partial-recall--ring-member ring buffer)
-      (when (and (wal-partial-recall--at-capacity memory)
-                 (wal-partial-recall--should-extend-p memory))
-        (ring-extend ring 1))
-
-      (ring-insert ring (wal-partial-recall--moment-create buffer)))))
-
-(defun wal-partial-recall-reclaim (&optional force buffer)
-  "Reclaim BUFFER if possible.
-
-If FORCE is t, will reclaim even if the threshold wasn't passed.."
-  (interactive "P")
-
-  (and-let* ((buffer (or buffer (current-buffer)))
-             (current-memory (wal-partial-recall--current))
-             (owner (wal-partial-recall--owner buffer))
-             ((not (eq current-memory owner)))
-             (ring (wal-partial-recall--memory-ring owner))
-             (moment (seq-find (lambda (it) (wal-partial-recall--moment-buffer-p it buffer)) (ring-elements ring)))
-             ((or force (< wal-partial-recall-reclaim-threshold
-                           (- (floor (time-to-seconds))
-                              (wal-partial-recall--moment-timestamp moment)))))
-             (index (wal-partial-recall--ring-member ring buffer)))
-
-    ;; Forget in the old memory.
-    (ring-remove ring index)
-
-    ;; Remember in the current one.
-    (wal-partial-recall-remember buffer)
-    (message "Reclaimed %s" buffer)))
-
-(defun wal-partial-recall-forget (&optional buffer)
-  "Forget BUFFER.
-
-If no buffer is passed, the current buffer is used."
-  (interactive)
-
-  (let* ((buffer (or buffer (current-buffer)))
-
-         (table wal-partial-recall--table)
-         (maybe-remove (lambda (key memory)
-                         (when-let* ((ring (wal-partial-recall--memory-ring memory))
-                                     (index (wal-partial-recall--ring-member ring buffer)))
-
-                           (message "Removed %s from %s" buffer key)
-                           (ring-remove ring index)))))
-
-    (maphash maybe-remove table)))
-
-(defvar wal-consult--source-partial-recall
-  (list :name "Partial Recall"
-        :narrow ?r
-        :category 'buffer
-        :state #'consult--buffer-state
-        :history 'buffer-name-history
-        :items
-        #'(lambda () (consult--buffer-query :sort 'visibility
-                                       :predicate #'wal-partial-recall--current-p
-                                       :as #'buffer-name)))
-  "Buffers that are recalled from the current tab.")
-
-(wal-define-init-setup tab-bar
-  "Set up the original tab."
-  :always
-  ((when-let* ((mode tab-bar-mode)
-               (tabs (funcall tab-bar-tabs-function))
-               (original (nth 0 tabs)))
-
-   (unless (wal-partial-recall--key original)
-     (wal-partial-recall--on-create original)))))
 #+END_SRC
 
 *** Configuration
 
 #+begin_src emacs-lisp
 (use-package tab-bar
-  :hook
-  ((emacs-startup . tab-bar-mode)
-   (kill-buffer . wal-partial-recall-forget)
-   (buffer-list-update . wal-partial-recall--on-buffer-list-update))
-
-  :config
-  (with-eval-after-load 'consult
-    (wal-insert-after
-     'consult-buffer-sources
-     'consult--source-buffer
-     'wal-consult--source-partial-recall))
-
-  (add-to-list 'tab-bar-tab-pre-close-functions #'wal-partial-recall--on-close)
-  (add-to-list 'tab-bar-tab-post-open-functions #'wal-partial-recall--on-create)
-  (add-to-list 'delete-frame-functions #'wal-partial-recall--on-frame-delete)
+  :hook ((emacs-startup . tab-bar-mode))
 
   :custom
   (tab-bar-show nil)
@@ -393,6 +93,30 @@ If no buffer is passed, the current buffer is used."
 
   :wal-bind
   ("o" . tab-switch))
+#+end_src
+
+** partial-recall
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+begin_src emacs-lisp
+(use-package partial-recall
+  ;; Installed using `project-vc-install'.
+  :if (wal-modern-emacs-p 29)
+
+  :wal-ways nil
+
+  :defer 1
+
+  :config
+  (partial-recall-mode 1)
+
+  (with-eval-after-load 'consult
+    (wal-insert-after
+     'consult-buffer-sources
+     'consult--source-buffer
+     'partial-recall--consult-buffer-source)))
 #+end_src
 
 * Footer

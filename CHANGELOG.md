@@ -10,8 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Pre-narrowing is now always enabled for `consult`.
-- `wal-partial-recall-reclaim` can now be forced by calling it with
-  `C-u`.
+- `wal-partial-recall` was spun out. Package `partial-recall` is now
+  part of `wal-core-vc-packages`.
 - `wdb-{faraway,nearby}` now default to
   `display-buffer-use-some-window`.
 
