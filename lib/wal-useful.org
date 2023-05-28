@@ -82,16 +82,15 @@ Utility functions to configure displaying buffers of a certain type.
 If DEDICATED is a boolean, WIDTH and HEIGHT are set as-is, if
 NO-OTHER is t set the `window-parameter'."
   `((window-width . ,width)
-	(window-height . ,height)
-	(dedicated . ,dedicated)
-	(window-parameters . ((no-other-window . ,no-other)))))
+    (window-height . ,height)
+    (dedicated . ,dedicated)
+    (window-parameters . ((no-other-window . ,no-other)))))
 
 (cl-defun wal-display-buffer-same-place-or-nearby (buffer &key side direction width height loose no-other)
   "Display BUFFER where it is or nearby.
 
-This window will be on SIDE (on the bottom by default) or in
-DIRECTION (right by default). The window will be dedicated unless
-LOOSE is t.
+This window will be on SIDE or in DIRECTION (both right by
+default). The window will be dedicated unless LOOSE is t.
 
 See `wal-display-buffer--actions' for explanations of WIDTH,
 HEIGHT and NO-OTHER."
@@ -99,30 +98,28 @@ HEIGHT and NO-OTHER."
 
     (add-to-list 'display-buffer-alist
                  `(,condition
-                   ,(if direction
-				        '(display-buffer-reuse-window
-						  display-buffer-in-direction
-						  display-buffer-in-side-window)
-					  '(display-buffer-reuse-window
-						display-buffer-in-side-window
-						display-buffer-in-direction))
-                   (side . ,(or side 'bottom))
-				   (direction . ,(or direction 'right))
+                   ,(delq nil `(display-buffer-reuse-window
+                                ,@(if direction
+                                      '(display-buffer-in-direction display-buffer-in-side-window)
+                                     '(display-buffer-in-side-window display-buffer-in-direction))
+                                display-buffer-use-some-window))
+                   (side . ,(or side 'right))
+                   (direction . ,(or direction 'right))
 
-				   ,@(wal-display-buffer--actions width height (not loose) no-other)))))
+                   ,@(wal-display-buffer--actions width height (not loose) no-other)))))
 
 (defun wal-display-buffer-use-some-frame--with-display-p (frame)
   "Check that FRAME is not the selected frame and has a display entry."
-    (and (not (eq frame (selected-frame)))
-         (get-lru-window frame)
-         (cdr-safe (assoc 'display (frame-parameters frame)))))
+  (and (not (eq frame (selected-frame)))
+       (get-lru-window frame)
+       (cdr-safe (assoc 'display (frame-parameters frame)))))
 
 (cl-defun wal-display-buffer-same-place-or-faraway (buffer &key width height bottom dedicated no-other)
   "Display BUFFER where it is or far away.
 
 If BOTTOM is t, display at bottom. Otherwise tries to reuse
-window first, then checks for another frame and lastly pops up a
-window.
+window first, then checks for another frame, then a pop-up and
+lastly some window.
 
 See `wal-display-buffer--actions' for explanations of WIDTH,
 HEIGHT, DEDICATED and NO-OTHER."
@@ -130,16 +127,17 @@ HEIGHT, DEDICATED and NO-OTHER."
 
     (add-to-list 'display-buffer-alist
                  `(,condition
-				   ,(delq nil `(display-buffer-reuse-window
-								display-buffer-reuse-mode-window
-								,(when bottom 'display-buffer-at-bottom)
-								display-buffer-use-some-frame
-								display-buffer-pop-up-window))
+                   ,(delq nil `(display-buffer-reuse-window
+                                display-buffer-reuse-mode-window
+                                ,(when bottom 'display-buffer-at-bottom)
+                                display-buffer-use-some-frame
+                                display-buffer-pop-up-window
+                                display-buffer-use-some-window))
 
                    (frame-predicate . wal-display-buffer-use-some-frame--with-display-p)
                    (inhibit-switch-frame . t)
 
-				   ,@(wal-display-buffer--actions width height dedicated no-other)))))
+                   ,@(wal-display-buffer--actions width height dedicated no-other)))))
 
 (defalias 'wdb-nearby 'wal-display-buffer-same-place-or-nearby)
 (defalias 'wdb-faraway 'wal-display-buffer-same-place-or-faraway)

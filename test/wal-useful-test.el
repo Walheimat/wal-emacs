@@ -58,7 +58,7 @@
 
     (should (equal (car display-buffer-alist)
                    '((major-mode . test-mode)
-                     (display-buffer-reuse-window display-buffer-in-side-window display-buffer-in-direction)
+                     (display-buffer-reuse-window display-buffer-in-side-window display-buffer-in-direction display-buffer-use-some-window)
                      (side . top)
 					 (direction . right)
 					 (window-width)
@@ -72,8 +72,8 @@
 
     (should (equal (car display-buffer-alist)
                    '((major-mode . test-mode)
-                     (display-buffer-reuse-window display-buffer-in-direction display-buffer-in-side-window)
-                     (side . bottom)
+                     (display-buffer-reuse-window display-buffer-in-direction display-buffer-in-side-window display-buffer-use-some-window)
+                     (side . right)
 					 (direction . below)
 					 (window-width . 0.4)
 					 (window-height)
@@ -108,7 +108,8 @@
                      (display-buffer-reuse-window
                       display-buffer-reuse-mode-window
                       display-buffer-use-some-frame
-					  display-buffer-pop-up-window)
+					  display-buffer-pop-up-window
+                      display-buffer-use-some-window)
                      (frame-predicate . wal-display-buffer-use-some-frame--with-display-p)
                      (inhibit-switch-frame . t)
 					 (window-width)
@@ -126,7 +127,8 @@
                       display-buffer-reuse-mode-window
 					  display-buffer-at-bottom
                       display-buffer-use-some-frame
-					  display-buffer-pop-up-window)
+					  display-buffer-pop-up-window
+                      display-buffer-use-some-window)
                      (frame-predicate . wal-display-buffer-use-some-frame--with-display-p)
                      (inhibit-switch-frame . t)
 					 (window-width)
