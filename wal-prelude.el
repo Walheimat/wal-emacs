@@ -13,6 +13,7 @@
 (defvar wal-packages '(wal-useful
                        wal-package
                        wal-key-bindings
+                       wal-bridge
                        ;; The following packages are optional.
                        wal-settings
                        wal-config

@@ -1,0 +1,110 @@
+#+TITLE: Bridge
+#+AUTHOR: @Walheimat
+#+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-bridge.el" wal-emacs-config-build-path)
+
+* Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;;; wal-bridge.el --- Integration of my own packages. -*- lexical-binding: t -*-
+
+;;; Commentary:
+;;
+;; Set up my own packages.
+
+;;; Code:
+
+(eval-when-compile
+  (require 'wal-useful nil t))
+
+(declare-function wal-line-mode "ext:wal-line.el")
+(declare-function wal-insert-after "wal-useful.el")
+(declare-function partial-recall-mode "ext:partial-recall.el")
+
+(defvar wal-line-animation-key-frames)
+
+(defgroup wal-bridge nil
+  "Change settings for bridge packages."
+  :group 'wal
+  :tag "Bridge")
+#+END_SRC
+
+* Packages
+
+** harpoon
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+begin_src emacs-lisp
+(use-package harpoon
+  :demand t
+
+  :custom
+  (harpoon-lsp-completion-styles '(orderless partial-completion basic))
+  (harpoon-major-key (wal-key-combo-for-leader 'major))
+  (harpoon-lsp-function 'lsp-deferred)
+  (harpoon-lsp-dir-ignore-list 'lsp-file-watch-ignored-directories))
+#+end_src
+
+** partial-recall
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+begin_src emacs-lisp
+(use-package partial-recall
+  :defer 1
+
+  :config
+  (partial-recall-mode 1)
+
+  (with-eval-after-load 'consult
+    (wal-insert-after
+     'consult-buffer-sources
+     'consult--source-buffer
+     'partial-recall--consult-buffer-source)))
+#+end_src
+
+** wal-line
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+My own mode line.
+
+#+BEGIN_SRC emacs-lisp
+(use-package wal-line
+  :defer 1
+
+  :config
+  (when (boundp 'wal-ascii-blue-whale-key-frames)
+    (setq wal-line-animation-key-frames wal-ascii-blue-whale-key-frames))
+
+  (wal-line-mode 1)
+
+  :custom
+  (wal-line-icons-prettify-buffer-status t)
+  (wal-line-icons-project-icon '(octicon . "package")))
+#+END_SRC
+
+* Footer
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(defvar harpoon--stumps nil)
+
+;; Guard against missing macro.
+(unless (featurep 'harpoon)
+  (cl-defmacro harpoon (name &rest _args)
+    "Push message that mode NAME would have been skewered."
+    `(push ',name harpoon--stumps)))
+
+(provide 'wal-bridge)
+
+;;; wal-bridge.el ends here
+#+END_SRC

@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New library file `wal-bridge` contains all of my own packages:
+  `wal-line`, `partial-recall` and `harpoon`. The latter two were spun
+  out.
+
 ### Changed
 
 - Pre-narrowing is now always enabled for `consult`.
-- `wal-partial-recall` was spun out. Package `partial-recall` is now
-  part of `wal-core-vc-packages`.
 - `wdb-{faraway,nearby}` now default to
   `display-buffer-use-some-window`.
 

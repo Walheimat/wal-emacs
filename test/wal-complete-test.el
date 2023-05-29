@@ -15,16 +15,6 @@
 
     (was-called-with corfu-mode 1)))
 
-(ert-deftest test-wal-corfu-auto--sets-corfu ()
-  (defvar corfu-auto-delay nil)
-  (defvar corfu-auto-prefix nil)
-
-  (with-temp-buffer
-    (wal-corfu-auto (list 2.1 4))
-
-    (should (equal 2.1 corfu-auto-delay))
-    (should (equal 4 corfu-auto-prefix))))
-
 (ert-deftest test-wal-record-this-command ()
   (let ((this-command 'testing))
     (with-temp-buffer

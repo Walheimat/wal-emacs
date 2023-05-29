@@ -492,39 +492,6 @@
 
         (should (string-equal "This one's itchy" (buffer-string)))))))
 
-(ert-deftest test-wal-disable-tabs--disables ()
-  (with-temp-buffer
-    (setq-local indent-tabs-mode t)
-
-    (wal-disable-tabs)
-
-    (should (eq indent-tabs-mode nil))))
-
-(ert-deftest test-wal-enable-tabs--enables ()
-  (with-temp-buffer
-    (setq-local indent-tabs-mode nil)
-    (should (eq indent-tabs-mode nil))
-
-    (wal-enable-tabs)
-
-    (should (eq indent-tabs-mode t))))
-
-(ert-deftest test-wal-maybe-enable-tabs--enables-if-tabs-preferred ()
-  (with-temp-buffer
-    (setq-local wal-prefer-tabs t)
-
-    (wal-maybe-enable-tabs)
-
-    (should (eq indent-tabs-mode t))))
-
-(ert-deftest test-wal-maybe-enable-tabs--disables-unless-preferred ()
-  (with-temp-buffer
-    (setq-local wal-prefer-tabs nil)
-
-    (wal-maybe-enable-tabs)
-
-    (should (eq indent-tabs-mode nil))))
-
 (ert-deftest test-wal-biased-random ()
   (let ((vals '(1 2 3 4)))
 
@@ -762,20 +729,6 @@
 (ert-deftest test-wal-duck-duck-go-region--fails-if-no-region ()
   (should-error (wal-duck-duck-go-region) :type 'user-error))
 
-(ert-deftest test-wal-message-in-a-bottle--shows-blue-whale ()
-  (let ((bottle '("Sting is playing bass, yeah")))
-
-    (with-mock ((message . #'wal-rf))
-
-      (should (string-equal (wal-message-in-a-bottle bottle) "}    , ﬞ   ⎠ Sting is playing bass, yeah")))))
-
-(ert-deftest test-wal-message-in-a-bottle--shows-passed-string ()
-  (let ((bottle '("Sting is playing bass, yeah")))
-
-    (with-mock ((message . #'wal-rf))
-
-      (should (string-equal (wal-message-in-a-bottle bottle wal-ascii-cachalot-whale) "}< ,.__) Sting is playing bass, yeah")))))
-
 (ert-deftest test-junk--install ()
   (with-mock (package-install
               delete-other-windows
@@ -915,192 +868,6 @@
   (should (string-equal (junk--stringify '(one two three)) "one, two, three"))
   (should (string-empty-p (junk--stringify '()))))
 
-(ert-deftest test-wal-prog-like ()
-  (with-mock ((run-hooks . #'wal-rf))
-
-    (should (equal (wal-prog-like) 'prog-like-hook))))
-
-(ert-deftest test-harpoon--treesit-ready-p ()
-  (defvar harpoon--treesit-alist)
-  (with-mock ((wal-modern-emacs-p . #'always)
-              (require . #'always)
-              (treesit-available-p . #'always)
-              (treesit-ready-p . (lambda (it &rest _) (equal 'testable it))))
-
-    (let ((harpoon--treesit-modes '((test-mode . testable) (zest-mode . zestable))))
-
-      (should (harpoon--treesit-ready-p 'test-mode))
-      (should-not (harpoon--treesit-ready-p 'zest-mode))
-      (should-not (harpoon--treesit-ready-p 'no-mapping-mode)))))
-
-(ert-deftest test-harpoon ()
-  (match-expansion
-   (harpoon test-mode
-     :messages ("Just testing")
-     :lsp t
-     :tabs t)
-   `(progn
-      (harpoon-function test-mode
-        :messages ("Just testing")
-        :lsp t
-        :tabs t)
-
-      (harpoon-hook test-mode)
-
-      (harpoon-ligatures test-mode
-        :messages ("Just testing")
-        :lsp t
-        :tabs t)
-
-      (harpoon-lsp
-       :messages ("Just testing")
-       :lsp t
-       :tabs t)
-
-      (harpoon-treesit test-mode))))
-
-(ert-deftest test-harpoon-function ()
-  (match-expansion
-   (harpoon-function test-mode
-     :messages ("Just testing")
-     :lsp t)
-   `(defun test-mode-harpoon ()
-      "Hook into `test-mode'."
-      (wal-message-in-a-bottle '("Just testing"))
-      (wal-lsp))))
-
-(ert-deftest test-harpoon-function--some-symbol ()
-  (match-expansion
-   (harpoon-function test-mode
-     :messages ("Just testing")
-     :lsp t
-     :tabs anything)
-   `(defun test-mode-harpoon ()
-      "Hook into `test-mode'."
-      (wal-message-in-a-bottle '("Just testing"))
-      (progn
-        (hack-local-variables)
-        (wal-maybe-enable-tabs))
-      (wal-lsp))))
-
-(ert-deftest test-harpoon-function--enable-indent ()
-  (match-expansion
-   (harpoon-function test-mode
-     :messages ("Just testing")
-     :lsp t
-     :tabs always)
-   `(defun test-mode-harpoon ()
-      "Hook into `test-mode'."
-      (wal-message-in-a-bottle '("Just testing"))
-      (wal-enable-tabs)
-      (wal-lsp))))
-
-(ert-deftest test-harpoon-function--no-tabs ()
-  (match-expansion
-   (harpoon-function test-mode
-     :messages ("Just testing")
-     :lsp nil
-     :tabs never)
-   `(defun test-mode-harpoon ()
-      "Hook into `test-mode'."
-      (wal-message-in-a-bottle '("Just testing"))
-      (wal-disable-tabs))))
-
-(ert-deftest test-harpoon-function--prog-like ()
-  (match-expansion
-   (harpoon-function test-mode
-     :messages ("Just testing")
-     :prog-like t
-     (message "hi"))
-   `(defun test-mode-harpoon ()
-      "Hook into `test-mode'."
-      (wal-message-in-a-bottle '("Just testing"))
-      (message "hi")
-      (run-hooks 'prog-like-hook))))
-
-(ert-deftest test-harpoon-function--major ()
-  (match-expansion
-   (harpoon-function test-mode
-     :messages ("Just testing")
-     :major t
-     (message "hi"))
-   `(defun test-mode-harpoon ()
-      "Hook into `test-mode'."
-      (wal-message-in-a-bottle '("Just testing"))
-      (message "hi")
-      (local-set-key (kbd (wal-key-combo-for-leader 'major)) 'test-mode-major))))
-
-(ert-deftest test-harpoon--corfu ()
-  (match-expansion
-   (harpoon-function test-mode
-     :messages ("Just testing")
-     :corfu (0.2 4)
-     (message "hi"))
-   `(defun test-mode-harpoon ()
-      "Hook into `test-mode'."
-      (wal-message-in-a-bottle '("Just testing"))
-      (message "hi")
-      (progn
-        (wal-corfu-auto '(0.2 4))
-        (local-set-key (kbd "C-M-i") #'completion-at-point)))))
-
-(ert-deftest test-harpoon--functions ()
-  (match-expansion
-   (harpoon-function test-mode
-     :functions (test-mode testable-mode)
-     (message "hi"))
-   `(defun test-mode-harpoon ()
-      "Hook into `test-mode'."
-      (message "hi")
-      (progn
-        (when (fboundp 'test-mode)
-          (test-mode))
-        (when (fboundp 'testable-mode)
-          (testable-mode))))))
-
-(ert-deftest test-harpoon-ligatures ()
-  (match-expansion
-   (harpoon-ligatures test-mode
-     :ligatures ("?!"))
-   `(wal-set-ligatures 'test-mode '("?!"))))
-
-(ert-deftest test-harpoon-lsp ()
-  (match-expansion
-   (harpoon-lsp :lsp (:ignore-dirs (".ignoramus")))
-   `(with-eval-after-load 'lsp-mode
-      (wal-lsp-ignore-directory '(".ignoramus")))))
-
-(ert-deftest test-harpoon-treesit ()
-  (with-mock ((harpoon--treesit-ready-p . #'always))
-
-    (match-expansion
-     (harpoon-treesit test-mode)
-     `(progn
-        (message "Remapping %s to %s" 'test-mode 'test-ts-mode)
-        (add-to-list 'major-mode-remap-alist
-                     '(test-mode . test-ts-mode))
-        (with-eval-after-load 'all-the-icons
-          (defvar all-the-icons-mode-icon-alist)
-
-          (when-let ((setting
-                      (cdr
-                       (assoc 'test-mode all-the-icons-mode-icon-alist)))
-                     (name 'test-ts-mode))
-
-            (add-to-list 'all-the-icons-mode-icon-alist
-                         (cons name setting))))))))
-
-(ert-deftest test-harpoon--mode-name--with-treeesit ()
-  (with-mock ((harpoon--treesit-ready-p . #'always))
-    (should (equal 'test-ts-mode (harpoon--mode-name 'test-mode)))))
-
-(ert-deftest test-harpoon-hook ()
-  (match-expansion
-   (harpoon-hook test-mode)
-   `(add-hook
-     'test-mode-hook
-     'test-mode-harpoon)))
-
 (ert-deftest test-wal-fundamental-mode--switches ()
   (with-temp-buffer
     (emacs-lisp-mode)
@@ -1164,7 +931,7 @@
        (lambda (_m) nil)
        t)
       (with-current-buffer "*wal-async*"
-        (funcall (car compilation-finish-functions) nil "finished\n"))
+         (funcall (car compilation-finish-functions) nil "finished\n"))
       (should (string= "interrupted\ncompiles\nfinishes\n" messages)))))
 
 (ert-deftest test-wal-matches-in-string ()

@@ -11,13 +11,6 @@
 (require 'warnings)
 (require 'flymake)
 
-(defvar wp--stumps nil)
-
-(unless (featurep 'use-package)
-  (defmacro use-package (package-name &rest _args)
-    "Push message that PACKAGE-NAME would have been loaded."
-    `(push ',package-name wp--stumps)))
-
 (defun wp--get-state (state)
   "Get the STATE."
   (when (hash-table-p flymake--state)

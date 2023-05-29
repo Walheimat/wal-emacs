@@ -197,15 +197,4 @@
 
       (was-called-with get-buffer "dash"))))
 
-(ert-deftest test-wal-with-common-ligatures ()
-  (defvar wal-common-ligatures)
-
-  (let ((wal-common-ligatures '("?")))
-
-    (with-mock ((require . #'always) ligature-set-ligatures)
-
-      (wal-set-ligatures 'test-mode '("!"))
-
-      (was-called-with ligature-set-ligatures (list 'test-mode '("!" "?"))))))
-
 ;;; wal-visuals-test.el ends here

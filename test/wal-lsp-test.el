@@ -8,45 +8,14 @@
 
 (require 'wal-lsp nil t)
 
-(ert-deftest test-wal-slow-lsp-p ()
-  (let ((wal-lsp-slow-modes '(test-mode)))
-
-    (should (wal-slow-lsp-p 'test-mode))))
-
-(ert-deftest test-wal-lsp--does-not-set-styles-for-slow-modes ()
-  (with-mock lsp-deferred
-
-    (let ((wal-lsp-slow-modes '(text-mode)))
-
-      (with-temp-buffer
-
-        (setq major-mode 'text-mode)
-
-        (wal-lsp)
-
-        (was-called lsp-deferred)
-        (should (equal '(basic partial-completion emacs22) completion-styles))))))
-
-(ert-deftest test-wal-lsp--otherwise-sets-styles ()
-  (with-mock lsp-deferred
-
-    (let ((wal-lsp-slow-modes nil))
-
-      (with-temp-buffer
-        (setq major-mode 'text-mode)
-
-        (wal-lsp)
-
-        (was-called lsp-deferred)
-        (should (equal '(orderless partial-completion basic) completion-styles))))))
-
 (ert-deftest test-wal-lsp-completion ()
   (let ((completion-category-defaults '((lsp-capf (styles other))))
         (completion-styles '(testful)))
 
-    (wal-lsp-completion)
+    (with-mock ((harpoon-slow-lsp-p . #'ignore))
+      (wal-lsp-completion)
 
-    (should (equal '((lsp-capf (styles testful))) completion-category-defaults))))
+      (should (equal '((lsp-capf (styles testful))) completion-category-defaults)))))
 
 (ert-deftest test-wal-first-prevent-adding-other-projects ()
   (with-mock eval
@@ -54,23 +23,6 @@
     (wal-first-prevent-adding-other-projects)
 
     (was-called-with eval (list '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))))
-
-(ert-deftest test-wal-lsp-ignore-directory--escape ()
-  (should (string= "[/\\\\]tests\\'" (wal-lsp-ignore-directory--escape "tests")))
-  (should (string= "[/\\\\]\\.tests\\'" (wal-lsp-ignore-directory--escape ".tests"))))
-
-(ert-deftest test-wal-lsp-ignore-directory ()
-(with-mock (wal-append (wal-lsp-ignore-directory--escape . (lambda (it) it)))
-
-  (wal-lsp-ignore-directory "test")
-
-  (was-called-with wal-append (list 'lsp-file-watch-ignored-directories '("test")))
-
-  (wal-clear-mocks)
-
-  (wal-lsp-ignore-directory '("test" "best"))
-
-  (was-called-with wal-append (list 'lsp-file-watch-ignored-directories '("test" "best")))))
 
 (ert-deftest test-wal-dap-terminated ()
   (with-mock (hydra-disable

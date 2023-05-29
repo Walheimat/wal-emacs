@@ -196,38 +196,11 @@ instead."
 :UNNUMBERED: t
 :END:
 
-*** Utility
-
-#+BEGIN_SRC emacs-lisp
-(defconst wal-common-ligatures
-  '(
-    "==" "!=" ">=" "<="        ; Comparison.
-    "+=" "-=" "/=" "%=" "*="   ; Assignment.
-    "||" "&&"                  ; Logical.
-    "/*" "*/" "//" "/**" "**/" ; Comments.
-    "++" "--"                  ; Increment/decrement.
-    ">>=" "<<=" "&=" "|=" "^=" ; Bitwise assignments.
-    "<<" ">>"                  ; Bitwise shifts.
-    "..."                      ; Spread.
-    )
-  "A list of ligatures available in all programming modes.")
-
-(defun wal-set-ligatures (modes ligatures)
-  "Set LIGATURES for MODES.
-
-All ligatures in `wal-common-ligatures' will be appended to
-LIGATURES."
-  (when (require 'ligature nil t)
-    (ligature-set-ligatures modes (append ligatures wal-common-ligatures))))
-#+END_SRC
-
-*** Configuration
-
 #+BEGIN_SRC emacs-lisp
 (use-package ligature
   :wal-ways nil
 
-  :hook ((prog-mode prog-like) . ligature-mode))
+  :hook ((prog-mode harpoon-prog-like) . ligature-mode))
 #+END_SRC
 
 ** mixed-pitch
@@ -367,7 +340,7 @@ Highlight =TODO=, =FIXME= etc. in =prog= modes.
 (use-package hl-todo
   :wal-ways nil
 
-  :hook ((prog-mode prog-like) . hl-todo-mode)
+  :hook ((prog-mode harpoon-prog-like) . hl-todo-mode)
 
   :custom
   (hl-todo-highlight-punctuation ":")
@@ -385,7 +358,7 @@ Make delimiters stand out.
 (use-package rainbow-delimiters
   :wal-ways nil
 
-  :hook ((prog-mode prog-like) . rainbow-delimiters-mode))
+  :hook ((prog-mode harpoon-prog-like) . rainbow-delimiters-mode))
 #+END_SRC
 
 ** rainbow-mode
@@ -407,33 +380,6 @@ Show colors colorfully.
 Minor modes are white-listed, hidden and delighted. Meaning that, if
 not white-listed, they are not shown, if they are shown, they are
 delighted.
-
-** wal-line
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-My own mode line.
-
-#+BEGIN_SRC emacs-lisp
-(use-package wal-line
-  ;; Installed using `project-vc-install'.
-  :if (wal-modern-emacs-p 29)
-
-  :wal-ways nil
-
-  :defer 1
-
-  :config
-  (when (boundp 'wal-ascii-blue-whale-key-frames)
-    (setq wal-line-animation-key-frames wal-ascii-blue-whale-key-frames))
-
-  (wal-line-mode 1)
-
-  :custom
-  (wal-line-icons-prettify-buffer-status t)
-  (wal-line-icons-project-icon '(octicon . "package")))
-#+END_SRC
 
 ** delight
 :PROPERTIES:
