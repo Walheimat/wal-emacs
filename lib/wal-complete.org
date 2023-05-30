@@ -24,8 +24,8 @@ Complete commands and code.
 
 (declare-function consult-line "ext:consult.el")
 (declare-function consult-org-agenda "ext:consult.el")
-(declare-function junk--stringify "wal-useful.el")
-(declare-function junk--parts "wal-useful.el")
+(declare-function junk--stringify "ext:junk.el")
+(declare-function junk--parts "ext:junk.el")
 (declare-function org-clock-in "ext:org-clock.el")
 (declare-function org-up-heading-safe "ext:org.el")
 (declare-function partial-recall--has-buffers-p "ext:partial-recall.el")
@@ -273,29 +273,6 @@ Fuzzy matches.
         completion-category-overrides '((file (styles partial-completion)))))
 #+END_SRC
 
-** marginalia
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-*** Utility
-
-#+BEGIN_SRC emacs-lisp
-(defun wal-marginalia-junk-annotate (candidate)
-  "Annotate CANDIDATE expansion pack."
-  (let* ((item (assoc (intern candidate) junk-expansion-packs))
-         (parts (junk--parts item)))
-
-    (cl-destructuring-bind (packages extras recipes docs) parts
-
-      (eval
-       (macroexpand
-        `(marginalia--fields
-          (,docs :face 'marginalia-documentation :truncate 0.6)
-          (,(junk--stringify (append packages recipes)) :face 'marginalia-value :truncate 0.8)
-          (,(junk--stringify extras) :face 'marginalia-value :truncate 0.4)))))))
-#+END_SRC
-
 *** Configuration
 
 Contextual information during completion, partial completion and
@@ -309,8 +286,9 @@ completion actions.
   :config
   (marginalia-mode)
 
-  (add-to-list 'marginalia-annotator-registry '(expansion-pack wal-marginalia-junk-annotate builtin none))
-  (add-to-list 'marginalia-command-categories '(junk-install . expansion-pack))
+  (when (fboundp 'junk-annotate)
+    (add-to-list 'marginalia-annotator-registry '(expansion-pack junk-annotate builtin none))
+    (add-to-list 'marginalia-command-categories '(junk-install . expansion-pack)))
 
   :bind
   (:map minibuffer-local-map

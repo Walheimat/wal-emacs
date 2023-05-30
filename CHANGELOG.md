@@ -10,8 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - New library file `wal-bridge` contains all of my own packages:
-  `wal-line`, `partial-recall` and `harpoon`. The latter two were spun
-  out.
+  `wal-line`, `partial-recall`, `harpoon` and `junk`. The latter three
+  were newly spun out.
 
 ### Changed
 
