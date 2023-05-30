@@ -397,14 +397,14 @@ Duplicate items are removed."
 
         (user-error "All keys %s must already be present in %s" keys target)))))
 
-(defun wal-insert-after (target preceding item &optional no-duplicates)
+(defun wal-insert-after (target preceding item &optional allow-duplicates)
   "Insert ITEM in TARGET after PRECEDING.
 
-If NO-DUPLICATES is t, trying to re-add an existing item will
+Unless ALLOW-DUPLICATES is t, trying to re-add an existing item will
 raise an error."
   (let ((val (symbol-value target)))
 
-    (when (and no-duplicates (memq item val))
+    (when (and (memq item val) (not allow-duplicates))
       (user-error "Can't insert after %s: %s is already in target %s" preceding item target))
 
     (if (memq preceding val)

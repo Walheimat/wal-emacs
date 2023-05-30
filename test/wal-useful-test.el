@@ -378,12 +378,19 @@
     (wal-insert-after 'test-target preceding item)
     (should (equal test-target '(hello darkness my old friend)))))
 
+(ert-deftest wal-insert-after--does-not-error-if-duplicates-allowed ()
+  (let ((test-target '(hello darkness my old friend))
+        (preceding 'darkness)
+        (item 'my))
+
+    (should (wal-insert-after 'test-target preceding item t))))
+
 (ert-deftest test-wal-insert-after--errors-if-key-already-in-list ()
   (let ((test-target '(hello darkness my old friend))
         (preceding 'darkness)
         (item 'my))
 
-    (should-error (wal-insert-after 'test-target preceding item t))))
+    (should-error (wal-insert-after 'test-target preceding item))))
 
 (ert-deftest test-wal-insert-after--errors-if-key-not-in-list ()
   (let ((test-target '(hello my old friend))
