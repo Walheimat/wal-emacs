@@ -22,14 +22,14 @@
 (ert-deftest test-wal-after-mc ()
   (let ((wal-mc-disabled '(abbrev-mode)))
 
-    (with-mock (abbrev-mode)
+    (bydi-with-mock (abbrev-mode)
       (with-temp-buffer
 
         (should-not abbrev-mode)
 
         (wal-after-mc)
 
-        (was-called abbrev-mode)
+        (bydi-was-called abbrev-mode)
         (should-not wal-mc-disabled)))))
 
 (ert-deftest test-wal-tempel-comment ()

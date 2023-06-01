@@ -12,30 +12,30 @@
   (defvar avy-goto-word-0 nil)
   (defvar avy-goto-word-0-regexp nil)
 
-  (with-mock (avy-goto-word-0
-              avy-jump
-              (avy-with . (lambda (_ b) b)))
+  (bydi-with-mock (avy-goto-word-0
+                   avy-jump
+                   (avy-with . (lambda (_ b) b)))
 
     (with-temp-buffer
       (insert "test")
 
       (wal-avy-goto-word)
 
-      (was-called-with avy-jump (list nil :beg (line-beginning-position) :end (line-end-position) :window-flip t))
+      (bydi-was-called-with avy-jump (list nil :beg (line-beginning-position) :end (line-end-position) :window-flip t))
 
       (wal-avy-goto-word '(4))
 
-      (was-called-with avy-goto-word-0 t)
+      (bydi-was-called-with avy-goto-word-0 t)
 
-      (wal-clear-mocks)
+      (bydi-clear-mocks)
 
       (wal-avy-goto-word 1)
 
-      (was-called-with avy-goto-word-0 t))))
+      (bydi-was-called-with avy-goto-word-0 t))))
 
 (ert-deftest test-wal-avy-goto-line ()
-  (with-mock ((avy-goto-line . #'beginning-of-line)
-              (avy-goto-end-of-line . #'end-of-line))
+  (bydi-with-mock ((avy-goto-line . #'beginning-of-line)
+                   (avy-goto-end-of-line . #'end-of-line))
 
     (with-temp-buffer
       (insert "test")
@@ -51,8 +51,8 @@
   (defvar wal-avy-mark-region nil)
   (let ((positions '(0 5 5 0)))
 
-    (with-mock ((avy-with . (lambda (_ b) b))
-                (avy--line . (lambda () (pop positions))))
+    (bydi-with-mock ((avy-with . (lambda (_ b) b))
+                     (avy--line . (lambda () (pop positions))))
 
       (with-temp-buffer
         (insert "test\ntesting")
@@ -66,8 +66,8 @@
     (should (equal (point-max) (avy-action-zip-to-char (point-max))))))
 
 (ert-deftest test-wal-then-goto-beginning-for-org-headings ()
-  (with-mock ((wal-univ-p . #'ignore)
-              (org-at-heading-p . #'always))
+  (bydi-with-mock ((wal-univ-p . #'ignore)
+                   (org-at-heading-p . #'always))
 
     (with-temp-buffer
       (setq major-mode 'org-mode)

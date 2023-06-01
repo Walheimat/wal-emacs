@@ -9,11 +9,11 @@
 (require 'wal-complete nil t)
 
 (ert-deftest test-wal-corfu-enable-in-minibuffer ()
-  (with-mock ((where-is-internal . #'always) corfu-mode)
+  (bydi-with-mock ((where-is-internal . #'always) corfu-mode)
 
     (wal-corfu-enable-in-minibuffer)
 
-    (was-called-with corfu-mode 1)))
+    (bydi-was-called-with corfu-mode 1)))
 
 (ert-deftest test-wal-record-this-command ()
   (let ((this-command 'testing))
@@ -38,27 +38,27 @@
     (should (equal 'test result))))
 
 (ert-deftest test-wal-browse-html-file ()
-  (with-mock (browse-url)
+  (bydi-with-mock (browse-url)
     (should-error (wal-browse-html-file "~/test/file.txt") :type 'user-error)
 
     (wal-browse-html-file "/tmp/test.html")
-    (was-called-with browse-url "/tmp/test.html")))
+    (bydi-was-called-with browse-url "/tmp/test.html")))
 
 (ert-deftest test-wal-consult-ripgrep-ignored ()
-  (with-mock (consult--grep consult--ripgrep-builder)
+  (bydi-with-mock (consult--grep consult--ripgrep-builder)
     (defvar consult-ripgrep-args)
     (let ((consult-ripgrep-args "test"))
 
       (wal-consult-ripgrep-ignored)
 
-      (was-called-with consult--grep (list "Ripgrep (ignored)" #'consult--ripgrep-builder nil nil)))))
+      (bydi-was-called-with consult--grep (list "Ripgrep (ignored)" #'consult--ripgrep-builder nil nil)))))
 
 (ert-deftest test-wal-consult-unregister ()
-  (with-mock ((consult--read . (lambda (&rest _r) ?r))
-              consult-register--candidates
-              consult--type-group
-              consult--type-narrow
-              consult--lookup-candidate)
+  (bydi-with-mock ((consult--read . (lambda (&rest _r) ?r))
+                   consult-register--candidates
+                   consult--type-group
+                   consult--type-narrow
+                   consult--lookup-candidate)
 
     (defvar consult-register--narrow)
     (let ((register-alist '((?t . test) (?r . remove)))
@@ -69,11 +69,11 @@
       (should (equal register-alist '((?t . test)))))))
 
 (ert-deftest test-wal-consult-line ()
-  (with-mock consult-line
+  (bydi-with-mock consult-line
 
     (wal-consult-line)
 
-    (was-called consult-line)
+    (bydi-was-called consult-line)
 
     (with-temp-buffer
       (insert "hello")
@@ -81,20 +81,20 @@
 
       (wal-consult-line t)
 
-      (was-called-with consult-line "hello"))))
+      (bydi-was-called-with consult-line "hello"))))
 
 (ert-deftest test-wal-consult-clock-in ()
-  (with-mock (consult-org-agenda org-clock-in wal-org-clock-in-from-now)
+  (bydi-with-mock (consult-org-agenda org-clock-in wal-org-clock-in-from-now)
 
     (wal-consult-clock-in)
 
-    (was-called consult-org-agenda)
-    (was-called org-clock-in)
+    (bydi-was-called consult-org-agenda)
+    (bydi-was-called org-clock-in)
 
     (funcall-interactively 'wal-consult-clock-in '(4))
 
-    (was-called consult-org-agenda)
-    (was-called wal-org-clock-in-from-now)))
+    (bydi-was-called consult-org-agenda)
+    (bydi-was-called wal-org-clock-in-from-now)))
 
 (ert-deftest test-wal-then-set-active-theme ()
   (defvar wal-active-theme nil)
@@ -121,48 +121,48 @@
   (let ((wal-consult-buffer-narrow-source 'project)
         (wal-consult-pre-narrowed-commands '(consult-buffer wal-consult-project)))
 
-    (with-mock ((consult--project-root . #'always)
-                (consult--buffer-query . #'always)
-                (consult--open-project-items . #'always)
-                (partial-recall--has-buffers-p . #'always))
+    (bydi-with-mock ((consult--project-root . #'always)
+                     (consult--buffer-query . #'always)
+                     (consult--open-project-items . #'always)
+                     (partial-recall--has-buffers-p . #'always))
 
-        (setq wal-consult-pre-narrow t
-              unread-command-events nil)
+      (setq wal-consult-pre-narrow t
+            unread-command-events nil)
 
-        (wal-consult--pre-narrow)
+      (wal-consult--pre-narrow)
 
-        (should-not unread-command-events)
+      (should-not unread-command-events)
 
-        (setq this-command 'consult-buffer)
+      (setq this-command 'consult-buffer)
 
-        (wal-consult--pre-narrow)
+      (wal-consult--pre-narrow)
 
-        (should unread-command-events)
-        (was-called consult--project-root)
+      (should unread-command-events)
+      (bydi-was-called consult--project-root)
 
-        (wal-clear-mocks)
+      (bydi-clear-mocks)
 
-        (setq wal-consult-buffer-narrow-source 'recall)
+      (setq wal-consult-buffer-narrow-source 'recall)
 
-        (wal-consult--pre-narrow)
+      (wal-consult--pre-narrow)
 
-        (should unread-command-events)
-        (was-not-called consult--project-root)
-        (was-called partial-recall--has-buffers-p)
+      (should unread-command-events)
+      (bydi-was-not-called consult--project-root)
+      (bydi-was-called partial-recall--has-buffers-p)
 
-        (setq unread-command-events nil
-              this-command 'wal-consult-project)
+      (setq unread-command-events nil
+            this-command 'wal-consult-project)
 
-        (wal-consult--pre-narrow)
+      (wal-consult--pre-narrow)
 
-        (should unread-command-events)
+      (should unread-command-events)
 
-        (setq wal-consult-pre-narrow nil
-              unread-command-events nil)
+      (setq wal-consult-pre-narrow nil
+            unread-command-events nil)
 
-        (wal-consult--pre-narrow)
+      (wal-consult--pre-narrow)
 
-        (should-not unread-command-events))))
+      (should-not unread-command-events))))
 
 (ert-deftest test-wal-consult-toggle-pre-narrow ()
   (defvar wal-consult-pre-narrow)
@@ -172,20 +172,20 @@
     (should wal-consult-pre-narrow)))
 
 (ert-deftest test-consult--open-project-items ()
-  (with-mock ((buffer-list . (lambda () '("a" "c" "b" "c" "a")))
-              (wal-project--buffer-root . (lambda (b) b)))
+  (bydi-with-mock ((buffer-list . (lambda () '("a" "c" "b" "c" "a")))
+                   (wal-project--buffer-root . (lambda (b) b)))
 
     (should (equal '("b" "c" "a") (consult--open-project-items)))))
 
 (ert-deftest test-wal-consult-project ()
-  (with-mock (consult--multi)
+  (bydi-with-mock (consult--multi)
 
     (call-interactively 'wal-consult-project)
 
-    (was-called-with consult--multi (list '(consult--source-open-projects consult--source-projects) :prompt "Select project: "))))
+    (bydi-was-called-with consult--multi (list '(consult--source-open-projects consult--source-projects) :prompt "Select project: "))))
 
 (ert-deftest test-wal-adjust-by-putting-current-buffer-first ()
-  (with-mock ((current-buffer . (lambda () 'current)))
+  (bydi-with-mock ((current-buffer . (lambda () 'current)))
 
     (let ((buffers '(one two current)))
 
@@ -196,17 +196,17 @@
       (should (equal '(one two three) (wal-adjust-by-putting-current-buffer-first buffers))))))
 
 (ert-deftest test-wal-consult-org-heading ()
-  (with-mock (consult-org-heading org-up-heading-safe)
+  (bydi-with-mock (consult-org-heading org-up-heading-safe)
 
     (funcall-interactively 'wal-consult-org-heading t)
 
-    (was-called org-up-heading-safe)
-    (was-called-with consult-org-heading (list nil 'tree))
+    (bydi-was-called org-up-heading-safe)
+    (bydi-was-called-with consult-org-heading (list nil 'tree))
 
-    (wal-clear-mocks)
+    (bydi-clear-mocks)
 
     (funcall-interactively 'wal-consult-org-heading)
 
-    (was-called-with consult-org-heading nil)))
+    (bydi-was-called-with consult-org-heading nil)))
 
 ;;; wal-complete-test.el ends here

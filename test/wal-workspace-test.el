@@ -9,21 +9,21 @@
 (require 'wal-workspace nil t)
 
 (ert-deftest test-wal-project-switch-to-parent-project ()
-  (with-mock (project-switch-project (wal-project-local-value . #'symbol-value))
+  (bydi-with-mock (project-switch-project (wal-project-local-value . #'symbol-value))
     (let ((wal-project-parent-project "/tmp/parent"))
 
       (wal-project-switch-to-parent-project)
 
-      (was-called-with project-switch-project (list "/tmp/parent"))
+      (bydi-was-called-with project-switch-project (list "/tmp/parent"))
 
       (setq wal-project-parent-project nil)
-      (wal-clear-mocks)
+      (bydi-clear-mocks)
 
       (should-error (wal-project-switch-to-parent-project) :type 'user-error))))
 
 (ert-deftest test-wal-with-project-bounded-compilation ()
-  (with-mock ((project-current . #'ignore)
-              (project-buffers . #'buffer-list))
+  (bydi-with-mock ((project-current . #'ignore)
+                   (project-buffers . #'buffer-list))
 
     (let ((fun (lambda () (funcall compilation-save-buffers-predicate))))
 
@@ -43,29 +43,29 @@
         (wal-project-command-history nil)
         (entered-command nil))
 
-    (with-mock ((project-current . #'always)
-                (project-root . (lambda (_) "/tmp/cmd"))
-                (project-name . (lambda (_) "Test Project"))
-                (project--value-in-dir . (lambda (&rest _) wal-project-test-default-cmd))
-                compile
-                (read-shell-command . (lambda (&rest _) entered-command)))
+    (bydi-with-mock ((project-current . #'always)
+                     (project-root . (lambda (_) "/tmp/cmd"))
+                     (project-name . (lambda (_) "Test Project"))
+                     (project--value-in-dir . (lambda (&rest _) wal-project-test-default-cmd))
+                     compile
+                     (read-shell-command . (lambda (&rest _) entered-command)))
 
       (setq entered-command "test")
 
       (wal-project-command 'test)
-      (was-called-with read-shell-command (list "Test project (Test Project): " "untest" 'wal-project-command-history))
-      (was-called-with compile "test")
+      (bydi-was-called-with read-shell-command (list "Test project (Test Project): " "untest" 'wal-project-command-history))
+      (bydi-was-called-with compile "test")
 
       (setq entered-command "best")
       (wal-project-command 'test)
-      (was-called-with compile "best")
+      (bydi-was-called-with compile "best")
 
       (should (string-equal "test" (ring-ref (gethash "/tmp/cmd" (plist-get wal-project-commands 'test)) 1)))
       (should (string-equal "best" (ring-ref (gethash "/tmp/cmd" (plist-get wal-project-commands 'test)) 0))))))
 
 (ert-deftest test-wal-project-create-command ()
-  (with-mock ((make-hash-table . (lambda (&rest _) 'hash-table)))
-    (match-expansion
+  (bydi-with-mock ((make-hash-table . (lambda (&rest _) 'hash-table)))
+    (bydi-match-expansion
      (wal-project-create-command test)
      `(progn
         (defvar-local wal-project-test-default-cmd nil)
@@ -76,74 +76,74 @@
         (bind-key "t" 'wal-project-test wal-project-prefix-map)))))
 
 (ert-deftest test-wal-project-select-command ()
-  (with-mock ((completing-read . (lambda (&rest _) "test"))
-              wal-project-command)
+  (bydi-with-mock ((completing-read . (lambda (&rest _) "test"))
+                   wal-project-command)
     (call-interactively 'wal-project-select-command)
 
-    (was-called-with wal-project-command (list 'test))))
+    (bydi-was-called-with wal-project-command (list 'test))))
 
 (ert-deftest test-wal-project-consult-buffer ()
   (defvar consult-project-buffer-sources)
-  (with-mock (consult-buffer)
+  (bydi-with-mock (consult-buffer)
     (let ((consult-project-buffer-sources 'testing))
 
       (wal-project-consult-buffer)
 
-      (was-called-with consult-buffer (list 'testing)))))
+      (bydi-was-called-with consult-buffer (list 'testing)))))
 
 (ert-deftest test-wal-project-magit-status ()
-  (with-mock (magit-status
-              (project-root . (lambda (_) "/tmp/test"))
-              (project-current . (lambda (&rest _) (list 'vc 'Git "/tmp/test"))))
+  (bydi-with-mock (magit-status
+                   (project-root . (lambda (_) "/tmp/test"))
+                   (project-current . (lambda (&rest _) (list 'vc 'Git "/tmp/test"))))
 
     (wal-project-magit-status)
 
-    (was-called-with magit-status (list "/tmp/test"))))
+    (bydi-was-called-with magit-status (list "/tmp/test"))))
 
 (ert-deftest test-wal-project-magit-status--ignores-if-no-vc ()
   (ert-with-message-capture messages
-    (with-mock ((project-current . (lambda (&rest _) (list 'vc nil "/tmp/test")))
-                (project-root . (lambda (&rest _) "/tmp/test"))
-                magit-status)
+    (bydi-with-mock ((project-current . (lambda (&rest _) (list 'vc nil "/tmp/test")))
+                     (project-root . (lambda (&rest _) "/tmp/test"))
+                     magit-status)
 
-    (wal-project-magit-status)
+      (wal-project-magit-status)
 
-    (was-not-called magit-status)
+      (bydi-was-not-called magit-status)
 
-    (should (string= "Project at ’/tmp/test’ is not version-controlled\n" messages)))))
+      (should (string= "Project at ’/tmp/test’ is not version-controlled\n" messages)))))
 
 (ert-deftest test-wal-project-dired-root ()
-  (with-mock (project-current (project-root . (lambda (&rest _) "/tmp/test")) dired)
+  (bydi-with-mock (project-current (project-root . (lambda (&rest _) "/tmp/test")) dired)
 
     (wal-project-dired-root)
 
-    (was-called-with dired (list "/tmp/test"))))
+    (bydi-was-called-with dired (list "/tmp/test"))))
 
 (ert-deftest test-wal-project--buffer-root ()
-  (with-mock ((project-current . (lambda (&rest _r) '(vc Git "/tmp")))
-              project-root)
+  (bydi-with-mock ((project-current . (lambda (&rest _r) '(vc Git "/tmp")))
+                   project-root)
     (with-temp-buffer
       (setq buffer-file-name "/tmp/test-buffer/file.test")
 
       (wal-project--buffer-root (current-buffer))
 
-      (was-called-with project-current '(nil "/tmp/test-buffer/"))
-      (was-called-with project-root (list '(vc Git "/tmp"))))
+      (bydi-was-called-with project-current '(nil "/tmp/test-buffer/"))
+      (bydi-was-called-with project-root (list '(vc Git "/tmp"))))
 
     (with-temp-buffer
       (setq dired-directory "/tmp/test-buffer/")
 
       (wal-project--buffer-root (current-buffer))
 
-      (was-called-with project-current '(nil "/tmp/test-buffer/"))
-      (was-called-with project-root (list '(vc Git "/tmp"))))))
+      (bydi-was-called-with project-current '(nil "/tmp/test-buffer/"))
+      (bydi-was-called-with project-root (list '(vc Git "/tmp"))))))
 
 (ert-deftest wal-project-local-value ()
-  (wal-with-temp-file "project"
+  (bydi-with-temp-file "project"
 
-    (with-mock ((project-current . #'always) (project-root . (lambda (_) wal-tmp-file)))
+    (bydi-with-mock ((project-current . #'always) (project-root . (lambda (_) bydi-tmp-file)))
 
-      (with-current-buffer (find-file-noselect wal-tmp-file)
+      (with-current-buffer (find-file-noselect bydi-tmp-file)
         (setq-local major-mode 'text-mode))
 
       (should (equal (wal-project-local-value 'major-mode) 'text-mode)))))

@@ -12,54 +12,54 @@
   (let ((completion-category-defaults '((lsp-capf (styles other))))
         (completion-styles '(testful)))
 
-    (with-mock ((harpoon-slow-lsp-p . #'ignore))
+    (bydi-with-mock ((harpoon-slow-lsp-p . #'ignore))
       (wal-lsp-completion)
 
       (should (equal '((lsp-capf (styles testful))) completion-category-defaults)))))
 
 (ert-deftest test-wal-first-prevent-adding-other-projects ()
-  (with-mock eval
+  (bydi-with-mock eval
 
     (wal-first-prevent-adding-other-projects)
 
-    (was-called-with eval (list '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))))
+    (bydi-was-called-with eval (list '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))))
 
 (ert-deftest test-wal-dap-terminated ()
-  (with-mock (hydra-disable
-              set-window-configuration)
+  (bydi-with-mock (hydra-disable
+                   set-window-configuration)
 
     (let ((wal-dap-before 'test))
       (wal-dap-terminated nil)
 
-      (was-called hydra-disable)
-      (was-called set-window-configuration))))
+      (bydi-was-called hydra-disable)
+      (bydi-was-called set-window-configuration))))
 
 (ert-deftest test-wal-dap-session-created ()
-  (with-mock ((current-window-configuration . #'wal-rt)
-              delete-other-windows)
+  (bydi-with-mock ((current-window-configuration . #'bydi-rt)
+                   delete-other-windows)
 
     (wal-dap-session-created)
 
-    (was-called delete-other-windows)
+    (bydi-was-called delete-other-windows)
     (should (equal 'testing wal-dap-before))))
 
 (ert-deftest test-wal-dap-stopped ()
-  (with-mock dap-hydra
+  (bydi-with-mock dap-hydra
 
     (wal-dap-stopped nil)
 
-    (was-called dap-hydra)))
+    (bydi-was-called dap-hydra)))
 
 (ert-deftest test-wal-ignore-if-no-lsp ()
   (defvar lsp-mode)
-  (with-mock (message)
+  (bydi-with-mock (message)
     (let ((lsp-mode nil))
       (should-not (wal-ignore-if-no-lsp))
-      (was-called-with message "Not in a LSP buffer")
-      (wal-clear-mocks))
+      (bydi-was-called-with message "Not in a LSP buffer")
+      (bydi-clear-mocks))
 
     (let ((lsp-mode t))
       (should (wal-ignore-if-no-lsp))
-      (was-not-called message))))
+      (bydi-was-not-called message))))
 
 ;;; wal-lsp-test.el ends here

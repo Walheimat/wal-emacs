@@ -9,12 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- New library file `wal-bridge` contains all of my own packages:
-  `wal-line`, `partial-recall`, `harpoon` and `junk`. The latter three
-  were newly spun out.
+- New library file `wal-bridge` contains all of my own packages.
 
 ### Changed
 
+- `partial-recall` was spun out as its own package.
+- `harpoon` was spun out as its own package.
+- `junk` was spun out as its own package.
+- Testing macros were spun out as their own package as `bydi`.
 - Pre-narrowing is now always enabled for `consult`.
 - `wdb-{faraway,nearby}` now default to
   `display-buffer-use-some-window`.

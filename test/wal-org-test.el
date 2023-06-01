@@ -9,20 +9,20 @@
 (require 'wal-org nil t)
 
 (ert-deftest test-wal-first-require-ox-md ()
-  (with-mock ((featurep . #'ignore)
-              require)
+  (bydi-with-mock ((featurep . #'ignore)
+                   require)
 
     (wal-first-require-ox-md)
 
-    (was-called-with featurep (list 'ox-md))
-    (was-called-with require (list 'ox-md nil t))))
+    (bydi-was-called-with featurep (list 'ox-md))
+    (bydi-was-called-with require (list 'ox-md nil t))))
 
 (ert-deftest test-wal-org-content ()
-  (with-mock org-content
+  (bydi-with-mock org-content
 
     (wal-org-content 8)
 
-    (was-called-with org-content (list 8))))
+    (bydi-was-called-with org-content (list 8))))
 
 (ert-deftest test-wal-org-refile ()
   (defvar org-roam-directory nil)
@@ -31,25 +31,25 @@
   (let ((org-agenda-files '("/tmp/agenda"))
         (org-roam-directory "/tmp/roam"))
 
-    (with-mock ((org-roam-buffer-p . #'always)
-                (org-refile . (lambda (&rest _) org-agenda-files)))
+    (bydi-with-mock ((org-roam-buffer-p . #'always)
+                     (org-refile . (lambda (&rest _) org-agenda-files)))
 
       (should (equal '("/tmp/roam") (wal-org-refile)))
-      (was-called org-refile)
+      (bydi-was-called org-refile)
 
-      (wal-clear-mocks)
+      (bydi-clear-mocks)
       (should (equal '("/tmp/agenda") (wal-org-refile 5)))
-      (was-called org-refile))
+      (bydi-was-called org-refile))
 
-    (with-mock ((org-roam-buffer-p . #'ignore)
-                (org-refile . (lambda (&rest _) org-agenda-files)))
+    (bydi-with-mock ((org-roam-buffer-p . #'ignore)
+                     (org-refile . (lambda (&rest _) org-agenda-files)))
 
       (should (equal '("/tmp/agenda") (wal-org-refile)))
-      (was-called org-refile))))
+      (bydi-was-called org-refile))))
 
 (ert-deftest wal-agenda-buffer-p ()
   (with-temp-buffer
-    (with-mock ((org-agenda-file-p . #'always))
+    (bydi-with-mock ((org-agenda-file-p . #'always))
       (should (wal-agenda-buffer-p (current-buffer))))))
 
 (ert-deftest test-wal-consult-agenda-buffer--query ()
@@ -80,21 +80,21 @@
 (ert-deftest test-wal-org-tree-slide ()
   (defvar visual-fill-column-width nil)
   (defvar visual-fill-column-center-text nil)
-  (with-mock (visual-fill-column-mode
-              mixed-pitch-mode
-              (wal-relative-column-width . #'wal-rf)
-              outline-show-all
-              text-scale-adjust)
+  (bydi-with-mock (visual-fill-column-mode
+                   mixed-pitch-mode
+                   (wal-relative-column-width . #'bydi-rf)
+                   outline-show-all
+                   text-scale-adjust)
 
     (wal-org-tree-slide-play)
 
     (should (eq visual-fill-column-width 160))
     (should visual-fill-column-center-text)
     (should-not cursor-type)
-    (was-called mixed-pitch-mode)
-    (was-called visual-fill-column-mode)
+    (bydi-was-called mixed-pitch-mode)
+    (bydi-was-called visual-fill-column-mode)
 
-    (wal-clear-mocks)
+    (bydi-clear-mocks)
 
     (wal-org-tree-slide-stop)
 
@@ -102,38 +102,38 @@
     (should-not visual-fill-column-center-text)
     (should cursor-type)
 
-    (was-called outline-show-all)
-    (was-called-with mixed-pitch-mode -1)
-    (was-called-with visual-fill-column-mode -1)
-    (was-called-with text-scale-adjust 0)))
+    (bydi-was-called outline-show-all)
+    (bydi-was-called-with mixed-pitch-mode -1)
+    (bydi-was-called-with visual-fill-column-mode -1)
+    (bydi-was-called-with text-scale-adjust 0)))
 
 (ert-deftest test-wal-org-tree-slide-text-scale ()
   (defvar org-tree-slide-mode)
   (let ((org-tree-slide-mode t))
 
-    (with-mock wal-org-tree-slide-play
+    (bydi-with-mock wal-org-tree-slide-play
 
       (wal-org-tree-slide-text-scale)
 
-      (was-called wal-org-tree-slide-play))))
+      (bydi-was-called wal-org-tree-slide-play))))
 
 (ert-deftest test-wal-org-capture-find-project-task-heading ()
   (let ((heading nil))
 
-    (with-mock ((org-find-exact-heading-in-directory . (lambda (&rest _) heading))
-                set-buffer
-                switch-to-buffer
-                goto-char
-                find-file-noselect
-                (wal-project-local-value . (lambda (it)
-                                             (pcase it
-                                               ('wal-org-capture-tasks-heading heading)
-                                               ('wal-project-parent-project nil)
-                                               (_ nil))))
-                (project-current . #'always)
-                (project-root . #'always)
-                (marker-buffer . (lambda (_) 'buffer))
-                (marker-position . (lambda (_) 'position)))
+    (bydi-with-mock ((org-find-exact-heading-in-directory . (lambda (&rest _) heading))
+                     set-buffer
+                     switch-to-buffer
+                     goto-char
+                     find-file-noselect
+                     (wal-project-local-value . (lambda (it)
+                                                  (pcase it
+                                                    ('wal-org-capture-tasks-heading heading)
+                                                    ('wal-project-parent-project nil)
+                                                    (_ nil))))
+                     (project-current . #'always)
+                     (project-root . #'always)
+                     (marker-buffer . (lambda (_) 'buffer))
+                     (marker-position . (lambda (_) 'position)))
 
       (should-error (wal-org-capture-locate-project-tasks) :type 'user-error)
       (should-error (wal-org-capture-switch-to-project-tasks) :type 'user-error)
@@ -141,39 +141,39 @@
       (setq heading 'heading)
 
       (wal-org-capture-locate-project-tasks)
-      (was-called-with goto-char (list 'position))
+      (bydi-was-called-with goto-char (list 'position))
 
 
       (wal-org-capture-switch-to-project-tasks)
-      (was-called-with switch-to-buffer (list 'buffer)))))
+      (bydi-was-called-with switch-to-buffer (list 'buffer)))))
 
 (ert-deftest test-wal-org-clock-in-switch-to-state ()
   (should (string-equal "IN PROGRESS" (wal-org-clock-in-switch-to-state "OTHER STATE"))))
 
 (ert-deftest test-wal-org-clock-heading ()
-  (with-mock ((org-link-display-format . #'wal-rf)
-              (org-get-heading . (lambda (&rest _r) "test heading"))
-              (org-no-properties . #'wal-rf)
-              wal-truncate)
+  (bydi-with-mock ((org-link-display-format . #'bydi-rf)
+                   (org-get-heading . (lambda (&rest _r) "test heading"))
+                   (org-no-properties . #'bydi-rf)
+                   wal-truncate)
 
     (wal-org-clock-heading)
 
-    (was-called-with wal-truncate (list "test heading" 12))))
+    (bydi-was-called-with wal-truncate (list "test heading" 12))))
 
 (ert-deftest test-wal-org-clock-in-from-now ()
-  (with-mock org-clock-in
+  (bydi-with-mock org-clock-in
 
     (wal-org-clock-in-from-now)
 
-    (was-called org-clock-in)))
+    (bydi-was-called org-clock-in)))
 
 (ert-deftest test-wal-org-clock-take-note ()
-  (with-mock (org-clock-goto
-              org-add-note)
+  (bydi-with-mock (org-clock-goto
+                   org-add-note)
 
     (wal-org-clock-take-note)
 
-    (was-called org-clock-goto)
-    (was-called org-add-note)))
+    (bydi-was-called org-clock-goto)
+    (bydi-was-called org-add-note)))
 
 ;;; wal-org-test.el ends here

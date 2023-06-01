@@ -28,17 +28,17 @@
 (ert-deftest test-wal-create-non-existent-directory ()
   (let ((temp-dir "/tmp/some-other/dir/"))
 
-    (with-mock ((file-name-directory . (lambda (&rest _r) temp-dir))
-                (y-or-n-p . #'always)
-                make-directory)
+    (bydi-with-mock ((file-name-directory . (lambda (&rest _r) temp-dir))
+                     (y-or-n-p . #'always)
+                     make-directory)
 
       (wal-create-non-existent-directory)
 
-      (was-called-with make-directory (list temp-dir t)))))
+      (bydi-was-called-with make-directory (list temp-dir t)))))
 
 (ert-deftest test-wal-create-non-existent-directory--aborts ()
-  (with-mock (file-name-directory
-              (file-exists-p . #'always))
+  (bydi-with-mock (file-name-directory
+                   (file-exists-p . #'always))
 
     (should-not (wal-create-non-existent-directory))))
 
@@ -83,9 +83,9 @@
 (ert-deftest test-wal-display-buffer-use-some-frame--with-display-p ()
   (let ((frame nil)
         (params nil))
-    (with-mock ((selected-frame . (lambda () frame))
-                get-lru-window
-                (frame-parameters . (lambda (_) params)))
+    (bydi-with-mock ((selected-frame . (lambda () frame))
+                     get-lru-window
+                     (frame-parameters . (lambda (_) params)))
 
 
       (setq frame 1)
@@ -137,16 +137,16 @@
 					 (window-parameters . ((no-other-window))))))))
 
 (ert-deftest wal-kill-some-file-buffers ()
-  (wal-with-temp-file "to-be-killed"
-    (with-mock kill-buffer-ask
+  (bydi-with-temp-file "to-be-killed"
+    (bydi-with-mock kill-buffer-ask
 
-      (find-file-noselect wal-tmp-file)
+      (find-file-noselect bydi-tmp-file)
 
       (get-buffer-create "killer-buffer")
 
       (wal-kill-some-file-buffers)
 
-      (was-called-with kill-buffer-ask (list (get-buffer "to-be-killed"))))))
+      (bydi-was-called-with kill-buffer-ask (list (get-buffer "to-be-killed"))))))
 
 (defvar useful-killing (ert-resource-file "killing.txt"))
 
@@ -176,7 +176,7 @@
 
 (ert-deftest test-wal-set-cursor-type--sets-and-resets ()
   (with-temp-buffer
-    (with-mock ((completing-read . (lambda (&rest _) "hollow")))
+    (bydi-with-mock ((completing-read . (lambda (&rest _) "hollow")))
 
       (wal-set-cursor-type)
 
@@ -216,11 +216,11 @@
     (should (equal (buffer-string) "That would be terrible\n"))))
 
 (ert-deftest test-wal-kwim--kills-region-if-active ()
-  (with-mock ((region-active-p . #'always) kill-region)
+  (bydi-with-mock ((region-active-p . #'always) kill-region)
     (with-temp-buffer
       (wal-kwim))
 
-    (was-called-with kill-region (list nil nil t))))
+    (bydi-was-called-with kill-region (list nil nil t))))
 
 (ert-deftest test-wal-mwim-beginning ()
   (with-temp-buffer
@@ -247,11 +247,11 @@
 
       (should (string-equal "This is the first sentence. This is the second one." (buffer-string)))))
 
-  (with-mock (fill-paragraph)
+  (bydi-with-mock (fill-paragraph)
 
     (funcall-interactively 'wal-spill-paragraph t)
 
-    (was-called-with fill-paragraph (list nil t))))
+    (bydi-was-called-with fill-paragraph (list nil t))))
 
 (ert-deftest wal-increase-gc-cons-threshold ()
   (defvar gc-cons-threshold)
@@ -273,11 +273,11 @@
 (ert-deftest test-wal-force-delete-other-windows ()
   (let ((ignore-window-parameters nil))
 
-    (with-mock (delete-other-windows)
+    (bydi-with-mock (delete-other-windows)
 
       (wal-force-delete-other-windows)
 
-      (was-called delete-other-windows))))
+      (bydi-was-called delete-other-windows))))
 
 (ert-deftest supernova ()
   (let ((a (get-buffer-create "stays"))
@@ -295,25 +295,25 @@
     (should (eq (length (window-list-1)) 1))))
 
 (ert-deftest test-wal-find-custom-file ()
-  (wal-with-temp-file "custom.el"
+  (bydi-with-temp-file "custom.el"
 
-    (let ((custom-file wal-tmp-file))
+    (let ((custom-file bydi-tmp-file))
 
       (wal-find-custom-file)
 
       (should (string-equal (buffer-name) "custom.el")))))
 
 (ert-deftest test-wal-find-init ()
-  (with-mock ((file-truename . (lambda (_) wal-emacs-config-default-path)))
+  (bydi-with-mock ((file-truename . (lambda (_) wal-emacs-config-default-path)))
 
     (wal-find-init)
 
     (should (string-match-p (buffer-name) wal-emacs-config-default-path))))
 
 (ert-deftest test-wal-find-fish-config ()
-  (wal-with-temp-file "config.fish"
+  (bydi-with-temp-file "config.fish"
 
-    (let ((wal-fish-config-locations `(,wal-tmp-file)))
+    (let ((wal-fish-config-locations `(,bydi-tmp-file)))
 
       (wal-find-fish-config)
 
@@ -326,7 +326,7 @@
     (should-error (wal-find-fish-config) :type 'user-error)))
 
 (ert-deftest test-wal-capture-flag ()
-  (match-expansion
+  (bydi-match-expansion
    (wal-capture-flag some-flag
      "We need to capture some flag.")
    `(when-let* ((flags wal-custom-flags)
@@ -421,7 +421,7 @@
   (should (equal '(:test :this :function) (wal-plist-keys '(:test "whether" :this "hacky" :function "works")))))
 
 (ert-deftest test-parallel ()
-  (match-expansion
+  (bydi-match-expansion
    (parallel some-fun other-fun)
    `(defun some-fun||other-fun (&optional arg)
       "Call `some-fun' or `other-fun' depending on prefix argument.\nNo argument means: call the prior. Numeric prefix `0' means: call the latter.\n\nFor all other prefix values: numeric prefixes call the latter,\n`universal-argument' prefixes call the prior."
@@ -440,7 +440,7 @@
         (call-interactively 'some-fun))))))
 
 (ert-deftest test-parallel--universalize ()
-  (match-expansion
+  (bydi-match-expansion
    (parallel some-fun other-fun :universalize t)
    `(defun some-fun||other-fun (&optional arg)
       "Call `some-fun' or `other-fun' depending on prefix argument.\nNo argument means: call the prior. Numeric prefix `0' means: call the latter.\n\nFor all other prefix values: numeric prefixes call the latter,\n`universal-argument' prefixes call the prior.\n\nThis function is universalized."
@@ -462,7 +462,7 @@
         (call-interactively 'some-fun))))))
 
 (ert-deftest test-wal-scratch-buffer ()
-  (with-mock ((pop-to-buffer . (lambda (n &rest _) (buffer-name n))))
+  (bydi-with-mock ((pop-to-buffer . (lambda (n &rest _) (buffer-name n))))
 
     (should (equal (wal-scratch-buffer) "*scratch*"))
     (should (equal (wal-scratch-buffer t) "*scratch*<2>"))
@@ -473,10 +473,10 @@
 
 (ert-deftest test-wal-persist-scratch-and-rehydrate ()
   (defvar wal-scratch-persist-file)
-  (wal-with-temp-file "scratch"
-    (let ((wal-scratch-persist-file wal-tmp-file))
+  (bydi-with-temp-file "scratch"
+    (let ((wal-scratch-persist-file bydi-tmp-file))
 
-      (delete-file wal-tmp-file)
+      (delete-file bydi-tmp-file)
 
       (with-current-buffer (get-buffer-create "*scratch*")
         (erase-buffer)
@@ -502,7 +502,7 @@
 (ert-deftest test-wal-biased-random ()
   (let ((vals '(1 2 3 4)))
 
-    (with-mock ((random . (lambda (_) (pop vals))))
+    (bydi-with-mock ((random . (lambda (_) (pop vals))))
 
       (should (eq (wal-biased-random 4) 3))
 
@@ -557,7 +557,7 @@
     (should (equal nil test-standard))))
 
 (ert-deftest test-wal-try ()
-  (match-expansion
+  (bydi-match-expansion
    (wal-try test
      (message "Testing again"))
    `(when (require 'test nil :no-error)
@@ -581,22 +581,22 @@
     (should (wal-server-edit-p))))
 
 (ert-deftest test-wal-delete-edit-or-kill ()
-  (with-mock ((wal-server-edit-p . #'always)
-              (server-edit-abort . (lambda () 'abort))
-              (server-edit . (lambda () 'edit)))
+  (bydi-with-mock ((wal-server-edit-p . #'always)
+                   (server-edit-abort . (lambda () 'abort))
+                   (server-edit . (lambda () 'edit)))
 
     (should (equal (wal-delete-edit-or-kill) 'edit))
     (should (equal (wal-delete-edit-or-kill t) 'abort)))
 
-  (with-mock ((wal-server-edit-p . #'ignore)
-              (daemonp . #'always)
-              (delete-frame . (lambda () 'delete-frame)))
+  (bydi-with-mock ((wal-server-edit-p . #'ignore)
+                   (daemonp . #'always)
+                   (delete-frame . (lambda () 'delete-frame)))
 
     (should (equal (wal-delete-edit-or-kill) 'delete-frame)))
 
-  (with-mock ((wal-server-edit-p . #'ignore)
-              (daemonp . #'ignore)
-              (save-buffers-kill-terminal . (lambda () 'kill)))
+  (bydi-with-mock ((wal-server-edit-p . #'ignore)
+                   (daemonp . #'ignore)
+                   (save-buffers-kill-terminal . (lambda () 'kill)))
 
     (should (equal (wal-delete-edit-or-kill) 'kill))))
 
@@ -624,7 +624,7 @@
   (defvar wal-booting nil)
 
   (let ((wal-booting t))
-    (match-expansion
+    (bydi-match-expansion
      (wal-on-boot test
        (setq wal-is-testing t))
      `(progn
@@ -632,13 +632,13 @@
 
   (let ((wal-booting nil))
 
-    (match-expansion
+    (bydi-match-expansion
      (wal-on-boot test
        (setq wal-is-testing t))
      `(message "Ignoring statements in '%s'" 'test))))
 
 (ert-deftest test-wal-transient-define-major ()
-  (match-expansion
+  (bydi-match-expansion
    (wal-transient-define-major test-mode ()
      "This is a world."
      [("i" "ignore" ignore)])
@@ -647,13 +647,13 @@
       [("i" "ignore" ignore)]))
 
   (defun test-mode-major () nil)
-  (match-expansion
+  (bydi-match-expansion
    (wal-transient-define-major test-mode ()
      "This is a world."
      [("i" "ignore" ignore)])
    `nil)
   (let ((wal-transient-may-redefine t))
-    (match-expansion
+    (bydi-match-expansion
      (wal-transient-define-major test-mode ()
        "This is a world."
        [("i" "ignore" ignore)])
@@ -663,15 +663,15 @@
   (fmakunbound 'test-prefix))
 
 (ert-deftest test-wal-when-ready ()
-  (with-mock ((daemonp . #'ignore))
+  (bydi-with-mock ((daemonp . #'ignore))
 
-    (match-expansion
+    (bydi-match-expansion
      (wal-when-ready (message "No demon ..."))
      `(add-hook 'emacs-startup-hook (lambda () (message "No demon ...")))))
 
-  (with-mock ((daemonp . #'always))
+  (bydi-with-mock ((daemonp . #'always))
 
-    (match-expansion
+    (bydi-match-expansion
      (wal-when-ready (message "Demon!"))
      `(add-hook 'server-after-make-frame-hook (lambda () (message "Demon!"))))))
 
@@ -681,7 +681,7 @@
 (ert-deftest test-setq-unless--only-sets-falsy ()
   (let ((wal-test-setq-a nil)
         (wal-test-setq-b "hello"))
-    (match-expansion
+    (bydi-match-expansion
      (setq-unless wal-test-setq-a "this"
                   wal-test-setq-b "but not this")
      `(progn
@@ -691,7 +691,7 @@
   (let ((wal-test-setq-a "hi")
         (wal-test-setq-b nil))
 
-    (match-expansion
+    (bydi-match-expansion
      (setq-unless wal-test-setq-b "this"
                   wal-test-setq-d "unknown")
      `(progn
@@ -699,7 +699,7 @@
         (setq wal-test-setq-d "unknown")))))
 
 (ert-deftest test-wal-define-init-setup ()
-  (match-expansion
+  (bydi-match-expansion
    (wal-define-init-setup test
      "Nothing else."
      :initial
@@ -728,7 +728,7 @@
     (insert "where is my mind")
     (set-mark (point-min))
     (goto-char (point-max))
-    (with-mock ((browse-url . (lambda (url &rest _r) url)))
+    (bydi-with-mock ((browse-url . (lambda (url &rest _r) url)))
       (should (string-equal
                (wal-duck-duck-go-region)
                "https://duckduckgo.com/html/?q=where%20is%20my%20mind")))))
@@ -755,43 +755,43 @@
   (with-temp-buffer
     (rename-buffer "*async-finalize-test*")
 
-    (with-mock (delete-window delete-other-windows)
+    (bydi-with-mock (delete-window delete-other-windows)
 
       (let ((finalizer (wal-async-process--finalize #'delete-window #'delete-other-windows)))
 
         (apply finalizer (list (current-buffer) "finished\n"))
 
-        (was-called delete-window)
-        (was-not-called delete-other-window)
-        (wal-clear-mocks)))
+        (bydi-was-called delete-window)
+        (bydi-was-not-called delete-other-window)
+        (bydi-clear-mocks)))
 
-    (with-mock ((delete-window . (lambda () (error "Oops"))) delete-other-windows)
+    (bydi-with-mock ((delete-window . (lambda () (error "Oops"))) delete-other-windows)
 
       (let ((finalizer (wal-async-process--finalize #'delete-window #'delete-other-windows)))
 
         (apply finalizer (list (current-buffer) "finished\n"))
 
-        (was-called delete-window)
-        (was-called-with delete-other-windows "Oops*async-finalize-test*")
-        (wal-clear-mocks)
+        (bydi-was-called delete-window)
+        (bydi-was-called-with delete-other-windows "Oops*async-finalize-test*")
+        (bydi-clear-mocks)
 
         (apply finalizer (list (current-buffer) "something else "))
 
-        (was-not-called delete-window)
-        (was-called-with delete-other-windows "something else")))))
+        (bydi-was-not-called delete-window)
+        (bydi-was-called-with delete-other-windows "something else")))))
 
 (ert-deftest test-wal-aysnc-process--maybe-interrupt ()
-  (with-mock ((compilation-find-buffer . (lambda () (message "found-buffer") "buffer"))
-              (get-buffer-process . (lambda (m) (message m)))
-              (interrupt-process . (lambda (_) (message "interrupted"))))
+  (bydi-with-mock ((compilation-find-buffer . (lambda () (message "found-buffer") "buffer"))
+                   (get-buffer-process . (lambda (m) (message m)))
+                   (interrupt-process . (lambda (_) (message "interrupted"))))
 
     (ert-with-message-capture messages
       (wal-async-process--maybe-interrupt)
       (should (string= "found-buffer\nbuffer\ninterrupted\n" messages)))))
 
 (ert-deftest test-wal-async-process ()
-  (with-mock ((wal-async-process--maybe-interrupt . (lambda () (message "interrupted")))
-              (compilation-start . (lambda (&rest _) (message "compiles"))))
+  (bydi-with-mock ((wal-async-process--maybe-interrupt . (lambda () (message "interrupted")))
+                   (compilation-start . (lambda (&rest _) (message "compiles"))))
     (ert-with-message-capture messages
       (wal-async-process
        "compiles"
@@ -799,7 +799,7 @@
        (lambda (_m) nil)
        t)
       (with-current-buffer "*wal-async*"
-         (funcall (car compilation-finish-functions) nil "finished\n"))
+        (funcall (car compilation-finish-functions) nil "finished\n"))
       (should (string= "interrupted\ncompiles\nfinishes\n" messages)))))
 
 (ert-deftest test-wal-matches-in-string ()
