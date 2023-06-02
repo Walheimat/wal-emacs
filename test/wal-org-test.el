@@ -177,3 +177,7 @@
     (bydi-was-called org-add-note)))
 
 ;;; wal-org-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

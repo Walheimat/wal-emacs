@@ -124,3 +124,7 @@
           (which-key-add-key-based-replacements "h" "Help me!"))))))
 
 ;;; wal-key-bindings-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

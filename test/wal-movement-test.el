@@ -78,3 +78,7 @@
       (should (equal 1 (point))))))
 
 ;;; wal-movement-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

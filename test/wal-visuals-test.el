@@ -198,3 +198,7 @@
       (bydi-was-called-with get-buffer "dash"))))
 
 ;;; wal-visuals-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

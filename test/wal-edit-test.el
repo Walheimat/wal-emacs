@@ -53,3 +53,7 @@
     (should-not (wal-in-case-of-mc-mode-do-not-default))))
 
 ;;; wal-edit-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

@@ -30,3 +30,7 @@
       (bydi-was-called select-window))))
 
 ;;; wal-windows-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

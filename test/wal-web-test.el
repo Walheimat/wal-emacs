@@ -12,3 +12,7 @@
   (should (equal (wal-pick-windows-being-kept) (list t))))
 
 ;;; wal-web-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

@@ -152,3 +152,7 @@
       (bydi-was-called-n-times wal-pacify--format 4))))
 
 ;;; wal-pacify-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

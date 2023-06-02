@@ -149,3 +149,7 @@
       (should (equal (wal-project-local-value 'major-mode) 'text-mode)))))
 
 ;;; wal-workspace-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

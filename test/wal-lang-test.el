@@ -212,3 +212,7 @@
       (should (wal-with-json-data-ignored-for-gdscript #'always table)))))
 
 ;;; wal-lang-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

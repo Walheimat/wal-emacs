@@ -373,4 +373,8 @@
     (wal-run-cold-boot)
     (bydi-was-called-with wal-make "cold-boot")))
 
-;;; wal-test.el ends here
+;;; wal-config-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

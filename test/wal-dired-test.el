@@ -40,3 +40,7 @@
   (should (equal (wal-consult-dired-buffer--query) '(visibility buffer-name wal-dired-buffer-p))))
 
 ;;; wal-dired-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

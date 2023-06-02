@@ -68,3 +68,7 @@
 (wal-test-helper--setup)
 
 ;;; test-helper.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

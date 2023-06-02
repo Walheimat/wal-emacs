@@ -30,3 +30,7 @@
       (bydi-was-called-with rg-run (list 'pattern 'files "/tmp/test" t nil 'flags)))))
 
 ;;; wal-find-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

@@ -63,3 +63,7 @@
       (bydi-was-not-called message))))
 
 ;;; wal-lsp-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

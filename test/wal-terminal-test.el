@@ -15,3 +15,7 @@
     (bydi-was-called eshell-truncate-buffer)))
 
 ;;; wal-terminal-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

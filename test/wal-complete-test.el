@@ -210,3 +210,7 @@
     (bydi-was-called-with consult-org-heading nil)))
 
 ;;; wal-complete-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

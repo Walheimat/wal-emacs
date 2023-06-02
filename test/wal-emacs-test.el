@@ -64,3 +64,7 @@
       (bydi-was-called-with pulse-momentary-highlight-one-line (list 8 'cursor)))))
 
 ;;; wal-emacs-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

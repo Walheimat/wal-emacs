@@ -161,3 +161,7 @@
       (bydi-was-called display-warning))))
 
 ;;; wal-package-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

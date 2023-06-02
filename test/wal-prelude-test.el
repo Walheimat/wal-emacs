@@ -281,3 +281,7 @@
       (bydi-was-called delay-warning))))
 
 ;;; wal-prelude-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

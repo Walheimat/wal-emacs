@@ -827,3 +827,7 @@
                (advice--p (advice--symbol-function 'wal-test-fun-2)))))
 
 ;;; wal-useful-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:

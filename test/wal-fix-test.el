@@ -136,3 +136,7 @@
     (bydi-was-called-with flyspell-goto-next-error (list t))))
 
 ;;; wal-fix-test.el ends here
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:
