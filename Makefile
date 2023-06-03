@@ -1,7 +1,7 @@
 EMACS?=emacs
 WAL_SOURCE_DIR?=$(CURDIR)
 EMACS_INIT_FILE?=$(HOME)/.emacs.d/init.el
-PACKAGE_MARKER=$(HOME)/.emacs.d/elpa/wal-line/wal-line.el
+PACKAGE_MARKER=$(HOME)/.emacs.d/elpa/whale-line/whale-line.el
 
 WITH_PRELUDE=$(EMACS) --batch -l ./wal-prelude.el
 
