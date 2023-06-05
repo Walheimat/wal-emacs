@@ -187,6 +187,7 @@ Example for advising =:around=.
   (require 'wal-useful nil t)
   (require 'wal-visuals nil t))
 
+(declare-function bydi-calculate-coverage "ext:bydi.el")
 (declare-function consult-org-heading "ext:consult.el")
 (declare-function magit-diff-range "ext:magit.el")
 (declare-function posframe-delete "ext:posframe.el")
@@ -195,7 +196,6 @@ Example for advising =:around=.
 (declare-function wal-flycheck-file "wal-fix.el")
 (declare-function wal-flycheck-file--erase "wal-fix.el")
 (declare-function wal-flycheck-file--get-buffer "wal-fix.el")
-(declare-function wal-matches-in-string "wal-useful.el")
 (declare-function wal-prelude-package-files "wal-prelude.el")
 (declare-function wal-prelude-tangle-config "wal-prelude.el")
 
@@ -546,7 +546,7 @@ If the answer is no, there will be no additional prompt."
 (defun wal-run-test--on-success ()
   "Show average test coverage."
   (lambda ()
-    (let ((average (wal-check-coverage--calculate-coverage)))
+    (let ((average (bydi-calculate-coverage)))
 
       (message "All tests succeeded. Coverage: %s" average))))
 
@@ -588,22 +588,6 @@ Optionally, custom ON-SUCCESS and ON-FAILURE handlers can be set."
 (defun wal-make--on-failure (name)
   "Display failure message for script NAME."
   (lambda (err) (message "Script '%s' failed.\n\n%s" name err)))
-
-(defun wal-check-coverage--calculate-coverage ()
-  "Calculate the full coverage."
-  (when-let* ((buffer (get-buffer "*wal-async*"))
-              (relevant (wal-check-coverage--add buffer "Relevant"))
-              (covered (wal-check-coverage--add buffer "Covered")))
-
-    (format "%.2f%%" (* 100 (/ (float covered) relevant)))))
-
-(defun wal-check-coverage--add (buf type)
-  "Add all numbers of TYPE in buffer BUF."
-  (let* ((regex (concat type ": \\(?1:[[:digit:]]+\\)"))
-         (content (with-current-buffer buf (buffer-string)))
-         (numbers (wal-matches-in-string regex content)))
-
-    (apply '+ (mapcar #'string-to-number numbers))))
 #+END_SRC
 
 * Footer

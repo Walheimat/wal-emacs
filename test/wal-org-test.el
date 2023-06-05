@@ -120,6 +120,9 @@
 (ert-deftest test-wal-org-capture-find-project-task-heading ()
   (let ((heading nil))
 
+    (when (get-buffer "*wal-async*")
+      (kill-buffer "*wal-async*"))
+
     (bydi-with-mock ((org-find-exact-heading-in-directory . (lambda (&rest _) heading))
                      set-buffer
                      switch-to-buffer

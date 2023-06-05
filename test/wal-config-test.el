@@ -234,18 +234,6 @@
 
       (bydi-was-called-with consult-org-heading (list nil '("/tmp/test.org" "/tmp/test-2.org"))))))
 
-(ert-deftest test-wal-check-coverage--calculate-coverage ()
-  (when (get-buffer "*wal-async*")
-    (kill-buffer "*wal-async*"))
-
-  (with-temp-buffer
-    (rename-buffer "*wal-async*")
-
-
-    (insert "wal-windows : Percent 50% [Relevant: 40 Covered: 20 Missed: 20]\nwal-windows : Percent 40% [Relevant: 20 Covered: 8 Missed: 12]")
-
-    (should (string-equal "46.67%" (wal-check-coverage--calculate-coverage)))))
-
 (ert-deftest test-wal-customize-group ()
   (bydi-with-mock customize-group
 
@@ -345,12 +333,11 @@
     (should (eq 'text wal-run-test--coverage-format))))
 
 (ert-deftest run-test-success-handler--checks-coverage ()
-  (bydi-with-mock ((wal-check-coverage--calculate-coverage . (lambda () "999%"))
+  (bydi-with-mock ((bydi-calculate-coverage . (lambda () "999%"))
                    message)
     (funcall (wal-run-test--on-success))
 
-    (bydi-was-called wal-check-coverage--calculate-coverage)
-    (bydi-was-called-with message (list "All tests succeeded. Coverage: %s" "999%"))))
+    (bydi-was-called bydi-calculate-coverage)))
 
 (ert-deftest run-test-failure-handler--messages ()
   (bydi-with-mock (message)

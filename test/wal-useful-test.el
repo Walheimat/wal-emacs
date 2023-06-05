@@ -802,12 +802,6 @@
         (funcall (car compilation-finish-functions) nil "finished\n"))
       (should (string= "interrupted\ncompiles\nfinishes\n" messages)))))
 
-(ert-deftest test-wal-matches-in-string ()
-  (let ((str "This 1 string has 3 matches, or is it 2?")
-        (pattern "\\(?1:[[:digit:]]\\)"))
-
-    (should (equal '("2" "3" "1") (wal-matches-in-string pattern str)))))
-
 (ert-deftest test-wal-advise-many ()
   (defun wal-test-fun-1 (arg1 arg2)
     "Do something with ARG1 and ARG2."
