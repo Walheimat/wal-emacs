@@ -23,6 +23,12 @@ Bridge twofer.
 - `wdb-{faraway,nearby}` now default to
   `display-buffer-use-some-window`.
 
+### Removed
+
+- Function `wal-matches-in-string` as well as
+  `wal-check-coverage--{calculate-coverage,add}` which are now part of
+  `bydi` package.
+
 ## [v2.1.0]
 
 Pizza time.
