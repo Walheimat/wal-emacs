@@ -194,7 +194,7 @@ use the result further down the line."
   (declare-function use-package-plist-maybe-put "ext:use-package.el")
 
   (let* ((active (or pred
-                     (if (junk--pack-p name)
+                     (if (and (fboundp 'junk--pack-p) (junk--pack-p name))
                          (not (null (package-installed-p name)))
                        (or (not (or wal-minimal wal-flag-mini))
                            (not (null (memq name wal-minimal-exclude)))))))
@@ -267,7 +267,8 @@ NAME is the package name, ARGS the ensure keywords."
           (setq package (car package)))
         (unless (or (package-installed-p package)
                     (memq package wal-package-ignored-packages)
-                    (junk--pack-p package))
+                    (when (fboundp 'junk--pack-p)
+                      (junk--pack-p package)))
           (condition-case-unless-debug err
               (progn
                 (when (assoc package (bound-and-true-p
