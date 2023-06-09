@@ -3,7 +3,33 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to [Semantic
+Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+
+- `org-agenda-todo-yesterday` is now bound in `org-agenda-mode-map`.
+
+### Changed
+
+- All test suites now new the newly added `bydi` patterns.
+- Package `wal-line` was renamed to `whale-line`.
+- `commitlint` rules now include fixed types.
+- `wal-core-vc-packages` now use specs.
+
+### Removed
+
+- Function `wal-matches-in-string` as well as
+  `wal-check-coverage--{calculate-coverage,add}` which are now part of
+  `bydi` package.
+- `junk--pack-p` is only used if bound.
+- Package `whale-line` is loaded after `all-the-icons`.
+
+### Fixed
+
+- Docstring `tempel` templates should work (a bit) better.
 
 ## [v2.1.1]
 
@@ -22,12 +48,6 @@ Bridge twofer.
 - Pre-narrowing is now always enabled for `consult`.
 - `wdb-{faraway,nearby}` now default to
   `display-buffer-use-some-window`.
-
-### Removed
-
-- Function `wal-matches-in-string` as well as
-  `wal-check-coverage--{calculate-coverage,add}` which are now part of
-  `bydi` package.
 
 ## [v2.1.0]
 
