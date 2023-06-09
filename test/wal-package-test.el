@@ -9,9 +9,10 @@
 (require 'wal-package nil t)
 
 (ert-deftest test-wal-use-package-normalize-binder ()
-  (bydi-with-mock ((use-package-recognize-function . #'always)
-                   (wal-prefix-user-key . (lambda (x) (format "C-t %s" x)))
-                   (use-package-error . (lambda (x) (error x))))
+
+  (bydi ((:always use-package-recognize-function)
+         (:mock wal-prefix-user-key :with (lambda (x) (format "C-t %s" x)))
+         (:mock use-package-error :with (lambda (x) (error x))))
 
     (should (equal (list (cons "C-t w" 'testing)) (wal-use-package-normalize-binder nil nil (list (cons "w" 'testing)))))
 
@@ -29,34 +30,33 @@
       (should (equal (list it "testing" (cons "C-t w" 'testing)) (wal-use-package-normalize-binder nil nil (list it "testing" (cons "w" 'testing))))))))
 
 (ert-deftest test-use-package-handler/:wal-ways ()
-  (let ((toggle t))
-    (bydi-with-mock ((package-installed-p . #'ignore)
-                     use-package-plist-maybe-put
-                     use-package-process-keywords
-                     (junk--pack-p . (lambda (_) toggle)))
+  (bydi ((:ignore package-installed-p)
+         use-package-plist-maybe-put
+         use-package-process-keywords
+         (:sometimes junk--pack-p))
 
-      (should (equal '((when nil name nil (nil :wal-ways nil)))
-                     (use-package-handler/:wal-ways 'name nil nil nil nil)))
+    (should (equal '((when nil name nil (nil :wal-ways nil)))
+                   (use-package-handler/:wal-ways 'name nil nil nil nil)))
 
-      (setq toggle nil)
-      (bydi-clear-mocks)
-      (defvar wal-minimal)
-      (defvar wal-flag-mini)
-      (defvar wal-minimal-exclude)
-      (let ((wal-minimal nil)
-            (wal-flag-mini t)
-            (wal-minimal-exclude '(name)))
+    (bydi-toggle-sometimes)
+    (bydi-clear-mocks)
+    (defvar wal-minimal)
+    (defvar wal-flag-mini)
+    (defvar wal-minimal-exclude)
+    (let ((wal-minimal nil)
+          (wal-flag-mini t)
+          (wal-minimal-exclude '(name)))
 
-        (should (equal '((when t name nil (nil :wal-ways t)))
-                       (use-package-handler/:wal-ways 'name nil nil nil nil)))))))
+      (should (equal '((when t name nil (nil :wal-ways t)))
+                     (use-package-handler/:wal-ways 'name nil nil nil nil))))))
 
 (ert-deftest test-wal-ignore-if-not-installed ()
   (let ((installed nil)
         (built-in nil)
         (user nil))
-    (bydi-with-mock ((package-installed-p . (lambda (_) installed))
-                     (package-built-in-p . (lambda (_) built-in))
-                     (package--user-selected-p . (lambda (_) user)))
+    (bydi ((:mock package-installed-p :return installed)
+           (:mock package-built-in-p :return built-in)
+           (:mock package--user-selected-p :return user))
 
       (should-not (wal-ignore-if-not-installed 'some-package))
 
@@ -83,15 +83,15 @@
         (package-archive-contents nil)
         (package-pinned-packages '((some-package . "test"))))
 
-    (bydi-with-mock (use-package-as-symbol
-                     use-package-pin-package
-                     (package-installed-p . (lambda (&rest _) installed))
-                     (package-built-in-p . (lambda (&rest _) built-in))
-                     (junk--pack-p . (lambda (&rest _) expansion))
-                     package-read-all-archive-contents
-                     package-refresh-contents
-                     package-install
-                     require)
+    (bydi (use-package-as-symbol
+           use-package-pin-package
+           (:mock package-installed-p :return installed)
+           (:mock package-built-in-p .:return built-in)
+           (:mock junk--pack-p :return expansion)
+           package-read-all-archive-contents
+           package-refresh-contents
+           package-install
+           require)
 
       (wal-use-package-ensure-elpa-if-not-built-in-or-expansion
        'some-package
@@ -142,16 +142,16 @@
 
   (let ((debug-on-error nil))
 
-    (bydi-with-mock (use-package-as-symbol
-                     use-package-pin-package
-                     (package-installed-p . (lambda (&rest _) nil))
-                     (package-built-in-p . (lambda (&rest _) nil))
-                     (junk--pack-p . (lambda (&rest _) nil))
-                     (package-read-all-archive-contents . (lambda () (error "Testing")))
-                     package-refresh-contents
-                     package-install
-                     require
-                     display-warning)
+    (bydi (use-package-as-symbol
+           use-package-pin-package
+           (:ignore package-installed-p)
+           (:ignore package-built-in-p)
+           (:ignore junk--pack-p)
+           (:mock package-read-all-archive-contents :with (lambda () (error "Testing")))
+           package-refresh-contents
+           package-install
+           require
+           display-warning)
 
       (wal-use-package-ensure-elpa-if-not-built-in-or-expansion
        'some-package

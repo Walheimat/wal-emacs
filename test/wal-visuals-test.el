@@ -9,7 +9,8 @@
 (require 'wal-visuals nil t)
 
 (ert-deftest test-wal-font-update ()
-  (bydi-with-mock (set-face-attribute (selected-frame . (lambda (&rest _) 'selected)))
+  (bydi (set-face-attribute
+         (:mock selected-frame :return 'selected))
     (wal-font-update :height 120 '(default) t)
 
     (bydi-was-called-with set-face-attribute (list 'default 'selected :height 120))))
@@ -18,7 +19,7 @@
   (let ((wal-fixed-font-height 121)
         (varying nil))
 
-    (bydi-with-mock ((read-number . (lambda (&rest _) varying)))
+    (bydi ((:mock read-number :return varying))
 
       (setq varying 301)
 
@@ -36,8 +37,8 @@
       (should (equal 177 (wal-read-sensible-font-height 'fixed))))))
 
 (ert-deftest test-wal-available-fonts ()
-  (bydi-with-mock (font-spec
-                   (find-font . (lambda (specs) (string-equal "TestFont" (nth 1 specs)))))
+  (bydi (font-spec
+         (:mock find-font :with (lambda (specs) (string-equal "TestFont" (nth 1 specs)))))
 
     (should (equal (list "TestFont") (wal-available-fonts '("Mononoki" "TestFont" "Arial"))))
     (bydi-was-called-n-times find-font 3)
@@ -47,15 +48,15 @@
 (ert-deftest test-wal-read-font ()
   (let ((wal-fixed-fonts '("TestFont" "OtherFont")))
 
-    (bydi-with-mock ((completing-read . (lambda (&rest _) "TestFont"))
-                     (face-attribute . (lambda (&rest _) "SomeFont"))
-                     (wal-available-fonts . (lambda (&rest _) wal-fixed-fonts)))
+    (bydi ((:mock completing-read :return "TestFont")
+           (:mock face-attribute :return "SomeFont")
+           (:mock wal-available-fonts :return wal-fixed-fonts))
 
       (should (string= "TestFont" (wal-read-font 'fixed)))
       (bydi-was-called-with completing-read (list "Select fixed font (current: SomeFont) " wal-fixed-fonts)))))
 
 (ert-deftest test-wal-select-fixed-or-variable-font ()
-  (bydi-with-mock ((wal-read-font . (lambda (&rest _) "TestFont")) wal-font-update)
+  (bydi ((:mock wal-read-font :return "TestFont") wal-font-update)
 
     (call-interactively 'wal-select-fixed-font)
 
@@ -66,8 +67,8 @@
     (bydi-was-called-with wal-font-update (list :font "TestFont" '(variable-pitch)))))
 
 (ert-deftest test-wal-set-fixed-or-variable-font-height ()
-  (bydi-with-mock ((wal-read-sensible-font-height . (lambda (&rest _) 101))
-                   wal-font-update)
+  (bydi ((:mock wal-read-sensible-font-height :return 101)
+         wal-font-update)
 
     (call-interactively 'wal-set-fixed-font-height)
 
@@ -84,8 +85,8 @@
     (should (equal (list "TestableFont" "PreferredFont") (wal-preferred-fonts (list "CruelFont" "TestableFont" "WaningFont" "PreferredFont"))))))
 
 (ert-deftest test-wal-fonts-candidate ()
-  (bydi-with-mock ((wal-available-fonts . (lambda (_) (list "TestFont")))
-                   (wal-preferred-fonts . (lambda (_) (list "ZestFont"))))
+  (bydi ((:mock wal-available-fonts :return (list "TestFont"))
+         (:mock wal-preferred-fonts :return (list "ZestFont")))
 
     (should (equal "TestFont" (wal-fonts-candidate (list "TestFont" "ZestFont"))))
     (bydi-was-not-called wal-preferred-fonts)
@@ -96,7 +97,7 @@
     (bydi-was-called wal-preferred-fonts)))
 
 (ert-deftest test-wal-font-lock ()
-  (bydi-with-mock set-face-attribute
+  (bydi set-face-attribute
 
     (wal-font-lock)
 
@@ -105,7 +106,7 @@
 
 (ert-deftest test-wal-set-transparency ()
   (let ((entered-number nil))
-    (bydi-with-mock ((read-number . (lambda (&rest _) entered-number)))
+    (bydi ((:mock read-number :return entered-number))
 
       (let ((emacs-major-version 29))
 
@@ -132,7 +133,7 @@
         (should (eq 90 (cdr (assoc 'alpha default-frame-alist))))))))
 
 (ert-deftest test-wal-load-active-theme ()
-  (bydi-with-mock (load-theme run-hooks)
+  (bydi (load-theme run-hooks)
 
     (let ((wal-active-theme nil))
 
@@ -169,7 +170,7 @@
   (should (equal "Testing" (wal-instead-show-biased-random))))
 
 (ert-deftest test-wal-in-case-of-daemonp-add-different-hook ()
-  (bydi-with-mock (require (daemonp . #'always) add-hook)
+  (bydi (require (:always daemonp) add-hook)
 
     (wal-in-case-of-daemonp-add-different-hook)
 
@@ -177,7 +178,7 @@
     (bydi-was-called-with require (list 'all-the-icons nil t))
     (bydi-was-called-with add-hook (list 'server-after-make-frame-hook #'dashboard-insert-startupify-lists)))
 
-  (bydi-with-mock ((daemonp . #'ignore) add-hook)
+  (bydi ((:ignore daemonp) add-hook)
 
     (wal-in-case-of-daemonp-add-different-hook)
 
@@ -189,7 +190,7 @@
 
   (let ((dashboard-buffer-name "dash"))
 
-    (bydi-with-mock (dashboard-insert-startupify-lists get-buffer)
+    (bydi (dashboard-insert-startupify-lists get-buffer)
 
       (wal-dashboard-get-buffer)
 

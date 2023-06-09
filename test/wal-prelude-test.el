@@ -13,7 +13,7 @@
          (file "/tmp/package/test.el")
          (other-file "/tmp/package/test.txt"))
 
-    (bydi-with-mock ((directory-files . (lambda (&rest _) (list "." ".." file other-file))))
+    (bydi ((:mock directory-files :return (list "." ".." file other-file)))
 
       (should (equal (list file) (wal-prelude-package-files))))))
 
@@ -25,9 +25,9 @@
 (defmacro with-bootstrap (shell-result &rest body)
   "Evaluate BODY with SHELL-RESULT in a temporary file."
   (declare (indent 1))
-  `(bydi-with-mock ((shell-command-to-string . (lambda (&rest _) ,shell-result))
-                    append-to-file
-                    delete-region)
+  `(bydi ((:mock shell-command-to-string :with (lambda (&rest _) ,shell-result))
+          append-to-file
+          delete-region)
      (bydi-with-temp-file "bootstrap"
        ,@body)))
 
@@ -67,12 +67,12 @@
         (user-emacs-directory "/tmp")
         (exists nil))
 
-    (bydi-with-mock ((file-exists-p . (lambda (&rest _)
+    (bydi ((:mock file-exists-p :with (lambda (&rest _)
                                         (let ((before exists))
                                           (setq exists (not exists))
                                           before)))
-                     make-empty-file
-                     load)
+           make-empty-file
+           load)
 
       (wal-prelude--configure-customization)
 
@@ -86,7 +86,7 @@
 
   (let ((wal-packages '(one two)))
 
-    (bydi-with-mock (require add-to-list wal-prelude--configure-customization)
+    (bydi (require add-to-list wal-prelude--configure-customization)
       (wal-prelude--load-config)
 
       (bydi-was-called wal-prelude--configure-customization)
@@ -101,7 +101,7 @@
         (default-directory "/tmp")
         (wal-emacs-config-build-path nil))
 
-    (bydi-with-mock (require add-to-list wal-prelude--configure-customization)
+    (bydi (require add-to-list wal-prelude--configure-customization)
 
       (wal-prelude--load-config)
 
@@ -114,9 +114,9 @@
   (let ((wal-packages '(fails))
         (wal-prelude-init-error nil))
 
-    (bydi-with-mock (add-to-list
-                     (require . (lambda (&rest _) (error "Oops")))
-                     wal-prelude--configure-customization)
+    (bydi (add-to-list
+           (:mock require :with (lambda (&rest _) (error "Oops")))
+           wal-prelude--configure-customization)
 
       (wal-prelude--load-config)
 
@@ -142,8 +142,8 @@
 
   (let ((package-user-dir nil))
 
-    (bydi-with-mock (require
-                     (make-temp-file . (lambda (&rest _) "/tmp/package")))
+    (bydi (require
+           (:mock make-temp-file :return "/tmp/package"))
 
       (wal-prelude--configure-cold-boot)
 
@@ -153,7 +153,7 @@
   (let ((wal-emacs-config-default-path "/tmp/default")
         (wal-prelude--phony-build-dependencies '("test" "testing")))
 
-    (bydi-with-mock (shell-command)
+    (bydi (shell-command)
       (wal-prelude--touch)
 
       (bydi-was-not-called shell-command))))
@@ -163,7 +163,7 @@
     (let ((wal-emacs-config-default-path "/tmp")
           (wal-prelude--phony-build-dependencies (list bydi-tmp-file "testing")))
 
-      (bydi-with-mock (shell-command)
+      (bydi (shell-command)
         (wal-prelude--touch)
 
         (bydi-was-called-n-times shell-command 1)))))
@@ -171,10 +171,10 @@
 (ert-deftest maybe-tangle--tangles-for-empty-directory ()
   (let ((wal-emacs-config "/tmp"))
 
-    (bydi-with-mock ((file-directory-p . #'always)
-                     (directory-empty-p . #'always)
-                     make-directory
-                     wal-prelude-tangle-config)
+    (bydi ((:always file-directory-p)
+           (:always directory-empty-p)
+           make-directory
+           wal-prelude-tangle-config)
 
       (wal-prelude--maybe-tangle)
 
@@ -183,10 +183,10 @@
 (ert-deftest maybe-tangle--does-not-tangle ()
   (let ((wal-emacs-config "/tmp"))
 
-    (bydi-with-mock ((file-directory-p . #'always)
-                     (directory-empty-p . #'ignore)
-                     make-directory
-                     wal-prelude-tangle-config)
+    (bydi ((:always file-directory-p)
+           (:ignore directory-empty-p)
+           make-directory
+           wal-prelude-tangle-config)
 
       (wal-prelude--maybe-tangle)
 
@@ -194,7 +194,7 @@
       (bydi-was-not-called make-directory))))
 
 (ert-deftest tangle-config--tangles-all-sources ()
-  (bydi-with-mock (require org-babel-tangle-file wal-prelude--touch)
+  (bydi (require org-babel-tangle-file wal-prelude--touch)
     (wal-prelude-tangle-config)
 
     (bydi-was-called-n-times org-babel-tangle-file (length wal-packages))
@@ -206,10 +206,10 @@
 
   (let ((wal-emacs-config-build-path "/tmp"))
 
-    (bydi-with-mock (wal-prelude--configure-cold-boot
-                     wal-prelude--set-paths
-                     wal-prelude--maybe-tangle
-                     wal-prelude--load-config)
+    (bydi (wal-prelude--configure-cold-boot
+           wal-prelude--set-paths
+           wal-prelude--maybe-tangle
+           wal-prelude--load-config)
 
       (wal-prelude-bootstrap "/tmp" 'cold)
 
@@ -220,9 +220,9 @@
 
   (let ((wal-emacs-config-build-path "/tmp"))
 
-    (bydi-with-mock (wal-prelude--set-paths
-                     wal-prelude--maybe-tangle
-                     wal-prelude--load-config)
+    (bydi (wal-prelude--set-paths
+           wal-prelude--maybe-tangle
+           wal-prelude--load-config)
 
       (wal-prelude-bootstrap "/tmp")
 
@@ -233,11 +233,11 @@
 
   (let ((wal-emacs-config "/tmp"))
 
-    (bydi-with-mock ((file-directory-p . #'always)
-                     (directory-empty-p . #'always)
-                     make-directory
-                     wal-prelude-tangle-config
-                     wal-prelude--set-paths)
+    (bydi ((:always file-directory-p)
+           (:always directory-empty-p)
+           make-directory
+           wal-prelude-tangle-config
+           wal-prelude--set-paths)
 
       (wal-prelude-bootstrap "/tmp" 'plain)
 
@@ -248,11 +248,11 @@
 
   (let ((wal-emacs-config "/tmp"))
 
-    (bydi-with-mock (wal-prelude-tangle-config
-                     wal-prelude--set-paths
-                     wal-prelude--maybe-tangle
-                     wal-prelude--load-config
-                     package-initialize)
+    (bydi (wal-prelude-tangle-config
+           wal-prelude--set-paths
+           wal-prelude--maybe-tangle
+           wal-prelude--load-config
+           package-initialize)
 
       (wal-prelude-bootstrap "/tmp" 'ensure)
 
@@ -263,12 +263,12 @@
 
   (let ((wal-prelude-init-error nil))
 
-    (bydi-with-mock (wal-prelude--set-paths
-                     wal-prelude--configure-cold-boot
-                     wal-prelude--load-config
-                     wal-prelude--maybe-tangle
-                     kill-emacs
-                     delay-warning)
+    (bydi (wal-prelude--set-paths
+           wal-prelude--configure-cold-boot
+           wal-prelude--load-config
+           wal-prelude--maybe-tangle
+           kill-emacs
+           delay-warning)
 
       (setq wal-prelude-init-error 'some-error)
 

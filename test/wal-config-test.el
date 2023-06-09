@@ -30,72 +30,72 @@
            (wal-ascii-cachalot-whale-key-frames ["cachalot"])
            (wal-ascii-blue-whale-key-frames ["blue"]))
 
-       (bydi-with-mock (wal-ascii-whale-animate run-with-timer cancel-timer kill-buffer)
+       (bydi (wal-ascii-whale-animate run-with-timer cancel-timer kill-buffer)
          ,@body))))
 
 (ert-deftest waw--start-animation--no-op-for-timer ()
   (waw-with-animation
-   (setq wal-ascii-whale-timer 'timer)
+    (setq wal-ascii-whale-timer 'timer)
 
-   (wal-ascii-whale--start-animation)
+    (wal-ascii-whale--start-animation)
 
-   (should-not wal-ascii-whale-key-frames)))
+    (should-not wal-ascii-whale-key-frames)))
 
 (ert-deftest waw--start-animation ()
   (waw-with-animation
-   (wal-ascii-whale--start-animation)
+    (wal-ascii-whale--start-animation)
 
-   (should wal-ascii-whale-timer)
-   (bydi-was-called wal-ascii-whale-animate)
-   (should (string= (aref wal-ascii-whale-key-frames 0) "blue"))))
+    (should wal-ascii-whale-timer)
+    (bydi-was-called wal-ascii-whale-animate)
+    (should (string= (aref wal-ascii-whale-key-frames 0) "blue"))))
 
 (ert-deftest waw--start-animation--cachalot ()
   (waw-with-animation
-   (setq wal-config-ascii-whale 'cachalot)
-   (wal-ascii-whale--start-animation)
+    (setq wal-config-ascii-whale 'cachalot)
+    (wal-ascii-whale--start-animation)
 
-   (should wal-ascii-whale-timer)
-   (bydi-was-called wal-ascii-whale-animate)
-   (should (string= (aref wal-ascii-whale-key-frames 0) "cachalot"))))
+    (should wal-ascii-whale-timer)
+    (bydi-was-called wal-ascii-whale-animate)
+    (should (string= (aref wal-ascii-whale-key-frames 0) "cachalot"))))
 
 (ert-deftest waw--start-animation--blue ()
   (waw-with-animation
-   (setq wal-config-ascii-whale 'blue)
-   (wal-ascii-whale--start-animation)
+    (setq wal-config-ascii-whale 'blue)
+    (wal-ascii-whale--start-animation)
 
-   (should wal-ascii-whale-timer)
-   (bydi-was-called wal-ascii-whale-animate)
-   (should (string= (aref wal-ascii-whale-key-frames 0) "blue"))))
+    (should wal-ascii-whale-timer)
+    (bydi-was-called wal-ascii-whale-animate)
+    (should (string= (aref wal-ascii-whale-key-frames 0) "blue"))))
 
 (ert-deftest waw--stop-animation--no-op-for-no-timer ()
   (waw-with-animation
-   (wal-ascii-whale--stop-animation)
+    (wal-ascii-whale--stop-animation)
 
-   (should-not wal-ascii-whale-timer)))
+    (should-not wal-ascii-whale-timer)))
 
 (ert-deftest waw--stop-animation--no-op-if-buffers-exist ()
   (waw-with-animation
-   (with-temp-buffer
-     (setq wal-ascii-whale-timer 'timer)
-     (setq wal-ascii-whale-parent-buffer (current-buffer))
+    (with-temp-buffer
+      (setq wal-ascii-whale-timer 'timer)
+      (setq wal-ascii-whale-parent-buffer (current-buffer))
 
-     (wal-ascii-whale--stop-animation))
+      (wal-ascii-whale--stop-animation))
 
-   (should wal-ascii-whale-timer)))
+    (should wal-ascii-whale-timer)))
 
 (ert-deftest waw--stop-animation ()
   (waw-with-animation
-   (setq wal-ascii-whale-timer 'timer)
+    (setq wal-ascii-whale-timer 'timer)
 
-   (wal-ascii-whale--stop-animation)
+    (wal-ascii-whale--stop-animation)
 
-   (should-not wal-ascii-whale-timer)
+    (should-not wal-ascii-whale-timer)
 
-   (bydi-was-called cancel-timer)
-   (bydi-was-called kill-buffer)))
+    (bydi-was-called cancel-timer)
+    (bydi-was-called kill-buffer)))
 
 (ert-deftest waw-setup ()
-  (bydi-with-mock (wal-ascii-whale--start-animation)
+  (bydi (wal-ascii-whale--start-animation)
     (with-temp-buffer
       (wal-ascii-whale-setup)
 
@@ -105,9 +105,9 @@
       (should (buffer-local-value 'window-configuration-change-hook (current-buffer))))))
 
 (ert-deftest waw-clean-up ()
-  (bydi-with-mock (posframe-delete
-                   wal-ascii-whale--start-animation
-                   wal-ascii-whale--stop-animation)
+  (bydi (posframe-delete
+         wal-ascii-whale--start-animation
+         wal-ascii-whale--stop-animation)
     (with-temp-buffer
       (wal-ascii-whale-setup)
 
@@ -126,7 +126,7 @@
     (should (equal '(9 . 5) result))))
 
 (ert-deftest waw-hidehandler ()
-  (bydi-with-mock ((get-buffer-window . #'ignore))
+  (bydi ((:ignore get-buffer-window))
 
     (should (wal-ascii-whale-hidehandler '(:posframe-parent-buffer '(nil nil))))))
 
@@ -134,23 +134,24 @@
   (let ((wal-ascii-whale-parent-buffer 'parent)
         (wal-ascii-whale-indirect-buffer 'indirect))
 
-    (bydi-with-mock (posframe-show (face-attribute . #'bydi-rf))
+    (bydi (posframe-show
+           (:mock face-attribute :return "#ffffff"))
 
       (wal-ascii-whale-display)
 
       (bydi-was-called-with posframe-show (list 'indirect
                                                 :accept-focus nil
                                                 :border-width 12
-                                                :border-color 'cursor
+                                                :border-color "#ffffff"
                                                 :poshandler 'wal-ascii-whale-poshandler
                                                 :posframe-parent-buffer 'parent
                                                 :hidehandler 'wal-ascii-whale-hidehandler)))))
 
 (ert-deftest waw-toggle-display ()
-  (bydi-with-mock (wal-ascii-whale-clean-up
-                   wal-ascii-whale-setup
-                   wal-ascii-whale-display
-                   (require . #'always))
+  (bydi (wal-ascii-whale-clean-up
+         wal-ascii-whale-setup
+         wal-ascii-whale-display
+         (:always require))
 
     (let ((wal-ascii-whale-parent-buffer t))
 
@@ -172,8 +173,8 @@
   (defvar wal-emacs-config-default-path)
   (let ((out '("1.0.0" "test everything" "1.0.1" "letting the world know"))
         (wal-emacs-config-default-path "~"))
-    (bydi-with-mock ((shell-command-to-string . (lambda (_) (pop out)))
-                     (message . #'bydi-rf))
+    (bydi ((:mock shell-command-to-string :with (lambda (_) (pop out)))
+           (:mock message :with bydi-rf))
 
       (should (equal "1.0.0: test everything" (wal-describe-config-version)))
 
@@ -182,25 +183,27 @@
         (should (equal "1.0.1: letting the world know" (wal-describe-config-version)))))))
 
 (ert-deftest test-wal-show-config-diff-range ()
-  (bydi-with-mock ((shell-command-to-string . (lambda (_) " testing "))
-                   (magit-diff-range . #'bydi-rf))
+  (bydi ((:mock shell-command-to-string :return " testing ")
+         magit-diff-range)
 
-    (should (string-equal "testing" (wal-show-config-diff-range)))))
+    (wal-show-config-diff-range)
+    (bydi-was-called-with magit-diff-range (list "testing" '("--stat")))))
 
 (ert-deftest test-wal-tangle-config-prompt ()
-  (bydi-with-mock ((wal-tangle-do-prompt . #'always)
-                   (y-or-n-p . #'always)
-                   (wal-prelude-tangle-config . #'bydi-rt))
+  (bydi ((:always wal-tangle-do-prompt)
+         (:always y-or-n-p )
+         wal-prelude-tangle-config)
 
     (let ((wal-tangle-do-prompt t))
 
-      (should (equal 'testing (wal-tangle-config-prompt))))))
+      (wal-tangle-config-prompt)
+      (bydi-was-called wal-prelude-tangle-config))))
 
 (ert-deftest test-wal-tangle-config-prompt--after ()
-  (bydi-with-mock ((wal-tangle-do-prompt . #'always)
-                   (y-or-n-p . #'ignore)
-                   (wal-prelude-tangle-config . #'bydi-rt)
-                   message)
+  (bydi ((:always wal-tangle-do-prompt)
+         (y-or-n-p . #'ignore)
+         wal-prelude-tangle-config
+         message)
 
     (let ((wal-tangle-do-prompt t))
 
@@ -218,7 +221,7 @@
   (defvar wal-emacs-config-default-path)
   (let ((wal-emacs-config-default-path "/tmp/config"))
 
-    (bydi-with-mock (project-switch-project)
+    (bydi (project-switch-project)
 
       (wal-config-switch-project)
 
@@ -228,14 +231,15 @@
   (defvar wal-emacs-config-lib-path)
   (let ((wal-emacs-config-lib-path nil))
 
-    (bydi-with-mock (consult-org-heading (directory-files . (lambda (&rest _) '("." ".." "/tmp/test.org" "/tmp/test-2.org"))))
+    (bydi (consult-org-heading
+           (:mock directory-files :return '("." ".." "/tmp/test.org" "/tmp/test-2.org")))
 
       (wal-config-consult-org-heading)
 
       (bydi-was-called-with consult-org-heading (list nil '("/tmp/test.org" "/tmp/test-2.org"))))))
 
 (ert-deftest test-wal-customize-group ()
-  (bydi-with-mock customize-group
+  (bydi customize-group
 
     (wal-customize-group)
 
@@ -252,9 +256,9 @@
   (defvar wal-emacs-config-default-path)
   (let ((wal-emacs-config-default-path "/tmp/default"))
 
-    (bydi-with-mock (wal-async-process
-                     (wal-make--on-success . (lambda (_) 'success))
-                     (wal-make--on-failure . (lambda (_) 'failure)))
+    (bydi (wal-async-process
+           (:mock wal-make--on-success :return 'success)
+           (:mock wal-make--on-failure :return 'failure))
 
       (wal-make "cold-boot")
 
@@ -267,9 +271,9 @@
   (defvar wal-emacs-config-default-path)
   (let ((wal-emacs-config-default-path "/tmp/default"))
 
-    (bydi-with-mock (wal-async-process
-                     (wal-run-test--on-success . (lambda () 'success))
-                     (wal-run-test--on-failure . (lambda () 'failure)))
+    (bydi (wal-async-process
+           (:mock wal-run-test--on-success :return 'success)
+           (:mock wal-run-test--on-failure :return 'failure))
 
       (wal-run-test)
 
@@ -284,9 +288,9 @@
   (let ((wal-emacs-config-default-path "/tmp/default")
         (wal-run-test--coverage-format 'json))
 
-    (bydi-with-mock (wal-async-process
-                     (wal-make--on-success . (lambda (_) 'success))
-                     (wal-make--on-failure . (lambda (_) 'failure)))
+    (bydi (wal-async-process
+           (:mock wal-make--on-success :return 'success)
+           (:mock wal-make--on-failure :return 'failure))
 
       (wal-run-test)
 
@@ -302,12 +306,15 @@
   (let ((wal-emacs-config-default-path "/tmp/default")
         (wal-run-test--coverage-format 'text))
 
-    (bydi-with-mock (wal-run-test
-                     (read-file-name . (lambda (_p _d _d _m _i pred &rest _)
-                                         (let ((selected "/tmp/tests/test.el"))
-                                           (if (funcall pred selected)
-                                               selected
-                                             nil)))))
+    (bydi (wal-run-test
+           (:mock
+            read-file-name
+            :with
+            (lambda (_p _d _d _m _i pred &rest _)
+              (let ((selected "/tmp/tests/test.el"))
+                (if (funcall pred selected)
+                    selected
+                  nil)))))
 
       (call-interactively 'wal-run-test-file)
 
@@ -333,26 +340,26 @@
     (should (eq 'text wal-run-test--coverage-format))))
 
 (ert-deftest run-test-success-handler--checks-coverage ()
-  (bydi-with-mock ((bydi-calculate-coverage . (lambda () "999%"))
-                   message)
+  (bydi ((:mock bydi-calculate-coverage :return "999%")
+         message)
     (funcall (wal-run-test--on-success))
 
     (bydi-was-called bydi-calculate-coverage)))
 
 (ert-deftest run-test-failure-handler--messages ()
-  (bydi-with-mock (message)
+  (bydi (message)
     (funcall (wal-run-test--on-failure) "because")
 
     (bydi-was-called-with message (list "Tests fail: %s" "because"))))
 
 (ert-deftest load-test-helper ()
-  (bydi-with-mock (require)
+  (bydi (require)
 
     (wal-config-load-test-helper)
     (bydi-was-called-with require (list 'bydi))))
 
 (ert-deftest test-wal-make--scripts ()
-  (bydi-with-mock (wal-make)
+  (bydi (wal-make)
 
     (wal-run-pacify)
     (bydi-was-called-with wal-make "pacify")

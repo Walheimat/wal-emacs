@@ -28,17 +28,17 @@
 (ert-deftest test-wal-create-non-existent-directory ()
   (let ((temp-dir "/tmp/some-other/dir/"))
 
-    (bydi-with-mock ((file-name-directory . (lambda (&rest _r) temp-dir))
-                     (y-or-n-p . #'always)
-                     make-directory)
+    (bydi ((:mock file-name-directory :return temp-dir)
+           (:always y-or-n-p)
+           make-directory)
 
       (wal-create-non-existent-directory)
 
       (bydi-was-called-with make-directory (list temp-dir t)))))
 
 (ert-deftest test-wal-create-non-existent-directory--aborts ()
-  (bydi-with-mock (file-name-directory
-                   (file-exists-p . #'always))
+  (bydi (file-name-directory
+         (:always file-exists-p))
 
     (should-not (wal-create-non-existent-directory))))
 
@@ -83,9 +83,9 @@
 (ert-deftest test-wal-display-buffer-use-some-frame--with-display-p ()
   (let ((frame nil)
         (params nil))
-    (bydi-with-mock ((selected-frame . (lambda () frame))
-                     get-lru-window
-                     (frame-parameters . (lambda (_) params)))
+    (bydi ((:mock selected-frame :return frame)
+           get-lru-window
+           (:mock frame-parameters :return params))
 
 
       (setq frame 1)
@@ -138,7 +138,7 @@
 
 (ert-deftest wal-kill-some-file-buffers ()
   (bydi-with-temp-file "to-be-killed"
-    (bydi-with-mock kill-buffer-ask
+    (bydi kill-buffer-ask
 
       (find-file-noselect bydi-tmp-file)
 
@@ -176,7 +176,7 @@
 
 (ert-deftest test-wal-set-cursor-type--sets-and-resets ()
   (with-temp-buffer
-    (bydi-with-mock ((completing-read . (lambda (&rest _) "hollow")))
+    (bydi ((:mock completing-read :return "hollow"))
 
       (wal-set-cursor-type)
 
@@ -216,7 +216,7 @@
     (should (equal (buffer-string) "That would be terrible\n"))))
 
 (ert-deftest test-wal-kwim--kills-region-if-active ()
-  (bydi-with-mock ((region-active-p . #'always) kill-region)
+  (bydi ((:always region-active-p) kill-region)
     (with-temp-buffer
       (wal-kwim))
 
@@ -247,7 +247,7 @@
 
       (should (string-equal "This is the first sentence. This is the second one." (buffer-string)))))
 
-  (bydi-with-mock (fill-paragraph)
+  (bydi (fill-paragraph)
 
     (funcall-interactively 'wal-spill-paragraph t)
 
@@ -273,7 +273,7 @@
 (ert-deftest test-wal-force-delete-other-windows ()
   (let ((ignore-window-parameters nil))
 
-    (bydi-with-mock (delete-other-windows)
+    (bydi (delete-other-windows)
 
       (wal-force-delete-other-windows)
 
@@ -304,7 +304,7 @@
       (should (string-equal (buffer-name) "custom.el")))))
 
 (ert-deftest test-wal-find-init ()
-  (bydi-with-mock ((file-truename . (lambda (_) wal-emacs-config-default-path)))
+  (bydi ((:mock file-truename :return wal-emacs-config-default-path))
 
     (wal-find-init)
 
@@ -462,7 +462,7 @@
         (call-interactively 'some-fun))))))
 
 (ert-deftest test-wal-scratch-buffer ()
-  (bydi-with-mock ((pop-to-buffer . (lambda (n &rest _) (buffer-name n))))
+  (bydi ((:mock pop-to-buffer :with (lambda (n &rest _) (buffer-name n))))
 
     (should (equal (wal-scratch-buffer) "*scratch*"))
     (should (equal (wal-scratch-buffer t) "*scratch*<2>"))
@@ -502,7 +502,7 @@
 (ert-deftest test-wal-biased-random ()
   (let ((vals '(1 2 3 4)))
 
-    (bydi-with-mock ((random . (lambda (_) (pop vals))))
+    (bydi ((:mock random :with (lambda (_) (pop vals))))
 
       (should (eq (wal-biased-random 4) 3))
 
@@ -581,22 +581,22 @@
     (should (wal-server-edit-p))))
 
 (ert-deftest test-wal-delete-edit-or-kill ()
-  (bydi-with-mock ((wal-server-edit-p . #'always)
-                   (server-edit-abort . (lambda () 'abort))
-                   (server-edit . (lambda () 'edit)))
+  (bydi ((:always wal-server-edit-p)
+         (:mock server-edit-abort :return 'abort)
+         (:mock server-edit :return 'edit))
 
     (should (equal (wal-delete-edit-or-kill) 'edit))
     (should (equal (wal-delete-edit-or-kill t) 'abort)))
 
-  (bydi-with-mock ((wal-server-edit-p . #'ignore)
-                   (daemonp . #'always)
-                   (delete-frame . (lambda () 'delete-frame)))
+  (bydi ((:ignore wal-server-edit-p)
+         (:always daemonp)
+         (:mock delete-frame :return 'delete-frame))
 
     (should (equal (wal-delete-edit-or-kill) 'delete-frame)))
 
-  (bydi-with-mock ((wal-server-edit-p . #'ignore)
-                   (daemonp . #'ignore)
-                   (save-buffers-kill-terminal . (lambda () 'kill)))
+  (bydi ((:ignore wal-server-edit-p)
+         (:ignore daemonp)
+         (:mock save-buffers-kill-terminal :return 'kill))
 
     (should (equal (wal-delete-edit-or-kill) 'kill))))
 
@@ -663,13 +663,13 @@
   (fmakunbound 'test-prefix))
 
 (ert-deftest test-wal-when-ready ()
-  (bydi-with-mock ((daemonp . #'ignore))
+  (bydi ((:ignore daemonp))
 
     (bydi-match-expansion
      (wal-when-ready (message "No demon ..."))
      `(add-hook 'emacs-startup-hook (lambda () (message "No demon ...")))))
 
-  (bydi-with-mock ((daemonp . #'always))
+  (bydi ((:always daemonp))
 
     (bydi-match-expansion
      (wal-when-ready (message "Demon!"))
@@ -728,7 +728,7 @@
     (insert "where is my mind")
     (set-mark (point-min))
     (goto-char (point-max))
-    (bydi-with-mock ((browse-url . (lambda (url &rest _r) url)))
+    (bydi ((:mock browse-url :with bydi-rf))
       (should (string-equal
                (wal-duck-duck-go-region)
                "https://duckduckgo.com/html/?q=where%20is%20my%20mind")))))
@@ -755,7 +755,7 @@
   (with-temp-buffer
     (rename-buffer "*async-finalize-test*")
 
-    (bydi-with-mock (delete-window delete-other-windows)
+    (bydi (delete-window delete-other-windows)
 
       (let ((finalizer (wal-async-process--finalize #'delete-window #'delete-other-windows)))
 
@@ -765,7 +765,7 @@
         (bydi-was-not-called delete-other-window)
         (bydi-clear-mocks)))
 
-    (bydi-with-mock ((delete-window . (lambda () (error "Oops"))) delete-other-windows)
+    (bydi ((:mock delete-window :with (lambda () (error "Oops"))) delete-other-windows)
 
       (let ((finalizer (wal-async-process--finalize #'delete-window #'delete-other-windows)))
 
@@ -781,17 +781,17 @@
         (bydi-was-called-with delete-other-windows "something else")))))
 
 (ert-deftest test-wal-aysnc-process--maybe-interrupt ()
-  (bydi-with-mock ((compilation-find-buffer . (lambda () (message "found-buffer") "buffer"))
-                   (get-buffer-process . (lambda (m) (message m)))
-                   (interrupt-process . (lambda (_) (message "interrupted"))))
+  (bydi ((:mock compilation-find-buffer :with (lambda () (message "found-buffer") "buffer"))
+         (:mock get-buffer-process :with (lambda (m) (message m)))
+         (:mock interrupt-process :with (lambda (_) (message "interrupted"))))
 
     (ert-with-message-capture messages
       (wal-async-process--maybe-interrupt)
       (should (string= "found-buffer\nbuffer\ninterrupted\n" messages)))))
 
 (ert-deftest test-wal-async-process ()
-  (bydi-with-mock ((wal-async-process--maybe-interrupt . (lambda () (message "interrupted")))
-                   (compilation-start . (lambda (&rest _) (message "compiles"))))
+  (bydi ((:mock wal-async-process--maybe-interrupt :with (lambda () (message "interrupted")))
+         (:mock compilation-start :with (lambda (&rest _) (message "compiles"))))
     (ert-with-message-capture messages
       (wal-async-process
        "compiles"

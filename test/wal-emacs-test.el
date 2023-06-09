@@ -9,7 +9,7 @@
 (require 'wal-emacs nil t)
 
 (ert-deftest test-wal-flyspell-commit-messages ()
-  (bydi-with-mock (flyspell-mode)
+  (bydi (flyspell-mode)
 
     (with-temp-buffer
       (wal-text-mode-flyspell-commit-messages)
@@ -21,7 +21,7 @@
       (bydi-was-called flyspell-mode))))
 
 (ert-deftest test-wal-flycheck-on-save ()
-  (bydi-with-mock (flycheck-mode)
+  (bydi (flycheck-mode)
 
     (defvar flycheck-check-syntax-automatically nil)
 
@@ -33,8 +33,8 @@
 
 
 (ert-deftest test-wal-kmacro ()
-  (bydi-with-mock (kmacro-end-macro
-                   kmacro-start-macro)
+  (bydi (kmacro-end-macro
+         kmacro-start-macro)
 
     (let ((defining-kbd-macro t))
       (wal-kmacro nil)
@@ -54,7 +54,7 @@
     (should-not register-alist)))
 
 (ert-deftest test-wal-lighthouse ()
-  (bydi-with-mock pulse-momentary-highlight-one-line
+  (bydi pulse-momentary-highlight-one-line
     (with-temp-buffer
       (insert "testing")
       (goto-char (point-max))

@@ -9,7 +9,7 @@
 (require 'wal-fix nil t)
 
 (ert-deftest test-wal-flycheck-file--get-buffer ()
-  (bydi-with-mock (view-mode)
+  (bydi (view-mode)
     (with-current-buffer (wal-flycheck-file--get-buffer)
 
       (should view-mode)
@@ -40,7 +40,7 @@
 (ert-deftest test-wal-flycheck-file--callback ()
   (bydi-with-temp-file "check"
 
-    (bydi-with-mock display-buffer
+    (bydi display-buffer
 
       (let* ((buf (find-file-noselect bydi-tmp-file))
              (cb (wal-flycheck-file--callback bydi-tmp-file buf nil t)))
@@ -63,8 +63,8 @@
     (let* ((buf (find-file-noselect bydi-tmp-file))
            (cb (wal-flycheck-file--callback bydi-tmp-file buf t t)))
 
-      (bydi-with-mock ((flycheck-error-message . #'bydi-rf)
-                       (flycheck-error-line . (lambda (_) 1)))
+      (bydi ((:mock flycheck-error-message :with bydi-rf)
+             (:mock flycheck-error-line :return 1))
 
         (apply cb '(nil ("testing"))))
 
@@ -75,11 +75,11 @@
   (kill-buffer wal-flycheck-file--buffer))
 
 (ert-deftest test-wal-flycheck-file ()
-  (bydi-with-mock ((flycheck-get-checker-for-buffer . #'bydi-rt)
-                   flycheck-syntax-check-new
-                   flycheck-compute-working-directory
-                   flycheck-syntax-check-start
-                   (wal-flycheck-file--callback . #'bydi-rt))
+  (bydi ((:mock flycheck-get-checker-for-buffer :with bydi-rt)
+         flycheck-syntax-check-new
+         flycheck-compute-working-directory
+         flycheck-syntax-check-start
+         (:mock wal-flycheck-file--callback :with bydi-rt))
     (bydi-with-temp-file "flycheck"
 
       (wal-flycheck-file bydi-tmp-file)
@@ -92,11 +92,11 @@
                                'testing))))))
 
 (ert-deftest test-wal-flycheck-file--no-checker ()
-  (bydi-with-mock ((flycheck-get-checker-for-buffer . #'ignore)
-                   flycheck-syntax-check-new
-                   flycheck-compute-working-directory
-                   flycheck-syntax-check-start
-                   wal-flycheck-file--callback)
+  (bydi ((:ignore flycheck-get-checker-for-buffer)
+         flycheck-syntax-check-new
+         flycheck-compute-working-directory
+         flycheck-syntax-check-start
+         wal-flycheck-file--callback)
 
     (bydi-with-temp-file "flycheck"
 
@@ -104,7 +104,7 @@
 
 (ert-deftest test-wal-flyspell ()
   (defvar flyspell-mode nil)
-  (bydi-with-mock (flyspell-mode flyspell-prog-mode)
+  (bydi (flyspell-mode flyspell-prog-mode)
 
     (let ((flyspell-mode t))
 
@@ -122,14 +122,14 @@
 
       (with-temp-buffer
 
-        (bydi-with-mock ((derived-mode-p . #'always))
+        (bydi ((:always derived-mode-p))
           (wal-flyspell)
 
           (bydi-was-not-called flyspell-mode)
           (bydi-was-called flyspell-prog-mode))))))
 
 (ert-deftest test-wal-flyspell-goto-previous-error ()
-  (bydi-with-mock (flyspell-goto-next-error)
+  (bydi (flyspell-goto-next-error)
 
     (wal-flyspell-goto-previous-error)
 

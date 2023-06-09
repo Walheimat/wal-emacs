@@ -31,27 +31,27 @@
 
 (ert-deftest wp--ready-p ()
   (with-flymake-state
-   (bydi-with-mock (flymake--state-reported-p)
+   (bydi (flymake--state-reported-p)
      (should (wal-pacify--ready-p)))))
 
 (ert-deftest wp--get-diags--appends ()
-  (bydi-with-mock ((flymake--state-diags . (lambda (_) '(test)))
-                   wal-pacify--get-state)
+  (bydi ((:mock flymake--state-diags :return '(test))
+         wal-pacify--get-state)
     (should (equal '(test test) (wal-pacify--get-diags)))))
 
 (ert-deftest wp--get-severity-diags ()
-  (bydi-with-mock ((wal-pacify--get-diags . (lambda () '(1 2 3 4 3)))
-                   (wal-pacify--get-info . #'bydi-rf)
-                   (flymake--severity . #'bydi-rf)
-                   (flymake-diagnostic-type . #'bydi-rf))
+  (bydi ((:mock wal-pacify--get-diags :return '(1 2 3 4 3))
+         (:mock wal-pacify--get-info :with bydi-rf)
+         (:mock flymake--severity :with bydi-rf)
+         (:mock flymake-diagnostic-type :with bydi-rf))
     (should (equal '(3 3) (wal-pacify--get-severity-diags 3)))))
 
 (ert-deftest wp--get-info ()
   (bydi-with-temp-file "testing"
 
-    (bydi-with-mock ((flymake--diag-text . (lambda (_) "test"))
-                     (flymake--diag-beg . (lambda (_) 1))
-                     (flymake--diag-locus . (lambda (_) (get-buffer bydi-tmp-file))))
+    (bydi ((:mock flymake--diag-text :return "test")
+           (:mock flymake--diag-beg :return 1)
+           (:mock flymake--diag-locus :with (lambda (_) (get-buffer bydi-tmp-file))))
 
       (should (equal (wal-pacify--get-info nil)
                      (list :file (buffer-file-name (get-buffer bydi-tmp-file))
@@ -61,10 +61,10 @@
 (ert-deftest wp--collect--collects-if-ready ()
   (let ((severities '(warning error debug info)))
     (bydi-with-temp-file "testing"
-      (bydi-with-mock (flymake-mode
-                       flymake-start
-                       (wal-pacify--ready-p . #'always)
-                       (wal-pacify--get-severity-diags . (lambda (_) (pop severities))))
+      (bydi (flymake-mode
+             flymake-start
+             (:always wal-pacify--ready-p)
+             (:mock wal-pacify--get-severity-diags :with (lambda (_) (pop severities))))
 
         (wal-pacify--collect bydi-tmp-file)
 
@@ -72,10 +72,10 @@
 
 (ert-deftest wp--collect--errors-if-never-ready ()
   (bydi-with-temp-file "testing"
-    (bydi-with-mock (flymake-mode
-                     flymake-start
-                     (wal-pacify--ready-p . #'ignore)
-                     sit-for)
+    (bydi (flymake-mode
+           flymake-start
+           (:ignore wal-pacify--ready-p)
+           sit-for)
 
       (should-error (wal-pacify--collect bydi-tmp-file) :type 'error))))
 
@@ -89,10 +89,10 @@
 
   (let ((wal-pacify-check--not-testable "notest\\|leaveme"))
 
-    (bydi-with-mock ((wal-prelude-package-files . (lambda () '("wal-notest.el"
-                                                          "wal-dotest.el"
-                                                          "wal-do-leaveme.el"
-                                                          "wal-useme.el"))))
+    (bydi ((:mock wal-prelude-package-files :return '("wal-notest.el"
+                                                      "wal-dotest.el"
+                                                      "wal-do-leaveme.el"
+                                                      "wal-useme.el")))
 
       (should (equal '("wal-dotest.el" "wal-useme.el") (wal-pacify-check--get-package-files))))))
 
@@ -107,10 +107,10 @@
         (wal-pacify--debugs nil)
         (wal-pacify--infos nil))
 
-    (bydi-with-mock ((wal-pacify-check--get-package-files . (lambda () '(one two three)))
-                     (wal-pacify--collect . (lambda (_) "" (error "Oops")))
-                     wal-pacif--format
-                     kill-emacs)
+    (bydi ((:mock wal-pacify-check--get-package-files :return '(one two three))
+           (:mock wal-pacify--collect :with (lambda (_) (error "Oops")))
+           wal-pacif--format
+           kill-emacs)
 
       (wal-pacify-check)
 
@@ -122,11 +122,11 @@
         (wal-pacify--debugs '(one two))
         (wal-pacify--infos '(three four)))
 
-    (bydi-with-mock ((wal-pacify-check--get-package-files . (lambda () '(one two three)))
-                     wal-pacify--collect
-                     wal-pacify--format
-                     message
-                     kill-emacs)
+    (bydi ((:mock wal-pacify-check--get-package-files :return '(one two three))
+           wal-pacify--collect
+           wal-pacify--format
+           message
+           kill-emacs)
 
       (wal-pacify-check)
 
@@ -140,11 +140,11 @@
         (wal-pacify--debugs nil)
         (wal-pacify--infos nil))
 
-    (bydi-with-mock ((wal-pacify-check--get-package-files . (lambda () '(one two three)))
-                     wal-pacify--collect
-                     wal-pacify--format
-                     message
-                     kill-emacs)
+    (bydi ((:mock wal-pacify-check--get-package-files :return '(one two three))
+           wal-pacify--collect
+           wal-pacify--format
+           message
+           kill-emacs)
 
       (wal-pacify-check)
 

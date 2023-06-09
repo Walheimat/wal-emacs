@@ -9,7 +9,7 @@
 (require 'wal-terminal nil t)
 
 (ert-deftest test-wal-instead-truncate-buffer ()
-  (bydi-with-mock eshell-truncate-buffer
+  (bydi eshell-truncate-buffer
     (wal-instead-truncate-buffer)
 
     (bydi-was-called eshell-truncate-buffer)))

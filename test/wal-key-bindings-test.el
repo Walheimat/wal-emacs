@@ -9,7 +9,7 @@
 (require 'wal-key-bindings nil t)
 
 (ert-deftest test-wal-create-leader-sink ()
-  (bydi-with-mock general-define-key
+  (bydi general-define-key
 
     (bydi-match-expansion
      (wal-create-leader-sink tester-sink :definer tester :prefix "C-t")
@@ -41,7 +41,7 @@
 (ert-deftest test-wal-key-combo-for-leader ()
   (defvar wal-key-reach)
   (defvar wal-leaders)
-  (bydi-with-mock ((wal-prefix-user-key . (lambda (x) (concat "C-t " x))))
+  (bydi ((:mock wal-prefix-user-key :with (lambda (x) (concat "C-t " x))))
 
     (let ((wal-leaders '(("a" . hunk) ("b" . bunk) ("c" . trunk))))
 
@@ -51,9 +51,9 @@
       (should (equal (kbd "C-t b") (wal-key-combo-for-leader 'bunk :translate t))))))
 
 (ert-deftest test-wal-general-create-definer ()
-  (bydi-with-mock ((wal-key-combo-for-leader . (lambda (_) "C-t"))
-                   (eval-after-load . #'ignore)
-                   eval)
+  (bydi ((:mock wal-key-combo-for-leader :return "C-t")
+         (:ignore eval-after-load)
+         eval)
 
     (wal-general-create-definer 'tester)
 
@@ -61,7 +61,7 @@
     (bydi-was-called-nth-with eval (list '(wal-create-leader-sink tester-sink :definer tester :prefix "C-t")) 1)))
 
 (ert-deftest test-major? ()
-  (bydi-with-mock (message (wal-key-combo-for-leader . (lambda (&rest _) "C-t")))
+  (bydi (message (:mock wal-key-combo-for-leader :return "C-t"))
 
     (with-temp-buffer
       (text-mode)
@@ -73,8 +73,8 @@
 (ert-deftest test-wal-transient-grab ()
   (defvar transient-current-command)
   (let ((transient-current-command "test"))
-    (bydi-with-mock((transient-arg-value . #'concat)
-                    (transient-args . #'bydi-rf))
+    (bydi((:mock transient-arg-value :with concat)
+          (:mock transient-args :with bydi-rf))
 
       (should (string-equal "--testing=test" (wal-transient-grab "testing"))))))
 
@@ -95,8 +95,8 @@
     (should (equal 0.8 (wal-with-delayed-transient-popup (lambda () transient-show-popup))))))
 
 (ert-deftest test-that-key ()
-  (bydi-with-mock ((wal-prefix-user-key . (lambda (k) (concat "H-" k)))
-                   (wal-key-combo-for-leader . (lambda (_l _k k) (concat "M-" k))))
+  (bydi ((:mock wal-prefix-user-key :with (lambda (k) (concat "H-" k)))
+         (:mock wal-key-combo-for-leader :with (lambda (_l _k k) (concat "M-" k))))
 
     (bydi-match-expansion
      (that-key "Help me!" :key "h")

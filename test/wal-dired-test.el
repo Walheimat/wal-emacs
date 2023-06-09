@@ -9,9 +9,9 @@
 (require 'wal-dired nil t)
 
 (ert-deftest tes-wal-dired-from-home ()
-  (bydi-with-mock ((dired-read-dir-and-switches . (lambda (&rest _) (list  "/tmp")))
-                   (dired-noselect . (lambda (&rest _) "/tmp/test"))
-                   pop-to-buffer-same-window)
+  (bydi ((:mock dired-read-dir-and-switches :return (list  "/tmp"))
+         (:mock dired-noselect :return "/tmp/test")
+         pop-to-buffer-same-window)
 
     (call-interactively 'wal-dired-from-home)
 
@@ -19,7 +19,7 @@
     (bydi-was-called-with pop-to-buffer-same-window "/tmp/test")))
 
 (ert-deftest test-wal-image-dired ()
-  (bydi-with-mock image-dired
+  (bydi image-dired
 
     (wal-image-dired)
 

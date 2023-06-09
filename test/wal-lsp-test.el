@@ -12,21 +12,21 @@
   (let ((completion-category-defaults '((lsp-capf (styles other))))
         (completion-styles '(testful)))
 
-    (bydi-with-mock ((harpoon-slow-lsp-p . #'ignore))
+    (bydi ((:ignore harpoon-slow-lsp-p))
       (wal-lsp-completion)
 
       (should (equal '((lsp-capf (styles testful))) completion-category-defaults)))))
 
 (ert-deftest test-wal-first-prevent-adding-other-projects ()
-  (bydi-with-mock eval
+  (bydi eval
 
     (wal-first-prevent-adding-other-projects)
 
     (bydi-was-called-with eval (list '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))))
 
 (ert-deftest test-wal-dap-terminated ()
-  (bydi-with-mock (hydra-disable
-                   set-window-configuration)
+  (bydi (hydra-disable
+         set-window-configuration)
 
     (let ((wal-dap-before 'test))
       (wal-dap-terminated nil)
@@ -35,8 +35,8 @@
       (bydi-was-called set-window-configuration))))
 
 (ert-deftest test-wal-dap-session-created ()
-  (bydi-with-mock ((current-window-configuration . #'bydi-rt)
-                   delete-other-windows)
+  (bydi ((:mock current-window-configuration :with bydi-rt)
+         delete-other-windows)
 
     (wal-dap-session-created)
 
@@ -44,7 +44,7 @@
     (should (equal 'testing wal-dap-before))))
 
 (ert-deftest test-wal-dap-stopped ()
-  (bydi-with-mock dap-hydra
+  (bydi dap-hydra
 
     (wal-dap-stopped nil)
 
@@ -52,7 +52,7 @@
 
 (ert-deftest test-wal-ignore-if-no-lsp ()
   (defvar lsp-mode)
-  (bydi-with-mock (message)
+  (bydi (message)
     (let ((lsp-mode nil))
       (should-not (wal-ignore-if-no-lsp))
       (bydi-was-called-with message "Not in a LSP buffer")

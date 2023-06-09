@@ -11,12 +11,11 @@
 (ert-deftest test-wal-tab-bar-switch-to-buffer-tab ()
   (let ((found nil))
 
-    (bydi-with-mock ((tab-bar-get-buffer-tab . (lambda (_) found))
-                     tab-bar-switch-to-tab
-                     switch-to-buffer
-                     select-window
-                     get-buffer-window)
-
+    (bydi ((:mock tab-bar-get-buffer-tab :return found)
+           tab-bar-switch-to-tab
+           switch-to-buffer
+           select-window
+           get-buffer-window)
       (wal-tab-bar-switch-to-buffer-tab 'buffer)
 
       (bydi-was-called-with switch-to-buffer (list 'buffer))
