@@ -340,11 +340,11 @@
     (should (eq 'text wal-run-test--coverage-format))))
 
 (ert-deftest run-test-success-handler--checks-coverage ()
-  (bydi ((:mock bydi-calculate-coverage :return "999%")
+  (bydi ((:mock bydi-coverage--average :return "999")
          message)
     (funcall (wal-run-test--on-success))
 
-    (bydi-was-called bydi-calculate-coverage)))
+    (bydi-was-called bydi-coverage--average)))
 
 (ert-deftest run-test-failure-handler--messages ()
   (bydi (message)
