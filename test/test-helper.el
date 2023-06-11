@@ -2,13 +2,10 @@
 
 ;;; Commentary:
 ;;
-;; Helper macros and functions.
+;; Set up paths, stumping and report.
 
 ;;; Code:
 
-(require 'ert-x)
-(require 'compat nil t)
-(require 'undercover nil t)
 (require 'bydi nil t)
 
 (declare-function bydi-path-setup "ext:bydi.el")

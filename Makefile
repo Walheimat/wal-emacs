@@ -14,6 +14,7 @@ INIT=--eval "(wal-prelude-init \"$(EMACS_INIT_FILE)\" \"$(WAL_SOURCE_DIR)\" $(IN
 UPDATE_VERSION=./tools/update-version.sh
 
 TEST_ARGS=
+TEST_PRE_ARGS=
 
 # Run `make V=1 {cmd}` to print commands
 $(V).SILENT:
@@ -57,7 +58,7 @@ $(PACKAGE_MARKER):
 # Run tests using cask
 .PHONY: test
 test: build .cask
-	cask exec ert-runner $(TEST_ARGS)
+	$(TEST_PRE_ARGS) cask exec ert-runner $(TEST_ARGS)
 
 # Check the package files with flycheck
 .PHONY: pacify
