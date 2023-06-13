@@ -116,6 +116,15 @@ Testing macros.
 (use-package bydi)
 #+END_SRC
 
+** parallel
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+begin_src emacs-lisp
+(use-package parallel)
+#+end_src
+
 * Footer
 :PROPERTIES:
 :VISIBILITY: folded
@@ -124,17 +133,23 @@ Testing macros.
 #+BEGIN_SRC emacs-lisp
 (defvar harpoon--stumps nil)
 (defvar junk--stumps nil)
+(defvar parallel--stumps nil)
 
 ;; Guard against missing macros.
 (unless (featurep 'harpoon)
-  (cl-defmacro harpoon (name &rest _args)
+  (defmacro harpoon (name &rest _args)
     "Push message that mode NAME would have been skewered."
     `(push ',name harpoon--stumps)))
 
 (unless (featurep 'junk)
-  (cl-defmacro junk-expand (name &rest _args)
-    "Push message that mode NAME would have been skewered."
+  (defmacro junk-expand (name &rest _args)
+    "Push message that mode NAME would create junk."
     `(push ',name junk--stumps)))
+
+(unless (featurep 'parallel)
+  (defmacro parallel (a b)
+    "Push message that A and B would have been parallelized."
+    `(push ',(intern (concat (symbol-name a) (symbol-name b))) parallel--stumps)))
 
 (provide 'wal-bridge)
 
