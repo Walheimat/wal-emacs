@@ -2,6 +2,7 @@ PACKAGE_MARKER=$(HOME)/.emacs.d/elpa/whale-line/whale-line.el
 
 LOCAL_DEPS=build
 LOCAL_PHONY_DEPS=ensure-init $(PACKAGE_MARKER)
+CI_DEPS=build
 
 include dinghy/emacs-package.mk
 
