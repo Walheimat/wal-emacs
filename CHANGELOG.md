@@ -20,6 +20,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   `junk` package since this is now a feature of `junk` itself when
   `junk-use-package-setup` is called.
 
+
+### Removed
+
+- `consult-buffer-filter` is no longer customized.
+
 ## [v2.1.2]
 
 Far-away troubles.
