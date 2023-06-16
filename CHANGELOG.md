@@ -14,6 +14,12 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   `wal-project-create-command` are not marked as `safe-local-variable`
   so that they don't need to be added manually every time.
 
+### Changed
+
+- `wal-use-package-ensure-elpa` no longer checks if a package is a
+  `junk` package since this is now a feature of `junk` itself when
+  `junk-use-package-setup` is called.
+
 ## [v2.1.2]
 
 Far-away troubles.

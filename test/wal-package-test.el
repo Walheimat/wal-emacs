@@ -32,20 +32,20 @@
 (ert-deftest test-use-package-handler/:wal-ways ()
   (bydi ((:ignore package-installed-p)
          use-package-plist-maybe-put
-         use-package-process-keywords
-         (:sometimes junk--pack-p))
+         use-package-process-keywords)
 
-    (should (equal '((when nil name nil (nil :wal-ways nil)))
-                   (use-package-handler/:wal-ways 'name nil nil nil nil)))
-
-    (bydi-toggle-sometimes)
-    (bydi-clear-mocks)
     (defvar wal-minimal)
     (defvar wal-flag-mini)
     (defvar wal-minimal-exclude)
+
     (let ((wal-minimal nil)
           (wal-flag-mini t)
-          (wal-minimal-exclude '(name)))
+          (wal-minimal-exclude '()))
+
+      (should (equal '((when nil name nil (nil :wal-ways nil)))
+                     (use-package-handler/:wal-ways 'name nil nil nil nil)))
+
+      (setq wal-minimal-exclude '(name))
 
       (should (equal '((when t name nil (nil :wal-ways t)))
                      (use-package-handler/:wal-ways 'name nil nil nil nil))))))
@@ -79,7 +79,6 @@
 
   (let ((built-in nil)
         (installed nil)
-        (expansion nil)
         (package-archive-contents nil)
         (package-pinned-packages '((some-package . "test"))))
 
@@ -87,13 +86,12 @@
            use-package-pin-package
            (:mock package-installed-p :return installed)
            (:mock package-built-in-p .:return built-in)
-           (:mock junk--pack-p :return expansion)
            package-read-all-archive-contents
            package-refresh-contents
            package-install
            require)
 
-      (wal-use-package-ensure-elpa-if-not-built-in-or-expansion
+      (wal-use-package-ensure-elpa
        'some-package
        (list t)
        nil)
@@ -104,7 +102,7 @@
 
       (setq package-archive-contents '((some-package . 'content)))
 
-      (wal-use-package-ensure-elpa-if-not-built-in-or-expansion
+      (wal-use-package-ensure-elpa
        'some-package
        (list t)
        nil)
@@ -115,7 +113,7 @@
 
       (setq package-archive-contents nil)
 
-      (wal-use-package-ensure-elpa-if-not-built-in-or-expansion
+      (wal-use-package-ensure-elpa
        'some-package
        (list 'truthy)
        nil)
@@ -124,16 +122,7 @@
 
       (bydi-was-called-with package-install (list 'truthy))
 
-      (bydi-clear-mocks)
-
-      (setq expansion t)
-
-      (wal-use-package-ensure-elpa-if-not-built-in-or-expansion
-       'some-package
-       (list 'truthy)
-       nil)
-
-      (bydi-was-not-called package-install))))
+      (bydi-clear-mocks))))
 
 (ert-deftest test-wal-use-package-ensure-function--displays-warning-on-error ()
   (defvar package-archive-contents nil)
@@ -146,14 +135,13 @@
            use-package-pin-package
            (:ignore package-installed-p)
            (:ignore package-built-in-p)
-           (:ignore junk--pack-p)
            (:mock package-read-all-archive-contents :with (lambda () (error "Testing")))
            package-refresh-contents
            package-install
            require
            display-warning)
 
-      (wal-use-package-ensure-elpa-if-not-built-in-or-expansion
+      (wal-use-package-ensure-elpa
        'some-package
        (list t)
        nil)

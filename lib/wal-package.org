@@ -19,7 +19,6 @@
 (eval-when-compile
   (require 'wal-useful nil t))
 
-(declare-function junk--pack-p "wal-useful.el")
 (declare-function package-built-in-p "package.el")
 (declare-function package-read-all-archive-contents "package.el")
 (declare-function package--user-selected-p "package.el")
@@ -195,10 +194,8 @@ use the result further down the line."
   (declare-function use-package-plist-maybe-put "ext:use-package.el")
 
   (let* ((active (or pred
-                     (if (and (fboundp 'junk--pack-p) (junk--pack-p name))
-                         (not (null (package-installed-p name)))
-                       (or (not (or wal-minimal wal-flag-mini))
-                           (not (null (memq name wal-minimal-exclude)))))))
+                     (or (not (or wal-minimal wal-flag-mini))
+                         (not (null (memq name wal-minimal-exclude))))))
 
          (body (use-package-process-keywords
                  name
@@ -246,10 +243,8 @@ These either are incorrectly deemed not built-in by
 `package-built-in-p' or would be missed because they're site
 packages.")
 
-(defun wal-use-package-ensure-elpa-if-not-built-in-or-expansion (name args _state &optional _no_refresh)
-  "Do the same as `use-package-ensure-elpa' but ignore additional packages.
-
-These are built-in packages and expansion pack packages.
+(defun wal-use-package-ensure-elpa (name args _state &optional _no_refresh)
+  "Do the same as `use-package-ensure-elpa' but ignore built-in packages.
 
 NAME is the package name, ARGS the ensure keywords."
   (declare-function use-package-as-symbol "ext:use-package.el")
@@ -267,9 +262,7 @@ NAME is the package name, ARGS the ensure keywords."
           (use-package-pin-package (car package) (cdr package))
           (setq package (car package)))
         (unless (or (package-installed-p package)
-                    (memq package wal-package-ignored-packages)
-                    (when (fboundp 'junk--pack-p)
-                      (junk--pack-p package)))
+                    (memq package wal-package-ignored-packages))
           (condition-case-unless-debug err
               (progn
                 (when (assoc package (bound-and-true-p
@@ -290,7 +283,7 @@ NAME is the package name, ARGS the ensure keywords."
                               :error))))))))
 
 (wal-on-boot external
-  (setq use-package-ensure-function #'wal-use-package-ensure-elpa-if-not-built-in-or-expansion)
+  (setq use-package-ensure-function #'wal-use-package-ensure-elpa)
   (advice-add
    'use-package-handler/:hook :before-while
    #'wal-ignore-if-not-installed))
