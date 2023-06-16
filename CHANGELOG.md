@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- Default value variables created by macro
+  `wal-project-create-command` are not marked as `safe-local-variable`
+  so that they don't need to be added manually every time.
+
 ## [v2.1.2]
 
 Far-away troubles.
