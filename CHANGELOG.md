@@ -19,7 +19,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `wal-use-package-ensure-elpa` no longer checks if a package is a
   `junk` package since this is now a feature of `junk` itself when
   `junk-use-package-setup` is called.
-
+- Switched to using `dinghy`.
 
 ### Removed
 

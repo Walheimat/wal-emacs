@@ -1,43 +1,19 @@
-EMACS?=emacs
-WAL_SOURCE_DIR?=$(CURDIR)
-EMACS_INIT_FILE?=$(HOME)/.emacs.d/init.el
 PACKAGE_MARKER=$(HOME)/.emacs.d/elpa/whale-line/whale-line.el
+
+LOCAL_DEPS=build
+LOCAL_PHONY_DEPS=ensure-init $(PACKAGE_MARKER)
+
+include dinghy/emacs-package.mk
+
+EMACS_INIT_FILE?=$(HOME)/.emacs.d/init.el
 
 WITH_PRELUDE=$(EMACS) --batch -l ./wal-prelude.el
 
 BOOTSTRAP_MODE=plain
-BOOTSTRAP=--eval "(wal-prelude-bootstrap \"$(WAL_SOURCE_DIR)\" '$(BOOTSTRAP_MODE))"
+BOOTSTRAP=--eval "(wal-prelude-bootstrap \"$(CURDIR)\" '$(BOOTSTRAP_MODE))"
 
 INIT_CLEAR=nil
-INIT=--eval "(wal-prelude-init \"$(EMACS_INIT_FILE)\" \"$(WAL_SOURCE_DIR)\" $(INIT_CLEAR))"
-
-UPDATE_VERSION=./tools/update-version.sh
-
-TEST_ARGS=
-TEST_PRE_ARGS=
-
-# Run `make V=1 {cmd}` to print commands
-$(V).SILENT:
-
-# -- Default goal
-
-ifdef CI
-install: ci
-else
-install: local
-endif
-
-# Do everything necessary for a local installation
-.PHONY: local
-local: build ensure-init $(PACKAGE_MARKER)
-
-# Do everything necessary for a installation in CI environment
-.PHONY: ci
-ci: .cask
-
-# Install Cask dependencies
-.cask: build
-	cask install
+INIT=--eval "(wal-prelude-init \"$(EMACS_INIT_FILE)\" \"$(CURDIR)\" $(INIT_CLEAR))"
 
 # Tangle all library files
 build:
@@ -55,11 +31,6 @@ $(PACKAGE_MARKER):
 
 # -- Checks
 
-# Run tests using cask
-.PHONY: test
-test: build .cask
-	$(TEST_PRE_ARGS) cask exec ert-runner $(TEST_ARGS)
-
 # Check the package files with flycheck
 .PHONY: pacify
 pacify: build
@@ -70,13 +41,6 @@ pacify: build
 cold-boot: BOOTSTRAP_MODE=cold
 cold-boot:
 	$(WITH_PRELUDE) $(BOOTSTRAP)
-
-# -- Utility
-
-.PHONY: update-version
-update-version:
-	$(UPDATE_VERSION) Cask
-	$(UPDATE_VERSION) lib/wal-config.org
 
 # -- Commit linting setup
 
@@ -90,11 +54,6 @@ node_modules:
 	npx husky install
 
 # -- Cleaning
-
-.PHONY: clean
-clean:
-	rm -rf build
-	rm -rf .cask
 
 .PHONY: clobber
 clobber: clean
