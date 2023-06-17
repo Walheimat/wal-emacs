@@ -73,4 +73,4 @@ uninstall:
 
 .PHONY: update-more
 update-more:
-	$(UPDATE_VERSION) lib/wal-emacs.org
+	$(UPDATE_VERSION) lib/wal-config.org
