@@ -11,7 +11,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - Default value variables created by macro
-  `wal-project-create-command` are not marked as `safe-local-variable`
+  `wal-project-create-command` are now marked as `safe-local-variable`
   so that they don't need to be added manually every time.
 
 ### Changed
@@ -20,6 +20,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   `junk` package since this is now a feature of `junk` itself when
   `junk-use-package-setup` is called.
 - Switched to using `dinghy`.
+- `wal-settings` now considers `find-sibling-rules` a safe variable.
 
 ### Removed
 
