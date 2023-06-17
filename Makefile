@@ -4,7 +4,7 @@ LOCAL_DEPS=build
 LOCAL_PHONY_DEPS=ensure-init $(PACKAGE_MARKER)
 CASK_DEPS=build
 
-UPDATE_VERSION_DEPS=update-config
+UPDATE_VERSION_DEPS=update-more
 
 include dinghy/emacs-package.mk
 
