@@ -4,6 +4,8 @@ LOCAL_DEPS=build
 LOCAL_PHONY_DEPS=ensure-init $(PACKAGE_MARKER)
 CASK_DEPS=build
 
+UPDATE_VERSION_DEPS=update-config
+
 include dinghy/emacs-package.mk
 
 EMACS_INIT_FILE?=$(HOME)/.emacs.d/init.el
@@ -66,3 +68,9 @@ clobber: clean
 uninstall: INIT_CLEAR=t
 uninstall:
 	$(WITH_PRELUDE) $(INIT)
+
+# -- Updating
+
+.PHONY: update-more
+update-more:
+	$(UPDATE_VERSION) lib/wal-emacs.org
