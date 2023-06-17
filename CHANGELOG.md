@@ -25,6 +25,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `consult-buffer-filter` is no longer customized.
 
+### Fixed
+
+- `wal-project-*` commands are only added to history if not present.
+
 ## [v2.1.2]
 
 Far-away troubles.

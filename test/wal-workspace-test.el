@@ -63,6 +63,23 @@
       (should (string-equal "test" (ring-ref (gethash "/tmp/cmd" (plist-get wal-project-commands 'test)) 1)))
       (should (string-equal "best" (ring-ref (gethash "/tmp/cmd" (plist-get wal-project-commands 'test)) 0))))))
 
+(ert-deftest wal-project-command--only-inserted-once ()
+  (let ((wal-project-commands (list 'test (make-hash-table :test 'equal)))
+        (wal-project-command-history nil)
+        (entered-command "test"))
+
+    (bydi ((:always project-current)
+           (:mock project-root :return "/tmp/cmd")
+           (:mock project-name :return "Test Project")
+           (:mock project--value-in-dir :return wal-project-test-default-cmd)
+           compile
+           (:mock read-shell-command :return entered-command))
+
+      (wal-project-command 'test)
+      (should (eq 1 (ring-length (gethash "/tmp/cmd" (plist-get wal-project-commands 'test)))))
+      (wal-project-command 'test)
+      (should (eq 1 (ring-length (gethash "/tmp/cmd" (plist-get wal-project-commands 'test))))))))
+
 (ert-deftest test-wal-project-create-command ()
   (bydi ((:mock make-hash-table :return 'hash-table))
     (bydi-match-expansion

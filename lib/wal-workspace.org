@@ -111,9 +111,10 @@ Each command will be stored in a per-project history."
          (default-directory (project-root current))
          (compilation-buffer-name-function 'wal-project-command--buffer-name))
 
-    ;; Store the entered command.
-    (ring-insert history command)
-    (puthash root history table)
+    ;; Store the entered command if not yet/no longer present.
+    (unless (ring-member history command)
+      (ring-insert history command)
+      (puthash root history table))
 
     (compile command)))
 
