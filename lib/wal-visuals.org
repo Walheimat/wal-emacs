@@ -24,6 +24,7 @@ I like nice-looking things.
 
 (declare-function dashboard-insert-startupify-lists "ext:dashboard.el")
 (declare-function ligature-set-ligatures "ext:ligature.el")
+(declare-function visual-fill-column-mode "ext:visual-fill-column.el")
 (declare-function wal-biased-random "wal-useful.el")
 (declare-function wal-modern-emacs-p "wal-useful.el")
 
@@ -382,11 +383,23 @@ Show colors colorfully.
 
 Break lines visually at fill column.
 
+*** Utility
+
+#+begin_src emacs-lisp
+(defun wal-visual-fill-column-mode ()
+  "Turn `visual-fill-column-mode' on or off."
+  (if visual-line-mode
+      (visual-fill-column-mode +1)
+    (visual-fill-column-mode -1)))
+#+end_src
+
+*** Configuration
+
 #+begin_src emacs-lisp
 (use-package visual-fill-column
   :wal-ways nil
 
-  :hook (visual-line-mode . visual-fill-column-mode)
+  :hook (visual-line-mode . wal-visual-fill-column-mode)
 
   :delight " vfc")
 #+end_src

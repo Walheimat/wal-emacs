@@ -158,6 +158,18 @@
 
       (should (string= "Failed to load theme: Unable to find theme file for ‘non-existence’\n" messages)))))
 
+(ert-deftest wal-visual-fill-column-mode--toggles ()
+  (bydi (visual-fill-column-mode)
+    (with-temp-buffer
+      (wal-visual-fill-column-mode)
+      (bydi-was-called-with visual-fill-column-mode '(-1))
+
+      (setq visual-line-mode t)
+      (bydi-clear-mocks)
+
+      (wal-visual-fill-column-mode)
+      (bydi-was-called-with visual-fill-column-mode '(+1)))))
+
 (ert-deftest test-wal-with-recent-files-excluded ()
   (defvar recentf-exclude nil)
 
