@@ -294,16 +294,25 @@ Un-dedicates if already dedicated."
 (defvar wal-supernova--markers '("\\`\\*" "\\` " "magit")
   "Markers used to find target buffers.")
 
+(defun wal-supernova--matches (buffer)
+  "Check if BUFFER matches a marker."
+  (let* ((reg (mapconcat (lambda (it) (concat "\\(?:" it "\\)")) wal-supernova--markers "\\|")))
+
+    (string-match-p reg (buffer-name buffer))))
+
+(defun wal-supernova--target-exists-p ()
+  "Check if any target exists."
+  (let ((buffers (mapcar #'window-buffer (window-list-1))))
+
+    (seq-find #'wal-supernova--matches buffers)))
+
 (defun wal-supernova ()
   "Quit windows with star buffers."
   (interactive)
 
-  (let* ((windows (window-list-1))
-         (reg (mapconcat (lambda (it) (concat "\\(?:" it "\\)")) wal-supernova--markers "\\|"))
-         (check (lambda (name) (string-match-p reg name))))
-
-    (dolist (window windows)
-      (when (funcall check (buffer-name (window-buffer window)))
+  (while (wal-supernova--target-exists-p)
+    (dolist (window (window-list-1))
+      (when (wal-supernova--matches (window-buffer window))
         (quit-window nil window)))))
 #+END_SRC
 

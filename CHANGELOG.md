@@ -15,6 +15,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `org-mode` no longer runs `auto-fill-mode`. Its `major` now binds
   `visual-line-mode`. Package`visual-fill-column` is now explicitly
   declared as a package and runs when `visual-line-mode` is run.
+- Command `wal-supernova` now quits windows until no target remains.
 
 ## [v2.1.3]
 
