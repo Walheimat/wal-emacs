@@ -12,9 +12,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Function `wal-insert-after` now allows passing optional fourth
   argument to quietly ignore a no-op instead of raising a user error.
-- `org-mode` now runs `visual-line-mode` instead of `auto-fill-mode`.
-  `visual-fill-column` is now explicitly declared as a package and
-  runs when `visual-line-mode` is run.
+- `org-mode` no longer runs `auto-fill-mode`. Its `major` now binds
+  `visual-line-mode`. Package`visual-fill-column` is now explicitly
+  declared as a package and runs when `visual-line-mode` is run.
 
 ## [v2.1.3]
 
