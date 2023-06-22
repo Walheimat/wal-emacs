@@ -8,6 +8,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Command `wal-project-find-in-here` to find a project file in the
+  `default-directory`.
+
 ### Changed
 
 - Function `wal-insert-after` now allows passing optional fourth

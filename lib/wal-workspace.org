@@ -26,6 +26,7 @@ Keep order.
 (declare-function consult--buffer-query "ext:consult.el")
 (declare-function magit-status "ext:magit.el")
 (declare-function project-buffers "ext:project.el")
+(declare-function project-find-file-in "ext:project.el")
 (declare-function project-name "ext:project.el")
 (declare-function project-root "ext:project.el")
 (declare-function project--value-in-dir "ext:project.el")
@@ -212,6 +213,16 @@ set to filter by project buffers."
               (root (project-root project))
               (root-buffer (find-file-noselect root)))
     (buffer-local-value symbol root-buffer)))
+
+(defun wal-project-find-in-here (&optional include-all)
+  "Find a project file in the current directory.
+
+If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
+  (interactive "P")
+
+  (when-let ((project (project-current nil)))
+
+    (project-find-file-in nil (list default-directory) project include-all)))
 #+END_SRC
 
 *** Configuration
@@ -268,7 +279,8 @@ set to filter by project buffers."
 
   :bind
   (:map wal-project-prefix-map
-   ("C-p" . wal-project-switch-to-parent-project))
+   ("C-p" . wal-project-switch-to-parent-project)
+   ("C-f" . wal-project-find-in-here))
 
   :wal-bind
   (("h" . project-find-file)))

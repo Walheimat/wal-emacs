@@ -166,6 +166,16 @@
 
       (should (equal (wal-project-local-value 'major-mode) 'text-mode)))))
 
+(ert-deftest wal-project-find-in-here ()
+  (let ((default-directory "/tmp/test"))
+
+    (bydi ((:mock project-current :return 'project)
+           project-find-file-in)
+
+      (funcall-interactively #'wal-project-find-in-here t)
+
+      (bydi-was-called-with project-find-file-in '(nil ("/tmp/test") project t)))))
+
 ;;; wal-workspace-test.el ends here
 
 ;; Local Variables:
