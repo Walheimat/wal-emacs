@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Removed
+
+- `wal-major-delight` and the silly names for certain major modes that
+  were ignored in `treesit` variants.
+
 ## [v2.1.4]
 
 Binky-brained.
