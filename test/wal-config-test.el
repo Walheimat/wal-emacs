@@ -260,9 +260,9 @@
            (:mock wal-make--on-success :return 'success)
            (:mock wal-make--on-failure :return 'failure))
 
-      (wal-make "cold-boot")
+      (wal-make "cold-boot" nil "cat out.txt")
 
-      (bydi-was-called-with wal-async-process '("cd /tmp/default && make cold-boot"
+      (bydi-was-called-with wal-async-process '("cd /tmp/default && make cold-boot && cat out.txt"
                                                 success
                                                 failure
                                                 t)))))
