@@ -277,7 +277,7 @@
 
       (wal-run-test)
 
-      (bydi-was-called-with wal-async-process '("cd /tmp/default && make test && cat coverage/results.txt"
+      (bydi-was-called-with wal-async-process '("cd /tmp/default && make test"
                                                 success
                                                 failure
                                                 t)))))
