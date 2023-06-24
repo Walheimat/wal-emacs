@@ -395,13 +395,11 @@ If called with numeric prefix `5', set variable
     "Run `org-roam' commands."
     [["Capture"
       ("c" "roam" org-roam-capture)
-      ("C" "default" org-capture)
       ("t" "today" org-roam-dailies-capture-today)]
      ["Find"
       ("f" "node" org-roam-node-find)
       ("d" "daily" org-roam-dailies-goto-date)
-      ("D" "daily directory" org-roam-dailies-find-directory)
-      ("p" "project tasks" wal-org-capture-switch-to-project-tasks)]
+      ("D" "daily directory" org-roam-dailies-find-directory)]
      ["Actions"
       ("b" "toggle roam buffer" org-roam-buffer-toggle)
       ("w" "roam refile" org-roam-refile
@@ -632,6 +630,9 @@ Capture templates.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-capture
+  :init
+  (parallel org-capture wal-org-capture-switch-to-project-tasks)
+
   :custom
   (org-capture-templates
    `(("c" "current task" plain
@@ -646,6 +647,9 @@ Capture templates.
       "* TODO %?\n\n%F\n\n%i"
       :empty-lines-before 1)))
   (org-capture-bookmark nil) ; Prevents countless edit buffers since we annotate bookmarks.
+
+  :bind
+  (("C-c c" . org-capture||wal-org-capture-switch-to-project-tasks))
 
   :delight " cap")
 #+END_SRC
