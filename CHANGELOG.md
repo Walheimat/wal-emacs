@@ -25,6 +25,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Macro `wal-project-create-command` now uses `cl-defmacro` and has
   optional keys `key` (to not default it) and `default` to set an
   initial command.
+- `org-capture` and custom `wal-org-capture-switch-to-project-task`
+  are no longer part of the `transient` for `org-roam`. They're not
+  bound using a `parallel` to `C-c c`.
+- `smerge` now uses `C-c g` and `recompile` uses `C-c r`.
 
 ### Removed
 
