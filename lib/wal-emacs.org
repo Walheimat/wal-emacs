@@ -38,46 +38,7 @@ external ones.
   (wdb-nearby 'debug-mode))
 #+END_SRC
 
-* Improved Editing
-
-Sometimes I need to see whitespace chars.
-
-** text-mode
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-No double spaces in sentences.
-
-*** Utility
-
-#+BEGIN_SRC emacs-lisp
-(defun wal-text-mode-flyspell-commit-messages ()
-  "Activate `flyspell-mode' when editing commit messages."
-  (when (string-match "COMMIT_EDITMSG" (buffer-name))
-    (flyspell-mode)))
-
-(defun wal-text-mode-flycheck-on-save ()
-  "Set up `flycheck-mode' to check syntax only on save."
-  (when (fboundp 'flycheck-mode)
-    (defvar flycheck-check-syntax-automatically)
-    (setq-local flycheck-check-syntax-automatically '(save))
-    (flycheck-mode)))
-#+END_SRC
-
-*** Configuration
-
-#+BEGIN_SRC emacs-lisp
-(use-package text-mode
-  :init
-  (harpoon text-mode
-    :functions
-    (wal-text-mode-flyspell-commit-messages
-     wal-text-mode-flycheck-on-save))
-
-  :custom
-  (sentence-end-double-space nil))
-#+END_SRC
+* Packages
 
 ** abbrev
 :PROPERTIES:
@@ -93,125 +54,6 @@ Automatic quick expansion.
 
   :delight " abb")
 #+END_SRC
-
-** follow
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Follow me around.
-
-#+begin_src emacs-lisp
-(use-package follow
-  :custom
-  (follow-mode-line-text " flw"))
-#+end_src
-
-** diff-mode
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Effing diffing.
-
-#+BEGIN_SRC emacs-lisp
-(use-package diff-mode
-  :bind
-  ;; Remove `diff-goto-source'.
-  (:map diff-mode-shared-map
-   ("o" . nil)))
-#+END_SRC
-
-** kmacro
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Some people need macros, okay?
-
-*** Utility
-
-#+BEGIN_SRC emacs-lisp
-(defun wal-kmacro (arg)
-  "Toggle kmacro recording with ARG."
-  (interactive "P")
-
-  (cond
-   (defining-kbd-macro (kmacro-end-macro arg))
-   (t (kmacro-start-macro arg))))
-#+END_SRC
-
-*** Configuration
-
-#+BEGIN_SRC emacs-lisp
-(use-package kmacro
-  :general
-  (editor "k" 'wal-kmacro))
-#+END_SRC
-
-** register
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-No offender.
-
-*** Utility
-
-#+BEGIN_SRC emacs-lisp
-(defun wal-clear-registers ()
-  "Clear all registers."
-  (interactive)
-
-  (setq register-alist nil))
-#+END_SRC
-
-*** Configuration
-
-#+BEGIN_SRC emacs-lisp
-(use-package register
-  :custom
-  (register-preview-delay 0.8)
-
-  :bind
-  (:map wal-triple-minus-map
-   ("r" . wal-clear-registers)))
-#+END_SRC
-
-** pulse
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Highlight lines.
-
-*** Utility
-
-#+BEGIN_SRC emacs-lisp
-(defun wal-lighthouse ()
-  "Do a heavy `pulse-momentary-highlight-one-line'.
-
-This just means increasing duration, delay, size and brightness."
-  (interactive)
-
-  (defvar pulse-iterations)
-  (let ((pulse-iterations 30))
-
-    (pulse-momentary-highlight-one-line (point) 'cursor)))
-#+END_SRC
-
-*** Configuration
-
-#+BEGIN_SRC emacs-lisp
-(use-package pulse
-  :bind
-  ("C-c <SPC>" . wal-lighthouse))
-#+END_SRC
-
-* Dealing With Emacs
-
-Allow restoring window configurations when Emacs decided they should
-be gone.
 
 ** async
 :PROPERTIES:
@@ -230,80 +72,6 @@ Execute IO actions asynchronously.
 
   :functions (dired-async-mode))
 #+END_SRC
-
-** shell
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-I'd like to kill shells without a process quickly.
-
-#+BEGIN_SRC emacs-lisp
-(use-package shell
-  :general
-  (general-define-key
-   :keymaps '(shell-mode-map comint-mode-map)
-   :predicate '(wal-dead-shell-p)
-   "k" 'kill-buffer-and-window))
-#+END_SRC
-
-** compile
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Show compilations in a pop-up and scroll output.
-
-#+BEGIN_SRC emacs-lisp
-(use-package compile
-  :hook
-  (compilation-filter . ansi-color-compilation-filter)
-
-  :config
-  (wdb-faraway "\\*compilation")
-
-  :custom
-  (compilation-scroll-output t)
-
-  :bind
-  (("C-c r" . recompile)))
-#+END_SRC
-
-* Help
-
-** helpful
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Let's try to be even more =helpful=.
-
-#+BEGIN_SRC emacs-lisp
-(use-package helpful
-  :config
-  (wdb-faraway 'helpful-mode)
-
-  :custom
-  (helpful-max-buffers 3)
-
-  :bind
-  (([remap describe-command] . helpful-command)
-   ([remap describe-function] . helpful-function)
-   ([remap describe-key] . helpful-key)
-   ([remap describe-variable] . helpful-variable)
-   ([remap describe-symbol] . helpful-symbol)
-
-   :map help-map
-   ("M" . helpful-macro)
-   ("C-x" . helpful-kill-buffers)
-
-   :map helpful-mode-map
-   ("k" . kill-buffer-and-window))
-
-  :defines (helpful-mode-map))
-#+END_SRC
-
-* Look-Up
 
 ** bookmark
 :PROPERTIES:
@@ -346,7 +114,42 @@ Quick calculations.
   ("C-c q" . quick-calc))
 #+END_SRC
 
-* Additional Info Display
+** compile
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Show compilations in a pop-up and scroll output.
+
+#+BEGIN_SRC emacs-lisp
+(use-package compile
+  :hook
+  (compilation-filter . ansi-color-compilation-filter)
+
+  :config
+  (wdb-faraway "\\*compilation")
+
+  :custom
+  (compilation-scroll-output t)
+
+  :bind
+  (("C-c r" . recompile)))
+#+END_SRC
+
+** diff-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Effing diffing.
+
+#+BEGIN_SRC emacs-lisp
+(use-package diff-mode
+  :bind
+  ;; Remove `diff-goto-source'.
+  (:map diff-mode-shared-map
+   ("o" . nil)))
+#+END_SRC
 
 ** eldoc
 :PROPERTIES:
@@ -365,6 +168,51 @@ Contextual information. Package =lsp-mode= use =eldoc= extensively.
   :delight " eld")
 #+END_SRC
 
+** follow
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Follow me around.
+
+#+begin_src emacs-lisp
+(use-package follow
+  :custom
+  (follow-mode-line-text " flw"))
+#+end_src
+
+** helpful
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Let's try to be even more =helpful=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package helpful
+  :config
+  (wdb-faraway 'helpful-mode)
+
+  :custom
+  (helpful-max-buffers 3)
+
+  :bind
+  (([remap describe-command] . helpful-command)
+   ([remap describe-function] . helpful-function)
+   ([remap describe-key] . helpful-key)
+   ([remap describe-variable] . helpful-variable)
+   ([remap describe-symbol] . helpful-symbol)
+
+   :map help-map
+   ("M" . helpful-macro)
+   ("C-x" . helpful-kill-buffers)
+
+   :map helpful-mode-map
+   ("k" . kill-buffer-and-window))
+
+  :defines (helpful-mode-map))
+#+END_SRC
+
 ** hl-line
 :PROPERTIES:
 :UNNUMBERED: t
@@ -378,6 +226,145 @@ Highlighting the current line.
   ((tablist-minor-mode
     tabulated-list-mode
     dired-mode) . hl-line-mode))
+#+END_SRC
+
+** kmacro
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Some people need macros, okay?
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal-kmacro (arg)
+  "Toggle kmacro recording with ARG."
+  (interactive "P")
+
+  (cond
+   (defining-kbd-macro (kmacro-end-macro arg))
+   (t (kmacro-start-macro arg))))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package kmacro
+  :general
+  (editor "k" 'wal-kmacro))
+#+END_SRC
+
+** pulse
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Highlight lines.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal-lighthouse ()
+  "Do a heavy `pulse-momentary-highlight-one-line'.
+
+This just means increasing duration, delay, size and brightness."
+  (interactive)
+
+  (defvar pulse-iterations)
+  (let ((pulse-iterations 30))
+
+    (pulse-momentary-highlight-one-line (point) 'cursor)))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package pulse
+  :bind
+  ("C-c <SPC>" . wal-lighthouse))
+#+END_SRC
+
+** register
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+No offender.
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal-clear-registers ()
+  "Clear all registers."
+  (interactive)
+
+  (setq register-alist nil))
+#+END_SRC
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package register
+  :custom
+  (register-preview-delay 0.8)
+
+  :bind
+  (:map wal-triple-minus-map
+   ("r" . wal-clear-registers)))
+#+END_SRC
+
+** shell
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+I'd like to kill shells without a process quickly.
+
+#+BEGIN_SRC emacs-lisp
+(use-package shell
+  :general
+  (general-define-key
+   :keymaps '(shell-mode-map comint-mode-map)
+   :predicate '(wal-dead-shell-p)
+   "k" 'kill-buffer-and-window))
+#+END_SRC
+
+** text-mode
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+No double spaces in sentences.
+
+*** Configuration
+
+#+BEGIN_SRC emacs-lisp
+(use-package text-mode
+  :init
+  (harpoon text-mode
+    :functions
+    (wal-text-mode-flyspell-commit-messages
+     wal-text-mode-flycheck-on-save))
+
+  :custom
+  (sentence-end-double-space nil))
+#+END_SRC
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal-text-mode-flyspell-commit-messages ()
+  "Activate `flyspell-mode' when editing commit messages."
+  (when (string-match "COMMIT_EDITMSG" (buffer-name))
+    (flyspell-mode)))
+
+(defun wal-text-mode-flycheck-on-save ()
+  "Set up `flycheck-mode' to check syntax only on save."
+  (when (fboundp 'flycheck-mode)
+    (defvar flycheck-check-syntax-automatically)
+    (setq-local flycheck-check-syntax-automatically '(save))
+    (flycheck-mode)))
 #+END_SRC
 
 * Footer
