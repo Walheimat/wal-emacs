@@ -22,6 +22,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   declared as a package and runs when `visual-line-mode` is run.
 - Command `wal-supernova` now quits windows until no target remains.
 
+### Removed
+
+- Helper package `wal-pacify` was moved to `dinghy`.
+
 ## [v2.1.3]
 
 Prism break.

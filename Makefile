@@ -3,6 +3,8 @@ PACKAGE_MARKER=$(HOME)/.emacs.d/elpa/whale-line/whale-line.el
 LOCAL_DEPS=build
 LOCAL_PHONY_DEPS=ensure-init $(PACKAGE_MARKER)
 CASK_DEPS=build
+PACIFY_DEPS=build
+PACIFY_PRE_EXEC=--eval "(setq dinghy-pacify-not-testable \"movement\\\|fix\\\|settings\")"
 
 UPDATE_VERSION_DEPS=update-more
 
@@ -33,11 +35,6 @@ $(PACKAGE_MARKER):
 	$(WITH_PRELUDE) $(BOOTSTRAP)
 
 # -- Checks
-
-# Check the package files with flycheck
-.PHONY: pacify
-pacify: build
-	$(WITH_PRELUDE) $(BOOTSTRAP) -l ./tools/wal-pacify.el -f wal-pacify-check
 
 # Simulate a cold boot
 .PHONY: cold-boot
