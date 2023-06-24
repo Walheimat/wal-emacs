@@ -122,17 +122,20 @@ Each command will be stored in a per-project history."
 
 (defvar wal-project-prefix-map (make-sparse-keymap))
 
-(defmacro wal-project-create-command (name &optional key)
+(cl-defmacro wal-project-create-command (name &key key default)
   "Create command NAME.
 
 The command will be bound using `ambassador' using its initial
-unles KEY is provided."
+unless KEY is provided. If DEFAULT is non-nil, set the initial
+value using it."
+  (declare (indent defun))
+
   (let ((function-name (intern (format "wal-project-%s" name)))
         (variable-name (intern (format "wal-project-%s-default-cmd" name)))
         (key (or key (substring (symbol-name name) 0 1))))
 
     `(progn
-       (defvar-local ,variable-name nil)
+       (defvar-local ,variable-name ,default)
 
        (defun ,function-name ()
          ,(concat (capitalize (symbol-name name)) " the current project.")
@@ -241,12 +244,15 @@ If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
   :config
   (wdb-faraway "\\*project")
 
-  (wal-project-create-command build)
-  (wal-project-create-command test)
+  (wal-project-create-command build :default "make")
+  (wal-project-create-command test :default "make test")
   (wal-project-create-command install)
   (wal-project-create-command lint)
   (wal-project-create-command publish)
-  (wal-project-create-command clean)
+  (wal-project-create-command clean :default "make clean")
+  (wal-project-create-command coverage
+    :key "o"
+    :default "make coverage")
 
   :custom
   (project-vc-extra-root-markers '("pom.xml"

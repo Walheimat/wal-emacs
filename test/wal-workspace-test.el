@@ -91,6 +91,16 @@
                (wal-project-command 'test))
         (setq wal-project-commands (plist-put wal-project-commands 'test hash-table))
         (bind-key "t" 'wal-project-test wal-project-prefix-map)
+        (put 'wal-project-test-default-cmd 'safe-local-variable #'stringp)))
+    (bydi-match-expansion
+     (wal-project-create-command test :key "o" :default "make all")
+     '(progn
+        (defvar-local wal-project-test-default-cmd "make all")
+        (defun wal-project-test nil "Test the current project."
+               (interactive)
+               (wal-project-command 'test))
+        (setq wal-project-commands (plist-put wal-project-commands 'test hash-table))
+        (bind-key "o" 'wal-project-test wal-project-prefix-map)
         (put 'wal-project-test-default-cmd 'safe-local-variable #'stringp)))))
 
 (ert-deftest test-wal-project-select-command ()

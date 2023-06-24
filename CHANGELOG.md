@@ -12,6 +12,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Command `wal-project-find-in-here` to find a project file in the
   `default-directory`.
+- New project command `coverage` defaulting to `make coverage`.
 
 ### Changed
 
@@ -21,6 +22,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   `visual-line-mode`. Package`visual-fill-column` is now explicitly
   declared as a package and runs when `visual-line-mode` is run.
 - Command `wal-supernova` now quits windows until no target remains.
+- Macro `wal-project-create-command` now uses `cl-defmacro` and has
+  optional keys `key` (to not default it) and `default` to set an
+  initial command.
 
 ### Removed
 
