@@ -22,10 +22,17 @@
       (should-error (wal-project-switch-to-parent-project) :type 'user-error))))
 
 (ert-deftest test-wal-with-project-bounded-compilation ()
-  (bydi ((:ignore project-current )
+  (bydi ((:always project-current)
          (:mock project-buffers :with buffer-list))
 
     (let ((fun (lambda () (funcall compilation-save-buffers-predicate))))
+
+      (should (wal-with-project-bounded-compilation fun)))))
+
+(ert-deftest wal-with-project-bounded-compilation--ignored-outside-project ()
+  (bydi ((:ignore project-current))
+
+    (let ((fun #'always))
 
       (should (wal-with-project-bounded-compilation fun)))))
 

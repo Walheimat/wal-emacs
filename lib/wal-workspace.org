@@ -164,10 +164,11 @@ value using it."
 
 Makes sure this is done with `compilation-save-buffers-predicate'
 set to filter by project buffers."
-  (let* ((buffers (project-buffers (project-current)))
-         (pred (lambda () (memq (current-buffer) buffers)))
-         (compilation-save-buffers-predicate pred))
-
+  (if-let* ((project (project-current nil))
+            (buffers (project-buffers project))
+            (pred (lambda () (memq (current-buffer) buffers)))
+            (compilation-save-buffers-predicate pred))
+      (apply fun args)
     (apply fun args)))
 
 (defun wal-project-consult-buffer ()
