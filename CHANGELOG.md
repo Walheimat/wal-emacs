@@ -8,10 +8,20 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Subsections in `wal-emacs` were removed.
+
 ### Removed
 
 - `wal-major-delight` and the silly names for certain major modes that
   were ignored in `treesit` variants.
+
+### Fixed
+
+- The advice added to `recompile` for `wal-project` commands no longer
+  breaks its functionality outside of projects (notably affecting
+  `rg`).
 
 ## [v2.1.4]
 
