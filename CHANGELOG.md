@@ -13,6 +13,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Subsections in `wal-emacs` were removed.
 - `search-whitespace-regexp` was set to allow for matching any char
   with space.
+- `consult-imenu` and `consult-outline` are now bound in `consult`
+  transient.
 
 ### Removed
 
