@@ -15,6 +15,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   with space.
 - `consult-imenu` and `consult-outline` are now bound in `consult`
   transient.
+- `dired-kill-when-opening-new-dired-buffer` is no longer enabled.
 
 ### Removed
 
