@@ -21,6 +21,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `wal-major-delight` and the silly names for certain major modes that
   were ignored in `treesit` variants.
+- Custom bindings for `jinx` were removed.
 
 ### Fixed
 
