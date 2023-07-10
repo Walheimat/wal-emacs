@@ -46,29 +46,6 @@
 (ert-deftest test-wal-otherwise-return-argument ()
   (should (equal 'testing (wal-otherwise-return-argument 'testing))))
 
-(ert-deftest test-wal-prettier-refresh ()
-  (defvar prettier-processes)
-  (let ((wal-prettier-timer t))
-
-    (should-error (wal-prettier-refresh) :type 'user-error))
-
-  (let ((prettier-processes nil))
-
-    (bydi (prettier--quit-all-processes
-           prettier-prettify
-           run-with-timer
-           (:mock hash-table-count :return 0)
-           cancel-timer)
-
-      (wal-prettier-refresh)
-
-      (let ((fun (nth 2 wal-prettier-timer)))
-
-        (funcall fun)
-
-        (bydi-was-called cancel-timer)
-        (bydi-was-called prettier-prettify)))))
-
 (ert-deftest test-wal-instead-delay-prettier-errors ()
   (bydi (delay-warning)
     (wal-instead-delay-prettier-errors "We are just %s %s" "testing" "this")

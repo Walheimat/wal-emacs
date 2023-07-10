@@ -688,26 +688,6 @@ Prettify your ugly JavaScript.
 *** Utility
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal-prettier-timer nil)
-
-(defun wal-prettier-refresh ()
-  "Force re-loading configuration and apply."
-  (interactive)
-
-  (when wal-prettier-timer
-    (user-error "Refresh timer already running"))
-
-  (prettier--quit-all-processes)
-
-  (setq wal-prettier-timer
-        (run-with-timer 0.1 0.1
-                        (lambda ()
-                          (when (zerop (hash-table-count prettier-processes))
-                            (cancel-timer wal-prettier-timer)
-                            (setq wal-prettier-timer nil)
-                            (prettier-prettify)
-                            (message "Refresh done"))))))
-
 (defun wal-instead-delay-prettier-errors (string &rest objects)
   "Treat prettier errors like warnings.
 
@@ -726,7 +706,9 @@ STRING is formatted with OBJECTS."
   :config
   (with-eval-after-load 'js
     (transient-append-suffix 'js-mode-major '(0 0 0)
-      '("p" "prettier" prettier-prettify)))
+      '("p" "prettier" prettier-prettify))
+    (transient-append-suffix 'js-mode-major '(0 0 0)
+      '("P" "restart prettier" prettier-restart)))
 
   ;; Copy JSON parsers for newer major modes.
   (mapc
