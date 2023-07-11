@@ -8,6 +8,12 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Key `:comint` that can be passed to `wal-project-create-command` to
+  make sure a command is run in `comint-mode` instead.
+- Command `wal-project-run` that uses the new option.
+
 ### Changed
 
 - Subsections in `wal-emacs` were removed.

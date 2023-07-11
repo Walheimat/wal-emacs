@@ -61,11 +61,11 @@
 
       (wal-project-command 'test)
       (bydi-was-called-with read-shell-command (list "Test project (Test Project): " "untest" 'wal-project-command-history))
-      (bydi-was-called-with compile "test")
+      (bydi-was-called-with compile '("test" nil))
 
       (setq entered-command "best")
       (wal-project-command 'test)
-      (bydi-was-called-with compile "best")
+      (bydi-was-called-with compile '("best" nil))
 
       (should (string-equal "test" (ring-ref (gethash "/tmp/cmd" (plist-get wal-project-commands 'test)) 1)))
       (should (string-equal "best" (ring-ref (gethash "/tmp/cmd" (plist-get wal-project-commands 'test)) 0))))))
@@ -100,12 +100,12 @@
         (bind-key "t" 'wal-project-test wal-project-prefix-map)
         (put 'wal-project-test-default-cmd 'safe-local-variable #'stringp)))
     (bydi-match-expansion
-     (wal-project-create-command test :key "o" :default "make all")
+     (wal-project-create-command test :key "o" :default "make all" :comint t)
      '(progn
         (defvar-local wal-project-test-default-cmd "make all")
         (defun wal-project-test nil "Test the current project."
                (interactive)
-               (wal-project-command 'test))
+               (wal-project-command 'test t))
         (setq wal-project-commands (plist-put wal-project-commands 'test hash-table))
         (bind-key "o" 'wal-project-test wal-project-prefix-map)
         (put 'wal-project-test-default-cmd 'safe-local-variable #'stringp)))))

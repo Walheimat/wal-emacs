@@ -84,10 +84,11 @@ Built-in project management.
       (concat "*" "project-" wal-project-current-command "*")
     "*project-compile*"))
 
-(defun wal-project-command (cmd)
+(defun wal-project-command (cmd &optional comint)
   "Run CMD for the current project.
 
-Each command will be stored in a per-project history."
+Each command will be stored in a per-project history. COMINT is
+passed to `compile'."
   (defvar project-vc-name)
 
   (let* ((project-vc-name nil)
@@ -118,16 +119,17 @@ Each command will be stored in a per-project history."
       (ring-insert history command)
       (puthash root history table))
 
-    (compile command)))
+    (compile command comint)))
 
 (defvar wal-project-prefix-map (make-sparse-keymap))
 
-(cl-defmacro wal-project-create-command (name &key key default)
+(cl-defmacro wal-project-create-command (name &key key default comint)
   "Create command NAME.
 
 The command will be bound using `ambassador' using its initial
 unless KEY is provided. If DEFAULT is non-nil, set the initial
-value using it."
+value using it. If COMINT is t, make sure the command is run in
+`comint-mode' instead."
   (declare (indent defun))
 
   (let ((function-name (intern (format "wal-project-%s" name)))
@@ -141,7 +143,9 @@ value using it."
          ,(concat (capitalize (symbol-name name)) " the current project.")
          (interactive)
 
-         (wal-project-command ',name))
+         ,(if comint
+              `(wal-project-command ',name t)
+            `(wal-project-command ',name)))
 
        (setq wal-project-commands (plist-put
                                    wal-project-commands
@@ -254,7 +258,7 @@ If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
   (wal-project-create-command coverage
     :key "o"
     :default "make coverage")
-  (wal-project-create-command run)
+  (wal-project-create-command run :comint t)
 
   :custom
   (project-vc-extra-root-markers '("pom.xml"
