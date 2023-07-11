@@ -89,6 +89,19 @@ You can get the =ripgrep= binary from [[https://github.com/BurntSushi/ripgrep][h
 :UNNUMBERED: t
 :END:
 
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal-dumb-jump-go ()
+  "Use `dumb-jump' to find definitions."
+  (interactive)
+
+  (let ((xref-backend-functions '(dumb-jump-xref-activate)))
+
+    (xref-find-definitions (thing-at-point 'symbol))))
+#+END_SRC
+*** Configuration
+
 Look up definitions when no LSP is already doing it. Jumping is done
 using =xref-find-definitions= (=M-.=).
 
@@ -100,6 +113,9 @@ using =xref-find-definitions= (=M-.=).
   :custom
   (dumb-jump-force-searcher 'rg)
   (dumb-jump-selector 'completing-read)
+
+  :general
+  (editor "M-." 'wal-dumb-jump-go)
 
   :functions (dumb-jump-xref-activate))
 #+END_SRC

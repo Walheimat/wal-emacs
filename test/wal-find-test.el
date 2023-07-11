@@ -25,6 +25,14 @@
       (call-interactively 'wal-rg-project-literal)
       (bydi-was-called-with rg-run (list 'pattern 'files "/tmp/test" t nil 'flags)))))
 
+(ert-deftest wal-dumb-jump-go ()
+  (bydi (xref-find-definitions
+         (:mock thing-at-point :return 'thing))
+    (wal-dumb-jump-go)
+
+    (bydi-was-called-with thing-at-point '(symbol))
+    (bydi-was-called-with xref-find-definitions '(thing))))
+
 ;;; wal-find-test.el ends here
 
 ;; Local Variables:
