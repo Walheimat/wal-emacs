@@ -34,6 +34,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - The advice added to `recompile` for `wal-project` commands no longer
   breaks its functionality outside of projects (notably affecting
   `rg`).
+- Functions `wdb-nearby` and `wdb-farway` no longer add nil
+  parameters. This might also have led to issues where windows could
+  no longer be targeted by `other-window.`
 
 ## [v2.1.4]
 

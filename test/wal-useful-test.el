@@ -61,7 +61,6 @@
                      (display-buffer-reuse-window display-buffer-in-side-window display-buffer-in-direction display-buffer-use-some-window)
                      (side . top)
 					 (direction . right)
-					 (window-width)
                      (window-height . 12)
 					 (dedicated . t)
                      (window-parameters . ((no-other-window . t))))))
@@ -75,10 +74,7 @@
                      (display-buffer-reuse-window display-buffer-in-direction display-buffer-in-side-window display-buffer-use-some-window)
                      (side . right)
 					 (direction . below)
-					 (window-width . 0.4)
-					 (window-height)
-					 (dedicated)
-                     (window-parameters . ((no-other-window))))))))
+					 (window-width . 0.4))))))
 
 (ert-deftest test-wal-display-buffer-use-some-frame--with-display-p ()
   (let ((frame nil)
@@ -111,11 +107,7 @@
 					  display-buffer-pop-up-window
                       display-buffer-use-some-window)
                      (frame-predicate . wal-display-buffer-use-some-frame--with-display-p)
-                     (inhibit-switch-frame . t)
-					 (window-width)
-					 (window-height)
-					 (dedicated)
-					 (window-parameters . ((no-other-window))))))
+                     (inhibit-switch-frame . t))))
 
 	(setq display-buffer-list '())
 
@@ -130,11 +122,7 @@
 					  display-buffer-pop-up-window
                       display-buffer-use-some-window)
                      (frame-predicate . wal-display-buffer-use-some-frame--with-display-p)
-                     (inhibit-switch-frame . t)
-					 (window-width)
-					 (window-height)
-					 (dedicated)
-					 (window-parameters . ((no-other-window))))))))
+                     (inhibit-switch-frame . t))))))
 
 (ert-deftest wal-kill-some-file-buffers ()
   (bydi-with-temp-file "to-be-killed"

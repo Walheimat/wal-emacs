@@ -81,10 +81,14 @@ Utility functions to configure displaying buffers of a certain type.
 
 If DEDICATED is a boolean, WIDTH and HEIGHT are set as-is, if
 NO-OTHER is t set the `window-parameter'."
-  `((window-width . ,width)
-    (window-height . ,height)
-    (dedicated . ,dedicated)
-    (window-parameters . ((no-other-window . ,no-other)))))
+  (delq nil `(,(when width
+                 `(window-width . ,width))
+              ,(when height
+                 `(window-height . ,height))
+              ,(when dedicated
+                 `(dedicated . ,dedicated))
+              ,(when no-other
+                 '(window-parameters . ((no-other-window . t)))))))
 
 (cl-defun wal-display-buffer-same-place-or-nearby (buffer &key side direction width height loose no-other)
   "Display BUFFER where it is or nearby.
