@@ -128,7 +128,7 @@
            switch-to-buffer
            goto-char
            find-file-noselect
-           (:mock wal-project-local-value :with (lambda (it)
+           (:mock wal-project-local-value :with (lambda (it &optional _)
                                                   (pcase it
                                                     ('wal-org-capture-tasks-heading heading)
                                                     ('wal-project-parent-project nil)
