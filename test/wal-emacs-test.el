@@ -63,6 +63,18 @@
 
       (bydi-was-called-with pulse-momentary-highlight-one-line (list 8 'cursor)))))
 
+(ert-deftest test-wal-compilation-buffer-p ()
+  (with-temp-buffer
+    (compilation-mode)
+
+    (should (wal-compilation-buffer-p (current-buffer)))))
+
+(ert-deftest test-wal-consult-compilation-buffer--query ()
+  (cl-defun consult--buffer-query (&key sort as predicate)
+    (list sort as predicate))
+
+  (should (equal (wal-consult-compilation-buffer--query) '(visibility buffer-name wal-compilation-buffer-p))))
+
 ;;; wal-emacs-test.el ends here
 
 ;; Local Variables:

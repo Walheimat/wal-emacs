@@ -121,6 +121,24 @@ Quick calculations.
 
 Show compilations in a pop-up and scroll output.
 
+*** Utility
+
+#+begin_src emacs-lisp
+(defun wal-compilation-buffer-p (buffer)
+  "Check if buffer BUFFER is a compilation buffer."
+  (with-current-buffer buffer
+    (derived-mode-p 'compilation-mode)))
+
+(defun wal-consult-compilation-buffer--query ()
+  "Get compilation buffer names."
+  (consult--buffer-query
+   :sort 'visibility
+   :as #'buffer-name
+   :predicate #'wal-compilation-buffer-p))
+#+end_src
+
+*** Configuration
+
 #+BEGIN_SRC emacs-lisp
 (use-package compile
   :hook
@@ -128,6 +146,20 @@ Show compilations in a pop-up and scroll output.
 
   :config
   (wdb-faraway "\\*compilation")
+
+  (with-eval-after-load 'consult
+    (defvar wal-consult--source-compilation-buffer
+      (list :name "Compilations"
+            :narrow ?c
+            :category 'buffer
+            :history 'buffer-name-history
+            :action #'wal-switch-to-buffer-obeying-display-actions
+            :items #'wal-consult-compilation-buffer--query))
+
+     (wal-insert-after
+      'consult-buffer-sources
+      'consult--source-buffer
+      'wal-consult--source-compilation-buffer))
 
   :custom
   (compilation-scroll-output t)

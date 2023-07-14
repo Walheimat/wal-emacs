@@ -13,6 +13,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Key `:comint` that can be passed to `wal-project-create-command` to
   make sure a command is run in `comint-mode` instead.
 - Command `wal-project-run` that uses the new option.
+- Compilation buffers can now be narrowed using `c`. This `consult`
+  source uses new function
+  `wal-switch-to-buffer-obeying-display-actinos`.
 
 ### Changed
 
