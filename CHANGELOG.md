@@ -6,7 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v2.1.5]
+
+Here but mostly there.
 
 ### Added
 
@@ -15,7 +17,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Command `wal-project-run` that uses the new option.
 - Compilation buffers can now be narrowed using `c`. This `consult`
   source uses new function
-  `wal-switch-to-buffer-obeying-display-actinos`.
+  `wal-switch-to-buffer-obeying-display-actions`.
 
 ### Changed
 

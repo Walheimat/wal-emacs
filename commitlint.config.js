@@ -30,5 +30,7 @@ module.exports = {
         "body-max-line-length": [2, "always", 70],
         "footer-max-line-length": [2, "always", 70],
     },
-    ignores: [(commit) => commit.includes("fixup")],
+    ignores: [
+        (commit) => commit.includes("fixup") || commit.includes("release"),
+    ],
 };
