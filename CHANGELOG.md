@@ -11,6 +11,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - `wal-project-update` using `comint-mode`.
+- `wal-eshell` as a project-aware wrapper around `eshell`. It will
+  create a new `eshell` buffer for a project or pop to an existing
+  one.
 
 ### Changed
 

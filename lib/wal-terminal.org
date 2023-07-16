@@ -27,6 +27,11 @@ I am convinced that we are in a terminal process.
   (require 'wal-bridge nil t))
 
 (declare-function project-buffers "ext:project.el")
+(declare-function project-current "ext:project.el")
+(declare-function project-root "ext:project.el")
+(declare-function wdb-nearby "wal-useful.el")
+
+(defvar eshell-buffer-name)
 #+END_SRC
 
 * Packages
@@ -68,6 +73,30 @@ Set up =eshell=. I like the idea of it but I don't really use it.
   (let ((eshell-buffer-maximum-lines 0))
 
     (eshell-truncate-buffer)))
+
+(defun wal-eshell (&optional arg)
+  "Run `eshell' in a project-aware way.
+
+ARG is passed to `eshell'."
+  (interactive "P")
+
+  (if-let* ((project (project-current))
+            (root (expand-file-name (project-root project))))
+
+      (if-let* ((pattern (concat "\\" (substring eshell-buffer-name 0 -1)))
+                (filter (lambda (it) (string-match-p pattern (buffer-name it))))
+                (eshell-buffers (seq-filter filter (buffer-list)))
+                (find (lambda (it)
+                        (let* ((dir (buffer-local-value 'default-directory it))
+                               (safe-dir (substring-no-properties dir)))
+                               (message "checking %s" safe-dir)
+                          (string-match-p root safe-dir))))
+                (containing (seq-find find eshell-buffers)))
+
+          (pop-to-buffer containing)
+        (eshell (length eshell-buffers)))
+
+    (eshell arg)))
 #+END_SRC
 
 *** Configuration
@@ -92,7 +121,7 @@ Set up =eshell=. I like the idea of it but I don't really use it.
                           "\n\n"))
 
   :bind
-  (("C-c e" . eshell)))
+  (("C-c e" . wal-eshell)))
 #+END_SRC
 
 ** eshell-syntax-highlighting
