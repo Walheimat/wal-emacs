@@ -591,6 +591,35 @@ Optionally, custom ON-SUCCESS and ON-FAILURE handlers can be set."
   (lambda (err) (message "Script '%s' failed.\n\n%s" name err)))
 #+END_SRC
 
+** Command Map
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'transient
+  ;; Create `transient' for config package.
+  (transient-define-prefix whaler ()
+    "Facilitate the usage of or the working on Walheimat's config."
+    [["Find"
+      ("f" "project" wal-config-switch-project)
+      ("h" "heading" wal-config-consult-org-heading)]
+     ["Act"
+      ("t" "tangle" wal-prelude-tangle-config)
+      ("x" "install expansion pack" junk-install)
+      ("c" "customize group" wal-customize-group)]
+     ["Help"
+      ("m" "show diff" wal-show-config-diff-range)
+      ("e" "load test helper" wal-config-load-test-helper)]
+     ["Check"
+      ("o" "test" wal-run-test)
+      ("O" "test file" wal-run-test-file)
+      ("F" "toggle test format" wal-run-test-toggle-format)
+      ("p" "pacify" wal-run-pacify)
+      ("b" "cold boot" wal-run-cold-boot)]]
+    ["Fluff"
+     ("w" "toggle animation" wal-ascii-whale-toggle-display)])
+
+  (advice-add 'whaler :around 'wal-with-delayed-transient-popup))
+#+end_src
+
 * Footer
 :PROPERTIES:
 :VISIBILITY: folded
