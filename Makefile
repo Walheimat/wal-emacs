@@ -6,7 +6,8 @@ CASK_DEPS=build
 PACIFY_DEPS=build
 PACIFY_PRE_EXEC=--eval "(setq dinghy-pacify-not-testable \"movement\\\|fix\\\|settings\")"
 
-UPDATE_VERSION_DEPS=update-more
+CURRENT_PACKAGE_VERSION=2.1.6
+UPDATE_VERSION_FILES=Cask lib/wal-config.org
 
 include dinghy/emacs-package.mk
 
@@ -65,9 +66,3 @@ clobber: clean
 uninstall: INIT_CLEAR=t
 uninstall:
 	$(WITH_PRELUDE) $(INIT)
-
-# -- Updating
-
-.PHONY: update-more
-update-more:
-	$(UPDATE_VERSION) lib/wal-config.org
