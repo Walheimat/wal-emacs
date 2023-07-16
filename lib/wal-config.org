@@ -187,7 +187,7 @@ Example for advising =:around=.
   (require 'wal-useful nil t)
   (require 'wal-visuals nil t))
 
-(declare-function bydi-coverage--average "ext:bydi.el")
+(declare-function bydi-report--calculate-average "ext:bydi.el")
 (declare-function consult-org-heading "ext:consult.el")
 (declare-function magit-diff-range "ext:magit.el")
 (declare-function posframe-delete "ext:posframe.el")
@@ -546,7 +546,7 @@ If the answer is no, there will be no additional prompt."
 (defun wal-run-test--on-success ()
   "Show average test coverage."
   (lambda ()
-    (let ((average (bydi-coverage--average)))
+    (let ((average (bydi-report--calculate-average)))
 
       (message "All tests succeeded. Coverage: %s%%" average))))
 
@@ -558,7 +558,8 @@ If the answer is no, there will be no additional prompt."
   "Load the test helper package."
   (interactive)
 
-  (require 'bydi))
+  (require 'bydi)
+  (require 'bydi-report))
 
 (defun wal-make (name &optional pre-command post-command on-success on-failure)
   "Run script defined by goal NAME.

@@ -20,6 +20,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   window.
 - `wal-project-{install,publish}` now use `comint-mode`.
 
+### Fixed
+
+- `wal-run-test` now uses correct `bydi` function and loads
+  `bydi-report`.
+
 ## [v2.1.5]
 
 Here but mostly there.

@@ -340,11 +340,11 @@
     (should (eq 'text wal-run-test--coverage-format))))
 
 (ert-deftest run-test-success-handler--checks-coverage ()
-  (bydi ((:mock bydi-coverage--average :return "999")
+  (bydi ((:mock bydi-report--calculate-average :return "999")
          message)
     (funcall (wal-run-test--on-success))
 
-    (bydi-was-called bydi-coverage--average)))
+    (bydi-was-called bydi-report--calculate-average)))
 
 (ert-deftest run-test-failure-handler--messages ()
   (bydi (message)
@@ -356,7 +356,8 @@
   (bydi (require)
 
     (wal-config-load-test-helper)
-    (bydi-was-called-with require (list 'bydi))))
+    (bydi-was-called-nth-with require (list 'bydi) 0)
+    (bydi-was-called-nth-with require (list 'bydi-report) 1)))
 
 (ert-deftest test-wal-make--scripts ()
   (bydi (wal-make)
