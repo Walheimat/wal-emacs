@@ -12,6 +12,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - The `corfu-auto-{delay,prefix}` were changed (or removed) for
   several languages.
+- `eshell` buffers are now displayed at the bottom in a dedicated side
+  window.
 
 ## [v2.1.5]
 
