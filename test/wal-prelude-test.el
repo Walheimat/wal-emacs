@@ -22,45 +22,46 @@
 
 (defvar valid-init (ert-resource-file "valid-init.txt"))
 
-(defmacro with-bootstrap (shell-result &rest body)
-  "Evaluate BODY with SHELL-RESULT in a temporary file."
+(defmacro with-bootstrap (shell-result with-contents &rest body)
+  "Evaluate BODY with SHELL-RESULT in a temporary file.
+
+If WITH-CONTENTS is t, the valid init file will be inserted in
+the temporary file."
   (declare (indent 1))
   `(bydi ((:mock shell-command-to-string :with (lambda (&rest _) ,shell-result))
           append-to-file
           delete-region)
-     (bydi-with-temp-file "bootstrap"
+     (ert-with-temp-file bootstrap
+       :text ,(when with-contents
+                (with-temp-buffer
+                  (insert-file-contents valid-init)
+                  (buffer-string)))
        ,@body)))
 
 (ert-deftest init-sets-up-bootstrap ()
-  (with-bootstrap "test"
-                  (wal-prelude-init bydi-tmp-file wal-emacs-config-default-path)
+  (with-bootstrap "test" nil
+    (wal-prelude-init bootstrap wal-emacs-config-default-path)
 
-                  (bydi-was-called append-to-file)))
+    (bydi-was-called append-to-file)))
 
 (ert-deftest init-does-not-set-up-for-valid-bootstrap ()
   (defvar wal-prelude--init-marker)
-  (with-bootstrap "test"
-                  (with-current-buffer (find-file-noselect bydi-tmp-file)
-                    (insert-file-contents valid-init))
+  (with-bootstrap "test" t
 
-                  (wal-prelude-init bydi-tmp-file wal-emacs-config-default-path)
-                  (bydi-was-not-called append-to-file)))
+    (wal-prelude-init bootstrap wal-emacs-config-default-path)
+    (bydi-was-not-called append-to-file)))
 
 (ert-deftest init-deletes-outdated-bootstrap ()
-  (with-bootstrap "best"
-                  (with-current-buffer (find-file-noselect bydi-tmp-file)
-                    (insert-file-contents valid-init))
+  (with-bootstrap "best" t
 
-                  (wal-prelude-init bydi-tmp-file wal-emacs-config-default-path)
-                  (bydi-was-called delete-region)))
+    (wal-prelude-init bootstrap wal-emacs-config-default-path)
+    (bydi-was-called delete-region)))
 
 (ert-deftest init--clears ()
-  (with-bootstrap "test"
-                  (with-current-buffer (find-file-noselect bydi-tmp-file)
-                    (insert-file-contents valid-init))
+  (with-bootstrap "test" t
 
-                  (wal-prelude-init bydi-tmp-file wal-emacs-config-default-path t)
-                  (bydi-was-called delete-region)))
+    (wal-prelude-init bootstrap wal-emacs-config-default-path t)
+    (bydi-was-called delete-region)))
 
 (ert-deftest configure-customization ()
   (let ((custom-file nil)
@@ -159,9 +160,9 @@
       (bydi-was-not-called shell-command))))
 
 (ert-deftest touch--touches-existing ()
-  (bydi-with-temp-file "touchable"
+  (ert-with-temp-file touchable
     (let ((wal-emacs-config-default-path "/tmp")
-          (wal-prelude--phony-build-dependencies (list bydi-tmp-file "testing")))
+          (wal-prelude--phony-build-dependencies (list touchable "testing")))
 
       (bydi (shell-command)
         (wal-prelude--touch)

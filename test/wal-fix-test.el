@@ -38,18 +38,18 @@
     (should (string-equal "" (buffer-string)))))
 
 (ert-deftest test-wal-flycheck-file--callback ()
-  (bydi-with-temp-file "check"
+  (ert-with-temp-file check
 
     (bydi display-buffer
 
-      (let* ((buf (find-file-noselect bydi-tmp-file))
-             (cb (wal-flycheck-file--callback bydi-tmp-file buf nil t)))
+      (let* ((buf (find-file-noselect check))
+             (cb (wal-flycheck-file--callback check buf nil t)))
 
         (apply cb '(nil nil))
 
         (with-current-buffer (wal-flycheck-file--get-buffer)
 
-          (should (string-equal "No errors in 'check'.\n" (buffer-string))))
+          (should (string-match-p "No errors in" (buffer-string))))
 
         (let ((expected (wal-flycheck-file--get-buffer)))
 
@@ -58,10 +58,10 @@
   (kill-buffer wal-flycheck-file--buffer))
 
 (ert-deftest test-wal-flycheck-file--callback-on-error ()
-  (bydi-with-temp-file "check-error"
+  (ert-with-temp-file check-error
 
-    (let* ((buf (find-file-noselect bydi-tmp-file))
-           (cb (wal-flycheck-file--callback bydi-tmp-file buf t t)))
+    (let* ((buf (find-file-noselect check-error))
+           (cb (wal-flycheck-file--callback check-error buf t t)))
 
       (bydi ((:mock flycheck-error-message :with bydi-rf)
              (:mock flycheck-error-line :return 1))
@@ -70,7 +70,8 @@
 
       (with-current-buffer (wal-flycheck-file--get-buffer)
 
-        (should (string-equal "Errors in file 'check-error':\nline 1: testing\n\n" (buffer-string))))))
+        (should (string-match-p "Errors in file" (buffer-string)))
+        (should (string-match-p "line 1: testing" (buffer-string))))))
 
   (kill-buffer wal-flycheck-file--buffer))
 
@@ -80,11 +81,11 @@
          flycheck-compute-working-directory
          flycheck-syntax-check-start
          (:mock wal-flycheck-file--callback :with bydi-rt))
-    (bydi-with-temp-file "flycheck"
+    (ert-with-temp-file flycheck
 
-      (wal-flycheck-file bydi-tmp-file)
+      (wal-flycheck-file flycheck)
 
-      (let ((buf (find-file-noselect bydi-tmp-file)))
+      (let ((buf (find-file-noselect flycheck)))
 
         (bydi-was-called-with flycheck-syntax-check-start
                               (list
@@ -98,9 +99,9 @@
          flycheck-syntax-check-start
          wal-flycheck-file--callback)
 
-    (bydi-with-temp-file "flycheck"
+    (ert-with-temp-file flycheck
 
-      (should-error (wal-flycheck-file bydi-tmp-file) :type 'user-error))))
+      (should-error (wal-flycheck-file flycheck) :type 'user-error))))
 
 (ert-deftest test-wal-flyspell ()
   (defvar flyspell-mode nil)

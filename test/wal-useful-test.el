@@ -125,16 +125,15 @@
                      (inhibit-switch-frame . t))))))
 
 (ert-deftest wal-kill-some-file-buffers ()
-  (bydi-with-temp-file "to-be-killed"
-    (bydi kill-buffer-ask
+  (ert-with-temp-file to-be-killed
+    :buffer killed
 
-      (find-file-noselect bydi-tmp-file)
-
-      (get-buffer-create "killer-buffer")
+    (bydi (kill-buffer-ask
+           (:mock buffer-list :return (list (get-buffer-create "killer-buffer") killed)))
 
       (wal-kill-some-file-buffers)
 
-      (bydi-was-called-with kill-buffer-ask (list (get-buffer "to-be-killed"))))))
+      (bydi-was-called-with kill-buffer-ask (list killed)))))
 
 (defvar useful-killing (ert-resource-file "killing.txt"))
 
@@ -291,13 +290,14 @@
     (bydi-was-called-with switch-to-buffer (list (current-buffer) t))))
 
 (ert-deftest test-wal-find-custom-file ()
-  (bydi-with-temp-file "custom.el"
+  (ert-with-temp-file custom
+    :text ";; customize"
 
-    (let ((custom-file bydi-tmp-file))
+    (let ((custom-file custom))
 
       (wal-find-custom-file)
 
-      (should (string-equal (buffer-name) "custom.el")))))
+      (should (string-equal (buffer-string) ";; customize")))))
 
 (ert-deftest test-wal-find-init ()
   (bydi ((:mock file-truename :return wal-emacs-config-default-path))
@@ -307,13 +307,14 @@
     (should (string-match-p (buffer-name) wal-emacs-config-default-path))))
 
 (ert-deftest test-wal-find-fish-config ()
-  (bydi-with-temp-file "config.fish"
+  (ert-with-temp-file fish
+    :text "# configure"
 
-    (let ((wal-fish-config-locations `(,bydi-tmp-file)))
+    (let ((wal-fish-config-locations (list fish)))
 
       (wal-find-fish-config)
 
-      (should (string-equal (buffer-name) "config.fish")))))
+      (should (string-equal (buffer-string) "# configure")))))
 
 (ert-deftest test-wal-find-fish-config--errors-if-not-found ()
   (defvar wal-fish-config-locations)
@@ -442,10 +443,11 @@
 
 (ert-deftest test-wal-persist-scratch-and-rehydrate ()
   (defvar wal-scratch-persist-file)
-  (bydi-with-temp-file "scratch"
-    (let ((wal-scratch-persist-file bydi-tmp-file))
 
-      (delete-file bydi-tmp-file)
+  (ert-with-temp-file scratch
+    (let ((wal-scratch-persist-file scratch))
+
+      (delete-file scratch)
 
       (with-current-buffer (get-buffer-create "*scratch*")
         (erase-buffer)

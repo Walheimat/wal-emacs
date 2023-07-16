@@ -174,11 +174,11 @@
       (bydi-was-called-with project-root (list '(vc Git "/tmp"))))))
 
 (ert-deftest wal-project-local-value ()
-  (bydi-with-temp-file "project"
+  (ert-with-temp-file project
 
-    (bydi ((:always project-current) (:mock project-root :return bydi-tmp-file))
+    (bydi ((:always project-current) (:mock project-root :return project))
 
-      (with-current-buffer (find-file-noselect bydi-tmp-file)
+      (with-current-buffer (find-file-noselect project)
         (setq-local major-mode 'text-mode))
 
       (should (equal (wal-project-local-value 'major-mode) 'text-mode)))))
