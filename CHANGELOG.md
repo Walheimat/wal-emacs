@@ -8,12 +8,17 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `wal-project-update` using `comint-mode`.
+
 ### Changed
 
 - The `corfu-auto-{delay,prefix}` were changed (or removed) for
   several languages.
 - `eshell` buffers are now displayed at the bottom in a dedicated side
   window.
+- `wal-project-{install,publish}` now use `comint-mode`.
 
 ## [v2.1.5]
 
