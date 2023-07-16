@@ -7,7 +7,7 @@
                                 ("lib/\\([^/]+\\).org" "build/\\1.el")
                                 ("tools/\\([^/]+\\).el" "test/\\1-test.el")
                                 ("test/\\([^/]+\\)-test.el" "tools/\\1.el")))
-         (wal-project-build-default-cmd . "make build")
+         (wal-project-build-default-cmd . "make tangle")
          (wal-project-lint-default-cmd . "make pacify")
          (wal-project-update-default-cmd . "make update-version")))
  (markdown-mode . ((eval . (auto-fill-mode t)))))

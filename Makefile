@@ -25,6 +25,10 @@ INIT=--eval "(wal-prelude-init \"$(EMACS_INIT_FILE)\" \"$(CURDIR)\" $(INIT_CLEAR
 build:
 	$(WITH_PRELUDE) $(BOOTSTRAP)
 
+.PHONY: tangle
+tangle: clean
+	$(WITH_PRELUDE) $(BOOTSTRAP)
+
 # Make sure the user's init file contains the bootstrapper
 .PHONY: ensure-init
 ensure-init:
