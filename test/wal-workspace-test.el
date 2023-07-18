@@ -93,9 +93,9 @@
      (wal-project-create-command test)
      '(progn
         (defvar-local wal-project-test-default-cmd nil)
-        (defun wal-project-test nil "Test the current project."
-               (interactive)
-               (wal-project-command 'test))
+        (defun wal-project-test (&optional arg) "Test the current project.\nIf ARG is t, use `comint-mode'. If function already uses that, use `compile-mode'."
+               (interactive "P")
+               (wal-project-command 'test (not (null arg))))
         (setq wal-project-commands (plist-put wal-project-commands 'test hash-table))
         (bind-key "t" 'wal-project-test wal-project-prefix-map)
         (put 'wal-project-test-default-cmd 'safe-local-variable #'stringp)))
@@ -103,9 +103,9 @@
      (wal-project-create-command test :key "o" :default "make all" :comint t)
      '(progn
         (defvar-local wal-project-test-default-cmd "make all")
-        (defun wal-project-test nil "Test the current project."
-               (interactive)
-               (wal-project-command 'test t))
+        (defun wal-project-test (&optional arg) "Test the current project.\nIf ARG is t, use `comint-mode'. If function already uses that, use `compile-mode'."
+               (interactive "P")
+               (wal-project-command 'test (null arg)))
         (setq wal-project-commands (plist-put wal-project-commands 'test hash-table))
         (bind-key "o" 'wal-project-test wal-project-prefix-map)
         (put 'wal-project-test-default-cmd 'safe-local-variable #'stringp)))))

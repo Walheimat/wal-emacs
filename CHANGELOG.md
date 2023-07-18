@@ -22,6 +22,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `eshell` buffers are now displayed at the bottom in a dedicated side
   window.
 - `wal-project-{install,publish}` now use `comint-mode`.
+- `wal-project-command`s now accept a prefix argument to toggle the
+  mode they usually use.
 
 ### Fixed
 

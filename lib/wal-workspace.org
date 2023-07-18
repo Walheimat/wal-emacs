@@ -139,13 +139,16 @@ value using it. If COMINT is t, make sure the command is run in
     `(progn
        (defvar-local ,variable-name ,default)
 
-       (defun ,function-name ()
-         ,(concat (capitalize (symbol-name name)) " the current project.")
-         (interactive)
+       (defun ,function-name (&optional arg)
+         ,(concat (capitalize (symbol-name name))
+                  " the current project.\n"
+                  "If ARG is t, use `comint-mode'. "
+                  "If function already uses that, use `compile-mode'.")
+         (interactive "P")
 
          ,(if comint
-              `(wal-project-command ',name t)
-            `(wal-project-command ',name)))
+              `(wal-project-command ',name (null arg))
+            `(wal-project-command ',name (not (null arg)))))
 
        (setq wal-project-commands (plist-put
                                    wal-project-commands
