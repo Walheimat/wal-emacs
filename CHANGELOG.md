@@ -14,6 +14,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `wal-eshell` as a project-aware wrapper around `eshell`. It will
   create a new `eshell` buffer for a project or pop to an existing
   one.
+- `vterm` and its utility functions were re-added and slightly
+  amended.
 
 ### Changed
 

@@ -51,6 +51,48 @@
       (when (buffer-live-p buffer)
         (kill-buffer buffer)))))
 
+(ert-deftest wal-vterm--calls-vterm-outside-project ()
+  (bydi ((:ignore project-current)
+         vterm)
+
+    (wal-vterm)
+
+    (bydi-was-called vterm)))
+
+(ert-deftest wal-vterm--checks-project-buffers ()
+  (let ((buffers nil))
+
+    (bydi ((:always project-current)
+           (:mock project-root :return "/test/project")
+           (:mock project-buffers :return buffers)
+           switch-to-buffer
+           vterm)
+
+      (with-temp-buffer
+        (setq-local buffers (list (current-buffer))
+                    major-mode 'vterm-mode
+                    default-directory "/test/project/deep")
+
+        (rename-buffer "VTerm: test")
+        (wal-vterm)
+        (bydi-was-called-with switch-to-buffer (list (current-buffer))))
+
+      (bydi-clear-mocks)
+
+      (with-temp-buffer
+        (setq buffers (list (current-buffer)))
+
+        (wal-vterm)
+
+        (bydi-was-called-with vterm (list '(4)))))))
+
+(ert-deftest wal-vterm--passes-on-prefix-arg ()
+  (bydi (vterm)
+
+    (funcall-interactively 'wal-vterm '(4))
+
+    (bydi-was-called-with vterm (list '(4)))))
+
 ;;; wal-terminal-test.el ends here
 
 ;; Local Variables:

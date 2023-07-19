@@ -139,6 +139,64 @@ ARG is passed to `eshell'."
   :hook (eshell-mode . eshell-syntax-highlighting-mode))
 #+END_SRC
 
+** vterm
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+*** Utility
+
+#+BEGIN_SRC emacs-lisp
+(defun wal-vterm (&optional arg)
+  "Get a `vterm' buffer.
+
+If called from a project buffer, this only creates a `vterm'
+buffer if one doesn't exist yet and ARG is nil."
+  (interactive "P")
+
+  (if arg (funcall-interactively 'vterm arg)
+
+    (if-let* ((current (project-current))
+              (root (project-root current)))
+
+        (if-let* ((safe-dir (expand-file-name root))
+                  (found (cl-find-if
+                          #'(lambda (it)
+                              (and (provided-mode-derived-p
+                                    (buffer-local-value 'major-mode it)
+                                    'vterm-mode)
+                                   (string-match-p
+                                    safe-dir
+                                    (buffer-local-value 'default-directory it))))
+                          (buffer-list))))
+            (switch-to-buffer found)
+
+          ;; Create a new session.
+          (funcall-interactively 'vterm '(4)))
+
+      (funcall-interactively 'vterm))))
+#+END_SRC
+
+*** Configuration
+
+#+begin_src emacs-lisp
+(use-package vterm
+  :wal-ways nil
+
+  :hook
+  (vterm-mode . with-editor-export-git-editor)
+
+  :custom
+  (vterm-prefix "VTerm")
+  (vterm-max-scrollback 10000)
+
+  :general
+  (ambassador "t" 'wal-vterm)
+
+  :delight
+  (vterm-copy-mode " vcp"))
+#+end_src
+
 * Footer
 :PROPERTIES:
 :VISIBILITY: folded
