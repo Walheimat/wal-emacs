@@ -10,7 +10,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- `wal-project-update` using `comint-mode`.
+- `wal-project-update`.
 - `wal-eshell` as a project-aware wrapper around `eshell`. It will
   create a new `eshell` buffer for a project or pop to an existing
   one.
@@ -31,6 +31,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `wal-run-test` now uses correct `bydi` function and loads
   `bydi-report`.
+- `comint-mode` buffers are now part of the `consult` source for
+  compilations.
 
 ## [v2.1.5]
 
