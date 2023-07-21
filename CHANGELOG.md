@@ -33,6 +33,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   `bydi-report`.
 - `comint-mode` buffers are now part of the `consult` source for
   compilations.
+- `wal-eshell` now requires `eshell`.
 
 ## [v2.1.5]
 

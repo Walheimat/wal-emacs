@@ -80,6 +80,8 @@ Set up =eshell=. I like the idea of it but I don't really use it.
 ARG is passed to `eshell'."
   (interactive "P")
 
+  (require 'eshell)
+
   (if-let* ((project (project-current))
             (root (expand-file-name (project-root project))))
 
@@ -89,7 +91,6 @@ ARG is passed to `eshell'."
                 (find (lambda (it)
                         (let* ((dir (buffer-local-value 'default-directory it))
                                (safe-dir (substring-no-properties dir)))
-                               (message "checking %s" safe-dir)
                           (string-match-p root safe-dir))))
                 (containing (seq-find find eshell-buffers)))
 
@@ -106,9 +107,6 @@ ARG is passed to `eshell'."
   :hook
   ((eshell-mode . with-editor-export-editor)
    (eshell-mode . with-editor-export-git-editor))
-
-  :init
-  (autoload #'wal-eshell "eshell" nil t)
 
   :config
   (advice-add

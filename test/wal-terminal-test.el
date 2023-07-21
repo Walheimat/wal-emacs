@@ -32,6 +32,7 @@
 
     (bydi ((:sometimes project-current)
            (:mock project-root :return "/home/test/projects/test")
+           require
            eshell
            pop-to-buffer)
 
