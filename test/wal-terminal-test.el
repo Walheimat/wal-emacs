@@ -42,11 +42,11 @@
       (kill-buffer (nth 1 buffers))
       (bydi-clear-mocks)
       (wal-eshell)
-      (bydi-was-called-with eshell 3)
+      (bydi-was-called-with eshell (list '(4)))
 
       (bydi-toggle-sometimes)
-      (wal-eshell '(4))
-      (bydi-was-called-with eshell (list '(4))))
+      (funcall-interactively 'wal-eshell 5)
+      (bydi-was-called-with eshell (list 5)))
 
     (dolist (buffer buffers)
       (when (buffer-live-p buffer)
