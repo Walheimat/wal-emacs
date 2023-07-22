@@ -125,8 +125,6 @@
       (bydi-clear-mocks))))
 
 (ert-deftest test-wal-use-package-ensure-function--displays-warning-on-error ()
-  (defvar package-archive-contents nil)
-  (defvar package-pinned-packages '((some-package . 'version)))
   (defvar debug-on-error)
 
   (let ((debug-on-error nil))
@@ -135,9 +133,9 @@
            use-package-pin-package
            (:ignore package-installed-p)
            (:ignore package-built-in-p)
-           (:mock package-read-all-archive-contents :with (lambda () (error "Testing")))
-           package-refresh-contents
+           package-read-all-archive-contents
            package-install
+           (:mock package-refresh-contents :with (lambda () (error "Testing")))
            require
            display-warning)
 

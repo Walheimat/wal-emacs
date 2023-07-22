@@ -118,37 +118,41 @@
       (bydi-was-called wal-org-tree-slide-play))))
 
 (ert-deftest test-wal-org-capture-find-project-task-heading ()
-  (let ((heading nil))
+  (let ((marker nil))
 
     (when (get-buffer "*wal-async*")
       (kill-buffer "*wal-async*"))
 
-    (bydi ((:mock org-find-exact-heading-in-directory :return heading)
-           set-buffer
+    (bydi ((:mock org-find-exact-heading-in-directory :return marker)
            switch-to-buffer
-           goto-char
            find-file-noselect
            (:mock wal-project-local-value :with (lambda (it &optional _)
                                                   (pcase it
-                                                    ('wal-org-capture-tasks-heading heading)
+                                                    ('wal-org-capture-tasks-heading marker)
                                                     ('wal-project-parent-project nil)
                                                     (_ nil))))
            (:always project-current)
-           (:always project-root)
-           (:mock marker-buffer :return 'buffer)
-           (:mock marker-position :return 'position))
+           (:always project-root))
 
       (should-error (wal-org-capture-locate-project-tasks) :type 'user-error)
       (should-error (wal-org-capture-switch-to-project-tasks) :type 'user-error)
 
-      (setq heading 'heading)
+      (with-temp-buffer
+        (insert "Test")
+        (goto-char (point-max))
 
-      (wal-org-capture-locate-project-tasks)
-      (bydi-was-called-with goto-char (list 'position))
+        (setq marker (point-marker))
 
+        (goto-char (point-min))
 
-      (wal-org-capture-switch-to-project-tasks)
-      (bydi-was-called-with switch-to-buffer (list 'buffer)))))
+        (wal-org-capture-locate-project-tasks)
+
+        (should (eq (marker-position marker) 5)))
+
+      (with-temp-buffer
+        (setq marker (point-marker))
+        (wal-org-capture-switch-to-project-tasks)
+        (bydi-was-called-with switch-to-buffer (list (current-buffer)))))))
 
 (ert-deftest test-wal-org-clock-in-switch-to-state ()
   (should (string-equal "IN PROGRESS" (wal-org-clock-in-switch-to-state "OTHER STATE"))))
