@@ -16,6 +16,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   one.
 - `vterm` and its utility functions were re-added and slightly
   amended.
+- `wal-tab-bar-rename-from-project` to do just that.
 
 ### Changed
 

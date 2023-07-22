@@ -28,6 +28,15 @@
       (bydi-was-called-with get-buffer-window (list 'buffer))
       (bydi-was-called select-window))))
 
+(ert-deftest wal-tab-bar-rename-from-project ()
+  (bydi ((:always project-current)
+         (:mock project-name :return "Test")
+         tab-bar-rename-tab)
+
+    (wal-tab-bar-rename-from-project)
+
+    (bydi-was-called-with tab-bar-rename-tab "Test")))
+
 ;;; wal-windows-test.el ends here
 
 ;; Local Variables:
