@@ -26,7 +26,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   window.
 - `wal-project-{install,publish}` now use `comint-mode`.
 - `wal-project-command`s now accept a prefix argument to toggle the
-  mode they usually use.
+  mode they usually use and will give accurate information in their
+  docstrings.
 
 ### Fixed
 

@@ -93,7 +93,7 @@
      (wal-project-create-command test)
      '(progn
         (defvar-local wal-project-test-default-cmd nil)
-        (defun wal-project-test (&optional arg) "Test the current project.\nIf ARG is t, use `comint-mode'. If function already uses that, use `compile-mode'."
+        (defun wal-project-test (&optional arg) "Test the current project.\nThis will use `compile-mode' unless ARG is t, then it will use `comint-mode'."
                (interactive "P")
                (wal-project-command 'test (not (null arg))))
         (setq wal-project-commands (plist-put wal-project-commands 'test hash-table))
@@ -103,7 +103,7 @@
      (wal-project-create-command test :key "o" :default "make all" :comint t)
      '(progn
         (defvar-local wal-project-test-default-cmd "make all")
-        (defun wal-project-test (&optional arg) "Test the current project.\nIf ARG is t, use `comint-mode'. If function already uses that, use `compile-mode'."
+        (defun wal-project-test (&optional arg) "Test the current project.\nThis will use `comint-mode' unless ARG is t, then it will use `compile-mode'."
                (interactive "P")
                (wal-project-command 'test (null arg)))
         (setq wal-project-commands (plist-put wal-project-commands 'test hash-table))
