@@ -34,10 +34,10 @@
            (:mock project-root :return "/home/test/projects/test")
            require
            eshell
-           pop-to-buffer)
+           switch-to-buffer)
 
       (wal-eshell)
-      (bydi-was-called-with pop-to-buffer (list (nth 1 buffers)))
+      (bydi-was-called-with switch-to-buffer (list (nth 1 buffers)))
 
       (kill-buffer (nth 1 buffers))
       (bydi-clear-mocks)
