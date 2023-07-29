@@ -491,13 +491,11 @@ Turn any =org-mode= buffer into a presentation.
       (setq cursor-type nil)
     (setq cursor-type t)))
 
-(defvar wal-org-tree-slide-disabled-modes '())
-
 (defun wal-org-tree-slide-play ()
   "Hook into `org-tree-slide-play'."
-  (setq visual-fill-column-width (wal-relative-column-width 160)
-        visual-fill-column-center-text t
-        cursor-type nil)
+  (setq-local visual-fill-column-width (wal-relative-column-width 160)
+              visual-fill-column-center-text t
+              cursor-type nil)
   (visual-fill-column-mode 1)
 
   (mixed-pitch-mode 1)
@@ -506,17 +504,15 @@ Turn any =org-mode= buffer into a presentation.
 
 (defun wal-org-tree-slide-stop ()
   "Hook into `org-tree-slide-stop'."
-  (setq visual-fill-column-width nil
-        visual-fill-column-center-text nil
-        cursor-type t
-        org-hide-emphasis-markers nil)
+  (setq-local visual-fill-column-width nil
+              visual-fill-column-center-text nil
+              cursor-type t
+              org-hide-emphasis-markers nil)
   (visual-fill-column-mode -1)
 
   (declare-function outline-show-all "ext:outline.el")
 
   (outline-show-all)
-
-  (setq wal-org-tree-slide-disabled-modes '())
 
   (mixed-pitch-mode -1)
 
