@@ -50,6 +50,30 @@
       (should (equal '((when t name nil (nil :wal-ways t)))
                      (use-package-handler/:wal-ways 'name nil nil nil nil))))))
 
+(ert-deftest sinker-handler ()
+  (defvar use-package-hook-name-suffix)
+  (let ((use-package-hook-name-suffix "-test"))
+    (bydi ((:mock use-package-concat :with append)
+           (:mock use-package-process-keywords :return (list 'kw))
+           (:mock use-package-hook-handler-normalize-mode-symbols :with (lambda (x) (list x)))
+           (:mock use-package-normalize-commands :with bydi-rf))
+
+      (should (equal (use-package-handler/:sinker
+                      'test
+                      nil
+                      '((kill-emacs . test-fn) (emacs-startup . test-fn))
+                      nil
+                      nil)
+                     '(kw
+                       (add-hook 'kill-emacs-test #'test-fn t)
+                       (add-hook 'emacs-startup-test #'test-fn t)))))))
+
+(ert-deftest fhook-handler ()
+  (bydi (use-package-handler/:hook)
+
+    (use-package-handler/:fhook 'name 'keyword 'args 'rest 'state)
+    (bydi-was-called use-package-handler/:hook)))
+
 (ert-deftest test-wal-ignore-if-not-installed ()
   (let ((installed nil)
         (built-in nil)

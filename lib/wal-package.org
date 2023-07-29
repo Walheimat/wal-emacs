@@ -17,6 +17,7 @@
 ;;; Code:
 
 (eval-when-compile
+  (require 'cl-extra)
   (require 'wal-useful nil t))
 
 (declare-function package-built-in-p "package.el")
@@ -104,6 +105,8 @@ These packages are installed with `package-vc-install'.")
 
   (wal-insert 'use-package-keywords :bind-keymap* :wal-bind)
   (wal-insert 'use-package-keywords :wal-bind :wal-bind-keymap)
+  (wal-insert 'use-package-keywords :hook :fhook)
+  (wal-insert 'use-package-keywords :hook :sinker)
 
   (wal-insert 'use-package-keywords :pin :wal-ways)
   (add-to-list 'use-package-defaults '(:wal-ways t t)))
@@ -205,6 +208,62 @@ use the result further down the line."
     `((when ,active
         ,@body))))
 #+END_SRC
+
+*** use-package/:sinker
+
+Add hook but at the end.
+
+#+begin_src emacs-lisp
+(defalias 'use-package-normalize/:sinker 'use-package-normalize/:hook)
+
+(defun use-package-handler/:sinker (name _keyword args rest state)
+  "Add hooks at the end.
+
+See other handler's explanation of NAME, ARGS, REST and STATE."
+  (declare-function use-package-concat "ext:use-package.el")
+  (declare-function use-package-hook-handler-normalize-mode-symbols "ext:use-package.el")
+  (declare-function use-package-normalize-commands "ext:use-package.el")
+  (declare-function use-package-process-keywords "ext:use-package.el")
+  (defvar use-package-hook-name-suffix)
+
+  (use-package-concat
+   (use-package-process-keywords name rest state)
+   (cl-mapcan
+    #'(lambda (def)
+        (let ((syms (car def))
+              (fun (cdr def)))
+          (when fun
+            (mapcar
+             #'(lambda (sym)
+                 `(add-hook
+                   (quote ,(intern
+                            (concat (symbol-name sym)
+                                    use-package-hook-name-suffix)))
+                   (function ,fun)
+                   t))
+             (use-package-hook-handler-normalize-mode-symbols syms)))))
+    (use-package-normalize-commands args))))
+#+end_src
+
+*** use-package/:fhook
+
+Allow adding hooks to =-functions=.
+
+#+begin_src emacs-lisp
+(defalias 'use-package-normalize/:fhook 'use-package-normalize/:hook)
+
+(defun use-package-handler/:fhook (name keyword args rest state)
+  "Add hook to variables using `*-functions' pattern.
+
+See other handler's explanation of NAME, KEYWORD, ARGS, REST and
+STATE."
+  (defvar use-package-hook-name-suffix)
+  (declare-function use-package-handler/:hook "ext:use-package.el")
+
+  (let ((use-package-hook-name-suffix "-functions"))
+
+    (use-package-handler/:hook name keyword args rest state)))
+#+end_src
 
 *** Conditional :hook and :ensure
 

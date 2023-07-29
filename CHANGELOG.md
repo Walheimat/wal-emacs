@@ -21,6 +21,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `wal-insert` that works like `wal-insert-before` but has optional 5th
   argument to insert before instead (pushing previous 5th argument
   `quiet` to position 6).
+- `use-package` keywords `:sinker` to add hook functions at the end
+  and `:fhook` to add a hook to a `-functions` variable.
 
 ### Changed
 
