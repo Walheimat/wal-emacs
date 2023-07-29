@@ -267,20 +267,12 @@
                                                 failure
                                                 t)))))
 
-(ert-deftest run-test--adds-post-command ()
-  (defvar wal-emacs-config-default-path)
-  (let ((wal-emacs-config-default-path "/tmp/default"))
+(ert-deftest run-test--runs-default ()
+  (let ((wal-run-test--coverage-format 'text))
 
-    (bydi (wal-async-process
-           (:mock wal-run-test--on-success :return 'success)
-           (:mock wal-run-test--on-failure :return 'failure))
-
+    (bydi (wal-make)
       (wal-run-test)
-
-      (bydi-was-called-with wal-async-process '("cd /tmp/default && make test"
-                                                success
-                                                failure
-                                                t)))))
+      (bydi-was-called-with wal-make (list "test")))))
 
 (ert-deftest run-test--adds-pre-command-for-json ()
   (defvar wal-emacs-config-default-path)
@@ -338,19 +330,6 @@
     (wal-run-test-toggle-format)
 
     (should (eq 'text wal-run-test--coverage-format))))
-
-(ert-deftest run-test-success-handler--checks-coverage ()
-  (bydi ((:mock bydi-report--calculate-average :return "999")
-         message)
-    (funcall (wal-run-test--on-success))
-
-    (bydi-was-called bydi-report--calculate-average)))
-
-(ert-deftest run-test-failure-handler--messages ()
-  (bydi (message)
-    (funcall (wal-run-test--on-failure) "because")
-
-    (bydi-was-called-with message (list "Tests fail: %s" "because"))))
 
 (ert-deftest load-test-helper ()
   (bydi (require)

@@ -187,7 +187,6 @@ Example for advising =:around=.
   (require 'wal-useful nil t)
   (require 'wal-visuals nil t))
 
-(declare-function bydi-report--calculate-average "ext:bydi.el")
 (declare-function consult-org-heading "ext:consult.el")
 (declare-function magit-diff-range "ext:magit.el")
 (declare-function posframe-delete "ext:posframe.el")
@@ -523,11 +522,7 @@ If the answer is no, there will be no additional prompt."
     (pcase wal-run-test--coverage-format
       ('text
        (wal-make
-        cmd
-        nil
-        nil
-        (wal-run-test--on-success)
-        (wal-run-test--on-failure)))
+        cmd))
       ('json
        (wal-make
         cmd
@@ -544,19 +539,6 @@ If the answer is no, there will be no additional prompt."
                   (lambda (it) (not (string= "test-helper.el" it))))))
 
   (wal-run-test (format "test TEST_ARGS=%s" file)))
-
-(defun wal-run-test--on-success ()
-  "Show average test coverage."
-  (lambda ()
-    (wal-config-load-test-helper)
-
-    (let ((average (bydi-report--calculate-average)))
-
-      (message "All tests succeeded. Coverage: %s%%" average))))
-
-(defun wal-run-test--on-failure ()
-  "Show failure reason."
-  (lambda (str) (message "Tests fail: %s" str)))
 
 (defun wal-config-load-test-helper ()
   "Load the test helper package."
