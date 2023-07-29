@@ -367,48 +367,57 @@
     (should-error (wal-replace-in-alist 'test-target values) :type 'user-error)
     (should (equal test-target '((a . "whale") (b . "home"))))))
 
-(ert-deftest test-wal-insert-after--inserts ()
+(ert-deftest test-wal-insert--inserts ()
   (let ((test-target '(hello my old friend))
         (preceding 'hello)
         (item 'darkness))
 
-    (wal-insert-after 'test-target preceding item)
+    (wal-insert 'test-target preceding item)
     (should (equal test-target '(hello darkness my old friend)))))
 
-(ert-deftest wal-insert-after--does-not-error-if-duplicates-allowed ()
+(ert-deftest wal-insert--does-not-error-if-duplicates-allowed ()
   (let ((test-target '(hello darkness my old friend))
         (preceding 'darkness)
         (item 'my))
 
-    (should (wal-insert-after 'test-target preceding item t))))
+    (should (wal-insert 'test-target preceding item t))))
 
-(ert-deftest test-wal-insert-after--errors-if-key-already-in-list ()
+(ert-deftest test-wal-insert--errors-if-key-already-in-list ()
   (let ((test-target '(hello darkness my old friend))
         (preceding 'darkness)
         (item 'my))
 
-    (should-error (wal-insert-after 'test-target preceding item))))
+    (should-error (wal-insert 'test-target preceding item))))
 
-(ert-deftest wal-insert-after--no-op-if-no-dupes-and-quiet ()
+(ert-deftest wal-insert--no-op-if-no-dupes-and-quiet ()
   (let ((test-target '(hello darkness my old friend))
         (preceding 'darkness)
         (item 'my))
 
-    (should-not (wal-insert-after 'test-target preceding item nil t))))
+    (should-not (wal-insert 'test-target preceding item nil nil t))))
 
-(ert-deftest test-wal-insert-after--errors-if-key-not-in-list ()
+(ert-deftest test-wal-insert--errors-if-key-not-in-list ()
   (let ((test-target '(hello my old friend))
         (preceding 'darkness)
         (item 'hello-again))
 
-    (should-error (wal-insert-after 'test-target preceding item) :type 'user-error)))
+    (should-error (wal-insert 'test-target preceding item) :type 'user-error)))
 
-(ert-deftest test-wal-insert-after--no-op-if-not-in-list-and-quiet ()
+(ert-deftest test-wal-insert--no-op-if-not-in-list-and-quiet ()
   (let ((test-target '(hello my old friend))
         (preceding 'darkness)
         (item 'hello-again))
 
-    (should-not (wal-insert-after 'test-target preceding item nil t))))
+    (should-not (wal-insert 'test-target preceding item nil nil t))))
+
+(ert-deftest wal-insert--can-add-before ()
+  (let ((test-target '(hello my old friend))
+        (point 'my)
+        (item 'darkness))
+
+    (wal-insert 'test-target point item nil t)
+
+    (should (equal '(hello darkness my old friend) test-target))))
 
 (ert-deftest test-wal-list-from--builds-list-if-element ()
   (let ((test-target "testing"))

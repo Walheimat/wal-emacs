@@ -18,6 +18,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `repeat-exit-key` is now bound to `<return>`.
 - `wal-org-hide-emphasis-markers` that will enable them (or disable
   them if called with a prefix argument) and fontify the buffer.
+- `wal-insert` that works like `wal-insert-before` but has optional 5th
+  argument to insert before instead (pushing previous 5th argument
+  `quiet` to position 6).
 
 ### Changed
 
@@ -31,6 +34,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `wal-{make,run}[-*]` commands as the `wal-project-{*}` cover all scenarios
   now.
+- `wal-insert-before` was removed (see above).
 
 ### Fixed
 

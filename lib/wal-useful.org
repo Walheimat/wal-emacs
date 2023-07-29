@@ -418,23 +418,31 @@ Duplicate items are removed."
 
         (user-error "All keys %s must already be present in %s" keys target)))))
 
-(defun wal-insert-after (target preceding item &optional allow-duplicates quiet)
-  "Insert ITEM in TARGET after PRECEDING.
+(defun wal-insert (target point item &optional allow-duplicates before quiet)
+  "Insert ITEM in TARGET after POINT.
 
 Unless ALLOW-DUPLICATES is t, trying to re-add an existing item will
-raise an error unless QUIET is t."
-  (let ((val (symbol-value target)))
+raise an error unless QUIET is t.
+
+If BEFORE is t, insert item before POINT."
+  (let ((val (symbol-value target))
+        (verb (if before "before" "after")))
 
     (if (and (memq item val) (not allow-duplicates))
         (unless quiet
-          (user-error "Can't insert after %s: %s is already in target %s" preceding item target))
+          (user-error (concat "Can't insert " verb " %s: %s is already in target %s") point item target))
 
-      (if (memq preceding val)
-          (let* ((remainder (nthcdr (cl-position preceding val) val)))
+      (if (memq point val)
+          (let* ((pos (cl-position point val))
+                 (padded (if before (cons nil val) val))
+                 (remainder (nthcdr pos padded)))
 
-            (setcdr remainder (cons item (cdr remainder))))
+            (setcdr remainder (cons item (cdr remainder)))
+            (if before
+                (set target (cdr padded))
+              padded))
         (unless quiet
-          (user-error "Can't insert after %s as it is not in %s" preceding target))))))
+          (user-error (concat "Can't insert " verb " %s as it is not in %s") point target))))))
 
 (defun wal-list-from (target item)
   "Create a list from TARGET appending ITEM.
