@@ -483,100 +483,6 @@ If the answer is no, there will be no additional prompt."
   (customize-group 'wal t))
 #+END_SRC
 
-** Scripts
-
-#+BEGIN_SRC emacs-lisp
-(defun wal-run-pacify ()
-  "Run the pacify script."
-  (interactive)
-
-  (wal-make "pacify"))
-
-(defun wal-run-cold-boot ()
-  "Run the cold-boot script."
-  (interactive)
-
-  (wal-make "cold-boot"))
-
-(defvar wal-run-test--coverage-format 'text
-  "The format of the coverage.")
-
-(defun wal-run-test-toggle-format ()
-  "Toggle the format used in `wal-run-test'."
-  (interactive)
-
-  (setq wal-run-test--coverage-format
-        (pcase wal-run-test--coverage-format
-          ('text 'json)
-          ('json 'text)
-          (_ 'text)))
-
-  (message "Test format is '%s'" wal-run-test--coverage-format))
-
-(defun wal-run-test (&optional cmd)
-  "Run the test script using CMD."
-  (interactive)
-
-  (let ((cmd (or cmd "test")))
-
-    (pcase wal-run-test--coverage-format
-      ('text
-       (wal-make
-        cmd))
-      ('json
-       (wal-make
-        cmd
-        "export COVERAGE_WITH_JSON=true")))))
-
-(defun wal-run-test-file (file)
-  "Run test routine for FILE."
-  (interactive
-   (list (read-file-name "Select test file: "
-                  (expand-file-name "test/" wal-emacs-config-default-path)
-                  nil
-                  t
-                  nil
-                  (lambda (it) (not (string= "test-helper.el" it))))))
-
-  (wal-run-test (format "test TEST_ARGS=%s" file)))
-
-(defun wal-config-load-test-helper ()
-  "Load the test helper package."
-  (interactive)
-
-  (require 'bydi)
-  (require 'bydi-report))
-
-(defun wal-make (name &optional pre-command post-command on-success on-failure)
-  "Run script defined by goal NAME.
-
-Optionally, PRE-COMMAND and POST-COMMAND can be set.
-
-Optionally, custom ON-SUCCESS and ON-FAILURE handlers can be set."
-  (let* ((command (format "cd %s && make %s" wal-emacs-config-default-path name))
-         (full-command command))
-
-    (when pre-command
-      (setq full-command (concat pre-command " && " full-command)))
-
-    (when post-command
-      (setq full-command (concat full-command " && " post-command)))
-
-    (wal-async-process
-     full-command
-     (or on-success (wal-make--on-success name))
-     (or on-failure (wal-make--on-failure name))
-     t)))
-
-(defun wal-make--on-success (name)
-  "Display success message for script NAME."
-  (lambda () (message "Script '%s' succeeded." name)))
-
-(defun wal-make--on-failure (name)
-  "Display failure message for script NAME."
-  (lambda (err) (message "Script '%s' failed.\n\n%s" name err)))
-#+END_SRC
-
 ** Command Map
 
 #+begin_src emacs-lisp
@@ -592,14 +498,7 @@ Optionally, custom ON-SUCCESS and ON-FAILURE handlers can be set."
       ("x" "install expansion pack" junk-install)
       ("c" "customize group" wal-customize-group)]
      ["Help"
-      ("m" "show diff" wal-show-config-diff-range)
-      ("e" "load test helper" wal-config-load-test-helper)]
-     ["Check"
-      ("o" "test" wal-run-test)
-      ("O" "test file" wal-run-test-file)
-      ("F" "toggle test format" wal-run-test-toggle-format)
-      ("p" "pacify" wal-run-pacify)
-      ("b" "cold boot" wal-run-cold-boot)]]
+      ("m" "show diff" wal-show-config-diff-range)]]
     ["Fluff"
      ("w" "toggle animation" wal-ascii-whale-toggle-display)])
 
