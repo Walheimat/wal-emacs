@@ -21,6 +21,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `org-hide-emphasis-marker` is no longer set as `t`.
 - `multiple-cursors` now uses a repeat map binding more commands.
+- The only `wal-project-` commands created now are `build`, `install`,
+  `clean`, `run`, new `execute` (the non-interactive equivalent of
+  `run`) and `test`.
 
 ### Removed
 

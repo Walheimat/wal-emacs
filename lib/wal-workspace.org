@@ -104,7 +104,12 @@ passed to `compile'."
          (initial (unless (ring-empty-p history)
                     (ring-ref history 0)))
          (wal-project-current-command (symbol-name cmd))
-         (prompt (concat (capitalize wal-project-current-command) " project (" name "): "))
+         (prompt (concat
+                  (capitalize wal-project-current-command)
+                  " project ("
+                  name
+                  ")"
+                  (if comint " interactively: " ": ")))
          (command (read-shell-command prompt initial 'wal-project-command-history))
 
          (default-directory (project-root current))
@@ -292,14 +297,11 @@ If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
   (wdb-faraway "\\*project")
 
   (wal-project-create-command build :default "make")
-  (wal-project-create-command test :default "make test")
   (wal-project-create-command install :comint t)
-  (wal-project-create-command lint)
-  (wal-project-create-command publish :comint t)
   (wal-project-create-command clean :default "make clean")
-  (wal-project-create-command coverage :key "o" :default "make coverage")
+  (wal-project-create-command execute)
   (wal-project-create-command run :comint t)
-  (wal-project-create-command update)
+  (wal-project-create-command test :default '("make test" "make coverage"))
 
   :custom
   (project-vc-extra-root-markers '("pom.xml"
