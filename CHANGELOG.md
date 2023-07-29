@@ -20,6 +20,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - `org-hide-emphasis-marker` is no longer set as `t`.
+- `multiple-cursors` now uses a repeat map binding more commands.
 
 ### Fixed
 
