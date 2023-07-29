@@ -16,6 +16,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   will add both commands to the history leaving `"make tangle"` as the
   most recent entry.
 
+### Changed
+
+- `org-hide-emphasis-marker` is no longer set as `t`.
+
 ### Fixed
 
 - `consult-flycheck` binding in `consult` `transient` no longer
