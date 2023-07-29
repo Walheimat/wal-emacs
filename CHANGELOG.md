@@ -15,6 +15,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   `wal-project-build-default-cmd` to `'("make tangle" "make local")`
   will add both commands to the history leaving `"make tangle"` as the
   most recent entry.
+- `repeat-exit-key` is now bound to `<return>`.
 
 ### Changed
 
