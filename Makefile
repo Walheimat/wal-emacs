@@ -6,7 +6,7 @@ CASK_DEPS=build
 PACIFY_DEPS=build
 PACIFY_PRE_EXEC=--eval "(setq dinghy-pacify-not-testable \"movement\\\|fix\\\|settings\")"
 
-CURRENT_PACKAGE_VERSION=2.1.6
+CURRENT_PACKAGE_VERSION=2.1.7
 UPDATE_VERSION_FILES=Cask lib/wal-config.org
 
 include dinghy/emacs-package.mk
