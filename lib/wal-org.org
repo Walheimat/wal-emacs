@@ -82,6 +82,15 @@ This calls `org-content' interactively."
   (declare-function org-content "ext:org-cycle.el")
 
   (org-content level))
+
+(defun wal-org-hide-emphasis-markers (&optional show)
+  "Hide emphasis markers.
+
+If SHOW is t, show them instead."
+  (interactive "P")
+
+  (setq org-hide-emphasis-markers (not show))
+  (font-lock-fontify-buffer))
 #+END_SRC
 
 *** Configuration
@@ -132,7 +141,8 @@ This calls `org-content' interactively."
         ("c" "show content" wal-org-content)
         ("a" "show all" org-show-all)
         ("i" "toggle indentation" org-indent-mode)
-        ("v" "visual line" visual-line-mode)]
+        ("v" "visual line" visual-line-mode)
+        ("m" "hide emphasis markers" wal-org-hide-emphasis-markers)]
 
        ["Help"
         ("h" "node info" org-info-find-node)]]))
@@ -490,13 +500,16 @@ Turn any =org-mode= buffer into a presentation.
         cursor-type nil)
   (visual-fill-column-mode 1)
 
-  (mixed-pitch-mode 1))
+  (mixed-pitch-mode 1)
+
+  (wal-org-hide-emphasis-markers))
 
 (defun wal-org-tree-slide-stop ()
   "Hook into `org-tree-slide-stop'."
   (setq visual-fill-column-width nil
         visual-fill-column-center-text nil
-        cursor-type t)
+        cursor-type t
+        org-hide-emphasis-markers nil)
   (visual-fill-column-mode -1)
 
   (declare-function outline-show-all "ext:outline.el")
@@ -507,7 +520,9 @@ Turn any =org-mode= buffer into a presentation.
 
   (mixed-pitch-mode -1)
 
-  (text-scale-adjust 0))
+  (text-scale-adjust 0)
+
+  (wal-org-hide-emphasis-markers t))
 
 (defun wal-org-tree-slide-text-scale ()
   "Hook into `text-scale-mode-hook' for `org-tree-slide'."

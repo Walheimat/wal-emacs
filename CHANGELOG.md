@@ -16,10 +16,12 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   will add both commands to the history leaving `"make tangle"` as the
   most recent entry.
 - `repeat-exit-key` is now bound to `<return>`.
+- `wal-org-hide-emphasis-markers` that will enable them (or disable
+  them if called with a prefix argument) and fontify the buffer.
 
 ### Changed
 
-- `org-hide-emphasis-marker` is no longer set as `t`.
+- `org-hide-emphasis-marker` is no longer set as `t` (see above).
 - `multiple-cursors` now uses a repeat map binding more commands.
 - The only `wal-project-` commands created now are `build`, `install`,
   `clean`, `run`, new `execute` (the non-interactive equivalent of

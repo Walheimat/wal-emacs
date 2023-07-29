@@ -24,6 +24,21 @@
 
     (bydi-was-called-with org-content (list 8))))
 
+(ert-deftest wal-org-hide-emphasis-makers ()
+  (defvar org-hide-emphasis-markers)
+
+  (let ((org-hide-emphasis-markers nil))
+
+    (bydi (font-lock-fontify-buffer)
+
+      (wal-org-hide-emphasis-markers)
+      (should org-hide-emphasis-markers)
+
+      (wal-org-hide-emphasis-markers t)
+      (should-not org-hide-emphasis-markers)
+
+      (bydi-was-called-n-times font-lock-fontify-buffer 2))))
+
 (ert-deftest test-wal-org-refile ()
   (defvar org-roam-directory nil)
   (defvar org-agenda-files nil)
@@ -84,7 +99,8 @@
          mixed-pitch-mode
          (:mock wal-relative-column-width :with bydi-rf)
          outline-show-all
-         text-scale-adjust)
+         text-scale-adjust
+         wal-org-hide-emphasis-markers)
 
     (wal-org-tree-slide-play)
 
@@ -93,6 +109,7 @@
     (should-not cursor-type)
     (bydi-was-called mixed-pitch-mode)
     (bydi-was-called visual-fill-column-mode)
+    (bydi-was-called wal-org-hide-emphasis-markers)
 
     (bydi-clear-mocks)
 
@@ -105,7 +122,8 @@
     (bydi-was-called outline-show-all)
     (bydi-was-called-with mixed-pitch-mode -1)
     (bydi-was-called-with visual-fill-column-mode -1)
-    (bydi-was-called-with text-scale-adjust 0)))
+    (bydi-was-called-with text-scale-adjust 0)
+    (bydi-was-called-with wal-org-hide-emphasis-markers t)))
 
 (ert-deftest test-wal-org-tree-slide-text-scale ()
   (defvar org-tree-slide-mode)
