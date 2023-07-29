@@ -29,7 +29,7 @@
 
   (let ((org-hide-emphasis-markers nil))
 
-    (bydi (font-lock-fontify-buffer)
+    (bydi (font-lock-flush)
 
       (wal-org-hide-emphasis-markers)
       (should org-hide-emphasis-markers)
@@ -37,7 +37,7 @@
       (wal-org-hide-emphasis-markers t)
       (should-not org-hide-emphasis-markers)
 
-      (bydi-was-called-n-times font-lock-fontify-buffer 2))))
+      (bydi-was-called-n-times font-lock-flush 2))))
 
 (ert-deftest test-wal-org-refile ()
   (defvar org-roam-directory nil)
