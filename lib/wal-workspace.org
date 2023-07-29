@@ -97,15 +97,11 @@ passed to `compile'."
          (name (project-name current))
 
          (table (plist-get wal-project-commands cmd))
-         (default-cmd (or (project--value-in-dir
-                           (intern (format "wal-project-%s-default-cmd" cmd))
-                           root)
-                          ""))
-         (history (gethash root table (make-ring wal-project-command-history-length)))
+
+         (history (wal-project-command--history cmd))
          (wal-project-command-history (ring-elements history))
 
-         (initial (if (ring-empty-p history)
-                      default-cmd
+         (initial (unless (ring-empty-p history)
                     (ring-ref history 0)))
          (wal-project-current-command (symbol-name cmd))
          (prompt (concat (capitalize wal-project-current-command) " project (" name "): "))
@@ -120,6 +116,37 @@ passed to `compile'."
       (puthash root history table))
 
     (compile command comint)))
+
+(defun wal-project-command--history (cmd)
+  "Access history for CMD.
+
+If the history doesn't yet exist, create it using the provided
+default.
+
+The default can be a string or a list of strings. In the latter
+case, they are inserted in reverse order so that the first item
+is the default."
+  (if-let* ((table (plist-get wal-project-commands cmd))
+            (project (project-current))
+            (root (project-root project))
+            (history (gethash root table)))
+
+      history
+
+    (let* ((var (intern (format "wal-project-%s-default-cmd" cmd)))
+           (default (project--value-in-dir var root))
+           (new-history (make-ring wal-project-command-history-length)))
+
+      (cond
+       ((listp default)
+        (mapc (lambda (it) (ring-insert new-history it)) (reverse default)))
+       ((stringp default)
+        (ring-insert new-history default))
+       (t nil))
+
+      (puthash root new-history table)
+
+      new-history)))
 
 (defvar wal-project-prefix-map (make-sparse-keymap))
 
@@ -137,7 +164,7 @@ value using it. If COMINT is t, make sure the command is run in
         (key (or key (substring (symbol-name name) 0 1))))
 
     `(progn
-       (defvar-local ,variable-name ,default)
+       (defvar-local ,variable-name ,default ,(format "Default for `%s'." function-name))
 
        (defun ,function-name (&optional arg)
          ,(concat (capitalize (symbol-name name))
@@ -159,7 +186,13 @@ value using it. If COMINT is t, make sure the command is run in
                                    ,(make-hash-table :test 'equal)))
 
        (bind-key ,key ',function-name wal-project-prefix-map)
-       (put ',variable-name 'safe-local-variable #'stringp))))
+       (put ',variable-name 'safe-local-variable #'wal-project-command--valid-default-p))))
+
+(defun wal-project-command--valid-default-p (val)
+  "Check if VAL is a valid project command default."
+  (or (stringp val)
+      (and (listp val)
+           (cl-every #'stringp val))))
 
 (defun wal-project-select-command (cmd)
   "Complete and run CMD."

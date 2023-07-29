@@ -8,6 +8,14 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `wal-project-command`s can now have multiple defaults that will be
+  added to the commands history on creation. For example, settings
+  `wal-project-build-default-cmd` to `'("make tangle" "make local")`
+  will add both commands to the history leaving `"make tangle"` as the
+  most recent entry.
+
 ### Fixed
 
 - `consult-flycheck` binding in `consult` `transient` no longer

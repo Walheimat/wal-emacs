@@ -87,28 +87,48 @@
       (wal-project-command 'test)
       (should (eq 1 (ring-length (gethash "/tmp/cmd" (plist-get wal-project-commands 'test))))))))
 
+(ert-deftest project-command--history--inserts-multiple ()
+  (let ((wal-project-commands (list 'test (make-hash-table :test 'equal)))
+        (wal-project-command-history nil)
+        (wal-project-test-default-cmd '("make test" "test make")))
+
+    (bydi ((:always project-current)
+           (:mock project-root :return "/tmp/cmd")
+           (:mock project-name :return "Test Project")
+           (:mock project--value-in-dir :return wal-project-test-default-cmd))
+
+      (let ((history (wal-project-command--history 'test)))
+
+        (should (string= "make test" (ring-ref history 0)))
+        (should (string= "test make" (ring-ref history 1)))))))
+
+(ert-deftest project-command--valid-default-p ()
+  (should (wal-project-command--valid-default-p "test"))
+  (should (wal-project-command--valid-default-p '("test" "make")))
+  (should-not (wal-project-command--valid-default-p '("test" make))))
+
 (ert-deftest test-wal-project-create-command ()
   (bydi ((:mock make-hash-table :return 'hash-table))
     (bydi-match-expansion
      (wal-project-create-command test)
      '(progn
-        (defvar-local wal-project-test-default-cmd nil)
+        (defvar-local wal-project-test-default-cmd nil "Default for `wal-project-test'.")
         (defun wal-project-test (&optional arg) "Test the current project.\nThis will use `compile-mode' unless ARG is t, then it will use `comint-mode'."
                (interactive "P")
                (wal-project-command 'test (not (null arg))))
         (setq wal-project-commands (plist-put wal-project-commands 'test hash-table))
         (bind-key "t" 'wal-project-test wal-project-prefix-map)
-        (put 'wal-project-test-default-cmd 'safe-local-variable #'stringp)))
+        (put 'wal-project-test-default-cmd 'safe-local-variable #'wal-project-command--valid-default-p)))
     (bydi-match-expansion
      (wal-project-create-command test :key "o" :default "make all" :comint t)
      '(progn
-        (defvar-local wal-project-test-default-cmd "make all")
+        (defvar-local wal-project-test-default-cmd "make all" "Default for `wal-project-test'.")
         (defun wal-project-test (&optional arg) "Test the current project.\nThis will use `comint-mode' unless ARG is t, then it will use `compile-mode'."
                (interactive "P")
                (wal-project-command 'test (null arg)))
         (setq wal-project-commands (plist-put wal-project-commands 'test hash-table))
         (bind-key "o" 'wal-project-test wal-project-prefix-map)
-        (put 'wal-project-test-default-cmd 'safe-local-variable #'stringp)))))
+        (put 'wal-project-test-default-cmd 'safe-local-variable #'wal-project-command--valid-default-p)))))
 
 (ert-deftest test-wal-project-select-command ()
   (bydi ((:mock completing-read :return "test")
