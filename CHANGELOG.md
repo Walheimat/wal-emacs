@@ -11,6 +11,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - Package `cape`; `cape-history` is bound for `eshell`.
+- Configuration for `corfu-popupinfo` to replace `corfu-doc`.
+
+#### Removed
+
+- `corfu-doc`.
 
 ## [v2.1.7]
 
