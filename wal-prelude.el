@@ -195,7 +195,7 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
 These files will be touched after tangling.")
 
 (defun wal-prelude--touch ()
-  "Touch directories to make sure they aren't considered outated."
+  "Touch directories to make sure they aren't considered outdated."
   (dolist (it wal-prelude--phony-build-dependencies)
 
     (let ((expanded (expand-file-name it wal-emacs-config-default-path)))
