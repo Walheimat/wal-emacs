@@ -50,6 +50,29 @@
 
     (bydi-was-called dap-hydra)))
 
+(ert-deftest wal-instead-grab-directly ()
+  (with-temp-buffer
+    (insert "hello")
+
+    (should (string= "hello" (wal-instead-grab-directly))))
+
+  (with-temp-buffer
+    (insert " hello")
+
+    (goto-char 1)
+
+    (should (string= "" (wal-instead-grab-directly)))))
+
+(ert-deftest wal-dap-adapt-company-backend ()
+  (bydi ((:mock cape-company-to-capf :with bydi-rf)
+         corfu-mode)
+
+    (with-temp-buffer
+      (wal-dap-adapt-company-backend)
+
+      (should (equal '(dap-ui-repl-company) completion-at-point-functions))
+      (bydi-was-called corfu-mode))))
+
 (ert-deftest test-wal-ignore-if-no-lsp ()
   (defvar lsp-mode)
   (bydi (message)

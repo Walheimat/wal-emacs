@@ -12,6 +12,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Package `cape`; `cape-history` is bound for `eshell`.
 - Configuration for `corfu-popupinfo` to replace `corfu-doc`.
+- The `company` backend `dap-mode` is now adapted to work with
+  `corfu`. This is done by overriding `dap-ui-repl-company-prefix` and
+  mapping the backend with `cape`'s adapter function.
 
 #### Removed
 

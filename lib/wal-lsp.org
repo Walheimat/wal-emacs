@@ -182,6 +182,21 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
 (defun wal-dap-stopped (_session)
   "(Re-)display the hydra immediately."
   (dap-hydra))
+
+(defun wal-instead-grab-directly ()
+  "Grab like `company' would."
+  (if (looking-at "\\>")
+      (buffer-substring (point) (save-excursion (skip-syntax-backward "w")
+                                                (point)))
+    (unless (and (char-after) (eq (char-syntax (char-after)) ?w))
+      "")))
+
+(defun wal-dap-adapt-company-backend ()
+  "Adapt company backend using `cape'."
+  (setq-local completion-at-point-functions
+              (mapcar #'cape-company-to-capf '(dap-ui-repl-company)))
+
+  (corfu-mode))
 #+END_SRC
 
 *** Configuration
@@ -192,7 +207,8 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
 
   :after lsp-mode
 
-  :hook (dap-session-created . wal-dap-session-created)
+  :hook ((dap-session-created . wal-dap-session-created)
+         (dap-ui-repl-mode . wal-dap-adapt-company-backend))
   :sinker ((dap-terminated . wal-dap-terminated)
            (dap-stopped . wal-dap-stopped))
 
@@ -202,6 +218,10 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
   (wal-replace-in-alist
    'dap-ui-buffer-configurations
    `((,dap-ui--repl-buffer . ((side . bottom) (slot . 1) (window-height . 5)))))
+
+  (advice-add
+   'dap-ui-repl-company-prefix :override
+   #'wal-instead-grab-directly)
 
   :custom
   (dap-auto-show-output nil)
