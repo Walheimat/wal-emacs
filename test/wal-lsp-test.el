@@ -73,6 +73,19 @@
       (should (equal '(dap-ui-repl-company) completion-at-point-functions))
       (bydi-was-called corfu-mode))))
 
+(ert-deftest wal-debug ()
+  (bydi (dap-hydra dap-debug)
+
+    (let ((wal-debugging nil))
+
+      (wal-debug)
+      (bydi-was-called dap-debug)
+
+      (setq wal-debugging t)
+
+      (wal-debug)
+      (bydi-was-called dap-hydra))))
+
 (ert-deftest test-wal-ignore-if-no-lsp ()
   (defvar lsp-mode)
   (bydi (message)
