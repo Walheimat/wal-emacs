@@ -7,7 +7,7 @@
  (depends-on "undercover")
  (depends-on "compat"))
 
-(package "wal" "2.1.7" "Walheimat's configuration")
+(package "wal" "2.1.8" "Walheimat's configuration")
 
 (package-file "build/wal-config.el")
 
