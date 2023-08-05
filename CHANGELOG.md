@@ -15,6 +15,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - The `company` backend `dap-mode` is now adapted to work with
   `corfu`. This is done by overriding `dap-ui-repl-company-prefix` and
   mapping the backend with `cape`'s adapter function.
+### Changed
+
+- `dired-hide-details-mode` is now turned on by default.
 
 #### Removed
 
