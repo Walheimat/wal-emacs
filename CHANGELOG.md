@@ -15,6 +15,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   `dired-directory-changed-p`.
 - `savehist-additional-variables` is now set to `(kill-ring)`.
 - `xref-search-program` is set to `ripgrep` if possible.
+- `vertico-multiform-commands` now set `{switch-to,consult}-buffer`
+  and `tab-switch` to use `flat`. Previous configurations are done via
+  `vertico-multiform-categories`. Switching to the vertical view and
+  back is bound to user-prefixed `i`.
 
 ### Fixed
 
