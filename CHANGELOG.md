@@ -19,6 +19,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   and `tab-switch` to use `flat`. Previous configurations are done via
   `vertico-multiform-categories`. Switching to the vertical view and
   back is bound to user-prefixed `i`.
+- `initial-major-mode` is no longer set to `fundamental-mode`.
 
 ### Fixed
 
