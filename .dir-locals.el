@@ -9,6 +9,9 @@
                                 ("test/\\([^/]+\\)-test.el" "tools/\\1.el")))
          (wal-project-build-default-cmd . "make tangle")
          (wal-project-install-default-cmd . ("make local"))
-         (wal-project-execute-default-cmd . ("make pacify" "make cold-boot" "make update-version"))
+         (wal-project-execute-default-cmd . ("make pacify"
+                                             "make cold-boot"
+                                             "make update-version"
+                                             "git submodule update --remote"))
          (wal-project-install-reverse-mode . t)))
  (markdown-mode . ((eval . (auto-fill-mode t)))))
