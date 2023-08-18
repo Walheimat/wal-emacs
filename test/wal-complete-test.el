@@ -159,17 +159,6 @@
       (setq buffers '(one two three))
       (should (equal '(one two three) (wal-adjust-by-putting-current-buffer-first buffers))))))
 
-(ert-deftest test-wal-consult-org-heading ()
-  (bydi (consult-org-heading org-up-heading-safe)
-    (funcall-interactively 'wal-consult-org-heading t)
-    (bydi-was-called org-up-heading-safe)
-    (bydi-was-called-with consult-org-heading (list nil 'tree))
-
-    (bydi-clear-mocks)
-
-    (funcall-interactively 'wal-consult-org-heading)
-    (bydi-was-called-with consult-org-heading nil)))
-
 ;;; wal-complete-test.el ends here
 
 ;; Local Variables:

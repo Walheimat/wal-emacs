@@ -198,10 +198,10 @@ Provide global option narrowing using the =vertico= family of products.
   (vertico-sort-function #'vertico-sort-history-alpha)
 
   (vertico-multiform-categories '((consult-grep buffer)
-                                  (consult-location buffer)))
+                                  (consult-location buffer)
+                                  (consult-org-heading buffer)))
 
-  (vertico-multiform-commands '((wal-consult-org-heading buffer)
-                                (tab-switch flat)
+  (vertico-multiform-commands '((tab-switch flat)
                                 (consult-buffer flat)))
 
   :wal-bind
@@ -534,18 +534,6 @@ If DISCONTINUE is non-nil, clock in from now."
     (if (memq current buffers)
         (cons current (delq current buffers))
       buffers)))
-
-(defun wal-consult-org-heading (&optional in-tree)
-  "Call `org-heading'.
-
-If optional IN-TREE is t, limit scope to current tree."
-  (interactive "P")
-
-  (if in-tree
-      (progn
-        (org-up-heading-safe)
-        (funcall-interactively 'consult-org-heading nil 'tree))
-    (call-interactively 'consult-org-heading)))
 #+END_SRC
 
 *** Configuration
@@ -601,7 +589,7 @@ If optional IN-TREE is t, limit scope to current tree."
     [["Goto"
       ("SPC" "mark" consult-mark)
       ("g" "line" consult-goto-line)
-      ("h" "heading" wal-consult-org-heading
+      ("h" "heading" consult-org-heading
        :inapt-if-not-mode 'org-mode)
       ("i" "imenu" consult-imenu)
       ("o" "outline" consult-outline)]

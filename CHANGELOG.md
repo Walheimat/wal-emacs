@@ -29,6 +29,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Command `wal-consult-line` as `consult-line` already adds
   `thing-at-point` to history.
+- Command `wal-consult-org-heading` as narrowing covers most cases.
 
 ## [v2.1.8]
 
