@@ -282,12 +282,18 @@
     (should (eq (length (window-list-1)) 1))))
 
 (ert-deftest wal-switch-to-buffer-obeying-display-actions ()
-  "Switch to BUFFER-OR-NAMe obeying display actions."
   (bydi (switch-to-buffer)
 
     (wal-switch-to-buffer-obeying-display-actions (current-buffer) t)
 
     (bydi-was-called-with switch-to-buffer (list (current-buffer) t))))
+
+(ert-deftest wal-switch-to-other-buffer ()
+  (bydi (switch-to-buffer)
+
+    (wal-switch-to-other-buffer)
+
+    (bydi-was-called-with switch-to-buffer (list nil t))))
 
 (ert-deftest test-wal-find-custom-file ()
   (ert-with-temp-file custom

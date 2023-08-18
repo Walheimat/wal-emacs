@@ -64,7 +64,7 @@ should get created."
       (make-directory parent-directory t))))
 #+END_SRC
 
-* Buffer Display
+* Buffers
 
 Utility functions to configure displaying buffers of a certain type.
 
@@ -145,11 +145,7 @@ HEIGHT, DEDICATED and NO-OTHER."
 
 (defalias 'wdb-nearby 'wal-display-buffer-same-place-or-nearby)
 (defalias 'wdb-faraway 'wal-display-buffer-same-place-or-faraway)
-#+END_SRC
 
-* Buffer Hygiene
-
-#+BEGIN_SRC emacs-lisp
 (defun wal-kill-some-file-buffers ()
   "Kill some buffers associated with files."
   (interactive)
@@ -157,6 +153,22 @@ HEIGHT, DEDICATED and NO-OTHER."
   (let ((file-buffers (seq-filter #'buffer-file-name (buffer-list))))
 
     (kill-some-buffers file-buffers)))
+
+(defun wal-switch-to-buffer-obeying-display-actions (buffer-or-name &optional norecord)
+  "Switch to BUFFER-OR-NAME obeying display actions.
+
+Passes NORECORD flag to `switch-to-buffer'."
+  (let ((switch-to-buffer-obey-display-actions t))
+
+    (switch-to-buffer buffer-or-name norecord)))
+
+(defun wal-switch-to-other-buffer ()
+  "Switch to the other buffer.
+
+This switch is not recorded."
+  (interactive)
+
+  (switch-to-buffer nil t))
 #+END_SRC
 
 * Editing
@@ -318,14 +330,6 @@ Un-dedicates if already dedicated."
     (dolist (window (window-list-1))
       (when (wal-supernova--matches (window-buffer window))
         (quit-window nil window)))))
-
-(defun wal-switch-to-buffer-obeying-display-actions (buffer-or-name &optional norecord)
-  "Switch to BUFFER-OR-NAME obeying display actions.
-
-Passes NORECORD flag to `switch-to-buffer'."
-  (let ((switch-to-buffer-obey-display-actions t))
-
-    (switch-to-buffer buffer-or-name norecord)))
 #+END_SRC
 
 * Files

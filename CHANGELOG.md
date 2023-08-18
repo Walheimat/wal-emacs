@@ -8,6 +8,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Command `wal-switch-to-other-buffer` bound to `M-o`.
+
 ### Changed
 
 - Pre-narrowing in `consult` is off by default.
