@@ -64,17 +64,6 @@
       (wal-consult-unregister)
       (should (equal register-alist '((?t . test)))))))
 
-(ert-deftest test-wal-consult-line ()
-  (bydi consult-line
-    (wal-consult-line)
-    (bydi-was-called consult-line)
-
-    (with-temp-buffer
-      (insert "hello")
-      (goto-char 1)
-      (wal-consult-line t)
-      (bydi-was-called-with consult-line "hello"))))
-
 (ert-deftest test-wal-consult-clock-in ()
   (bydi (consult-org-agenda org-clock-in wal-org-clock-in-from-now)
     (wal-consult-clock-in)

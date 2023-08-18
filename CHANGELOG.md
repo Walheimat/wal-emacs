@@ -25,6 +25,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `partial-recall` buffer source is no longer inserted before the
   default buffer source.
 
+### Removed
+
+- Command `wal-consult-line` as `consult-line` already adds
+  `thing-at-point` to history.
+
 ## [v2.1.8]
 
 Dapper capper.
