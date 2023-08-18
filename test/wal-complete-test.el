@@ -86,12 +86,6 @@
     (should (equal out '(hook)))
     (should (equal wal-active-theme 'test))))
 
-(ert-deftest test-wal-with-big-vertico ()
-  (defvar vertico-count 10)
-  (let ((fun (lambda () vertico-count)))
-
-    (should (equal 20 (wal-with-big-vertico fun)))))
-
 (ert-deftest test-wal-consult--pre-narrow ()
   (defvar wal-consult-pre-narrow)
   (defvar wal-consult-buffer-narrow-source)

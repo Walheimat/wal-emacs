@@ -446,13 +446,6 @@ If DISCONTINUE is non-nil, clock in from now."
   (setq wal-active-theme theme)
   (run-hooks 'wal-theme-hook))
 
-(defun wal-with-big-vertico (fun &rest args)
-  "Call FUN with ARGS but increase the `vertico-count'."
-  (defvar vertico-count)
-  (let ((vertico-count 20))
-
-    (apply fun args)))
-
 (defvar wal-consult-pre-narrow nil
   "Whether `consult' commands should be pre-narrowed.")
 
@@ -554,7 +547,6 @@ If DISCONTINUE is non-nil, clock in from now."
    consult--source-bookmark
    consult-recent-file
    wal-consult-clock-in
-   consult-org-heading
    :preview-key "C-."
 
    consult--source-project-recent-file
@@ -565,9 +557,6 @@ If DISCONTINUE is non-nil, clock in from now."
 
   ;; Be sure to set the active them after switching.
   (advice-add 'consult-theme :after #'wal-then-set-active-theme)
-
-  ;; Use a bigger `vertico' when grepping.
-  (advice-add 'consult-ripgrep :around #'wal-with-big-vertico)
 
   ;; Stay on first buffer before input.
   (advice-add
