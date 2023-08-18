@@ -200,10 +200,9 @@
 (ert-deftest wal-project-local-value ()
   (ert-with-temp-file project
 
-    (bydi ((:always project-current) (:mock project-root :return project))
-
-      (with-current-buffer (find-file-noselect project)
-        (setq-local major-mode 'text-mode))
+    (bydi ((:always project-current)
+           (:mock project-root :return project)
+           (:mock project--value-in-dir :return 'text-mode))
 
       (should (equal (wal-project-local-value 'major-mode) 'text-mode)))))
 

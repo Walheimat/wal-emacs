@@ -38,6 +38,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `corfu-popuinfo` is no longer ensured.
 - `make test` running `cask install` since the test folder might be
   more recent than the build folder (see below).
+- `wal-project-local-value` now uses `project--value-in-dir` instead
+  of visiting the root buffer and using `buffer-local-value`.
 
 ### Removed
 

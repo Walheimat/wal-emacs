@@ -70,7 +70,7 @@ Built-in project management.
   "Switch to the current project's parent project."
   (interactive)
 
-  (if-let ((parent (wal-project-local-value 'wal-project-parent-project)))
+  (if-let* ((parent (wal-project-local-value 'wal-project-parent-project)))
       (project-switch-project parent)
     (user-error "You need to set `wal-project-parent-project'")))
 
@@ -272,9 +272,9 @@ set to filter by project buffers."
 
 Optionally the PROJECT may be passed directly."
   (when-let* ((project (or project (project-current)))
-              (root (project-root project))
-              (root-buffer (find-file-noselect root)))
-    (buffer-local-value symbol root-buffer)))
+              (root (project-root project)))
+
+    (project--value-in-dir symbol root)))
 
 (defun wal-project-find-in-here (&optional include-all)
   "Find a project file in the current directory.
