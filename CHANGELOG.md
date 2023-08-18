@@ -34,12 +34,16 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `partial-recall` buffer source is no longer inserted before the
   default buffer source.
 - `corfu-popuinfo` is no longer ensured.
+- `make test` running `cask install` since the test folder might be
+  more recent than the build folder (see below).
 
 ### Removed
 
 - Command `wal-consult-line` as `consult-line` already adds
   `thing-at-point` to history.
 - Command `wal-consult-org-heading` as narrowing covers most cases.
+- Package definitions in `Cask` file as installing the package via
+  `cask` is not (yet) possible.
 
 ## [v2.1.8]
 
