@@ -76,7 +76,7 @@
         (entered-command "test"))
 
     (bydi ((:always project-current)
-           (:mock project-root :return "/tmp/cmd")
+p           (:mock project-root :return "/tmp/cmd")
            (:mock project-name :return "Test Project")
            (:mock project--value-in-dir :return wal-project-test-default-cmd)
            compile
@@ -215,6 +215,17 @@
       (funcall-interactively #'wal-project-find-in-here t)
 
       (bydi-was-called-with project-find-file-in '(nil ("/tmp/test") project t)))))
+
+(ert-deftest wal-project-switch-to-tasks ()
+  (let ((marker nil))
+
+    (bydi ((:mock wal-org-capture--find-project-tasks-heading :return marker)
+           switch-to-buffer)
+
+      (with-temp-buffer
+        (setq marker (point-marker))
+        (wal-project-switch-to-tasks)
+        (bydi-was-called-with switch-to-buffer (list (current-buffer)))))))
 
 ;;; wal-workspace-test.el ends here
 

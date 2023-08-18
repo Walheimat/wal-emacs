@@ -135,7 +135,7 @@
 
       (bydi-was-called wal-org-tree-slide-play))))
 
-(ert-deftest test-wal-org-capture-find-project-task-heading ()
+(ert-deftest wal-org-capture-find-project-task-heading ()
   (let ((marker nil))
 
     (when (get-buffer "*wal-async*")
@@ -143,7 +143,6 @@
 
     (bydi ((:mock org-find-exact-heading-in-directory :return marker)
            switch-to-buffer
-           find-file-noselect
            (:mock wal-project-local-value :with (lambda (it &optional _)
                                                   (pcase it
                                                     ('wal-org-capture-tasks-heading marker)
@@ -153,7 +152,6 @@
            (:always project-root))
 
       (should-error (wal-org-capture-locate-project-tasks) :type 'user-error)
-      (should-error (wal-org-capture-switch-to-project-tasks) :type 'user-error)
 
       (with-temp-buffer
         (insert "Test")
@@ -165,12 +163,7 @@
 
         (wal-org-capture-locate-project-tasks)
 
-        (should (eq (marker-position marker) 5)))
-
-      (with-temp-buffer
-        (setq marker (point-marker))
-        (wal-org-capture-switch-to-project-tasks)
-        (bydi-was-called-with switch-to-buffer (list (current-buffer)))))))
+        (should (eq (marker-position marker) 5))))))
 
 (ert-deftest test-wal-org-clock-in-switch-to-state ()
   (should (string-equal "IN PROGRESS" (wal-org-clock-in-switch-to-state "OTHER STATE"))))

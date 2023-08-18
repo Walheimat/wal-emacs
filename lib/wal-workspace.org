@@ -285,6 +285,15 @@ If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
   (when-let ((project (project-current nil)))
 
     (project-find-file-in nil (list default-directory) project include-all)))
+
+(defun wal-project-switch-to-tasks ()
+  "Switch to the current project's tasks."
+  (interactive)
+
+  (when-let* ((marker (wal-org-capture--find-project-tasks-heading))
+              (buffer (marker-buffer marker)))
+
+    (switch-to-buffer buffer)))
 #+END_SRC
 
 *** Configuration
@@ -319,7 +328,7 @@ If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
 
   (project-switch-commands '((project-find-file "Find file" ?f)
                              (project-find-dir "Find dir" ?d)
-                             (wal-org-capture-switch-to-project-tasks "Find tasks" ?t)
+                             (wal-project-switch-to-tasks "Find tasks" ?t)
                              (wal-project-magit-status "Magit" ?m)
                              (wal-project-consult-buffer "Consult buffer" ?j)
                              (wal-rg-project-literal "Find rg" ?n)
@@ -342,7 +351,8 @@ If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
   :bind
   (:map wal-project-prefix-map
    ("C-p" . wal-project-switch-to-parent-project)
-   ("C-f" . wal-project-find-in-here))
+   ("C-f" . wal-project-find-in-here)
+   ("C-c" . wal-project-switch-to-tasks))
 
   :wal-bind
   (("h" . project-find-file)))
