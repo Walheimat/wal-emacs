@@ -13,7 +13,6 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Pre-narrowing in `consult` is off by default.
 - `dired-auto-revert-buffer` is now set to
   `dired-directory-changed-p`.
-- `show-paren-context-when-offscreen` is now set to `overlay`.
 - `savehist-additional-variables` is now set to `(kill-ring)`.
 - `xref-search-program` is set to `ripgrep` if possible.
 
