@@ -32,6 +32,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   `consult-outline` depending on the mode.
 - User-prefixed `i` now uses `avy-goto-char-timer` with a timer of 0.4
   seconds instead of `avy-goto-char`.
+- Project task `org-capture` template no longer adds the file path.
 
 ### Fixed
 
@@ -45,6 +46,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - The custom `dashboard` banners are now chosen by new override advice
   to `dashboard-choose-banner`. So having both GUI and terminal frames
   should yield the appropriate logo.
+- `org-capture-templates` now set empty lines before and after instead
+  of using newline.
 
 ### Removed
 
