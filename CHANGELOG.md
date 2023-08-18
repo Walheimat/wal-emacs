@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Pre-narrowing in `consult` is off by default.
+- `dired-auto-revert-buffer` is now set to
+  `dired-directory-changed-p`.
+- `show-paren-context-when-offscreen` is now set to `overlay`.
+- `savehist-additional-variables` is now set to `(kill-ring)`.
+- `xref-search-program` is set to `ripgrep` if possible.
+
+### Fixed
+
+- `partial-recall` buffer source is no longer inserted before the
+  default buffer source.
+
 ## [v2.1.8]
 
 Dapper capper.
