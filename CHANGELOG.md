@@ -30,6 +30,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `partial-recall` buffer source is no longer inserted before the
   default buffer source.
+- `corfu-popuinfo` is no longer ensured.
 
 ### Removed
 
