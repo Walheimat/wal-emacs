@@ -576,10 +576,13 @@ If DISCONTINUE is non-nil, clock in from now."
     [["Goto"
       ("SPC" "mark" consult-mark)
       ("g" "line" consult-goto-line)
-      ("h" "heading" consult-org-heading
-       :inapt-if-not-mode 'org-mode)
       ("i" "imenu" consult-imenu)
-      ("o" "outline" consult-outline)]
+      ("o" "outline" (lambda ()
+                       (interactive)
+
+                       (if (derived-mode-p 'org-mode)
+                           (call-interactively 'consult-org-heading)
+                         (call-interactively 'consult-outline))))]
 
      ["Find"
       ("m" "bookmark" consult-bookmark)

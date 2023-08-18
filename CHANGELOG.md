@@ -28,6 +28,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   view and back is bound to user-prefixed `i`.
 - `initial-major-mode` is no longer set to `fundamental-mode`.
 - `vertico-resize` is set to `t`.
+- `transient` for `consult` now calls either `consult-org-heading` or
+  `consult-outline` depending on the mode.
 
 ### Fixed
 
