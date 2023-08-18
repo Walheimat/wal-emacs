@@ -113,22 +113,26 @@
      (wal-project-create-command test)
      '(progn
         (defvar-local wal-project-test-default-cmd nil "Default for `wal-project-test'.")
-        (defun wal-project-test (&optional arg) "Test the current project.\nThis will use `compile-mode' unless ARG is t, then it will use `comint-mode'."
+        (defvar-local wal-project-test-reverse-mode nil "Whether to reverse `comint' usage.")
+        (defun wal-project-test (&optional arg) "Test the current project.\nThis will use `compile-mode' unless ARG or `wal-project-test-reverse-mode' is t, then it will use `comint-mode'."
                (interactive "P")
-               (wal-project-command 'test (not (null arg))))
+               (wal-project-command 'test (or (not (null arg)) wal-project-test-reverse-mode)))
         (setq wal-project-commands (plist-put wal-project-commands 'test hash-table))
         (bind-key "t" 'wal-project-test wal-project-prefix-map)
-        (put 'wal-project-test-default-cmd 'safe-local-variable #'wal-project-command--valid-default-p)))
+        (put 'wal-project-test-default-cmd 'safe-local-variable #'wal-project-command--valid-default-p)
+        (put 'wal-project-test-reverse-mode 'safe-local-variable #'booleanp)))
     (bydi-match-expansion
      (wal-project-create-command test :key "o" :default "make all" :comint t)
      '(progn
         (defvar-local wal-project-test-default-cmd "make all" "Default for `wal-project-test'.")
-        (defun wal-project-test (&optional arg) "Test the current project.\nThis will use `comint-mode' unless ARG is t, then it will use `compile-mode'."
+        (defvar-local wal-project-test-reverse-mode nil "Whether to reverse `comint' usage.")
+        (defun wal-project-test (&optional arg) "Test the current project.\nThis will use `comint-mode' unless ARG or `wal-project-test-reverse-mode' is t, then it will use `compile-mode'."
                (interactive "P")
-               (wal-project-command 'test (null arg)))
+               (wal-project-command 'test (and (null arg) (not wal-project-test-reverse-mode))))
         (setq wal-project-commands (plist-put wal-project-commands 'test hash-table))
         (bind-key "o" 'wal-project-test wal-project-prefix-map)
-        (put 'wal-project-test-default-cmd 'safe-local-variable #'wal-project-command--valid-default-p)))))
+        (put 'wal-project-test-default-cmd 'safe-local-variable #'wal-project-command--valid-default-p)
+        (put 'wal-project-test-reverse-mode 'safe-local-variable #'booleanp)))))
 
 (ert-deftest test-wal-project-select-command ()
   (bydi ((:mock completing-read :return "test")

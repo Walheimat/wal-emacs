@@ -169,25 +169,28 @@ value using it. If COMINT is t, make sure the command is run in
   (declare (indent defun))
 
   (let ((function-name (intern (format "wal-project-%s" name)))
-        (variable-name (intern (format "wal-project-%s-default-cmd" name)))
+        (default-var (intern (format "wal-project-%s-default-cmd" name)))
+        (reverse-var (intern (format "wal-project-%s-reverse-mode" name)))
         (key (or key (substring (symbol-name name) 0 1))))
 
     `(progn
-       (defvar-local ,variable-name ,default ,(format "Default for `%s'." function-name))
+       (defvar-local ,default-var ,default ,(format "Default for `%s'." function-name))
+       (defvar-local ,reverse-var nil "Whether to reverse `comint' usage.")
 
        (defun ,function-name (&optional arg)
          ,(concat (capitalize (symbol-name name))
                   " the current project.\n"
                   "This will use "
                   (if comint "`comint-mode'" "`compile-mode'")
-                  " unless ARG is t, then it will use "
+                  " unless ARG or `" (symbol-name reverse-var)
+                  "' is t, then it will use "
                   (if comint "`compile-mode'" "`comint-mode'")
                   ".")
          (interactive "P")
 
          ,(if comint
-              `(wal-project-command ',name (null arg))
-            `(wal-project-command ',name (not (null arg)))))
+              `(wal-project-command ',name (and (null arg) (not ,reverse-var)))
+            `(wal-project-command ',name (or (not (null arg)) ,reverse-var))))
 
        (setq wal-project-commands (plist-put
                                    wal-project-commands
@@ -195,7 +198,8 @@ value using it. If COMINT is t, make sure the command is run in
                                    ,(make-hash-table :test 'equal)))
 
        (bind-key ,key ',function-name wal-project-prefix-map)
-       (put ',variable-name 'safe-local-variable #'wal-project-command--valid-default-p))))
+       (put ',default-var 'safe-local-variable #'wal-project-command--valid-default-p)
+       (put ',reverse-var 'safe-local-variable #'booleanp))))
 
 (defun wal-project-command--valid-default-p (val)
   "Check if VAL is a valid project command default."
@@ -300,7 +304,7 @@ If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
   (wdb-faraway "\\*project")
 
   (wal-project-create-command build :default "make")
-  (wal-project-create-command install :comint t)
+  (wal-project-create-command install :comint t :default "make install")
   (wal-project-create-command clean :default "make clean")
   (wal-project-create-command execute)
   (wal-project-create-command run :comint t)

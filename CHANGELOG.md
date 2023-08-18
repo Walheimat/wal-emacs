@@ -11,6 +11,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - Command `wal-switch-to-other-buffer` bound to `M-o`.
+- Commands created by `wal-project-create-command` now also create
+  variable `wal-project-{cmd}-reverse-mode` that allows overriding the
+  default usage (`comint` or `compile`) for the given command.
 
 ### Changed
 
