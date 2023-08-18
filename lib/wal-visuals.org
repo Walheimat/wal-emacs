@@ -506,6 +506,20 @@ Let's have a dash of board.
 
     (dashboard-insert-startupify-lists)
     (get-buffer dashboard-buffer-name)))
+
+(defun wal-instead-use-custom-banner ()
+  "Choose the correct banner.
+
+Try to use the local banners and only if that fails call the
+original FUN."
+  (declare-function dashboard--image-supported-p "ext:dashboard.el")
+
+  (let ((png (expand-file-name "assets/logo.png" wal-emacs-config-default-path))
+        (ascii (expand-file-name "assets/logo.txt" wal-emacs-config-default-path)))
+
+    (if (dashboard--image-supported-p png)
+        (list :image png :text ascii)
+      (list :text ascii))))
 #+END_SRC
 
 *** Configuration
@@ -526,6 +540,9 @@ Let's have a dash of board.
   (advice-add
    'dashboard-setup-startup-hook :before-until
    #'wal-in-case-of-daemonp-add-different-hook)
+  (advice-add
+   'dashboard-choose-banner :override
+   #'wal-instead-use-custom-banner)
 
   :config
   (setq dashboard-banner-logo-title (wal-describe-config-version))
@@ -541,13 +558,6 @@ Let's have a dash of board.
   (dashboard-projects-backend 'project-el)
 
   (dashboard-image-banner-max-height (if wal-hidpi 0 300))
-  (dashboard-startup-banner (let ((ext (if (or (daemonp) (display-graphic-p))
-                                           ".png"
-                                         ".txt")))
-
-                              (expand-file-name
-                               (concat "assets/logo" ext)
-                               wal-emacs-config-default-path)))
 
   (dashboard-footer-icon "🐋")
   (dashboard-footer-messages '("breaching your favorite stupid framework"

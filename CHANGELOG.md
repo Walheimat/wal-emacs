@@ -42,6 +42,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   more recent than the build folder (see below).
 - `wal-project-local-value` now uses `project--value-in-dir` instead
   of visiting the root buffer and using `buffer-local-value`.
+- The custom `dashboard` banners are now chosen by new override advice
+  to `dashboard-choose-banner`. So having both GUI and terminal frames
+  should yield the appropriate logo.
 
 ### Removed
 

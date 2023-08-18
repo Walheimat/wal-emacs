@@ -210,6 +210,19 @@
 
       (bydi-was-called-with get-buffer "dash"))))
 
+(ert-deftest wal-instead-use-custom-banner ()
+  (let ((wal-emacs-config-default-path "/home/test"))
+    (bydi ((:sometimes dashboard--image-supported-p))
+
+      (should (equal (list :image "/home/test/assets/logo.png"
+                           :text "/home/test/assets/logo.txt")
+                     (wal-instead-use-custom-banner)))
+
+      (bydi-toggle-sometimes)
+
+      (should (equal (list :text "/home/test/assets/logo.txt")
+                     (wal-instead-use-custom-banner))))))
+
 ;;; wal-visuals-test.el ends here
 
 ;; Local Variables:
