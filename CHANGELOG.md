@@ -24,6 +24,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   done via `vertico-multiform-categories`. Switching to the vertical
   view and back is bound to user-prefixed `i`.
 - `initial-major-mode` is no longer set to `fundamental-mode`.
+- `vertico-resize` is set to `t`.
 
 ### Fixed
 
