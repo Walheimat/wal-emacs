@@ -30,6 +30,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `vertico-resize` is set to `t`.
 - `transient` for `consult` now calls either `consult-org-heading` or
   `consult-outline` depending on the mode.
+- User-prefixed `i` now uses `avy-goto-char-timer` with a timer of 0.4
+  seconds instead of `avy-goto-char`.
 
 ### Fixed
 
