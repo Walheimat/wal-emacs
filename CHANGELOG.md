@@ -11,6 +11,15 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - `proselint` checker is disabled (has to be enabled manually).
+- `wal-project-command` switches to `comint` with numeric prefix
+  argument 0.
+- `wal-project-command` no longer prompts unless called with a prefix
+  argument as long as the history is non-empty.
+
+### Removed
+
+- `wal-project-create-command` no longer accepts key `:comint`. All
+  commands use `compile` by default again; see above.
 
 ## [v2.1.9]
 

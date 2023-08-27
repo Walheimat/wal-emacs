@@ -87,11 +87,15 @@ Built-in project management.
       (concat "*" "project-" wal-project-current-command "*")
     "*project-compile*"))
 
-(defun wal-project-command (cmd &optional comint)
+(defun wal-project-command (cmd &optional arg)
   "Run CMD for the current project.
 
-Each command will be stored in a per-project history. COMINT is
-passed to `compile'."
+Each command will be stored in a per-project history. If the
+history is non-empty, the user will not be prompted unless called
+with a prefix argument ARG.
+
+If the prefix argument ARG is 0, `comint-mode' will be used
+instead of `compile-mode'."
   (defvar project-vc-name)
 
   (let* ((project-vc-name nil)
@@ -107,13 +111,14 @@ passed to `compile'."
          (initial (unless (ring-empty-p history)
                     (ring-ref history 0)))
          (wal-project-current-command (symbol-name cmd))
-         (prompt (concat
-                  (capitalize wal-project-current-command)
-                  " project ("
-                  name
-                  ")"
-                  (if comint " interactively: " ": ")))
-         (command (read-shell-command prompt initial 'wal-project-command-history))
+
+         (comint (zerop (prefix-numeric-value arg)))
+         (prompt (format "%s project (%s)%s"
+                         (capitalize wal-project-current-command)
+                         name
+                         (if comint " interactively: " ": ")))
+         (command (or (and (not arg) initial)
+                      (read-shell-command prompt initial 'wal-project-command-history)))
 
          (default-directory (project-root current))
          (compilation-buffer-name-function 'wal-project-command--buffer-name))
@@ -159,7 +164,7 @@ is the default."
 
 (defvar wal-project-prefix-map (make-sparse-keymap))
 
-(cl-defmacro wal-project-create-command (name &key key default comint)
+(cl-defmacro wal-project-create-command (name &key key default)
   "Create command NAME.
 
 The command will be bound using `ambassador' using its initial
@@ -170,27 +175,18 @@ value using it. If COMINT is t, make sure the command is run in
 
   (let ((function-name (intern (format "wal-project-%s" name)))
         (default-var (intern (format "wal-project-%s-default-cmd" name)))
-        (reverse-var (intern (format "wal-project-%s-reverse-mode" name)))
         (key (or key (substring (symbol-name name) 0 1))))
 
     `(progn
        (defvar-local ,default-var ,default ,(format "Default for `%s'." function-name))
-       (defvar-local ,reverse-var nil "Whether to reverse `comint' usage.")
 
        (defun ,function-name (&optional arg)
          ,(concat (capitalize (symbol-name name))
-                  " the current project.\n"
-                  "This will use "
-                  (if comint "`comint-mode'" "`compile-mode'")
-                  " unless ARG or `" (symbol-name reverse-var)
-                  "' is t, then it will use "
-                  (if comint "`compile-mode'" "`comint-mode'")
-                  ".")
+                  " the current project.\n\n"
+                  "See `wal-project-command' for behavior of ARG.")
          (interactive "P")
 
-         ,(if comint
-              `(wal-project-command ',name (and (null arg) (not ,reverse-var)))
-            `(wal-project-command ',name (or (not (null arg)) ,reverse-var))))
+         (wal-project-command ',name arg))
 
        (setq wal-project-commands (plist-put
                                    wal-project-commands
@@ -198,8 +194,7 @@ value using it. If COMINT is t, make sure the command is run in
                                    ,(make-hash-table :test 'equal)))
 
        (bind-key ,key ',function-name wal-project-prefix-map)
-       (put ',default-var 'safe-local-variable #'wal-project-command--valid-default-p)
-       (put ',reverse-var 'safe-local-variable #'booleanp))))
+       (put ',default-var 'safe-local-variable #'wal-project-command--valid-default-p))))
 
 (defun wal-project-command--valid-default-p (val)
   "Check if VAL is a valid project command default."
@@ -313,10 +308,9 @@ If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
   (wdb-faraway "\\*project")
 
   (wal-project-create-command build :default "make")
-  (wal-project-create-command install :comint t :default "make install")
+  (wal-project-create-command install :default "make install")
   (wal-project-create-command clean :default "make clean")
   (wal-project-create-command execute)
-  (wal-project-create-command run :comint t)
   (wal-project-create-command test :default '("make test" "make coverage"))
 
   :custom
