@@ -525,6 +525,14 @@ If DISCONTINUE is non-nil, clock in from now."
     (if (memq current buffers)
         (cons current (delq current buffers))
       buffers)))
+
+(defun wal-consult-outline ()
+  "Call the appropriate `consult' method."
+  (interactive)
+
+  (if (derived-mode-p 'org-mode)
+      (call-interactively 'consult-org-heading)
+    (call-interactively 'consult-outline)))
 #+END_SRC
 
 *** Configuration
@@ -577,12 +585,7 @@ If DISCONTINUE is non-nil, clock in from now."
       ("SPC" "mark" consult-mark)
       ("g" "line" consult-goto-line)
       ("i" "imenu" consult-imenu)
-      ("o" "outline" (lambda ()
-                       (interactive)
-
-                       (if (derived-mode-p 'org-mode)
-                           (call-interactively 'consult-org-heading)
-                         (call-interactively 'consult-outline))))]
+      ("o" "outline" wal-consult-outline)]
 
      ["Find"
       ("m" "bookmark" consult-bookmark)

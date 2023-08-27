@@ -153,6 +153,17 @@
       (setq buffers '(one two three))
       (should (equal '(one two three) (wal-adjust-by-putting-current-buffer-first buffers))))))
 
+(ert-deftest wal-consult-outline ()
+  (bydi ((:sometimes derived-mode-p)
+         consult-org-heading
+         consult-outline)
+
+    (wal-consult-outline)
+    (bydi-was-called consult-org-heading)
+    (bydi-toggle-sometimes)
+    (wal-consult-outline)
+    (bydi-was-called consult-outline)))
+
 ;;; wal-complete-test.el ends here
 
 ;; Local Variables:
