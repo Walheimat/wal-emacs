@@ -86,18 +86,6 @@
       (wal-debug)
       (bydi-was-called dap-hydra))))
 
-(ert-deftest test-wal-ignore-if-no-lsp ()
-  (defvar lsp-mode)
-  (bydi (message)
-    (let ((lsp-mode nil))
-      (should-not (wal-ignore-if-no-lsp))
-      (bydi-was-called-with message "Not in a LSP buffer")
-      (bydi-clear-mocks))
-
-    (let ((lsp-mode t))
-      (should (wal-ignore-if-no-lsp))
-      (bydi-was-not-called message))))
-
 ;;; wal-lsp-test.el ends here
 
 ;; Local Variables:

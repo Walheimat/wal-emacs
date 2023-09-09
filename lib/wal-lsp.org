@@ -267,19 +267,6 @@ This is `dap-debug' before and `dap-hydra' during debugging."
 
 Jump to symbols with =consult=.
 
-*** Utility
-
-#+BEGIN_SRC emacs-lisp
-(defun wal-ignore-if-no-lsp (&rest _args)
-  "Don't call the function if `lsp-mode' is nil."
-  (if (bound-and-true-p lsp-mode)
-      t
-    (message "Not in a LSP buffer")
-    nil))
-#+END_SRC
-
-*** Configuration
-
 #+begin_src emacs-lisp
 (use-package consult-lsp
   :wal-ways nil
@@ -288,10 +275,6 @@ Jump to symbols with =consult=.
   :after (consult lsp-mode)
 
   :config
-  (advice-add
-   'consult-lsp-file-symbols :before-while
-   #'wal-ignore-if-no-lsp)
-
   (transient-append-suffix 'consult '(0 0 -1)
     '("y" "symbol" consult-lsp-file-symbols
       :inapt-if-not (lambda () (bound-and-true-p lsp-mode)))))
