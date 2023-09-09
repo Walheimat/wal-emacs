@@ -216,6 +216,8 @@ Note that `message' is silenced during tangling."
   (require 'ob-tangle)
   (defvar org-confirm-babel-evaluate)
 
+  (message "Tangling files in '%s'" wal-emacs-config-lib-path)
+
   (let ((org-confirm-babel-evaluate nil)
         (sources (nthcdr 2 (directory-files wal-emacs-config-lib-path t))))
 
