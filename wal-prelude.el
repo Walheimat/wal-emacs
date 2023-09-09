@@ -78,10 +78,9 @@ This variable will be set when calling `wal-prelude-bootstrap'.")
 
     el-files))
 
-(defconst wal-prelude--init-marker ";; wal-prelude-bootstrap"
-  "The marker used to insert and delete in the user's init file.")
-
-(defconst wal-prelude--init-marker-fs (concat "\n" wal-prelude--init-marker ":%s\n")
+(defconst wal-prelude--init-marker "wal-prelude-bootstrap")
+(defconst wal-prelude--init-end-marker "wal-prelude-bootstrap--end")
+(defconst wal-prelude--init-marker-fs (concat wal-prelude--init-marker ":%s")
   "String to format new markers.")
 
 (defun wal-prelude-init (init-file source-dir &optional clear)
@@ -105,7 +104,7 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
          (template-buffer (find-file-noselect template))
          (template-contents (with-current-buffer template-buffer
                               (buffer-string)))
-         (bootstrap (concat marker (format template-contents source-dir)))
+         (bootstrap (format template-contents marker source-dir wal-prelude--init-end-marker))
          (ready nil))
 
     (with-current-buffer init-buffer
@@ -114,9 +113,20 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
           (progn
             (message "Bootstrap in '%s' is up-to-date" init-file)
             (setq ready t))
-        (when-let* ((start (string-search wal-prelude--init-marker (buffer-string))))
+        (when-let* ((start (string-search wal-prelude--init-marker (buffer-string)))
+                    (end (or (string-search wal-prelude--init-end-marker (buffer-string))
+                             (point-max))))
           (message "Deleting existing bootstrap in '%s'" init-file)
-          (delete-region start (point-max))
+
+          (save-excursion
+            (goto-char start)
+            (beginning-of-line)
+            (setq start (point))
+            (goto-char end)
+            (end-of-line)
+            (setq end (point)))
+
+          (delete-region start end)
           (save-buffer))))
     (kill-buffer init-buffer)
 
