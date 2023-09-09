@@ -288,15 +288,10 @@ Should be used when setting up minibuffer."
 Un-dedicates if already dedicated."
   (interactive)
 
-  (let ((window (selected-window))
-        (buffer (current-buffer)))
+  (let ((dedicated (window-dedicated-p)))
 
-    (if (window-dedicated-p window)
-        (progn
-         (set-window-dedicated-p window nil)
-         (message "Window no longer dedicated to %s" buffer))
-    (set-window-dedicated-p window buffer)
-    (message "Dedicating window to %s" buffer))))
+    (message "Window %s dedicated to buffer" (if dedicated "no longer" "now"))
+    (set-window-dedicated-p (selected-window) (not dedicated))))
 
 (defun wal-force-delete-other-windows ()
   "Call `delete-other-windows' ignoring window parameters."
@@ -416,11 +411,10 @@ Duplicate items are removed."
   "Edit TARGET alist in-place using VALUES."
   (let ((val (symbol-value target)))
 
-    (if (seq-every-p (lambda (it) (assoc (car it) val)) values)
-        (seq-each (lambda (it) (map-put! val (car it) (cdr it))) values)
-      (let ((keys (mapcar #'car values)))
+    (unless (seq-every-p (lambda (it) (assoc (car it) val)) values)
+      (user-error "All keys %s must already be present in %s" (mapcar #'car values) target))
 
-        (user-error "All keys %s must already be present in %s" keys target)))))
+    (seq-each (lambda (it) (map-put! val (car it) (cdr it))) values)))
 
 (defun wal-insert (target point item &optional allow-duplicates before quiet)
   "Insert ITEM in TARGET after POINT.
@@ -565,32 +559,11 @@ Truncates to 8 characters if no MAX-LEN is provided."
         (concat (substring text 0 (max (- len 3) 1)) "...")
       text)))
 
-(defun wal-pad-string (string &optional right)
-  "Advise to pad STRING.
-
-Padding is on the left unless RIGHT is t."
-  (let ((trimmed (string-trim string))
-        (padding " "))
-
-    (if right
-        (concat trimmed padding)
-      (concat padding trimmed))))
-
 (defun wal-univ-p ()
   "Check if the `current-prefix-arg' is the `universal-argument'.
 
 This is mainly useful for non-interactive functions."
   (equal current-prefix-arg '(4)))
-
-(defun wal-reset-to-standard (sym &optional locally)
-  "Reset symbol SYM to its standard value.
-If LOCALLY is t, the local variable is killed while its global
-value is left untouched."
-  (if locally
-      (if (local-variable-p sym)
-          (kill-local-variable sym)
-        (user-error "'%s' has no local binding" sym))
-    (set-default sym (eval (car (get sym 'standard-value))))))
 
 (defmacro wal-try (package &rest body)
   "Exceute BODY if PACKAGE can be required."
@@ -605,18 +578,6 @@ We also make sure we're not in `with-editor-mode' as to not to
 intefere with `magit' and friends."
   (and (bound-and-true-p server-buffer-clients)
        (not (bound-and-true-p with-editor-mode))))
-
-(defun wal-delete-edit-or-kill (&optional abort)
-  "Delete frame, be done (or ABORT) or kill Emacs."
-  (interactive "P")
-
-  (cond
-   ((wal-server-edit-p)
-    (if abort (server-edit-abort) (server-edit)))
-   ((daemonp)
-    (delete-frame))
-   (t
-    (save-buffers-kill-terminal))))
 
 (defun wal-dead-shell-p ()
   "Check if the current buffer is a shell or comint buffer with no process."

@@ -20,6 +20,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `wal-project-create-command` no longer accepts key `:comint`. All
   commands use `compile` by default again; see above.
+- Functions `wal-delete-edit-or-kill`, `wal-pad-string` and
+  `wal-reset-to-standard`.
 
 ## [v2.1.9]
 

@@ -508,39 +508,12 @@
 (ert-deftest test-wal-truncate--leaves-as-is-if-below ()
   (should (string-equal (wal-truncate "This is it" 24) "This is it")))
 
-(ert-deftest test-wal-pad-string--pads ()
-  (let ((test-string "hello"))
-
-    (should (equal " hello" (wal-pad-string test-string)))))
-
-(ert-deftest test-wal-pad-string--pads-right ()
-  (let ((test-string "hello"))
-
-    (should (equal "hello " (wal-pad-string test-string t)))))
-
 (ert-deftest test-wal-univ-p ()
   (let ((current-prefix-arg '(4)))
 
     (should (wal-univ-p))))
 
 (defvar test-standard 'standard)
-
-(ert-deftest test-wal-reset-to-standard--resets ()
-  (setq test-standard 'global)
-
-  (should (equal 'global test-standard))
-
-  (wal-reset-to-standard 'test-standard)
-
-  (should (equal nil test-standard))
-  (should-error (wal-reset-to-standard 'test-standard t) :type 'user-error)
-
-  (with-temp-buffer
-    (setq-local test-standard 'local)
-
-    (wal-reset-to-standard 'test-standard t)
-
-    (should (equal nil test-standard))))
 
 (ert-deftest test-wal-try ()
   (bydi-match-expansion
@@ -565,26 +538,6 @@
         (with-editor-mode nil))
 
     (should (wal-server-edit-p))))
-
-(ert-deftest test-wal-delete-edit-or-kill ()
-  (bydi ((:always wal-server-edit-p)
-         (:mock server-edit-abort :return 'abort)
-         (:mock server-edit :return 'edit))
-
-    (should (equal (wal-delete-edit-or-kill) 'edit))
-    (should (equal (wal-delete-edit-or-kill t) 'abort)))
-
-  (bydi ((:ignore wal-server-edit-p)
-         (:always daemonp)
-         (:mock delete-frame :return 'delete-frame))
-
-    (should (equal (wal-delete-edit-or-kill) 'delete-frame)))
-
-  (bydi ((:ignore wal-server-edit-p)
-         (:ignore daemonp)
-         (:mock save-buffers-kill-terminal :return 'kill))
-
-    (should (equal (wal-delete-edit-or-kill) 'kill))))
 
 (require 'shell)
 
