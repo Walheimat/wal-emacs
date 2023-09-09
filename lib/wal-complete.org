@@ -489,7 +489,11 @@ If DISCONTINUE is non-nil, clock in from now."
         :history 'consult--project-history
         :action 'project-switch-project
         :preview-key "C-."
-        :items (lambda () (mapcar #'car project--list))))
+        :items (lambda ()
+                 (let ((open (consult--open-project-items))
+                       (all (mapcar #'car project--list)))
+
+                   (seq-filter (lambda (it) (not (member it open))) all)))))
 
 (defun consult--open-project-items ()
   "Get the open projects."
