@@ -116,8 +116,8 @@ t."
 
 (defun wal-read-sensible-font-height (type)
   "Read a sensible font height for TYPE."
-  (let* ((prev (symbol-value (intern (format "wal-%s-font-height" type))))
-         (num (read-number (format "Set %s font (currently: %s): " type prev))))
+  (let* ((current (face-attribute type :height))
+         (num (read-number (format "Set %s font (currently: %s): " type current))))
 
     (max (min num 300) 80)))
 
@@ -150,18 +150,16 @@ t."
   "Set the HEIGHT for fixed fonts.
 
 Affects all frames unless ARG is t."
-  (interactive (list (wal-read-sensible-font-height 'fixed) current-prefix-arg))
+  (interactive (list (wal-read-sensible-font-height 'default) current-prefix-arg))
 
-  (setq wal-fixed-font-height height)
   (wal-font-update :height height '(default fixed-pitch) arg))
 
 (defun wal-set-variable-font-height (height &optional arg)
   "Set the HEIGHT for variable fonts.
 
 Affects all frames unless ARG is t."
-  (interactive (list (wal-read-sensible-font-height 'variable) current-prefix-arg))
+  (interactive (list (wal-read-sensible-font-height 'variable-pitch) current-prefix-arg))
 
-  (setq wal-variable-font-height height)
   (wal-font-update :height height '(variable-pitch) arg))
 
 (defun wal-preferred-fonts (fonts)

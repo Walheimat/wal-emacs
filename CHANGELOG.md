@@ -23,6 +23,12 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Functions `wal-delete-edit-or-kill`, `wal-pad-string` and
   `wal-reset-to-standard`.
 
+### Fixed
+
+- `wal-read-sensible-font-height` now uses `face-attribute` to
+  retrieve the current value; no command sets custom variables
+  anymore.
+
 ## [v2.1.9]
 
 Valued locals.

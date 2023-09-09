@@ -16,24 +16,23 @@
     (bydi-was-called-with set-face-attribute (list 'default 'selected :height 120))))
 
 (ert-deftest test-wal-read-sensible-font-height ()
-  (let ((wal-fixed-font-height 121)
-        (varying nil))
+  (let ((input 301)
+        (current 121))
 
-    (bydi ((:mock read-number :return varying))
+    (bydi ((:mock read-number :return input)
+           (:mock face-attribute :return current))
 
-      (setq varying 301)
-
-      (should  (eq 300 (wal-read-sensible-font-height 'fixed)))
-      (bydi-was-called-with read-number "Set fixed font (currently: 121): ")
-
-      (bydi-clear-mocks)
-
-      (setq varying 79)
-      (should (equal 80 (wal-read-sensible-font-height 'fixed)))
+      (should  (eq 300 (wal-read-sensible-font-height 'fixed-pitch)))
+      (bydi-was-called-with read-number "Set fixed-pitch font (currently: 121): ")
 
       (bydi-clear-mocks)
 
-      (setq varying 177)
+      (setq input 79)
+      (should (equal 80 (wal-read-sensible-font-height 'fixed-pitch)))
+
+      (bydi-clear-mocks)
+
+      (setq input 177)
       (should (equal 177 (wal-read-sensible-font-height 'fixed))))))
 
 (ert-deftest test-wal-available-fonts ()
