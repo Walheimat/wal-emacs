@@ -6,7 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v2.1.10]
+
+Prompt inaction.
+
+## Added
+
+- `profiler` commands are now bound in `administrator`.
+- The bootstrapper is no longer required to live at the end of the
+  init file (although it will always be appended to the end on
+  creation).
+- `cargo-process-run-example` is now bound in Rust `major`.
+- Tangling the config now notifies immediately.
 
 ### Changed
 
@@ -15,6 +26,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   argument 0.
 - `wal-project-command` no longer prompts unless called with a prefix
   argument as long as the history is non-empty.
+- `consult-buffer` and `tab-switch` use `flat` completion.
+- Autosave variables have been adjusted downwards (more autosaves).
+- `multiple-cursors-mode` is now "prominent" in `minions`.
 
 ### Removed
 
@@ -28,6 +42,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `wal-read-sensible-font-height` now uses `face-attribute` to
   retrieve the current value; no command sets custom variables
   anymore.
+- Open and closed projects are now differentiated during completion
+  (no duplicates).
 
 ## [v2.1.9]
 
