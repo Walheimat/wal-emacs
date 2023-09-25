@@ -522,14 +522,6 @@ If DISCONTINUE is non-nil, clock in from now."
    '(consult--source-open-projects consult--source-projects)
    :prompt "Select project: "))
 
-(defun wal-adjust-by-putting-current-buffer-first (buffers)
-  "Return BUFFERS with the current buffer first."
-  (let ((current (current-buffer)))
-
-    (if (memq current buffers)
-        (cons current (delq current buffers))
-      buffers)))
-
 (defun wal-consult-outline ()
   "Call the appropriate `consult' method."
   (interactive)
@@ -565,13 +557,8 @@ If DISCONTINUE is non-nil, clock in from now."
    wal-consult-clock-in
    :prompt "Clock in: ")
 
-  ;; Be sure to set the active them after switching.
+  ;; Be sure to set the active theme after switching.
   (advice-add 'consult-theme :after #'wal-then-set-active-theme)
-
-  ;; Stay on first buffer before input.
-  (advice-add
-   'consult--buffer-sort-visibility :filter-return
-   'wal-adjust-by-putting-current-buffer-first)
 
   (advice-add 'consult :around 'wal-with-delayed-transient-popup)
 

@@ -11,6 +11,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - Setting `project-vc-name` is marked as safe for strings.
+- `consult` is no longer advised to put the current buffer first.
 
 ## Removed
 

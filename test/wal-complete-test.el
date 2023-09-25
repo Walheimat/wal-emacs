@@ -144,15 +144,6 @@
     (call-interactively 'wal-consult-project)
     (bydi-was-called-with consult--multi (list '(consult--source-open-projects consult--source-projects) :prompt "Select project: "))))
 
-(ert-deftest test-wal-adjust-by-putting-current-buffer-first ()
-  (let ((buffers '(one two testing)))
-
-    (bydi ((:mock current-buffer :with bydi-rt))
-      (should (equal '(testing one two) (wal-adjust-by-putting-current-buffer-first buffers)))
-
-      (setq buffers '(one two three))
-      (should (equal '(one two three) (wal-adjust-by-putting-current-buffer-first buffers))))))
-
 (ert-deftest wal-consult-outline ()
   (bydi ((:sometimes derived-mode-p)
          consult-org-heading
