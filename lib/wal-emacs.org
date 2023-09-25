@@ -199,6 +199,35 @@ Effing diffing.
    ("o" . nil)))
 #+END_SRC
 
+** doc-view
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+begin_src emacs-lisp
+(defvar-local wal-doc-view-page-offset 0)
+
+(defun wal-with-page-offset (goto page)
+  "Go to PAGE with an offset.
+
+GOTO is the advised function
+
+This function only applies the offset if `this-command' is
+`doc-view-goto-page' to avoid offsetting going to a previous or
+next page."
+  (let ((offset (if (eq 'doc-view-goto-page this-command)
+                    (+ page wal-doc-view-page-offset)
+                  page)))
+
+    (funcall-interactively goto offset)))
+
+(use-package doc-view
+  :config
+  (advice-add
+   'doc-view-goto-page :around
+   #'wal-with-page-offset))
+#+end_src
+
 ** eldoc
 :PROPERTIES:
 :UNNUMBERED: t
