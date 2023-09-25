@@ -103,6 +103,22 @@
 
       (should-error (wal-flycheck-file flycheck) :type 'user-error))))
 
+(ert-deftest wal-flycheck-mode ()
+  (bydi (flycheck-mode)
+    (with-temp-buffer
+      (setq major-mode 'test-mode)
+
+      (let ((wal-flycheck-ignored-modes '(test-mode)))
+
+        (wal-flycheck-mode)
+
+        (bydi-was-not-called flycheck-mode)
+
+        (setq wal-flycheck-ignored-modes nil)
+
+        (wal-flycheck-mode)
+        (bydi-was-called flycheck-mode)))))
+
 (ert-deftest test-wal-flyspell ()
   (defvar flyspell-mode nil)
   (bydi (flyspell-mode flyspell-prog-mode)
