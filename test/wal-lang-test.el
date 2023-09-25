@@ -169,25 +169,6 @@
 
         (should (equal flycheck-checker 'wal-less-stylelint))))))
 
-(ert-deftest test-wal-with-json-data-ignored-for-gdscript ()
-  (let ((table (make-hash-table :test 'equal)))
-
-    (puthash "jsonrpc" "2.0" table)
-
-    (with-temp-buffer
-      (setq major-mode 'gdscript-mode)
-
-      (should-not (wal-with-json-data-ignored-for-gdscript #'always table))
-
-      (remhash "jsonrpc" table)
-
-      (should (wal-with-json-data-ignored-for-gdscript #'always table))
-
-      (setq major-mode 'text-mode)
-      (puthash "jsonrpc" "2.0" table)
-
-      (should (wal-with-json-data-ignored-for-gdscript #'always table)))))
-
 ;;; wal-lang-test.el ends here
 
 ;; Local Variables:

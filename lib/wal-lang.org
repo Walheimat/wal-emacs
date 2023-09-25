@@ -1263,36 +1263,26 @@ We want quicker suggestions when in CSS modes.
 The engine you've been waiting for.
 
 #+BEGIN_SRC emacs-lisp
-;; Workaround from https://github.com/godotengine/emacs-gdscript-mode#known-issues
-(defun wal-with-json-data-ignored-for-gdscript (fun &rest args)
-  "Advise FUN, passing ARGS.
-
-This will ignore the error message resulting from Godot not
-replying to the `JSONRPC' request."
-  (if (string-equal major-mode "gdscript-mode")
-      (let ((json-data (nth 0 args)))
-
-        (unless (and (string= (gethash "jsonrpc" json-data "") "2.0")
-                     (not (gethash "id" json-data nil))
-                     (not (gethash "method" json-data nil)))
-          (apply fun args)))
-    (apply fun args)))
-
 (use-package gdscript-mode
   :wal-ways nil
 
   :init
   (harpoon gdscript-mode
     :lsp t
-    :tabs always
-    :messages ("I wish you were Estra-gone"))
+    :messages ("I wish you were Estra-gone")
+    :completion (3 4)
+
+    (setq-local harpoon-lsp-function 'eglot-ensure
+                eglot-send-changes-idle-time 2
+                corfu-auto nil))
 
   :config
   (advice-add
-   'lsp--get-message-type :around
-   #'wal-with-json-data-ignored-for-gdscript)
+   'eglot-completion-at-point
+   :around #'cape-wrap-buster)
 
-  (require 'dap-gdscript nil t))
+  :custom
+  (gdscript-indent-offset 2))
 #+END_SRC
 
 * Prolog
