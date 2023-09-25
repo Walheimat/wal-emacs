@@ -12,6 +12,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Setting `project-vc-name` is marked as safe for strings.
 
+## Removed
+
+- Commands `wal-tab-bar-switch-to-buffer-tab` and
+  `wal-tab-bar-rename-from-project`.
+
 ## [v2.1.10]
 
 Prompt inaction.

@@ -65,34 +65,6 @@ Everything that has to do with windows.
 
 Invisible tabs.
 
-*** Utility
-
-#+BEGIN_SRC emacs-lisp
-(defun wal-tab-bar-switch-to-buffer-tab (buffer)
-  "If BUFFER is shown in a tab, switch to the tab.
-
-Otherwise switch to the buffer normally."
-  (interactive "b")
-
-  (if-let* ((tab (tab-bar-get-buffer-tab buffer))
-            (tab-name (cdr-safe (assoc 'name tab))))
-      (progn
-        (tab-bar-switch-to-tab tab-name)
-        (select-window (get-buffer-window buffer)))
-    (switch-to-buffer buffer)))
-
-(defun wal-tab-bar-rename-from-project ()
-  "Rename the current tab from the current project."
-  (interactive)
-
-  (when-let* ((current (project-current))
-              (name (project-name current)))
-
-    (tab-bar-rename-tab name)))
-#+END_SRC
-
-*** Configuration
-
 #+begin_src emacs-lisp
 (use-package tab-bar
   :hook ((emacs-startup . tab-bar-mode))
@@ -102,12 +74,6 @@ Otherwise switch to the buffer normally."
 
   (tab-bar-new-tab-choice #'wal-dashboard-get-buffer)
   (tab-bar-new-tab-group nil)
-
-  :bind
-  (:map wal-triple-minus-map
-   ("t" . wal-tab-bar-rename-from-project)
-   :map wal-zero-in-map
-   ("t" . wal-tab-bar-switch-to-buffer-tab))
 
   :wal-bind
   ("o" . tab-switch))
