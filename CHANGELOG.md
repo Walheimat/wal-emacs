@@ -6,12 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v2.1.11]
+
+Longer safe.
 
 ### Changed
 
 - Setting `project-vc-name` is marked as safe for strings.
+- Setting the various custom local variables is now considered safe.
 - `consult` is no longer advised to put the current buffer first.
+- `gdscript-mode` was updated to use `eglot`, `flycheck`, and
+  `wal-maybe-enable-tabs`.
+- Package configurations are no longer divided into **Utility** and
+  **Configuration** sections.
 
 ## Removed
 
