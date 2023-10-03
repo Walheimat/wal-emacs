@@ -6,3 +6,5 @@
  (depends-on "ert-runner")
  (depends-on "undercover")
  (depends-on "compat"))
+
+(files "wal-prelude.el" "build/*.el")
