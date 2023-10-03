@@ -8,6 +8,12 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Local variable `wal-org-capture-tasks-file`. When set, locating the
+  heading will try that file first. This allows tasks file living
+  outside of a project again.
+
 ### Changed
 
 - Function `wal-insert` now uses keyword arguments for

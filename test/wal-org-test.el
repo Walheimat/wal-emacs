@@ -142,6 +142,7 @@
       (kill-buffer "*wal-async*"))
 
     (bydi ((:mock org-find-exact-heading-in-directory :return marker)
+           (:mock org-find-exact-headline-in-buffer :return marker)
            switch-to-buffer
            (:mock wal-project-local-value :with (lambda (it &optional _)
                                                   (pcase it
@@ -163,7 +164,20 @@
 
         (wal-org-capture-locate-project-tasks)
 
-        (should (eq (marker-position marker) 5))))))
+        (should (eq (marker-position marker) 5)))
+
+      (ert-with-temp-file file
+        (setq wal-org-capture-tasks-file file)
+
+        (with-current-buffer (find-file-noselect file)
+          (insert "Testing")
+          (goto-char (point-max))
+
+          (setq marker (point-marker)))
+
+        (wal-org-capture-locate-project-tasks)
+
+        (should (eq (marker-position marker) 8))))))
 
 (ert-deftest test-wal-org-clock-in-switch-to-state ()
   (should (string-equal "IN PROGRESS" (wal-org-clock-in-switch-to-state "OTHER STATE"))))
