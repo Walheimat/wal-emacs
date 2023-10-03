@@ -386,7 +386,7 @@
         (preceding 'darkness)
         (item 'my))
 
-    (should (wal-insert 'test-target preceding item t))))
+    (should (wal-insert 'test-target preceding item :allow-duplicates t))))
 
 (ert-deftest test-wal-insert--errors-if-key-already-in-list ()
   (let ((test-target '(hello darkness my old friend))
@@ -400,7 +400,7 @@
         (preceding 'darkness)
         (item 'my))
 
-    (should-not (wal-insert 'test-target preceding item nil nil t))))
+    (should-not (wal-insert 'test-target preceding item :quiet t))))
 
 (ert-deftest test-wal-insert--errors-if-key-not-in-list ()
   (let ((test-target '(hello my old friend))
@@ -414,14 +414,14 @@
         (preceding 'darkness)
         (item 'hello-again))
 
-    (should-not (wal-insert 'test-target preceding item nil nil t))))
+    (should-not (wal-insert 'test-target preceding item :quiet t))))
 
 (ert-deftest wal-insert--can-add-before ()
   (let ((test-target '(hello my old friend))
         (point 'my)
         (item 'darkness))
 
-    (wal-insert 'test-target point item nil t)
+    (wal-insert 'test-target point item :before t)
 
     (should (equal '(hello darkness my old friend) test-target))))
 
