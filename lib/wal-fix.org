@@ -23,11 +23,18 @@ Please let me know when I screwed up. I promise I will learn.
   (require 'wal-useful nil t)
   (require 'wal-key-bindings nil t))
 
-(declare-function wal-key-combo-for-leader "wal-key-bindings.el")
 (declare-function ambassador "wal-key-bindings.el")
-(declare-function wdb-nearby "wal-useful.el")
-(declare-function flycheck-parse-stylelint "ext:flycheck.el")
 (declare-function flycheck-buffer-nonempty-p "ext:flycheck.el")
+(declare-function flycheck-error-line "ext:flycheck.el")
+(declare-function flycheck-error-message "ext:flycheck.el")
+(declare-function flycheck-mode "ext:flycheck.el")
+(declare-function flycheck-parse-stylelint "ext:flycheck.el")
+(declare-function wal-key-combo-for-leader "wal-key-bindings.el")
+(declare-function wdb-nearby "wal-useful.el")
+
+(defvar flycheck-checkers)
+(defvar flycheck-checkers)
+(defvar flycheck-error-list-buffer)
 #+END_SRC
 
 * Packages
@@ -80,7 +87,7 @@ Optionally don't concat a newline char if SKIP-NEWLINE is t."
 Unless DEFER-DISPLAY is t, show it.
 
 If KILL-BUFFER is t, also kill its BUFFER."
-  (lambda (status &optional errors)
+  (lambda (_status &optional errors)
     (let* ((output-buffer (wal-flycheck-file--get-buffer))
            (filename (file-name-nondirectory file)))
 
@@ -142,28 +149,28 @@ If KILL-BUFFER is t, kill the file's buffer."
   (wdb-nearby flycheck-error-list-buffer :side 'bottom)
 
   ;; TEMP: https://github.com/flycheck/flycheck/pull/1944
-  (flycheck-define-checker wal-scss-stylelint
-    "Same as default but not passing `--syntax' flag."
-    :command ("stylelint"
-              (eval flycheck-stylelint-args)
-              (option-flag "--quiet" flycheck-stylelint-quiet)
-              (config-file "--config" flycheck-stylelintrc))
-    :standard-input t
-    :error-parser flycheck-parse-stylelint
-    :predicate flycheck-buffer-nonempty-p
-    :modes (scss-mode))
+  (eval (macroexpand '(flycheck-define-checker wal-scss-stylelint
+                        "Same as default but not passing `--syntax' flag."
+                        :command ("stylelint"
+                                  (eval flycheck-stylelint-args)
+                                  (option-flag "--quiet" flycheck-stylelint-quiet)
+                                  (config-file "--config" flycheck-stylelintrc))
+                        :standard-input t
+                        :error-parser flycheck-parse-stylelint
+                        :predicate flycheck-buffer-nonempty-p
+                        :modes (scss-mode))))
   (add-to-list 'flycheck-checkers 'wal-scss-stylelint)
 
-  (flycheck-define-checker wal-less-stylelint
-    "Same as default but not passing `--syntax' flag."
-    :command ("stylelint"
-              (eval flycheck-stylelint-args)
-              (option-flag "--quiet" flycheck-stylelint-quiet)
-              (config-file "--config" flycheck-stylelintrc))
-    :standard-input t
-    :error-parser flycheck-parse-stylelint
-    :predicate flycheck-buffer-nonempty-p
-    :modes (less-css-mode))
+  (eval (macroexpand-1 '(flycheck-define-checker wal-less-stylelint
+                          "Same as default but not passing `--syntax' flag."
+                          :command ("stylelint"
+                                    (eval flycheck-stylelint-args)
+                                    (option-flag "--quiet" flycheck-stylelint-quiet)
+                                    (config-file "--config" flycheck-stylelintrc))
+                          :standard-input t
+                          :error-parser flycheck-parse-stylelint
+                          :predicate flycheck-buffer-nonempty-p
+                          :modes (less-css-mode))))
   (add-to-list 'flycheck-checkers 'wal-less-stylelint)
 
   :custom

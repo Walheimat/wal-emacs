@@ -4,7 +4,6 @@ LOCAL_DEPS=build
 LOCAL_PHONY_DEPS=ensure-init $(PACKAGE_MARKER)
 CI_DEPS=build
 PACIFY_DEPS=build
-PACIFY_PRE_EXEC=--eval "(setq dinghy-pacify-not-testable \"movement\\\|fix\\\|settings\")"
 
 CURRENT_PACKAGE_VERSION=2.1.11
 UPDATE_VERSION_FILES=lib/wal-config.org
