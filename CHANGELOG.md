@@ -23,6 +23,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   `allow-duplicates`, `before` and `quiet`.
 - Binding for `j` in `dired-jump-map` is removed because it interferes
   with `dired-goto-file`.
+- Bindings in `wal-project-prefix-map`.
 
 ### Fixed
 
