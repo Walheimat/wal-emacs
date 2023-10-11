@@ -169,7 +169,7 @@
     (bydi-was-called wal-ascii-whale-display)
     (bydi-was-not-called wal-ascii-whale-clean-up)))
 
-(ert-deftest test-wal-describe-config-version ()
+(ert-deftest wal-describe-config-version ()
   (defvar wal-emacs-config-default-path)
   (let ((out '("1.0.0" "test everything" "1.0.1" "letting the world know"))
         (wal-emacs-config-default-path "~"))
@@ -182,14 +182,14 @@
 
         (should (equal "1.0.1: letting the world know" (wal-describe-config-version)))))))
 
-(ert-deftest test-wal-show-config-diff-range ()
+(ert-deftest wal-show-config-diff-range ()
   (bydi ((:mock shell-command-to-string :return " testing ")
          magit-diff-range)
 
     (wal-show-config-diff-range)
     (bydi-was-called-with magit-diff-range (list "testing" '("--stat")))))
 
-(ert-deftest test-wal-tangle-config-prompt ()
+(ert-deftest wal-tangle-config-prompt ()
   (bydi ((:always wal-tangle-do-prompt)
          (:always y-or-n-p )
          wal-prelude-tangle-config)
@@ -199,7 +199,7 @@
       (wal-tangle-config-prompt)
       (bydi-was-called wal-prelude-tangle-config))))
 
-(ert-deftest test-wal-tangle-config-prompt--after ()
+(ert-deftest wal-tangle-config-prompt--after ()
   (bydi ((:always wal-tangle-do-prompt)
          (y-or-n-p . #'ignore)
          wal-prelude-tangle-config
@@ -217,7 +217,7 @@
 
       (bydi-was-called-with message "Config changed. To tangle, call `wal-prelude-tangle-config'"))))
 
-(ert-deftest test-wal-config-switch-project ()
+(ert-deftest wal-config-switch-project ()
   (defvar wal-emacs-config-default-path)
   (let ((wal-emacs-config-default-path "/tmp/config"))
 
@@ -235,7 +235,7 @@
 
       (should (equal '("/tmp/test.org" "/tmp/test-2.org") (wal-config-lib-files))))))
 
-(ert-deftest test-wal-config-consult-org-heading ()
+(ert-deftest wal-config-consult-org-heading ()
   (bydi (consult-org-heading
          (:mock wal-config-lib-files :return '("/tmp/test.org" "/tmp/test-2.org")))
 
@@ -251,7 +251,7 @@
 
     (bydi-was-called wal-config-lib-files)))
 
-(ert-deftest test-wal-customize-group ()
+(ert-deftest wal-customize-group ()
   (bydi customize-group
 
     (wal-customize-group)

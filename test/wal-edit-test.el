@@ -8,7 +8,7 @@
 
 (require 'wal-edit nil t)
 
-(ert-deftest test-wal-before-mc ()
+(ert-deftest wal-before-mc ()
   (let ((wal-mc-conflicting-modes '(abbrev-mode)))
 
     (with-temp-buffer
@@ -19,7 +19,7 @@
       (should-not abbrev-mode)
       (should (equal wal-mc-disabled '(abbrev-mode))))))
 
-(ert-deftest test-wal-after-mc ()
+(ert-deftest wal-after-mc ()
   (let ((wal-mc-disabled '(abbrev-mode)))
 
     (bydi (abbrev-mode)
@@ -32,7 +32,7 @@
         (bydi-was-called abbrev-mode)
         (should-not wal-mc-disabled)))))
 
-(ert-deftest test-wal-tempel-comment ()
+(ert-deftest wal-tempel-comment ()
   (with-temp-buffer
     (setq major-mode 'emacs-lisp-mode)
 
@@ -42,7 +42,7 @@
 
     (should (string-equal (wal-tempel-comment (list 'c "testing")) "// testing"))))
 
-(ert-deftest test-wal-in-case-of-mc-mode-do-not-default ()
+(ert-deftest wal-in-case-of-mc-mode-do-not-default ()
   (defvar multiple-cursors-mode nil)
 
   (let ((multiple-cursors-mode t))

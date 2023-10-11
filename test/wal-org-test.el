@@ -8,7 +8,7 @@
 
 (require 'wal-org nil t)
 
-(ert-deftest test-wal-first-require-ox-md ()
+(ert-deftest wal-first-require-ox-md ()
   (bydi ((:ignore featurep)
          require)
 
@@ -17,7 +17,7 @@
     (bydi-was-called-with featurep (list 'ox-md))
     (bydi-was-called-with require (list 'ox-md nil t))))
 
-(ert-deftest test-wal-org-content ()
+(ert-deftest wal-org-content ()
   (bydi org-content
 
     (wal-org-content 8)
@@ -39,7 +39,7 @@
 
       (bydi-was-called-n-times font-lock-flush 2))))
 
-(ert-deftest test-wal-org-refile ()
+(ert-deftest wal-org-refile ()
   (defvar org-roam-directory nil)
   (defvar org-agenda-files nil)
 
@@ -67,13 +67,13 @@
     (bydi ((:always org-agenda-file-p))
       (should (wal-agenda-buffer-p (current-buffer))))))
 
-(ert-deftest test-wal-consult-agenda-buffer--query ()
+(ert-deftest wal-consult-agenda-buffer--query ()
   (cl-defun consult--buffer-query (&key sort as predicate)
     (list sort as predicate))
 
   (should (equal (wal-consult-agenda-buffer--query) '(visibility buffer-name wal-agenda-buffer-p))))
 
-(ert-deftest test-wal-relative-column-width ()
+(ert-deftest wal-relative-column-width ()
   (defvar text-scale-mode-amount nil)
   (defvar text-scale-mode-step nil)
   (let ((text-scale-mode-amount 1)
@@ -81,7 +81,7 @@
 
     (should (eq 80 (wal-relative-column-width)))))
 
-(ert-deftest test-wal-org-tree-slide-toggle-visibility ()
+(ert-deftest wal-org-tree-slide-toggle-visibility ()
   (let ((cursor-type 'box))
 
     (wal-org-tree-slide-toggle-visibility)
@@ -92,7 +92,7 @@
 
     (should cursor-type)))
 
-(ert-deftest test-wal-org-tree-slide ()
+(ert-deftest wal-org-tree-slide ()
   (defvar visual-fill-column-width nil)
   (defvar visual-fill-column-center-text nil)
   (bydi (visual-fill-column-mode
@@ -125,7 +125,7 @@
     (bydi-was-called-with text-scale-adjust 0)
     (bydi-was-called-with wal-org-hide-emphasis-markers t)))
 
-(ert-deftest test-wal-org-tree-slide-text-scale ()
+(ert-deftest wal-org-tree-slide-text-scale ()
   (defvar org-tree-slide-mode)
   (let ((org-tree-slide-mode t))
 
@@ -179,10 +179,10 @@
 
         (should (eq (marker-position marker) 8))))))
 
-(ert-deftest test-wal-org-clock-in-switch-to-state ()
+(ert-deftest wal-org-clock-in-switch-to-state ()
   (should (string-equal "IN PROGRESS" (wal-org-clock-in-switch-to-state "OTHER STATE"))))
 
-(ert-deftest test-wal-org-clock-heading ()
+(ert-deftest wal-org-clock-heading ()
   (bydi ((:mock org-link-display-format :with bydi-rf)
          (:mock org-get-heading :return "test heading")
          (:mock org-no-properties :with bydi-rf)
@@ -192,14 +192,14 @@
 
     (bydi-was-called-with wal-truncate (list "test heading" 12))))
 
-(ert-deftest test-wal-org-clock-in-from-now ()
+(ert-deftest wal-org-clock-in-from-now ()
   (bydi org-clock-in
 
     (wal-org-clock-in-from-now)
 
     (bydi-was-called org-clock-in)))
 
-(ert-deftest test-wal-org-clock-take-note ()
+(ert-deftest wal-org-clock-take-note ()
   (bydi (org-clock-goto
          org-add-note)
 

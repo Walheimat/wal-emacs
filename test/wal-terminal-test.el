@@ -8,7 +8,7 @@
 
 (require 'wal-terminal nil t)
 
-(ert-deftest test-wal-instead-truncate-buffer ()
+(ert-deftest wal-instead-truncate-buffer ()
   (bydi eshell-truncate-buffer
     (wal-instead-truncate-buffer)
 

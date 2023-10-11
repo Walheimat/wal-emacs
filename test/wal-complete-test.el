@@ -8,40 +8,40 @@
 
 (require 'wal-complete nil t)
 
-(ert-deftest test-wal-corfu-enable-in-minibuffer ()
+(ert-deftest wal-corfu-enable-in-minibuffer ()
   (bydi ((:mock where-is-internal :with always)
          corfu-mode)
     (wal-corfu-enable-in-minibuffer)
     (bydi-was-called-with corfu-mode 1)))
 
-(ert-deftest test-wal-record-this-command ()
+(ert-deftest wal-record-this-command ()
   (let ((this-command 'testing))
 
     (with-temp-buffer
       (wal-record-this-command)
       (should (equal 'testing wal-command)))))
 
-(ert-deftest test-wal-with-dired-goto-file-ignored ()
+(ert-deftest wal-with-dired-goto-file-ignored ()
   (let* ((wal-command 'dired-goto-file)
          (fun (lambda (_) 'test))
          (result (apply 'wal-with-dired-goto-file-ignored (list fun 'category))))
 
     (should-not result)))
 
-(ert-deftest test-wal-with-dired-goto-file-ignored--ignores ()
+(ert-deftest wal-with-dired-goto-file-ignored--ignores ()
   (let* ((wal-command 'dired-goto-file-1)
          (fun (lambda (_) 'test))
          (result (apply 'wal-with-dired-goto-file-ignored (list fun 'category))))
 
     (should (equal 'test result))))
 
-(ert-deftest test-wal-browse-html-file ()
+(ert-deftest wal-browse-html-file ()
   (bydi (browse-url)
     (should-error (wal-browse-html-file "~/test/file.txt") :type 'user-error)
     (wal-browse-html-file "/tmp/test.html")
     (bydi-was-called-with browse-url "/tmp/test.html")))
 
-(ert-deftest test-wal-consult-ripgrep-ignored ()
+(ert-deftest wal-consult-ripgrep-ignored ()
   (bydi (consult--grep consult--ripgrep-builder)
     (defvar consult-ripgrep-args)
     (let ((consult-ripgrep-args "test"))
@@ -49,7 +49,7 @@
       (wal-consult-ripgrep-ignored)
       (bydi-was-called-with consult--grep (list "Ripgrep (ignored)" #'consult--ripgrep-builder nil nil)))))
 
-(ert-deftest test-wal-consult-unregister ()
+(ert-deftest wal-consult-unregister ()
   (defvar consult-register--narrow)
 
   (let ((register-alist '((?t . test) (?r . remove)))
@@ -64,7 +64,7 @@
       (wal-consult-unregister)
       (should (equal register-alist '((?t . test)))))))
 
-(ert-deftest test-wal-consult-clock-in ()
+(ert-deftest wal-consult-clock-in ()
   (bydi (consult-org-agenda org-clock-in wal-org-clock-in-from-now)
     (wal-consult-clock-in)
     (bydi-was-called consult-org-agenda)
@@ -74,7 +74,7 @@
     (bydi-was-called consult-org-agenda)
     (bydi-was-called wal-org-clock-in-from-now)))
 
-(ert-deftest test-wal-then-set-active-theme ()
+(ert-deftest wal-then-set-active-theme ()
   (defvar wal-active-theme nil)
   (let ((out nil)
         (wal-active-theme nil))
@@ -86,7 +86,7 @@
     (should (equal out '(hook)))
     (should (equal wal-active-theme 'test))))
 
-(ert-deftest test-wal-consult--pre-narrow ()
+(ert-deftest wal-consult--pre-narrow ()
   (defvar wal-consult-pre-narrow)
   (defvar wal-consult-buffer-narrow-source)
   (defvar wal-consult-pre-narrowed-commands)
@@ -126,7 +126,7 @@
       (wal-consult--pre-narrow)
       (should-not unread-command-events))))
 
-(ert-deftest test-wal-consult-toggle-pre-narrow ()
+(ert-deftest wal-consult-toggle-pre-narrow ()
   (defvar wal-consult-pre-narrow)
 
   (let ((wal-consult-pre-narrow nil))
@@ -134,12 +134,12 @@
     (wal-consult-toggle-pre-narrowing)
     (should wal-consult-pre-narrow)))
 
-(ert-deftest test-consult--open-project-items ()
+(ert-deftest consult--open-project-items ()
   (bydi ((:mock buffer-list :return '("a" "c" "b" "c" "a"))
          (:mock wal-project--buffer-root :with bydi-rf))
     (should (equal '("b" "c" "a") (consult--open-project-items)))))
 
-(ert-deftest test-wal-consult-project ()
+(ert-deftest wal-consult-project ()
   (bydi (consult--multi)
     (call-interactively 'wal-consult-project)
     (bydi-was-called-with consult--multi (list '(consult--source-open-projects consult--source-projects) :prompt "Select project: "))))

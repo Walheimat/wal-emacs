@@ -8,7 +8,7 @@
 
 (require 'wal-web nil t)
 
-(ert-deftest test-wal-pick-windows-being-kept ()
+(ert-deftest wal-pick-windows-being-kept ()
   (should (equal (wal-pick-windows-being-kept) (list t))))
 
 ;;; wal-web-test.el ends here

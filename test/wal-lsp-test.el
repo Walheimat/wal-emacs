@@ -8,7 +8,7 @@
 
 (require 'wal-lsp nil t)
 
-(ert-deftest test-wal-lsp-completion ()
+(ert-deftest wal-lsp-completion ()
   (let ((completion-category-defaults '((lsp-capf (styles other))))
         (completion-styles '(testful)))
 
@@ -17,14 +17,14 @@
 
       (should (equal '((lsp-capf (styles testful))) completion-category-defaults)))))
 
-(ert-deftest test-wal-first-prevent-adding-other-projects ()
+(ert-deftest wal-first-prevent-adding-other-projects ()
   (bydi eval
 
     (wal-first-prevent-adding-other-projects)
 
     (bydi-was-called-with eval (list '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))))
 
-(ert-deftest test-wal-dap-terminated ()
+(ert-deftest wal-dap-terminated ()
   (bydi (hydra-disable
          set-window-configuration)
 
@@ -34,7 +34,7 @@
       (bydi-was-called hydra-disable)
       (bydi-was-called set-window-configuration))))
 
-(ert-deftest test-wal-dap-session-created ()
+(ert-deftest wal-dap-session-created ()
   (bydi ((:mock current-window-configuration :with bydi-rt)
          delete-other-windows)
 
@@ -43,7 +43,7 @@
     (bydi-was-called delete-other-windows)
     (should (equal 'testing wal-dap-before))))
 
-(ert-deftest test-wal-dap-stopped ()
+(ert-deftest wal-dap-stopped ()
   (bydi dap-hydra
 
     (wal-dap-stopped nil)

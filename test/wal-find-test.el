@@ -8,12 +8,12 @@
 
 (require 'wal-find nil t)
 
-(ert-deftest test-wal-rg-rerun-toggle-hidden ()
+(ert-deftest wal-rg-rerun-toggle-hidden ()
   (bydi-with-mock (rg-rerun-toggle-flag)
     (wal-rg-rerun-toggle-hidden)
     (bydi-was-called-with rg-rerun-toggle-flag (list "--hidden"))))
 
-(ert-deftest test-wal-rg-project-literal ()
+(ert-deftest wal-rg-project-literal ()
   (defvar rg-command-line-flags-function)
 
   (bydi ((:mock rg-read-pattern :return 'pattern)

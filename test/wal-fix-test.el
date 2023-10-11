@@ -8,7 +8,7 @@
 
 (require 'wal-fix nil t)
 
-(ert-deftest test-wal-flycheck-file--get-buffer ()
+(ert-deftest wal-flycheck-file--get-buffer ()
   (bydi (view-mode)
     (with-current-buffer (wal-flycheck-file--get-buffer)
 
@@ -17,7 +17,7 @@
 
   (kill-buffer wal-flycheck-file--buffer))
 
-(ert-deftest test-wal-flycheck-file--write ()
+(ert-deftest wal-flycheck-file--write ()
   (wal-flycheck-file--write "hello")
 
   (with-current-buffer (wal-flycheck-file--get-buffer)
@@ -26,7 +26,7 @@
 
   (kill-buffer wal-flycheck-file--buffer))
 
-(ert-deftest test-wal-flycheck-file--erase ()
+(ert-deftest wal-flycheck-file--erase ()
   (wal-flycheck-file--write "testing" t)
 
   (with-current-buffer (wal-flycheck-file--get-buffer)
@@ -37,7 +37,7 @@
 
     (should (string-equal "" (buffer-string)))))
 
-(ert-deftest test-wal-flycheck-file--callback ()
+(ert-deftest wal-flycheck-file--callback ()
   (ert-with-temp-file check
 
     (bydi display-buffer
@@ -57,7 +57,7 @@
 
   (kill-buffer wal-flycheck-file--buffer))
 
-(ert-deftest test-wal-flycheck-file--callback-on-error ()
+(ert-deftest wal-flycheck-file--callback-on-error ()
   (ert-with-temp-file check-error
 
     (let* ((buf (find-file-noselect check-error))
@@ -75,7 +75,7 @@
 
   (kill-buffer wal-flycheck-file--buffer))
 
-(ert-deftest test-wal-flycheck-file ()
+(ert-deftest wal-flycheck-file ()
   (bydi ((:mock flycheck-get-checker-for-buffer :with bydi-rt)
          flycheck-syntax-check-new
          flycheck-compute-working-directory
@@ -92,7 +92,7 @@
                                (list :buffer buf :checker 'testing :context nil :working-directory (list 'testing))
                                'testing))))))
 
-(ert-deftest test-wal-flycheck-file--no-checker ()
+(ert-deftest wal-flycheck-file--no-checker ()
   (bydi ((:ignore flycheck-get-checker-for-buffer)
          flycheck-syntax-check-new
          flycheck-compute-working-directory
@@ -119,7 +119,7 @@
         (wal-flycheck-mode)
         (bydi-was-called flycheck-mode)))))
 
-(ert-deftest test-wal-flyspell ()
+(ert-deftest wal-flyspell ()
   (defvar flyspell-mode nil)
   (bydi (flyspell-mode flyspell-prog-mode)
 
@@ -145,7 +145,7 @@
           (bydi-was-not-called flyspell-mode)
           (bydi-was-called flyspell-prog-mode))))))
 
-(ert-deftest test-wal-flyspell-goto-previous-error ()
+(ert-deftest wal-flyspell-goto-previous-error ()
   (bydi (flyspell-goto-next-error)
 
     (wal-flyspell-goto-previous-error)

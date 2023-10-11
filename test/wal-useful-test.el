@@ -8,7 +8,7 @@
 
 (require 'wal-useful nil t)
 
-(ert-deftest test-wal-modern-emacs-p ()
+(ert-deftest wal-modern-emacs-p ()
   (let ((emacs-major-version 30))
     (should (wal-modern-emacs-p 30)))
 
@@ -21,11 +21,11 @@
   (let ((emacs-major-version 27))
     (should-not (wal-modern-emacs-p))))
 
-(ert-deftest test-wal-modern-emacs-p--errors-for-bad-arguments ()
+(ert-deftest wal-modern-emacs-p--errors-for-bad-arguments ()
   (should-error (wal-modern-emacs-p 27) :type 'user-error)
   (should-error (wal-modern-emacs-p "testing") :type 'user-error))
 
-(ert-deftest test-wal-create-non-existent-directory ()
+(ert-deftest wal-create-non-existent-directory ()
   (let ((temp-dir "/tmp/some-other/dir/"))
 
     (bydi ((:mock file-name-directory :return temp-dir)
@@ -36,19 +36,19 @@
 
       (bydi-was-called-with make-directory (list temp-dir t)))))
 
-(ert-deftest test-wal-create-non-existent-directory--aborts ()
+(ert-deftest wal-create-non-existent-directory--aborts ()
   (bydi (file-name-directory
          (:always file-exists-p))
 
     (should-not (wal-create-non-existent-directory))))
 
-(ert-deftest test-wal-display-buffer--condition--passes-strings ()
+(ert-deftest wal-display-buffer--condition--passes-strings ()
   (should (string-equal "testing" (wal-display-buffer--condition "testing"))))
 
-(ert-deftest test-wal-display-buffer--condition--considers-symbols-major-modes ()
+(ert-deftest wal-display-buffer--condition--considers-symbols-major-modes ()
   (should (equal '(major-mode . test-mode) (wal-display-buffer--condition 'test-mode))))
 
-(ert-deftest test-wal-display-buffer--condition--errors-for-unsupported-types ()
+(ert-deftest wal-display-buffer--condition--errors-for-unsupported-types ()
   (should-error (wal-display-buffer--condition '(hello world)) :type 'user-error))
 
 (ert-deftest wal-display-buffer-same-place-or-nearby ()
@@ -76,7 +76,7 @@
 					 (direction . below)
 					 (window-width . 0.4))))))
 
-(ert-deftest test-wal-display-buffer-use-some-frame--with-display-p ()
+(ert-deftest wal-display-buffer-use-some-frame--with-display-p ()
   (let ((frame nil)
         (params nil))
     (bydi ((:mock selected-frame :return frame)
@@ -137,7 +137,7 @@
 
 (defvar useful-killing (ert-resource-file "killing.txt"))
 
-(ert-deftest test-wal-kill-ring-save-buffer ()
+(ert-deftest wal-kill-ring-save-buffer ()
   (with-temp-buffer
     (insert-file-contents useful-killing)
 
@@ -161,7 +161,7 @@
 
       (should (buffer-local-value 'before-save-hook (current-buffer))))))
 
-(ert-deftest test-wal-set-cursor-type--sets-and-resets ()
+(ert-deftest wal-set-cursor-type--sets-and-resets ()
   (with-temp-buffer
     (bydi ((:mock completing-read :return "hollow"))
 
@@ -173,7 +173,7 @@
 
     (should (eq cursor-type t))))
 
-(ert-deftest test-wal-kwim--kills-forward-in-line ()
+(ert-deftest wal-kwim--kills-forward-in-line ()
   (with-temp-buffer
     (insert-file-contents useful-killing)
     (goto-char 7)
@@ -182,7 +182,7 @@
 
     (should (equal (buffer-string) "I hope\nThat would be terrible\n"))))
 
-(ert-deftest test-wal-kwim--kills-line-at-end ()
+(ert-deftest wal-kwim--kills-line-at-end ()
   (with-temp-buffer
     (insert-file-contents useful-killing)
     (goto-char 0)
@@ -192,7 +192,7 @@
 
     (should (equal (buffer-string) "That would be terrible\n"))))
 
-(ert-deftest test-wal-kwim--kills-line-at-beg ()
+(ert-deftest wal-kwim--kills-line-at-beg ()
   (with-temp-buffer
     (insert-file-contents useful-killing)
 
@@ -202,14 +202,14 @@
 
     (should (equal (buffer-string) "That would be terrible\n"))))
 
-(ert-deftest test-wal-kwim--kills-region-if-active ()
+(ert-deftest wal-kwim--kills-region-if-active ()
   (bydi ((:always region-active-p) kill-region)
     (with-temp-buffer
       (wal-kwim))
 
     (bydi-was-called-with kill-region (list nil nil t))))
 
-(ert-deftest test-wal-mwim-beginning ()
+(ert-deftest wal-mwim-beginning ()
   (with-temp-buffer
     (insert "hello\n  world")
     (goto-char 7)
@@ -225,7 +225,7 @@
 
     (should (eq (point) 9))))
 
-(ert-deftest test-wal-spill-paragraph ()
+(ert-deftest wal-spill-paragraph ()
   (let ((sentence-end-double-space nil))
     (with-temp-buffer
       (insert "This is the first sentence.\nThis is the second one.")
@@ -247,7 +247,7 @@
 
     (should (eq 104857600 gc-cons-threshold))))
 
-(ert-deftest test-wal-l ()
+(ert-deftest wal-l ()
   (with-temp-buffer
     (wal-l)
 
@@ -257,7 +257,7 @@
 
     (should-not (window-dedicated-p))))
 
-(ert-deftest test-wal-force-delete-other-windows ()
+(ert-deftest wal-force-delete-other-windows ()
   (let ((ignore-window-parameters nil))
 
     (bydi (delete-other-windows)
@@ -295,7 +295,7 @@
 
     (bydi-was-called-with switch-to-buffer (list nil t))))
 
-(ert-deftest test-wal-find-custom-file ()
+(ert-deftest wal-find-custom-file ()
   (ert-with-temp-file custom
     :text ";; customize"
 
@@ -305,14 +305,14 @@
 
       (should (string-equal (buffer-string) ";; customize")))))
 
-(ert-deftest test-wal-find-init ()
+(ert-deftest wal-find-init ()
   (bydi ((:mock file-truename :return wal-emacs-config-default-path))
 
     (wal-find-init)
 
     (should (string-match-p (buffer-name) wal-emacs-config-default-path))))
 
-(ert-deftest test-wal-find-fish-config ()
+(ert-deftest wal-find-fish-config ()
   (ert-with-temp-file fish
     :text "# configure"
 
@@ -322,13 +322,13 @@
 
       (should (string-equal (buffer-string) "# configure")))))
 
-(ert-deftest test-wal-find-fish-config--errors-if-not-found ()
+(ert-deftest wal-find-fish-config--errors-if-not-found ()
   (defvar wal-fish-config-locations)
   (let ((wal-fish-config-locations '()))
 
     (should-error (wal-find-fish-config) :type 'user-error)))
 
-(ert-deftest test-wal-capture-flag ()
+(ert-deftest wal-capture-flag ()
   (bydi-match-expansion
    (wal-capture-flag some-flag
      "We need to capture some flag.")
@@ -342,7 +342,7 @@
 
 (defvar test-target nil)
 
-(ert-deftest test-wal-append--appends ()
+(ert-deftest wal-append--appends ()
   (let ((test-target '(a b c))
         (sequence '(d e f)))
 
@@ -350,7 +350,7 @@
 
     (should (equal test-target '(a b c d e f)))))
 
-(ert-deftest test-wal-append--removes-duplicates ()
+(ert-deftest wal-append--removes-duplicates ()
   (let ((test-target '(a b c))
         (sequence '(c d a)))
 
@@ -358,7 +358,7 @@
 
     (should (equal test-target '(a b c d)))))
 
-(ert-deftest test-wal-replace-in-alist--replaces ()
+(ert-deftest wal-replace-in-alist--replaces ()
   (let ((test-target '((a . "whale") (b . "home")))
         (values '((b . "heimat"))))
 
@@ -366,14 +366,14 @@
 
     (should (equal test-target '((a . "whale") (b . "heimat"))))))
 
-(ert-deftest test-wal-replace-in-alist--refuses-new-keys ()
+(ert-deftest wal-replace-in-alist--refuses-new-keys ()
   (let ((test-target '((a . "whale") (b . "home")))
         (values '((b . "heimat") (c . "dolphin"))))
 
     (should-error (wal-replace-in-alist 'test-target values) :type 'user-error)
     (should (equal test-target '((a . "whale") (b . "home"))))))
 
-(ert-deftest test-wal-insert--inserts ()
+(ert-deftest wal-insert--inserts ()
   (let ((test-target '(hello my old friend))
         (preceding 'hello)
         (item 'darkness))
@@ -388,7 +388,7 @@
 
     (should (wal-insert 'test-target preceding item :allow-duplicates t))))
 
-(ert-deftest test-wal-insert--errors-if-key-already-in-list ()
+(ert-deftest wal-insert--errors-if-key-already-in-list ()
   (let ((test-target '(hello darkness my old friend))
         (preceding 'darkness)
         (item 'my))
@@ -402,14 +402,14 @@
 
     (should-not (wal-insert 'test-target preceding item :quiet t))))
 
-(ert-deftest test-wal-insert--errors-if-key-not-in-list ()
+(ert-deftest wal-insert--errors-if-key-not-in-list ()
   (let ((test-target '(hello my old friend))
         (preceding 'darkness)
         (item 'hello-again))
 
     (should-error (wal-insert 'test-target preceding item) :type 'user-error)))
 
-(ert-deftest test-wal-insert--no-op-if-not-in-list-and-quiet ()
+(ert-deftest wal-insert--no-op-if-not-in-list-and-quiet ()
   (let ((test-target '(hello my old friend))
         (preceding 'darkness)
         (item 'hello-again))
@@ -425,28 +425,28 @@
 
     (should (equal '(hello darkness my old friend) test-target))))
 
-(ert-deftest test-wal-list-from--builds-list-if-element ()
+(ert-deftest wal-list-from--builds-list-if-element ()
   (let ((test-target "testing"))
 
     (should (equal '("testing" "again") (wal-list-from 'test-target "again")))))
 
-(ert-deftest test-wal-list-from--appends-if-list ()
+(ert-deftest wal-list-from--appends-if-list ()
   (let ((test-target '("testing")))
 
     (should (equal '("testing" "again") (wal-list-from 'test-target "again")))))
 
-(ert-deftest test-wal-list-from--deletes-duplicates ()
+(ert-deftest wal-list-from--deletes-duplicates ()
   (let ((test-target '("testing" "again")))
 
     (should (equal '("testing" "again") (wal-list-from 'test-target "again")))))
 
-(ert-deftest test-wal-plist-keys--errors-if-invalid ()
+(ert-deftest wal-plist-keys--errors-if-invalid ()
   (should-error (wal-plist-keys '(:test a :best))))
 
-(ert-deftest test-wal-plist-keys--extracts-keys ()
+(ert-deftest wal-plist-keys--extracts-keys ()
   (should (equal '(:test :this :function) (wal-plist-keys '(:test "whether" :this "hacky" :function "works")))))
 
-(ert-deftest test-wal-scratch-buffer ()
+(ert-deftest wal-scratch-buffer ()
   (bydi ((:mock pop-to-buffer :with (lambda (n &rest _) (buffer-name n))))
 
     (should (equal (wal-scratch-buffer) "*scratch*"))
@@ -456,7 +456,7 @@
   (kill-buffer "*scratch*<2>")
   (kill-buffer "*scratch*<4>"))
 
-(ert-deftest test-wal-persist-scratch-and-rehydrate ()
+(ert-deftest wal-persist-scratch-and-rehydrate ()
   (defvar wal-scratch-persist-file)
 
   (ert-with-temp-file scratch
@@ -485,7 +485,7 @@
 
         (should (string-equal "This one's itchy" (buffer-string)))))))
 
-(ert-deftest test-wal-biased-random ()
+(ert-deftest wal-biased-random ()
   (let ((vals '(1 2 3 4)))
 
     (bydi ((:mock random :with (lambda (_) (pop vals))))
@@ -496,33 +496,33 @@
 
       (should (eq (wal-biased-random 4 t) 1)))))
 
-(ert-deftest test-wal-bytes-per-mb--floors ()
+(ert-deftest wal-bytes-per-mb--floors ()
   (should (equal 314572 (wal-bytes-per-mb 0.3))))
 
-(ert-deftest test-wal-truncate--truncates ()
+(ert-deftest wal-truncate--truncates ()
   (should (string-equal (wal-truncate "This is it" 7) "This...")))
 
-(ert-deftest test-wal-truncate--truncates-without-len ()
+(ert-deftest wal-truncate--truncates-without-len ()
   (should (string-equal (wal-truncate "This is it") "This ...")))
 
-(ert-deftest test-wal-truncate--leaves-as-is-if-below ()
+(ert-deftest wal-truncate--leaves-as-is-if-below ()
   (should (string-equal (wal-truncate "This is it" 24) "This is it")))
 
-(ert-deftest test-wal-univ-p ()
+(ert-deftest wal-univ-p ()
   (let ((current-prefix-arg '(4)))
 
     (should (wal-univ-p))))
 
 (defvar test-standard 'standard)
 
-(ert-deftest test-wal-try ()
+(ert-deftest wal-try ()
   (bydi-match-expansion
    (wal-try test
      (message "Testing again"))
    `(when (require 'test nil :no-error)
       (message "Testing again"))))
 
-(ert-deftest test-wal-server-edit-p ()
+(ert-deftest wal-server-edit-p ()
   (defvar server-buffer-clients)
   (defvar with-editor-mode)
   (let ((server-buffer-clients '(test)))
@@ -541,13 +541,13 @@
 
 (require 'shell)
 
-(ert-deftest test-wal-dead-shell-p ()
+(ert-deftest wal-dead-shell-p ()
   (with-temp-buffer
     (shell-mode)
 
     (should (wal-dead-shell-p))))
 
-(ert-deftest test-wal-prefix-user-key ()
+(ert-deftest wal-prefix-user-key ()
   (defvar wal-use-hyper-prefix)
   (cl-letf (((symbol-function 'daemonp) #'always)
             (wal-use-hyper-prefix t))
@@ -559,7 +559,7 @@
 
     (should (string-equal (wal-prefix-user-key "k") "C-c w k"))))
 
-(ert-deftest test-wal-on-boot ()
+(ert-deftest wal-on-boot ()
   (defvar wal-booting nil)
 
   (let ((wal-booting t))
@@ -576,7 +576,7 @@
        (setq wal-is-testing t))
      `(message "Ignoring statements in '%s'" 'test))))
 
-(ert-deftest test-wal-transient-define-major ()
+(ert-deftest wal-transient-define-major ()
   (bydi-match-expansion
    (wal-transient-define-major test-mode ()
      "This is a world."
@@ -601,7 +601,7 @@
         [("i" "ignore" ignore)])))
   (fmakunbound 'test-prefix))
 
-(ert-deftest test-wal-when-ready ()
+(ert-deftest wal-when-ready ()
   (bydi ((:ignore daemonp))
 
     (bydi-match-expansion
@@ -617,7 +617,7 @@
 (defvar wal-test-setq-a nil)
 (defvar wal-test-setq-b nil)
 
-(ert-deftest test-setq-unless--only-sets-falsy ()
+(ert-deftest setq-unless--only-sets-falsy ()
   (let ((wal-test-setq-a nil)
         (wal-test-setq-b "hello"))
     (bydi-match-expansion
@@ -626,7 +626,7 @@
      `(progn
         (setq wal-test-setq-a "this")))))
 
-(ert-deftest test-setq-unless--sets-unset ()
+(ert-deftest setq-unless--sets-unset ()
   (let ((wal-test-setq-a "hi")
         (wal-test-setq-b nil))
 
@@ -637,7 +637,7 @@
         (setq wal-test-setq-b "this")
         (setq wal-test-setq-d "unknown")))))
 
-(ert-deftest test-wal-define-init-setup ()
+(ert-deftest wal-define-init-setup ()
   (bydi-match-expansion
    (wal-define-init-setup test
      "Nothing else."
@@ -662,7 +662,7 @@
             (add-hook 'server-after-make-frame-hook #'wal-init-setup-test))
         (add-hook 'emacs-startup-hook #'wal-init-setup-test)))))
 
-(ert-deftest test-wal-duck-duck-go-region--succeeds-if-region ()
+(ert-deftest wal-duck-duck-go-region--succeeds-if-region ()
   (with-temp-buffer
     (insert "where is my mind")
     (set-mark (point-min))
@@ -672,10 +672,10 @@
                (wal-duck-duck-go-region)
                "https://duckduckgo.com/html/?q=where%20is%20my%20mind")))))
 
-(ert-deftest test-wal-duck-duck-go-region--fails-if-no-region ()
+(ert-deftest wal-duck-duck-go-region--fails-if-no-region ()
   (should-error (wal-duck-duck-go-region) :type 'user-error))
 
-(ert-deftest test-wal-fundamental-mode--switches ()
+(ert-deftest wal-fundamental-mode--switches ()
   (with-temp-buffer
     (emacs-lisp-mode)
     (wal-fundamental-mode)
@@ -687,10 +687,10 @@
 
     (should (equal major-mode 'emacs-lisp-mode))))
 
-(ert-deftest test-wal-async-process--buffer-name ()
+(ert-deftest wal-async-process--buffer-name ()
   (should (string= (wal-async-process--buffer-name 'test-mode) wal-async-process-buffer-name)))
 
-(ert-deftest test-wal-async-process--finalize ()
+(ert-deftest wal-async-process--finalize ()
   (with-temp-buffer
     (rename-buffer "*async-finalize-test*")
 
@@ -719,7 +719,7 @@
         (bydi-was-not-called delete-window)
         (bydi-was-called-with delete-other-windows "something else")))))
 
-(ert-deftest test-wal-aysnc-process--maybe-interrupt ()
+(ert-deftest wal-aysnc-process--maybe-interrupt ()
   (bydi ((:mock compilation-find-buffer :with (lambda () (message "found-buffer") "buffer"))
          (:mock get-buffer-process :with (lambda (m) (message m)))
          (:mock interrupt-process :with (lambda (_) (message "interrupted"))))
@@ -728,7 +728,7 @@
       (wal-async-process--maybe-interrupt)
       (should (string= "found-buffer\nbuffer\ninterrupted\n" messages)))))
 
-(ert-deftest test-wal-async-process ()
+(ert-deftest wal-async-process ()
   (bydi ((:mock wal-async-process--maybe-interrupt :with (lambda () (message "interrupted")))
          (:mock compilation-start :with (lambda (&rest _) (message "compiles"))))
     (ert-with-message-capture messages
@@ -741,7 +741,7 @@
         (funcall (car compilation-finish-functions) nil "finished\n"))
       (should (string= "interrupted\ncompiles\nfinishes\n" messages)))))
 
-(ert-deftest test-wal-advise-many ()
+(ert-deftest wal-advise-many ()
   (defun wal-test-fun-1 (arg1 arg2)
     "Do something with ARG1 and ARG2."
     (list arg1 arg2))

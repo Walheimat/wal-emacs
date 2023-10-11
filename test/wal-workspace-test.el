@@ -8,7 +8,7 @@
 
 (require 'wal-workspace nil t)
 
-(ert-deftest test-wal-project-switch-to-parent-project ()
+(ert-deftest wal-project-switch-to-parent-project ()
   (bydi (project-switch-project (:mock wal-project-local-value :with symbol-value))
     (let ((wal-project-parent-project "/tmp/parent"))
 
@@ -21,7 +21,7 @@
 
       (should-error (wal-project-switch-to-parent-project) :type 'user-error))))
 
-(ert-deftest test-wal-with-project-bounded-compilation ()
+(ert-deftest wal-with-project-bounded-compilation ()
   (bydi ((:always project-current)
          (:mock project-buffers :with buffer-list))
 
@@ -36,13 +36,13 @@
 
       (should (wal-with-project-bounded-compilation fun)))))
 
-(ert-deftest test-wal-project-command--buffer-name ()
+(ert-deftest wal-project-command--buffer-name ()
   (let ((wal-project-current-command "test"))
     (should (string-equal (wal-project-command--buffer-name nil) "*project-test*")))
 
   (should (string-equal (wal-project-command--buffer-name nil) "*project-compile*")))
 
-(ert-deftest test-wal-project-command ()
+(ert-deftest wal-project-command ()
   (defvar wal-project-test-default-cmd nil)
 
   (let ((wal-project-commands (list 'test (make-hash-table :test 'equal)))
@@ -107,7 +107,7 @@ p           (:mock project-root :return "/tmp/cmd")
   (should (wal-project-command--valid-default-p '("test" "make")))
   (should-not (wal-project-command--valid-default-p '("test" make))))
 
-(ert-deftest test-wal-project-create-command ()
+(ert-deftest wal-project-create-command ()
   (bydi ((:mock make-hash-table :return 'hash-table))
     (bydi-match-expansion
      (wal-project-create-command test)
@@ -130,14 +130,14 @@ p           (:mock project-root :return "/tmp/cmd")
         (bind-key "o" 'wal-project-test wal-project-prefix-map)
         (put 'wal-project-test-default-cmd 'safe-local-variable #'wal-project-command--valid-default-p)))))
 
-(ert-deftest test-wal-project-select-command ()
+(ert-deftest wal-project-select-command ()
   (bydi ((:mock completing-read :return "test")
          wal-project-command)
     (call-interactively 'wal-project-select-command)
 
     (bydi-was-called-with wal-project-command (list 'test))))
 
-(ert-deftest test-wal-project-consult-buffer ()
+(ert-deftest wal-project-consult-buffer ()
   (defvar consult-project-buffer-sources)
   (bydi (consult-buffer)
     (let ((consult-project-buffer-sources 'testing))
@@ -146,7 +146,7 @@ p           (:mock project-root :return "/tmp/cmd")
 
       (bydi-was-called-with consult-buffer (list 'testing)))))
 
-(ert-deftest test-wal-project-magit-status ()
+(ert-deftest wal-project-magit-status ()
   (bydi (magit-status
          (:mock project-root :return "/tmp/test")
          (:mock project-current :return (list 'vc 'Git "/tmp/test")))
@@ -155,7 +155,7 @@ p           (:mock project-root :return "/tmp/cmd")
 
     (bydi-was-called-with magit-status (list "/tmp/test"))))
 
-(ert-deftest test-wal-project-magit-status--ignores-if-no-vc ()
+(ert-deftest wal-project-magit-status--ignores-if-no-vc ()
   (ert-with-message-capture messages
     (bydi ((:mock project-current :return (list 'vc nil "/tmp/test"))
            (:mock project-root :return "/tmp/test")
@@ -167,14 +167,14 @@ p           (:mock project-root :return "/tmp/cmd")
 
       (should (string= "Project at ’/tmp/test’ is not version-controlled\n" messages)))))
 
-(ert-deftest test-wal-project-dired-root ()
+(ert-deftest wal-project-dired-root ()
   (bydi (project-current (:mock project-root :return "/tmp/test") dired)
 
     (wal-project-dired-root)
 
     (bydi-was-called-with dired (list "/tmp/test"))))
 
-(ert-deftest test-wal-project--buffer-root ()
+(ert-deftest wal-project--buffer-root ()
   (bydi ((:mock project-current :return '(vc Git "/tmp"))
          project-root)
     (with-temp-buffer

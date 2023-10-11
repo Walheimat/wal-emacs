@@ -8,7 +8,7 @@
 
 (require 'wal-emacs nil t)
 
-(ert-deftest test-wal-flyspell-commit-messages ()
+(ert-deftest wal-flyspell-commit-messages ()
   (bydi (flyspell-mode)
 
     (with-temp-buffer
@@ -20,7 +20,7 @@
 
       (bydi-was-called flyspell-mode))))
 
-(ert-deftest test-wal-flycheck-on-save ()
+(ert-deftest wal-flycheck-on-save ()
   (bydi (flycheck-mode)
 
     (defvar flycheck-check-syntax-automatically nil)
@@ -46,7 +46,7 @@
       (wal-with-page-offset #'doc-view-goto-page 3)
       (bydi-was-called-with doc-view-goto-page 3))))
 
-(ert-deftest test-wal-kmacro ()
+(ert-deftest wal-kmacro ()
   (bydi (kmacro-end-macro
          kmacro-start-macro)
 
@@ -60,14 +60,14 @@
 
       (bydi-was-called kmacro-start-macro))))
 
-(ert-deftest test-wal-clear-registers ()
+(ert-deftest wal-clear-registers ()
   (let ((register-alist '((a . b))))
 
     (wal-clear-registers)
 
     (should-not register-alist)))
 
-(ert-deftest test-wal-lighthouse ()
+(ert-deftest wal-lighthouse ()
   (bydi pulse-momentary-highlight-one-line
     (with-temp-buffer
       (insert "testing")
@@ -77,13 +77,13 @@
 
       (bydi-was-called-with pulse-momentary-highlight-one-line (list 8 'cursor)))))
 
-(ert-deftest test-wal-compilation-buffer-p ()
+(ert-deftest wal-compilation-buffer-p ()
   (with-temp-buffer
     (compilation-mode)
 
     (should (wal-compilation-buffer-p (current-buffer)))))
 
-(ert-deftest test-wal-consult-compilation-buffer--query ()
+(ert-deftest wal-consult-compilation-buffer--query ()
   (cl-defun consult--buffer-query (&key sort as predicate)
     (list sort as predicate))
 

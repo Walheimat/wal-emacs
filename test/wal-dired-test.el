@@ -18,7 +18,7 @@
     (bydi-was-called-with dired-noselect (list "/tmp" nil))
     (bydi-was-called-with pop-to-buffer-same-window "/tmp/test")))
 
-(ert-deftest test-wal-image-dired ()
+(ert-deftest wal-image-dired ()
   (bydi image-dired
 
     (wal-image-dired)
@@ -27,13 +27,13 @@
 
       (bydi-was-called-with image-dired expected))))
 
-(ert-deftest test-wal-dired-buffer-p ()
+(ert-deftest wal-dired-buffer-p ()
   (with-temp-buffer
     (dired-mode)
 
     (should (wal-dired-buffer-p (current-buffer)))))
 
-(ert-deftest test-wal-consult-dired-buffer--query ()
+(ert-deftest wal-consult-dired-buffer--query ()
   (cl-defun consult--buffer-query (&key sort as predicate)
     (list sort as predicate))
 

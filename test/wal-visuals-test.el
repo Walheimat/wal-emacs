@@ -8,14 +8,14 @@
 
 (require 'wal-visuals nil t)
 
-(ert-deftest test-wal-font-update ()
+(ert-deftest wal-font-update ()
   (bydi (set-face-attribute
          (:mock selected-frame :return 'selected))
     (wal-font-update :height 120 '(default) t)
 
     (bydi-was-called-with set-face-attribute (list 'default 'selected :height 120))))
 
-(ert-deftest test-wal-read-sensible-font-height ()
+(ert-deftest wal-read-sensible-font-height ()
   (let ((input 301)
         (current 121))
 
@@ -35,7 +35,7 @@
       (setq input 177)
       (should (equal 177 (wal-read-sensible-font-height 'fixed))))))
 
-(ert-deftest test-wal-available-fonts ()
+(ert-deftest wal-available-fonts ()
   (bydi (font-spec
          (:mock find-font :with (lambda (specs) (string-equal "TestFont" (nth 1 specs)))))
 
@@ -44,7 +44,7 @@
     (bydi-was-called-n-times font-spec 3)
     (bydi-was-called-nth-with font-spec (list :name "Arial") 2)))
 
-(ert-deftest test-wal-read-font ()
+(ert-deftest wal-read-font ()
   (let ((wal-fixed-fonts '("TestFont" "OtherFont")))
 
     (bydi ((:mock completing-read :return "TestFont")
@@ -54,7 +54,7 @@
       (should (string= "TestFont" (wal-read-font 'fixed)))
       (bydi-was-called-with completing-read (list "Select fixed font (current: SomeFont) " wal-fixed-fonts)))))
 
-(ert-deftest test-wal-select-fixed-or-variable-font ()
+(ert-deftest wal-select-fixed-or-variable-font ()
   (bydi ((:mock wal-read-font :return "TestFont") wal-font-update)
 
     (call-interactively 'wal-select-fixed-font)
@@ -65,7 +65,7 @@
 
     (bydi-was-called-with wal-font-update (list :font "TestFont" '(variable-pitch)))))
 
-(ert-deftest test-wal-set-fixed-or-variable-font-height ()
+(ert-deftest wal-set-fixed-or-variable-font-height ()
   (bydi ((:mock wal-read-sensible-font-height :return 101)
          wal-font-update)
 
@@ -78,12 +78,12 @@
 
     (bydi-was-called-with wal-font-update (list :height 101 '(variable-pitch) nil))))
 
-(ert-deftest test-wal-preferred-fonts ()
+(ert-deftest wal-preferred-fonts ()
   (let ((wal-preferred-fonts '("PreferredFont" "NiceFont" "TestableFont")))
 
     (should (equal (list "TestableFont" "PreferredFont") (wal-preferred-fonts (list "CruelFont" "TestableFont" "WaningFont" "PreferredFont"))))))
 
-(ert-deftest test-wal-fonts-candidate ()
+(ert-deftest wal-fonts-candidate ()
   (bydi ((:mock wal-available-fonts :return (list "TestFont"))
          (:mock wal-preferred-fonts :return (list "ZestFont")))
 
@@ -95,7 +95,7 @@
     (should (equal "ZestFont" (wal-fonts-candidate (list "TestFont" "ZestFont") t)))
     (bydi-was-called wal-preferred-fonts)))
 
-(ert-deftest test-wal-font-lock ()
+(ert-deftest wal-font-lock ()
   (bydi set-face-attribute
 
     (wal-font-lock)
@@ -103,7 +103,7 @@
     (bydi-was-called-nth-with set-face-attribute (list 'font-lock-comment-face nil :slant 'italic :weight 'normal) 0)
     (bydi-was-called-nth-with set-face-attribute (list 'font-lock-keyword-face nil :weight 'bold) 1)))
 
-(ert-deftest test-wal-set-transparency ()
+(ert-deftest wal-set-transparency ()
   (let ((entered-number nil))
     (bydi ((:mock read-number :return entered-number))
 
@@ -131,7 +131,7 @@
         (should (eq 90 wal-transparency))
         (should (eq 90 (cdr (assoc 'alpha default-frame-alist))))))))
 
-(ert-deftest test-wal-load-active-theme ()
+(ert-deftest wal-load-active-theme ()
   (bydi (load-theme run-hooks)
 
     (let ((wal-active-theme nil))
@@ -149,7 +149,7 @@
       (bydi-was-called-with load-theme (list 'test-theme t))
       (bydi-was-called-with run-hooks (list 'wal-theme-hook)))))
 
-(ert-deftest test-wal-load-active-them--captures-error ()
+(ert-deftest wal-load-active-them--captures-error ()
   (let ((wal-active-theme 'non-existence))
 
     (ert-with-message-capture messages
@@ -169,18 +169,18 @@
       (wal-visual-fill-column-mode)
       (bydi-was-called-with visual-fill-column-mode '(+1)))))
 
-(ert-deftest test-wal-with-recent-files-excluded ()
+(ert-deftest wal-with-recent-files-excluded ()
   (defvar recentf-exclude nil)
 
   (let ((fun (lambda (_) recentf-exclude)))
 
     (should (equal '("bookmarks\\'" "zettelkasten" "org/tasks") (wal-with-recent-files-excluded fun 'test)))))
 
-(ert-deftest test-wal-instead-show-biased-random ()
+(ert-deftest wal-instead-show-biased-random ()
   (defvar dashboard-footer-messages '("Testing"))
   (should (equal "Testing" (wal-instead-show-biased-random))))
 
-(ert-deftest test-wal-in-case-of-daemonp-add-different-hook ()
+(ert-deftest wal-in-case-of-daemonp-add-different-hook ()
   (bydi (require (:always daemonp) add-hook)
 
     (wal-in-case-of-daemonp-add-different-hook)
@@ -195,7 +195,7 @@
 
     (bydi-was-not-called add-hook)))
 
-(ert-deftest test-wal-dashboard-get-buffer ()
+(ert-deftest wal-dashboard-get-buffer ()
   (defvar dashboard-force-refresh)
   (defvar dashboard-buffer-name)
 

@@ -8,7 +8,7 @@
 
 (require 'wal-package nil t)
 
-(ert-deftest test-wal-use-package-normalize-binder ()
+(ert-deftest wal-use-package-normalize-binder ()
 
   (bydi ((:always use-package-recognize-function)
          (:mock wal-prefix-user-key :with (lambda (x) (format "C-t %s" x)))
@@ -29,7 +29,7 @@
 
       (should (equal (list it "testing" (cons "C-t w" 'testing)) (wal-use-package-normalize-binder nil nil (list it "testing" (cons "w" 'testing))))))))
 
-(ert-deftest test-use-package-handler/:wal-ways ()
+(ert-deftest use-package-handler/:wal-ways ()
   (bydi ((:ignore package-installed-p)
          use-package-plist-maybe-put
          use-package-process-keywords)
@@ -74,7 +74,7 @@
     (use-package-handler/:fhook 'name 'keyword 'args 'rest 'state)
     (bydi-was-called use-package-handler/:hook)))
 
-(ert-deftest test-wal-ignore-if-not-installed ()
+(ert-deftest wal-ignore-if-not-installed ()
   (let ((installed nil)
         (built-in nil)
         (user nil))
@@ -96,7 +96,7 @@
             user t)
       (should (wal-ignore-if-not-installed 'some-package)))))
 
-(ert-deftest test-wal-use-package-ensure-function ()
+(ert-deftest wal-use-package-ensure-function ()
 
   (defvar package-archive-contents)
   (defvar package-pinned-packages)
@@ -148,7 +148,7 @@
 
       (bydi-clear-mocks))))
 
-(ert-deftest test-wal-use-package-ensure-function--displays-warning-on-error ()
+(ert-deftest wal-use-package-ensure-function--displays-warning-on-error ()
   (defvar debug-on-error)
 
   (let ((debug-on-error nil))

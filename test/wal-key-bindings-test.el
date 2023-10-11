@@ -8,7 +8,7 @@
 
 (require 'wal-key-bindings nil t)
 
-(ert-deftest test-wal-create-leader-sink ()
+(ert-deftest wal-create-leader-sink ()
   (bydi general-define-key
 
     (bydi-match-expansion
@@ -24,21 +24,21 @@
     (bydi-was-called-with general-define-key
                           (list :prefix "C-t" "t" (list :ignore t :wk "TESTER!")))))
 
-(ert-deftest test-editors ()
+(ert-deftest editors ()
   (bydi-match-expansion
    (editors "t" #'ignore #'always)
    '(progn
       (editor "t" #'ignore)
       (editor-sink "t" #'always))))
 
-(ert-deftest test-wal-key-by-leader ()
+(ert-deftest wal-key-by-leader ()
   (defvar wal-key-reach)
   (defvar wal-leaders)
   (let ((wal-leaders '(("a" . hunk) ("b" . bunk) ("c" . trunk))))
 
     (should (string-equal "c" (wal-key-by-leader 'trunk)))))
 
-(ert-deftest test-wal-key-combo-for-leader ()
+(ert-deftest wal-key-combo-for-leader ()
   (defvar wal-key-reach)
   (defvar wal-leaders)
   (bydi ((:mock wal-prefix-user-key :with (lambda (x) (concat "C-t " x))))
@@ -50,7 +50,7 @@
       (should (string-equal "C-t c" (wal-key-combo-for-leader 'trunk)))
       (should (equal (kbd "C-t b") (wal-key-combo-for-leader 'bunk :translate t))))))
 
-(ert-deftest test-wal-general-create-definer ()
+(ert-deftest wal-general-create-definer ()
   (bydi ((:mock wal-key-combo-for-leader :return "C-t")
          (:ignore eval-after-load)
          eval)
@@ -60,7 +60,7 @@
     (bydi-was-called-nth-with eval (list '(general-create-definer tester :prefix "C-t")) 0)
     (bydi-was-called-nth-with eval (list '(wal-create-leader-sink tester-sink :definer tester :prefix "C-t")) 1)))
 
-(ert-deftest test-major? ()
+(ert-deftest major? ()
   (bydi (message (:mock wal-key-combo-for-leader :return "C-t"))
 
     (with-temp-buffer
@@ -70,7 +70,7 @@
 
       (bydi-was-called-with message (list "Major (%s) has no binding in %s" "C-t" "text-mode")))))
 
-(ert-deftest test-wal-transient-grab ()
+(ert-deftest wal-transient-grab ()
   (defvar transient-current-command)
   (let ((transient-current-command "test"))
     (bydi((:mock transient-arg-value :with concat)
@@ -78,7 +78,7 @@
 
       (should (string-equal "--testing=test" (wal-transient-grab "testing"))))))
 
-(ert-deftest test-wal-transient-command-or-major ()
+(ert-deftest wal-transient-command-or-major ()
   (with-temp-buffer
     (setq-local mode-line-buffer-identification "cool-major")
 
@@ -88,13 +88,13 @@
 
     (should-not (string= "major" (wal-transient-command-or-major)))))
 
-(ert-deftest test-wal-with-delayed-transient-popup ()
+(ert-deftest wal-with-delayed-transient-popup ()
   (defvar transient-show-popup)
   (let ((transient-show-popup 0.4))
 
     (should (equal 0.8 (wal-with-delayed-transient-popup (lambda () transient-show-popup))))))
 
-(ert-deftest test-that-key ()
+(ert-deftest that-key ()
   (bydi ((:mock wal-prefix-user-key :with (lambda (k) (concat "H-" k)))
          (:mock wal-key-combo-for-leader :with (lambda (_l _k k) (concat "M-" k))))
 
