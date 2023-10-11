@@ -21,6 +21,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Function `wal-insert` now uses keyword arguments for
   `allow-duplicates`, `before` and `quiet`.
+- Binding for `j` in `dired-jump-map` is removed because it interferes
+  with `dired-goto-file`.
 
 ## [v2.1.11]
 
