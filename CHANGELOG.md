@@ -13,6 +13,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Local variable `wal-org-capture-tasks-file`. When set, locating the
   heading will try that file first. This allows tasks file living
   outside of a project again.
+- Command `wal-config-org-tags-view` to search for tags in the config.
 
 ### Changed
 

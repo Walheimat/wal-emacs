@@ -227,16 +227,29 @@
 
       (bydi-was-called-with project-switch-project (list "/tmp/config")))))
 
-(ert-deftest test-wal-config-consult-org-heading ()
+(ert-deftest wal-config-lib-files ()
   (defvar wal-emacs-config-lib-path)
   (let ((wal-emacs-config-lib-path nil))
 
-    (bydi (consult-org-heading
-           (:mock directory-files :return '("." ".." "/tmp/test.org" "/tmp/test-2.org")))
+    (bydi ((:mock directory-files :return '("." ".." "/tmp/test.org" "/tmp/test-2.org")))
 
-      (wal-config-consult-org-heading)
+      (should (equal '("/tmp/test.org" "/tmp/test-2.org") (wal-config-lib-files))))))
 
-      (bydi-was-called-with consult-org-heading (list nil '("/tmp/test.org" "/tmp/test-2.org"))))))
+(ert-deftest test-wal-config-consult-org-heading ()
+  (bydi (consult-org-heading
+         (:mock wal-config-lib-files :return '("/tmp/test.org" "/tmp/test-2.org")))
+
+    (wal-config-consult-org-heading)
+
+    (bydi-was-called-with consult-org-heading (list nil '("/tmp/test.org" "/tmp/test-2.org")))))
+
+(ert-deftest wal-config-org-tags-view ()
+  (bydi (org-tags-view
+         wal-config-lib-files)
+
+    (wal-config-org-tags-view)
+
+    (bydi-was-called wal-config-lib-files)))
 
 (ert-deftest test-wal-customize-group ()
   (bydi customize-group
