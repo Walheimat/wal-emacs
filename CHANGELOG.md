@@ -24,6 +24,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Binding for `j` in `dired-jump-map` is removed because it interferes
   with `dired-goto-file`.
 
+### Fixed
+
+- Binding to `M-o` in `sgml-mode`'s `html-mode` is rebound to `C-M-o`
+  in order to not interfere with `wal-switch-to-other-buffer`.
+
 ## [v2.1.11]
 
 Longer safe.
