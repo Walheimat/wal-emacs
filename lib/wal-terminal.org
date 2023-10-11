@@ -1,6 +1,7 @@
 #+TITLE: Terminal
 #+AUTHOR: @Walheimat
 #+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-terminal.el" wal-emacs-config-build-path)
+#+TAGS: { builtin(b) melpa(m) gnu(e) nongnu(n) git(g) }
 
 #+BEGIN_QUOTE
 I am convinced that we are in a terminal process.
@@ -36,10 +37,13 @@ I am convinced that we are in a terminal process.
 
 * Packages
 
-** with-editor
+** with-editor                                                       :nongnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Makes sure that Emacs is used as a visual editor when a terminal opens
+a file.
 
 #+BEGIN_SRC emacs-lisp
 (use-package with-editor
@@ -55,12 +59,17 @@ I am convinced that we are in a terminal process.
   :packages (eshell-syntax-highlighting))
 #+END_SRC
 
-** eshell
+** eshell                                                           :builtin:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Set up =eshell=. I like the idea of it but I don't really use it.
+I've been told it's not a complete shell but it allows using Emacs
+commands from a shell-like interface.
+
+This adds =wal-eshell= to only open a single =eshell= buffer per
+project. This also makes sure truncation actually fully truncates.
+Also sets up =with-editor= and a banner message.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal-instead-truncate-buffer (&rest _r)
@@ -117,10 +126,12 @@ ARG is passed to `eshell'."
   (("C-c e" . wal-eshell)))
 #+END_SRC
 
-** eshell-syntax-highlighting
+** eshell-syntax-highlighting                                         :melpa:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Add syntax highlighting in =eshell= buffers.
 
 #+BEGIN_SRC emacs-lisp
 (use-package eshell-syntax-highlighting
@@ -129,10 +140,14 @@ ARG is passed to `eshell'."
   :hook (eshell-mode . eshell-syntax-highlighting-mode))
 #+END_SRC
 
-** vterm
+** vterm                                                              :melpa:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Fully functional and slightly cumbersome terminal usable within Emacs.
+Adds the same functionality to have one =vterm= buffer per project and
+sets up =with-editor=.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal-vterm (&optional arg)

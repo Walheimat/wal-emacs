@@ -1,6 +1,7 @@
 #+TITLE: Completion
 #+AUTHOR: @Walheimat
 #+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-complete.el" wal-emacs-config-build-path)
+#+TAGS: { builtin(b) melpa(m) gnu(e) nongnu(n) git(g) }
 
 Complete commands and code.
 
@@ -63,10 +64,14 @@ See `wal-consult--pre-narrow' for covered commands."
 
 * Inline Completion
 
-** corfu
+** corfu                                                                :gnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Light-weight inline completion. The custom function is taken from the
+wiki to make sure that =corfu= is enabled in the minibuffer when it
+makes sense. This turns on auto-completion.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal-corfu-enable-in-minibuffer ()
@@ -84,10 +89,12 @@ See `wal-consult--pre-narrow' for covered commands."
   (corfu-cycle t))
 #+END_SRC
 
-** corfu-quick
+** corfu-quick                                                          :gnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Jump to a completion candidate with a single letter.
 
 #+BEGIN_SRC emacs-lisp
 (use-package corfu-quick
@@ -103,10 +110,12 @@ See `wal-consult--pre-narrow' for covered commands."
   :defines (corfu-map))
 #+END_SRC
 
-** corfu-history
+** corfu-history                                                        :gnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Save the completion history.
 
 #+BEGIN_SRC emacs-lisp
 (use-package corfu-history
@@ -126,7 +135,7 @@ See `wal-consult--pre-narrow' for covered commands."
   :functions (corfu-history-mode))
 #+END_SRC
 
-** corfu-popupinfo
+** corfu-popupinfo                                                      :gnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -153,10 +162,13 @@ Scrolling works like for =other-window=.
   :functions (corfu-popupinfo-mode))
 #+END_SRC
 
-** cape
+** cape                                                                 :gnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Provides additional completion function as well as functionality to
+jerry-rig =company= backends to work with =corfu=.
 
 #+begin_src emacs-lisp
 (use-package cape
@@ -167,12 +179,15 @@ Scrolling works like for =other-window=.
 
 * Minibuffer Completion
 
-** vertico
+** vertico                                                              :gnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Provide global option narrowing using the =vertico= family of products.
+Provide global option narrowing using the =vertico= family of
+products. The setup is mostly as per the official docs. This just sets
+up =vertico-multiform-mode= to make certain completion tasks
+unobtrusive.
 
 #+BEGIN_SRC emacs-lisp
 (use-package vertico
@@ -205,10 +220,13 @@ Provide global option narrowing using the =vertico= family of products.
   :functions (vertico-mode vertico-multiform-mode))
 #+END_SRC
 
-** vertico-directory
+** vertico-directory                                                    :gnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Make sure navigating directories during completion is a breeze. This
+makes sure that we don't go into directories when jumping in Dired.
 
 #+BEGIN_SRC emacs-lisp
 (defvar-local wal-command nil
@@ -247,10 +265,12 @@ Provide global option narrowing using the =vertico= family of products.
    ("M-DEL" . vertico-directory-delete-word)))
 #+END_SRC
 
-** vertico-quick
+** vertico-quick                                                        :gnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Quickly jump to a candidate with a single letter.
 
 #+BEGIN_SRC emacs-lisp
 (use-package vertico-quick
@@ -268,12 +288,13 @@ Provide global option narrowing using the =vertico= family of products.
    ("u" . vertico-quick-exit)))
 #+END_SRC
 
-** orderless
+** orderless                                                            :gnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Fuzzy matches.
+Fuzzy matching while completing. The =completion= settings are as per
+official docs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package orderless
@@ -287,7 +308,7 @@ Fuzzy matches.
         completion-category-overrides '((file (styles partial-completion)))))
 #+END_SRC
 
-** marginalia
+** marginalia                                                           :gnu:
 
 Contextual information during completion, partial completion and
 completion actions.
@@ -300,10 +321,6 @@ completion actions.
   :config
   (marginalia-mode)
 
-  (when (fboundp 'junk-annotate)
-    (add-to-list 'marginalia-annotator-registry '(expansion-pack junk-annotate builtin none))
-    (add-to-list 'marginalia-command-categories '(junk-install . expansion-pack)))
-
   :bind
   (:map minibuffer-local-map
    ("C-," . marginalia-cycle))
@@ -312,12 +329,14 @@ completion actions.
   :defines (marginalia-annotator-registry marginalia-command-categories))
 #+END_SRC
 
-** embark
+** embark                                                               :gnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Act upon =thing-at-point=, be it in a buffer or minibuffer.
+Act upon =thing-at-point=, be it in a buffer or minibuffer. Sets a few
+more commands in various maps. The entry point command is created
+using [[file:wal-bridge.org::*parallel][parallel]].
 
 #+BEGIN_SRC emacs-lisp
 (defun wal-browse-html-file (filename)
@@ -353,10 +372,12 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
   ("k" . embark-act||embark-dwim))
 #+END_SRC
 
-** embark-consult
+** embark-consult                                                       :gnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Integration for =consult=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package embark-consult
@@ -366,12 +387,16 @@ Act upon =thing-at-point=, be it in a buffer or minibuffer.
   :hook (embark-collect-mode . consult-preview-at-point-mode))
 #+END_SRC
 
-** consult
+** consult                                                              :gnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Heavy lifting with =consult=.
+Beautiful completion and narrowing within completion. This sets up
+pre-narrowing, mainly for [[file:wal-bridge.org::*partial-recall][partial-recall]]. It also adds a new source
+for projects while switching to differentiate open and closed
+projects. Since =consult= provides many useful commands a transient
+combining the most useful ones is bound to the eponymous leader key.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal-consult-ripgrep-ignored (&optional dir initial)

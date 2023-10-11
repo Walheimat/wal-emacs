@@ -1,6 +1,7 @@
 #+TITLE: Org Mode
 #+AUTHOR: @Walheimat
 #+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-org.el" wal-emacs-config-build-path)
+#+TAGS: { builtin(b) melpa(m) gnu(e) nongnu(n) git(g) }
 
 The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]] or run =org-info=.
 
@@ -59,12 +60,17 @@ This variable is relative to the `org-directory'."
   :type 'string)
 #+END_SRC
 
-* The Mode Itself
+* Packages
 
-** org
+** org                                                              :builtin:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+If not the reason why you came to Emacs, probably the one that makes
+you stay. Org is a structured plain-text format that can be
+manipulated to work for document authoring, task-planning and more.
+Read the manual in Emacs or [[https://orgmode.org/manuals.html][on the web]].
 
 #+BEGIN_SRC emacs-lisp
 (defun wal-first-require-ox-md (&rest _args)
@@ -202,12 +208,13 @@ If SHOW is t, show them instead."
    ("M-n" . org-next-visible-heading)))
 #+END_SRC
 
-* Agendas
-
-** org-agenda
+** org-agenda                                                       :builtin:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Plan your day, week and year. This adapts the agenda view to show what
+I need day-to-day and adds a =consult= buffer source.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal-agenda-buffer-p (buffer)
@@ -264,10 +271,13 @@ If SHOW is t, show them instead."
    ("C-c C-t" . org-agenda-todo-yesterday)))
 #+END_SRC
 
-** org-habit
+** org-habit                                                        :builtin:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Habits are a special kind of todo to keep track of what you keep
+doing/forgetting to do.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-habit
@@ -276,12 +286,13 @@ If SHOW is t, show them instead."
   (org-habit-graph-column 50))
 #+END_SRC
 
-** org-super-agenda
+** org-super-agenda                                                   :melpa:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Allow for better grouping.
+Allows for nicer grouping in the agenda view. The groups relate to
+custom groups and todo keywords.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-super-agenda
@@ -324,9 +335,15 @@ Allow for better grouping.
   (org-super-agenda-final-group-separator "\n"))
 #+END_SRC
 
-* Zettelkasten
+** org-roam                                                           :melpa:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
 
-Trying to organize my thoughts using Zettelkästen.
+Trying to organize my thoughts using Zettelkästen. This package allows
+you to create a web of interconnected nodes of org files.
+
+This adds a function to refile only within =org-roam= files.
 
 /Note/ that you will need to install =sqlite3= manually.
 
@@ -335,14 +352,7 @@ Trying to organize my thoughts using Zettelkästen.
   "Note rhizome."
   :packages (org-roam)
   :extras (org-roam-ui))
-#+END_SRC
 
-** org-roam
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-#+BEGIN_SRC emacs-lisp
 (defun wal-org-refile (&optional arg)
   "Refile using ARG, but use `org-roam-directory' for its files.
 
@@ -432,12 +442,12 @@ If called with numeric prefix `5', set variable
       :empty-lines 1))))
 #+END_SRC
 
-** org-roam-ui
+** org-roam-ui                                                        :melpa:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Fancy UI.
+Fancy UI for =org-roam=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-roam-ui
@@ -451,14 +461,13 @@ Fancy UI.
     '("u" "ui" org-roam-ui-mode)))
 #+END_SRC
 
-* Presentations
-
-** org-tree-slide
+** org-tree-slide                                                    :nongnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Turn any =org-mode= buffer into a presentation.
+Turn any =org-mode= buffer into a presentation. The custom functions
+make sure that content is centered and only code retains fixed pitch.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal-relative-column-width (&optional target-width)
@@ -545,14 +554,14 @@ Turn any =org-mode= buffer into a presentation.
    ("v" . wal-org-tree-slide-toggle-visibility)))
 #+END_SRC
 
-* Editing
-
-** org-src
+** org-src                                                          :builtin:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Editing source blocks.
+Editing source blocks in Org files.
+
+Loads a few more languages and disables native tabs in source blocks.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-src
@@ -581,12 +590,17 @@ Editing source blocks.
   :delight " osc")
 #+END_SRC
 
-** org-capture
+** org-capture                                                      :builtin:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Capture templates.
+If you want to just write a quick note or todo for yourself,
+=org-capture= is your friend. This adds the concept of project tasks
+that are collected in distinct files under a desired heading. They can
+be created using one of the custom templates. The others are for
+taking notes related to the currently clocked task and one for dailies
+(although =org-roam= is preferred for these).
 
 #+BEGIN_SRC emacs-lisp
 (defvar-local wal-org-capture-tasks-heading "Tasks")
@@ -643,12 +657,12 @@ Capture templates.
   :delight " cap")
 #+END_SRC
 
-** org-refile
+** org-refile                                                       :builtin:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Configure refiling headings.
+Configure refiling headings. Reduces the depth for agenda files.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-refile
@@ -658,9 +672,7 @@ Configure refiling headings.
      (org-agenda-files . (:maxlevel . 3)))))
 #+END_SRC
 
-* Other
-
-** org-babel
+** org-babel                                                        :builtin:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -682,12 +694,15 @@ Convenient (and less safe) source block interaction.
   (org-confirm-babel-evalute nil))
 #+end_src
 
-** org-clock
+** org-clock                                                        :builtin:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-You know the drill. Clock in, clock out.
+You know the drill. Clock in, clock out. Makes sure that headings with
+a todo keyword are set to in progress when clocked into. Also adds a
+command to ignore continuous clocking as well as one to add a note to
+the clocked task.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal-org-clock-in-switch-to-state (todo-state)
@@ -751,7 +766,7 @@ You know the drill. Clock in, clock out.
    ("C-c N" . org-clock-out)))
 #+END_SRC
 
-** org-duration
+** org-duration                                                     :builtin:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -772,7 +787,7 @@ Set up durations for a 40-hour week.
       ("y" . ,(* 60 8 5 4 11)))))
 #+END_SRC
 
-** org-keys
+** org-keys                                                         :builtin:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -788,7 +803,7 @@ Add some user speed commands.
   (org-return-follows-link t))
 #+END_SRC
 
-** org-modern
+** org-modern                                                           :gnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:

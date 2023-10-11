@@ -1,6 +1,7 @@
 #+TITLE: Visuals
 #+AUTHOR @Walheimat
 #+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-visuals.el" wal-emacs-config-build-path)
+#+TAGS: { builtin(b) melpa(m) gnu(e) nongnu(n) git(g) }
 
 I like nice-looking things.
 
@@ -94,7 +95,12 @@ This has no default value."
 
 * Fonts
 
-Font *JetBrains Mono* has the best support for ligatures.
+This code sets up fonts. Fonts are set by matching preferred fonts
+against available ones. I have found that *JetBrains Mono* has the
+best support for ligatures.
+
+There's commands to set fonts and their height. Comments are globally
+italicized and keywords made bold.
 
 #+begin_src emacs-lisp
 (defvar wal-fonts-updated-hook nil
@@ -185,10 +191,15 @@ instead."
   (set-face-attribute 'font-lock-keyword-face nil :weight 'bold))
 #+end_src
 
-** ligature
+** ligature                                                           :melpa:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+This sets up char-tables so that ligatures work (for fonts that
+support it). The ligatures are set up per-language using =harpoon=,
+see [[file:wal-lang.org][Languages]]. That package also provides common ligatures to all
+languages.
 
 #+BEGIN_SRC emacs-lisp
 (use-package ligature
@@ -197,12 +208,13 @@ instead."
   :hook ((prog-mode harpoon-prog-like) . ligature-mode))
 #+END_SRC
 
-** mixed-pitch
+** mixed-pitch                                                        :melpa:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Allow using variable and fixed fonts in the same buffer.
+Allow using variable and fixed fonts in the same buffer. Makes sure
+that code in =markdown-mode= buffers uses fixed pitch.
 
 #+BEGIN_SRC emacs-lisp
 (use-package mixed-pitch
@@ -239,7 +251,7 @@ Allow using variable and fixed fonts in the same buffer.
        (message "Failed to load theme: %s" (error-message-string err))))))
 #+end_src
 
-** doom-themes
+** doom-themes                                                        :melpa:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -255,7 +267,7 @@ The nicest theme packages out there. It supports many, many packages'
   (doom-themes-org-config))
 #+END_SRC
 
-** kaolin-themes
+** kaolin-themes                                                      :melpa:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -278,7 +290,7 @@ Another collection of beautiful themes, but it doesn't color every
   (kaolin-themes-org-scale-headings nil))
 #+END_SRC
 
-** modus-themes
+** modus-themes                                                     :builtin:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -294,7 +306,7 @@ Protesilaos' super configurable themes.
   (modus-themes-org-blocks 'tinted-background))
 #+END_SRC
 
-** ef-themes
+** ef-themes                                                            :gnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -306,7 +318,7 @@ Color over configuration from the same author.
   :wal-ways nil)
 #+END_SRC
 
-** base16-themes
+** base16-themes                                                      :melpa:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -323,12 +335,13 @@ Check out the [[https://base16-project.github.io/base16-gallery/][gallery]].
 
 * Guides
 
-** hl-todo
+** hl-todo                                                            :melpa:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Highlight =TODO=, =FIXME= etc. in =prog= modes.
+Highlight =TODO=, =FIXME= etc. in programming modes but only if they
+are followed by a colon.
 
 #+BEGIN_SRC emacs-lisp
 (use-package hl-todo
@@ -341,12 +354,12 @@ Highlight =TODO=, =FIXME= etc. in =prog= modes.
   (hl-todo-require-punctuation t))
 #+END_SRC
 
-** rainbow-delimiters
+** rainbow-delimiters                                                :nongnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Make delimiters stand out.
+Make delimiters in programming modes stand out colorfully.
 
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-delimiters
@@ -355,12 +368,14 @@ Make delimiters stand out.
   :hook ((prog-mode harpoon-prog-like) . rainbow-delimiters-mode))
 #+END_SRC
 
-** rainbow-mode
+** rainbow-mode                                                         :gnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Show colors colorfully.
+Show colors colorfully. This sets the background of color names and
+hex codes to the respective color. Mostly useful when editing themes
+or editing CSS files.
 
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-mode
@@ -369,12 +384,13 @@ Show colors colorfully.
   :delight " rbm")
 #+END_SRC
 
-** visual-fill-column
+** visual-fill-column                                                :nongnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Break lines visually at fill column.
+Break lines visually at fill column. This allows the ergonomics of
+using =fill-paragraph= without physically breaking lines.
 
 #+begin_src emacs-lisp
 (defun wal-visual-fill-column-mode ()
@@ -400,12 +416,13 @@ Minor modes are white-listed, hidden and delighted. Meaning that, if
 not white-listed, they are not shown, if they are shown, they are
 delighted.
 
-** delight
+** delight                                                              :gnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Refine a couple of major and minor mode names.
+Allows renaming major and minor modes. For external packages this is
+done in their respective configuration.
 
 #+BEGIN_SRC emacs-lisp
 (use-package delight
@@ -422,12 +439,14 @@ Refine a couple of major and minor mode names.
   :functions (delight))
 #+END_SRC
 
-** minions
+** minions                                                            :melpa:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Sometimes the list of minor modes overcrowds the modeline.
+Sometimes the list of minor modes overcrowds the modeline. This
+minifies all but those you want to be visible and provides a menu on
+the mode-line to enable and disable them.
 
 #+BEGIN_SRC emacs-lisp
 (use-package minions
@@ -458,12 +477,18 @@ Sometimes the list of minor modes overcrowds the modeline.
 
 * Dashboard
 
-** dashboard
+** dashboard                                                          :melpa:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Let's have a dash of board.
+Let's have a dash of board. This is what you see when starting up
+Emacs or creating a new frame. It shows recent files, projects and
+bookmarks as well as the current version of the configuration and an
+inspirational (self-deprecating) message.
+
+Makes sure that the bookmarks file as well as the =org-roam= and Org
+tasks folders are ignored in the recent files list.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal-with-recent-files-excluded (fun &rest args)
@@ -578,12 +603,12 @@ original FUN."
 
 * Icons
 
-** all-the-icons
+** all-the-icons                                                      :melpa:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-You need to install the icons yourself[fn:1].
+Provides icons for buffers. You need to install the icons yourself[fn:1].
 
 #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons
@@ -591,6 +616,10 @@ You need to install the icons yourself[fn:1].
 #+END_SRC
 
 * Transparency
+
+Sets up transparency (by =alpha-background= or =alpha= if the prior
+isn't available). You can change this per-frame through
+=wal-set-transparency=.
 
 #+begin_src emacs-lisp
 (defun wal-transparency--param ()
@@ -619,7 +648,8 @@ This also updates variable `wal-transparency' during the session."
 
 * Setups
 
-Make frame transparent and set themes.
+This sets up transparency and fonts reliably for new start-ups and
+frame creation. See [[file:wal-useful.org::*Setup][useful]] for how this is done.
 
 #+begin_src emacs-lisp
 (wal-define-init-setup visuals

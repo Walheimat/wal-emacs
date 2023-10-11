@@ -1,8 +1,9 @@
 #+TITLE: Workspace
 #+AUTHOR: @Walheimat
 #+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-workspace.el" wal-emacs-config-build-path)
+#+TAGS: { builtin(b) melpa(m) gnu(e) nongnu(n) git(g) }
 
-Keep order.
+Manage and interact with projects.
 
 * Header
 :PROPERTIES:
@@ -53,12 +54,37 @@ Keep order.
 
 * Packages
 
-** project
+** project                                                          :builtin:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Built-in project management.
+Library =project= has by now become mature enough to replace the
+otherwise excellent =projectile=.
+
+The package configuration defines
+=wal-project-{build,install,clean,execute,test}= commands using a
+macro that sets up =wal-project-command= calls. Each of these commands
+have their own per-project history that can be pre-filled through
+dir-local variables. The commands are provided through a prefix map
+bound to =C-c p=.
+
+These command as well as =project-compile= and =recompile= are advised
+to be bounded to project files. This means that running them will not
+prompt to save unsaved files outside of the project.
+
+Various switch commands (selected when switching projects) are added
+to find Org file containing the tasks, showing =magit= status, finding
+a buffer with =consult=, searching with =rg=, finding the root dir and
+running one of the above commands.
+
+The concept of parent projects is established for mono- and projects
+that comprise several sub-projects. The action to switch to it is
+bound in the prefix map. The command to find the tasks file as well as
+a command to only find from the current file's directory are also
+bound there.
+
+Root markers (how projects are found) and =vc= ignores are extended.
 
 #+BEGIN_SRC emacs-lisp
 (defvar-local wal-project-parent-project nil

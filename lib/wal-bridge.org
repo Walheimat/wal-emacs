@@ -1,6 +1,9 @@
 #+TITLE: Bridge
 #+AUTHOR: @Walheimat
 #+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-bridge.el" wal-emacs-config-build-path)
+#+TAGS: { builtin(b) melpa(m) gnu(e) nongnu(n) git(g) }
+
+This is a collection of my own packages that are sourced from GitHub.
 
 * Header
 :PROPERTIES:
@@ -24,6 +27,8 @@
 (declare-function wal-insert "wal-useful.el")
 (declare-function partial-recall-mode "ext:partial-recall.el")
 
+(defvar marginalia-annotator-registry)
+(defvar marginalia-command-categories)
 (defvar whale-line-animation-key-frames)
 
 (defgroup wal-bridge nil
@@ -34,10 +39,16 @@
 
 * Packages
 
-** harpoon
+** harpoon                                                              :git:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Provides a =use-package=-like macro to define a function to hook into
+and set up transient, completion, modes, ligatures, LSP and
+indentation for major modes.
+
+See [[file:wal-lang.org][Languages]] for usage or the [[https://github.com/Walheimat/harpoon][repository]] for more info.
 
 #+begin_src emacs-lisp
 (use-package harpoon
@@ -50,10 +61,21 @@
   (harpoon-lsp-dir-ignore-list 'lsp-file-watch-ignored-directories))
 #+end_src
 
-** partial-recall
+** partial-recall                                                       :git:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Enhances =tab-bar-mode= to become a short-term-memory workspace.
+Buffers opened in a tab belong to that tab. The management of
+(permanently) adding, removing etc. that buffer is based on usage of
+that buffer (re-visiting, keeping it visible) and other buffers.
+
+The package provides a =consult= buffer source that we insert. The
+various buffer-related commands are annotated with =marginalia= and
+the command map is bound in [[file:wal-key-bindings.org::*Ambassador][ambassador]].
+
+See the [[https://github.com/Walheimat/partial-recall][repository]] for more information.
 
 #+begin_src emacs-lisp
 (use-package partial-recall
@@ -84,12 +106,24 @@
   (ambassador "p" '(:keymap partial-recall-command-map :wk "partial recall")))
 #+end_src
 
-** whale-line
+** whale-line                                                           :git:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-My own mode line.
+My own "fancy" mode line. It has segments for all default mode-line
+constructs as well as segments for =partial-recall=, =vc=, =project=,
+=tab-bar-mode=, =multiple-cursors=, =org=, =minions=, =lsp-mode=,
+=dap-mode=.
+
+The mode line is divided into left and right justified by space. Which
+segments are shown is based on whether the window is selected as well
+as priority considerations if space is low.
+
+The icon for buffer status is disabled and we use the UTF-8-heavy
+whale instead for the animation segment.
+
+See the [[https://github.com/Walheimat/whale-line][repository]] for more info.
 
 #+BEGIN_SRC emacs-lisp
 (use-package whale-line
@@ -106,34 +140,55 @@ My own mode line.
   :defines (whale-line-segments-animation-key-frames))
 #+END_SRC
 
-** junk
+** junk                                                                 :git:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-My way of defining optional packages.
+Provides a macro to define package groups and optional packages for
+that group. You can use =junk-install= (bound in [[file:wal-key-bindings.org::*Whaler][whaler]]) to install
+such packages. It uses =marginalia= to provide annotations that
+indicate which packages are already installed.
+
+See the [[https://github.com/Walheimat/junk][repository]] for more information.
 
 #+begin_src emacs-lisp
 (use-package junk
   :config
-  (junk-setup-use-package))
+  (junk-setup-use-package)
+
+  (with-eval-after-load 'marginalia
+    (add-to-list 'marginalia-annotator-registry '(expansion-pack junk-annotate builtin none))
+    (add-to-list 'marginalia-command-categories '(junk-install . expansion-pack))))
 #+end_src
 
-** bydi
+** bydi                                                                 :git:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Testing macros.
+Provides macros to mock functions and watch variables in =ert= tests.
+This package is generally not needed unless you want to create tests.
+
+See [[https://github.com/Walheimat/bydi][repository]] for more information and usage or check out the various
+tests under =/test/=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package bydi)
 #+END_SRC
 
-** parallel
+** parallel                                                             :git:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
+
+Provides a macro to compose two commands into one while retaining
+their consumption of prefix arguments. When calling the composition,
+the first command is executed unless it is called with a numeric
+prefix argument. The first command always uses the normal =C-u=, the
+second =C-<number>=.
+
+See the [[https://github.com/Walheimat/parallel][repository]] for more information.
 
 #+begin_src emacs-lisp
 (use-package parallel)

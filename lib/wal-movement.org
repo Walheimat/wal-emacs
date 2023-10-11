@@ -1,6 +1,7 @@
 #+TITLE: Movement
 #+AUTHOR: @Walheimat
 #+PROPERTY: header-args:emacs-lisp :tangle (expand-file-name "wal-movement.el" wal-emacs-config-build-path)
+#+TAGS: { builtin(b) melpa(m) gnu(e) nongnu(n) git(g) }
 
 Moving around should be fun.
 
@@ -30,12 +31,18 @@ Moving around should be fun.
 
 * Packages
 
-** avy
+** avy                                                                  :gnu:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 
-Who needs a mouse.
+Line-(as well as word- and character-)based movement and actions.
+
+Configured to go to =beginnning-of-line= for Org buffers (because of
+=org-speed-commands=). The scope (current line, current window, all
+windows) of jumping to words can be extended using =C-u=. The dispatch
+is extended with functionality to mark the section between point and
+jump target.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal-avy-goto-word (&optional scope)
@@ -68,23 +75,6 @@ jump to a word in the buffer or anywhere."
         (avy-goto-line)
         (beginning-of-line-text))
     (avy-goto-end-of-line)))
-
-(defun wal-avy-mark-region ()
-  "Select two lines and mark the region between them."
-  (interactive)
-
-  (eval (macroexpand
-         '(avy-with wal-avy-mark-region
-            (let* ((beg (avy--line))
-                   (end (avy--line)))
-
-             (when (> beg end)
-               (cl-rotatef beg end))
-
-             (set-mark beg)
-             (goto-char end)
-             (forward-visible-line 1)
-             (point))))))
 
 (defun avy-action-zip-to-char (pt)
   "Zip (just mark) from current point up to PT."

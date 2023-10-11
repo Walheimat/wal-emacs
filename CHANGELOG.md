@@ -14,6 +14,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   heading will try that file first. This allows tasks file living
   outside of a project again.
 - Command `wal-config-org-tags-view` to search for tags in the config.
+- Adds tags to all package configurations to indicate where they are
+  sourced from.
 
 ### Changed
 

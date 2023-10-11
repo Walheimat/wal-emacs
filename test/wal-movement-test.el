@@ -47,19 +47,6 @@
       (wal-avy-goto-line t)
       (should (equal (point) (point-min))))))
 
-(ert-deftest test-wal-avy-mark-region ()
-  (defvar wal-avy-mark-region nil)
-  (let ((positions '(0 5 5 0)))
-
-    (bydi ((:mock avy-with :with (lambda (_ b) b))
-           (:mock avy--line :with (lambda () (pop positions))))
-
-      (with-temp-buffer
-        (insert "test\ntesting")
-
-        (should (equal 6 (wal-avy-mark-region)))
-        (should (equal 6 (wal-avy-mark-region)))))))
-
 (ert-deftest test-avy-action-zip-to-char ()
   (with-temp-buffer
     (insert "testing")
