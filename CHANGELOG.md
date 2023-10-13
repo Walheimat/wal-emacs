@@ -24,6 +24,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Binding for `j` in `dired-jump-map` is removed because it interferes
   with `dired-goto-file`.
 - Bindings in `wal-project-prefix-map`.
+- Completion of files with `cape` now uses `C-c /`.
 
 ### Fixed
 
