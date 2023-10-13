@@ -35,17 +35,6 @@ Please let me know when I screwed up. I promise I will learn.
 (defvar flycheck-checkers)
 (defvar flycheck-checkers)
 (defvar flycheck-error-list-buffer)
-
-(defgroup wal-fix nil
-  "Change checker settings."
-  :group 'wal
-  :tag "Fixing")
-
-(defcustom wal-fix-syntax-checker 'flycheck
-  "The checker to use for prog and prog-like files."
-  :type '(choice (const :tag "Flymake" flymake)
-                 (const :tag "Flycheck" flycheck))
-  :group 'wal-fix)
 #+END_SRC
 
 * Packages
@@ -59,7 +48,6 @@ ships with a few (and so do some other packages like =lsp-mode=).
 (defvar wal-flymake-map (make-sparse-keymap))
 
 (use-package flymake
-  :if (equal 'flymake wal-fix-syntax-checker)
   :hook ((prog-mode harpoon-prog-like-mode) . flymake-mode)
 
   :config
@@ -74,6 +62,7 @@ ships with a few (and so do some other packages like =lsp-mode=).
   :bind-keymap
   ("C-c f" . wal-flymake-map))
 #+end_src
+
 ** flycheck                                                           :melpa:
 :PROPERTIES:
 :UNNUMBERED: t
@@ -167,7 +156,7 @@ If KILL-BUFFER is t, kill the file's buffer."
             (flycheck-syntax-check-start check callback))
         (user-error "Couldn't determine checker for file")))))
 
-(defvar wal-flycheck-ignored-modes '(gdscript-mode))
+(defvar wal-flycheck-ignored-modes '(gdscript-mode emacs-lisp-mode))
 
 (defun wal-flycheck-mode ()
   "Turn on `flycheck-mode' unless the `major-mode' is ignored."
@@ -175,7 +164,6 @@ If KILL-BUFFER is t, kill the file's buffer."
     (flycheck-mode)))
 
 (use-package flycheck
-  :if (equal 'flycheck wal-fix-syntax-checker)
   :hook ((prog-mode harpoon-prog-like-mode) . wal-flycheck-mode)
 
   :init

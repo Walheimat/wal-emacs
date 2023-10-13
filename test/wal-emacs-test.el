@@ -20,19 +20,6 @@
 
       (bydi-was-called flyspell-mode))))
 
-(ert-deftest wal-flycheck-on-save ()
-  (let ((wal-fix-syntax-checker 'flycheck))
-
-    (bydi (flycheck-mode)
-
-      (defvar flycheck-check-syntax-automatically nil)
-
-      (with-temp-buffer
-        (wal-text-mode-flycheck-on-save)
-        (bydi-was-called flycheck-mode)
-
-        (should (equal '(save) flycheck-check-syntax-automatically))))))
-
 (ert-deftest wal-with-page-offset ()
   (let ((this-command 'doc-view-goto-page)
         (wal-doc-view-page-offset 4))

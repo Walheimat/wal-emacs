@@ -16,8 +16,6 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Command `wal-config-org-tags-view` to search for tags in the config.
 - Adds tags to all package configurations to indicate where they are
   sourced from.
-- `flycheck` or `flymake` can be used as the default by setting custom
-  variable `wal-fix-syntax-checker`.
 - Command map for `diff-hl` is now bound to `d` in `ambassador`
   (`docker` was moved to `o`).
 
@@ -29,6 +27,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   with `dired-goto-file`.
 - Bindings in `wal-project-prefix-map`.
 - Completion of files with `cape` now uses `C-c /`.
+- `emacs-lisp-mode` now uses `flymake`.
 
 ### Fixed
 
