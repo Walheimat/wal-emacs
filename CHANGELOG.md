@@ -18,6 +18,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   sourced from.
 - `flycheck` or `flymake` can be used as the default by setting custom
   variable `wal-fix-syntax-checker`.
+- Command map for `diff-hl` is now bound to `d` in `ambassador`
+  (`docker` was moved to `o`).
 
 ### Changed
 
