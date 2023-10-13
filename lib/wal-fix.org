@@ -35,10 +35,45 @@ Please let me know when I screwed up. I promise I will learn.
 (defvar flycheck-checkers)
 (defvar flycheck-checkers)
 (defvar flycheck-error-list-buffer)
+
+(defgroup wal-fix nil
+  "Change checker settings."
+  :group 'wal
+  :tag "Fixing")
+
+(defcustom wal-fix-syntax-checker 'flycheck
+  "The checker to use for prog and prog-like files."
+  :type '(choice (const :tag "Flymake" flymake)
+                 (const :tag "Flycheck" flycheck))
+  :group 'wal-fix)
 #+END_SRC
 
 * Packages
 
+** flymake                                                          :builtin:
+
+=flymake= uses backends to check your code, one for each mode. It
+ships with a few (and so do some other packages like =lsp-mode=).
+
+#+begin_src emacs-lisp
+(defvar wal-flymake-map (make-sparse-keymap))
+
+(use-package flymake
+  :if (equal 'flymake wal-fix-syntax-checker)
+  :hook ((prog-mode harpoon-prog-like-mode) . flymake-mode)
+
+  :config
+  (that-key "flymake" :key "C-c f")
+
+  :bind
+  (:map wal-flymake-map
+   ("n" . flymake-goto-next-error)
+   ("p" . flymake-goto-prev-error)
+   ("l" . flymake-show-diagnostics-buffer))
+
+  :bind-keymap
+  ("C-c f" . wal-flymake-map))
+#+end_src
 ** flycheck                                                           :melpa:
 :PROPERTIES:
 :UNNUMBERED: t
@@ -140,6 +175,7 @@ If KILL-BUFFER is t, kill the file's buffer."
     (flycheck-mode)))
 
 (use-package flycheck
+  :if (equal 'flycheck wal-fix-syntax-checker)
   :hook ((prog-mode harpoon-prog-like-mode) . wal-flycheck-mode)
 
   :init
