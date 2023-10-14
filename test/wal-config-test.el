@@ -249,7 +249,12 @@
 
     (wal-config-org-tags-view)
 
-    (bydi-was-called wal-config-lib-files)))
+    (bydi-was-called wal-config-lib-files)
+    (bydi-was-called org-tags-view)
+
+    (wal-config-org-tags-view t)
+
+    (bydi-was-called-last-with org-tags-view (list nil wal-config--package-tags))))
 
 (ert-deftest wal-customize-group ()
   (bydi customize-group

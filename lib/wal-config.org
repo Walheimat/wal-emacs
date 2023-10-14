@@ -484,16 +484,30 @@ If the answer is no, there will be no additional prompt."
 
   (customize-group 'wal t))
 
-(defun wal-config-org-tags-view ()
-  "Show tags for the config."
-  (interactive)
+(defvar wal-config--package-tags "gnu|nongnu|melpa|git")
+
+(defun wal-config-org-tags-view (&optional all-packages)
+  "Show tags for the config.
+
+Calls out to `org-tags-view' while setting `org-agenda-fiels' to
+the library files of the config.
+
+Sets up `vertico' to select the prompt to allow for usage of &
+and | selectors.
+
+If ALL-PACKAGES is t, call `org-tags-view' with a pre-constructed
+matcher."
+  (interactive "P")
 
   (defvar wal-emacs-config-lib-path)
   (defvar org-agenda-files)
 
-  (let ((org-agenda-files (wal-config-lib-files)))
+  (let ((org-agenda-files (wal-config-lib-files))
+        (vertico-preselect 'prompt))
 
-    (call-interactively 'org-tags-view)))
+    (if all-packages
+        (org-tags-view nil wal-config--package-tags)
+      (call-interactively 'org-tags-view))))
 #+END_SRC
 
 ** Command Map
