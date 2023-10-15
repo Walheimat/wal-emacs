@@ -6,10 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v2.1.12]
+
+Visible introspection.
 
 ### Added
 
+- Better package documentation.
 - Local variable `wal-org-capture-tasks-file`. When set, locating the
   heading will try that file first. This allows tasks file living
   outside of a project again.
