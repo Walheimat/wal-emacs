@@ -11,6 +11,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - `dashboard-refresh-buffer` is now bound in `ambassador` to `0`.
+- Binding for `compile` (`C-c t`) was removed.
 
 ## [v2.1.12]
 
