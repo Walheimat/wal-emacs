@@ -12,6 +12,14 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `dashboard-refresh-buffer` is now bound in `ambassador` to `0`.
 - Binding for `compile` (`C-c t`) was removed.
+- Org tags are now grouped and no longer define select characters.
+  This is because of the fix below; files can now freely define their
+  own tags and both the predefined and the file-specific tags can be
+  chosen.
+
+### Fixed
+
+- `org-tag-persistent-alist` is now set instead of `org-tag-alist`.
 
 ## [v2.1.12]
 
