@@ -254,7 +254,7 @@
 
     (wal-config-org-tags-view t)
 
-    (bydi-was-called-last-with org-tags-view (list nil wal-config--package-tags))))
+    (bydi-was-called-last-with org-tags-view (list nil wal-config--package-tag))))
 
 (ert-deftest wal-customize-group ()
   (bydi customize-group

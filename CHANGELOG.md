@@ -16,6 +16,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   This is because of the fix below; files can now freely define their
   own tags and both the predefined and the file-specific tags can be
   chosen.
+- The package tags are now grouped under `package`.
 
 ### Fixed
 
