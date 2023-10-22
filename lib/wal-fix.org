@@ -35,6 +35,8 @@ Please let me know when I screwed up. I promise I will learn.
 (defvar flycheck-checkers)
 (defvar flycheck-checkers)
 (defvar flycheck-error-list-buffer)
+
+(defvar wal-flymake-modes '(gdscript-mode emacs-lisp-mode))
 #+END_SRC
 
 * Packages
@@ -47,8 +49,13 @@ ships with a few (and so do some other packages like =lsp-mode=).
 #+begin_src emacs-lisp
 (defvar wal-flymake-map (make-sparse-keymap))
 
+(defun wal-flymake-mode ()
+  "Turn on `flycheck-mode' unless the `major-mode' is ignored."
+  (when (memq major-mode wal-flymake-modes)
+    (flymake-mode)))
+
 (use-package flymake
-  :hook ((prog-mode harpoon-prog-like-mode) . flymake-mode)
+  :hook ((prog-mode harpoon-prog-like-mode) . wal-flymake-mode)
 
   :config
   (that-key "flymake" :key "C-c f")
@@ -159,11 +166,9 @@ If KILL-BUFFER is t, kill the file's buffer."
             (flycheck-syntax-check-start check callback))
         (user-error "Couldn't determine checker for file")))))
 
-(defvar wal-flycheck-ignored-modes '(gdscript-mode emacs-lisp-mode))
-
 (defun wal-flycheck-mode ()
   "Turn on `flycheck-mode' unless the `major-mode' is ignored."
-  (unless (memq major-mode wal-flycheck-ignored-modes)
+  (unless (memq major-mode wal-flymake-modes)
     (flycheck-mode)))
 
 (use-package flycheck

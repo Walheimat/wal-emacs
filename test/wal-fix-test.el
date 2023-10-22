@@ -8,6 +8,22 @@
 
 (require 'wal-fix nil t)
 
+(ert-deftest wal-flymake-mode ()
+  (bydi (flymake-mode)
+    (with-temp-buffer
+      (setq major-mode 'test-mode)
+
+      (let ((wal-flymake-modes nil))
+
+        (wal-flymake-mode)
+
+        (bydi-was-not-called flymake-mode)
+
+        (setq wal-flymake-modes '(test-mode))
+
+        (wal-flymake-mode)
+        (bydi-was-called flymake-mode)))))
+
 (ert-deftest wal-flycheck-file--get-buffer ()
   (bydi (view-mode)
     (with-current-buffer (wal-flycheck-file--get-buffer)
@@ -108,13 +124,13 @@
     (with-temp-buffer
       (setq major-mode 'test-mode)
 
-      (let ((wal-flycheck-ignored-modes '(test-mode)))
+      (let ((wal-flymake-modes '(test-mode)))
 
         (wal-flycheck-mode)
 
         (bydi-was-not-called flycheck-mode)
 
-        (setq wal-flycheck-ignored-modes nil)
+        (setq wal-flymake-modes nil)
 
         (wal-flycheck-mode)
         (bydi-was-called flycheck-mode)))))

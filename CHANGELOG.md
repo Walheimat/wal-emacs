@@ -21,6 +21,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - `org-tag-persistent-alist` is now set instead of `org-tag-alist`.
+- `flymake-mode` is only enabled for modes ignored by `flycheck-mode`.
 
 ## [v2.1.12]
 
