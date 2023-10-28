@@ -17,11 +17,14 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   own tags and both the predefined and the file-specific tags can be
   chosen.
 - The package tags are now grouped under `package`.
+- Neither `flycheck-mode` nor `flymake-mode` hook into `prog-mode`
+  anymore. This is because `harpoon` now allows to set a checker
+  function that can be overridden (which is done for `emacs-lisp-mode`
+  and `gdscript-mode`).
 
 ### Fixed
 
 - `org-tag-persistent-alist` is now set instead of `org-tag-alist`.
-- `flymake-mode` is only enabled for modes ignored by `flycheck-mode`.
 
 ## [v2.1.12]
 
