@@ -299,8 +299,14 @@ Increase the =gc-cons-threshold= after start-up.
 Let's keep the scratch contents.
 
 #+BEGIN_SRC emacs-lisp
-;; Empty scratch message.
-(setq initial-scratch-message "")
+(let ((package-count (length package-activated-list))
+      (init-time (emacs-init-time))
+      (date (format-time-string "%d/%m/%Y")))
+
+  (setq initial-scratch-message (if (or wal-minimal wal-flag-mini)
+                                    (format ";; Minimal wal-emacs (loaded %d packages in %s) on %s\n"
+                                            package-count init-time date)
+                                  (format ";; Normal wal-emacs on %s\n" date))))
 
 (add-hook 'emacs-startup-hook #'wal-rehydrate-scratch)
 (add-hook 'kill-emacs-hook #'wal-persist-scratch)
