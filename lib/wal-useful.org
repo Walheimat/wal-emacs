@@ -24,6 +24,7 @@ Custom useful functions, commands and macros.
 
 (declare-function map-put! "ext:map.el")
 (declare-function package--update-selected-packages "ext:package.el")
+(declare-function package-built-in-p "ext:package.el")
 (declare-function server-edit "ext:server.el")
 (declare-function server-edit-abort "ext:server.el")
 
@@ -766,6 +767,45 @@ Optonally, interrupt any running process if INTERRUPT is t."
                                        (buffer-name buf)))))
          (funcall error-callback (string-trim status)))))
 #+END_SRC
+
+* Packages
+
+#+begin_src emacs-lisp
+(defconst wal-package-ignored-packages
+  '(abbrev
+    dired
+    elisp-mode
+    follow-mode
+    lisp-mode
+    mu4e
+    nxml-mode
+    ob
+    org-agenda
+    org-capture
+    org-clock
+    org-duration
+    org-habit
+    org-keys
+    org-refile
+    org-src
+    register
+    text-mode)
+  "Packages that should be ignored when ensuring.
+
+These either are incorrectly deemed not built-in by
+`package-built-in-p' or would be missed because they're site
+packages.")
+
+(defun wal-package-installed-p (package)
+  "Check if PACKAGE is installed."
+  (not (null (or (package-installed-p package)
+                 (memq package wal-package-ignored-packages)))))
+
+(defun wal-package-built-in-p (package)
+  "Check if PACKAGE is built-in."
+  (not (null (or (package-built-in-p package)
+                 (memq package wal-package-ignored-packages)))))
+#+end_src
 
 * Advice
 

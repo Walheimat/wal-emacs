@@ -277,31 +277,6 @@ and expansion pack packages.
       (package-built-in-p package)
       (package--user-selected-p package)))
 
-(defconst wal-package-ignored-packages
-  '(abbrev
-    dired
-    elisp-mode
-    follow-mode
-    lisp-mode
-    mu4e
-    nxml-mode
-    ob
-    org-agenda
-    org-capture
-    org-clock
-    org-duration
-    org-habit
-    org-keys
-    org-refile
-    org-src
-    register
-    text-mode)
-  "Packages that should be ignored when ensuring.
-
-These either are incorrectly deemed not built-in by
-`package-built-in-p' or would be missed because they're site
-packages.")
-
 (defun wal-use-package-ensure-elpa (name args _state &optional _no_refresh)
   "Do the same as `use-package-ensure-elpa' but ignore built-in packages.
 
@@ -320,8 +295,7 @@ NAME is the package name, ARGS the ensure keywords."
         (when (consp package)
           (use-package-pin-package (car package) (cdr package))
           (setq package (car package)))
-        (unless (or (package-installed-p package)
-                    (memq package wal-package-ignored-packages))
+        (unless (wal-package-installed-p package)
           (condition-case-unless-debug err
               (progn
                 (when (assoc package (bound-and-true-p

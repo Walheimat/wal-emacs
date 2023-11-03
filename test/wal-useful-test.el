@@ -759,6 +759,24 @@
   (should (and (advice--p (advice--symbol-function 'wal-test-fun-1))
                (advice--p (advice--symbol-function 'wal-test-fun-2)))))
 
+(ert-deftest wal-package-installed-p ()
+  (let ((wal-package-ignored-packages '(test)))
+    (bydi ((:sometimes package-installed-p))
+
+      (should (wal-package-installed-p 'other))
+      (bydi-toggle-sometimes)
+      (should-not (wal-package-installed-p 'other))
+      (should (wal-package-installed-p 'test)))))
+
+(ert-deftest wal-package-built-in-p ()
+  (let ((wal-package-ignored-packages '(test)))
+    (bydi ((:sometimes package-built-in-p))
+
+      (should (wal-package-built-in-p 'other))
+      (bydi-toggle-sometimes)
+      (should-not (wal-package-built-in-p 'other))
+      (should (wal-package-built-in-p 'test)))))
+
 ;;; wal-useful-test.el ends here
 
 ;; Local Variables:
