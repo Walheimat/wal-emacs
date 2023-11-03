@@ -208,6 +208,23 @@
     (bydi-was-called org-clock-goto)
     (bydi-was-called org-add-note)))
 
+(ert-deftest wal-org-clock-insert-current-task ()
+  (defvar org-clock-current-task)
+
+  (with-temp-buffer
+    (let ((org-clock-current-task nil)
+          (kill-ring nil))
+
+      (should-error (wal-org-clock-kill-current-task))
+      (should (string= "" (buffer-string)))
+
+      (setq org-clock-current-task (propertize "Testing" :face 'success))
+
+      (wal-org-clock-kill-current-task)
+      (yank)
+
+      (should (string= "Testing" (buffer-string))))))
+
 ;;; wal-org-test.el ends here
 
 ;; Local Variables:
