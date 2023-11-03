@@ -13,7 +13,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Command `wal-org-clock-kill-current-task` to do just that.
 - The minimal setup (with flag `--mini` or customizing `wal-minimal`)
   is now actually minimal, loading (for now) only built-in packages
-  and two packages: `general` and `vertico`.
+  and marked packages.
 
 ### Changed
 
