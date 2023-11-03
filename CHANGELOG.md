@@ -12,6 +12,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Command `wal-org-clock-kill-current-task` to do just that.
 
+### Fixed
+
+- Macros for `wal-capture-flag` were moved to `wal-package` since
+  otherwise packages in `wal-bridge` are not affected.
+
 ## [v2.1.13]
 
 Fishing for complements.
