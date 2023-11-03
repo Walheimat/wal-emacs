@@ -26,6 +26,7 @@ Let's greet the world.
   (require 'wal-lsp nil t)
   (require 'wal-bridge nil t))
 
+(declare-function cape-wrap-buster "ext:cape.el")
 (declare-function markdown-mode "ext:markdown-mode.el")
 (declare-function markdown-view-mode "ext:markdown-mode.el")
 (declare-function mixed-pitch-mode "ext:markdown-mode.el")
@@ -34,6 +35,10 @@ Let's greet the world.
 (declare-function transient-prefix "ext:transient.el")
 (declare-function transient-set "ext:transient.el")
 (declare-function transient-setup "ext:transient.el")
+(declare-function transient-switches "ext:transient.el")
+(declare-function transient--show "ext:transient.el")
+(declare-function transient-suffix-object "ext:transient.el")
+(declare-function wal-advise-many "wal-useful.el")
 (declare-function wal-maybe-enable-tabs "wal-useful.el")
 (declare-function wal-message-in-a-bottle "wal-useful.el")
 (declare-function wal-corfu-auto "wal-complete.el")
@@ -43,7 +48,9 @@ Let's greet the world.
 (declare-function wal-key-combo-for-leader "wal-key-bindings.el")
 (declare-function wal-lsp "wal-lsp.el")
 (declare-function wal-lsp-ignore-directory "wal-lsp.el")
+(declare-function wdb-faraway "wal-useful.el")
 
+(defvar inferior-lisp-program)
 (defvar prettier-processes)
 
 (defgroup wal-lang nil
@@ -69,8 +76,6 @@ Bitches brew.
 
 #+BEGIN_SRC emacs-lisp
 (use-package elixir-mode
-  :wal-ways nil
-
   :init
   (harpoon elixir-mode
     :lsp t
@@ -140,7 +145,6 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
 #+BEGIN_SRC emacs-lisp
 (use-package rust-mode
   :if (executable-find "cargo")
-  :wal-ways nil
 
   :init
   (harpoon rust-mode
@@ -168,8 +172,7 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(use-package cargo-mode
-  :wal-ways nil)
+(use-package cargo-mode)
 #+END_SRC
 
 * Python
@@ -255,8 +258,6 @@ Did Microsoft do the right thing?
       (async-shell-command cmd buffer))))
 
 (use-package lsp-pyright
-  :wal-ways nil
-
   :demand t
   :after (python lsp-mode))
 #+END_SRC
@@ -270,8 +271,6 @@ Sort with =isort=.
 
 #+begin_src emacs-lisp
 (use-package python-isort
-  :wal-ways nil
-
   :after python
 
   :init
@@ -288,8 +287,6 @@ Blacken buffers.
 
 #+BEGIN_SRC emacs-lisp
 (use-package python-black
-  :wal-ways nil
-
   :after python
 
   :init
@@ -306,8 +303,6 @@ Work with Jupyter notebooks.
 
 #+BEGIN_SRC emacs-lisp
 (use-package ein
-  :wal-ways nil
-
   :after python
 
   :init
@@ -335,8 +330,6 @@ Takes care[fn:1] of all your virtual environment needs.
   :if (and (executable-find "dasel")
            (executable-find "sqlite3"))
 
-  :wal-ways nil
-
   :hook (python-mode . pet-mode)
 
   :config
@@ -356,8 +349,6 @@ Takes care[fn:1] of all your virtual environment needs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package poetry
-  :wal-ways nil
-
   :after python
 
   :init
@@ -369,8 +360,6 @@ Takes care[fn:1] of all your virtual environment needs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package pyvenv
-  :wal-ways nil
-
   :after python
 
   :init
@@ -402,8 +391,6 @@ Deal with the parens.
 
 #+BEGIN_SRC emacs-lisp
 (use-package puni
-  :wal-ways nil
-
   :hook (lisp-data-mode . puni-mode)
 
   :init
@@ -426,7 +413,9 @@ Deal with the parens.
    ("C-M-{" . puni-wrap-curly)
 
    ("C-M--" . puni-raise)
-   ("C-M-=" . puni-convolute)))
+   ("C-M-=" . puni-convolute))
+
+   :defines (puni-mode-map))
 #+END_SRC
 
 ** elisp-mode                                                       :builtin:
@@ -490,8 +479,6 @@ Get some closure.
 
 #+begin_src emacs-lisp
 (use-package clojure-mode
-  :wal-ways nil
-
   :init
   (harpoon clojure-mode
     :lsp t
@@ -517,8 +504,6 @@ Can't have closure without REPL.
 
 #+begin_src emacs-lisp
 (use-package cider
-  :wal-ways nil
-
   :demand t
   :after clojure-mode
 
@@ -535,8 +520,6 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
 
 #+BEGIN_SRC emacs-lisp
 (use-package slime
-  :wal-ways nil
-
   :defer 2
   :after lisp-mode
 
@@ -546,7 +529,8 @@ Check out the [[https://lispcookbook.github.io/cl-cookbook/getting-started.html]
 
   (slime-setup '(slime-fancy slime-quicklisp slime-asdf))
 
-  :delight " slm")
+  :delight " slm"
+  :functions (slime-setup))
 #+END_SRC
 
 * JavaScript
@@ -624,8 +608,6 @@ Please use TypeScript.
 
 #+BEGIN_SRC emacs-lisp
 (use-package typescript-mode
-  :wal-ways nil
-
   :mode "\\.ts\\(x\\)?\\'"
 
   :init
@@ -643,8 +625,7 @@ Please use TypeScript.
 Allow accessing a project's =node_modules=.
 
 #+BEGIN_SRC emacs-lisp
-(use-package add-node-modules-path
-  :wal-ways nil)
+(use-package add-node-modules-path)
 #+END_SRC
 
 ** prettier                                                           :melpa:
@@ -664,8 +645,6 @@ STRING is formatted with OBJECTS."
     (delay-warning 'prettier formatted :warning)))
 
 (use-package prettier
-  :wal-ways nil
-
   :config
   (with-eval-after-load 'js
     (transient-append-suffix 'js-mode-major '(0 0 0)
@@ -686,7 +665,9 @@ STRING is formatted with OBJECTS."
    #'wal-instead-delay-prettier-errors)
 
   :custom
-  (prettier-lighter " prt"))
+  (prettier-lighter " prt")
+
+  :defines (prettier-major-mode-parsers))
 #+END_SRC
 
 * Go
@@ -708,8 +689,6 @@ Setup for LSP.
 
 #+BEGIN_SRC emacs-lisp
 (use-package go-mode
-  :wal-ways nil
-
   :init
   (harpoon go-mode
     :lsp t
@@ -756,8 +735,7 @@ Bash your head in!
 Sometimes you have to deal with things at their time.
 
 #+BEGIN_SRC emacs-lisp
-(use-package crontab-mode
-  :wal-ways nil)
+(use-package crontab-mode)
 #+END_SRC
 
 ** fish-mode                                                          :melpa:
@@ -769,8 +747,6 @@ Support =fish= functions.
 
 #+BEGIN_SRC emacs-lisp
 (use-package fish-mode
-  :wal-ways nil
-
   :custom
   (fish-indent-offset 2))
 #+END_SRC
@@ -816,8 +792,6 @@ Sometimes things that don't do things need to look nice.
     (error "Can't change view outside of markdown modes"))))
 
 (use-package markdown-mode
-  :wal-ways nil
-
   :init
   (harpoon markdown-mode
     :bind t)
@@ -834,7 +808,9 @@ Sometimes things that don't do things need to look nice.
   :bind
   (:map markdown-mode-map
    ("M-<up>" . markdown-move-list-item-up)
-   ("M-<down>" . markdown-move-list-item-down)))
+   ("M-<down>" . markdown-move-list-item-down))
+
+  :defines (markdown-mode-map))
 #+END_SRC
 
 * Flutter
@@ -854,8 +830,6 @@ Yes, you need to install *Android Studio* for some reason.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dart-mode
-  :wal-ways nil
-
   :init
   (harpoon dart-mode
     :lsp t
@@ -908,7 +882,6 @@ LSP support for Dart.
 
 (use-package lsp-dart
   :if (or (executable-find "flutter") (executable-find "dart"))
-  :wal-ways nil
 
   :after lsp-mode
 
@@ -1016,8 +989,6 @@ LSP integration.
   "Regular expression used for JUnit errors.")
 
 (use-package lsp-java
-  :wal-ways nil
-
   :config
   (require 'dap-java)
 
@@ -1074,8 +1045,6 @@ Font-locked logs.
 
 #+BEGIN_SRC emacs-lisp
 (use-package log4j-mode
-  :wal-ways nil
-
   :custom-face
   (log4j-font-lock-debug-face ((t (:foreground unspecified :inherit (shadow)))))
   (log4j-font-lock-info-face ((t (:foreground unspecified :inherit (success)))))
@@ -1108,8 +1077,6 @@ The elephant in the room.
 
 #+BEGIN_SRC emacs-lisp
 (use-package php-mode
-  :wal-ways nil
-
   :init
   (harpoon php-mode
     :lsp t
@@ -1240,8 +1207,6 @@ We want quicker suggestions when in CSS modes.
 
 #+BEGIN_SRC emacs-lisp
 (use-package web-mode
-  :wal-ways nil
-
   :mode ("\\.vue\\'"
          "\\.blade.php\\'"
          "\\.component.html\\'")
@@ -1272,8 +1237,6 @@ The engine you've been waiting for.
 
 #+BEGIN_SRC emacs-lisp
 (use-package gdscript-mode
-  :wal-ways nil
-
   :init
   (harpoon gdscript-mode
     :lsp (:function eglot-ensure)

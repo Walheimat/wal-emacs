@@ -25,6 +25,7 @@ Language servers are awesome. Thanks, Microsoft.
   (require 'wal-key-bindings nil t)
   (require 'wal-bridge nil t))
 
+(declare-function ambassador "wal-key-bindings.el")
 (declare-function cape-company-to-capf "ext:cape.el")
 (declare-function corfu-mode "ext:corfu.el")
 (declare-function dap--completing-read "ext:dap-mode.el")
@@ -36,6 +37,7 @@ Language servers are awesome. Thanks, Microsoft.
 (declare-function hydra-disable "ext:hydra.el")
 (declare-function wal-append "wal-useful.el")
 (declare-function wal-dap "wal-lsp.el")
+(declare-function wal-key-combo-for-leader "wal-key-bindings.el")
 (declare-function wal-tempel-setup-capf "wal-edit.el")
 
 (defvar dap-debug-template-configurations)
@@ -85,8 +87,6 @@ servers yourself[fn:1].
   (eval '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))
 
 (use-package lsp-mode
-  :wal-ways nil
-
   :hook (lsp-completion-mode . wal-lsp-completion)
 
   :config
@@ -131,7 +131,8 @@ servers yourself[fn:1].
   (lsp-mode " lsp")
   (lsp-lens-mode " lns")
 
-  :functions (lsp-deferred))
+  :functions (lsp-deferred lsp-enable-which-key-integration)
+  :defines (lsp-keymap-prefix))
 #+END_SRC
 
 ** lsp-ui                                                             :melpa:
@@ -143,8 +144,6 @@ Don't clutter things up too much.
 
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-ui
-  :wal-ways nil
-
   :after lsp-mode
 
   :custom
@@ -217,8 +216,6 @@ This is `dap-debug' before and `dap-hydra' during debugging."
   (corfu-mode))
 
 (use-package dap-mode
-  :wal-ways nil
-
   :after lsp-mode
 
   :hook ((dap-session-created . wal-dap-session-created)
@@ -266,8 +263,6 @@ Jump to symbols with =consult=.
 
 #+begin_src emacs-lisp
 (use-package consult-lsp
-  :wal-ways nil
-
   :demand t
   :after (consult lsp-mode)
 
@@ -286,8 +281,6 @@ Some more linting.
 
 #+begin_src emacs-lisp
 (use-package lsp-sonarlint
-  :wal-ways nil
-
   :config
   (require 'lsp-sonarlint-java)
 

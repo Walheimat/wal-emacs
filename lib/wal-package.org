@@ -24,6 +24,8 @@
 (declare-function package-read-all-archive-contents "package.el")
 (declare-function package--user-selected-p "package.el")
 (declare-function wal-prefix-user-key "wal-useful.el")
+(declare-function wal-package-built-in-p "wal-useful.el")
+(declare-function wal-package-installed-p "wal-useful.el")
 
 (defgroup wal-package nil
   "Change settings for external packages."
@@ -33,11 +35,6 @@
 (defcustom wal-minimal nil
   "Whether to use a minimal configuration."
   :type 'boolean
-  :group 'wal-package)
-
-(defcustom wal-minimal-exclude '()
-  "Packages that are not part of a minimal configuration but should be installed."
-  :type '(repeat symbol)
   :group 'wal-package)
 #+END_SRC
 
@@ -192,30 +189,28 @@ with =:wal-ways nil=.
 (defalias 'use-package-normalize/:wal-ways 'use-package-normalize-predicate)
 
 (defun use-package-handler/:wal-ways (name _keyword pred rest state)
-  "Only expand conditionally.
+  "Only expand minimally.
 
-The conditions for normal packages are: (1) the PRED is t, (2)
-`wal-minimal' is nil or (3) NAME is never excluded.
-
-If NAME is an expansion pack package, the conditions are: (1) the
-PRED is t or (2) NAME is installed.
+If `wal-minimal' is t, package NAME is only expanded if it is
+either built-in or sets PRED to t.
 
 The STATE is updated as well before parsing REST if we want to
 use the result further down the line."
   (declare-function use-package-process-keywords "ext:use-package.el")
   (declare-function use-package-plist-maybe-put "ext:use-package.el")
 
-  (let* ((active (or pred
-                     (or (not (or wal-minimal wal-flag-mini))
-                         (not (null (memq name wal-minimal-exclude))))))
+  (let* ((do-expand (or pred
+                        (not (or wal-minimal wal-flag-mini))
+                        (wal-package-built-in-p name)))
 
          (body (use-package-process-keywords
                  name
                  rest
-                 (use-package-plist-maybe-put state :wal-ways active))))
+                 (use-package-plist-maybe-put state :wal-ways do-expand))))
 
-    `((when ,active
-        ,@body))))
+    (message "Will expand %s? %s" name do-expand)
+
+    `((when ,do-expand ,@body))))
 #+END_SRC
 
 *** use-package/:sinker

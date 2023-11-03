@@ -27,9 +27,12 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 
 (declare-function consult--buffer-state "ext:consult.el")
 (declare-function consult--buffer-query "ext:consult.el")
+(declare-function general-define-key "ext:general.el")
 (declare-function mixed-pitch-mode "ext:mixed-pitch.el")
 (declare-function org-roam-buffer-p "ext:org-roam.el")
 (declare-function project-root "ext:project.el")
+(declare-function transient-prefix "ext:transient.el")
+(declare-function transient-setup "ext:transient.el")
 (declare-function visual-fill-column-mode "ext:visual-fill-column.el")
 (declare-function wal-append "wal-useful.el")
 (declare-function wal-insert "wal-useful.el")
@@ -39,7 +42,9 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (declare-function wal-replace-in-alist "wal-fun.el")
 (declare-function wal-truncate "wal-useful.el")
 (declare-function wal-univ-p "wal-useful.el")
+(declare-function wdb-nearby "wal-useful.el")
 
+(defvar org-clock-current-task)
 (defvar text-scale-mode-step)
 (defvar visual-fill-column-width)
 (defvar visual-fill-column-center-text)
@@ -312,8 +317,6 @@ custom groups and todo keywords.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-super-agenda
-  :wal-ways nil
-
   :demand t
   :after org-agenda
 
@@ -348,7 +351,9 @@ custom groups and todo keywords.
 
      ;; Discard the rest.
      (:discard (:anything t))))
-  (org-super-agenda-final-group-separator "\n"))
+  (org-super-agenda-final-group-separator "\n")
+
+  :functions (org-super-agenda-mode))
 #+END_SRC
 
 ** org-roam                                                           :melpa:
@@ -392,7 +397,6 @@ If called with numeric prefix `5', set variable
 
 (use-package org-roam
   :if (executable-find "sqlite3")
-  :wal-ways nil
 
   :commands
   (org-roam-buffer-display-dedicated
@@ -455,7 +459,10 @@ If called with numeric prefix `5', set variable
       "* %?\n:PROPERTIES:\n:CREATED_AT: %U\n:TASK: %k\n:END:"
       :target (file+head "%<%Y-%m-%d>.org"
                          "#+title: %<%Y-%m-%d>\n")
-      :empty-lines 1))))
+      :empty-lines 1)))
+
+  :functions (org-roam-db-autosync-enable)
+  :defines (org-roam-buffer org-roam-v2-ack))
 #+END_SRC
 
 ** org-roam-ui                                                        :melpa:
@@ -467,8 +474,6 @@ Fancy UI for =org-roam=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-roam-ui
-  :wal-ways nil
-
   :defer 3
   :after org-roam
 
@@ -539,8 +544,6 @@ make sure that content is centered and only code retains fixed pitch.
     (wal-org-tree-slide-play)))
 
 (use-package org-tree-slide
-  :wal-ways nil
-
   :after org
 
   :hook
@@ -567,7 +570,9 @@ make sure that content is centered and only code retains fixed pitch.
    ("p" . org-tree-slide-move-previous-tree)
    ("i" . text-scale-increase)
    ("d" . text-scale-decrease)
-   ("v" . wal-org-tree-slide-toggle-visibility)))
+   ("v" . wal-org-tree-slide-toggle-visibility))
+
+  :defines (org-tree-slide-mode-map))
 #+END_SRC
 
 ** org-src                                                          :builtin:
@@ -840,8 +845,6 @@ Modern look.
 
 #+begin_src emacs-lisp
 (use-package org-modern
-  :wal-ways nil
-
   :hook (org-mode . org-modern-mode)
 
   :custom

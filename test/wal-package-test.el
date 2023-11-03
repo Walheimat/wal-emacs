@@ -30,22 +30,28 @@
       (should (equal (list it "testing" (cons "C-t w" 'testing)) (wal-use-package-normalize-binder nil nil (list it "testing" (cons "w" 'testing))))))))
 
 (ert-deftest use-package-handler/:wal-ways ()
-  (bydi ((:ignore package-installed-p)
+  (bydi ((:sometimes wal-package-built-in-p)
          use-package-plist-maybe-put
          use-package-process-keywords)
 
     (defvar wal-minimal)
     (defvar wal-flag-mini)
-    (defvar wal-minimal-exclude)
 
     (let ((wal-minimal nil)
-          (wal-flag-mini t)
-          (wal-minimal-exclude '()))
+          (wal-flag-mini t))
+
+      (should (equal '((when t name nil (nil :wal-ways t)))
+                     (use-package-handler/:wal-ways 'name nil t nil nil)))
+
+      (should (equal '((when t name nil (nil :wal-ways t)))
+                     (use-package-handler/:wal-ways 'name nil nil nil nil)))
+
+      (bydi-toggle-sometimes)
 
       (should (equal '((when nil name nil (nil :wal-ways nil)))
                      (use-package-handler/:wal-ways 'name nil nil nil nil)))
 
-      (setq wal-minimal-exclude '(name))
+      (setq wal-flag-mini nil)
 
       (should (equal '((when t name nil (nil :wal-ways t)))
                      (use-package-handler/:wal-ways 'name nil nil nil nil))))))
