@@ -18,6 +18,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Custom variable `wal-hyper-mock` that defaults to `C-c w`. It is
   bound in `function-key-map` to apply hyper modifier. This makes
   `wal-use-hyper-prefix` obsolete.
+- Package `corfu-terminal`.
 
 ### Changed
 
