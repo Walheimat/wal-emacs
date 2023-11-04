@@ -123,6 +123,9 @@
         (when (display-graphic-p)
           (which-key-add-key-based-replacements "h" "Help me!"))))))
 
+(ert-deftest wal-prefix-user-key ()
+  (should (string-equal (wal-prefix-user-key "k") "H-k")))
+
 ;;; wal-key-bindings-test.el ends here
 
 ;; Local Variables:

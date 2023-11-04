@@ -50,6 +50,9 @@ I [[Rebinding Hyper][rebound]] my =<CAPS>= (caps-lock) key to =Hyper_L= to use t
 bindings below. Therefore, all following keys should be right hand
 keys.
 
+Note that =C-c w= is bound to apply the hyper modifier as well; so if
+you don't have access to the key, you can always use that instead.
+
 Most hyper[fn:2] bindings are quick-access actions:
 
 + =H-\= complete =tempel= templates
@@ -211,10 +214,8 @@ They are:
   (require 'wal-package nil t))
 
 (defvar transient-current-command)
-(defvar wal-use-hyper-prefix)
 
 (declare-function general-define-key "ext:general")
-(declare-function wal-prefix-user-key "wal-useful.el")
 (declare-function transient-args "ext:transient.el")
 (declare-function transient-arg-value "ext:transient.el")
 
@@ -225,9 +226,9 @@ They are:
 
 ;;;; Customization:
 
-(defcustom wal-use-hyper-prefix t
-  "Whether the hyper modifier should be used to prefix user keys."
-  :type 'boolean
+(defcustom wal-hyper-mock (kbd "C-c w")
+  "The key sequence to use to mock hyper modifier."
+  :type 'key-sequence
   :group 'wal-key-bindings)
 
 (defcustom wal-leaders '((";" . editor)
@@ -245,6 +246,12 @@ They are:
 * Leaders
 
 #+BEGIN_SRC emacs-lisp
+(defsubst wal-prefix-user-key (user-key)
+  "Prefix USER-KEY."
+  (let ((prefix "H-"))
+
+    (concat prefix user-key)))
+
 (defun wal-key-by-leader (leader)
   "Get the key for LEADER."
   (car-safe (rassoc leader wal-leaders)))
@@ -501,8 +508,7 @@ USER-KEY and LEADER can be used to prefix the key."
      "s" 'find-sibling-file)
 
     (that-key "triple-minus" :user-key "-")
-    (that-key "zero-in" :user-key "0")
-    (that-key "wal" :key "C-c w" :condition (not (display-graphic-p))))
+    (that-key "zero-in" :user-key "0"))
 
   (global-set-key [remap kill-line] #'wal-kwim)
   (global-set-key [remap move-beginning-of-line] #'wal-mwim-beginning)
@@ -511,6 +517,9 @@ USER-KEY and LEADER can be used to prefix the key."
   (global-set-key (kbd "C-c l") #'display-line-numbers-mode)
   (global-set-key (kbd "C-c o") #'wal-supernova)
   (global-set-key (kbd "M-o") #'wal-switch-to-other-buffer)
+
+  ;; Alternate binding for C-c x @ h.
+  (define-key function-key-map wal-hyper-mock #'event-apply-hyper-modifier)
 
   ;; Allow deleting windows while repeating other-window.
   (with-eval-after-load 'window

@@ -547,18 +547,6 @@
 
     (should (wal-dead-shell-p))))
 
-(ert-deftest wal-prefix-user-key ()
-  (defvar wal-use-hyper-prefix)
-  (cl-letf (((symbol-function 'daemonp) #'always)
-            (wal-use-hyper-prefix t))
-
-    (should (string-equal (wal-prefix-user-key "k") "H-k")))
-
-  (cl-letf (((symbol-function 'daemonp) #'ignore)
-            (wal-use-hyper-prefix t))
-
-    (should (string-equal (wal-prefix-user-key "k") "C-c w k"))))
-
 (ert-deftest wal-on-boot ()
   (defvar wal-booting nil)
 

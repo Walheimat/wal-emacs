@@ -15,14 +15,19 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   is now actually minimal, loading (for now) only built-in packages
   and marked packages.
 - Initial scratch message now contains a comment about the setup.
+- Custom variable `wal-hyper-mock` that defaults to `C-c w`. It is
+  bound in `function-key-map` to apply hyper modifier. This makes
+  `wal-use-hyper-prefix` obsolete.
 
 ### Changed
 
 - Custom `use-package` keyword `:wal-ways` now defaults to `nil`.
+-
 
 ### Removed
 
 - Custom variable `wal-minimal-exclude`.
+- Custom variable `wal-use-hyper-prefix` (see above).
 
 ### Fixed
 
