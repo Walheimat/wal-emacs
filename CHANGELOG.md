@@ -6,7 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v2.1.14]
+
+Minimal comfort.
 
 ### Added
 
@@ -23,7 +25,6 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - Custom `use-package` keyword `:wal-ways` now defaults to `nil`.
--
 
 ### Removed
 
