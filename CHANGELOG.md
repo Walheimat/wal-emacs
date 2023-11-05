@@ -8,6 +8,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- `org-agenda` buffers are ignored by `partial-recall`.
+
 ### Fixed
 
 - `all-the-icons-dired-mode` is now advised to not be triggered for
