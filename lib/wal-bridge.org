@@ -107,9 +107,6 @@ See the [[https://github.com/Walheimat/partial-recall][repository]] for more inf
        (partial-recall-reinforce . buffer)
        (partial-recall-remember . buffer))))
 
-  (with-eval-after-load 'org-agenda
-    (add-to-list 'partial-recall-meaningful-traits 'wal-agenda--non-agenda-buffer-p))
-
   :general
   (ambassador "p" '(:keymap partial-recall-command-map :wk "partial recall")))
 #+end_src
@@ -232,7 +229,11 @@ See the [[https://github.com/Walheimat/parallel][repository]] for more informati
 (unless (featurep 'parallel)
   (defmacro parallel (a b)
     "Push message that A and B would have been parallelized."
-    `(push ',(intern (concat (symbol-name a) (symbol-name b))) parallel--stumps)))
+    `(push ',(intern (concat (symbol-name a) (symbol-name b))) parallel--stumps))
+
+  (defmacro parallel-mirror (a &rest _r)
+    "Push message that A would have been mirrored."
+    `(push ',(intern (concat (symbol-name a) "-mirror")) parallel--stumps)))
 
 (provide 'wal-bridge)
 

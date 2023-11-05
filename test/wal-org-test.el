@@ -67,11 +67,6 @@
     (bydi ((:always org-agenda-file-p))
       (should (wal-agenda-buffer-p (current-buffer))))))
 
-(ert-deftest wal-agenda--non-agenda-buffer-p ()
-  (with-temp-buffer
-    (bydi ((:always org-agenda-file-p))
-      (should-not (wal-agenda--non-agenda-buffer-p (current-buffer))))))
-
 (ert-deftest wal-consult-agenda-buffer--query ()
   (cl-defun consult--buffer-query (&key sort as predicate)
     (list sort as predicate))

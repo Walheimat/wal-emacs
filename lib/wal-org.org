@@ -244,10 +244,6 @@ I need day-to-day and adds a =consult= buffer source.
 
   (org-agenda-file-p (buffer-file-name buffer)))
 
-(defun wal-agenda--non-agenda-buffer-p (buffer)
-  "Verify that BUFFER does not contribute to the agenda."
-  (not (wal-agenda-buffer-p buffer)))
-
 (defun wal-consult-agenda-buffer--query ()
   "Get contributing Org Agenda buffer names."
   (consult--buffer-query
@@ -257,6 +253,9 @@ I need day-to-day and adds a =consult= buffer source.
 
 (use-package org-agenda
   :config
+  (parallel-mirror wal-agenda-buffer-p :type boolean)
+  (add-to-list 'partial-recall-meaningful-traits 'parallel-mirror-wal-agenda-buffer-p)
+
   (wal-replace-in-alist 'org-agenda-prefix-format '((agenda . "  %?-12t%?-12c%? s%?b")))
 
   (with-eval-after-load 'consult
