@@ -306,11 +306,11 @@
       (should (string-equal (buffer-string) ";; customize")))))
 
 (ert-deftest wal-find-init ()
-  (bydi ((:mock file-truename :return wal-emacs-config-default-path))
+  (bydi ((:mock file-truename :return wal--default-path))
 
     (wal-find-init)
 
-    (should (string-match-p (buffer-name) wal-emacs-config-default-path))))
+    (should (string-match-p (buffer-name) wal--default-path))))
 
 (ert-deftest wal-find-fish-config ()
   (ert-with-temp-file fish

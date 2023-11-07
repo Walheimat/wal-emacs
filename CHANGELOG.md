@@ -14,6 +14,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Prelude package was renamed from `wal-prelude` to just `wal` after
   linting.
 - All library files are now tangled using `wal--tangle-target`.
+- All internal path variable were renamed.
 
 ### Fixed
 

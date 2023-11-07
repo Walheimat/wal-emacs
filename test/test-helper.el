@@ -16,16 +16,16 @@
 
 (defun wal-test-helper--path-setup ()
   "Set up paths."
-  (defvar wal-emacs-config-default-path)
-  (defvar wal-emacs-config-build-path)
-  (defvar wal-emacs-config-lib-path)
+  (defvar wal--default-path)
+  (defvar wal--build-path)
+  (defvar wal--lib-path)
 
   (cl-destructuring-bind (source-dir build-dir lib-dir _tools-dir)
       (bydi-ci-setup-paths (list "build" "lib" "tools"))
 
-    (setq wal-emacs-config-default-path source-dir
-          wal-emacs-config-build-path build-dir
-          wal-emacs-config-lib-path lib-dir)))
+    (setq wal--default-path source-dir
+          wal--build-path build-dir
+          wal--lib-path lib-dir)))
 
 (defvar wal-test-helper--stumps nil)
 

@@ -210,7 +210,7 @@
       (bydi-was-called-with get-buffer "dash"))))
 
 (ert-deftest wal-instead-use-custom-banner ()
-  (let ((wal-emacs-config-default-path "/home/test"))
+  (let ((wal--default-path "/home/test"))
     (bydi ((:sometimes dashboard--image-supported-p))
 
       (should (equal (list :image "/home/test/assets/logo.png"

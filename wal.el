@@ -52,17 +52,17 @@ The order determines the load order as well.")
 (defvar wal-ensure nil
   "Ensure packages after bootstrapping.")
 
-(defvar wal-emacs-config-default-path nil
+(defvar wal--default-path nil
   "The root path of the configuration.
 
 This variable will be set when calling `wal-bootstrap'.")
 
-(defvar wal-emacs-config-lib-path nil
+(defvar wal--lib-path nil
   "The path to the config's library.
 
 This variable will be set when calling `wal-bootstrap'")
 
-(defvar wal-emacs-config-build-path nil
+(defvar wal--build-path nil
   "The path to the config's built packages.
 
 This variable will be set when calling `wal-bootstrap'.")
@@ -74,7 +74,7 @@ This variable will be set when calling `wal-bootstrap'.")
 
 (defun wal-package-files ()
   "Get the package files."
-  (let* ((package-files (nthcdr 2 (directory-files wal-emacs-config-build-path t)))
+  (let* ((package-files (nthcdr 2 (directory-files wal--build-path t)))
          (el-files (seq-filter
                     (lambda (it)
                       (string-equal (file-name-extension it)
@@ -159,7 +159,7 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
   (interactive)
 
   (let ((dir (or build-dir
-                 wal-emacs-config-build-path
+                 wal--build-path
                  default-directory))
         (current nil))
 
@@ -189,9 +189,9 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
           (build-dir (expand-file-name "build" source-dir)))
 
      ;; These variables are also used in `wal' package.
-     (setq wal-emacs-config-default-path source-dir
-           wal-emacs-config-lib-path lib-dir
-           wal-emacs-config-build-path build-dir)))
+     (setq wal--default-path source-dir
+           wal--lib-path lib-dir
+           wal--build-path build-dir)))
 
 (defun wal--configure-cold-boot ()
   "Configure cold-booting."
@@ -213,7 +213,7 @@ These files will be touched after tangling.")
   "Touch directories to make sure they aren't considered outdated."
   (dolist (it wal--phony-build-dependencies)
 
-    (let ((expanded (expand-file-name it wal-emacs-config-default-path)))
+    (let ((expanded (expand-file-name it wal--default-path)))
 
       (when (file-exists-p expanded)
         (shell-command (format "touch %s" expanded))))))
@@ -227,7 +227,7 @@ These files will be touched after tangling.")
          (nodir (file-name-nondirectory name))
          (sans (file-name-sans-extension nodir)))
 
-    (expand-file-name (format "%s.el" sans) wal-emacs-config-build-path)))
+    (expand-file-name (format "%s.el" sans) wal--build-path)))
 
 (defun wal-tangle-config ()
   "Tangle the configuration's libraries.
@@ -239,23 +239,23 @@ Note that `message' is silenced during tangling."
   (require 'ob-tangle)
   (defvar org-confirm-babel-evaluate)
 
-  (message "Tangling files in '%s'" wal-emacs-config-lib-path)
+  (message "Tangling files in '%s'" wal--lib-path)
 
   (let ((org-confirm-babel-evaluate nil)
-        (sources (nthcdr 2 (directory-files wal-emacs-config-lib-path t))))
+        (sources (nthcdr 2 (directory-files wal--lib-path t))))
 
     (dolist (it wal--ignore-during-tangle)
       (advice-add it :override #'ignore))
 
     (dolist (it sources)
-      (org-babel-tangle-file (expand-file-name it wal-emacs-config-default-path)))
+      (org-babel-tangle-file (expand-file-name it wal--default-path)))
 
     (dolist (it wal--ignore-during-tangle)
       (advice-remove it #'ignore))
 
     (wal--touch)
 
-    (message "All library files in '%s' tangled" wal-emacs-config-lib-path)))
+    (message "All library files in '%s' tangled" wal--lib-path)))
 
 (defun wal--handle-error (exit)
   "Handle the error that occurred during initialization.
@@ -271,10 +271,10 @@ If EXIT is t, exit on error."
 
 (defun wal--maybe-tangle ()
   "Maybe tangle the configuration."
-  (if (and (file-directory-p wal-emacs-config-build-path)
-           (not (directory-empty-p wal-emacs-config-build-path)))
-      (message "Found non-empty build directory '%s', will not tangle" wal-emacs-config-build-path)
-    (make-directory wal-emacs-config-build-path t)
+  (if (and (file-directory-p wal--build-path)
+           (not (directory-empty-p wal--build-path)))
+      (message "Found non-empty build directory '%s', will not tangle" wal--build-path)
+    (make-directory wal--build-path t)
     (wal-tangle-config)))
 
 (defun wal-bootstrap (source-dir &optional mode)

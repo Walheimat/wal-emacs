@@ -40,7 +40,7 @@ the temporary file."
 
 (ert-deftest init-sets-up-bootstrap ()
   (with-bootstrap "test" nil
-    (wal-init bootstrap wal-emacs-config-default-path)
+    (wal-init bootstrap wal--default-path)
 
     (bydi-was-called append-to-file)))
 
@@ -48,19 +48,19 @@ the temporary file."
   (defvar wal--init-marker)
   (with-bootstrap "test" t
 
-    (wal-init bootstrap wal-emacs-config-default-path)
+    (wal-init bootstrap wal--default-path)
     (bydi-was-not-called append-to-file)))
 
 (ert-deftest init-deletes-outdated-bootstrap ()
   (with-bootstrap "best" t
 
-    (wal-init bootstrap wal-emacs-config-default-path)
+    (wal-init bootstrap wal--default-path)
     (bydi-was-called delete-region)))
 
 (ert-deftest init--clears ()
   (with-bootstrap "test" t
 
-    (wal-init bootstrap wal-emacs-config-default-path t)
+    (wal-init bootstrap wal--default-path t)
     (bydi-was-called delete-region)))
 
 (ert-deftest configure-customization ()
@@ -96,11 +96,11 @@ the temporary file."
 
 (ert-deftest load-config--defaults-directory ()
   (defvar wal-packages)
-  (defvar wal-emacs-config-build-path)
+  (defvar wal--build-path)
 
   (let ((wal-packages '(test))
         (default-directory "/tmp")
-        (wal-emacs-config-build-path nil))
+        (wal--build-path nil))
 
     (bydi (require add-to-list wal--configure-customization)
 
@@ -126,17 +126,17 @@ the temporary file."
       (setq wal-init-error nil))))
 
 (ert-deftest set-paths--does-that ()
-  (defvar wal-emacs-config-default-path)
-  (defvar wal-emacs-config-build-path)
-  (defvar wal-emacs-config-lib-path)
+  (defvar wal--default-path)
+  (defvar wal--build-path)
+  (defvar wal--lib-path)
 
-  (let ((wal-emacs-config-default-path nil)
-        (wal-emacs-config-build-path nil)
-        (wal-emacs-config-lib-path nil))
+  (let ((wal--default-path nil)
+        (wal--build-path nil)
+        (wal--lib-path nil))
 
     (wal--set-paths "/tmp")
 
-    (should (string= wal-emacs-config-lib-path "/tmp/lib"))))
+    (should (string= wal--lib-path "/tmp/lib"))))
 
 (ert-deftest configure-cold-boot--sets-package-user-dir ()
   (defvar package-user-dir)
@@ -151,7 +151,7 @@ the temporary file."
       (should (string= "/tmp/package" package-user-dir)))))
 
 (ert-deftest touch--does-not-for-non-existing ()
-  (let ((wal-emacs-config-default-path "/tmp/default")
+  (let ((wal--default-path "/tmp/default")
         (wal--phony-build-dependencies '("test" "testing")))
 
     (bydi (shell-command)
@@ -161,7 +161,7 @@ the temporary file."
 
 (ert-deftest touch--touches-existing ()
   (ert-with-temp-file touchable
-    (let ((wal-emacs-config-default-path "/tmp")
+    (let ((wal--default-path "/tmp")
           (wal--phony-build-dependencies (list touchable "testing")))
 
       (bydi (shell-command)
@@ -203,9 +203,9 @@ the temporary file."
     (bydi-was-called wal--touch)))
 
 (ert-deftest bootstrap--configures-cold-boot ()
-  (defvar wal-emacs-config-build-path)
+  (defvar wal--build-path)
 
-  (let ((wal-emacs-config-build-path "/tmp"))
+  (let ((wal--build-path "/tmp"))
 
     (bydi (wal--configure-cold-boot
            wal--set-paths
@@ -217,9 +217,9 @@ the temporary file."
       (bydi-was-called wal--configure-cold-boot))))
 
 (ert-deftest bootstrap--would-load-config ()
-  (defvar wal-emacs-config-build-path)
+  (defvar wal--build-path)
 
-  (let ((wal-emacs-config-build-path "/tmp"))
+  (let ((wal--build-path "/tmp"))
 
     (bydi (wal--set-paths
            wal--maybe-tangle
@@ -230,7 +230,7 @@ the temporary file."
       (bydi-was-called wal--load-config))))
 
 (ert-deftest bootstrap--would-tangle ()
-  (defvar wal-emacs-config-build-path)
+  (defvar wal--build-path)
 
   (let ((wal-emacs-config "/tmp"))
 
@@ -245,7 +245,7 @@ the temporary file."
       (bydi-was-called wal-tangle-config))))
 
 (ert-deftest bootstrap--would-ensure ()
-  (defvar wal-emacs-config-build-path)
+  (defvar wal--build-path)
 
   (let ((wal-emacs-config "/tmp"))
 

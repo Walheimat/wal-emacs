@@ -170,9 +170,9 @@
     (bydi-was-not-called wal-ascii-whale-clean-up)))
 
 (ert-deftest wal-describe-config-version ()
-  (defvar wal-emacs-config-default-path)
+  (defvar wal--default-path)
   (let ((out '("1.0.0" "test everything" "1.0.1" "letting the world know"))
-        (wal-emacs-config-default-path "~"))
+        (wal--default-path "~"))
     (bydi ((:mock shell-command-to-string :with (lambda (_) (pop out)))
            (:mock message :with bydi-rf))
 
@@ -218,8 +218,8 @@
       (bydi-was-called-with message "Config changed. To tangle, call `wal-tangle-config'"))))
 
 (ert-deftest wal-config-switch-project ()
-  (defvar wal-emacs-config-default-path)
-  (let ((wal-emacs-config-default-path "/tmp/config"))
+  (defvar wal--default-path)
+  (let ((wal--default-path "/tmp/config"))
 
     (bydi (project-switch-project)
 
@@ -228,8 +228,8 @@
       (bydi-was-called-with project-switch-project (list "/tmp/config")))))
 
 (ert-deftest wal-config-lib-files ()
-  (defvar wal-emacs-config-lib-path)
-  (let ((wal-emacs-config-lib-path nil))
+  (defvar wal--lib-path)
+  (let ((wal--lib-path nil))
 
     (bydi ((:mock directory-files :return '("." ".." "/tmp/test.org" "/tmp/test-2.org")))
 
