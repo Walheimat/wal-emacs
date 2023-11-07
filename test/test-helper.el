@@ -48,7 +48,7 @@
   "Set up everything."
   (when (wal-test-helper--cold-p)
     (bydi-report-setup-undercover (list "build/*.el"
-                                        "wal-prelude.el"))
+                                        "wal.el"))
 
     (message "Cold start, setting up test helper")
 

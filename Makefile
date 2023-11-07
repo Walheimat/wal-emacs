@@ -6,19 +6,19 @@ CI_DEPS=build
 PACIFY_DEPS=build
 
 CURRENT_PACKAGE_VERSION=2.1.14
-UPDATE_VERSION_FILES=lib/wal-config.org
+UPDATE_VERSION_FILES=lib/wal-config.org wal.el
 
 include dinghy/emacs-package.mk
 
 EMACS_INIT_FILE?=$(HOME)/.emacs.d/init.el
 
-WITH_PRELUDE=$(EMACS) --batch -l ./wal-prelude.el
+WITH_PRELUDE=$(EMACS) --batch -l ./wal.el
 
 BOOTSTRAP_MODE=plain
-BOOTSTRAP=--eval "(wal-prelude-bootstrap \"$(CURDIR)\" '$(BOOTSTRAP_MODE))"
+BOOTSTRAP=--eval "(wal-bootstrap \"$(CURDIR)\" '$(BOOTSTRAP_MODE))"
 
 INIT_CLEAR=nil
-INIT=--eval "(wal-prelude-init \"$(EMACS_INIT_FILE)\" \"$(CURDIR)\" $(INIT_CLEAR))"
+INIT=--eval "(wal-init \"$(EMACS_INIT_FILE)\" \"$(CURDIR)\" $(INIT_CLEAR))"
 
 # Tangle all library files
 build:

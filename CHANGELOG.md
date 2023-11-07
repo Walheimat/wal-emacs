@@ -11,6 +11,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - `org-agenda` buffers are ignored by `partial-recall`.
+- Prelude package was renamed from `wal-prelude` to just `wal` after
+  linting.
 
 ### Fixed
 

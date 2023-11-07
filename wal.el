@@ -1,4 +1,9 @@
-;;; wal-prelude.el --- Bootstrap the configuration. -*- lexical-binding: t -*-
+;;; wal.el --- Bootstrap the configuration -*- lexical-binding: t -*-
+
+;; Author: Krister Schuchardt <krister.schuchardt@gmail.com>
+;; Homepage: https://github.com/Walheimat/wal-emacs
+;; Version: 2.1.14
+;; Package-Requires: ((emacs "28.1"))
 
 ;;; Commentary:
 
@@ -44,30 +49,30 @@ The order determines the load order as well.")
 (defvar wal-loaded nil
   "Set to t after loading.")
 
-(defvar wal-prelude-ensure nil
+(defvar wal-ensure nil
   "Ensure packages after bootstrapping.")
 
 (defvar wal-emacs-config-default-path nil
   "The root path of the configuration.
 
-This variable will be set when calling `wal-prelude-bootstrap'.")
+This variable will be set when calling `wal-bootstrap'.")
 
 (defvar wal-emacs-config-lib-path nil
   "The path to the config's library.
 
-This variable will be set when calling `wal-prelude-bootstrap'")
+This variable will be set when calling `wal-bootstrap'")
 
 (defvar wal-emacs-config-build-path nil
   "The path to the config's built packages.
 
-This variable will be set when calling `wal-prelude-bootstrap'.")
+This variable will be set when calling `wal-bootstrap'.")
 
 (defgroup wal nil
   "Walheimat's configuration."
   :group 'convenience
   :prefix "wal-")
 
-(defun wal-prelude-package-files ()
+(defun wal-package-files ()
   "Get the package files."
   (let* ((package-files (nthcdr 2 (directory-files wal-emacs-config-build-path t)))
          (el-files (seq-filter
@@ -78,12 +83,12 @@ This variable will be set when calling `wal-prelude-bootstrap'.")
 
     el-files))
 
-(defconst wal-prelude--init-marker "wal-prelude-bootstrap")
-(defconst wal-prelude--init-end-marker "wal-prelude-bootstrap--end")
-(defconst wal-prelude--init-marker-fs (concat wal-prelude--init-marker ":%s")
+(defconst wal--init-marker "wal-prelude-bootstrap")
+(defconst wal--init-end-marker "wal-prelude-bootstrap--end")
+(defconst wal--init-marker-fs (concat wal--init-marker ":%s")
   "String to format new markers.")
 
-(defun wal-prelude-init (init-file source-dir &optional clear)
+(defun wal-init (init-file source-dir &optional clear)
   "Ensure that the INIT-FILE knows how to bootstrap.
 
 This verifies the bootstrapping block was created by the current
@@ -99,12 +104,12 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
          (description (string-trim (shell-command-to-string cmd)))
          (hashed (base64-encode-string description))
          (init-buffer (find-file-noselect init-file))
-         (marker (format wal-prelude--init-marker-fs hashed))
+         (marker (format wal--init-marker-fs hashed))
          (template (expand-file-name "data/init.eld" source-dir))
          (template-buffer (find-file-noselect template))
          (template-contents (with-current-buffer template-buffer
                               (buffer-string)))
-         (bootstrap (format template-contents marker source-dir wal-prelude--init-end-marker))
+         (bootstrap (format template-contents marker source-dir wal--init-end-marker))
          (ready nil))
 
     (with-current-buffer init-buffer
@@ -113,8 +118,8 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
           (progn
             (message "Bootstrap in '%s' is up-to-date" init-file)
             (setq ready t))
-        (when-let* ((start (string-search wal-prelude--init-marker (buffer-string)))
-                    (end (or (string-search wal-prelude--init-end-marker (buffer-string))
+        (when-let* ((start (string-search wal--init-marker (buffer-string)))
+                    (end (or (string-search wal--init-end-marker (buffer-string))
                              (point-max))))
           (message "Deleting existing bootstrap in '%s'" init-file)
 
@@ -134,10 +139,10 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
       (message "Setting up bootstrap in '%s'" init-file)
       (append-to-file bootstrap nil init-file))))
 
-(defvar wal-prelude-init-error nil
+(defvar wal-init-error nil
   "Set to the error message if initialization failed.")
 
-(defun wal-prelude--configure-customization ()
+(defun wal--configure-customization ()
   "Configure custom file and load it."
   (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 
@@ -149,7 +154,7 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
   (when (file-exists-p custom-file)
     (load custom-file)))
 
-(defun wal-prelude--load-config (&optional build-dir)
+(defun wal--load-config (&optional build-dir)
   "Load the config from BUILD-DIR."
   (interactive)
 
@@ -160,7 +165,7 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
 
     (setq wal-booting t)
 
-    (wal-prelude--configure-customization)
+    (wal--configure-customization)
 
     (add-to-list 'load-path dir)
 
@@ -172,13 +177,13 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
        (message "Failed to load package '%s': %s"
                 current
                 (error-message-string err))
-       (setq wal-prelude-init-error err
+       (setq wal-init-error err
              wal-booting nil)))
 
     (setq wal-booting nil
           wal-loaded t)))
 
-(defun wal-prelude--set-paths (source-dir)
+(defun wal--set-paths (source-dir)
   "Set all directories based on SOURCE-DIR."
    (let* ((lib-dir (expand-file-name "lib" source-dir))
           (build-dir (expand-file-name "build" source-dir)))
@@ -188,9 +193,9 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
            wal-emacs-config-lib-path lib-dir
            wal-emacs-config-build-path build-dir)))
 
-(defun wal-prelude--configure-cold-boot ()
+(defun wal--configure-cold-boot ()
   "Configure cold-booting."
-  (require 'cl-macs)
+  (require 'cl-lib)
   (require 'seq)
   (require 'scroll-bar)
 
@@ -199,24 +204,24 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
     (setq package-user-dir temp-dir)
     (message "Cold-boot using '%s'" temp-dir)))
 
-(defconst wal-prelude--phony-build-dependencies '(".cask")
+(defconst wal--phony-build-dependencies '(".cask")
   "Files or directories that are phony dependencies.
 
 These files will be touched after tangling.")
 
-(defun wal-prelude--touch ()
+(defun wal--touch ()
   "Touch directories to make sure they aren't considered outdated."
-  (dolist (it wal-prelude--phony-build-dependencies)
+  (dolist (it wal--phony-build-dependencies)
 
     (let ((expanded (expand-file-name it wal-emacs-config-default-path)))
 
       (when (file-exists-p expanded)
         (shell-command (format "touch %s" expanded))))))
 
-(defvar wal-prelude--ignore '(message partial-recall--schedule-buffer)
+(defvar wal--ignore '(message partial-recall--schedule-buffer)
   "Functions that should be advised using `ignore' during tangling.")
 
-(defun wal-prelude-tangle-config ()
+(defun wal-tangle-config ()
   "Tangle the configuration's libraries.
 
 Note that `message' is silenced during tangling."
@@ -231,40 +236,40 @@ Note that `message' is silenced during tangling."
   (let ((org-confirm-babel-evaluate nil)
         (sources (nthcdr 2 (directory-files wal-emacs-config-lib-path t))))
 
-    (dolist (it wal-prelude--ignore)
+    (dolist (it wal--ignore)
       (advice-add it :override #'ignore))
 
     (dolist (it sources)
       (org-babel-tangle-file (expand-file-name it wal-emacs-config-default-path)))
 
-    (dolist (it wal-prelude--ignore)
+    (dolist (it wal--ignore)
       (advice-remove it #'ignore))
 
-    (wal-prelude--touch)
+    (wal--touch)
 
     (message "All library files in '%s' tangled" wal-emacs-config-lib-path)))
 
-(defun wal-prelude--handle-error (exit)
+(defun wal--handle-error (exit)
   "Handle the error that occurred during initialization.
 
 If EXIT is t, exit on error."
-  (when wal-prelude-init-error
+  (when wal-init-error
     (if exit
         (kill-emacs 1)
       (delay-warning
        'wal
-       (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal-prelude-init-error)
+       (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal-init-error)
        :error))))
 
-(defun wal-prelude--maybe-tangle ()
+(defun wal--maybe-tangle ()
   "Maybe tangle the configuration."
   (if (and (file-directory-p wal-emacs-config-build-path)
            (not (directory-empty-p wal-emacs-config-build-path)))
       (message "Found non-empty build directory '%s', will not tangle" wal-emacs-config-build-path)
     (make-directory wal-emacs-config-build-path t)
-    (wal-prelude-tangle-config)))
+    (wal-tangle-config)))
 
-(defun wal-prelude-bootstrap (source-dir &optional mode)
+(defun wal-bootstrap (source-dir &optional mode)
   "Bootstrap the configuration in SOURCE-DIR.
 
 This will tangle the config if it hasn't been yet.
@@ -283,25 +288,25 @@ Ensure means that packages will be installed after loading."
 
     (message "Bootstrapping config from '%s' in '%s' mode" source-dir mode)
 
-    (wal-prelude--set-paths source-dir)
-    (wal-prelude--maybe-tangle)
+    (wal--set-paths source-dir)
+    (wal--maybe-tangle)
 
     (pcase mode
       ('ensure
        (package-initialize)
-       (setq wal-prelude-ensure t))
+       (setq wal-ensure t))
 
       ('cold
-       (wal-prelude--configure-cold-boot)
+       (wal--configure-cold-boot)
        (setq exit t))
 
       ('plain
        (setq load nil)))
 
     (when load
-      (wal-prelude--load-config)
-      (wal-prelude--handle-error exit))))
+      (wal--load-config)
+      (wal--handle-error exit))))
 
-(provide 'wal-prelude)
+(provide 'wal)
 
-;;; wal-prelude.el ends here
+;;; wal.el ends here

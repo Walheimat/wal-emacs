@@ -7,4 +7,4 @@
  (depends-on "undercover")
  (depends-on "compat"))
 
-(files "wal-prelude.el" "build/*.el")
+(files "wal.el" "build/*.el")

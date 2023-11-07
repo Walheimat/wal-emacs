@@ -14,7 +14,7 @@
       (file-name-handler-alist nil))
 
   (add-to-list 'load-path base-dir)
-  (require 'wal-prelude)
+  (require 'wal)
 
-  (when (fboundp 'wal-prelude-bootstrap)
-    (wal-prelude-bootstrap base-dir))) ;; %s
+  (when (fboundp 'wal-bootstrap)
+    (wal-bootstrap base-dir))) ;; %s

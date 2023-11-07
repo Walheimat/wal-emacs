@@ -1,4 +1,4 @@
-;;; wal-prelude-test.el --- Test prelude package. -*- lexical-binding: t; -*-
+;;; wal-test.el --- Test prelude package. -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;;
@@ -6,7 +6,7 @@
 
 ;;; Code:
 
-(require 'wal-prelude nil t)
+(require 'wal nil t)
 
 (ert-deftest package-files ()
   (let* ((dir "/tmp/package")
@@ -15,10 +15,10 @@
 
     (bydi ((:mock directory-files :return (list "." ".." file other-file)))
 
-      (should (equal (list file) (wal-prelude-package-files))))))
+      (should (equal (list file) (wal-package-files))))))
 
 (ert-deftest init-fails-if-no-init ()
-  (should-error (wal-prelude-init "/tmp/no-exist.el" "/tmp") :type 'user-error))
+  (should-error (wal-init "/tmp/no-exist.el" "/tmp") :type 'user-error))
 
 (defvar valid-init (ert-resource-file "valid-init.txt"))
 
@@ -40,27 +40,27 @@ the temporary file."
 
 (ert-deftest init-sets-up-bootstrap ()
   (with-bootstrap "test" nil
-    (wal-prelude-init bootstrap wal-emacs-config-default-path)
+    (wal-init bootstrap wal-emacs-config-default-path)
 
     (bydi-was-called append-to-file)))
 
 (ert-deftest init-does-not-set-up-for-valid-bootstrap ()
-  (defvar wal-prelude--init-marker)
+  (defvar wal--init-marker)
   (with-bootstrap "test" t
 
-    (wal-prelude-init bootstrap wal-emacs-config-default-path)
+    (wal-init bootstrap wal-emacs-config-default-path)
     (bydi-was-not-called append-to-file)))
 
 (ert-deftest init-deletes-outdated-bootstrap ()
   (with-bootstrap "best" t
 
-    (wal-prelude-init bootstrap wal-emacs-config-default-path)
+    (wal-init bootstrap wal-emacs-config-default-path)
     (bydi-was-called delete-region)))
 
 (ert-deftest init--clears ()
   (with-bootstrap "test" t
 
-    (wal-prelude-init bootstrap wal-emacs-config-default-path t)
+    (wal-init bootstrap wal-emacs-config-default-path t)
     (bydi-was-called delete-region)))
 
 (ert-deftest configure-customization ()
@@ -75,7 +75,7 @@ the temporary file."
            make-empty-file
            load)
 
-      (wal-prelude--configure-customization)
+      (wal--configure-customization)
 
       (should (string= custom-file "/tmp/custom.el"))
 
@@ -87,10 +87,10 @@ the temporary file."
 
   (let ((wal-packages '(one two)))
 
-    (bydi (require add-to-list wal-prelude--configure-customization)
-      (wal-prelude--load-config)
+    (bydi (require add-to-list wal--configure-customization)
+      (wal--load-config)
 
-      (bydi-was-called wal-prelude--configure-customization)
+      (bydi-was-called wal--configure-customization)
       (bydi-was-called-nth-with require (list 'one) 0)
       (bydi-was-called-nth-with require (list 'two) 1))))
 
@@ -102,28 +102,28 @@ the temporary file."
         (default-directory "/tmp")
         (wal-emacs-config-build-path nil))
 
-    (bydi (require add-to-list wal-prelude--configure-customization)
+    (bydi (require add-to-list wal--configure-customization)
 
-      (wal-prelude--load-config)
+      (wal--load-config)
 
       (bydi-was-called-with add-to-list (list 'load-path "/tmp")))))
 
 (ert-deftest load-config--sets-init-error-on-failure ()
   (defvar wal-packages)
-  (defvar wal-prelude-init-error)
+  (defvar wal-init-error)
 
   (let ((wal-packages '(fails))
-        (wal-prelude-init-error nil))
+        (wal-init-error nil))
 
     (bydi (add-to-list
            (:mock require :with (lambda (&rest _) (error "Oops")))
-           wal-prelude--configure-customization)
+           wal--configure-customization)
 
-      (wal-prelude--load-config)
+      (wal--load-config)
 
-      (should (string= (error-message-string wal-prelude-init-error) "Oops"))
+      (should (string= (error-message-string wal-init-error) "Oops"))
 
-      (setq wal-prelude-init-error nil))))
+      (setq wal-init-error nil))))
 
 (ert-deftest set-paths--does-that ()
   (defvar wal-emacs-config-default-path)
@@ -134,7 +134,7 @@ the temporary file."
         (wal-emacs-config-build-path nil)
         (wal-emacs-config-lib-path nil))
 
-    (wal-prelude--set-paths "/tmp")
+    (wal--set-paths "/tmp")
 
     (should (string= wal-emacs-config-lib-path "/tmp/lib"))))
 
@@ -146,26 +146,26 @@ the temporary file."
     (bydi (require
            (:mock make-temp-file :return "/tmp/package"))
 
-      (wal-prelude--configure-cold-boot)
+      (wal--configure-cold-boot)
 
       (should (string= "/tmp/package" package-user-dir)))))
 
 (ert-deftest touch--does-not-for-non-existing ()
   (let ((wal-emacs-config-default-path "/tmp/default")
-        (wal-prelude--phony-build-dependencies '("test" "testing")))
+        (wal--phony-build-dependencies '("test" "testing")))
 
     (bydi (shell-command)
-      (wal-prelude--touch)
+      (wal--touch)
 
       (bydi-was-not-called shell-command))))
 
 (ert-deftest touch--touches-existing ()
   (ert-with-temp-file touchable
     (let ((wal-emacs-config-default-path "/tmp")
-          (wal-prelude--phony-build-dependencies (list touchable "testing")))
+          (wal--phony-build-dependencies (list touchable "testing")))
 
       (bydi (shell-command)
-        (wal-prelude--touch)
+        (wal--touch)
 
         (bydi-was-called-n-times shell-command 1)))))
 
@@ -175,11 +175,11 @@ the temporary file."
     (bydi ((:always file-directory-p)
            (:always directory-empty-p)
            make-directory
-           wal-prelude-tangle-config)
+           wal-tangle-config)
 
-      (wal-prelude--maybe-tangle)
+      (wal--maybe-tangle)
 
-      (bydi-was-called wal-prelude-tangle-config))))
+      (bydi-was-called wal-tangle-config))))
 
 (ert-deftest maybe-tangle--does-not-tangle ()
   (let ((wal-emacs-config "/tmp"))
@@ -187,47 +187,47 @@ the temporary file."
     (bydi ((:always file-directory-p)
            (:ignore directory-empty-p)
            make-directory
-           wal-prelude-tangle-config)
+           wal-tangle-config)
 
-      (wal-prelude--maybe-tangle)
+      (wal--maybe-tangle)
 
-      (bydi-was-not-called wal-prelude-tangle-config)
+      (bydi-was-not-called wal-tangle-config)
       (bydi-was-not-called make-directory))))
 
 (ert-deftest tangle-config--tangles-all-sources ()
-  (bydi (require org-babel-tangle-file wal-prelude--touch)
-    (wal-prelude-tangle-config)
+  (bydi (require org-babel-tangle-file wal--touch)
+    (wal-tangle-config)
 
     (bydi-was-called-n-times org-babel-tangle-file (length wal-packages))
 
-    (bydi-was-called wal-prelude--touch)))
+    (bydi-was-called wal--touch)))
 
 (ert-deftest bootstrap--configures-cold-boot ()
   (defvar wal-emacs-config-build-path)
 
   (let ((wal-emacs-config-build-path "/tmp"))
 
-    (bydi (wal-prelude--configure-cold-boot
-           wal-prelude--set-paths
-           wal-prelude--maybe-tangle
-           wal-prelude--load-config)
+    (bydi (wal--configure-cold-boot
+           wal--set-paths
+           wal--maybe-tangle
+           wal--load-config)
 
-      (wal-prelude-bootstrap "/tmp" 'cold)
+      (wal-bootstrap "/tmp" 'cold)
 
-      (bydi-was-called wal-prelude--configure-cold-boot))))
+      (bydi-was-called wal--configure-cold-boot))))
 
 (ert-deftest bootstrap--would-load-config ()
   (defvar wal-emacs-config-build-path)
 
   (let ((wal-emacs-config-build-path "/tmp"))
 
-    (bydi (wal-prelude--set-paths
-           wal-prelude--maybe-tangle
-           wal-prelude--load-config)
+    (bydi (wal--set-paths
+           wal--maybe-tangle
+           wal--load-config)
 
-      (wal-prelude-bootstrap "/tmp")
+      (wal-bootstrap "/tmp")
 
-      (bydi-was-called wal-prelude--load-config))))
+      (bydi-was-called wal--load-config))))
 
 (ert-deftest bootstrap--would-tangle ()
   (defvar wal-emacs-config-build-path)
@@ -237,51 +237,51 @@ the temporary file."
     (bydi ((:always file-directory-p)
            (:always directory-empty-p)
            make-directory
-           wal-prelude-tangle-config
-           wal-prelude--set-paths)
+           wal-tangle-config
+           wal--set-paths)
 
-      (wal-prelude-bootstrap "/tmp" 'plain)
+      (wal-bootstrap "/tmp" 'plain)
 
-      (bydi-was-called wal-prelude-tangle-config))))
+      (bydi-was-called wal-tangle-config))))
 
 (ert-deftest bootstrap--would-ensure ()
   (defvar wal-emacs-config-build-path)
 
   (let ((wal-emacs-config "/tmp"))
 
-    (bydi (wal-prelude-tangle-config
-           wal-prelude--set-paths
-           wal-prelude--maybe-tangle
-           wal-prelude--load-config
+    (bydi (wal-tangle-config
+           wal--set-paths
+           wal--maybe-tangle
+           wal--load-config
            package-initialize)
 
-      (wal-prelude-bootstrap "/tmp" 'ensure)
+      (wal-bootstrap "/tmp" 'ensure)
 
       (bydi-was-called package-initialize))))
 
 (ert-deftest bootstrap--handles-errors ()
-  (defvar wal-prelude-init-error)
+  (defvar wal-init-error)
 
-  (let ((wal-prelude-init-error nil))
+  (let ((wal-init-error nil))
 
-    (bydi (wal-prelude--set-paths
-           wal-prelude--configure-cold-boot
-           wal-prelude--load-config
-           wal-prelude--maybe-tangle
+    (bydi (wal--set-paths
+           wal--configure-cold-boot
+           wal--load-config
+           wal--maybe-tangle
            kill-emacs
            delay-warning)
 
-      (setq wal-prelude-init-error 'some-error)
+      (setq wal-init-error 'some-error)
 
-      (wal-prelude-bootstrap "/tmp" 'cold)
+      (wal-bootstrap "/tmp" 'cold)
 
       (bydi-was-called kill-emacs)
 
-      (wal-prelude-bootstrap "/tmp")
+      (wal-bootstrap "/tmp")
 
       (bydi-was-called delay-warning))))
 
-;;; wal-prelude-test.el ends here
+;;; wal-test.el ends here
 
 ;; Local Variables:
 ;; no-byte-compile: t
