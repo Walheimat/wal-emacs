@@ -281,6 +281,12 @@ the temporary file."
 
       (bydi-was-called delay-warning))))
 
+(ert-deftest wal--tangle-target ()
+  (let ((wal--build-path "/tmp/build")
+        (buffer-file-name "/tmp/test.org"))
+
+    (should (string= (wal--tangle-target) "/tmp/build/test.el"))))
+
 ;;; wal-test.el ends here
 
 ;; Local Variables:

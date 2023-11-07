@@ -221,6 +221,14 @@ These files will be touched after tangling.")
 (defvar wal--ignore-during-tangle '(message partial-recall--schedule-buffer)
   "Functions that should be advised using `ignore' during tangling.")
 
+(defun wal--tangle-target ()
+  "Get the target file during tangling."
+  (let* ((name buffer-file-name)
+         (nodir (file-name-nondirectory name))
+         (sans (file-name-sans-extension nodir)))
+
+    (expand-file-name (format "%s.el" sans) wal-emacs-config-build-path)))
+
 (defun wal-tangle-config ()
   "Tangle the configuration's libraries.
 
