@@ -218,7 +218,7 @@ These files will be touched after tangling.")
       (when (file-exists-p expanded)
         (shell-command (format "touch %s" expanded))))))
 
-(defvar wal--ignore '(message partial-recall--schedule-buffer)
+(defvar wal--ignore-during-tangle '(message partial-recall--schedule-buffer)
   "Functions that should be advised using `ignore' during tangling.")
 
 (defun wal-tangle-config ()
@@ -236,13 +236,13 @@ Note that `message' is silenced during tangling."
   (let ((org-confirm-babel-evaluate nil)
         (sources (nthcdr 2 (directory-files wal-emacs-config-lib-path t))))
 
-    (dolist (it wal--ignore)
+    (dolist (it wal--ignore-during-tangle)
       (advice-add it :override #'ignore))
 
     (dolist (it sources)
       (org-babel-tangle-file (expand-file-name it wal-emacs-config-default-path)))
 
-    (dolist (it wal--ignore)
+    (dolist (it wal--ignore-during-tangle)
       (advice-remove it #'ignore))
 
     (wal--touch)
