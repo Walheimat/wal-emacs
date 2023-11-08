@@ -253,10 +253,12 @@ I need day-to-day and adds a =consult= buffer source.
    :predicate #'wal-agenda-buffer-p))
 
 (use-package org-agenda
-  :config
-  (parallel-mirror wal-agenda-buffer-p :type boolean)
-  (add-to-list 'partial-recall-meaningful-traits 'parallel-mirror-wal-agenda-buffer-p)
+  :init
+  (with-eval-after-load 'partial-recall
+    (parallel-mirror wal-agenda-buffer-p :type boolean)
+    (add-to-list 'partial-recall-meaningful-traits 'parallel-mirror-wal-agenda-buffer-p))
 
+  :config
   (wal-replace-in-alist 'org-agenda-prefix-format '((agenda . "  %?-12t%?-12c%? s%?b")))
 
   (with-eval-after-load 'consult
@@ -293,7 +295,9 @@ I need day-to-day and adds a =consult= buffer source.
   :bind
   (("C-c a" . org-agenda)
    :map org-agenda-mode-map
-   ("C-c C-t" . org-agenda-todo-yesterday)))
+   ("C-c C-t" . org-agenda-todo-yesterday))
+
+  :autoload (org-agenda-file-p))
 #+END_SRC
 
 ** org-habit                                                        :builtin:
