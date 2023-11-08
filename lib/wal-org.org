@@ -643,8 +643,11 @@ taking notes related to the currently clocked task and one for dailies
   (if-let* ((project (project-current t))
             (root (project-root project))
             (heading (wal-project-local-value 'wal-org-capture-tasks-heading project))
-            (marker (or (and-let* ((file wal-org-capture-tasks-file)
-                                   (buffer (find-file-noselect file)))
+            (marker (or (and-let* ((file (wal-project-local-value 'wal-org-capture-tasks-file))
+                                   (canonicalized (and (boundp 'org-directory)
+                                                       (expand-file-name file org-directory)))
+                                   (buffer (and (file-exists-p canonicalized)
+                                                (find-file-noselect canonicalized))))
                           (org-find-exact-headline-in-buffer heading buffer))
                         (org-find-exact-heading-in-directory heading (or (wal-project-local-value 'wal-project-parent-project) root)))))
       marker

@@ -8,6 +8,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Local variable `wal-org-capture-tasks-file` can now also be set to a
+  path relative to `org-directory`.
+
 ### Changed
 
 - `org-agenda` buffers are ignored by `partial-recall`.

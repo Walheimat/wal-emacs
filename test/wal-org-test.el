@@ -136,7 +136,11 @@
       (bydi-was-called wal-org-tree-slide-play))))
 
 (ert-deftest wal-org-capture-find-project-task-heading ()
-  (let ((marker nil))
+  (defvar org-directory)
+
+  (let ((marker nil)
+        (existing-file nil)
+        (org-directory "/tmp"))
 
     (when (get-buffer "*wal-async*")
       (kill-buffer "*wal-async*"))
@@ -147,6 +151,7 @@
            (:mock wal-project-local-value :with (lambda (it &optional _)
                                                   (pcase it
                                                     ('wal-org-capture-tasks-heading marker)
+                                                    ('wal-org-capture-tasks-file existing-file)
                                                     ('wal-project-parent-project nil)
                                                     (_ nil))))
            (:always project-current)
@@ -167,7 +172,7 @@
         (should (eq (marker-position marker) 5)))
 
       (ert-with-temp-file file
-        (setq wal-org-capture-tasks-file file)
+        (setq existing-file file)
 
         (with-current-buffer (find-file-noselect file)
           (insert "Testing")
@@ -177,7 +182,19 @@
 
         (wal-org-capture-locate-project-tasks)
 
-        (should (eq (marker-position marker) 8))))))
+        (should (eq (marker-position marker) 8))
+
+        (setq existing-file (file-name-nondirectory file))
+
+        (with-current-buffer (find-file-noselect file)
+          (insert "?")
+          (goto-char (point-max))
+
+          (setq marker (point-marker)))
+
+        (wal-org-capture-locate-project-tasks)
+
+        (should (eq (marker-position marker) 9))))))
 
 (ert-deftest wal-org-clock-in-switch-to-state ()
   (should (string-equal "IN PROGRESS" (wal-org-clock-in-switch-to-state "OTHER STATE"))))
