@@ -20,6 +20,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   linting.
 - All library files are now tangled using `wal--tangle-target`.
 - All internal path variable were renamed.
+- Persistent tag `@growth` was replaced with `@wellbeing`.
 
 ### Fixed
 
