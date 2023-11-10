@@ -13,6 +13,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Local variable `wal-org-capture-tasks-file` can now also be set to a
   path relative to `org-directory`.
 - Package `org-habit-stats` as an extra of new `junk` expansion `org`.
+- `org-stuck-projects` is now configured to use tag group "energy".
 
 ### Changed
 
