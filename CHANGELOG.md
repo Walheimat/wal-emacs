@@ -31,6 +31,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   non-GUI frames.
 - `wal-ignore-if-not-installed` now uses `wal-package-installed-p` to
   make sure missed built-ins aren't ignored if they set `:hook`.
+- Custom prefix map `wal-project-prefix-map` is now bound directly to
+  avoid losing the prefix argument on first invocation.
 
 ## [v2.1.14]
 
