@@ -23,6 +23,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Persistent tag `@growth` was replaced with `@wellbeing`.
 - Functions `wal-package-{installed,built-in}-p` were moved to
   `wal-package`.
+- `wal-consult-project` is now called with `:require-match t`.
 
 ### Fixed
 

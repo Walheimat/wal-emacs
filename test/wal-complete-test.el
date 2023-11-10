@@ -142,7 +142,7 @@
 (ert-deftest wal-consult-project ()
   (bydi (consult--multi)
     (call-interactively 'wal-consult-project)
-    (bydi-was-called-with consult--multi (list '(consult--source-open-projects consult--source-projects) :prompt "Select project: "))))
+    (bydi-was-called-with consult--multi (list '(consult--source-open-projects consult--source-projects) :prompt "Select project: " :require-match t))))
 
 (ert-deftest wal-consult-outline ()
   (bydi ((:sometimes derived-mode-p)
