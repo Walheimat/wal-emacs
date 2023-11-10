@@ -68,6 +68,12 @@ This variable is relative to the `org-directory'."
 
 * Packages
 
+#+begin_src emacs-lisp
+(junk-expand org
+  "Additional Org-related packages."
+  :extras (org-habit-stats))
+#+end_src
+
 ** org                                                              :builtin:
 :PROPERTIES:
 :UNNUMBERED: t
@@ -229,6 +235,20 @@ If SHOW is t, show them instead."
    ("M-p" . org-previous-visible-heading)
    ("M-n" . org-next-visible-heading)))
 #+END_SRC
+
+** org-habit-stats                                                    :melpa:
+
+#+begin_src emacs-lisp
+(use-package org-habit-stats
+  :defer 3
+  :after org
+
+  :config
+  (transient-append-suffix 'org-mode-major '(1 -1)
+    '["Habits"
+      ("S" "stats" org-habit-stats-view-habit-at-point
+       :inapt-if-not (lambda () (org-is-habit-p (point))))]))
+#+end_src
 
 ** org-agenda                                                       :builtin:
 :PROPERTIES:
