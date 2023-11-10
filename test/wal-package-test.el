@@ -84,7 +84,8 @@
   (let ((installed nil)
         (built-in nil)
         (user nil))
-    (bydi ((:mock package-installed-p :return installed)
+
+    (bydi ((:mock wal-package-installed-p :return installed)
            (:mock package-built-in-p :return built-in)
            (:mock package--user-selected-p :return user))
 

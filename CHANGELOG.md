@@ -28,6 +28,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `all-the-icons-dired-mode` is now advised to not be triggered for
   non-GUI frames.
+- `wal-ignore-if-not-installed` now uses `wal-package-installed-p` to
+  make sure missed built-ins aren't ignored if they set `:hook`.
 
 ## [v2.1.14]
 
