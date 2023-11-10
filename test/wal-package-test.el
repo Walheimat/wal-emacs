@@ -176,6 +176,24 @@
 
       (bydi-was-called display-warning))))
 
+(ert-deftest wal-package-installed-p ()
+  (let ((wal-package--missed-built-in '(test)))
+    (bydi ((:sometimes package-installed-p))
+
+      (should (wal-package-installed-p 'other))
+      (bydi-toggle-sometimes)
+      (should-not (wal-package-installed-p 'other))
+      (should (wal-package-installed-p 'test)))))
+
+(ert-deftest wal-package-built-in-p ()
+  (let ((wal-package--missed-built-in '(test)))
+    (bydi ((:sometimes package-built-in-p))
+
+      (should (wal-package-built-in-p 'other))
+      (bydi-toggle-sometimes)
+      (should-not (wal-package-built-in-p 'other))
+      (should (wal-package-built-in-p 'test)))))
+
 ;;; wal-package-test.el ends here
 
 ;; Local Variables:

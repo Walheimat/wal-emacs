@@ -21,6 +21,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - All library files are now tangled using `wal--tangle-target`.
 - All internal path variable were renamed.
 - Persistent tag `@growth` was replaced with `@wellbeing`.
+- Functions `wal-package-{installed,built-in}-p` were moved to
+  `wal-package`.
 
 ### Fixed
 

@@ -24,8 +24,6 @@
 (declare-function package-read-all-archive-contents "package.el")
 (declare-function package--user-selected-p "package.el")
 (declare-function wal-prefix-user-key "wal-useful.el")
-(declare-function wal-package-built-in-p "wal-useful.el")
-(declare-function wal-package-installed-p "wal-useful.el")
 
 (defgroup wal-package nil
   "Change settings for external packages."
@@ -40,18 +38,46 @@
 
 * Packages
 
-** use-package
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
 Before =use-package= macro can be used to configure other packages it
 needs to be installed.
 
 #+BEGIN_SRC emacs-lisp
+(defconst wal-package--missed-built-in
+  '(abbrev
+    dired
+    elisp-mode
+    follow-mode
+    lisp-mode
+    nxml-mode
+    ob
+    org-agenda
+    org-capture
+    org-clock
+    org-duration
+    org-habit
+    org-keys
+    org-refile
+    org-src
+    register
+    text-mode)
+  "Missed built-in packages.
+
+This is a list of packages that `package-built-in-p' erroneously
+considers external.")
+
+(defun wal-package-installed-p (package)
+  "Check if PACKAGE is installed."
+  (not (null (or (package-installed-p package)
+                 (memq package wal-package--missed-built-in)))))
+
+(defun wal-package-built-in-p (package)
+  "Check if PACKAGE is built-in."
+  (not (null (or (package-built-in-p package)
+                 (memq package wal-package--missed-built-in)))))
+
 (defconst wal-core-packages '(use-package
-                               delight
-                               general)
+                              delight
+                              general)
   "Packages to install before using `use-package'.
 Such as package `use-package'.")
 
@@ -118,7 +144,7 @@ These packages are installed with `package-vc-install'.")
     "Will set up `use-package' to ensure packages."))
 #+END_SRC
 
-** Extensions
+** use-package Extensions
 
 *** use-package/:wal-bind
 
