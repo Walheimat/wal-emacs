@@ -6,7 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v2.2.0]
+
+Prelude to peace.
 
 ### Added
 
@@ -19,7 +21,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `org-agenda` buffers are ignored by `partial-recall`.
 - Prelude package was renamed from `wal-prelude` to just `wal` after
-  linting.
+  linting (requires re-running `make local` to update the
+  bootstrapper).
 - All library files are now tangled using `wal--tangle-target`.
 - All internal path variable were renamed.
 - Persistent tag `@growth` was replaced with `@wellbeing`.
