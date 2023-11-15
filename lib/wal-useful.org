@@ -501,7 +501,9 @@ If SESSION is non-nil, switch to (or create) it."
                     (session
                      (wal-scratch-buffer--prep (generate-new-buffer name)))
                     (t
-                     (get-buffer-create name)))))
+                     (if-let ((buffer (get-buffer name)))
+                         buffer
+                       (wal-scratch-buffer--prep (get-buffer-create name)))))))
 
     (pop-to-buffer buf '(display-buffer-same-window))))
 
