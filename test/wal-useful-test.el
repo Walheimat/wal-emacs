@@ -458,14 +458,17 @@
 
 (ert-deftest wal-persist-scratch-and-rehydrate ()
   (defvar wal-scratch-persist-file)
+  (defvar wal-scratch-persist--marker)
 
   (ert-with-temp-file scratch
-    (let ((wal-scratch-persist-file scratch))
+    (let ((wal-scratch-persist-file scratch)
+          (wal-scratch-persist--marker "mark-it"))
 
       (delete-file scratch)
 
       (with-current-buffer (get-buffer-create "*scratch*")
         (erase-buffer)
+        (insert "This one has mark-it in it\n")
         (insert "This one's itchy"))
 
       (wal-persist-scratch)
@@ -473,7 +476,6 @@
       (let ((file (find-file-noselect wal-scratch-persist-file)))
 
         (with-current-buffer file
-
           (should (string-equal "This one's itchy" (buffer-string)))))
 
       (with-current-buffer (get-buffer-create "*scratch*")

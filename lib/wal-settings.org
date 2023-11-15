@@ -51,6 +51,7 @@ functionality is used.
 (defvar use-package-defaults)
 (defvar wal-ensure)
 (defvar wal-minimal)
+(defvar wal-scratch-persist--marker)
 (defvar xref-search-program)
 
 (defgroup wal-settings nil
@@ -302,12 +303,13 @@ Let's keep the scratch contents.
 #+BEGIN_SRC emacs-lisp
 (let ((package-count (length package-activated-list))
       (init-time (emacs-init-time))
-      (date (format-time-string "%d/%m/%Y")))
+      (date (format-time-string "%d/%m/%Y"))
+      (marker wal-scratch-persist--marker))
 
   (setq initial-scratch-message (if (or wal-minimal wal-flag-mini)
-                                    (format ";; Minimal wal-emacs (loaded %d packages in %s) on %s\n"
-                                            package-count init-time date)
-                                  (format ";; Normal wal-emacs on %s\n" date))))
+                                    (format ";; Minimal %s (loaded %d packages in %s) on %s\n"
+                                            marker package-count init-time date)
+                                  (format ";; Normal %s on %s\n" marker date))))
 
 (add-hook 'emacs-startup-hook #'wal-rehydrate-scratch)
 (add-hook 'kill-emacs-hook #'wal-persist-scratch)
