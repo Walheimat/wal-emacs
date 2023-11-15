@@ -476,6 +476,16 @@ removed."
 Make the scratch buffer contents persist between sessions.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal-scratch-buffer--prep (buffer)
+  "Prep scratch buffer BUFFER."
+  (with-current-buffer buffer
+    (when initial-scratch-message
+      (insert initial-scratch-message)
+      (set-buffer-modified-p nil))
+    (funcall initial-major-mode))
+
+  buffer)
+
 (defun wal-scratch-buffer (&optional session)
   "Switch to the scratch buffer.
 
@@ -484,13 +494,29 @@ If SESSION is non-nil, switch to (or create) it."
 
   (let* ((name "*scratch*")
          (buf (cond ((numberp session)
-                     (get-buffer-create (format "%s<%d>" name session)))
+                     (if-let* ((session-name (format "%s<%d>" name session))
+                               (buffer (get-buffer session-name)))
+                         buffer
+                       (wal-scratch-buffer--prep (get-buffer-create session-name))))
                     (session
-                     (generate-new-buffer name))
+                     (wal-scratch-buffer--prep (generate-new-buffer name)))
                     (t
                      (get-buffer-create name)))))
 
     (pop-to-buffer buf '(display-buffer-same-window))))
+
+(defvar wal-scratch-persist--marker "wal-emacs")
+
+(defun wal-scratch-persist--buffer-string (buffer)
+  "Get the content from BUFFER.
+
+This filters out lines that start with a comment."
+  (let* ((string (with-current-buffer buffer
+                   (substring-no-properties (buffer-string))))
+         (lines (split-string string "\n"))
+         (filter (lambda (it) (not (string-match-p wal-scratch-persist--marker it)))))
+
+    (string-join (seq-filter filter lines) "\n")))
 
 (defun wal-persist-scratch ()
   "Persist content of all *scratch* buffers.
@@ -507,7 +533,7 @@ order of buffers is not persisted."
         (buffer-list)
         (seq-filter (lambda (it) (string-match-p "\\*scratch" (buffer-name it))))
         (reverse)
-        (apply (lambda (&rest seq) (mapconcat (lambda (it) (with-current-buffer it (buffer-string))) seq "\n\n")))
+        (apply (lambda (&rest seq) (mapconcat #'wal-scratch-persist--buffer-string seq "\n\n")))
         (string-trim)
         (insert))
 

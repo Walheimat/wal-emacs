@@ -12,6 +12,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `wal-scratch-persist` no longer persists the
   `initial-scratch-message`.
+- Additional scratch buffers are prepped correctly (initial message
+  and mode).
 
 ## [v2.2.0]
 

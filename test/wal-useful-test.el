@@ -451,6 +451,7 @@
 
     (should (equal (wal-scratch-buffer) "*scratch*"))
     (should (equal (wal-scratch-buffer t) "*scratch*<2>"))
+    (should (equal (wal-scratch-buffer 4) "*scratch*<4>"))
     (should (equal (wal-scratch-buffer 4) "*scratch*<4>")))
 
   (kill-buffer "*scratch*<2>")
