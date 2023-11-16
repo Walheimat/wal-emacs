@@ -95,7 +95,7 @@ Root markers (how projects are found) and =vc= ignores are extended.
   "Switch to the current project's parent project."
   (interactive)
 
-  (if-let* ((parent (wal-project-local-value 'wal-project-parent-project)))
+  (if-let ((parent (wal-project-local-value 'wal-project-parent-project)))
       (project-switch-project parent)
     (user-error "You need to set `wal-project-parent-project'")))
 
@@ -231,19 +231,20 @@ value using it. If COMINT is t, make sure the command is run in
   "Complete and run CMD."
   (interactive
    (list (completing-read "Select command: "
-                          (wal-plist-keys wal-project-commands))))
+                          (wal-plist-keys wal-project-commands)
+                          nil
+                          t)))
 
   (wal-project-command (intern cmd)))
 
-(defun wal-with-project-bounded-compilation (fun &rest args)
+(defun wal-project--with-bounded-compilation (fun &rest args)
   "Run FUN applying ARGS.
 
 Makes sure this is done with `compilation-save-buffers-predicate'
 set to filter by project buffers."
   (if-let* ((project (project-current nil))
             (buffers (project-buffers project))
-            (pred (lambda () (memq (current-buffer) buffers)))
-            (compilation-save-buffers-predicate pred))
+            (compilation-save-buffers-predicate (lambda () (memq (current-buffer) buffers))))
       (apply fun args)
     (apply fun args)))
 
@@ -291,8 +292,9 @@ set to filter by project buffers."
   "Get the project-local value of SYMBOL.
 
 Optionally the PROJECT may be passed directly."
-  (when-let* ((project (or project (project-current)))
-              (root (project-root project)))
+  (and-let* (((boundp symbol))
+             (project (or project (project-current)))
+             (root (project-root project)))
 
     (project--value-in-dir symbol root)))
 
@@ -318,7 +320,7 @@ If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
 (use-package project
   :init
   (wal-advise-many
-   'wal-with-project-bounded-compilation :around
+   'wal-project--with-bounded-compilation :around
    '(project-compile
      recompile
      wal-project-command))

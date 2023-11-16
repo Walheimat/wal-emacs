@@ -21,20 +21,20 @@
 
       (should-error (wal-project-switch-to-parent-project) :type 'user-error))))
 
-(ert-deftest wal-with-project-bounded-compilation ()
+(ert-deftest wal-project--with-bounded-compilation ()
   (bydi ((:always project-current)
          (:mock project-buffers :with buffer-list))
 
     (let ((fun (lambda () (funcall compilation-save-buffers-predicate))))
 
-      (should (wal-with-project-bounded-compilation fun)))))
+      (should (wal-project--with-bounded-compilation fun)))))
 
-(ert-deftest wal-with-project-bounded-compilation--ignored-outside-project ()
+(ert-deftest wal-project--with-bounded-compilation--ignored-outside-project ()
   (bydi ((:ignore project-current))
 
     (let ((fun #'always))
 
-      (should (wal-with-project-bounded-compilation fun)))))
+      (should (wal-project--with-bounded-compilation fun)))))
 
 (ert-deftest wal-project-command--buffer-name ()
   (let ((wal-project-current-command "test"))
