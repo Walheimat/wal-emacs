@@ -287,6 +287,17 @@ the temporary file."
 
     (should (string= (wal--tangle-target) "/tmp/build/test.el"))))
 
+(ert-deftest wal--compile ()
+  (let ((wal--default-path "/tmp"))
+
+    (bydi (compile
+           (:watch default-directory))
+
+      (wal-update)
+
+      (bydi-was-set-to default-directory "/tmp")
+      (bydi-was-called-with compile '("make update" nil)))))
+
 ;;; wal-test.el ends here
 
 ;; Local Variables:

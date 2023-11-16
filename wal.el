@@ -257,6 +257,20 @@ Note that `message' is silenced during tangling."
 
     (message "All library files in '%s' tangled" wal--lib-path)))
 
+(defun wal--compile (cmd &optional comint)
+  "Compile CMD.
+
+Optionally use `comint-mode' if COMINT is t."
+  (let ((default-directory wal--default-path))
+
+    (compile cmd comint)))
+
+(defun wal-update ()
+  "Pull remote changes and tangle again."
+  (interactive)
+
+  (wal--compile "make update"))
+
 (defun wal--handle-error (exit)
   "Handle the error that occurred during initialization.
 

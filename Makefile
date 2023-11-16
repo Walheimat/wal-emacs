@@ -38,6 +38,14 @@ $(PACKAGE_MARKER): BOOTSTRAP_MODE=ensure
 $(PACKAGE_MARKER):
 	$(WITH_PRELUDE) $(BOOTSTRAP)
 
+# Update
+update-git:
+	$(info Pulling changes)
+	git pull
+
+.PHONY: update
+update: update-git clean ensure-init $(PACKAGE_MARKER)
+
 # -- Checks
 
 # Simulate a cold boot
