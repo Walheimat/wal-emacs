@@ -12,6 +12,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `wal-update` to invoke all necessary commands and Makefile targets
   to have the latest changes installed.
+- `wal-project-command` now tries to update its history when
+  `compilation-start` is run.
 
 ### Fixed
 

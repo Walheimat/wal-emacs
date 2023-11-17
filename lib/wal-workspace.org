@@ -37,6 +37,7 @@ Manage and interact with projects.
 (declare-function ring-insert "ext:ring.el")
 (declare-function ring-member "ext:ring.el")
 (declare-function ring-ref "ext:ring.el")
+(declare-function ring-remove "ext:ring.el")
 (declare-function ring-remove+insert+extend "ext:ring.el")
 (declare-function wal-org-capture--find-project-tasks-heading "wal-org.el")
 (declare-function wal-plist-keys "wal-useful.el")
@@ -112,6 +113,8 @@ Root markers (how projects are found) and =vc= ignores are extended.
       (concat "*" "project-" wal-project-current-command "*")
     "*project-compile*"))
 
+(defvar wal-project--last-command-category nil)
+
 (defun wal-project-command (cmd &optional arg)
   "Run CMD for the current project.
 
@@ -148,6 +151,8 @@ instead of `compile-mode'."
          (default-directory (project-root current))
          (compilation-buffer-name-function 'wal-project-command--buffer-name))
 
+    (setq wal-project--last-command-category cmd)
+
     ;; Store the entered command if not yet/no longer present.
     (if (ring-member history command)
         (ring-remove+insert+extend history command t)
@@ -155,6 +160,19 @@ instead of `compile-mode'."
     (puthash root history table)
 
     (compile command comint)))
+
+(defun wal-project-command--update-history (command &rest _)
+  "Update history using COMMAND.
+
+If the previous `compile-command' is part of the history of the
+last `wal-project' command invoked, replace it with the new
+COMMAND."
+  (and-let* (wal-project--last-command-category
+             (history (wal-project-command--history wal-project--last-command-category))
+             (index (ring-member history compile-command)))
+
+    (ring-remove history index)
+    (ring-insert history command)))
 
 (defun wal-project-command--history (cmd)
   "Access history for CMD.
@@ -324,6 +342,9 @@ If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
    '(project-compile
      recompile
      wal-project-command))
+
+  ;; Update categorized command history.
+  (advice-add 'compilation-start :ater #'wal-project-command--update-history)
 
   ;; Allow setting custom names.
   (put 'project-vc-name 'safe-local-variable #'stringp)

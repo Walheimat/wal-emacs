@@ -107,6 +107,26 @@ p           (:mock project-root :return "/tmp/cmd")
   (should (wal-project-command--valid-default-p '("test" "make")))
   (should-not (wal-project-command--valid-default-p '("test" make))))
 
+(ert-deftest wal-project-command--update-history ()
+  (let ((fake-history (make-ring 3))
+        (compile-command "make help"))
+
+    (ring-insert fake-history "make test")
+
+    (bydi ((:mock wal-project-command--history :return fake-history))
+
+      (wal-project-command--update-history "make new")
+
+      (should (equal (ring-elements fake-history)
+                     '("make test")))
+
+      (setq compile-command "make test")
+
+      (wal-project-command--update-history "make new")
+
+      (should (equal (ring-elements fake-history)
+                     '("make new"))))))
+
 (ert-deftest wal-project-create-command ()
   (bydi ((:mock make-hash-table :return 'hash-table))
     (bydi-match-expansion
