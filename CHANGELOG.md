@@ -15,6 +15,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `wal-project-command` now tries to update its history when
   `compilation-start` is run.
 
+### Changed
+
+- `compile` is bound again to `C-c i`.
+
 ### Fixed
 
 - `wal-scratch-persist` no longer persists the
