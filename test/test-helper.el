@@ -20,8 +20,8 @@
   (defvar wal--build-path)
   (defvar wal--lib-path)
 
-  (cl-destructuring-bind (source-dir build-dir lib-dir _tools-dir)
-      (bydi-ci-setup-paths (list "build" "lib" "tools"))
+  (cl-destructuring-bind (source-dir build-dir lib-dir)
+      (bydi-ci-setup-paths (list "build" "lib"))
 
     (setq wal--default-path source-dir
           wal--build-path build-dir
