@@ -266,7 +266,7 @@ Optionally use `comint-mode' if COMINT is t."
     (compile cmd comint)))
 
 (defun wal-update ()
-  "Pull remote changes and tangle again."
+  "Pull from remote and tangle again."
   (interactive)
 
   (wal--compile "make update"))
