@@ -296,21 +296,20 @@
     (bydi-was-called-with switch-to-buffer (list nil t))))
 
 (ert-deftest wal-find-custom-file ()
-  (ert-with-temp-file custom
-    :text ";; customize"
+  (bydi ((:mock file-truename :return "/tmp/custom.el")
+         (:mock find-file-noselect :with bydi-rf)
+         switch-to-buffer)
 
-    (let ((custom-file custom))
-
-      (wal-find-custom-file)
-
-      (should (string-equal (buffer-string) ";; customize")))))
+    (wal-find-custom-file)
+    (bydi-was-called-with switch-to-buffer "/tmp/custom.el")))
 
 (ert-deftest wal-find-init ()
-  (bydi ((:mock file-truename :return wal--default-path))
+  (bydi ((:mock file-truename :return "/tmp/init.el")
+         (:mock find-file-noselect :with bydi-rf)
+         switch-to-buffer)
 
     (wal-find-init)
-
-    (should (string-match-p (buffer-name) wal--default-path))))
+    (bydi-was-called-with switch-to-buffer "/tmp/init.el")))
 
 (ert-deftest wal-find-fish-config ()
   (ert-with-temp-file fish
