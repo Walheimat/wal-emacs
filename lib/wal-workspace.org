@@ -161,6 +161,22 @@ instead of `compile-mode'."
 
     (compile command comint)))
 
+(defun wal-project-command--fuzzy-match-p (command history)
+  "Check if COMMAND matches previous commands in HISTORY."
+  (when-let* ((elements (ring-elements history))
+              (min-count 1)
+              (match (seq-find
+                      (lambda (it)
+                        (let* ((el-parts (string-split it " "))
+                               (matches (seq-count
+                                         (lambda (part)
+                                           (string-match-p part command))
+                                         el-parts)))
+                          (> matches min-count)))
+                      elements)))
+
+    (ring-member history match)))
+
 (defun wal-project-command--update-history (command &rest _)
   "Update history using COMMAND.
 
@@ -169,7 +185,7 @@ last `wal-project' command invoked, replace it with the new
 COMMAND."
   (and-let* (wal-project--last-command-category
              (history (wal-project-command--history wal-project--last-command-category))
-             (index (ring-member history compile-command)))
+             (index (wal-project-command--fuzzy-match-p command history)))
 
     (ring-remove history index)
     (ring-insert history command)))

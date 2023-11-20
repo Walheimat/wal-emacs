@@ -109,7 +109,7 @@ p           (:mock project-root :return "/tmp/cmd")
 
 (ert-deftest wal-project-command--update-history ()
   (let ((fake-history (make-ring 3))
-        (compile-command "make help"))
+        (wal-project--last-command-category 'test))
 
     (ring-insert fake-history "make test")
 
@@ -120,12 +120,20 @@ p           (:mock project-root :return "/tmp/cmd")
       (should (equal (ring-elements fake-history)
                      '("make test")))
 
-      (setq compile-command "make test")
-
-      (wal-project-command--update-history "make new")
+      (wal-project-command--update-history "make test FLAG=t")
 
       (should (equal (ring-elements fake-history)
-                     '("make new"))))))
+                     '("make test FLAG=t")))
+
+      (wal-project-command--update-history "make way")
+
+      (should (equal (ring-elements fake-history)
+                     '("make test FLAG=t")))
+
+      (wal-project-command--update-history "make test")
+
+      (should (equal (ring-elements fake-history)
+                     '("make test"))))))
 
 (ert-deftest wal-project-create-command ()
   (bydi ((:mock make-hash-table :return 'hash-table))
