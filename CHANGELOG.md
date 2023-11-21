@@ -8,6 +8,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `other-frame` is now bound in `other-window-repeat-map`.
+
 ### Fixed
 
 - Updating the history of `wal-project-*` commands now uses fuzzy
