@@ -11,6 +11,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - `other-frame` is now bound in `other-window-repeat-map`.
+- Package `dogears` as a trial.
+
+### Changed
+
+- Fringe mark for `bookmark` was disabled.
 
 ### Fixed
 
