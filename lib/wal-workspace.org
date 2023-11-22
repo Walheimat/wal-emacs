@@ -105,7 +105,7 @@ Root markers (how projects are found) and =vc= ignores are extended.
 
 (defvar wal-project-current-command nil)
 (defvar wal-project-command-history nil)
-(defconst wal-project-command-history-length 5)
+(defconst wal-project-command-history-length 10)
 
 (defun wal-project-command--buffer-name (_major-mode)
   "Get the buffer name for the current command."
@@ -153,10 +153,8 @@ instead of `compile-mode'."
 
     (setq wal-project--last-command-category cmd)
 
-    ;; Store the entered command if not yet/no longer present.
-    (if (ring-member history command)
-        (ring-remove+insert+extend history command t)
-      (ring-insert history command))
+    (ring-remove+insert+extend history command)
+
     (puthash root history table)
 
     (compile command comint)))
@@ -180,15 +178,28 @@ instead of `compile-mode'."
 (defun wal-project-command--update-history (command &rest _)
   "Update history using COMMAND.
 
-If the previous `compile-command' is part of the history of the
-last `wal-project' command invoked, replace it with the new
-COMMAND."
+If COMMAND matches other commands of the last command category,
+add it to the history."
   (and-let* (wal-project--last-command-category
              (history (wal-project-command--history wal-project--last-command-category))
              (index (wal-project-command--fuzzy-match-p command history)))
 
-    (ring-remove history index)
-    (ring-insert history command)))
+    (ring-remove+insert+extend history command)))
+
+(defun wal-project-command--select-category (recompile &optional edit)
+  "Call RECOMPILE while selecting categorical history.
+
+EDIT is passed as-is to RECOMPILE."
+  (if-let* ((command compile-command)
+            (history (and wal-project--last-command-category
+                          (wal-project-command--history wal-project--last-command-category)))
+            (matches (wal-project-command--fuzzy-match-p command history)))
+
+      (let ((compile-history (ring-elements history)))
+
+        (funcall-interactively recompile edit))
+
+    (funcall-interactively recompile edit)))
 
 (defun wal-project-command--history (cmd)
   "Access history for CMD.
@@ -361,6 +372,7 @@ If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
 
   ;; Update categorized command history.
   (advice-add 'compilation-start :after #'wal-project-command--update-history)
+  (advice-add 'recompile :around #'wal-project-command--select-category)
 
   ;; Allow setting custom names.
   (put 'project-vc-name 'safe-local-variable #'stringp)

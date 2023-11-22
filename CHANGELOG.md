@@ -12,16 +12,22 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `other-frame` is now bound in `other-window-repeat-map`.
 - Package `dogears` as a trial.
+- `recompile` is now advised to set the `compile-history` to that of
+  the last `wal-project-*` command if the `compile-command` matches.
 
 ### Changed
 
 - Fringe mark for `bookmark` was disabled.
+- Commands added to `wal-project-command` history no longer replace
+  the one matched against. They're just inserted.
 
 ### Fixed
 
 - Updating the history of `wal-project-*` commands now uses fuzzy
   matching instead of just checking the last `compile-command` (as
   this can lead to erroneous replacements).
+- `wal-project-command` no longer infinitely extends a command's
+  history.
 
 ## [v2.2.1]
 

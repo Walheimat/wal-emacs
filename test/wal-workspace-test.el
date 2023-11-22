@@ -123,17 +123,41 @@ p           (:mock project-root :return "/tmp/cmd")
       (wal-project-command--update-history "make test FLAG=t")
 
       (should (equal (ring-elements fake-history)
-                     '("make test FLAG=t")))
+                     '("make test FLAG=t" "make test")))
 
       (wal-project-command--update-history "make way")
 
       (should (equal (ring-elements fake-history)
-                     '("make test FLAG=t")))
+                     '("make test FLAG=t" "make test")))
 
       (wal-project-command--update-history "make test")
 
       (should (equal (ring-elements fake-history)
-                     '("make test"))))))
+                     '("make test" "make test FLAG=t"))))))
+
+(ert-deftest wal-project-command--select-category ()
+  (let ((compile-history '("make test"))
+        (compile-command "make best")
+        (wal-project--last-command-category nil)
+        (history (make-ring 2))
+        (matches nil))
+
+    (bydi ((:mock wal-project-command--history :return history)
+           (:mock wal-project-command--fuzzy-match-p :return matches)
+           (:watch compile-history))
+
+      (ring-insert history "make history")
+
+      (wal-project-command--select-category #'ignore)
+
+      (bydi-was-not-set compile-history)
+
+      (setq wal-project--last-command-category 'test
+            matches t)
+
+      (wal-project-command--select-category #'ignore)
+
+      (bydi-was-set-to compile-history '("make history")))))
 
 (ert-deftest wal-project-create-command ()
   (bydi ((:mock make-hash-table :return 'hash-table))
