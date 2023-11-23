@@ -63,17 +63,6 @@ Manage and interact with projects.
 Library =project= has by now become mature enough to replace the
 otherwise excellent =projectile=.
 
-The package configuration defines
-=wal-project-{build,install,clean,execute,test}= commands using a
-macro that sets up =wal-project-command= calls. Each of these commands
-have their own per-project history that can be pre-filled through
-dir-local variables. The commands are provided through a prefix map
-bound to =C-c p=.
-
-These command as well as =project-compile= and =recompile= are advised
-to be bounded to project files. This means that running them will not
-prompt to save unsaved files outside of the project.
-
 Various switch commands (selected when switching projects) are added
 to find Org file containing the tasks, showing =magit= status, finding
 a buffer with =consult=, searching with =rg=, finding the root dir and
@@ -99,199 +88,6 @@ Root markers (how projects are found) and =vc= ignores are extended.
   (if-let ((parent (wal-project-local-value 'wal-project-parent-project)))
       (project-switch-project parent)
     (user-error "You need to set `wal-project-parent-project'")))
-
-(defvar wal-project-commands nil
-  "Hash maps for compilation commands.")
-
-(defvar wal-project-current-command nil)
-(defvar wal-project-command-history nil)
-(defconst wal-project-command-history-length 10)
-
-(defun wal-project-command--buffer-name (_major-mode)
-  "Get the buffer name for the current command."
-  (if wal-project-current-command
-      (concat "*" "project-" wal-project-current-command "*")
-    "*project-compile*"))
-
-(defvar wal-project--last-command-category nil)
-
-(defun wal-project-command (cmd &optional arg)
-  "Run CMD for the current project.
-
-Each command will be stored in a per-project history. If the
-history is non-empty, the user will not be prompted unless called
-with a prefix argument ARG.
-
-If the prefix argument ARG is 0, `comint-mode' will be used
-instead of `compile-mode'."
-  (defvar project-vc-name)
-
-  (let* ((project-vc-name nil)
-         (current (project-current t))
-         (root (project-root current))
-         (name (project-name current))
-
-         (table (plist-get wal-project-commands cmd))
-
-         (history (wal-project-command--history cmd))
-         (wal-project-command-history (ring-elements history))
-
-         (initial (unless (ring-empty-p history)
-                    (ring-ref history 0)))
-         (wal-project-current-command (symbol-name cmd))
-
-         (comint (zerop (prefix-numeric-value arg)))
-         (prompt (format "%s project (%s)%s"
-                         (capitalize wal-project-current-command)
-                         name
-                         (if comint " interactively: " ": ")))
-         (command (or (and (not arg) initial)
-                      (read-shell-command prompt initial 'wal-project-command-history)))
-
-         (default-directory (project-root current))
-         (compilation-buffer-name-function 'wal-project-command--buffer-name))
-
-    (setq wal-project--last-command-category cmd)
-
-    (ring-remove+insert+extend history command)
-
-    (puthash root history table)
-
-    (compile command comint)))
-
-(defun wal-project-command--fuzzy-match-p (command history)
-  "Check if COMMAND matches previous commands in HISTORY."
-  (when-let* ((elements (ring-elements history))
-              (min-count 1)
-              (match (seq-find
-                      (lambda (it)
-                        (let* ((el-parts (string-split it " "))
-                               (matches (seq-count
-                                         (lambda (part)
-                                           (string-match-p part command))
-                                         el-parts)))
-                          (> matches min-count)))
-                      elements)))
-
-    (ring-member history match)))
-
-(defun wal-project-command--update-history (command &rest _)
-  "Update history using COMMAND.
-
-If COMMAND matches other commands of the last command category,
-add it to the history."
-  (and-let* (wal-project--last-command-category
-             (history (wal-project-command--history wal-project--last-command-category))
-             (index (wal-project-command--fuzzy-match-p command history)))
-
-    (ring-remove+insert+extend history command)))
-
-(defun wal-project-command--select-category (recompile &optional edit)
-  "Call RECOMPILE while selecting categorical history.
-
-EDIT is passed as-is to RECOMPILE."
-  (if-let* ((command compile-command)
-            (history (and wal-project--last-command-category
-                          (wal-project-command--history wal-project--last-command-category)))
-            (matches (wal-project-command--fuzzy-match-p command history)))
-
-      (let ((compile-history (ring-elements history)))
-
-        (funcall-interactively recompile edit))
-
-    (funcall-interactively recompile edit)))
-
-(defun wal-project-command--history (cmd)
-  "Access history for CMD.
-
-If the history doesn't yet exist, create it using the provided
-default.
-
-The default can be a string or a list of strings. In the latter
-case, they are inserted in reverse order so that the first item
-is the default."
-  (if-let* ((table (plist-get wal-project-commands cmd))
-            (project (project-current))
-            (root (project-root project))
-            (history (gethash root table)))
-
-      history
-
-    (let* ((var (intern (format "wal-project-%s-default-cmd" cmd)))
-           (default (project--value-in-dir var root))
-           (new-history (make-ring wal-project-command-history-length)))
-
-      (cond
-       ((listp default)
-        (mapc (lambda (it) (ring-insert new-history it)) (reverse default)))
-       ((stringp default)
-        (ring-insert new-history default))
-       (t nil))
-
-      (puthash root new-history table)
-
-      new-history)))
-
-(defvar wal-project-prefix-map (make-sparse-keymap))
-
-(cl-defmacro wal-project-create-command (name &key key default)
-  "Create command NAME.
-
-The command will be bound using `ambassador' using its initial
-unless KEY is provided. If DEFAULT is non-nil, set the initial
-value using it. If COMINT is t, make sure the command is run in
-`comint-mode' instead."
-  (declare (indent defun))
-
-  (let ((function-name (intern (format "wal-project-%s" name)))
-        (default-var (intern (format "wal-project-%s-default-cmd" name)))
-        (key (or key (substring (symbol-name name) 0 1))))
-
-    `(progn
-       (defvar-local ,default-var ,default ,(format "Default for `%s'." function-name))
-
-       (defun ,function-name (&optional arg)
-         ,(concat (capitalize (symbol-name name))
-                  " the current project.\n\n"
-                  "See `wal-project-command' for behavior of ARG.")
-         (interactive "P")
-
-         (wal-project-command ',name arg))
-
-       (setq wal-project-commands (plist-put
-                                   wal-project-commands
-                                   ',name
-                                   ,(make-hash-table :test 'equal)))
-
-       (bind-key ,key ',function-name wal-project-prefix-map)
-       (put ',default-var 'safe-local-variable #'wal-project-command--valid-default-p))))
-
-(defun wal-project-command--valid-default-p (val)
-  "Check if VAL is a valid project command default."
-  (or (stringp val)
-      (and (listp val)
-           (cl-every #'stringp val))))
-
-(defun wal-project-select-command (cmd)
-  "Complete and run CMD."
-  (interactive
-   (list (completing-read "Select command: "
-                          (wal-plist-keys wal-project-commands)
-                          nil
-                          t)))
-
-  (wal-project-command (intern cmd)))
-
-(defun wal-project--with-bounded-compilation (fun &rest args)
-  "Run FUN applying ARGS.
-
-Makes sure this is done with `compilation-save-buffers-predicate'
-set to filter by project buffers."
-  (if-let* ((project (project-current nil))
-            (buffers (project-buffers project))
-            (compilation-save-buffers-predicate (lambda () (memq (current-buffer) buffers))))
-      (apply fun args)
-    (apply fun args)))
 
 (defun wal-project-consult-buffer ()
   "Find an open project buffer using `consult-buffer'."
@@ -363,32 +159,9 @@ If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
     (switch-to-buffer buffer)))
 
 (use-package project
-  :init
-  (wal-advise-many
-   'wal-project--with-bounded-compilation :around
-   '(project-compile
-     recompile
-     wal-project-command))
-
-  ;; Update categorized command history.
-  (advice-add 'compilation-start :after #'wal-project-command--update-history)
-  (advice-add 'recompile :around #'wal-project-command--select-category)
-
+  :config
   ;; Allow setting custom names.
   (put 'project-vc-name 'safe-local-variable #'stringp)
-
-  (bind-key "C-c p" wal-project-prefix-map)
-  (that-key "project commands" :key "C-c p")
-
-  :config
-  (wdb-faraway "\\*project")
-
-  ;; Create common commands.
-  (wal-project-create-command build :default "make")
-  (wal-project-create-command install :default "make install")
-  (wal-project-create-command clean :default "make clean")
-  (wal-project-create-command execute)
-  (wal-project-create-command test :default '("make test" "make coverage"))
 
   :custom
   (project-vc-extra-root-markers '("pom.xml"
@@ -404,7 +177,7 @@ If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
                              (wal-project-consult-buffer "Consult buffer" ?j)
                              (wal-rg-project-literal "Find rg" ?n)
                              (wal-project-dired-root "Find root dir" ?r)
-                             (wal-project-select-command "Run command" ?c)))
+                             (ship-mate-select-command "Run command" ?c)))
 
   (project-vc-ignores '("node_modules/"
                         "build/"
@@ -417,7 +190,7 @@ If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
                         "coverage/"))
 
   :bind
-  (:map wal-project-prefix-map
+  (:map ship-mate-command-map
    ("^" . wal-project-switch-to-parent-project)
    ("C-f" . wal-project-find-in-here))
 

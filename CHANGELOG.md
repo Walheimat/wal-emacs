@@ -14,6 +14,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Package `dogears` as a trial.
 - `recompile` is now advised to set the `compile-history` to that of
   the last `wal-project-*` command if the `compile-command` matches.
+- My package `ship-mate` which is functionality spun out from this
+  config.
 
 ### Changed
 

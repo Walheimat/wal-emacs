@@ -205,6 +205,46 @@ See the [[https://github.com/Walheimat/parallel][repository]] for more informati
   (parallel-custom-namespace "wal-"))
 #+end_src
 
+** ship-mate                                                            :git:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Provides macros to create project-scoped compilation.
+
+The package configuration defines
+=ship-mate-{build,install,clean,execute,test}= commands using a macro
+that sets up =ship-mate-command= calls. Each of these commands have
+their own per-project history that can be pre-filled through dir-local
+variables. The commands are provided through a prefix map bound to
+=C-c p=.
+
+These command as well as =project-compile= and =recompile= are advised
+to be bounded to project files. This means that running them will not
+prompt to save unsaved files outside of the project.
+
+#+begin_src emacs-lisp
+(use-package ship-mate
+  :wal-ways t
+
+  :demand t
+
+  :config
+  (ship-mate-mode)
+
+    ;; Create common commands.
+  (ship-mate-create-command build :default "make")
+  (ship-mate-create-command install :default "make install")
+  (ship-mate-create-command clean :default "make clean")
+  (ship-mate-create-command execute)
+  (ship-mate-create-command test :default '("make test" "make coverage"))
+
+  (bind-key "C-c p" ship-mate-command-map)
+  (that-key "project commands" :key "C-c p")
+
+  (wdb-faraway "\\*project"))
+#+end_src
+
 * Footer
 :PROPERTIES:
 :VISIBILITY: folded
