@@ -691,25 +691,31 @@ taking notes related to the currently clocked task and one for dailies
 (use-package org-capture
   :custom
   (org-capture-templates
-   `(("c" "current task" plain
+   `(("c" "add note for current task" plain
       (clock)
       "\n%?\n"
       :empty-lines-before 1
       :empty-lines-after 1)
-     ("d" "daily" plain
+     ("d" "add daily note" plain
       (file+olp+datetree ,(concat org-directory "/dailies.org"))
       "%i\n%?"
       :empty-lines-before 1
       :empty-lines-after 1)
-     ("p" "project task" entry
+     ("t" "add new project task" entry
       (function wal-org-capture-locate-project-tasks)
       "* TODO %?\n\n%i"
       :empty-lines-before 1
-      :empty-lines-after 1)))
+      :empty-lines-after 1)
+     ("p" "visit project tasks" plain
+      (function wal-org-capture-locate-project-tasks)
+      ""
+      :unnarrowed t)))
   (org-capture-bookmark nil) ; Prevents countless edit buffers since we annotate bookmarks.
 
   :bind
-  (("C-c c" . org-capture))
+  (("C-c c" . org-capture)
+   :map wal-zero-in-map
+   ("c" . wal-org-capture-pop-to-project-tasks))
 
   :delight " cap")
 #+END_SRC

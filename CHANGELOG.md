@@ -22,6 +22,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Fringe mark for `bookmark` was disabled.
 - Commands added to `wal-project-command` history no longer replace
   the one matched against. They're just inserted.
+- `org-capture-templates` was reworked. Plain `p` now is for plain
+  entries in the file (unnarrowed) while `t` is adding new tasks.
 
 ### Fixed
 
