@@ -6,32 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v2.2.2]
+
+Extrinsic vice.
 
 ### Added
 
 - `other-frame` is now bound in `other-window-repeat-map`.
 - Package `dogears` as a trial.
-- `recompile` is now advised to set the `compile-history` to that of
-  the last `wal-project-*` command if the `compile-command` matches.
 - My package `ship-mate` which is functionality spun out from this
   config.
 
 ### Changed
 
 - Fringe mark for `bookmark` was disabled.
-- Commands added to `wal-project-command` history no longer replace
-  the one matched against. They're just inserted.
 - `org-capture-templates` was reworked. Plain `p` now is for plain
   entries in the file (unnarrowed) while `t` is adding new tasks.
+- [The following are included in `ship-mate`]
+  - Commands added to (formerly) `wal-project-command` history no
+    longer replace the one matched against. They're just inserted.
+    [This is a feature of `ship-mate`].
+  - `recompile` is now advised to set the `compile-history` to that of
+    the last (formerly) `wal-project-*` command if the
+    `compile-command` matches.
 
 ### Fixed
 
-- Updating the history of `wal-project-*` commands now uses fuzzy
-  matching instead of just checking the last `compile-command` (as
-  this can lead to erroneous replacements).
-- `wal-project-command` no longer infinitely extends a command's
-  history.
+- [The following are included in `ship-mate`]
+  - Updating the history of (formerly) `wal-project-*` commands now
+    uses fuzzy matching instead of just checking the last
+    `compile-command` (as this can lead to erroneous replacements).
+  - (formerly) `wal-project-command` no longer infinitely extends a
+    command's history.
 
 ## [v2.2.1]
 
