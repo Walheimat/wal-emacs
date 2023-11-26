@@ -54,25 +54,6 @@ cold-boot: BOOTSTRAP_MODE=cold
 cold-boot:
 	$(WITH_PRELUDE) $(BOOTSTRAP)
 
-# -- Commit linting setup
-
-.PHONY: commits
-commits: node_modules .husky/_/husky.sh
-
-node_modules:
-	npm install
-
-.husky/_/husky.sh:
-	npx husky install
-
-# -- Cleaning
-
-.PHONY: clobber
-clobber: clean
-	git config --unset core.hooksPath
-	rm -rf node_modules
-	rm -f .husky/_/husky.sh
-
 .PHONY: uninstall
 uninstall: INIT_CLEAR=t
 uninstall:
