@@ -11,6 +11,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - `org-agenda` is no longer implicitly loaded by `partial-recall`.
+- `markdown-mode` no longer enables `flycheck-mode`.
 
 ## [v2.2.2]
 
