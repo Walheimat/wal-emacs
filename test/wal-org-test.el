@@ -196,6 +196,12 @@
 
         (should (eq (marker-position marker) 9))))))
 
+(ert-deftest wal-org-capture-project-tasks ()
+  (bydi org-capture
+    (wal-org-capture-project-tasks)
+
+    (bydi-was-called-with org-capture '(nil "p"))))
+
 (ert-deftest wal-org-clock-in-switch-to-state ()
   (should (string-equal "IN PROGRESS" (wal-org-clock-in-switch-to-state "OTHER STATE"))))
 

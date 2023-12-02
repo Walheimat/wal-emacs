@@ -12,6 +12,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `wal-upgrade` to call `package-vc-upgrade-all` for `wal-bridge`
   packages.
+- `C-c v` is bound to `wal-org-capture-project-tasks`.
 
 ### Fixed
 
