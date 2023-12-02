@@ -281,6 +281,19 @@ the temporary file."
 
       (bydi-was-called delay-warning))))
 
+(ert-deftest bootstrap--would-initialize ()
+  (let ((wal-emacs-config "/tmp"))
+
+    (bydi (wal-tangle-config
+           wal--set-paths
+           wal--maybe-tangle
+           wal--load-config
+           package-initialize)
+
+      (wal-bootstrap "/tmp" 'upgrade)
+
+      (bydi-was-called package-initialize))))
+
 (ert-deftest wal--tangle-target ()
   (let ((wal--build-path "/tmp/build")
         (buffer-file-name "/tmp/test.org"))
@@ -297,6 +310,18 @@ the temporary file."
 
       (bydi-was-set-to default-directory "/tmp")
       (bydi-was-called-with compile '("make update" nil)))))
+
+(ert-deftest wal-upgrade ()
+  (bydi wal--compile
+    (wal-upgrade)
+
+    (bydi-was-called-with wal--compile "make upgrade-bridge")))
+
+(ert-deftest wal-upgrade--bridge ()
+  (bydi package-vc-upgrade-all
+    (wal-upgrade--bridge)
+
+    (bydi-was-called package-vc-upgrade-all)))
 
 ;;; wal-test.el ends here
 
