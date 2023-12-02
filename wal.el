@@ -271,6 +271,17 @@ Optionally use `comint-mode' if COMINT is t."
 
   (wal--compile "make update"))
 
+(defun wal-upgrade ()
+  "Upgrade bridge packages."
+  (interactive)
+
+  (wal--compile "make upgrade-bridge"))
+
+(defun wal-upgrade--bridge ()
+  "Upgrade bridge packages."
+
+  (package-vc-upgrade-all))
+
 (defun wal--handle-error (exit)
   "Handle the error that occurred during initialization.
 
@@ -317,6 +328,9 @@ Ensure means that packages will be installed after loading."
       ('ensure
        (package-initialize)
        (setq wal-ensure t))
+
+      ('upgrade
+       (package-initialize))
 
       ('cold
        (wal--configure-cold-boot)

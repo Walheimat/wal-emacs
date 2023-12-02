@@ -8,6 +8,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `wal-upgrade` to call `package-vc-upgrade-all` for `wal-bridge`
+  packages.
+
 ### Fixed
 
 - `org-agenda` is no longer implicitly loaded by `partial-recall`.
