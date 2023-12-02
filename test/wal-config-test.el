@@ -134,7 +134,8 @@
   (let ((wal-ascii-whale-parent-buffer 'parent)
         (wal-ascii-whale-indirect-buffer 'indirect))
 
-    (bydi (posframe-show
+    (bydi ((:always require)
+           posframe-show
            (:mock face-attribute :return "#ffffff"))
 
       (wal-ascii-whale-display)
@@ -147,27 +148,54 @@
                                                 :posframe-parent-buffer 'parent
                                                 :hidehandler 'wal-ascii-whale-hidehandler)))))
 
-(ert-deftest waw-toggle-display ()
-  (bydi (wal-ascii-whale-clean-up
-         wal-ascii-whale-setup
-         wal-ascii-whale-display
-         (:always require))
+(ert-deftest waw--maybe-display ()
+  (ert-with-test-buffer (:name "maybe-display")
 
-    (let ((wal-ascii-whale-parent-buffer t))
+    (bydi (wal-ascii-whale-setup
+           wal-ascii-whale-display
+           project-current
+           (:mock project-buffers :return (list (current-buffer)))
+           )
 
-      (wal-ascii-whale-toggle-display)
+      (wal-ascii-whale--maybe-display (current-buffer))
 
-      (bydi-was-called wal-ascii-whale-clean-up)
-      (bydi-was-not-called wal-ascii-whale-setup))
+      (bydi-was-called wal-ascii-whale-setup)
+      (bydi-was-called wal-ascii-whale-display)
 
-    (bydi-clear-mocks)
-    (setq wal-ascii-whale-parent-buffer nil)
+      (bydi-clear-mocks)
 
-    (wal-ascii-whale-toggle-display)
+      (setq wal-ascii-whale-parent-buffer 'buffer)
 
-    (bydi-was-called wal-ascii-whale-setup)
-    (bydi-was-called wal-ascii-whale-display)
-    (bydi-was-not-called wal-ascii-whale-clean-up)))
+      (wal-ascii-whale--maybe-display (current-buffer) t)
+
+      (bydi-was-not-called wal-ascii-whale-setup)
+      (bydi-was-not-called wal-ascii-whale-display)
+
+      (wal-ascii-whale--maybe-display (current-buffer))
+
+      (bydi-was-not-called wal-ascii-whale-setup)
+      (bydi-was-not-called wal-ascii-whale-display))))
+
+(ert-deftest waw--maybe-display--ignored-buffers ()
+  (let ((wal-ascii-whale--ignored-buffers (list "test-file")))
+
+    (bydi ((:mock buffer-file-name :return "test-file")
+           wal-ascii-whale-setup
+           wal-ascii-whale-display
+           project-current
+           (:mock project-buffers :return (list (current-buffer))))
+
+      (wal-ascii-whale--maybe-display (current-buffer))
+
+      (bydi-was-not-called wal-ascii-whale-setup)
+      (bydi-was-not-called wal-ascii-whale-display))))
+
+(ert-deftest waw--on-find-file ()
+  (bydi wal-ascii-whale--maybe-display
+
+    (wal-ascii-whale--on-find-file)
+
+    (bydi-was-called wal-ascii-whale--maybe-display)))
 
 (ert-deftest wal-describe-config-version ()
   (defvar wal--default-path)

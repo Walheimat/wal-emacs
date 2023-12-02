@@ -191,6 +191,7 @@ Example for advising =:around=.
 (declare-function magit-diff-range "ext:magit.el")
 (declare-function posframe-delete "ext:posframe.el")
 (declare-function posframe-show "ext:posframe.el")
+(declare-function project-buffers "ext:project.el")
 (declare-function transient-prefix "ext:transient.el")
 (declare-function transient-setup "ext:transient.el")
 (declare-function wal-async-process "wal-useful.el")
@@ -251,6 +252,9 @@ Animate a swimming whale in a =posframe=.
 
 (defvar-local wal-ascii-whale-indirect-buffer nil)
 (defvar-local wal-ascii-whale-parent-buffer nil)
+
+(defvar wal-ascii-whale--ignored-buffers '("COMMIT_EDITMSG")
+  "List of buffer names to ignore.")
 
 (defun wal-ascii-whale-animate ()
   "Animate the ASCII whale."
@@ -373,26 +377,41 @@ INFO contains positioning information."
 
 (defun wal-ascii-whale-display ()
   "Display the running animation in a posframe."
-  (let ((default-frame-alist nil))
-
-    (posframe-show
-     wal-ascii-whale-indirect-buffer
-     :accept-focus nil
-     :border-width (pcase wal-config-ascii-whale ('blue 12) ('cachalot 6) (_ 6))
-     :border-color (face-attribute 'cursor :background)
-     :poshandler 'wal-ascii-whale-poshandler
-     :posframe-parent-buffer wal-ascii-whale-parent-buffer
-     :hidehandler 'wal-ascii-whale-hidehandler)))
-
-(defun wal-ascii-whale-toggle-display ()
-  "Toggle the animation."
-  (interactive)
-
   (when (require 'posframe nil t)
-    (if wal-ascii-whale-parent-buffer
-        (wal-ascii-whale-clean-up)
+    (let ((default-frame-alist nil))
+
+      (posframe-show
+       wal-ascii-whale-indirect-buffer
+       :accept-focus nil
+       :border-width (pcase wal-config-ascii-whale ('blue 12) ('cachalot 6) (_ 6))
+       :border-color (face-attribute 'cursor :background)
+       :poshandler 'wal-ascii-whale-poshandler
+       :posframe-parent-buffer wal-ascii-whale-parent-buffer
+       :hidehandler 'wal-ascii-whale-hidehandler))))
+
+(defun wal-ascii-whale--maybe-display (buffer &optional no-record &rest _args)
+  "Maybe display the animation for BUFFER.
+
+This only happens for project buffers as long as NO-RECORD is not t."
+  (when wal-config-show-whale-animation
+    (and-let* (((not no-record))
+               (buffer (get-buffer buffer))
+               ((not (and-let* ((name (buffer-file-name buffer)))
+                       (seq-find (lambda (it) (string-match-p it name)) wal-ascii-whale--ignored-buffers))))
+               ((null (buffer-local-value 'wal-ascii-whale-parent-buffer buffer)))
+               ((memq buffer (project-buffers (project-current nil wal--default-path)))))
+
       (wal-ascii-whale-setup)
+
       (wal-ascii-whale-display))))
+
+(defun wal-ascii-whale--on-find-file ()
+  "Maybe display animation for new file."
+  (wal-ascii-whale--maybe-display (current-buffer)))
+
+(wal-on-boot config
+  (advice-add 'switch-to-buffer :after #'wal-ascii-whale--maybe-display)
+  (add-hook 'find-file-hook #'wal-ascii-whale--on-find-file))
 #+END_SRC
 
 * Editing the Config
@@ -529,9 +548,7 @@ matcher."
       ("u" "update" wal-update)
       ("U" "upgrade" wal-upgrade)]
      ["Help"
-      ("m" "show diff" wal-show-config-diff-range)]]
-    ["Fluff"
-     ("w" "toggle animation" wal-ascii-whale-toggle-display)])
+      ("m" "show diff" wal-show-config-diff-range)]])
 
   (advice-add 'whaler :around 'wal-with-delayed-transient-popup))
 #+end_src
