@@ -24,6 +24,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `rg-isearch-current-file` is now bound to `M-s n` instead of `H-n`
   when `isearch` is active.
 - `dogears` has idle timer enabled again and hooks removed.
+- Commands executed through the prelude's `wal--compile` function
+  don't display the buffer anymore. They can be displayed using new
+  command `wal-show-compilation-result` bound in `whaler` to `r`.
 
 ### Fixed
 

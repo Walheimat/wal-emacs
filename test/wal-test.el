@@ -329,6 +329,18 @@ the temporary file."
 
     (bydi-was-called-with wal--compile "make tangle")))
 
+(ert-deftest wal-show-compilation-result ()
+  (let ((wal--compile-buffer nil))
+
+    (should-error (wal-show-compilation-result))
+
+    (setq wal--compile-buffer (current-buffer))
+
+    (bydi pop-to-buffer
+      (wal-show-compilation-result)
+
+      (bydi-was-called-with pop-to-buffer (current-buffer)))))
+
 ;;; wal-test.el ends here
 
 ;; Local Variables:

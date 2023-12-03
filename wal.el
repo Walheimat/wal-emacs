@@ -255,6 +255,8 @@ Note that `message' is silenced during tangling."
 
     (message "All library files in '%s' tangled" wal--lib-path)))
 
+(defvar wal--compile-buffer nil)
+
 (defun wal--compile (cmd &optional comint)
   "Compile CMD.
 
@@ -265,7 +267,16 @@ Optionally use `comint-mode' if COMINT is t."
         (display-buffer-alist '(("\\*compilation" (display-buffer-no-window))))
         (compilation-save-buffers-predicate #'ignore))
 
-    (compile cmd comint)))
+    (setq wal--compile-buffer (compile cmd comint))))
+
+(defun wal-show-compilation-result ()
+  "Pop to the compilation buffer."
+  (interactive)
+
+  (unless wal--compile-buffer
+    (user-error "No compilation buffer"))
+
+  (pop-to-buffer wal--compile-buffer))
 
 (defun wal-update ()
   "Pull from remote and tangle again."
