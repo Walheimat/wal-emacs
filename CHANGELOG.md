@@ -19,6 +19,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   have been renamed from `wal-ascii-whale-*` to
   `wal-config-animation-`.
 
+### Changed
+
+- `rg-isearch-current-file` is now bound to `M-s n` instead of `H-n`
+  when `isearch` is active.
+
 ### Fixed
 
 - `org-agenda` is no longer implicitly loaded by `partial-recall`.
