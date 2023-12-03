@@ -132,10 +132,13 @@
 
 (ert-deftest animation-display ()
   (let ((wal-config-animation-parent-buffer 'parent)
-        (wal-config-animation-indirect-buffer 'indirect))
+        (wal-config-animation-indirect-buffer 'indirect)
+        (wal-transparency 50))
 
     (bydi ((:always require)
            posframe-show
+           modify-frame-parameters
+           (:mock wal-transparency--param :return 'alpha-background)
            (:mock face-attribute :return "#ffffff"))
 
       (wal-config-animation-display)
@@ -144,7 +147,8 @@
                                                 :accept-focus nil
                                                 :poshandler 'wal-config-animation-poshandler
                                                 :posframe-parent-buffer 'parent
-                                                :hidehandler 'wal-config-animation-hidehandler)))))
+                                                :hidehandler 'wal-config-animation-hidehandler))
+      (bydi-was-called-with modify-frame-parameters '(... ((alpha-background . 50)))))))
 
 (ert-deftest animation--maybe-display ()
   (ert-with-test-buffer (:name "maybe-display")

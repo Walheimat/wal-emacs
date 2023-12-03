@@ -379,14 +379,16 @@ INFO contains positioning information."
 (defun wal-config-animation-display ()
   "Display the running animation in a posframe."
   (when (require 'posframe nil t)
-    (let ((default-frame-alist nil))
+    (let ((default-frame-alist nil)
+          (frame (posframe-show
+                  wal-config-animation-indirect-buffer
+                  :accept-focus nil
+                  :poshandler 'wal-config-animation-poshandler
+                  :posframe-parent-buffer wal-config-animation-parent-buffer
+                  :hidehandler 'wal-config-animation-hidehandler)))
 
-      (posframe-show
-       wal-config-animation-indirect-buffer
-       :accept-focus nil
-       :poshandler 'wal-config-animation-poshandler
-       :posframe-parent-buffer wal-config-animation-parent-buffer
-       :hidehandler 'wal-config-animation-hidehandler))))
+      (when (eq 'alpha-background (wal-transparency--param))
+        (modify-frame-parameters frame `((alpha-background . ,wal-transparency)))))))
 
 (defun wal-config-animation--maybe-display (buffer &optional no-record &rest _args)
   "Maybe display the animation for BUFFER.
