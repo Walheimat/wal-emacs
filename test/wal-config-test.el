@@ -142,8 +142,6 @@
 
       (bydi-was-called-with posframe-show (list 'indirect
                                                 :accept-focus nil
-                                                :border-width 12
-                                                :border-color "#ffffff"
                                                 :poshandler 'wal-config-animation-poshandler
                                                 :posframe-parent-buffer 'parent
                                                 :hidehandler 'wal-config-animation-hidehandler)))))
