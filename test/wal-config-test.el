@@ -217,34 +217,6 @@
     (wal-show-config-diff-range)
     (bydi-was-called-with magit-diff-range (list "testing" '("--stat")))))
 
-(ert-deftest wal-tangle-config-prompt ()
-  (bydi ((:always wal-tangle-do-prompt)
-         (:always y-or-n-p )
-         wal-tangle-config)
-
-    (let ((wal-tangle-do-prompt t))
-
-      (wal-tangle-config-prompt)
-      (bydi-was-called wal-tangle-config))))
-
-(ert-deftest wal-tangle-config-prompt--after ()
-  (bydi ((:always wal-tangle-do-prompt)
-         (y-or-n-p . #'ignore)
-         wal-tangle-config
-         message)
-
-    (let ((wal-tangle-do-prompt t))
-
-      (wal-tangle-config-prompt)
-
-      (bydi-was-called-with message "To tangle, call `wal-tangle-config'")
-      (should-not wal-tangle-do-prompt)
-
-      (bydi-clear-mocks)
-      (wal-tangle-config-prompt)
-
-      (bydi-was-called-with message "Config changed. To tangle, call `wal-tangle-config'"))))
-
 (ert-deftest wal-config-switch-project ()
   (defvar wal--default-path)
   (let ((wal--default-path "/tmp/config"))

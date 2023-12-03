@@ -233,8 +233,6 @@ These files will be touched after tangling.")
   "Tangle the configuration's libraries.
 
 Note that `message' is silenced during tangling."
-  (interactive)
-
   (require 'org)
   (require 'ob-tangle)
   (defvar org-confirm-babel-evaluate)
@@ -281,6 +279,12 @@ Optionally use `comint-mode' if COMINT is t."
   "Upgrade bridge packages."
 
   (package-vc-upgrade-all))
+
+(defun wal-tangle ()
+  "Tangle the config in a separate process."
+  (interactive)
+
+  (wal--compile "make tangle"))
 
 (defun wal--handle-error (exit)
   "Handle the error that occurred during initialization.

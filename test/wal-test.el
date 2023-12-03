@@ -323,6 +323,12 @@ the temporary file."
 
     (bydi-was-called package-vc-upgrade-all)))
 
+(ert-deftest wal-tangle ()
+  (bydi wal--compile
+    (wal-tangle)
+
+    (bydi-was-called-with wal--compile "make tangle")))
+
 ;;; wal-test.el ends here
 
 ;; Local Variables:
