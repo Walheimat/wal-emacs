@@ -259,7 +259,11 @@ Note that `message' is silenced during tangling."
   "Compile CMD.
 
 Optionally use `comint-mode' if COMINT is t."
-  (let ((default-directory wal--default-path))
+  (defvar compilation-save-buffers-predicate)
+
+  (let ((default-directory wal--default-path)
+        (display-buffer-alist '(("\\*compilation" (display-buffer-no-window))))
+        (compilation-save-buffers-predicate #'ignore))
 
     (compile cmd comint)))
 
@@ -267,11 +271,15 @@ Optionally use `comint-mode' if COMINT is t."
   "Pull from remote and tangle again."
   (interactive)
 
+  (message "Updating repository")
+
   (wal--compile "make update"))
 
 (defun wal-upgrade ()
   "Upgrade bridge packages."
   (interactive)
+
+  (message "Upgrading bridge packages")
 
   (wal--compile "make upgrade-bridge"))
 
@@ -283,6 +291,8 @@ Optionally use `comint-mode' if COMINT is t."
 (defun wal-tangle ()
   "Tangle the config in a separate process."
   (interactive)
+
+  (message "Tangling configuration")
 
   (wal--compile "make tangle"))
 
