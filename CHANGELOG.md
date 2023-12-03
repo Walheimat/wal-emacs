@@ -18,6 +18,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   `wal-config-show-animation` to `nil`. All variables and functions
   have been renamed from `wal-ascii-whale-*` to
   `wal-config-animation-`.
+- Package `surround`.
 
 ### Changed
 
