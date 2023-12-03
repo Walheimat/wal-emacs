@@ -57,6 +57,7 @@
 
     (setq auto-mode-alist nil)
 
+    (bydi-report-setup-ert :increase-print-depth t)
     (bydi-report-setup-ert-runner #'wal-test-helper--report)))
 
 (wal-test-helper--setup)
