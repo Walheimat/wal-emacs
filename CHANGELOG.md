@@ -33,6 +33,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `org-agenda` is no longer implicitly loaded by `partial-recall`.
 - `markdown-mode` no longer enables `flycheck-mode`.
+- `magit-process-buffer` has double the size.
 
 ## [v2.2.2]
 
