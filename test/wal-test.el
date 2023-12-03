@@ -36,7 +36,7 @@ the temporary file."
                 (with-temp-buffer
                   (insert-file-contents valid-init)
                   (buffer-string)))
-       ,@body)))
+       (shut-up ,@body))))
 
 (ert-deftest init-sets-up-bootstrap ()
   (with-bootstrap "test" nil
@@ -64,10 +64,14 @@ the temporary file."
     (bydi-was-called delete-region)))
 
 (ert-deftest configure-customization ()
+  :tags '(problematic)
+
   (let ((custom-file nil)
         (user-emacs-directory "/tmp")
         (exists nil))
 
+    ;; FIXME: Needs to mock `file-exists-p' which provokes a warning
+    ;;        that can't be suppressed.
     (bydi ((:mock file-exists-p :with (lambda (&rest _)
                                         (let ((before exists))
                                           (setq exists (not exists))
@@ -88,7 +92,7 @@ the temporary file."
   (let ((wal-packages '(one two)))
 
     (bydi (require add-to-list wal--configure-customization)
-      (wal--load-config)
+      (shut-up (wal--load-config))
 
       (bydi-was-called wal--configure-customization)
       (bydi-was-called-nth-with require (list 'one) 0)
@@ -104,7 +108,7 @@ the temporary file."
 
     (bydi (require add-to-list wal--configure-customization)
 
-      (wal--load-config)
+      (shut-up (wal--load-config))
 
       (bydi-was-called-with add-to-list (list 'load-path "/tmp")))))
 
@@ -119,7 +123,7 @@ the temporary file."
            (:mock require :with (lambda (&rest _) (error "Oops")))
            wal--configure-customization)
 
-      (wal--load-config)
+      (shut-up (wal--load-config))
 
       (should (string= (error-message-string wal-init-error) "Oops"))
 
@@ -146,7 +150,7 @@ the temporary file."
     (bydi (require
            (:mock make-temp-file :return "/tmp/package"))
 
-      (wal--configure-cold-boot)
+      (shut-up (wal--configure-cold-boot))
 
       (should (string= "/tmp/package" package-user-dir)))))
 
@@ -177,7 +181,7 @@ the temporary file."
            make-directory
            wal-tangle-config)
 
-      (wal--maybe-tangle)
+      (shut-up (wal--maybe-tangle))
 
       (bydi-was-called wal-tangle-config))))
 
@@ -189,14 +193,15 @@ the temporary file."
            make-directory
            wal-tangle-config)
 
-      (wal--maybe-tangle)
+      (shut-up (wal--maybe-tangle))
 
       (bydi-was-not-called wal-tangle-config)
       (bydi-was-not-called make-directory))))
 
 (ert-deftest tangle-config--tangles-all-sources ()
   (bydi (require org-babel-tangle-file wal--touch)
-    (wal-tangle-config)
+
+    (shut-up (wal-tangle-config))
 
     (bydi-was-called-n-times org-babel-tangle-file (length wal-packages))
 
@@ -212,7 +217,7 @@ the temporary file."
            wal--maybe-tangle
            wal--load-config)
 
-      (wal-bootstrap "/tmp" 'cold)
+      (shut-up (wal-bootstrap "/tmp" 'cold))
 
       (bydi-was-called wal--configure-cold-boot))))
 
@@ -225,7 +230,7 @@ the temporary file."
            wal--maybe-tangle
            wal--load-config)
 
-      (wal-bootstrap "/tmp")
+      (shut-up (wal-bootstrap "/tmp"))
 
       (bydi-was-called wal--load-config))))
 
@@ -240,7 +245,7 @@ the temporary file."
            wal-tangle-config
            wal--set-paths)
 
-      (wal-bootstrap "/tmp" 'plain)
+      (shut-up (wal-bootstrap "/tmp" 'plain))
 
       (bydi-was-called wal-tangle-config))))
 
@@ -255,7 +260,7 @@ the temporary file."
            wal--load-config
            package-initialize)
 
-      (wal-bootstrap "/tmp" 'ensure)
+      (shut-up (wal-bootstrap "/tmp" 'ensure))
 
       (bydi-was-called package-initialize))))
 
@@ -273,11 +278,11 @@ the temporary file."
 
       (setq wal-init-error 'some-error)
 
-      (wal-bootstrap "/tmp" 'cold)
+      (shut-up (wal-bootstrap "/tmp" 'cold))
 
       (bydi-was-called kill-emacs)
 
-      (wal-bootstrap "/tmp")
+      (shut-up (wal-bootstrap "/tmp"))
 
       (bydi-was-called delay-warning))))
 
@@ -290,7 +295,7 @@ the temporary file."
            wal--load-config
            package-initialize)
 
-      (wal-bootstrap "/tmp" 'upgrade)
+      (shut-up (wal-bootstrap "/tmp" 'upgrade))
 
       (bydi-was-called package-initialize))))
 
@@ -306,26 +311,26 @@ the temporary file."
     (bydi (compile
            (:watch default-directory))
 
-      (wal-update)
+      (shut-up (wal-update))
 
       (bydi-was-set-to default-directory "/tmp")
       (bydi-was-called-with compile '("make update" nil)))))
 
 (ert-deftest wal-upgrade ()
   (bydi wal--compile
-    (wal-upgrade)
+    (shut-up (wal-upgrade))
 
     (bydi-was-called-with wal--compile "make upgrade-bridge")))
 
 (ert-deftest wal-upgrade--bridge ()
   (bydi package-vc-upgrade-all
-    (wal-upgrade--bridge)
+    (shut-up (wal-upgrade--bridge))
 
     (bydi-was-called package-vc-upgrade-all)))
 
 (ert-deftest wal-tangle ()
   (bydi wal--compile
-    (wal-tangle)
+    (shut-up (wal-tangle))
 
     (bydi-was-called-with wal--compile "make tangle")))
 

@@ -40,16 +40,17 @@
     (bydi-was-called-with magit-status (list "/tmp/test"))))
 
 (ert-deftest wal-project-magit-status--ignores-if-no-vc ()
-  (ert-with-message-capture messages
-    (bydi ((:mock project-current :return (list 'vc nil "/tmp/test"))
-           (:mock project-root :return "/tmp/test")
-           magit-status)
+  (shut-up
+    (ert-with-message-capture messages
+      (bydi ((:mock project-current :return (list 'vc nil "/tmp/test"))
+             (:mock project-root :return "/tmp/test")
+             magit-status)
 
-      (wal-project-magit-status)
+        (wal-project-magit-status)
 
-      (bydi-was-not-called magit-status)
+        (bydi-was-not-called magit-status)
 
-      (should (string= "Project at ’/tmp/test’ is not version-controlled\n" messages)))))
+        (should (string= "Project at ’/tmp/test’ is not version-controlled\n" messages))))))
 
 (ert-deftest wal-project-dired-root ()
   (bydi (project-current (:mock project-root :return "/tmp/test") dired)

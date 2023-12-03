@@ -243,8 +243,9 @@
 
       (setq org-clock-current-task (propertize "Testing" :face 'success))
 
-      (wal-org-clock-kill-current-task)
-      (yank)
+      (shut-up
+        (wal-org-clock-kill-current-task)
+        (yank))
 
       (should (string= "Testing" (buffer-string))))))
 

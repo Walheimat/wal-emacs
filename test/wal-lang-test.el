@@ -103,11 +103,17 @@
 (ert-deftest wal-lsp-dart-service-uri ()
   (bydi ((:mock lsp-workspace-get-metadata :with (lambda (_) (error "Testing"))))
 
-    (should (string-equal "Couldn’t get service URI: Testing" (wal-lsp-dart-service-uri))))
+    (shut-up
+      (ert-with-message-capture messages
+        (wal-lsp-dart-service-uri)
+        (should (string-equal "Couldn’t get service URI: Testing\n" messages)))))
 
   (bydi ((:mock lsp-workspace-get-metadata :return "test-uri"))
 
-    (should (string-equal "Service URI (test-uri) copied to kill ring" (wal-lsp-dart-service-uri)))
+    (shut-up
+      (ert-with-message-capture messages
+        (wal-lsp-dart-service-uri)
+        (should (string-equal "Service URI (test-uri) copied to kill ring\n" messages))))
 
     (should (string-equal (car kill-ring) "test-uri"))))
 
@@ -127,7 +133,7 @@
          transient-set
          (:ignore wal-transient-grab))
 
-    (wal-java-test-dwim)
+    (shut-up (wal-java-test-dwim))
 
     (bydi-was-not-called dap-java-run-test-method)))
 

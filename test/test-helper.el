@@ -10,6 +10,8 @@
 (require 'bydi-ci)
 (require 'bydi-report)
 
+(setq byte-compile-warnings '(not not-unused))
+
 (defun wal-test-helper--cold-p ()
   "Check if we're loading this file from a cold start."
   (not (bound-and-true-p wal-loaded)))

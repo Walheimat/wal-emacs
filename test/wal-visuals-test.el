@@ -152,10 +152,11 @@
 (ert-deftest wal-load-active-them--captures-error ()
   (let ((wal-active-theme 'non-existence))
 
-    (ert-with-message-capture messages
-      (wal-load-active-theme)
+    (shut-up
+      (ert-with-message-capture messages
+        (wal-load-active-theme)
 
-      (should (string= "Failed to load theme: Unable to find theme file for ‘non-existence’\n" messages)))))
+        (should (string= "Failed to load theme: Unable to find theme file for ‘non-existence’\n" messages))))))
 
 (ert-deftest wal-visual-fill-column-mode--toggles ()
   (bydi (visual-fill-column-mode)

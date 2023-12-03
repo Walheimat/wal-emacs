@@ -37,6 +37,9 @@
       (bydi-was-called-with make-directory (list temp-dir t)))))
 
 (ert-deftest wal-create-non-existent-directory--aborts ()
+  :tags '(problematic)
+
+  ;; FIXME: Redefines `file-exists-p'.
   (bydi (file-name-directory
          (:always file-exists-p))
 
@@ -249,11 +252,11 @@
 
 (ert-deftest wal-l ()
   (with-temp-buffer
-    (wal-l)
+    (shut-up (wal-l))
 
     (should (window-dedicated-p))
 
-    (wal-l)
+    (shut-up (wal-l))
 
     (should-not (window-dedicated-p))))
 
@@ -712,26 +715,26 @@
         (bydi-was-called-with delete-other-windows "something else")))))
 
 (ert-deftest wal-aysnc-process--maybe-interrupt ()
-  (bydi ((:mock compilation-find-buffer :with (lambda () (message "found-buffer") "buffer"))
-         (:mock get-buffer-process :with (lambda (m) (message m)))
-         (:mock interrupt-process :with (lambda (_) (message "interrupted"))))
+  (bydi ((:always compilation-find-buffer)
+         (:mock get-buffer-process :return 'proc)
+         interrupt-process)
 
-    (ert-with-message-capture messages
-      (wal-async-process--maybe-interrupt)
-      (should (string= "found-buffer\nbuffer\ninterrupted\n" messages)))))
+    (wal-async-process--maybe-interrupt)
+
+    (bydi-was-called-with interrupt-process 'proc)))
 
 (ert-deftest wal-async-process ()
   (bydi ((:mock wal-async-process--maybe-interrupt :with (lambda () (message "interrupted")))
          (:mock compilation-start :with (lambda (&rest _) (message "compiles"))))
-    (ert-with-message-capture messages
-      (wal-async-process
-       "compiles"
-       (lambda () (message "finishes"))
-       (lambda (_m) nil)
-       t)
-      (with-current-buffer "*wal-async*"
-        (funcall (car compilation-finish-functions) nil "finished\n"))
-      (should (string= "interrupted\ncompiles\nfinishes\n" messages)))))
+    (shut-up (ert-with-message-capture messages
+               (wal-async-process
+                "compiles"
+                (lambda () (message "finishes"))
+                (lambda (_m) nil)
+                t)
+               (with-current-buffer "*wal-async*"
+                 (funcall (car compilation-finish-functions) nil "finished\n"))
+               (should (string= "interrupted\ncompiles\nfinishes\n" messages))))))
 
 (ert-deftest wal-advise-many ()
   (defun wal-test-fun-1 (arg1 arg2)
