@@ -23,6 +23,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `rg-isearch-current-file` is now bound to `M-s n` instead of `H-n`
   when `isearch` is active.
+- `dogears` has idle timer enabled again and hooks removed.
 
 ### Fixed
 
