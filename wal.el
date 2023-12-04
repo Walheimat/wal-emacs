@@ -142,9 +142,12 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
 (defvar wal-init-error nil
   "Set to the error message if initialization failed.")
 
+(defvar wal--custom-file "custom.el"
+  "Name of the custom file.")
+
 (defun wal--configure-customization ()
   "Configure custom file and load it."
-  (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+  (setq custom-file (expand-file-name wal--custom-file user-emacs-directory))
 
   (message "Setting up custom file '%s" custom-file)
 

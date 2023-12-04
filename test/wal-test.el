@@ -64,27 +64,29 @@ the temporary file."
     (bydi-was-called delete-region)))
 
 (ert-deftest configure-customization ()
-  :tags '(problematic)
+  (ert-with-temp-file file
+    :text "(message \"from within\")"
 
-  (let ((custom-file nil)
-        (user-emacs-directory "/tmp")
-        (exists nil))
+    (let ((user-emacs-directory "/tmp")
+          (wal--custom-file (file-name-nondirectory file)))
 
-    ;; FIXME: Needs to mock `file-exists-p' which provokes a warning
-    ;;        that can't be suppressed.
-    (bydi ((:mock file-exists-p :with (lambda (&rest _)
-                                        (let ((before exists))
-                                          (setq exists (not exists))
-                                          before)))
-           make-empty-file
-           load)
+      (shut-up
+        (ert-with-message-capture messages
+          (wal--configure-customization)
 
-      (wal--configure-customization)
+          (should (string-match-p "from within" messages)))))))
 
-      (should (string= custom-file "/tmp/custom.el"))
+(ert-deftest configure-customization--creates-file ()
+  (let ((user-emacs-directory "/tmp")
+        (wal--custom-file "some-custom-file.el"))
 
-      (bydi-was-called-with make-empty-file (list "/tmp/custom.el" t))
-      (bydi-was-called-with load "/tmp/custom.el"))))
+      (shut-up
+        (ert-with-message-capture messages
+          (wal--configure-customization)))
+
+      (should (file-exists-p "/tmp/some-custom-file.el"))
+
+      (delete-file "/tmp/some-custom-file.el")))
 
 (ert-deftest load-config--requires-packages ()
   (defvar wal-packages)

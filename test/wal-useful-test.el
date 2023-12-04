@@ -36,15 +36,6 @@
 
       (bydi-was-called-with make-directory (list temp-dir t)))))
 
-(ert-deftest wal-create-non-existent-directory--aborts ()
-  :tags '(problematic)
-
-  ;; FIXME: Redefines `file-exists-p'.
-  (bydi (file-name-directory
-         (:always file-exists-p))
-
-    (should-not (wal-create-non-existent-directory))))
-
 (ert-deftest wal-display-buffer--condition--passes-strings ()
   (should (string-equal "testing" (wal-display-buffer--condition "testing"))))
 
