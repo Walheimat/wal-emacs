@@ -11,7 +11,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - `wal-upgrade` to call `package-vc-upgrade-all` for `wal-bridge`
-  packages.
+  packages, bound to `U` in `whaler`.
 - `C-c v` is bound to `wal-org-capture-project-tasks`.
 - While editing this config, the swimming whale `posframe` is
   displayed again for project buffers. Can be disabled by setting

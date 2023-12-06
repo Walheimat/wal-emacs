@@ -297,10 +297,43 @@ Optionally use `comint-mode' if COMINT is t."
 
   (wal--compile "make upgrade-bridge"))
 
-(defun wal-upgrade--bridge ()
-  "Upgrade bridge packages."
+(defvar wal-upgrade--wait-time 1)
 
-  (package-vc-upgrade-all))
+(defun wal-upgrade--bridge ()
+  "Upgrade bridge packages.
+
+This waits for a maximum of 5 seconds to upgrade all packages."
+  (defvar package-alist)
+  (declare-function package-vc-p "ext:package.el")
+
+  (let* ((package-count 0)
+         (counter 0)
+         (after-execution (lambda (&rest _args)
+                            (setq counter (1+ counter))))
+         (repeats 0)
+         (max-repeats 5))
+
+    (dolist (package package-alist)
+      (dolist (pkg-desc (cdr package))
+        (when (package-vc-p pkg-desc)
+          (setq package-count (1+ package-count)))))
+
+    (add-hook 'vc-post-command-functions after-execution)
+
+    (package-vc-upgrade-all)
+
+    (while (and (not (= counter package-count))
+                (not (> repeats max-repeats)))
+
+      (setq repeats (1+ repeats))
+
+      (sit-for wal-upgrade--wait-time))
+
+    (remove-hook 'vc-post-command-functions after-execution)
+
+    (if (< repeats max-repeats)
+        (message "Upgraded packages in %d seconds" repeats)
+      (message "Upgrades did not finish, waited for a maximum of %d seconds" max-repeats))))
 
 (defun wal-tangle ()
   "Tangle the config in a separate process."

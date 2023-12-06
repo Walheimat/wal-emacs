@@ -325,10 +325,30 @@ the temporary file."
     (bydi-was-called-with wal--compile "make upgrade-bridge")))
 
 (ert-deftest wal-upgrade--bridge ()
-  (bydi package-vc-upgrade-all
-    (shut-up (wal-upgrade--bridge))
+  (let ((wal-upgrade--wait-time 0)
+        (package-alist nil))
 
-    (bydi-was-called package-vc-upgrade-all)))
+    (push (list 'a (package-desc-create :name "Test 1" :kind 'vc)) package-alist)
+    (push (list 'b (package-desc-create :name "Test 2" :kind 'vc)) package-alist)
+
+    (shut-up
+      (ert-with-message-capture messages
+
+        (bydi package-vc-upgrade-all
+          (wal-upgrade--bridge)
+
+          (bydi-was-called package-vc-upgrade-all))
+
+        (should (string= "Upgrades did not finish, waited for a maximum of 5 seconds\n" messages)))
+
+      (ert-with-message-capture messages
+        (bydi ((:mock package-vc-upgrade-all :with (lambda ()
+                                                     (run-hooks 'vc-post-command-functions)
+                                                     (run-hooks 'vc-post-command-functions))))
+
+          (wal-upgrade--bridge)
+
+          (should (string-prefix-p "Upgraded packages in" messages)))))))
 
 (ert-deftest wal-tangle ()
   (bydi wal--compile
