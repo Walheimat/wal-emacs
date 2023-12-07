@@ -9,6 +9,8 @@
 (require 'wal-config nil t)
 
 (ert-deftest animation-animate ()
+  :tags '(config)
+
   (let ((wal-config-animation-key-frames ["testing" "resting"])
         (wal-config-animation-frame-index 0))
 
@@ -34,6 +36,8 @@
          ,@body))))
 
 (ert-deftest animation--start-animation--no-op-for-timer ()
+  :tags '(config)
+
   (animation-with-animation
     (setq wal-config-animation-timer 'timer)
 
@@ -42,6 +46,8 @@
     (should-not wal-config-animation-key-frames)))
 
 (ert-deftest animation--start-animation ()
+  :tags '(config)
+
   (animation-with-animation
     (wal-config-animation--start-animation)
 
@@ -50,6 +56,8 @@
     (should (string= (aref wal-config-animation-key-frames 0) "blue"))))
 
 (ert-deftest animation--start-animation--cachalot ()
+  :tags '(config)
+
   (animation-with-animation
     (setq wal-config-animation-type 'cachalot)
     (wal-config-animation--start-animation)
@@ -59,6 +67,8 @@
     (should (string= (aref wal-config-animation-key-frames 0) "cachalot"))))
 
 (ert-deftest animation--start-animation--blue ()
+  :tags '(config)
+
   (animation-with-animation
     (setq wal-config-animation-type 'blue)
     (wal-config-animation--start-animation)
@@ -68,12 +78,16 @@
     (should (string= (aref wal-config-animation-key-frames 0) "blue"))))
 
 (ert-deftest animation--stop-animation--no-op-for-no-timer ()
+  :tags '(config)
+
   (animation-with-animation
     (wal-config-animation--stop-animation)
 
     (should-not wal-config-animation-timer)))
 
 (ert-deftest animation--stop-animation--no-op-if-buffers-exist ()
+  :tags '(config)
+
   (animation-with-animation
     (with-temp-buffer
       (setq wal-config-animation-timer 'timer)
@@ -84,6 +98,8 @@
     (should wal-config-animation-timer)))
 
 (ert-deftest animation--stop-animation ()
+  :tags '(config)
+
   (animation-with-animation
     (setq wal-config-animation-timer 'timer)
 
@@ -95,6 +111,8 @@
     (bydi-was-called kill-buffer)))
 
 (ert-deftest animation-setup ()
+  :tags '(config)
+
   (bydi (wal-config-animation--start-animation)
     (with-temp-buffer
       (wal-config-animation-setup)
@@ -105,6 +123,8 @@
       (should (buffer-local-value 'window-configuration-change-hook (current-buffer))))))
 
 (ert-deftest animation-clean-up ()
+  :tags '(config)
+
   (bydi (posframe-delete
          wal-config-animation--start-animation
          wal-config-animation--stop-animation)
@@ -117,6 +137,8 @@
       (bydi-was-called wal-config-animation--stop-animation))))
 
 (ert-deftest animation-poshandler ()
+  :tags '(config)
+
   (let ((result (wal-config-animation-poshandler `(:parent-window-left 4
                                                                   :parent-window-top 4
                                                                   :parent-window-width 8
@@ -126,11 +148,15 @@
     (should (equal '(9 . 5) result))))
 
 (ert-deftest animation-hidehandler ()
+  :tags '(config)
+
   (bydi ((:ignore get-buffer-window))
 
     (should (wal-config-animation-hidehandler '(:posframe-parent-buffer '(nil nil))))))
 
 (ert-deftest animation-display ()
+  :tags '(config)
+
   (let ((wal-config-animation-parent-buffer 'parent)
         (wal-config-animation-indirect-buffer 'indirect)
         (wal-transparency 50))
@@ -151,6 +177,8 @@
       (bydi-was-called-with modify-frame-parameters '(... ((alpha-background . 50)))))))
 
 (ert-deftest animation--maybe-display ()
+  :tags '(config)
+
   (ert-with-test-buffer (:name "maybe-display")
 
     (bydi (wal-config-animation-setup
@@ -179,6 +207,8 @@
       (bydi-was-not-called wal-config-animation-display))))
 
 (ert-deftest animation--maybe-display--ignored-buffers ()
+  :tags '(config)
+
   (let ((wal-config-animation--ignored-buffers (list "test-file")))
 
     (bydi ((:mock buffer-file-name :return "test-file")
@@ -193,6 +223,8 @@
       (bydi-was-not-called wal-config-animation-display))))
 
 (ert-deftest animation--on-find-file ()
+  :tags '(config)
+
   (bydi wal-config-animation--maybe-display
 
     (wal-config-animation--on-find-file)
@@ -200,6 +232,8 @@
     (bydi-was-called wal-config-animation--maybe-display)))
 
 (ert-deftest wal-describe-config-version ()
+  :tags '(config)
+
   (defvar wal--default-path)
   (let ((out '("1.0.0" "test everything" "1.0.1" "letting the world know"))
         (wal--default-path "~"))
@@ -213,6 +247,8 @@
         (should (equal "1.0.1: letting the world know" (wal-describe-config-version)))))))
 
 (ert-deftest wal-show-config-diff-range ()
+  :tags '(config)
+
   (bydi ((:mock shell-command-to-string :return " testing ")
          magit-diff-range)
 
@@ -220,6 +256,8 @@
     (bydi-was-called-with magit-diff-range (list "testing" '("--stat")))))
 
 (ert-deftest wal-config-switch-project ()
+  :tags '(config)
+
   (defvar wal--default-path)
   (let ((wal--default-path "/tmp/config"))
 
@@ -230,6 +268,8 @@
       (bydi-was-called-with project-switch-project (list "/tmp/config")))))
 
 (ert-deftest wal-config-lib-files ()
+  :tags '(config)
+
   (defvar wal--lib-path)
   (let ((wal--lib-path nil))
 
@@ -238,6 +278,8 @@
       (should (equal '("/tmp/test.org" "/tmp/test-2.org") (wal-config-lib-files))))))
 
 (ert-deftest wal-config-consult-org-heading ()
+  :tags '(config)
+
   (bydi (consult-org-heading
          (:mock wal-config-lib-files :return '("/tmp/test.org" "/tmp/test-2.org")))
 
@@ -246,6 +288,8 @@
     (bydi-was-called-with consult-org-heading (list nil '("/tmp/test.org" "/tmp/test-2.org")))))
 
 (ert-deftest wal-config-org-tags-view ()
+  :tags '(config)
+
   (bydi (org-tags-view
          wal-config-lib-files)
 
@@ -259,6 +303,8 @@
     (bydi-was-called-last-with org-tags-view (list nil wal-config--package-tag))))
 
 (ert-deftest wal-customize-group ()
+  :tags '(config)
+
   (bydi customize-group
 
     (wal-customize-group)

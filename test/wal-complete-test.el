@@ -9,12 +9,16 @@
 (require 'wal-complete nil t)
 
 (ert-deftest wal-corfu-enable-in-minibuffer ()
+  :tags '(complete)
+
   (bydi ((:mock where-is-internal :with always)
          corfu-mode)
     (wal-corfu-enable-in-minibuffer)
     (bydi-was-called-with corfu-mode 1)))
 
 (ert-deftest wal-record-this-command ()
+  :tags '(complete)
+
   (let ((this-command 'testing))
 
     (with-temp-buffer
@@ -22,6 +26,8 @@
       (should (equal 'testing wal-command)))))
 
 (ert-deftest wal-with-dired-goto-file-ignored ()
+  :tags '(complete)
+
   (let* ((wal-command 'dired-goto-file)
          (fun (lambda (_) 'test))
          (result (apply 'wal-with-dired-goto-file-ignored (list fun 'category))))
@@ -29,6 +35,8 @@
     (should-not result)))
 
 (ert-deftest wal-with-dired-goto-file-ignored--ignores ()
+  :tags '(complete)
+
   (let* ((wal-command 'dired-goto-file-1)
          (fun (lambda (_) 'test))
          (result (apply 'wal-with-dired-goto-file-ignored (list fun 'category))))
@@ -36,12 +44,16 @@
     (should (equal 'test result))))
 
 (ert-deftest wal-browse-html-file ()
+  :tags '(complete)
+
   (bydi (browse-url)
     (should-error (wal-browse-html-file "~/test/file.txt") :type 'user-error)
     (wal-browse-html-file "/tmp/test.html")
     (bydi-was-called-with browse-url "/tmp/test.html")))
 
 (ert-deftest wal-consult-ripgrep-ignored ()
+  :tags '(complete)
+
   (bydi (consult--grep consult--ripgrep-builder)
     (defvar consult-ripgrep-args)
     (let ((consult-ripgrep-args "test"))
@@ -50,6 +62,8 @@
       (bydi-was-called-with consult--grep (list "Ripgrep (ignored)" #'consult--ripgrep-builder nil nil)))))
 
 (ert-deftest wal-consult-unregister ()
+  :tags '(complete)
+
   (defvar consult-register--narrow)
 
   (let ((register-alist '((?t . test) (?r . remove)))
@@ -65,6 +79,8 @@
       (should (equal register-alist '((?t . test)))))))
 
 (ert-deftest wal-consult-clock-in ()
+  :tags '(complete)
+
   (bydi (consult-org-agenda org-clock-in wal-org-clock-in-from-now)
     (wal-consult-clock-in)
     (bydi-was-called consult-org-agenda)
@@ -75,6 +91,8 @@
     (bydi-was-called wal-org-clock-in-from-now)))
 
 (ert-deftest wal-then-set-active-theme ()
+  :tags '(complete)
+
   (defvar wal-active-theme nil)
   (let ((out nil)
         (wal-active-theme nil))
@@ -87,6 +105,8 @@
     (should (equal wal-active-theme 'test))))
 
 (ert-deftest wal-consult--pre-narrow ()
+  :tags '(complete)
+
   (defvar wal-consult-pre-narrow)
   (defvar wal-consult-buffer-narrow-source)
   (defvar wal-consult-pre-narrowed-commands)
@@ -127,6 +147,8 @@
       (should-not unread-command-events))))
 
 (ert-deftest wal-consult-toggle-pre-narrow ()
+  :tags '(complete)
+
   (defvar wal-consult-pre-narrow)
 
   (let ((wal-consult-pre-narrow nil))
@@ -135,16 +157,22 @@
     (should wal-consult-pre-narrow)))
 
 (ert-deftest consult--open-project-items ()
+  :tags '(complete)
+
   (bydi ((:mock buffer-list :return '("a" "c" "b" "c" "a"))
          (:mock wal-project--buffer-root :with bydi-rf))
     (should (equal '("b" "c" "a") (consult--open-project-items)))))
 
 (ert-deftest wal-consult-project ()
+  :tags '(complete)
+
   (bydi (consult--multi)
     (call-interactively 'wal-consult-project)
     (bydi-was-called-with consult--multi (list '(consult--source-open-projects consult--source-projects) :prompt "Select project: " :require-match t))))
 
 (ert-deftest wal-consult-outline ()
+  :tags '(complete)
+
   (bydi ((:sometimes derived-mode-p)
          consult-org-heading
          consult-outline)

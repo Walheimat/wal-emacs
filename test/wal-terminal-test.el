@@ -9,12 +9,16 @@
 (require 'wal-terminal nil t)
 
 (ert-deftest wal-instead-truncate-buffer ()
+  :tags '(terminal)
+
   (bydi eshell-truncate-buffer
     (wal-instead-truncate-buffer)
 
     (bydi-was-called eshell-truncate-buffer)))
 
 (ert-deftest wal-eshell ()
+  :tags '(terminal)
+
   (defvar eshell-buffer-name)
   (let ((eshell-buffer-name "*eshell*")
         (buffers (list (get-buffer-create "*eshell*")
@@ -53,6 +57,8 @@
         (kill-buffer buffer)))))
 
 (ert-deftest wal-vterm--calls-vterm-outside-project ()
+  :tags '(terminal)
+
   (bydi ((:ignore project-current)
          vterm)
 
@@ -61,6 +67,8 @@
     (bydi-was-called vterm)))
 
 (ert-deftest wal-vterm--checks-project-buffers ()
+  :tags '(terminal)
+
   (let ((buffers nil))
 
     (bydi ((:always project-current)
@@ -88,6 +96,8 @@
         (bydi-was-called-with vterm (list '(4)))))))
 
 (ert-deftest wal-vterm--passes-on-prefix-arg ()
+  :tags '(terminal)
+
   (bydi (vterm)
 
     (funcall-interactively 'wal-vterm '(4))

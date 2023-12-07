@@ -9,10 +9,14 @@
 (require 'wal-lang nil t)
 
 (ert-deftest wal-in-python-project-p ()
+  :tags '(lang)
+
   (should-not (wal-in-python-project-p "noexist"))
   (should (wal-in-python-project-p "test")))
 
 (ert-deftest wal-lsp-pyright-install-stubs ()
+  :tags '(lang)
+
   (bydi ((:ignore wal-in-python-project-p))
 
     (should-error (wal-lsp-pyright-install-stubs) :type 'user-error))
@@ -44,15 +48,21 @@
         (bydi-was-called-with async-shell-command (list cmd buf))))))
 
 (ert-deftest wal-otherwise-return-argument ()
+  :tags '(lang)
+
   (should (equal 'testing (wal-otherwise-return-argument 'testing))))
 
 (ert-deftest wal-instead-delay-prettier-errors ()
+  :tags '(lang)
+
   (bydi (delay-warning)
     (wal-instead-delay-prettier-errors "We are just %s %s" "testing" "this")
 
     (bydi-was-called-with delay-warning (list 'prettier "We are just testing this" :warning))))
 
 (ert-deftest wal-markdown-view ()
+  :tags '(lang)
+
   (bydi (mixed-pitch-mode
          markdown-mode
          markdown-view-mode)
@@ -78,18 +88,24 @@
       (should-error (wal-markdown-view)))))
 
 (ert-deftest wal-find-dart-flutter-sdk-dir ()
+  :tags '(lang)
+
   (bydi ((:mock executable-find :with (lambda (x) (format "/usr/bin/%s" x)))
          (:mock shell-command-to-string :return "/tmp/sdk\n"))
 
     (should (string-equal "/tmp/sdk" (wal-find-dart-flutter-sdk-dir)))))
 
 (ert-deftest wal-find-dart-sdk-dir ()
+  :tags '(lang)
+
   (bydi ((:mock executable-find :with (lambda (x) (format "/usr/bin/%s" x)))
          (:mock shell-command-to-string :return "/tmp/sdk\n"))
 
     (should (string-equal "/tmp/sdk/bin/cache/dart-sdk" (wal-find-dart-sdk-dir)))))
 
 (ert-deftest wal-lsp-dart-set-process-query-on-exit-flag ()
+  :tags '(lang)
+
   (with-temp-buffer
     (setq lsp-dart-flutter-daemon-buffer-name (buffer-name))
     (start-process "sleep-test" (current-buffer) "sleep" "10")
@@ -101,6 +117,8 @@
     (should-not (process-query-on-exit-flag (get-buffer-process lsp-dart-flutter-daemon-buffer-name)))))
 
 (ert-deftest wal-lsp-dart-service-uri ()
+  :tags '(lang)
+
   (bydi ((:mock lsp-workspace-get-metadata :with (lambda (_) (error "Testing"))))
 
     (shut-up
@@ -118,9 +136,13 @@
     (should (string-equal (car kill-ring) "test-uri"))))
 
 (ert-deftest wal-with-bash-shell ()
+  :tags '(lang)
+
   (should (equal "/bin/bash" (wal-with-bash-shell (lambda () shell-file-name)))))
 
 (ert-deftest wal-java-test-dwim ()
+  :tags '(lang)
+
   (bydi (dap-java-run-test-method
          transient-set
          (:mock wal-transient-grab :with (lambda (s) (if (string-equal s "mode") "run" "method"))))
@@ -138,6 +160,8 @@
     (bydi-was-not-called dap-java-run-test-method)))
 
 (ert-deftest wal-junit-match-file ()
+  :tags '(lang)
+
   (let ((matched nil))
 
     (bydi ((:mock buffer-list :return (list "a" "b"))
@@ -153,6 +177,8 @@
       (should (string= "d" (wal-junit-match-file))))))
 
 (ert-deftest wal-maybe-use-custom-css-checker ()
+  :tags '(lang)
+
   (defvar lsp-after-open-hook)
   (defvar flycheck-checker)
   (bydi ((:always executable-find))

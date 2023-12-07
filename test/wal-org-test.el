@@ -9,6 +9,8 @@
 (require 'wal-org nil t)
 
 (ert-deftest wal-first-require-ox-md ()
+  :tags '(org)
+
   (bydi ((:ignore featurep)
          require)
 
@@ -18,6 +20,8 @@
     (bydi-was-called-with require (list 'ox-md nil t))))
 
 (ert-deftest wal-org-content ()
+  :tags '(org)
+
   (bydi org-content
 
     (wal-org-content 8)
@@ -25,6 +29,8 @@
     (bydi-was-called-with org-content (list 8))))
 
 (ert-deftest wal-org-hide-emphasis-makers ()
+  :tags '(org)
+
   (defvar org-hide-emphasis-markers)
 
   (let ((org-hide-emphasis-markers nil))
@@ -40,6 +46,8 @@
       (bydi-was-called-n-times font-lock-flush 2))))
 
 (ert-deftest wal-org-refile ()
+  :tags '(org)
+
   (defvar org-roam-directory nil)
   (defvar org-agenda-files nil)
 
@@ -63,17 +71,23 @@
       (bydi-was-called org-refile))))
 
 (ert-deftest wal-agenda-buffer-p ()
+  :tags '(org)
+
   (with-temp-buffer
     (bydi ((:always org-agenda-file-p))
       (should (wal-agenda-buffer-p (current-buffer))))))
 
 (ert-deftest wal-consult-agenda-buffer--query ()
+  :tags '(org)
+
   (cl-defun consult--buffer-query (&key sort as predicate)
     (list sort as predicate))
 
   (should (equal (wal-consult-agenda-buffer--query) '(visibility buffer-name wal-agenda-buffer-p))))
 
 (ert-deftest wal-relative-column-width ()
+  :tags '(org)
+
   (defvar text-scale-mode-amount nil)
   (defvar text-scale-mode-step nil)
   (let ((text-scale-mode-amount 1)
@@ -82,6 +96,8 @@
     (should (eq 80 (wal-relative-column-width)))))
 
 (ert-deftest wal-org-tree-slide-toggle-visibility ()
+  :tags '(org)
+
   (let ((cursor-type 'box))
 
     (wal-org-tree-slide-toggle-visibility)
@@ -93,6 +109,8 @@
     (should cursor-type)))
 
 (ert-deftest wal-org-tree-slide ()
+  :tags '(org)
+
   (defvar visual-fill-column-width nil)
   (defvar visual-fill-column-center-text nil)
   (bydi (visual-fill-column-mode
@@ -126,6 +144,8 @@
     (bydi-was-called-with wal-org-hide-emphasis-markers t)))
 
 (ert-deftest wal-org-tree-slide-text-scale ()
+  :tags '(org)
+
   (defvar org-tree-slide-mode)
   (let ((org-tree-slide-mode t))
 
@@ -136,6 +156,8 @@
       (bydi-was-called wal-org-tree-slide-play))))
 
 (ert-deftest wal-org-capture-find-project-task-heading ()
+  :tags '(org)
+
   (defvar org-directory)
 
   (let ((marker nil)
@@ -197,15 +219,21 @@
         (should (eq (marker-position marker) 9))))))
 
 (ert-deftest wal-org-capture-project-tasks ()
+  :tags '(org)
+
   (bydi org-capture
     (wal-org-capture-project-tasks)
 
     (bydi-was-called-with org-capture '(nil "p"))))
 
 (ert-deftest wal-org-clock-in-switch-to-state ()
+  :tags '(org)
+
   (should (string-equal "IN PROGRESS" (wal-org-clock-in-switch-to-state "OTHER STATE"))))
 
 (ert-deftest wal-org-clock-heading ()
+  :tags '(org)
+
   (bydi ((:mock org-link-display-format :with bydi-rf)
          (:mock org-get-heading :return "test heading")
          (:mock org-no-properties :with bydi-rf)
@@ -216,6 +244,8 @@
     (bydi-was-called-with wal-truncate (list "test heading" 12))))
 
 (ert-deftest wal-org-clock-in-from-now ()
+  :tags '(org)
+
   (bydi org-clock-in
 
     (wal-org-clock-in-from-now)
@@ -223,6 +253,8 @@
     (bydi-was-called org-clock-in)))
 
 (ert-deftest wal-org-clock-take-note ()
+  :tags '(org)
+
   (bydi (org-clock-goto
          org-add-note)
 
@@ -232,6 +264,8 @@
     (bydi-was-called org-add-note)))
 
 (ert-deftest wal-org-clock-insert-current-task ()
+  :tags '(org)
+
   (defvar org-clock-current-task)
 
   (with-temp-buffer

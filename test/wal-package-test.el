@@ -9,6 +9,8 @@
 (require 'wal-package nil t)
 
 (ert-deftest wal-use-package-normalize-binder ()
+  :tags '(package)
+
 
   (bydi ((:always use-package-recognize-function)
          (:mock wal-prefix-user-key :with (lambda (x) (format "C-t %s" x)))
@@ -30,6 +32,8 @@
       (should (equal (list it "testing" (cons "C-t w" 'testing)) (wal-use-package-normalize-binder nil nil (list it "testing" (cons "w" 'testing))))))))
 
 (ert-deftest use-package-handler/:wal-ways ()
+  :tags '(package)
+
   (bydi ((:sometimes wal-package-built-in-p)
          use-package-plist-maybe-put
          use-package-process-keywords)
@@ -57,6 +61,8 @@
                      (use-package-handler/:wal-ways 'name nil nil nil nil))))))
 
 (ert-deftest sinker-handler ()
+  :tags '(package)
+
   (defvar use-package-hook-name-suffix)
   (let ((use-package-hook-name-suffix "-test"))
     (bydi ((:mock use-package-concat :with append)
@@ -75,12 +81,16 @@
                        (add-hook 'emacs-startup-test #'test-fn t)))))))
 
 (ert-deftest fhook-handler ()
+  :tags '(package)
+
   (bydi (use-package-handler/:hook)
 
     (use-package-handler/:fhook 'name 'keyword 'args 'rest 'state)
     (bydi-was-called use-package-handler/:hook)))
 
 (ert-deftest wal-ignore-if-not-installed ()
+  :tags '(package)
+
   (let ((installed nil)
         (built-in nil)
         (user nil))
@@ -104,6 +114,8 @@
       (should (wal-ignore-if-not-installed 'some-package)))))
 
 (ert-deftest wal-use-package-ensure-function ()
+  :tags '(package)
+
 
   (defvar package-archive-contents)
   (defvar package-pinned-packages)
@@ -156,6 +168,8 @@
       (bydi-clear-mocks))))
 
 (ert-deftest wal-use-package-ensure-function--displays-warning-on-error ()
+  :tags '(package)
+
   (defvar debug-on-error)
 
   (let ((debug-on-error nil))
@@ -178,6 +192,8 @@
       (bydi-was-called display-warning))))
 
 (ert-deftest wal-package-installed-p ()
+  :tags '(package)
+
   (let ((wal-package--missed-built-in '(test)))
     (bydi ((:sometimes package-installed-p))
 
@@ -187,6 +203,8 @@
       (should (wal-package-installed-p 'test)))))
 
 (ert-deftest wal-package-built-in-p ()
+  :tags '(package)
+
   (let ((wal-package--missed-built-in '(test)))
     (bydi ((:sometimes package-built-in-p))
 

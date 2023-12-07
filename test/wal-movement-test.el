@@ -9,6 +9,8 @@
 (require 'wal-movement nil t)
 
 (ert-deftest wal-avy-goto-word ()
+  :tags '(movement)
+
   (defvar avy-goto-word-0 nil)
   (defvar avy-goto-word-0-regexp nil)
 
@@ -34,6 +36,8 @@
       (bydi-was-called-with avy-goto-word-0 t))))
 
 (ert-deftest wal-avy-goto-line ()
+  :tags '(movement)
+
   (bydi ((:mock avy-goto-line :with beginning-of-line)
          (:mock avy-goto-end-of-line :with end-of-line))
 
@@ -48,11 +52,15 @@
       (should (equal (point) (point-min))))))
 
 (ert-deftest avy-action-zip-to-char ()
+  :tags '(movement)
+
   (with-temp-buffer
     (insert "testing")
     (should (equal (point-max) (avy-action-zip-to-char (point-max))))))
 
 (ert-deftest wal-then-goto-beginning-for-org-headings ()
+  :tags '(movement)
+
   (bydi ((:ignore wal-univ-p)
          (:always org-at-heading-p))
 

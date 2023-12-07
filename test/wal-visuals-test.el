@@ -9,6 +9,8 @@
 (require 'wal-visuals nil t)
 
 (ert-deftest wal-font-update ()
+  :tags '(visuals)
+
   (bydi (set-face-attribute
          (:mock selected-frame :return 'selected))
     (wal-font-update :height 120 '(default) t)
@@ -16,6 +18,8 @@
     (bydi-was-called-with set-face-attribute (list 'default 'selected :height 120))))
 
 (ert-deftest wal-read-sensible-font-height ()
+  :tags '(visuals)
+
   (let ((input 301)
         (current 121))
 
@@ -36,6 +40,8 @@
       (should (equal 177 (wal-read-sensible-font-height 'fixed))))))
 
 (ert-deftest wal-available-fonts ()
+  :tags '(visuals)
+
   (bydi (font-spec
          (:mock find-font :with (lambda (specs) (string-equal "TestFont" (nth 1 specs)))))
 
@@ -45,6 +51,8 @@
     (bydi-was-called-nth-with font-spec (list :name "Arial") 2)))
 
 (ert-deftest wal-read-font ()
+  :tags '(visuals)
+
   (let ((wal-fixed-fonts '("TestFont" "OtherFont")))
 
     (bydi ((:mock completing-read :return "TestFont")
@@ -55,6 +63,8 @@
       (bydi-was-called-with completing-read (list "Select fixed font (current: SomeFont) " wal-fixed-fonts)))))
 
 (ert-deftest wal-select-fixed-or-variable-font ()
+  :tags '(visuals)
+
   (bydi ((:mock wal-read-font :return "TestFont") wal-font-update)
 
     (call-interactively 'wal-select-fixed-font)
@@ -66,6 +76,8 @@
     (bydi-was-called-with wal-font-update (list :font "TestFont" '(variable-pitch)))))
 
 (ert-deftest wal-set-fixed-or-variable-font-height ()
+  :tags '(visuals)
+
   (bydi ((:mock wal-read-sensible-font-height :return 101)
          wal-font-update)
 
@@ -79,11 +91,15 @@
     (bydi-was-called-with wal-font-update (list :height 101 '(variable-pitch) nil))))
 
 (ert-deftest wal-preferred-fonts ()
+  :tags '(visuals)
+
   (let ((wal-preferred-fonts '("PreferredFont" "NiceFont" "TestableFont")))
 
     (should (equal (list "TestableFont" "PreferredFont") (wal-preferred-fonts (list "CruelFont" "TestableFont" "WaningFont" "PreferredFont"))))))
 
 (ert-deftest wal-fonts-candidate ()
+  :tags '(visuals)
+
   (bydi ((:mock wal-available-fonts :return (list "TestFont"))
          (:mock wal-preferred-fonts :return (list "ZestFont")))
 
@@ -96,6 +112,8 @@
     (bydi-was-called wal-preferred-fonts)))
 
 (ert-deftest wal-font-lock ()
+  :tags '(visuals)
+
   (bydi set-face-attribute
 
     (wal-font-lock)
@@ -104,6 +122,8 @@
     (bydi-was-called-nth-with set-face-attribute (list 'font-lock-keyword-face nil :weight 'bold) 1)))
 
 (ert-deftest wal-set-transparency ()
+  :tags '(visuals)
+
   (let ((entered-number nil))
     (bydi ((:mock read-number :return entered-number))
 
@@ -132,6 +152,8 @@
         (should (eq 90 (cdr (assoc 'alpha default-frame-alist))))))))
 
 (ert-deftest wal-load-active-theme ()
+  :tags '(visuals)
+
   (bydi (load-theme run-hooks)
 
     (let ((wal-active-theme nil))
@@ -150,6 +172,8 @@
       (bydi-was-called-with run-hooks (list 'wal-theme-hook)))))
 
 (ert-deftest wal-load-active-them--captures-error ()
+  :tags '(visuals)
+
   (let ((wal-active-theme 'non-existence))
 
     (shut-up
@@ -159,6 +183,8 @@
         (should (string= "Failed to load theme: Unable to find theme file for ‘non-existence’\n" messages))))))
 
 (ert-deftest wal-visual-fill-column-mode--toggles ()
+  :tags '(visuals)
+
   (bydi (visual-fill-column-mode)
     (with-temp-buffer
       (wal-visual-fill-column-mode)
@@ -171,6 +197,8 @@
       (bydi-was-called-with visual-fill-column-mode '(+1)))))
 
 (ert-deftest wal-with-recent-files-excluded ()
+  :tags '(visuals)
+
   (defvar recentf-exclude nil)
 
   (let ((fun (lambda (_) recentf-exclude)))
@@ -178,10 +206,14 @@
     (should (equal '("bookmarks\\'" "zettelkasten" "org/tasks") (wal-with-recent-files-excluded fun 'test)))))
 
 (ert-deftest wal-instead-show-biased-random ()
+  :tags '(visuals)
+
   (defvar dashboard-footer-messages '("Testing"))
   (should (equal "Testing" (wal-instead-show-biased-random))))
 
 (ert-deftest wal-in-case-of-daemonp-add-different-hook ()
+  :tags '(visuals)
+
   (bydi (require (:always daemonp) add-hook)
 
     (wal-in-case-of-daemonp-add-different-hook)
@@ -197,6 +229,8 @@
     (bydi-was-not-called add-hook)))
 
 (ert-deftest wal-dashboard-get-buffer ()
+  :tags '(visuals)
+
   (defvar dashboard-force-refresh)
   (defvar dashboard-buffer-name)
 
@@ -211,6 +245,8 @@
       (bydi-was-called-with get-buffer "dash"))))
 
 (ert-deftest wal-instead-use-custom-banner ()
+  :tags '(visuals)
+
   (let ((wal--default-path "/home/test"))
     (bydi ((:sometimes dashboard--image-supported-p))
 

@@ -8,7 +8,9 @@
 
 (require 'wal-dired nil t)
 
-(ert-deftest tes-wal-dired-from-home ()
+(ert-deftest wal-dired-from-home ()
+  :tags '(dired)
+
   (bydi ((:mock dired-read-dir-and-switches :return (list  "/tmp"))
          (:mock dired-noselect :return "/tmp/test")
          pop-to-buffer-same-window)
@@ -19,6 +21,8 @@
     (bydi-was-called-with pop-to-buffer-same-window "/tmp/test")))
 
 (ert-deftest wal-image-dired ()
+  :tags '(dired)
+
   (bydi image-dired
 
     (wal-image-dired)
@@ -28,12 +32,16 @@
       (bydi-was-called-with image-dired expected))))
 
 (ert-deftest wal-dired-buffer-p ()
+  :tags '(dired)
+
   (with-temp-buffer
     (dired-mode)
 
     (should (wal-dired-buffer-p (current-buffer)))))
 
 (ert-deftest wal-consult-dired-buffer--query ()
+  :tags '(dired)
+
   (cl-defun consult--buffer-query (&key sort as predicate)
     (list sort as predicate))
 

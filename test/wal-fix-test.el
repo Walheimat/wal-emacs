@@ -9,6 +9,8 @@
 (require 'wal-fix nil t)
 
 (ert-deftest wal-flycheck-file--get-buffer ()
+  :tags '(fix)
+
   (bydi (view-mode)
     (with-current-buffer (wal-flycheck-file--get-buffer)
 
@@ -18,6 +20,8 @@
   (kill-buffer wal-flycheck-file--buffer))
 
 (ert-deftest wal-flycheck-file--write ()
+  :tags '(fix)
+
   (wal-flycheck-file--write "hello")
 
   (with-current-buffer (wal-flycheck-file--get-buffer)
@@ -27,6 +31,8 @@
   (kill-buffer wal-flycheck-file--buffer))
 
 (ert-deftest wal-flycheck-file--erase ()
+  :tags '(fix)
+
   (wal-flycheck-file--write "testing" t)
 
   (with-current-buffer (wal-flycheck-file--get-buffer)
@@ -38,6 +44,8 @@
     (should (string-equal "" (buffer-string)))))
 
 (ert-deftest wal-flycheck-file--callback ()
+  :tags '(fix)
+
   (ert-with-temp-file check
 
     (bydi display-buffer
@@ -58,6 +66,8 @@
   (kill-buffer wal-flycheck-file--buffer))
 
 (ert-deftest wal-flycheck-file--callback-on-error ()
+  :tags '(fix)
+
   (ert-with-temp-file check-error
 
     (let* ((buf (find-file-noselect check-error))
@@ -76,6 +86,8 @@
   (kill-buffer wal-flycheck-file--buffer))
 
 (ert-deftest wal-flycheck-file ()
+  :tags '(fix)
+
   (bydi ((:mock flycheck-get-checker-for-buffer :with bydi-rt)
          flycheck-syntax-check-new
          flycheck-compute-working-directory
@@ -93,6 +105,8 @@
                                'testing))))))
 
 (ert-deftest wal-flycheck-file--no-checker ()
+  :tags '(fix)
+
   (bydi ((:ignore flycheck-get-checker-for-buffer)
          flycheck-syntax-check-new
          flycheck-compute-working-directory
@@ -104,6 +118,8 @@
       (should-error (wal-flycheck-file flycheck) :type 'user-error))))
 
 (ert-deftest wal-flyspell ()
+  :tags '(fix)
+
   (defvar flyspell-mode nil)
   (bydi (flyspell-mode flyspell-prog-mode)
 
@@ -130,6 +146,8 @@
           (bydi-was-called flyspell-prog-mode))))))
 
 (ert-deftest wal-flyspell-goto-previous-error ()
+  :tags '(fix)
+
   (bydi (flyspell-goto-next-error)
 
     (wal-flyspell-goto-previous-error)

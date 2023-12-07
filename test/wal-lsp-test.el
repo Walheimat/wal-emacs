@@ -9,6 +9,8 @@
 (require 'wal-lsp nil t)
 
 (ert-deftest wal-lsp-completion ()
+  :tags '(lsp)
+
   (let ((completion-category-defaults '((lsp-capf (styles other))))
         (completion-styles '(testful)))
 
@@ -18,6 +20,8 @@
       (should (equal '((lsp-capf (styles testful))) completion-category-defaults)))))
 
 (ert-deftest wal-first-prevent-adding-other-projects ()
+  :tags '(lsp)
+
   (bydi eval
 
     (wal-first-prevent-adding-other-projects)
@@ -25,6 +29,8 @@
     (bydi-was-called-with eval (list '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))))
 
 (ert-deftest wal-dap-terminated ()
+  :tags '(lsp)
+
   (bydi (hydra-disable
          set-window-configuration)
 
@@ -35,6 +41,8 @@
       (bydi-was-called set-window-configuration))))
 
 (ert-deftest wal-dap-session-created ()
+  :tags '(lsp)
+
   (bydi ((:mock current-window-configuration :with bydi-rt)
          delete-other-windows)
 
@@ -44,6 +52,8 @@
     (should (equal 'testing wal-dap-before))))
 
 (ert-deftest wal-dap-stopped ()
+  :tags '(lsp)
+
   (bydi dap-hydra
 
     (wal-dap-stopped nil)
@@ -51,6 +61,8 @@
     (bydi-was-called dap-hydra)))
 
 (ert-deftest wal-instead-grab-directly ()
+  :tags '(lsp)
+
   (with-temp-buffer
     (insert "hello")
 
@@ -64,6 +76,8 @@
     (should (string= "" (wal-instead-grab-directly)))))
 
 (ert-deftest wal-dap-adapt-company-backend ()
+  :tags '(lsp)
+
   (bydi ((:mock cape-company-to-capf :with bydi-rf)
          corfu-mode)
 
@@ -74,6 +88,8 @@
       (bydi-was-called corfu-mode))))
 
 (ert-deftest wal-debug ()
+  :tags '(lsp)
+
   (bydi (dap-hydra dap-debug)
 
     (let ((wal-debugging nil))
