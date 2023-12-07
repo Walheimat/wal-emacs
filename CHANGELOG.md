@@ -19,6 +19,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   have been renamed from `wal-ascii-whale-*` to
   `wal-config-animation-`.
 - Package `surround`.
+- Package `dogears` now has custom command `wal-dogears-list` which
+  pops to or toggles the list.
 
 ### Changed
 

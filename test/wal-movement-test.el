@@ -72,6 +72,31 @@
 
       (should (equal 1 (point))))))
 
+(ert-deftest wal-dogears-list ()
+  :tags '(movement)
+
+  (defvar dogears-list-buffer)
+
+  (let ((dogears-list-buffer nil))
+
+    (bydi (dogears-list
+           (:spy quit-window))
+
+      (wal-dogears-list)
+
+      (bydi-was-called dogears-list t)
+
+      (ert-with-test-buffer (:name "dogears")
+
+        (setq dogears-list-buffer (current-buffer))
+
+        (display-buffer dogears-list-buffer)
+
+        (wal-dogears-list)
+
+        (bydi-was-not-called dogears-list)
+        (bydi-was-called quit-window)))))
+
 ;;; wal-movement-test.el ends here
 
 ;; Local Variables:
