@@ -282,24 +282,19 @@ Optionally use `comint-mode' if COMINT is t."
   (pop-to-buffer wal--compile-buffer))
 
 (defun wal-update ()
-  "Pull from remote and tangle again."
+  "Update the configuration.
+
+This updates the repository, tangles it and finally upgrades
+packages in `wal-bridge'."
   (interactive)
 
   (message "Updating repository")
 
-  (wal--compile "make update"))
-
-(defun wal-upgrade ()
-  "Upgrade bridge packages."
-  (interactive)
-
-  (message "Upgrading bridge packages")
-
-  (wal--compile "make upgrade-bridge"))
+  (wal--compile "make update && make upgrade"))
 
 (defvar wal-upgrade--wait-time 1)
 
-(defun wal-upgrade--bridge ()
+(defun wal-upgrade ()
   "Upgrade bridge packages.
 
 This waits for a maximum of 5 seconds to upgrade all packages."

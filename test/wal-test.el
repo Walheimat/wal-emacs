@@ -368,17 +368,9 @@ the temporary file."
       (shut-up (wal-update))
 
       (bydi-was-set-to default-directory "/tmp")
-      (bydi-was-called-with compile '("make update" nil)))))
+      (bydi-was-called-with compile '("make update && make upgrade" nil)))))
 
 (ert-deftest wal-upgrade ()
-  :tags '(prelude user-facing)
-
-  (bydi wal--compile
-    (shut-up (wal-upgrade))
-
-    (bydi-was-called-with wal--compile "make upgrade-bridge")))
-
-(ert-deftest wal-upgrade--bridge ()
   :tags '(prelude)
 
   (let ((wal-upgrade--wait-time 0)
@@ -391,7 +383,7 @@ the temporary file."
       (ert-with-message-capture messages
 
         (bydi package-vc-upgrade-all
-          (wal-upgrade--bridge)
+          (wal-upgrade)
 
           (bydi-was-called package-vc-upgrade-all))
 
@@ -402,7 +394,7 @@ the temporary file."
                                                      (run-hooks 'vc-post-command-functions)
                                                      (run-hooks 'vc-post-command-functions))))
 
-          (wal-upgrade--bridge)
+          (wal-upgrade)
 
           (should (string-prefix-p "Upgraded packages in" messages)))))))
 

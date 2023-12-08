@@ -46,10 +46,10 @@ update-git:
 .PHONY: update
 update: update-git clean ensure-init $(PACKAGE_MARKER)
 
-.PHONY: upgrade-bridge
-upgrade-bridge: BOOTSTRAP_MODE=upgrade
-upgrade-bridge:
-	$(WITH_PRELUDE) $(BOOTSTRAP) -f wal-upgrade--bridge
+.PHONY: upgrade
+upgrade: BOOTSTRAP_MODE=upgrade
+upgrade:
+	$(WITH_PRELUDE) $(BOOTSTRAP) -f wal-upgrade
 
 # -- Checks
 
