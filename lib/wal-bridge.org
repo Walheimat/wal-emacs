@@ -3,7 +3,8 @@
 #+PROPERTY: header-args:emacs-lisp :tangle (wal--tangle-target)
 #+TAGS: { package : builtin(b) melpa(m) gnu(e) nongnu(n) git(g) }
 
-This is a collection of my own packages that are sourced from GitHub.
+This is a collection of my own packages that are sourced from
+GitHub[fn:1].
 
 * Header
 :PROPERTIES:
@@ -44,11 +45,12 @@ This is a collection of my own packages that are sourced from GitHub.
 :UNNUMBERED: t
 :END:
 
-Provides a =use-package=-like macro to define a function to hook into
-and set up transient, completion, modes, ligatures, LSP and
-indentation for major modes.
+This is a =use-package=-like macro to define a function that hooks
+into and sets up bindings, completion, modes, ligatures, LSP,
+indentation and any custom things for major modes.
 
-See [[file:wal-lang.org][Languages]] for usage or the [[https://github.com/Walheimat/harpoon][repository]] for more info.
+Extensive usage of this package can be seen in [[file:wal-lang.org][Languages]]. Also have a
+look at the [[https://github.com/Walheimat/harpoon][repository]] for more info.
 
 #+begin_src emacs-lisp
 (use-package harpoon
@@ -71,14 +73,17 @@ See [[file:wal-lang.org][Languages]] for usage or the [[https://github.com/Walhe
 :UNNUMBERED: t
 :END:
 
-Enhances =tab-bar-mode= to become a short-term-memory workspace.
-Buffers opened in a tab belong to that tab. The management of
-(permanently) adding, removing etc. that buffer is based on usage of
-that buffer (re-visiting, keeping it visible) and other buffers.
+Enhances =tab-bar-mode= to create short-term-memory workspaces.
 
-The package provides a =consult= buffer source that we insert. The
-various buffer-related commands are annotated with =marginalia= and
-the command map is bound in [[file:wal-key-bindings.org::*Ambassador][ambassador]].
+Significant buffers opened in a tab belong to that tab. Management
+like (permanently) adding and removing such buffers is based on their
+usage over time (continually re-visiting, keeping it visible during a
+split, keeping it focused for a while).
+
+The package provides a =consult= buffer source that is inserted and
+used by default when switching buffers. The various buffer-related
+commands are annotated with =marginalia= and the command map is bound
+in [[file:wal-key-bindings.org::*Ambassador][ambassador]].
 
 See the [[https://github.com/Walheimat/partial-recall][repository]] for more information.
 
@@ -117,13 +122,12 @@ See the [[https://github.com/Walheimat/partial-recall][repository]] for more inf
 :END:
 
 My own "fancy" mode line. It has segments for all default mode-line
-constructs as well as segments for =partial-recall=, =vc=, =project=,
-=tab-bar-mode=, =multiple-cursors=, =org=, =minions=, =lsp-mode=,
-=dap-mode=.
+constructs as well as segments for =vc=, =project=, =tab-bar-mode=,
+=multiple-cursors=, =org=, =minions=, =lsp-mode= and =dap-mode=.
 
-The mode line is divided into left and right justified by space. Which
-segments are shown is based on whether the window is selected as well
-as priority considerations if space is low.
+Which segments are shown is based on window selection state and
+priority considerations (say if there isn't enough space to display
+all segments).
 
 The icon for buffer status is disabled and we use the UTF-8-heavy
 whale instead for the animation segment.
@@ -174,11 +178,12 @@ See the [[https://github.com/Walheimat/junk][repository]] for more information.
 :UNNUMBERED: t
 :END:
 
-Provides macros to mock functions and watch variables in =ert= tests.
-This package is generally not needed unless you want to create tests.
+Provides macros to mock and spy on functions as well as watch
+variables in =ert= tests. This package is generally not needed unless
+you want to run tests interactively.
 
-See [[https://github.com/Walheimat/bydi][repository]] for more information and usage or check out the various
-tests under =/test/=.
+See the [[https://github.com/Walheimat/bydi][repository]] for more information and usage or check out the
+various [[file:../test/][tests]] using the macro.
 
 #+BEGIN_SRC emacs-lisp
 (use-package bydi)
@@ -189,11 +194,14 @@ tests under =/test/=.
 :UNNUMBERED: t
 :END:
 
-Provides a macro to compose two commands into one while retaining
-their consumption of prefix arguments. When calling the composition,
-the first command is executed unless it is called with a numeric
-prefix argument. The first command always uses the normal =C-u=, the
-second =C-<number>=.
+Provides two macros.
+
+One to compose two commands into one while retaining their consumption
+of prefix arguments. When calling the composition, the first command
+is executed unless it is called with a numeric prefix argument. The
+first command always uses the normal =C-u=, the second =C-<number>=.
+
+The other inverts conditional functions.
 
 See the [[https://github.com/Walheimat/parallel][repository]] for more information.
 
@@ -210,14 +218,13 @@ See the [[https://github.com/Walheimat/parallel][repository]] for more informati
 :UNNUMBERED: t
 :END:
 
-Provides macros to create project-scoped compilation.
+Provides macros to create project-scoped compilation commands.
 
 The package configuration defines
-=ship-mate-{build,install,clean,execute,test}= commands using a macro
-that sets up =ship-mate-command= calls. Each of these commands have
-their own per-project history that can be pre-filled through dir-local
-variables. The commands are provided through a prefix map bound to
-=C-c p=.
+=ship-mate-{build,install,clean,execute,test}= commands. Each of these
+commands have their own per-project history that can be pre-filled
+through defaults and dir-local variables. The commands are provided
+through a prefix map bound to =C-c p=.
 
 These command as well as =project-compile= and =recompile= are advised
 to be bounded to project files. This means that running them will not
@@ -279,3 +286,7 @@ prompt to save unsaved files outside of the project.
 
 ;;; wal-bridge.el ends here
 #+END_SRC
+
+* Footnotes
+
+[fn:1] Using =package-vc-install=, see [[file:wal-package.org][Packages]].
