@@ -71,7 +71,7 @@
     (bydi-was-called-nth-with eval (list '(wal-create-leader-sink tester-sink :definer tester :prefix "C-t")) 1)))
 
 (ert-deftest major? ()
-  :tags '(key-bindings)
+  :tags '(key-bindings user-facing)
 
   (bydi (message (:mock wal-key-combo-for-leader :return "C-t"))
 

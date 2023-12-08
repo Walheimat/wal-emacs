@@ -15,7 +15,7 @@
   (should (wal-in-python-project-p "test")))
 
 (ert-deftest wal-lsp-pyright-install-stubs ()
-  :tags '(lang)
+  :tags '(lang user-facing)
 
   (bydi ((:ignore wal-in-python-project-p))
 
@@ -61,7 +61,7 @@
     (bydi-was-called-with delay-warning (list 'prettier "We are just testing this" :warning))))
 
 (ert-deftest wal-markdown-view ()
-  :tags '(lang)
+  :tags '(lang user-facing)
 
   (bydi (mixed-pitch-mode
          markdown-mode
@@ -117,7 +117,7 @@
     (should-not (process-query-on-exit-flag (get-buffer-process lsp-dart-flutter-daemon-buffer-name)))))
 
 (ert-deftest wal-lsp-dart-service-uri ()
-  :tags '(lang)
+  :tags '(lang user-facing)
 
   (bydi ((:mock lsp-workspace-get-metadata :with (lambda (_) (error "Testing"))))
 
@@ -141,7 +141,7 @@
   (should (equal "/bin/bash" (wal-with-bash-shell (lambda () shell-file-name)))))
 
 (ert-deftest wal-java-test-dwim ()
-  :tags '(lang)
+  :tags '(lang user-facing)
 
   (bydi (dap-java-run-test-method
          transient-set

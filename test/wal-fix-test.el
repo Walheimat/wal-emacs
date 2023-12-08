@@ -86,7 +86,7 @@
   (kill-buffer wal-flycheck-file--buffer))
 
 (ert-deftest wal-flycheck-file ()
-  :tags '(fix)
+  :tags '(fix user-facing)
 
   (bydi ((:mock flycheck-get-checker-for-buffer :with bydi-rt)
          flycheck-syntax-check-new
@@ -105,7 +105,7 @@
                                'testing))))))
 
 (ert-deftest wal-flycheck-file--no-checker ()
-  :tags '(fix)
+  :tags '(fix user-facing)
 
   (bydi ((:ignore flycheck-get-checker-for-buffer)
          flycheck-syntax-check-new
@@ -118,7 +118,7 @@
       (should-error (wal-flycheck-file flycheck) :type 'user-error))))
 
 (ert-deftest wal-flyspell ()
-  :tags '(fix)
+  :tags '(fix user-facing)
 
   (defvar flyspell-mode nil)
   (bydi (flyspell-mode flyspell-prog-mode)
@@ -146,7 +146,7 @@
           (bydi-was-called flyspell-prog-mode))))))
 
 (ert-deftest wal-flyspell-goto-previous-error ()
-  :tags '(fix)
+  :tags '(fix user-facing)
 
   (bydi (flyspell-goto-next-error)
 

@@ -9,7 +9,7 @@
 (require 'wal-dired nil t)
 
 (ert-deftest wal-dired-from-home ()
-  :tags '(dired)
+  :tags '(dired user-facing)
 
   (bydi ((:mock dired-read-dir-and-switches :return (list  "/tmp"))
          (:mock dired-noselect :return "/tmp/test")
@@ -21,7 +21,7 @@
     (bydi-was-called-with pop-to-buffer-same-window "/tmp/test")))
 
 (ert-deftest wal-image-dired ()
-  :tags '(dired)
+  :tags '(dired user-facing)
 
   (bydi image-dired
 

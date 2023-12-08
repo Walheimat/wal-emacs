@@ -52,7 +52,7 @@
     (bydi-was-called-with browse-url "/tmp/test.html")))
 
 (ert-deftest wal-consult-ripgrep-ignored ()
-  :tags '(complete)
+  :tags '(complete user-facing)
 
   (bydi (consult--grep consult--ripgrep-builder)
     (defvar consult-ripgrep-args)
@@ -62,7 +62,7 @@
       (bydi-was-called-with consult--grep (list "Ripgrep (ignored)" #'consult--ripgrep-builder nil nil)))))
 
 (ert-deftest wal-consult-unregister ()
-  :tags '(complete)
+  :tags '(complete user-facing)
 
   (defvar consult-register--narrow)
 

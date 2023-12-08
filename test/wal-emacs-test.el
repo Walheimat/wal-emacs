@@ -40,7 +40,7 @@
       (bydi-was-called-with doc-view-goto-page 3))))
 
 (ert-deftest wal-kmacro ()
-  :tags '(emacs)
+  :tags '(emacs user-facing)
 
   (bydi (kmacro-end-macro
          kmacro-start-macro)
@@ -56,7 +56,7 @@
       (bydi-was-called kmacro-start-macro))))
 
 (ert-deftest wal-clear-registers ()
-  :tags '(emacs)
+  :tags '(emacs user-facing)
 
   (let ((register-alist '((a . b))))
 
@@ -65,7 +65,7 @@
     (should-not register-alist)))
 
 (ert-deftest wal-lighthouse ()
-  :tags '(emacs)
+  :tags '(emacs user-facing)
 
   (bydi pulse-momentary-highlight-one-line
     (with-temp-buffer

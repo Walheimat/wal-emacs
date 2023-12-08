@@ -9,14 +9,14 @@
 (require 'wal-find nil t)
 
 (ert-deftest wal-rg-rerun-toggle-hidden ()
-  :tags '(find)
+  :tags '(find user-facing)
 
   (bydi-with-mock (rg-rerun-toggle-flag)
     (wal-rg-rerun-toggle-hidden)
     (bydi-was-called-with rg-rerun-toggle-flag (list "--hidden"))))
 
 (ert-deftest wal-rg-project-literal ()
-  :tags '(find)
+  :tags '(find user-facing)
 
   (defvar rg-command-line-flags-function)
 
@@ -30,7 +30,7 @@
       (bydi-was-called-with rg-run (list 'pattern 'files "/tmp/test" t nil 'flags)))))
 
 (ert-deftest wal-dumb-jump-go ()
-  :tags '(find)
+  :tags '(find user-facing)
 
   (bydi (xref-find-definitions
          (:mock thing-at-point :return 'thing))

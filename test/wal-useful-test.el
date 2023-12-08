@@ -137,7 +137,7 @@
                      (inhibit-switch-frame . t))))))
 
 (ert-deftest wal-kill-some-file-buffers ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (ert-with-temp-file to-be-killed
     :buffer killed
@@ -152,7 +152,7 @@
 (defvar useful-killing (ert-resource-file "killing.txt"))
 
 (ert-deftest wal-kill-ring-save-buffer ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (with-temp-buffer
     (insert-file-contents useful-killing)
@@ -182,7 +182,7 @@
       (should (buffer-local-value 'before-save-hook (current-buffer))))))
 
 (ert-deftest wal-set-cursor-type--sets-and-resets ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (with-temp-buffer
     (bydi ((:mock completing-read :return "hollow"))
@@ -196,7 +196,7 @@
     (should (eq cursor-type t))))
 
 (ert-deftest wal-kwim--kills-forward-in-line ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (with-temp-buffer
     (insert-file-contents useful-killing)
@@ -207,7 +207,7 @@
     (should (equal (buffer-string) "I hope\nThat would be terrible\n"))))
 
 (ert-deftest wal-kwim--kills-line-at-end ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (with-temp-buffer
     (insert-file-contents useful-killing)
@@ -219,7 +219,7 @@
     (should (equal (buffer-string) "That would be terrible\n"))))
 
 (ert-deftest wal-kwim--kills-line-at-beg ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (with-temp-buffer
     (insert-file-contents useful-killing)
@@ -231,7 +231,7 @@
     (should (equal (buffer-string) "That would be terrible\n"))))
 
 (ert-deftest wal-kwim--kills-region-if-active ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (bydi ((:always region-active-p) kill-region)
     (with-temp-buffer
@@ -240,7 +240,7 @@
     (bydi-was-called-with kill-region (list nil nil t))))
 
 (ert-deftest wal-mwim-beginning ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (with-temp-buffer
     (insert "hello\n  world")
@@ -258,7 +258,7 @@
     (should (eq (point) 9))))
 
 (ert-deftest wal-spill-paragraph ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (let ((sentence-end-double-space nil))
     (with-temp-buffer
@@ -284,7 +284,7 @@
     (should (eq 104857600 gc-cons-threshold))))
 
 (ert-deftest wal-l ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (with-temp-buffer
     (shut-up (wal-l))
@@ -296,7 +296,7 @@
     (should-not (window-dedicated-p))))
 
 (ert-deftest wal-force-delete-other-windows ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (let ((ignore-window-parameters nil))
 
@@ -307,7 +307,7 @@
       (bydi-was-called delete-other-windows))))
 
 (ert-deftest supernova ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (let ((a (get-buffer-create "stays"))
         (b (get-buffer-create "*goes*"))
@@ -333,7 +333,7 @@
     (bydi-was-called-with switch-to-buffer (list (current-buffer) t))))
 
 (ert-deftest wal-switch-to-other-buffer ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (bydi (switch-to-buffer)
 
@@ -342,7 +342,7 @@
     (bydi-was-called-with switch-to-buffer (list nil t))))
 
 (ert-deftest wal-find-custom-file ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (bydi ((:mock file-truename :return "/tmp/custom.el")
          (:mock find-file-noselect :with bydi-rf)
@@ -352,7 +352,7 @@
     (bydi-was-called-with switch-to-buffer "/tmp/custom.el")))
 
 (ert-deftest wal-find-init ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (bydi ((:mock file-truename :return "/tmp/init.el")
          (:mock find-file-noselect :with bydi-rf)
@@ -362,7 +362,7 @@
     (bydi-was-called-with switch-to-buffer "/tmp/init.el")))
 
 (ert-deftest wal-find-fish-config ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (ert-with-temp-file fish
     :text "# configure"
@@ -534,7 +534,7 @@
   (should (equal '(:test :this :function) (wal-plist-keys '(:test "whether" :this "hacky" :function "works")))))
 
 (ert-deftest wal-scratch-buffer ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (bydi ((:mock pop-to-buffer :with (lambda (n &rest _) (buffer-name n))))
 
@@ -549,7 +549,7 @@
   (kill-buffer "*scratch*<4>"))
 
 (ert-deftest wal-persist-scratch-and-rehydrate ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (defvar wal-scratch-persist-file)
   (defvar wal-scratch-persist--marker)
@@ -615,7 +615,7 @@
   (should (string-equal (wal-truncate "This is it" 24) "This is it")))
 
 (ert-deftest wal-univ-p ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (let ((current-prefix-arg '(4)))
 
@@ -777,7 +777,7 @@
         (add-hook 'emacs-startup-hook #'wal-init-setup-test)))))
 
 (ert-deftest wal-duck-duck-go-region--succeeds-if-region ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (with-temp-buffer
     (insert "where is my mind")
@@ -789,12 +789,12 @@
                "https://duckduckgo.com/html/?q=where%20is%20my%20mind")))))
 
 (ert-deftest wal-duck-duck-go-region--fails-if-no-region ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (should-error (wal-duck-duck-go-region) :type 'user-error))
 
 (ert-deftest wal-fundamental-mode--switches ()
-  :tags '(useful)
+  :tags '(useful user-facing)
 
   (with-temp-buffer
     (emacs-lisp-mode)

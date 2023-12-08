@@ -88,7 +88,7 @@
       (bydi-was-called corfu-mode))))
 
 (ert-deftest wal-debug ()
-  :tags '(lsp)
+  :tags '(lsp user-facing)
 
   (bydi (dap-hydra dap-debug)
 

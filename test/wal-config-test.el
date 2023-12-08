@@ -232,7 +232,7 @@
     (bydi-was-called wal-config-animation--maybe-display)))
 
 (ert-deftest wal-describe-config-version ()
-  :tags '(config)
+  :tags '(config user-facing)
 
   (defvar wal--default-path)
   (let ((out '("1.0.0" "test everything" "1.0.1" "letting the world know"))
@@ -247,7 +247,7 @@
         (should (equal "1.0.1: letting the world know" (wal-describe-config-version)))))))
 
 (ert-deftest wal-show-config-diff-range ()
-  :tags '(config)
+  :tags '(config user-facing)
 
   (bydi ((:mock shell-command-to-string :return " testing ")
          magit-diff-range)
@@ -256,7 +256,7 @@
     (bydi-was-called-with magit-diff-range (list "testing" '("--stat")))))
 
 (ert-deftest wal-config-switch-project ()
-  :tags '(config)
+  :tags '(config user-facing)
 
   (defvar wal--default-path)
   (let ((wal--default-path "/tmp/config"))
@@ -278,7 +278,7 @@
       (should (equal '("/tmp/test.org" "/tmp/test-2.org") (wal-config-lib-files))))))
 
 (ert-deftest wal-config-consult-org-heading ()
-  :tags '(config)
+  :tags '(config user-facing)
 
   (bydi (consult-org-heading
          (:mock wal-config-lib-files :return '("/tmp/test.org" "/tmp/test-2.org")))
@@ -288,7 +288,7 @@
     (bydi-was-called-with consult-org-heading (list nil '("/tmp/test.org" "/tmp/test-2.org")))))
 
 (ert-deftest wal-config-org-tags-view ()
-  :tags '(config)
+  :tags '(config user-facing)
 
   (bydi (org-tags-view
          wal-config-lib-files)

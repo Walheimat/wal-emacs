@@ -20,7 +20,7 @@
     (bydi-was-called-with require (list 'ox-md nil t))))
 
 (ert-deftest wal-org-content ()
-  :tags '(org)
+  :tags '(org user-facing)
 
   (bydi org-content
 
@@ -29,7 +29,7 @@
     (bydi-was-called-with org-content (list 8))))
 
 (ert-deftest wal-org-hide-emphasis-makers ()
-  :tags '(org)
+  :tags '(org user-facing)
 
   (defvar org-hide-emphasis-markers)
 
@@ -46,7 +46,7 @@
       (bydi-was-called-n-times font-lock-flush 2))))
 
 (ert-deftest wal-org-refile ()
-  :tags '(org)
+  :tags '(org user-facing)
 
   (defvar org-roam-directory nil)
   (defvar org-agenda-files nil)
@@ -96,7 +96,7 @@
     (should (eq 80 (wal-relative-column-width)))))
 
 (ert-deftest wal-org-tree-slide-toggle-visibility ()
-  :tags '(org)
+  :tags '(org user-facing)
 
   (let ((cursor-type 'box))
 
@@ -219,7 +219,7 @@
         (should (eq (marker-position marker) 9))))))
 
 (ert-deftest wal-org-capture-project-tasks ()
-  :tags '(org)
+  :tags '(org user-facing)
 
   (bydi org-capture
     (wal-org-capture-project-tasks)
@@ -253,7 +253,7 @@
     (bydi-was-called org-clock-in)))
 
 (ert-deftest wal-org-clock-take-note ()
-  :tags '(org)
+  :tags '(org user-facing)
 
   (bydi (org-clock-goto
          org-add-note)
@@ -264,7 +264,7 @@
     (bydi-was-called org-add-note)))
 
 (ert-deftest wal-org-clock-insert-current-task ()
-  :tags '(org)
+  :tags '(org user-facing)
 
   (defvar org-clock-current-task)
 

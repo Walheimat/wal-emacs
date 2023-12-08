@@ -63,7 +63,7 @@
       (bydi-was-called-with completing-read (list "Select fixed font (current: SomeFont) " wal-fixed-fonts)))))
 
 (ert-deftest wal-select-fixed-or-variable-font ()
-  :tags '(visuals)
+  :tags '(visuals user-facing)
 
   (bydi ((:mock wal-read-font :return "TestFont") wal-font-update)
 
@@ -76,7 +76,7 @@
     (bydi-was-called-with wal-font-update (list :font "TestFont" '(variable-pitch)))))
 
 (ert-deftest wal-set-fixed-or-variable-font-height ()
-  :tags '(visuals)
+  :tags '(visuals user-facing)
 
   (bydi ((:mock wal-read-sensible-font-height :return 101)
          wal-font-update)
@@ -122,7 +122,7 @@
     (bydi-was-called-nth-with set-face-attribute (list 'font-lock-keyword-face nil :weight 'bold) 1)))
 
 (ert-deftest wal-set-transparency ()
-  :tags '(visuals)
+  :tags '(visuals user-facing)
 
   (let ((entered-number nil))
     (bydi ((:mock read-number :return entered-number))
@@ -152,7 +152,7 @@
         (should (eq 90 (cdr (assoc 'alpha default-frame-alist))))))))
 
 (ert-deftest wal-load-active-theme ()
-  :tags '(visuals)
+  :tags '(visuals user-facing)
 
   (bydi (load-theme run-hooks)
 

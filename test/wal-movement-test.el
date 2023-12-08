@@ -9,7 +9,7 @@
 (require 'wal-movement nil t)
 
 (ert-deftest wal-avy-goto-word ()
-  :tags '(movement)
+  :tags '(movement user-facing)
 
   (defvar avy-goto-word-0 nil)
   (defvar avy-goto-word-0-regexp nil)
@@ -36,7 +36,7 @@
       (bydi-was-called-with avy-goto-word-0 t))))
 
 (ert-deftest wal-avy-goto-line ()
-  :tags '(movement)
+  :tags '(movement user-facing)
 
   (bydi ((:mock avy-goto-line :with beginning-of-line)
          (:mock avy-goto-end-of-line :with end-of-line))
@@ -73,7 +73,7 @@
       (should (equal 1 (point))))))
 
 (ert-deftest wal-dogears-list ()
-  :tags '(movement)
+  :tags '(movement user-facing)
 
   (defvar dogears-list-buffer)
 
