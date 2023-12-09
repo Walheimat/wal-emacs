@@ -39,6 +39,31 @@
     (bydi-was-called-with thing-at-point '(symbol))
     (bydi-was-called-with xref-find-definitions '(thing))))
 
+(ert-deftest wal-dogears-list ()
+  :tags '(movement user-facing)
+
+  (defvar dogears-list-buffer)
+
+  (let ((dogears-list-buffer nil))
+
+    (bydi (dogears-list
+           (:spy quit-window))
+
+      (wal-dogears-list)
+
+      (bydi-was-called dogears-list t)
+
+      (ert-with-test-buffer (:name "dogears")
+
+        (setq dogears-list-buffer (current-buffer))
+
+        (display-buffer dogears-list-buffer)
+
+        (wal-dogears-list)
+
+        (bydi-was-not-called dogears-list)
+        (bydi-was-called quit-window)))))
+
 ;;; wal-find-test.el ends here
 
 ;; Local Variables:

@@ -20,7 +20,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   `wal-config-animation-`.
 - Package `surround`.
 - Package `dogears` now has custom command `wal-dogears-list` which
-  pops to or toggles the list.
+  pops to or toggles the list. It was moved to `find` package.
 
 ### Changed
 
