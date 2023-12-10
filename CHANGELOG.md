@@ -13,6 +13,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `vertico-sort-function` is no longer customized (meaning it uses
   `vertico-sort-history-alpha` again).
+- `repeat-exit-timeout` was increased to 5 seconds.
 
 ## [v2.2.3]
 
