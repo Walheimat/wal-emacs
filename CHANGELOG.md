@@ -7,6 +7,13 @@ Changelog](https://keepachangelog.com/en/1.0.0/), and this project
 (very loosely) adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- `vertico-sort-function` is no longer customized (meaning it uses
+  `vertico-sort-history-alpha` again).
+
 ## [v2.2.3]
 
 Whale form.
