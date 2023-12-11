@@ -283,6 +283,15 @@
 
       (should (string= "Testing" (buffer-string))))))
 
+(ert-deftest wal-org-agenda-take-note ()
+  (bydi (consult-org-agenda
+         org-add-note)
+
+    (wal-org-agenda-take-note)
+
+    (bydi-was-called consult-org-agenda)
+    (bydi-was-called org-add-note)))
+
 ;;; wal-org-test.el ends here
 
 ;; Local Variables:

@@ -25,10 +25,12 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   (require 'wal-key-bindings nil t)
   (require 'wal-bridge nil t))
 
-(declare-function consult--buffer-state "ext:consult.el")
 (declare-function consult--buffer-query "ext:consult.el")
+(declare-function consult--buffer-state "ext:consult.el")
+(declare-function consult-org-agenda "ext:consult.el")
 (declare-function general-define-key "ext:general.el")
 (declare-function mixed-pitch-mode "ext:mixed-pitch.el")
+(declare-function org-clock-goto "ext:org-clock.el")
 (declare-function org-roam-buffer-p "ext:org-roam.el")
 (declare-function project-root "ext:project.el")
 (declare-function transient-prefix "ext:transient.el")
@@ -276,6 +278,14 @@ I need day-to-day and adds a =consult= buffer source.
    :as #'buffer-name
    :predicate #'wal-agenda-buffer-p))
 
+(defun wal-org-agenda-take-note ()
+  "Take a note for and agenda item."
+  (interactive)
+
+  (save-window-excursion
+    (consult-org-agenda)
+    (org-add-note)))
+
 (use-package org-agenda
   :config
   (with-eval-after-load 'partial-recall
@@ -318,6 +328,7 @@ I need day-to-day and adds a =consult= buffer source.
 
   :bind
   (("C-c a" . org-agenda)
+   ("C-c n" . wal-org-agenda-take-note)
    :map org-agenda-mode-map
    ("C-c C-t" . org-agenda-todo-yesterday))
 
@@ -844,8 +855,8 @@ the clocked task.
   (org-clock-heading-function #'wal-org-clock-heading)
 
   :bind
-  (("C-c n" . org-clock-take-note||goto)
-   ("C-c N" . org-clock-out)))
+  (("C-c t" . org-clock-take-note||goto)
+   ("C-c T" . org-clock-out)))
 #+END_SRC
 
 ** org-duration                                                     :builtin:

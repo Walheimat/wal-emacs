@@ -9,6 +9,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `wal-org-agenda-take-note` to do just that, bound to `C-c n`.
+
 ### Changed
 
 - `vertico-sort-function` is no longer customized (meaning it uses
@@ -16,6 +20,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `repeat-exit-timeout` was increased to 5 seconds.
 - Bindings for `multiple-cursor` repeat map have been made more
   ergonomic.
+- `org-clock` bindings now use `C-c {t,T}`.
 
 ## [v2.2.3]
 
