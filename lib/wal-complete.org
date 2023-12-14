@@ -29,7 +29,6 @@ Complete commands and code.
 (declare-function junk--parts "ext:junk.el")
 (declare-function org-clock-in "ext:org-clock.el")
 (declare-function org-up-heading-safe "ext:org.el")
-(declare-function partial-recall--has-buffers-p "ext:partial-recall.el")
 (declare-function wal-append "wal-useful.el")
 (declare-function wal-org-clock-in-from-now "wal-org.el")
 (declare-function wal-project--buffer-root "wal-workspace.el")
@@ -48,19 +47,6 @@ Complete commands and code.
   "Change completion settings."
   :group 'wal
   :tag "Completion")
-
-(defcustom wal-consult-buffer-narrow-source 'recall
-  "Source to use when pre-narrowing `consult-buffer'."
-  :type '(choice (const :tag "Partial recall buffers" recall)
-                 (const :tag "Project buffers" project))
-  :group 'wal-complete)
-
-(defcustom wal-consult-pre-narrowed-commands '(consult-buffer)
-  "Commands that should be pre-narrowed when toggled.
-
-See `wal-consult--pre-narrow' for covered commands."
-  :type '(repeat symbol)
-  :group 'wal-complete)
 #+END_SRC
 
 * Inline Completion
@@ -223,7 +209,8 @@ unobtrusive.
                                   (imenu buffer)))
 
   (vertico-multiform-commands '((tab-switch flat)
-                                (consult-buffer flat)))
+                                (partial-recall-switch-to-buffer flat)
+                                (consult-buffer buffer)))
 
   :functions (vertico-mode vertico-multiform-mode))
 #+END_SRC
@@ -400,9 +387,8 @@ Integration for =consult=.
 :UNNUMBERED: t
 :END:
 
-Beautiful completion and narrowing within completion. This sets up
-pre-narrowing, mainly for [[file:wal-bridge.org::*partial-recall][partial-recall]]. It also adds a new source
-for projects while switching to differentiate open and closed
+Beautiful completion and narrowing within completion. This adds a new
+source for projects while switching to differentiate open and closed
 projects. Since =consult= provides many useful commands a transient
 combining the most useful ones is bound to the eponymous leader key.
 
@@ -457,43 +443,6 @@ If DISCONTINUE is non-nil, clock in from now."
   (setq wal-active-theme theme)
   (run-hooks 'wal-theme-hook))
 
-(defvar wal-consult-pre-narrow t
-  "Whether `consult' commands should be pre-narrowed.")
-
-(defun wal-consult-toggle-pre-narrowing ()
-  "Toggle pre-narrowing of `consult' commands."
-  (interactive)
-
-  (setq wal-consult-pre-narrow (not wal-consult-pre-narrow)))
-
-(defun wal-consult--pre-narrow ()
-  "Pre-narrow `consult' commands."
-  (declare-function consult--buffer-query "ext:consult.el")
-  (declare-function consult--project-root "ext:consult.el")
-
-  (and-let* ((should-narrow (and (memq this-command wal-consult-pre-narrowed-commands)
-                                 (if wal-consult-pre-narrow
-                                     (not (wal-univ-p))
-                                   (wal-univ-p))))
-             (char (pcase this-command
-                     ('consult-buffer
-                      (pcase wal-consult-buffer-narrow-source
-                        ('project
-                         (when-let* ((root (consult--project-root))
-                                     (buffers (consult--buffer-query
-                                               :sort 'visibility
-                                               :directory root
-                                               :as #'buffer-name)))
-
-                           ?p))
-                        ('recall
-                         (when (partial-recall--has-buffers-p) ?r))))
-
-                     ('wal-consult-project
-                      (when (consult--open-project-items) ?o)))))
-
-    (setq unread-command-events (append unread-command-events (list char 32)))))
-
 (defvar consult--project-history nil)
 
 (defvar consult--source-projects
@@ -501,7 +450,6 @@ If DISCONTINUE is non-nil, clock in from now."
         :category 'project
         :history 'consult--project-history
         :action 'project-switch-project
-        :preview-key "C-."
         :items (lambda ()
                  (let ((open (consult--open-project-items))
                        (all (mapcar #'car project--list)))
@@ -556,13 +504,11 @@ If DISCONTINUE is non-nil, clock in from now."
   (consult-customize
    consult--source-recent-file
    consult--source-project-recent-file
+   consult--source-project-recent-file-hidden
    consult--source-bookmark
    consult-recent-file
    wal-consult-clock-in
    :preview-key "C-."
-
-   consult--source-project-recent-file
-   :narrow ?r
 
    wal-consult-clock-in
    :prompt "Clock in: ")
@@ -572,9 +518,6 @@ If DISCONTINUE is non-nil, clock in from now."
 
   (advice-add 'consult :around 'wal-with-delayed-transient-popup)
 
-  ;; Pre-narrow `consult' commands.
-  (add-hook 'minibuffer-setup-hook #'wal-consult--pre-narrow)
-
   (with-eval-after-load 'org-keys
     (wal-replace-in-alist
      'org-speed-commands
@@ -583,10 +526,12 @@ If DISCONTINUE is non-nil, clock in from now."
   (transient-define-prefix consult ()
     "Run `consult' commands."
     [["Goto"
+      ("," "buffer" consult-buffer)
       ("SPC" "mark" consult-mark)
       ("g" "line" consult-goto-line)
       ("i" "imenu" consult-imenu)
-      ("o" "outline" wal-consult-outline)]
+      ("o" "outline" wal-consult-outline)
+      ("p" "project" wal-consult-project)]
 
      ["Find"
       ("m" "bookmark" consult-bookmark)
@@ -612,18 +557,12 @@ If DISCONTINUE is non-nil, clock in from now."
 
     [["Modes"
       ("+" "major mode command" consult-mode-command)
-      ("-" "toggle minor mode" consult-minor-mode-menu)]
-     ["Utility"
-      ("N" "toggle pre-narrowing" wal-consult-toggle-pre-narrowing)]])
+      ("-" "toggle minor mode" consult-minor-mode-menu)]])
 
   :general
   (general-define-key
    (wal-key-combo-for-leader 'consult)
-   'consult)
-
-  :wal-bind
-  (("j" . consult-buffer)
-   ("p" . wal-consult-project)))
+   'consult))
 #+END_SRC
 
 * Footer

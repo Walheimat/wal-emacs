@@ -104,58 +104,6 @@
     (should (equal out '(hook)))
     (should (equal wal-active-theme 'test))))
 
-(ert-deftest wal-consult--pre-narrow ()
-  :tags '(complete)
-
-  (defvar wal-consult-pre-narrow)
-  (defvar wal-consult-buffer-narrow-source)
-  (defvar wal-consult-pre-narrowed-commands)
-
-  (let ((wal-consult-buffer-narrow-source 'project)
-        (wal-consult-pre-narrowed-commands '(consult-buffer wal-consult-project)))
-
-    (bydi ((:mock consult--project-root :with always)
-           (:mock consult--buffer-query :with always)
-           (:mock consult--open-project-items :with always)
-           (:mock partial-recall--has-buffers-p :with always))
-      (setq wal-consult-pre-narrow t
-            unread-command-events nil)
-      (wal-consult--pre-narrow)
-      (should-not unread-command-events)
-
-      (setq this-command 'consult-buffer)
-      (wal-consult--pre-narrow)
-      (should unread-command-events)
-      (bydi-was-called consult--project-root)
-
-      (bydi-clear-mocks)
-
-      (setq wal-consult-buffer-narrow-source 'recall)
-      (wal-consult--pre-narrow)
-      (should unread-command-events)
-      (bydi-was-not-called consult--project-root)
-      (bydi-was-called partial-recall--has-buffers-p)
-
-      (setq unread-command-events nil
-            this-command 'wal-consult-project)
-      (wal-consult--pre-narrow)
-      (should unread-command-events)
-
-      (setq wal-consult-pre-narrow nil
-            unread-command-events nil)
-      (wal-consult--pre-narrow)
-      (should-not unread-command-events))))
-
-(ert-deftest wal-consult-toggle-pre-narrow ()
-  :tags '(complete)
-
-  (defvar wal-consult-pre-narrow)
-
-  (let ((wal-consult-pre-narrow nil))
-
-    (wal-consult-toggle-pre-narrowing)
-    (should wal-consult-pre-narrow)))
-
 (ert-deftest consult--open-project-items ()
   :tags '(complete)
 

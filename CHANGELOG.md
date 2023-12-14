@@ -21,6 +21,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Bindings for `multiple-cursor` repeat map have been made more
   ergonomic.
 - `org-clock` bindings now use `C-c {t,T}`.
+- All `consult` commands are now bound in `consult` `transient`.
+- The concept of pre-narrowing `consult` commands was removed again.
+- `consult-buffer` now uses `vertico-multiform` style `buffer`.
+- `H-j` now does what `H-u` used to do: go to word.
 
 ## [v2.2.3]
 
