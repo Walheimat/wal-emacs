@@ -25,6 +25,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - The concept of pre-narrowing `consult` commands was removed again.
 - `consult-buffer` now uses `vertico-multiform` style `buffer`.
 - `H-j` now does what `H-u` used to do: go to word.
+- `wal-project-dired-root` was removed (since `project-dired` does the
+  same thing).
 
 ## [v2.2.3]
 

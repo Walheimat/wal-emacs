@@ -60,15 +60,6 @@
 
         (should (string= "Project at ’/tmp/test’ is not version-controlled\n" messages))))))
 
-(ert-deftest wal-project-dired-root ()
-  :tags '(workspace user-facing)
-
-  (bydi (project-current (:mock project-root :return "/tmp/test") dired)
-
-    (wal-project-dired-root)
-
-    (bydi-was-called-with dired (list "/tmp/test"))))
-
 (ert-deftest wal-project--buffer-root ()
   :tags '(workspace)
 
