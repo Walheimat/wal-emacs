@@ -7,8 +7,7 @@
 ;;; Code:
 
 (require 'bydi)
-(require 'bydi-ci)
-(require 'bydi-report)
+(require 'dinghy-rope)
 
 (setq byte-compile-warnings '(not not-unused))
 
@@ -23,7 +22,7 @@
   (defvar wal--lib-path)
 
   (cl-destructuring-bind (source-dir build-dir lib-dir)
-      (bydi-ci-setup-paths (list "build" "lib"))
+      (dinghy-rope-setup-paths (list "build" "lib"))
 
     (setq wal--default-path source-dir
           wal--build-path build-dir
@@ -49,7 +48,7 @@
 (defun wal-test-helper--setup ()
   "Set up everything."
   (when (wal-test-helper--cold-p)
-    (bydi-report-setup-undercover (list "build/*.el"
+    (dinghy-rope-setup-undercover (list "build/*.el"
                                         "wal.el"))
 
     (message "Cold start, setting up test helper")
@@ -59,8 +58,8 @@
 
     (setq auto-mode-alist nil)
 
-    (bydi-report-setup-ert :increase-print-depth t)
-    (bydi-report-setup-ert-runner #'wal-test-helper--report)))
+    (dinghy-rope-setup-ert :increase-print-depth t)
+    (dinghy-rope-setup-ert-runner #'wal-test-helper--report)))
 
 (wal-test-helper--setup)
 
