@@ -29,6 +29,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `wal-project-dired-root` was removed (since `project-dired` does the
   same thing).
 
+### Fixed
+
+- `org-habit` no longer force-loads `org-agenda`.
+
 ## [v2.2.3]
 
 Whale form.
