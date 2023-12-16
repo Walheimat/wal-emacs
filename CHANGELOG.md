@@ -14,6 +14,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `wal-org-agenda-take-note` to do just that, bound to `C-c n`.
 - Package `gumshoe` as alternative to `dogears` (might remove both
   again soon).
+- `dinghy-rope` is now installed during `ensure`
 
 ### Changed
 

@@ -304,11 +304,13 @@ the temporary file."
            wal--set-paths
            wal--maybe-tangle
            wal--load-config
+           wal--ensure-dinghy
            package-initialize)
 
       (shut-up (wal-bootstrap "/tmp" 'ensure))
 
-      (bydi-was-called package-initialize))))
+      (bydi-was-called package-initialize)
+      (bydi-was-called wal--ensure-dinghy))))
 
 (ert-deftest bootstrap--handles-errors ()
   :tags '(prelude)
@@ -419,6 +421,20 @@ the temporary file."
       (wal-show-compilation-result)
 
       (bydi-was-called-with pop-to-buffer (current-buffer)))))
+
+(ert-deftest wal--ensure-dinghy ()
+  :tags '(prelude)
+
+  (ert-with-temp-directory dinghy-dir
+    (let ((wal--dinghy-path dinghy-dir)
+          (src-dir (expand-file-name "src" dinghy-dir)))
+
+      (make-directory src-dir)
+
+      (bydi (package-install-file)
+        (wal--ensure-dinghy)
+
+        (bydi-was-called-with package-install-file (expand-file-name "src/dinghy-rope.el" dinghy-dir))))))
 
 ;;; wal-test.el ends here
 

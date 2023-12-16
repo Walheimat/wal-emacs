@@ -67,6 +67,11 @@ This variable will be set when calling `wal-bootstrap'")
 
 This variable will be set when calling `wal-bootstrap'.")
 
+(defvar wal--dinghy-path nil
+  "The path to dinghy submodule.
+
+This variable will be set when calling `wal-bootstrap'.")
+
 (defgroup wal nil
   "Walheimat's configuration."
   :group 'convenience
@@ -186,15 +191,26 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
     (setq wal-booting nil
           wal-loaded t)))
 
+(defun wal--ensure-dinghy ()
+  "Prep dinghy packages.
+
+This installs `dinghy-rope'."
+  (let ((src (expand-file-name "src" wal--dinghy-path)))
+
+    (when (file-exists-p src)
+      (package-install-file (expand-file-name "dinghy-rope.el" src)))))
+
 (defun wal--set-paths (source-dir)
   "Set all directories based on SOURCE-DIR."
    (let* ((lib-dir (expand-file-name "lib" source-dir))
-          (build-dir (expand-file-name "build" source-dir)))
+          (build-dir (expand-file-name "build" source-dir))
+          (dinghy-dir (expand-file-name "dinghy" source-dir)))
 
      ;; These variables are also used in `wal' package.
      (setq wal--default-path source-dir
            wal--lib-path lib-dir
-           wal--build-path build-dir)))
+           wal--build-path build-dir
+           wal--dinghy-path dinghy-dir)))
 
 (defun wal--configure-cold-boot ()
   "Configure cold-booting."
@@ -383,6 +399,7 @@ Ensure means that packages will be installed after loading."
     (pcase mode
       ('ensure
        (package-initialize)
+       (wal--ensure-dinghy)
        (setq wal-ensure t))
 
       ('upgrade

@@ -33,7 +33,11 @@ tangle: clean
 ensure-init:
 	$(WITH_PRELUDE) $(INIT)
 
-# Make sure packages have been installed
+.PHONY: force-ensure
+force-ensure: BOOTSTRAP_MODE=ensure
+force-ensure:
+	$(WITH_PRELUDE) $(BOOTSTRAP)
+
 $(PACKAGE_MARKER): BOOTSTRAP_MODE=ensure
 $(PACKAGE_MARKER):
 	$(WITH_PRELUDE) $(BOOTSTRAP)
