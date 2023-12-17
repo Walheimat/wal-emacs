@@ -189,7 +189,9 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
                 current
                 (error-message-string err))
        (setq wal-init-error err
-             wal-booting nil)))
+             wal-booting nil))
+      (:success
+       (message "Successfully loaded all %d packages" (length wal-packages))))
 
     (setq wal-booting nil
           wal-loaded t)))
