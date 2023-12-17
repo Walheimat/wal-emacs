@@ -15,6 +15,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Package `gumshoe` as alternative to `dogears` (might remove both
   again soon).
 - `dinghy-rope` is now installed during `ensure`
+- `winner` now ignores buffers that use a buffer because of `vertico`.
 
 ### Changed
 
