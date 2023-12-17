@@ -19,12 +19,15 @@
                        wal-package
                        wal-key-bindings
                        wal-bridge
+
+                       ;; The following packages require a setup.
+                       wal-visuals
+                       wal-emacs
+                       wal-config
+
                        ;; The following packages are optional.
                        wal-settings
-                       wal-config
-                       wal-emacs
                        wal-edit
-                       wal-visuals
                        wal-movement
                        wal-find
                        wal-complete
