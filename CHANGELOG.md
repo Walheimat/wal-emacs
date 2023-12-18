@@ -33,6 +33,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   selection.
 - `wal-project-dired-root` was removed (since `project-dired` does the
   same thing).
+- Custom `eshell` command was removed; `vterm` one now uses
+  `project-prefixed-buffer-name` like `project-eshell`.
 
 ### Fixed
 

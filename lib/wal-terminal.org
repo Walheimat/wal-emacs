@@ -29,7 +29,9 @@ I am convinced that we are in a terminal process.
 
 (declare-function project-buffers "ext:project.el")
 (declare-function project-current "ext:project.el")
+(declare-function project-prefixed-buffer-name "ext:project.el")
 (declare-function project-root "ext:project.el")
+(declare-function vterm "ext:vterm.el")
 (declare-function wdb-faraway "wal-useful.el")
 
 (defvar eshell-buffer-name)
@@ -67,9 +69,8 @@ a file.
 I've been told it's not a complete shell but it allows using Emacs
 commands from a shell-like interface.
 
-This adds =wal-eshell= to only open a single =eshell= buffer per
-project. This also makes sure truncation actually fully truncates.
-Also sets up =with-editor= and a banner message.
+This makes sure truncation actually fully truncates. Also sets up
+=with-editor= and a banner message.
 
 #+BEGIN_SRC emacs-lisp
 (defun wal-instead-truncate-buffer (&rest _r)
@@ -80,31 +81,6 @@ Also sets up =with-editor= and a banner message.
   (let ((eshell-buffer-maximum-lines 0))
 
     (eshell-truncate-buffer)))
-
-(defun wal-eshell (&optional arg)
-  "Run `eshell' in a project-aware way.
-
-ARG is passed to `eshell'."
-  (interactive "P")
-
-  (require 'eshell)
-
-  (if-let* ((project (project-current))
-            (root (expand-file-name (project-root project))))
-
-      (if-let* ((pattern (concat "\\" (substring eshell-buffer-name 0 -1)))
-                (filter (lambda (it) (string-match-p pattern (buffer-name it))))
-                (eshell-buffers (seq-filter filter (buffer-list)))
-                (find (lambda (it)
-                        (let* ((dir (buffer-local-value 'default-directory it))
-                               (safe-dir (substring-no-properties dir)))
-                          (string-match-p root safe-dir))))
-                (containing (seq-find find eshell-buffers)))
-
-          (switch-to-buffer containing)
-        (funcall-interactively 'eshell '(4)))
-
-    (eshell arg)))
 
 (use-package eshell
   :hook
@@ -123,7 +99,7 @@ ARG is passed to `eshell'."
                           "\n\n"))
 
   :bind
-  (("C-c e" . wal-eshell)))
+  (("C-c e" . eshell)))
 #+END_SRC
 
 ** eshell-syntax-highlighting                                         :melpa:
@@ -144,38 +120,25 @@ Add syntax highlighting in =eshell= buffers.
 :END:
 
 Fully functional and slightly cumbersome terminal usable within Emacs.
+
 Adds the same functionality to have one =vterm= buffer per project and
 sets up =with-editor=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal-vterm (&optional arg)
-  "Get a `vterm' buffer.
+(defun wal-project-vterm (&optional force)
+  "Get a project `vterm' buffer.
 
-If called from a project buffer, this only creates a `vterm'
-buffer if one doesn't exist yet and ARG is nil."
+If FORCE is non-nil, this creates a new buffer even if a project
+buffer already exists."
   (interactive "P")
 
-  (if arg (funcall-interactively 'vterm arg)
+  (let* ((default-directory (project-root (project-current t)))
+         (vterm-buffer-name (project-prefixed-buffer-name "vterm"))
+         (buffer (get-buffer vterm-buffer-name)))
 
-    (if-let* ((current (project-current))
-              (root (expand-file-name (project-root current))))
-
-        (if-let* ((safe-dir (expand-file-name root))
-                  (found (cl-find-if
-                          #'(lambda (it)
-                              (and (provided-mode-derived-p
-                                    (buffer-local-value 'major-mode it)
-                                    'vterm-mode)
-                                   (string-match-p
-                                    safe-dir
-                                    (buffer-local-value 'default-directory it))))
-                          (buffer-list))))
-            (switch-to-buffer found)
-
-          ;; Create a new session.
-          (funcall-interactively 'vterm '(4)))
-
-      (funcall-interactively 'vterm))))
+    (if (and buffer (not force))
+        (pop-to-buffer buffer (bound-and-true-p display-comint-buffer-action))
+      (vterm t))))
 
 (use-package vterm
   :hook
@@ -186,7 +149,9 @@ buffer if one doesn't exist yet and ARG is nil."
   (vterm-max-scrollback 10000)
 
   :general
-  (ambassador "t" 'wal-vterm)
+  (ambassador "t" '(:ignore t :wk "vterm")
+              "tt" 'vterm
+              "tp" 'wal-project-vterm)
 
   :delight
   (vterm-copy-mode " vcp"))
