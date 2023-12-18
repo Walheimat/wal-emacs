@@ -7,7 +7,9 @@ Changelog](https://keepachangelog.com/en/1.0.0/), and this project
 (very loosely) adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.2.4]
+
+Binding light.
 
 ### Added
 
@@ -16,6 +18,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   again soon).
 - `dinghy-rope` is now installed during `ensure`
 - `winner` now ignores buffers that use a buffer because of `vertico`.
+- The newly free `H-p` and `H-y` are temporarily bound to
+  `point-to-register` and `jump-to-register`.
 
 ### Changed
 
