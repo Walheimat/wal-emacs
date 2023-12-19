@@ -94,15 +94,23 @@
   :tags '(complete)
 
   (defvar wal-active-theme nil)
-  (let ((out nil)
-        (wal-active-theme nil))
 
-    (with-temp-buffer
-      (add-hook 'wal-theme-hook (lambda () (add-to-list 'out 'hook)))
-      (wal-then-set-active-theme 'test))
+  (bydi (customize-save-variable
+         (:spy run-hooks)
+         (:watch wal-active-theme))
 
-    (should (equal out '(hook)))
-    (should (equal wal-active-theme 'test))))
+    (wal-then-set-active-theme 'some)
+
+    (bydi-was-set-to wal-active-theme 'some)
+    (bydi-was-not-called customize-save-variable)
+    (bydi-was-called-with run-hooks 'wal-theme-hook)
+
+
+    (let ((current-prefix-arg t))
+
+      (wal-then-set-active-theme 'some)
+
+      (bydi-was-called customize-save-variable))))
 
 (ert-deftest consult--open-project-items ()
   :tags '(complete)
