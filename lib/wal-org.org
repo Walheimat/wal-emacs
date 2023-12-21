@@ -47,6 +47,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (declare-function wdb-nearby "wal-useful.el")
 
 (defvar org-clock-current-task)
+(defvar org-log-note-this-command 'org-clock-out)
 (defvar partial-recall-meaningful-traits)
 (defvar text-scale-mode-step)
 (defvar visual-fill-column-width)
@@ -799,6 +800,24 @@ the clocked task.
 
     (wal-truncate heading 12)))
 
+(defvar wal-org-clock--unsaved nil)
+
+(defun wal-org-clock--first-record-clocking-buffer (&rest _)
+  "Record the buffer that is being clocked."
+  (declare-function org-clocking-buffer "ext:org-clock.el")
+
+  (setq wal-org-clock--unsaved (org-clocking-buffer)))
+
+(defun wal-org-clock--then-save-unsaved-buffer (&rest _)
+  "Save the buffer of the clocked item."
+  (when (and wal-org-clock--unsaved
+             (eq org-log-note-this-command 'org-clock-out))
+
+    (with-current-buffer wal-org-clock--unsaved
+      (save-buffer)))
+
+  (setq wal-org-clock--unsaved nil))
+
 (defun wal-org-clock-in-from-now ()
   "Force `org-clock-in' without continuous logging."
   (defvar org-clock-continuously)
@@ -838,6 +857,15 @@ the clocked task.
     (add-to-list 'org-speed-commands '("N" . wal-org-clock-in-from-now)))
 
   (parallel wal-org-clock-take-note org-clock-goto)
+
+  :config
+  (advice-add
+   'org-clock-out :before
+   #'wal-org-clock--first-record-clocking-buffer)
+
+  (advice-add
+   'org-store-log-note :after
+   #'wal-org-clock--then-save-unsaved-buffer)
 
   :custom
   ;; We want a continuous, persistent clock.

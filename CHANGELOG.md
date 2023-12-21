@@ -9,6 +9,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Clocking in and out now saves the buffer.
+
 ### Changed
 
 - Calling `consult-theme` with a prefix argument now customizes

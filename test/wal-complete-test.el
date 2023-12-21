@@ -81,10 +81,17 @@
 (ert-deftest wal-consult-clock-in ()
   :tags '(complete)
 
-  (bydi (consult-org-agenda org-clock-in wal-org-clock-in-from-now)
+  (bydi (consult-org-agenda
+         org-clock-in
+         wal-org-clock-in-from-now
+         (:spy save-buffer)
+         (:mock org-clocking-buffer :return (current-buffer)))
+
     (wal-consult-clock-in)
     (bydi-was-called consult-org-agenda)
     (bydi-was-called org-clock-in)
+    (bydi-was-called org-clocking-buffer)
+    (bydi-was-called save-buffer)
 
     (funcall-interactively 'wal-consult-clock-in '(4))
     (bydi-was-called consult-org-agenda)

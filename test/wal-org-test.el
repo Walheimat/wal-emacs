@@ -292,6 +292,25 @@
     (bydi-was-called consult-org-agenda)
     (bydi-was-called org-add-note)))
 
+(ert-deftest wal-org-clock--first-record-clocking-buffer ()
+  (bydi ((:watch wal-org-clock--unsaved)
+         (:mock org-clocking-buffer :return 'buffer))
+
+    (wal-org-clock--first-record-clocking-buffer)
+
+    (bydi-was-set-to wal-org-clock--unsaved 'buffer)))
+
+(ert-deftest wal-org-clock--then-save-unsaved-buffer ()
+  (let ((wal-org-clock--unsaved (current-buffer))
+        (org-log-note-this-command 'org-clock-out))
+
+    (bydi ((:spy save-buffer)
+           (:watch wal-org-clock--unsaved))
+      (wal-org-clock--then-save-unsaved-buffer)
+
+      (bydi-was-called save-buffer)
+      (bydi-was-set-to wal-org-clock--unsaved nil))))
+
 ;;; wal-org-test.el ends here
 
 ;; Local Variables:

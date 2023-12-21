@@ -28,6 +28,7 @@ Complete commands and code.
 (declare-function junk--stringify "ext:junk.el")
 (declare-function junk--parts "ext:junk.el")
 (declare-function org-clock-in "ext:org-clock.el")
+(declare-function org-clocking-buffer "ext:org-clock.el")
 (declare-function org-up-heading-safe "ext:org.el")
 (declare-function wal-append "wal-useful.el")
 (declare-function wal-org-clock-in-from-now "wal-org.el")
@@ -435,7 +436,10 @@ If DISCONTINUE is non-nil, clock in from now."
     (consult-org-agenda)
     (if discontinue
         (wal-org-clock-in-from-now)
-      (org-clock-in))))
+      (org-clock-in)))
+
+  (with-current-buffer (org-clocking-buffer)
+    (save-buffer)))
 
 (defun wal-then-set-active-theme (theme)
   "Advise to set `wal-active-theme' to THEME."
