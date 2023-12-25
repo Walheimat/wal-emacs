@@ -241,7 +241,10 @@ the temporary file."
 
     (shut-up (wal-tangle-config))
 
-    (bydi-was-called-n-times org-babel-tangle-file (length wal-packages))
+    (let ((all (+ (length wal-packages)
+                  (length wal-additional-packages))))
+
+      (bydi-was-called-n-times org-babel-tangle-file all))
 
     (bydi-was-called wal--touch)))
 

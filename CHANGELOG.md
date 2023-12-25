@@ -12,6 +12,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - Clocking in and out now saves the buffer.
+- Which non-required packages are loaded can now be customized using
+  `wal-additional-packages` which includes all optional packages.
 
 ### Changed
 

@@ -19,29 +19,9 @@
                        wal-package
                        wal-key-bindings
                        wal-bridge
-
-                       ;; The following packages require a setup.
                        wal-visuals
                        wal-emacs
-                       wal-config
-
-                       ;; The following packages are optional.
-                       wal-settings
-                       wal-edit
-                       wal-movement
-                       wal-find
-                       wal-complete
-                       wal-workspace
-                       wal-windows
-                       wal-org
-                       wal-dired
-                       wal-terminal
-                       wal-vc
-                       wal-lang
-                       wal-fix
-                       wal-lsp
-                       wal-devops
-                       wal-web)
+                       wal-config)
   "List of sub-packages that will be loaded.
 
 The order determines the load order as well.")
@@ -79,6 +59,30 @@ This variable will be set when calling `wal-bootstrap'.")
   "Walheimat's configuration."
   :group 'convenience
   :prefix "wal-")
+
+(defcustom wal-additional-packages '(wal-settings
+                                     wal-edit
+                                     wal-movement
+                                     wal-find
+                                     wal-complete
+                                     wal-workspace
+                                     wal-windows
+                                     wal-org
+                                     wal-dired
+                                     wal-terminal
+                                     wal-vc
+                                     wal-lang
+                                     wal-fix
+                                     wal-lsp
+                                     wal-devops
+                                     wal-web)
+  "Additional packages of the configuration.
+
+These are optional packages that can be left out. If a minimal
+configuration is preferred, you can optionally set `wal-minimal'
+or run Emacs with flag `--minimal'."
+  :group 'wal
+  :type '(repeat symbol))
 
 (defun wal-package-files ()
   "Get the package files."
@@ -180,18 +184,20 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
 
     (add-to-list 'load-path dir)
 
-    (condition-case err
-        (dolist (it wal-packages)
-          (setq current it)
-          (require it))
-      (error
-       (message "Failed to load package '%s': %s"
-                current
-                (error-message-string err))
-       (setq wal-init-error err
-             wal-booting nil))
-      (:success
-       (message "Successfully loaded all %d packages" (length wal-packages))))
+    (let ((all-packages (append wal-packages wal-additional-packages)))
+
+      (condition-case err
+          (dolist (it all-packages)
+            (setq current it)
+            (require it))
+        (error
+         (message "Failed to load package '%s': %s"
+                  current
+                  (error-message-string err))
+         (setq wal-init-error err
+               wal-booting nil))
+        (:success
+         (message "Successfully loaded all %d packages" (length all-packages)))))
 
     (setq wal-booting nil
           wal-loaded t)))
