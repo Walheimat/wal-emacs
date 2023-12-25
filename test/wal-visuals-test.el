@@ -78,17 +78,23 @@
 (ert-deftest wal-set-fixed-or-variable-font-height ()
   :tags '(visuals user-facing)
 
-  (bydi ((:mock wal-read-sensible-font-height :return 101)
-         wal-font-update)
+  (let ((wal-fixed-font-height 100)
+        (wal-variable-font-height 100))
 
-    (call-interactively 'wal-set-fixed-font-height)
+    (bydi ((:mock wal-read-sensible-font-height :return 101)
+           wal-font-update
+           (:watch wal-fixed-font-height)
+           (:watch wal-variable-font-height))
 
-    (bydi-was-called-with wal-font-update (list :height 101 '(default fixed-pitch) nil))
-    (bydi-clear-mocks)
+      (call-interactively 'wal-set-fixed-font-height)
 
-    (call-interactively 'wal-set-variable-font-height)
+      (bydi-was-called-with wal-font-update (list :height 101 '(default fixed-pitch) nil) t)
+      (bydi-was-set-to wal-fixed-font-height 101)
 
-    (bydi-was-called-with wal-font-update (list :height 101 '(variable-pitch) nil))))
+      (call-interactively 'wal-set-variable-font-height)
+
+      (bydi-was-called-with wal-font-update (list :height 101 '(variable-pitch) nil))
+      (bydi-was-set-to wal-variable-font-height 101))))
 
 (ert-deftest wal-preferred-fonts ()
   :tags '(visuals)

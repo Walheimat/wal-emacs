@@ -19,6 +19,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Calling `consult-theme` with a prefix argument now customizes
   `wal-theme`.
+- Calling `wal-set-{fixed,variable}-font-height` now sets the
+  respective custom variable.
 
 ## [2.2.4]
 
