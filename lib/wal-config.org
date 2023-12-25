@@ -292,9 +292,9 @@ No-op if it is already running."
 
     ;; Start timer.
     (setq wal-config-animation-timer (run-with-timer
-                                 0
-                                 wal-config-animation-animation-speed
-                                 #'wal-config-animation-animate))))
+                                      0
+                                      wal-config-animation-animation-speed
+                                      #'wal-config-animation-animate))))
 
 (defun wal-config-animation--stop-animation ()
   "Stop the animation if it is running.
@@ -320,19 +320,31 @@ whale."
   ;; the animation buffer.
   (setq wal-config-animation-parent-buffer (current-buffer)
         wal-config-animation-indirect-buffer (make-indirect-buffer
-                                         (get-buffer wal-config-animation-buffer)
-                                         (generate-new-buffer-name wal-config-animation-buffer)))
+                                              (get-buffer wal-config-animation-buffer)
+                                              (generate-new-buffer-name wal-config-animation-buffer)))
 
   ;; Set font size for indirect buffer.
-  (with-current-buffer wal-config-animation-indirect-buffer
-    (defvar wal-fixed-font-height)
-    (let ((fheight (* 2 wal-fixed-font-height)))
-
-      (face-remap-add-relative 'default :height fheight)))
+  (wal-config-animation--set-font-height)
 
   ;; Set up hooks to clean up and re-display.
+  (add-hook 'wal-fonts-updated-hook #'wal-config-animation--reset nil t)
   (add-hook 'kill-buffer-hook #'wal-config-animation-clean-up nil t)
   (add-hook 'window-configuration-change-hook #'wal-config-animation-display nil t))
+
+(defun wal-config-animation--set-font-height ()
+  "Set font height to double of `wal-fixed-font-height'."
+  (defvar wal-fixed-font-height)
+
+  (with-current-buffer wal-config-animation-indirect-buffer
+
+    (let ((fheight (* 2 wal-fixed-font-height)))
+
+      (face-remap-add-relative 'default :height fheight))))
+
+(defun wal-config-animation--reset ()
+  "Reset the animation."
+  (wal-config-animation--set-font-height)
+  (wal-config-animation-display))
 
 (defun wal-config-animation-clean-up ()
   "Clean up the animation."
@@ -343,7 +355,8 @@ whale."
   (setq wal-config-animation-parent-buffer nil
         wal-config-animation-indirect-buffer nil)
 
-    ;; Remove animation and re-positioning hooks.
+  ;; Remove animation and re-positioning hooks.
+  (remove-hook 'wal-fonts-updated-hook #'wal-config-animation--reset t)
   (remove-hook 'kill-buffer-hook #'wal-config-animation-clean-up t)
   (remove-hook 'window-configuration-change-hook #'wal-config-animation-display t)
 

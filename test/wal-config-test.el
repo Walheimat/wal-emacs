@@ -120,7 +120,8 @@
       (bydi-was-called wal-config-animation--start-animation)
 
       (should (buffer-local-value 'kill-buffer-hook (current-buffer)))
-      (should (buffer-local-value 'window-configuration-change-hook (current-buffer))))))
+      (should (buffer-local-value 'window-configuration-change-hook (current-buffer)))
+      (should (buffer-local-value 'wal-fonts-updated-hook (current-buffer))))))
 
 (ert-deftest animation-clean-up ()
   :tags '(config)
@@ -175,6 +176,17 @@
                                                 :posframe-parent-buffer 'parent
                                                 :hidehandler 'wal-config-animation-hidehandler))
       (bydi-was-called-with modify-frame-parameters '(... ((alpha-background . 50)))))))
+
+(ert-deftest animation--reset ()
+  :tags '(config)
+
+  (bydi (wal-config-animation--set-font-height
+         wal-config-animation-display)
+
+    (wal-config-animation--reset)
+
+    (bydi-was-called wal-config-animation--set-font-height)
+    (bydi-was-called wal-config-animation-display)))
 
 (ert-deftest animation--maybe-display ()
   :tags '(config)

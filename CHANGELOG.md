@@ -22,6 +22,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Calling `wal-set-{fixed,variable}-font-height` now sets the
   respective custom variable.
 
+### Fixed
+
+- The size of the animation is now updated when fonts are updated.
+
 ## [2.2.4]
 
 Binding light.
