@@ -27,6 +27,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - The size of the animation is now updated when fonts are updated.
 - `wal-consult-clock-in` now only matches non-archived and active
   headings.
+- Open projects are no longer hidden.
 
 ## [2.2.4]
 
