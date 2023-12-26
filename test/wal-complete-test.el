@@ -88,7 +88,7 @@
          (:mock org-clocking-buffer :return (current-buffer)))
 
     (wal-consult-clock-in)
-    (bydi-was-called consult-org-agenda)
+    (bydi-was-called-with consult-org-agenda "-ARCHIVE/-DONE")
     (bydi-was-called org-clock-in)
     (bydi-was-called org-clocking-buffer)
     (bydi-was-called save-buffer)

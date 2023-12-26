@@ -25,6 +25,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - The size of the animation is now updated when fonts are updated.
+- `wal-consult-clock-in` now only matches non-archived and active
+  headings.
 
 ## [2.2.4]
 
