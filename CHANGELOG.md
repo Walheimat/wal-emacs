@@ -21,6 +21,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   `wal-theme`.
 - Calling `wal-set-{fixed,variable}-font-height` now sets the
   respective custom variable.
+- Clocking out now puts task state to `WAITING` by default.
+- Swapped `C-c T` and `C-c t` (clocking out and taking note).
 
 ### Fixed
 
