@@ -30,6 +30,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `wal-consult-clock-in` now only matches non-archived and active
   headings.
 - Open projects are no longer hidden.
+- `ship-mate` compilations use `wdb-faraway` again.
 
 ## [2.2.4]
 
