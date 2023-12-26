@@ -188,22 +188,31 @@ the temporary file."
   (let ((wal--default-path "/tmp/default")
         (wal--phony-build-dependencies '("test" "testing")))
 
-    (bydi (shell-command)
+    (bydi ((:mock shell-command-to-string :return ""))
       (wal--touch)
 
-      (bydi-was-not-called shell-command))))
+      (bydi-was-not-called shell-command-to-string))))
 
 (ert-deftest touch--touches-existing ()
   :tags '(prelude)
 
   (ert-with-temp-file touchable
     (let ((wal--default-path "/tmp")
-          (wal--phony-build-dependencies (list touchable "testing")))
+          (wal--phony-build-dependencies (list touchable "testing"))
+          (output ""))
 
-      (bydi (shell-command)
+      (bydi ((:mock shell-command-to-string :return output))
         (wal--touch)
 
-        (bydi-was-called-n-times shell-command 1)))))
+        (bydi-was-called-n-times shell-command-to-string 1)
+
+        (setq output "some output")
+
+        (shut-up
+          (ert-with-message-capture messages
+            (wal--touch)
+
+            (should (string-match-p "Output from touching: some output\n" messages))))))))
 
 (ert-deftest maybe-tangle--tangles-for-empty-directory ()
   :tags '(prelude)

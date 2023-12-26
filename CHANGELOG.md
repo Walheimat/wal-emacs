@@ -14,6 +14,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Clocking in and out now saves the buffer.
 - Which non-required packages are loaded can now be customized using
   `wal-additional-packages` which includes all optional packages.
+- The number of tangled files is now displayed as well as the touched
+  files.
 
 ### Changed
 

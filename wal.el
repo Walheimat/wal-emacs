@@ -193,16 +193,20 @@ Note that `message' is silenced during tangling."
 
     (wal--touch)
 
-    (message "All library files in '%s' tangled" wal--lib-path)))
+    (message "All %d library files in `%s' tangled" (length sources) wal--lib-path)))
 
 (defun wal--touch ()
   "Touch directories to make sure they aren't considered outdated."
   (dolist (it wal--phony-build-dependencies)
 
-    (let ((expanded (expand-file-name it wal--default-path)))
+    (message "Touching `%s'" it)
 
-      (when (file-exists-p expanded)
-        (shell-command (format "touch %s" expanded))))))
+    (and-let* ((expanded (expand-file-name it wal--default-path))
+               ((file-exists-p expanded))
+               (output (shell-command-to-string (format "touch %s" expanded))))
+
+      (unless (string-empty-p output)
+        (message "Output from touching: %s" output)))))
 
 ;;; -- Loading
 
