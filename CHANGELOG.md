@@ -7,6 +7,13 @@ Changelog](https://keepachangelog.com/en/1.0.0/), and this project
 (very loosely) adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- `consult` transient only binds two register commands now
+  (`consult-register` and `wal-consult-unregister`).
+
 ## [2.2.5]
 
 Clock and load.
