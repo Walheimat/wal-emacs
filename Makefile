@@ -5,7 +5,7 @@ LOCAL_PHONY_DEPS=ensure-init $(PACKAGE_MARKER)
 CI_DEPS=build
 PACIFY_DEPS=build
 
-CURRENT_PACKAGE_VERSION=2.2.4
+CURRENT_PACKAGE_VERSION=2.2.5
 UPDATE_VERSION_FILES=lib/wal-config.org wal.el
 
 include dinghy/emacs-package.mk
