@@ -16,6 +16,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `compilation-max-output-line-length` is set to `nil`.
 - `org-todo-keywords` now require notes for changes to `WAITING`,
   `BLOCKED` and `CANCELED`.
+- Key-bindings for `jump-to-register` and `harpoon-completion-key`
+  were swapped (`H-h` and `H-<SPC>`).
 
 ## [2.2.5]
 
