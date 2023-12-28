@@ -14,6 +14,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `consult` transient only binds two register commands now
   (`consult-register` and `wal-consult-unregister`).
 - `compilation-max-output-line-length` is set to `nil`.
+- `org-todo-keywords` now require notes for changes to `WAITING`,
+  `BLOCKED` and `CANCELED`.
 
 ## [2.2.5]
 
