@@ -189,7 +189,8 @@ the temporary file."
         (wal--phony-build-dependencies '("test" "testing")))
 
     (bydi ((:mock shell-command-to-string :return ""))
-      (wal--touch)
+
+      (shut-up (wal--touch))
 
       (bydi-was-not-called shell-command-to-string))))
 
@@ -202,7 +203,7 @@ the temporary file."
           (output ""))
 
       (bydi ((:mock shell-command-to-string :return output))
-        (wal--touch)
+        (shut-up (wal--touch))
 
         (bydi-was-called-n-times shell-command-to-string 1)
 
