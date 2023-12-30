@@ -16,6 +16,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `compilation-max-output-line-length` is set to `nil`.
 - `org-todo-keywords` now require notes for changes to `WAITING`,
   `BLOCKED` and `CANCELED`.
+- Modes derived from `text-mode` enable `auto-fill-mode` again.
 
 ## [2.2.5]
 
