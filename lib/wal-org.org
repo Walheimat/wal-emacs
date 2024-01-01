@@ -855,12 +855,15 @@ the clocked task.
   :after org
 
   :init
+  (org-clock-persistence-insinuate)
+  (org-clock-auto-clockout-insinuate)
+
+  :config
   (with-eval-after-load 'org-keys
     (add-to-list 'org-speed-commands '("N" . wal-org-clock-in-from-now)))
 
   (parallel wal-org-clock-take-note org-clock-goto)
 
-  :config
   (advice-add
    'org-clock-out :before
    #'wal-org-clock--first-record-clocking-buffer)
@@ -871,21 +874,31 @@ the clocked task.
 
   :custom
   ;; We want a continuous, persistent clock.
-  (org-clock-idle-time 60)
   (org-clock-continuously t)
-  (org-clock-persist t)
+  (org-clock-persist 'clock)
+
+  ;; Switch state on clock in conditionally.
   (org-clock-in-switch-to-state 'wal-org-clock-in-switch-to-state)
-  (org-clock-out-switch-to-state "WAITING")
   (org-clock-in-resume t)
-  (org-clock-report-include-clocking-task t)
+
+  ;; Always switch to waiting, don't leave zero clocks.
+  (org-clock-out-switch-to-state "WAITING")
   (org-clock-out-remove-zero-time-clocks t)
+
+  (org-clock-report-include-clocking-task t)
+
+  ;; Clock out automatically and always resolve clocks.
+  (org-clock-auto-clockout-timer 60)
+  (org-clock-auto-clock-resolution t)
 
   ;; Truncate overly long tasks.
   (org-clock-heading-function #'wal-org-clock-heading)
 
   :bind
   (("C-c T" . org-clock-take-note||goto)
-   ("C-c t" . org-clock-out)))
+   ("C-c t" . org-clock-out))
+
+  :functions (org-clock-auto-clockout-insinuate))
 #+END_SRC
 
 ** org-duration                                                     :builtin:

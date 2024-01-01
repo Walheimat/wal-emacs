@@ -17,6 +17,13 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `org-todo-keywords` now require notes for changes to `WAITING`,
   `BLOCKED` and `CANCELED`.
 - Modes derived from `text-mode` enable `auto-fill-mode` again.
+- Instead of being prompted to resolve an idle clock, an automatic
+  clock out happens.
+
+### Fixed
+
+- `org-clock-persistence-insinuate` is now called to make
+  `org-clock-persist` actually try to reload a running clock.
 
 ## [2.2.5]
 
