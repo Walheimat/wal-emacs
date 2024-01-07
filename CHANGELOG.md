@@ -11,7 +11,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Configured `outline-minor-mode`. `emacs-lisp-mode` now uses it.
+- Configured `outline-minor-mode`. All `prog-mode` modes now use it.
 
 ## [2.2.6]
 
