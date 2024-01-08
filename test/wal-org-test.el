@@ -226,10 +226,12 @@
 
     (bydi-was-called-with org-capture '(nil "p"))))
 
-(ert-deftest wal-org-clock-in-switch-to-state ()
+(ert-deftest wal-org-clock-in-and-out-switch-to-state ()
   :tags '(org)
 
-  (should (string-equal "IN PROGRESS" (wal-org-clock-in-switch-to-state "OTHER STATE"))))
+  (should (string-equal "IN PROGRESS" (wal-org-clock-in-switch-to-state "OTHER STATE")))
+
+  (should (string-equal "WAITING" (wal-org-clock-out-switch-to-state "OTHER STATE"))))
 
 (ert-deftest wal-org-clock-heading ()
   :tags '(org)

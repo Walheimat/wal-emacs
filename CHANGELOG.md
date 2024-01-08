@@ -13,6 +13,17 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Configured `outline-minor-mode`. All `prog-mode` modes now use it.
 
+### Removed
+
+- `org-clock-auto-clockout-insinuate` is no longer called. Instead
+  `org-clock-idle-time` was re-added.
+- `org-clock-auto-clock-resolution` is the default value again.
+
+### Fixed
+
+- Clocking out now uses `wal-org-clock-out-switch-to-state` to only
+  set todo state if there was one before.
+
 ## [2.2.6]
 
 In grace you drank.

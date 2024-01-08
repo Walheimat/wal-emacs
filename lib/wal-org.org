@@ -792,6 +792,11 @@ the clocked task.
   (when todo-state
     "IN PROGRESS"))
 
+(defun wal-org-clock-out-switch-to-state (todo-state)
+  "Only switch state to WAITING if TODO-STATE was given."
+  (when todo-state
+    "WAITING"))
+
 (defun wal-org-clock-heading ()
   "Render a truncated heading for modeline."
   (declare-function org-link-display-format "ext:org-link.el")
@@ -856,7 +861,6 @@ the clocked task.
 
   :init
   (org-clock-persistence-insinuate)
-  (org-clock-auto-clockout-insinuate)
 
   :config
   (with-eval-after-load 'org-keys
@@ -877,28 +881,25 @@ the clocked task.
   (org-clock-continuously t)
   (org-clock-persist 'clock)
 
-  ;; Switch state on clock in conditionally.
+  ;; Resolve after idling.
+  (org-clock-idle-time 120)
+
+  ;; Switch state conditionally and resume.
   (org-clock-in-switch-to-state 'wal-org-clock-in-switch-to-state)
   (org-clock-in-resume t)
 
-  ;; Always switch to waiting, don't leave zero clocks.
-  (org-clock-out-switch-to-state "WAITING")
+  ;; Switch state conditionally and remove zero clocks.
+  (org-clock-out-switch-to-state 'wal-org-clock-out-switch-to-state)
   (org-clock-out-remove-zero-time-clocks t)
 
   (org-clock-report-include-clocking-task t)
-
-  ;; Clock out automatically and always resolve clocks.
-  (org-clock-auto-clockout-timer 60)
-  (org-clock-auto-clock-resolution t)
 
   ;; Truncate overly long tasks.
   (org-clock-heading-function #'wal-org-clock-heading)
 
   :bind
   (("C-c T" . org-clock-take-note||goto)
-   ("C-c t" . org-clock-out))
-
-  :functions (org-clock-auto-clockout-insinuate))
+   ("C-c t" . org-clock-out)))
 #+END_SRC
 
 ** org-duration                                                     :builtin:
