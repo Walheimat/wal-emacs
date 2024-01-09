@@ -18,6 +18,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `org-clock-auto-clockout-insinuate` is no longer called. Instead
   `org-clock-idle-time` was re-added.
 - `org-clock-auto-clock-resolution` is the default value again.
+- `outline-minor-mode-highlight` is no longer set.
 
 ### Fixed
 
