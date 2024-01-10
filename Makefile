@@ -52,7 +52,7 @@ uninstall:
 
 update-git:
 	$(info Pulling changes)
-	git pull
+	git pull --recurse-submodules
 
 update: update-git clean ensure-init $(PACKAGE_MARKER)
 
