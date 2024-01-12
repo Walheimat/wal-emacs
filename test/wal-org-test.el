@@ -254,17 +254,6 @@
 
     (bydi-was-called org-clock-in)))
 
-(ert-deftest wal-org-clock-take-note ()
-  :tags '(org user-facing)
-
-  (bydi (org-clock-goto
-         org-add-note)
-
-    (wal-org-clock-take-note)
-
-    (bydi-was-called org-clock-goto)
-    (bydi-was-called org-add-note)))
-
 (ert-deftest wal-org-clock-insert-current-task ()
   :tags '(org user-facing)
 
@@ -287,31 +276,45 @@
 
 (ert-deftest wal-org-agenda-take-note ()
   (bydi (consult-org-agenda
+         org-clock-goto
          org-add-note)
 
     (wal-org-agenda-take-note)
 
-    (bydi-was-called consult-org-agenda)
-    (bydi-was-called org-add-note)))
+    (bydi-was-called consult-org-agenda t)
+    (bydi-was-called org-add-note)
+    (bydi-was-not-called org-clock-goto)
 
-(ert-deftest wal-org-clock--first-record-clocking-buffer ()
-  (bydi ((:watch wal-org-clock--unsaved)
-         (:mock org-clocking-buffer :return 'buffer))
+    (funcall-interactively 'wal-org-agenda-take-note t)
 
-    (wal-org-clock--first-record-clocking-buffer)
+    (bydi-was-not-called consult-org-agenda)
+    (bydi-was-called org-add-note)
+    (bydi-was-called org-clock-goto)))
 
-    (bydi-was-set-to wal-org-clock--unsaved 'buffer)))
+(ert-deftest wal-org--first-record-buffer ()
+  :tags '(org)
 
-(ert-deftest wal-org-clock--then-save-unsaved-buffer ()
-  (let ((wal-org-clock--unsaved (current-buffer))
-        (org-log-note-this-command 'org-clock-out))
+  (bydi ((:watch wal-org--unsaved))
+
+    (ert-with-test-buffer (:name "logging")
+      (defvar org-log-note-marker)
+
+      (let ((org-log-note-marker (point-marker)))
+
+        (wal-org--first-record-buffer)
+
+        (bydi-was-set-to wal-org--unsaved (current-buffer))))))
+
+(ert-deftest wal-org--then-save-unsaved-buffer ()
+  (let ((wal-org--unsaved (current-buffer)))
 
     (bydi ((:spy save-buffer)
-           (:watch wal-org-clock--unsaved))
-      (wal-org-clock--then-save-unsaved-buffer)
+           (:watch wal-org--unsaved))
+
+      (wal-org--then-save-unsaved-buffer)
 
       (bydi-was-called save-buffer)
-      (bydi-was-set-to wal-org-clock--unsaved nil))))
+      (bydi-was-set-to wal-org--unsaved nil))))
 
 ;;; wal-org-test.el ends here
 

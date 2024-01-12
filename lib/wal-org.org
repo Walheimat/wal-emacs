@@ -47,7 +47,8 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (declare-function wdb-nearby "wal-useful.el")
 
 (defvar org-clock-current-task)
-(defvar org-log-note-this-command 'org-clock-out)
+(defvar org-log-note-this-command)
+(defvar org-log-note-marker)
 (defvar partial-recall-meaningful-traits)
 (defvar text-scale-mode-step)
 (defvar visual-fill-column-width)
@@ -113,6 +114,25 @@ If SHOW is t, show them instead."
   (setq org-hide-emphasis-markers (not show))
   (font-lock-flush))
 
+(defvar wal-org--unsaved nil)
+
+(defun wal-org--first-record-buffer (&rest _)
+  "Record the buffer from the log marker."
+  (and-let* (((boundp 'org-log-note-marker))
+             (marker org-log-note-marker)
+             (buffer (marker-buffer marker)))
+
+    (setq wal-org--unsaved buffer)))
+
+(defun wal-org--then-save-unsaved-buffer (&rest _)
+  "Save the buffer for which a note has been taken."
+  (when wal-org--unsaved
+
+    (with-current-buffer wal-org--unsaved
+      (save-buffer))
+
+    (setq wal-org--unsaved nil)))
+
 (use-package org
   :commands (org-add-note org-find-exact-heading-in-directory)
 
@@ -130,6 +150,14 @@ If SHOW is t, show them instead."
   (advice-add
    'org-export-dispatch :before
    #'wal-first-require-ox-md)
+
+  (advice-add
+   'org-add-log-setup :after
+   #'wal-org--first-record-buffer)
+
+  (advice-add
+   'org-store-log-note :after
+   #'wal-org--then-save-unsaved-buffer)
 
   ;; Create register file if it doesn't yet exist
   (let ((register (expand-file-name wal-org-agenda-file org-directory)))
@@ -279,12 +307,17 @@ I need day-to-day and adds a =consult= buffer source.
    :as #'buffer-name
    :predicate #'wal-agenda-buffer-p))
 
-(defun wal-org-agenda-take-note ()
-  "Take a note for and agenda item."
-  (interactive)
+(defun wal-org-agenda-take-note (&optional arg)
+  "Take a note for and agenda item.
+
+If called with ARG, this will add a note to the currently clocked
+item."
+  (interactive "P")
 
   (save-window-excursion
-    (consult-org-agenda)
+    (if arg
+        (org-clock-goto)
+      (consult-org-agenda))
     (org-add-note)))
 
 (use-package org-agenda
@@ -807,24 +840,6 @@ the clocked task.
 
     (wal-truncate heading 12)))
 
-(defvar wal-org-clock--unsaved nil)
-
-(defun wal-org-clock--first-record-clocking-buffer (&rest _)
-  "Record the buffer that is being clocked."
-  (declare-function org-clocking-buffer "ext:org-clock.el")
-
-  (setq wal-org-clock--unsaved (org-clocking-buffer)))
-
-(defun wal-org-clock--then-save-unsaved-buffer (&rest _)
-  "Save the buffer of the clocked item."
-  (when (and wal-org-clock--unsaved
-             (eq org-log-note-this-command 'org-clock-out))
-
-    (with-current-buffer wal-org-clock--unsaved
-      (save-buffer)))
-
-  (setq wal-org-clock--unsaved nil))
-
 (defun wal-org-clock-in-from-now ()
   "Force `org-clock-in' without continuous logging."
   (defvar org-clock-continuously)
@@ -833,16 +848,6 @@ the clocked task.
   (let ((org-clock-continuously nil))
 
     (org-clock-in)))
-
-(defun wal-org-clock-take-note ()
-  "Take a note for the currently clocked-in entry."
-  (interactive)
-
-  (declare-function org-clock-goto "ext:org-clock.el")
-
-  (save-window-excursion
-    (org-clock-goto)
-    (org-add-note)))
 
 (defun wal-org-clock-kill-current-task ()
   "Insert the current task."
@@ -866,16 +871,6 @@ the clocked task.
   (with-eval-after-load 'org-keys
     (add-to-list 'org-speed-commands '("N" . wal-org-clock-in-from-now)))
 
-  (parallel wal-org-clock-take-note org-clock-goto)
-
-  (advice-add
-   'org-clock-out :before
-   #'wal-org-clock--first-record-clocking-buffer)
-
-  (advice-add
-   'org-store-log-note :after
-   #'wal-org-clock--then-save-unsaved-buffer)
-
   :custom
   ;; We want a continuous, persistent clock.
   (org-clock-continuously t)
@@ -898,8 +893,7 @@ the clocked task.
   (org-clock-heading-function #'wal-org-clock-heading)
 
   :bind
-  (("C-c T" . org-clock-take-note||goto)
-   ("C-c t" . org-clock-out)))
+  (("C-c t" . org-clock-out)))
 #+END_SRC
 
 ** org-duration                                                     :builtin:

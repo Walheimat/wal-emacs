@@ -12,6 +12,14 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - Configured `outline-minor-mode`. All `prog-mode` modes now use it.
+- Instead of only saving buffers when notes were taken for clocking
+  out, taking notes always save that buffer.
+
+### Changed
+
+- `wal-org-clock-take-note` was removed in favor of extending
+  `wal-org-agenda-take-note`. When called with argument, this will now
+  take note for the clocked task.
 
 ### Removed
 
