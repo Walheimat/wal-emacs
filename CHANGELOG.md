@@ -20,6 +20,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `wal-org-clock-take-note` was removed in favor of extending
   `wal-org-agenda-take-note`. When called with argument, this will now
   take note for the clocked task.
+- Key bindings were changed:
+  - `H-p` still stores point, but `H-M-p` stores window register
+  - `H-h` now invokes `project-find-file`
+  - `H-y` invokes `jump-to-register`
 
 ### Removed
 
