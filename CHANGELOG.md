@@ -24,6 +24,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   - `H-p` still stores point, but `H-M-p` stores window register
   - `H-h` now invokes `project-find-file`
   - `H-y` invokes `jump-to-register`
+  - `H-i` now completes
+  - `H-M-j` now jumps to char with timer using `avy`
 
 ### Removed
 
