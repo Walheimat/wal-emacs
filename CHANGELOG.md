@@ -31,6 +31,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   `org-clock-idle-time` was re-added.
 - `org-clock-auto-clock-resolution` is the default value again.
 - `outline-minor-mode-highlight` is no longer set.
+- `wal-org-content` since using `org-content` with numeric prefix is
+  preferable.
 
 ### Fixed
 

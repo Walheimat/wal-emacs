@@ -19,15 +19,6 @@
     (bydi-was-called-with featurep (list 'ox-md))
     (bydi-was-called-with require (list 'ox-md nil t))))
 
-(ert-deftest wal-org-content ()
-  :tags '(org user-facing)
-
-  (bydi org-content
-
-    (wal-org-content 8)
-
-    (bydi-was-called-with org-content (list 8))))
-
 (ert-deftest wal-org-hide-emphasis-makers ()
   :tags '(org user-facing)
 
