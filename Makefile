@@ -1,8 +1,8 @@
-# -- Dinghy setup
+# Dinghy setup
 
 PACKAGE_MARKER=$(HOME)/.emacs.d/elpa/whale-line/whale-line.el
 
-CURRENT_PACKAGE_VERSION=2.2.6
+CURRENT_PACKAGE_VERSION=2.2.7
 LOCAL_DEPS=build
 LOCAL_PHONY_DEPS=ensure-init $(PACKAGE_MARKER)
 CI_DEPS=build
@@ -11,7 +11,7 @@ UPDATE_VERSION_FILES=lib/wal-config.org wal.el
 
 include dinghy/emacs-package.mk
 
-# -- Goals
+# Goals
 
 WITH_PRELUDE=$(EMACS) --batch -l ./wal.el
 
@@ -25,7 +25,7 @@ BOOTSTRAP=--eval "(wal-bootstrap \"$(CURDIR)\" '$(BOOTSTRAP_MODE))"
 .PHONY: tangle ensure-init force-ensure uninstall \
 	update-git update upgrade cold-boot
 
-# ---- Installation
+## Installation
 
 build:
 	$(WITH_PRELUDE) $(BOOTSTRAP)
@@ -48,7 +48,7 @@ uninstall: INIT_CLEAR=t
 uninstall:
 	$(WITH_PRELUDE) $(INIT)
 
-# ---- Updating
+## Updating
 
 update-git:
 	$(info Pulling changes)
@@ -60,7 +60,7 @@ upgrade: BOOTSTRAP_MODE=upgrade
 upgrade:
 	$(WITH_PRELUDE) $(BOOTSTRAP) -f wal-upgrade
 
-# ---- Checks
+## Checks
 
 cold-boot: BOOTSTRAP_MODE=cold
 cold-boot:
