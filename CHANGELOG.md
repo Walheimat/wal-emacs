@@ -13,6 +13,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - Clocking out now prompts the user to select the next state.
+- Instead of providing `wal-project-vterm`, `vterm` is now advised to
+  prefer using a project-specific buffer.
 
 ## [2.2.7]
 

@@ -125,33 +125,42 @@ Adds the same functionality to have one =vterm= buffer per project and
 sets up =with-editor=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal-project-vterm (&optional force)
-  "Get a project `vterm' buffer.
+(defun wal-vterm--prefer-project (fun &optional arg)
+  "Get preferably a `vterm' buffer.
 
-If FORCE is non-nil, this creates a new buffer even if a project
-buffer already exists."
+This calls FUN (which is `vterm'). If there is a project and ARG
+is non-nil, this creates a new buffer even if a project buffer
+already exists."
   (interactive "P")
 
-  (let* ((default-directory (project-root (project-current t)))
-         (vterm-buffer-name (project-prefixed-buffer-name "vterm"))
-         (buffer (get-buffer vterm-buffer-name)))
+  (if-let ((project (project-current)))
 
-    (if (and buffer (not force))
-        (pop-to-buffer buffer (bound-and-true-p display-comint-buffer-action))
-      (vterm t))))
+    (let* ((default-directory (project-root project))
+           (vterm-buffer-name (project-prefixed-buffer-name "vterm"))
+           (buffer (get-buffer vterm-buffer-name)))
+
+      (if (and buffer (not arg))
+          (pop-to-buffer buffer (bound-and-true-p display-comint-buffer-action))
+
+        (funcall fun t)))
+
+    (funcall fun arg)))
 
 (use-package vterm
   :hook
   (vterm-mode . with-editor-export-git-editor)
+
+  :init
+  (advice-add
+   'vterm :around
+   #'wal-vterm--prefer-project)
 
   :custom
   (vterm-prefix "VTerm")
   (vterm-max-scrollback 10000)
 
   :general
-  (ambassador "t" '(:ignore t :wk "vterm")
-              "tt" 'vterm
-              "tp" 'wal-project-vterm)
+  (ambassador "t" 'vterm)
 
   :delight
   (vterm-copy-mode " vcp"))
