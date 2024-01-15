@@ -222,7 +222,13 @@
 
   (should (string-equal "IN PROGRESS" (wal-org-clock-in-switch-to-state "OTHER STATE")))
 
-  (should (string-equal "WAITING" (wal-org-clock-out-switch-to-state "OTHER STATE"))))
+  (bydi ((:mock completing-read :return "WAITING"))
+    (defvar org-todo-keywords-1)
+
+    (let ((org-todo-keywords-1 '("BAITING" "WAITING")))
+
+      (should (string-equal "WAITING" (wal-org-clock-out-switch-to-state "OTHER STATE")))
+      (should (string-equal "WAITING" (wal-org-clock-out-switch-to-state "BAITING"))))))
 
 (ert-deftest wal-org-clock-heading ()
   :tags '(org)

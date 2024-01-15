@@ -822,9 +822,21 @@ the clocked task.
     "IN PROGRESS"))
 
 (defun wal-org-clock-out-switch-to-state (todo-state)
-  "Only switch state to WAITING if TODO-STATE was given."
-  (when todo-state
-    "WAITING"))
+  "Switch from TODO-STATE to a user-selected state.
+
+The possible states is reduced to those following the current
+state if that state is known."
+  (defvar org-todo-keywords-1)
+
+  (and-let* (todo-state
+             (keywords org-todo-keywords-1)
+             (keywords (if (member todo-state keywords)
+                           (seq-subseq keywords (1+ (seq-position keywords todo-state)))
+                         keywords))
+
+             (prompt (format "Switch from %s to: " todo-state)))
+
+    (completing-read prompt keywords nil t)))
 
 (defun wal-org-clock-heading ()
   "Render a truncated heading for modeline."
