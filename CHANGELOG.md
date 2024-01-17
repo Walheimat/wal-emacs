@@ -10,6 +10,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `groovy-mode` and `jenkinsfile-mode` as Java `junk` extras.
+
 ### Changed
 
 - Clocking out now prompts the user to select the next state.
