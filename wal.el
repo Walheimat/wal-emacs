@@ -245,15 +245,18 @@ Note that `message' is silenced during tangling."
 
 (defun wal-load--configure-customization ()
   "Configure custom file and load it."
-  (setq custom-file (expand-file-name wal--custom-file user-emacs-directory))
+  (let ((file (expand-file-name wal--custom-file user-emacs-directory)))
 
-  (message "Setting up custom file '%s" custom-file)
+    (if (file-exists-p file)
 
-  (unless (file-exists-p custom-file)
-    (make-empty-file custom-file t))
+        (progn
+          (message "Loading custom file `%s'" file)
+          (load file))
 
-  (when (file-exists-p custom-file)
-    (load custom-file)))
+      (message "Didn't find file, setting up `%s'" file)
+      (make-empty-file file t))
+
+    (setq custom-file file)))
 
 ;;; Helpers
 
