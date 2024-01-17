@@ -81,9 +81,7 @@ the temporary file."
   (ert-with-temp-file file
     :text "(message \"from within\")"
 
-    (message "File is here %s" file)
-
-    (let ((user-emacs-directory "/tmp")
+    (let ((user-emacs-directory temporary-file-directory)
           (wal--custom-file (file-name-nondirectory file)))
 
       (shut-up
