@@ -224,8 +224,10 @@
 
   (bydi ((:mock completing-read :return "WAITING"))
     (defvar org-todo-keywords-1)
+    (defvar org-clock-current-task)
 
-    (let ((org-todo-keywords-1 '("BAITING" "WAITING")))
+    (let ((org-todo-keywords-1 '("BAITING" "WAITING"))
+          (org-clock-current-task nil))
 
       (should (string-equal "WAITING" (wal-org-clock-out-switch-to-state "OTHER STATE")))
       (should (string-equal "WAITING" (wal-org-clock-out-switch-to-state "BAITING"))))))
