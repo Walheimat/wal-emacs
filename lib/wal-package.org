@@ -156,8 +156,8 @@ prefixed by =wal-prefix-user-key=.
 (defun wal-use-package-normalize-binder (name keyword args)
   "Normalize NAME, KEYWORD, ARGS.
 
-This normalizer is a copy of the normalizer for `:bind'. There
-are two differences:
+This normalizer is a downgraded copy of the normalizer for
+`:bind'. There are two differences:
 
 1. It prefixes the key strings with `wal-prefix-user-key'.
 2. On recursion it calls this normalizer."
@@ -172,19 +172,17 @@ are two differences:
          ((and (consp x)
                (or (stringp (car x))
                    (vectorp (car x)))
-               (or (use-package-recognize-function (cdr x) t #'stringp)))
+               (use-package-recognize-function (cdr x) t #'stringp))
           ;; This is where we deviate from the `:bind' normalizer.
-          (setq args* (nconc args* (list (cons (wal-prefix-user-key (car x)) (cdr x)))))
-          (setq arg (cdr arg)))
-         ((or (and (eq x :map) (symbolp (cadr arg)))
-              (and (eq x :prefix) (stringp (cadr arg)))
-              (and (eq x :prefix-map) (symbolp (cadr arg)))
-              (and (eq x :prefix-docstring) (stringp (cadr arg)))
-              (eq x :filter)
-              (and (eq x :menu-name) (stringp (cadr arg)))
-              (and (eq x :package) (symbolp (cadr arg))))
-          (setq args* (nconc args* (list x (cadr arg))))
-          (setq arg (cddr arg)))
+          (let ((item (if (stringp (car x))
+                          (cons (wal-prefix-user-key (car x)) (cdr x))
+                        x)))
+
+            (setq args* (nconc args* (list item))
+                  arg (cdr arg))))
+         ((and (eq x :map) (symbolp (cadr arg)))
+          (setq args* (nconc args* (list x (cadr arg)))
+                arg (cddr arg)))
          ((listp x)
           (setq args*
                 (nconc args* (use-package-normalize/:wal-bind name keyword x)))
@@ -192,8 +190,8 @@ are two differences:
          (t
           (use-package-error
            (concat (symbol-name name)
-                   " wants arguments acceptable to the `bind-keys' macro,"
-                   " or a list of such values"))))))
+                   " behaves mostly like `:bind' but only supports"
+                   " keys, binding to map and remaps"))))))
     args*))
 
 (defalias 'use-package-normalize/:wal-bind 'wal-use-package-normalize-binder)

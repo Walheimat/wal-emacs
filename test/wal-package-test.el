@@ -11,7 +11,6 @@
 (ert-deftest wal-use-package-normalize-binder ()
   :tags '(package)
 
-
   (bydi ((:always use-package-recognize-function)
          (:mock wal-prefix-user-key :with (lambda (x) (format "C-t %s" x)))
          (:mock use-package-error :with (lambda (x) (error x))))
@@ -20,16 +19,18 @@
 
     (should (equal (list (cons "C-t w" 'testing)) (wal-use-package-normalize-binder nil nil (list (list (cons "w" 'testing))))))
 
+    (should (equal (list (cons "C-t w" 'testing)
+                         (cons [remap forward-char] 'testing))
+                   (wal-use-package-normalize-binder nil nil (list (cons "w" 'testing)
+                                                                   (cons [remap forward-char] 'testing)))))
+
     (should-error (wal-use-package-normalize-binder ':wal-bind nil (list "testing")))
 
-    (setq wal-up-test-sym t)
-    (dolist (it (list :map :prefix-map :package))
+    (should (equal (list :map 'wal-up-test-sym (cons "C-t w" 'testing)) (wal-use-package-normalize-binder nil nil (list :map 'wal-up-test-sym (cons "w" 'testing)))))
 
-      (should (equal (list it 'wal-up-test-sym (cons "C-t w" 'testing)) (wal-use-package-normalize-binder nil nil (list it 'wal-up-test-sym (cons "w" 'testing))))))
 
-    (dolist (it (list :prefix-docstring :prefix :menu-name))
 
-      (should (equal (list it "testing" (cons "C-t w" 'testing)) (wal-use-package-normalize-binder nil nil (list it "testing" (cons "w" 'testing))))))))
+    (should-error (wal-use-package-normalize-binder nil nil (list :prefix 'wal-up-test-sym (cons "w" 'testing))))))
 
 (ert-deftest use-package-handler/:wal-ways ()
   :tags '(package)

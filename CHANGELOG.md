@@ -19,6 +19,12 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Clocking out now prompts the user to select the next state.
 - Instead of providing `wal-project-vterm`, `vterm` is now advised to
   prefer using a project-specific buffer.
+- `:wal-bind[-keymap]` only supports a minimal version of
+  `:bind[-keymap]`, namely keys, remaps and binding to maps.
+
+### Fixed
+
+- `:wal-bind` now handles passing a remap vector.
 
 ## [2.2.7]
 
