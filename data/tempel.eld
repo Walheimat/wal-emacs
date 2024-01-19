@@ -71,6 +71,7 @@ emacs-lisp-mode
 
 js-mode
 js-ts-mode
+typescript-mode
 
 (docstring
  "/**" n
