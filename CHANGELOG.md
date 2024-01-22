@@ -7,8 +7,9 @@ Changelog](https://keepachangelog.com/en/1.0.0/), and this project
 (very loosely) adheres to [Semantic
 Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.8]
 
-## [Unreleased]
+Minor groove.
 
 ### Added
 
