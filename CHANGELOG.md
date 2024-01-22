@@ -22,6 +22,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - `:wal-bind[-keymap]` only supports a minimal version of
   `:bind[-keymap]`, namely keys, remaps and binding to maps.
 - `typescript-mode` is now mostly configured like `js-mode`.
+- Command `wal-org-agenda-take-note` now defaults to taking note for
+  current task (if it exists) unless it's called with prefix argument.
 
 ### Fixed
 

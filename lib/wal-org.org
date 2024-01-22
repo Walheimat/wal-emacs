@@ -91,8 +91,7 @@ Read the manual in Emacs or [[https://orgmode.org/manuals.html][on the web]].
 #+BEGIN_SRC emacs-lisp
 (defun wal-first-require-ox-md (&rest _args)
   "Advise to require `ox-md' before export dispatch."
-  (unless (featurep 'ox-md)
-    (require 'ox-md nil t)))
+  (require 'ox-md nil t))
 
 (defun wal-org-hide-emphasis-markers (&optional show)
   "Hide emphasis markers.
@@ -301,19 +300,24 @@ I need day-to-day and adds a =consult= buffer source.
    :predicate #'wal-agenda-buffer-p))
 
 (defun wal-org-agenda-take-note (&optional arg)
-  "Take a note for and agenda item.
+  "Take a note for an agenda item.
 
-If called with ARG, this will add a note to the currently clocked
-item."
+This prefers the currently clocked item unless ARG is passed.
+
+Otherwise (or if there is no clocked item) this prompts to select
+the item first."
   (interactive "P")
 
   (declare-function org-clock-goto "ext:org-clock.el")
 
-  (save-window-excursion
-    (if arg
-        (org-clock-goto)
-      (consult-org-agenda))
-    (org-add-note)))
+  (let ((current org-clock-current-task))
+
+    (save-window-excursion
+      (if (and current
+               (not arg))
+          (org-clock-goto)
+        (consult-org-agenda))
+      (org-add-note))))
 
 (use-package org-agenda
   :config

@@ -11,12 +11,10 @@
 (ert-deftest wal-first-require-ox-md ()
   :tags '(org)
 
-  (bydi ((:ignore featurep)
-         require)
+  (bydi ((:always require))
 
     (wal-first-require-ox-md)
 
-    (bydi-was-called-with featurep (list 'ox-md))
     (bydi-was-called-with require (list 'ox-md nil t))))
 
 (ert-deftest wal-org-hide-emphasis-makers ()
@@ -274,21 +272,40 @@
       (should (string= "Testing" (buffer-string))))))
 
 (ert-deftest wal-org-agenda-take-note ()
-  (bydi (consult-org-agenda
-         org-clock-goto
-         org-add-note)
+  :tags '(org user-facing)
 
-    (wal-org-agenda-take-note)
+  (defvar org-clock-current-task)
+  (let ((org-clock-current-task nil))
 
-    (bydi-was-called consult-org-agenda t)
-    (bydi-was-called org-add-note)
-    (bydi-was-not-called org-clock-goto)
+    (bydi (consult-org-agenda
+           org-clock-goto
+           org-add-note)
 
-    (funcall-interactively 'wal-org-agenda-take-note t)
+      (wal-org-agenda-take-note)
 
-    (bydi-was-not-called consult-org-agenda)
-    (bydi-was-called org-add-note)
-    (bydi-was-called org-clock-goto)))
+      (bydi-was-called consult-org-agenda t)
+      (bydi-was-called org-add-note)
+      (bydi-was-not-called org-clock-goto)
+
+      (funcall-interactively 'wal-org-agenda-take-note t)
+
+      (bydi-was-called consult-org-agenda t)
+      (bydi-was-called org-add-note)
+      (bydi-was-not-called org-clock-goto)
+
+      (setq org-clock-current-task "Test task")
+
+      (wal-org-agenda-take-note)
+
+      (bydi-was-not-called consult-org-agenda)
+      (bydi-was-called org-add-note)
+      (bydi-was-called org-clock-goto t)
+
+      (funcall-interactively 'wal-org-agenda-take-note t)
+
+      (bydi-was-called consult-org-agenda)
+      (bydi-was-called org-add-note)
+      (bydi-was-not-called org-clock-goto))))
 
 (ert-deftest wal-org--first-record-buffer ()
   :tags '(org)
