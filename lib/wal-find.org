@@ -119,59 +119,6 @@ using =xref-find-definitions= (=M-.=).
   :functions (dumb-jump-xref-activate))
 #+END_SRC
 
-** dogears
-
-This package keeps track of significant places by using an idle timer
-and adding hooks.
-
-We wrap the list command in a custom command to toggle it instead. We
-also add a repeat map to quickly move between places.
-
-#+begin_src emacs-lisp
-(defun wal-dogears-list ()
-  "Toggle `dogears-list' using sidebar config."
-  (interactive)
-
-  (if-let* ((buffer dogears-list-buffer)
-            (window (get-buffer-window buffer)))
-
-      (quit-window nil window)
-
-    (let ((display-buffer-alist '(("\\*Dogears"
-                                   (display-buffer-in-side-window
-                                    dogears-sidebar-alist)))))
-
-      (dogears-list))))
-
-(use-package dogears
-  :defer 3
-
-  :config
-  (dogears-mode)
-
-  (defvar-keymap dogears-repeat-map
-    :doc "Keymap to repeat various `dogears' commands."
-    :repeat t
-    "n" 'dogears-forward
-    "p" 'dogears-back)
-
-  :custom
-  (dogears-sidebar-alist '((side . bottom)))
-  (dogears-idle 10)
-  (dogears-message nil)
-  (dogears-ignore-modes '(dogears-list-mode helpful-mode compilation-mode dired-mode))
-  (dogears-hooks nil)
-
-  :general
-  (ambassador
-    "r" '(:ignore t :wk "dogears")
-    "rg" 'dogears-go
-    "rr" 'dogears-remember
-    "rl" 'wal-dogears-list
-    "rn" 'dogears-forward
-    "rp" 'dogears-back))
-#+end_src
-
 ** gumshoe
 
 Backtrack in a buffer.
