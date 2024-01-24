@@ -9,6 +9,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- `corfu-auto` was enabled again.
+
 ### Removed
 
 - Package `dogears` was removed in favor of keeping `gumshoe` (for
