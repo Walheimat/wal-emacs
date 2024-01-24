@@ -31,13 +31,11 @@
 (ert-deftest wal-dap-terminated ()
   :tags '(lsp)
 
-  (bydi (hydra-disable
-         set-window-configuration)
+  (bydi (set-window-configuration)
 
     (let ((wal-dap-before 'test))
       (wal-dap-terminated nil)
 
-      (bydi-was-called hydra-disable)
       (bydi-was-called set-window-configuration))))
 
 (ert-deftest wal-dap-session-created ()
@@ -50,15 +48,6 @@
 
     (bydi-was-called delete-other-windows)
     (should (equal 'testing wal-dap-before))))
-
-(ert-deftest wal-dap-stopped ()
-  :tags '(lsp)
-
-  (bydi dap-hydra
-
-    (wal-dap-stopped nil)
-
-    (bydi-was-called dap-hydra)))
 
 (ert-deftest wal-instead-grab-directly ()
   :tags '(lsp)
@@ -86,21 +75,6 @@
 
       (should (equal '(dap-ui-repl-company) completion-at-point-functions))
       (bydi-was-called corfu-mode))))
-
-(ert-deftest wal-debug ()
-  :tags '(lsp user-facing)
-
-  (bydi (dap-hydra dap-debug)
-
-    (let ((wal-debugging nil))
-
-      (wal-debug)
-      (bydi-was-called dap-debug)
-
-      (setq wal-debugging t)
-
-      (wal-debug)
-      (bydi-was-called dap-hydra))))
 
 ;;; wal-lsp-test.el ends here
 

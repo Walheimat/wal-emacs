@@ -30,11 +30,9 @@ Language servers are awesome. Thanks, Microsoft.
 (declare-function corfu-mode "ext:corfu.el")
 (declare-function dap--completing-read "ext:dap-mode.el")
 (declare-function dap--json-encode "ext:dap-mode.el")
-(declare-function dap-hydra "ext:dap-mode.el")
 (declare-function dap-register-debug-template "ext:dap-mode.el")
 (declare-function lsp-deferred "ext:lsp-mode.el")
 (declare-function harpoon-slow-lsp-p "ext:harpoon.el")
-(declare-function hydra-disable "ext:hydra.el")
 (declare-function wal-append "wal-useful.el")
 (declare-function wal-dap "wal-lsp.el")
 (declare-function wal-key-combo-for-leader "wal-key-bindings.el")
@@ -170,20 +168,8 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
 (defvar wal-dap-before nil)
 (defvar wal-debugging nil)
 
-(defun wal-debug ()
-  "Run the right debug command.
-
-This is `dap-debug' before and `dap-hydra' during debugging."
-  (interactive)
-
-  (if wal-debugging
-      (call-interactively 'dap-hydra)
-    (call-interactively 'dap-debug)))
-
 (defun wal-dap-terminated (_session)
-  "Disable hydra and restore window configuration."
-  (hydra-disable)
-
+  "Restore window configuration."
   (when wal-dap-before
     (set-window-configuration wal-dap-before))
 
@@ -196,10 +182,6 @@ This is `dap-debug' before and `dap-hydra' during debugging."
         wal-debugging t)
 
   (delete-other-windows))
-
-(defun wal-dap-stopped (_session)
-  "(Re-)display the hydra immediately."
-  (dap-hydra))
 
 (defun wal-instead-grab-directly ()
   "Grab like `company' would."
@@ -221,8 +203,7 @@ This is `dap-debug' before and `dap-hydra' during debugging."
 
   :hook ((dap-session-created . wal-dap-session-created)
          (dap-ui-repl-mode . wal-dap-adapt-company-backend))
-  :sinker ((dap-terminated . wal-dap-terminated)
-           (dap-stopped . wal-dap-stopped))
+  :sinker ((dap-terminated . wal-dap-terminated))
 
   :config
   (dap-auto-configure-mode)
@@ -235,9 +216,20 @@ This is `dap-debug' before and `dap-hydra' during debugging."
    'dap-ui-repl-company-prefix :override
    #'wal-instead-grab-directly)
 
+  (defvar-keymap dap-repeat-map
+    :doc "Keymap to repeat `dap-mode' commands."
+    :repeat '(:enter (dap-next dap-continue dap-step-in dap-step-out)
+              :exit (dap-disconnect dap-eval))
+    "n" 'dap-next
+    "c" 'dap-continue
+    "i" 'dap-step-in
+    "o" 'dap-step-out
+    "e" 'dap-eval
+    "d" 'dap-disconnect)
+
   :custom
   (dap-auto-show-output nil)
-  (dap-auto-configure-features '(breakpoints locals expressions repl))
+  (dap-auto-configure-features '(locals expressions))
 
   (dap-ui-repl-prompt (propertize "$ " 'field 'output))
 
@@ -248,11 +240,28 @@ This is `dap-debug' before and `dap-hydra' during debugging."
   (treemacs-text-scale -1)
 
   :general
-  (ambassador :keymaps 'lsp-mode-map "b" '(wal-debug :wk "debug"))
+  (ambassador :keymaps 'lsp-mode-map
+    "b" '(:ignore t :wk "dap")
 
-  :delight " dap"
+    "bb" 'dap-debug
+    "br" 'dap-ui-repl
 
-  :functions (dap-hydra))
+    "ba" 'dap-ui-expressions-add
+    "b." 'dap-eval-thing-at-point
+
+    "bt" 'dap-breakpoint-toggle
+    "b?" 'dap-breakpoint-condition
+    "bp" 'dap-ui-breakpoints-list
+
+    ;; Repeated.
+    "bn" 'dap-next
+    "bc" 'dap-continue
+    "bi" 'dap-step-in
+    "bo" 'dap-step-out
+    "be" 'dap-eval
+    "bd" 'dap-disconnect)
+
+  :delight " dap")
 #+END_SRC
 
 ** consult-lsp                                                        :melpa:

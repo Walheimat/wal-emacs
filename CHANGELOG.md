@@ -12,6 +12,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - `corfu-auto` was enabled again.
+- Command `dap-hydra` is no longer used. Instead a repeat map was
+  added for common `dap-mode` commands. Many commands are now bound in
+  `ambassador`.
 
 ### Removed
 
