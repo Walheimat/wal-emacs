@@ -9,6 +9,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Custom `transient` for `consult` now binds `wal-consult-error` that
+  uses either `consult-flycheck` or `consult-flymake`.
+
 ### Changed
 
 - `corfu-auto` was enabled again.

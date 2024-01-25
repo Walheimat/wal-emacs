@@ -504,6 +504,21 @@ If DISCONTINUE is non-nil, clock in from now."
       (call-interactively 'consult-org-heading)
     (call-interactively 'consult-outline)))
 
+(defun wal-consult-error ()
+  "Jump to error.
+
+Use either `flymake' or `flycheck'."
+  (interactive)
+
+  (cond
+   ((and (bound-and-true-p flycheck-mode)
+         (fboundp 'consult-flycheck))
+    (call-interactively 'consult-flycheck))
+   ((bound-and-true-p flymake-mode)
+    (call-interactively 'consult-flymake))
+   (t
+    (user-error "No syntax checker"))))
+
 (use-package consult
   :commands (consult--multi consult)
 
@@ -543,7 +558,8 @@ If DISCONTINUE is non-nil, clock in from now."
       ("i" "imenu" consult-imenu)
       ("o" "outline" wal-consult-outline)
       ("p" "project" wal-consult-project)
-      ("r" "register" consult-register)]
+      ("r" "register" consult-register)
+      ("e" "error" wal-consult-error)]
 
      ["Find"
       ("m" "bookmark" consult-bookmark)

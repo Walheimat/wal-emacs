@@ -146,6 +146,33 @@
     (wal-consult-outline)
     (bydi-was-called consult-outline)))
 
+(ert-deftest wal-consult-error ()
+  :tags '(complete user-facing)
+
+  (bydi (consult-flycheck
+         consult-flymake
+         (:spy fboundp))
+
+    (bydi-when fboundp 'consult-flycheck t)
+
+    (defvar flycheck-mode)
+
+    (let ((flycheck-mode t))
+
+      (wal-consult-error)
+
+      (bydi-was-called consult-flycheck))
+
+    (defvar flymake-mode)
+
+    (let ((flymake-mode t))
+
+      (wal-consult-error)
+
+      (bydi-was-called consult-flymake))
+
+    (should-error (wal-consult-error))))
+
 ;;; wal-complete-test.el ends here
 
 ;; Local Variables:
