@@ -20,6 +20,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Command `dap-hydra` is no longer used. Instead a repeat map was
   added for common `dap-mode` commands. Many commands are now bound in
   `ambassador`.
+- Binding for `completion-at-point` is again `C-M i`.
 
 ### Removed
 
