@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.2.9](https://github.com/Walheimat/wal-emacs/compare/v2.2.8...v2.2.9) (2024-01-28)
+
+
+### Bug Fixes
+
+* **lsp,junk:** fix docstring ([6029049](https://github.com/Walheimat/wal-emacs/commit/60290499afb790eb98a59c3544d95ead330198a7))
+* **pdf-tools:** declare as junk extra ([f6b47e8](https://github.com/Walheimat/wal-emacs/commit/f6b47e8d312564281003ddfa6a67070dc9d32860))
+* **surround:** provide definition name when binding key ([0a1f29a](https://github.com/Walheimat/wal-emacs/commit/0a1f29a3bb60b3ebcc9ca7f256265f58f933ae9c))
+
+
+### Features
+
+* **ci:** add semantic-release ([7327138](https://github.com/Walheimat/wal-emacs/commit/7327138915e6442aefea4770ab392fa37f5d0d3a))
+* **consult,flymake,flycheck:** bind wal-consult-error ([dcaa551](https://github.com/Walheimat/wal-emacs/commit/dcaa5518fb29e118912859d29cd11f3e6cdc63b5))
+* **dogears:** remove package ([cb637f9](https://github.com/Walheimat/wal-emacs/commit/cb637f969c8f677982f4f14580fbd8a6dfe20789))
+
 ## [2.2.8]
 
 Minor groove.
