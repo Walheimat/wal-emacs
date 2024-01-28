@@ -1,32 +1,5 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a
-Changelog](https://keepachangelog.com/en/1.0.0/), and this project
-(very loosely) adheres to [Semantic
-Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-### Added
-
-- Custom `transient` for `consult` now binds `wal-consult-error` that
-  uses either `consult-flycheck` or `consult-flymake`.
-
-### Changed
-
-- `corfu-auto` was enabled again.
-- Command `dap-hydra` is no longer used. Instead a repeat map was
-  added for common `dap-mode` commands. Many commands are now bound in
-  `ambassador`.
-- Binding for `completion-at-point` is again `C-M i`.
-
-### Removed
-
-- Package `dogears` was removed in favor of keeping `gumshoe` (for
-  now).
-
 ## [2.2.8]
 
 Minor groove.

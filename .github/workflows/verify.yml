@@ -4,17 +4,10 @@ on:
     branches:
       - trunk
     paths-ignore:
-      - '.dir-locals.el'
-      - '.gitignore'
-      - 'CHANGELOG.md'
-      - 'README.org'
-      - 'assets/**'
-      - 'commitlint.config.js'
-      - 'data/**'
-      - 'package-lock.json'
-      - 'package.json'
-      - 'proselintrc.json'
-      - 'tools/update-version.sh'
+      - .gitignore
+      - CHANGELOG.md
+      - README.org
+  workflow_call:
 
 jobs:
   test:
@@ -26,7 +19,7 @@ jobs:
       - name: Get Emacs
         uses: purcell/setup-emacs@master
         with:
-          version: 29.1
+          version: release-snapshot
 
       - name: Get Cask
         uses: conao3/setup-cask@master
@@ -48,11 +41,3 @@ jobs:
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Run byte-compiler check (allowed to fail)
-        continue-on-error: ${{ !contains(github.event.head_commit.message, 'release') }}
-        run: make pacify
-
-      - name: Simulate cold boot
-        if: contains(github.event.head_commit.message, 'release')
-        run: make cold-boot

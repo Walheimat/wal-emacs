@@ -2,12 +2,13 @@
 
 PACKAGE_MARKER=$(HOME)/.emacs.d/elpa/whale-line/whale-line.el
 
+PACKAGE_NAME=wal-emacs
 CURRENT_PACKAGE_VERSION=2.2.8
 LOCAL_DEPS=build
 LOCAL_PHONY_DEPS=ensure-init $(PACKAGE_MARKER)
 CI_DEPS=build
 PACIFY_DEPS=build
-UPDATE_VERSION_FILES=lib/wal-config.org wal.el
+UPDATE_VERSION_FILES=lib/wal-config.org wal.el Makefile
 
 include dinghy/emacs-package.mk
 
