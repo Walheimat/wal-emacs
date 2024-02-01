@@ -741,22 +741,22 @@ See `org-capture' for the usage of GOTO."
 (use-package org-capture
   :custom
   (org-capture-templates
-   `(("c" "add note for current task" plain
+   `(("c" "clocking task" plain
       (clock)
       "\n%?\n"
-      :empty-lines-before 1
-      :empty-lines-after 1)
-     ("d" "add daily note" plain
+      :unnarrowed t)
+     ("d" "daily note" plain
       (file+olp+datetree ,(concat org-directory "/dailies.org"))
       "%i\n%?"
       :empty-lines-before 1
       :empty-lines-after 1)
-     ("t" "add new project task" entry
+     ("t" "new project task" entry
       (function wal-org-capture-locate-project-tasks)
       "* TODO %?\n\n%i"
       :empty-lines-before 1
-      :empty-lines-after 1)
-     ("p" "visit project tasks" plain
+      :empty-lines-after 1
+      :before-finalize (org-set-tags-command))
+     ("p" "project tasks" plain
       (function wal-org-capture-locate-project-tasks)
       ""
       :unnarrowed t)))
