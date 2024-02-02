@@ -87,7 +87,11 @@ Root markers (how projects are found) and =vc= ignores are extended.
   (interactive)
 
   (if-let ((parent (wal-project-local-value 'wal-project-parent-project)))
-      (project-switch-project parent)
+
+      (let* ((child-root (project-root (project-current)))
+             (expanded (expand-file-name parent child-root)))
+
+        (project-switch-project expanded))
     (user-error "You need to set `wal-project-parent-project'")))
 
 (defun wal-project-consult-buffer ()
@@ -108,7 +112,6 @@ Root markers (how projects are found) and =vc= ignores are extended.
             (is-vc (cadr current)))
       (magit-status root)
     (message "Project at '%s' is not version-controlled" root)))
-
 
 (defun wal-project--buffer-root (buffer)
   "Get the project root for BUFFER."

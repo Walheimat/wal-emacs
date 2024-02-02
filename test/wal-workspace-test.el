@@ -8,20 +8,45 @@
 
 (require 'wal-workspace nil t)
 
-(ert-deftest wal-project-switch-to-parent-project ()
+(ert-deftest switch-to-parent-project--errors-if-not-set ()
   :tags '(workspace user-facing)
 
-  (bydi (project-switch-project (:mock wal-project-local-value :with symbol-value))
+  (bydi (project-switch-project
+         (:mock wal-project-local-value :with symbol-value))
+
+    (let ((wal-project-parent-project nil))
+
+      (bydi-was-not-called project-switch-project)
+
+      (should-error (wal-project-switch-to-parent-project) :type 'user-error))))
+
+(ert-deftest project-switch-to-parent-project--absolute-path ()
+  :tags '(workspace user-facing)
+
+  (bydi (project-switch-project
+         (:mock wal-project-local-value :with symbol-value)
+         (:ignore project-current)
+         (:mock project-root :return "/tmp/parent/child"))
+
     (let ((wal-project-parent-project "/tmp/parent"))
 
       (wal-project-switch-to-parent-project)
 
-      (bydi-was-called-with project-switch-project (list "/tmp/parent"))
+      (bydi-was-called-with project-switch-project (list "/tmp/parent") t))))
 
-      (setq wal-project-parent-project nil)
-      (bydi-clear-mocks)
+(ert-deftest switch-to-parent-project--relative-path ()
+  :tags '(workspace user-facing)
 
-      (should-error (wal-project-switch-to-parent-project) :type 'user-error))))
+  (bydi (project-switch-project
+         (:mock wal-project-local-value :with symbol-value)
+         (:ignore project-current)
+         (:mock project-root :return "/tmp/parent/child"))
+
+    (let ((wal-project-parent-project ".."))
+
+      (wal-project-switch-to-parent-project)
+
+      (bydi-was-called-with project-switch-project (list "/tmp/parent") t))))
 
 (ert-deftest wal-project-consult-buffer ()
   :tags '(workspace user-facing)
