@@ -14,7 +14,7 @@ module.exports = {
                 "fix",
                 "improve",
                 "refac",
-                "style",
+                "binding",
                 "test",
             ],
         ],
