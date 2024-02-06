@@ -705,27 +705,33 @@ taking notes related to the currently clocked task and one for dailies
 (defvar-local wal-org-capture-tasks-file nil)
 (put 'wal-org-capture-tasks-file 'safe-local-variable #'stringp)
 
-(defun wal-org-capture--find-project-tasks-heading ()
-  "Find the heading of the current project's tasks."
+(defun wal-org-capture--find-project-tasks-heading (&optional arg)
+  "Find the heading of a project's tasks.
+
+The project is the current project unless ARG is t."
   (declare-function org-find-exact-heading-in-directory "ext:org.el")
   (declare-function org-find-exact-headline-in-buffer "ext:org.el")
 
-  (if-let* ((project (project-current t))
-            (root (project-root project))
-            (heading (wal-project-local-value 'wal-org-capture-tasks-heading project))
-            (marker (or (and-let* ((file (wal-project-local-value 'wal-org-capture-tasks-file))
-                                   (canonicalized (and (boundp 'org-directory)
-                                                       (expand-file-name file org-directory)))
-                                   (buffer (and (file-exists-p canonicalized)
-                                                (find-file-noselect canonicalized))))
-                          (org-find-exact-headline-in-buffer heading buffer))
-                        (org-find-exact-heading-in-directory heading (or (wal-project-local-value 'wal-project-parent-project) root)))))
-      marker
-    (user-error "Couldn't find heading '%s'" wal-org-capture-tasks-heading)))
+  (let ((project-current-directory-override (and arg (project-prompt-project-dir))))
 
-(defun wal-org-capture-locate-project-tasks ()
-  "Locate the current project's tasks."
-  (let ((marker (wal-org-capture--find-project-tasks-heading)))
+    (if-let* ((project (project-current t))
+              (root (project-root project))
+              (heading (wal-project-local-value 'wal-org-capture-tasks-heading project))
+              (marker (or (and-let* ((file (wal-project-local-value 'wal-org-capture-tasks-file))
+                                     (canonicalized (and (boundp 'org-directory)
+                                                         (expand-file-name file org-directory)))
+                                     (buffer (and (file-exists-p canonicalized)
+                                                  (find-file-noselect canonicalized))))
+                            (org-find-exact-headline-in-buffer heading buffer))
+                          (org-find-exact-heading-in-directory heading (or (wal-project-local-value 'wal-project-parent-project) root)))))
+        marker
+      (user-error "Couldn't find heading '%s'" wal-org-capture-tasks-heading))))
+
+(defun wal-org-capture-locate-project-tasks (&optional other-project)
+  "Locate project tasks.
+
+If OTHER-PROJECT is t, do that for another project."
+  (let ((marker (wal-org-capture--find-project-tasks-heading other-project)))
 
     (set-buffer (marker-buffer marker))
     (goto-char (marker-position marker))))
@@ -752,6 +758,12 @@ See `org-capture' for the usage of GOTO."
       :empty-lines-after 1)
      ("t" "new project task" entry
       (function wal-org-capture-locate-project-tasks)
+      "* TODO %?\n\n%i"
+      :empty-lines-before 1
+      :empty-lines-after 1
+      :before-finalize (org-set-tags-command))
+     ("T" "new project task (other project)" entry
+      (function (lambda () (wal-org-capture-locate-project-tasks t)))
       "* TODO %?\n\n%i"
       :empty-lines-before 1
       :empty-lines-after 1

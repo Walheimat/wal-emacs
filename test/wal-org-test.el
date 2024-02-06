@@ -166,6 +166,7 @@
                                                     ('wal-project-parent-project nil)
                                                     (_ nil))))
            (:always project-current)
+           (:ignore project-prompt-project-dir)
            (:always project-root))
 
       (should-error (wal-org-capture-locate-project-tasks) :type 'user-error)
@@ -191,7 +192,7 @@
 
           (setq marker (point-marker)))
 
-        (wal-org-capture-locate-project-tasks)
+        (wal-org-capture-locate-project-tasks t)
 
         (should (eq (marker-position marker) 8))
 
