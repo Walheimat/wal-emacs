@@ -260,14 +260,17 @@ Note that `message' is silenced during tangling."
 
 ;;; Helpers
 
-(defun wal--compile (cmd &optional comint)
+(defun wal--compile (cmd &optional hidden comint)
   "Compile CMD.
 
-Optionally use `comint-mode' if COMINT is t."
+Optionally use `comint-mode' if COMINT is t. If HIDDEN is t, hide
+the compilation."
   (defvar compilation-save-buffers-predicate)
 
   (let ((default-directory wal--default-path)
-        (display-buffer-alist '(("\\*compilation" (display-buffer-no-window))))
+        (display-buffer-alist (if hidden
+                                  '(("\\*compilation" (display-buffer-no-window)))
+                                display-buffer-alist))
         (compilation-save-buffers-predicate #'ignore))
 
     (setq wal--compile-buffer (compile cmd comint))))
@@ -341,7 +344,7 @@ This waits for a maximum of 5 seconds to upgrade all packages."
 
   (message "Tangling configuration")
 
-  (wal--compile "make tangle"))
+  (wal--compile "make tangle" t))
 
 ;;; -- Bootstrapping
 

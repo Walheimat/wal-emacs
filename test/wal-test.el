@@ -419,7 +419,7 @@ the temporary file."
   (bydi wal--compile
     (shut-up (wal-tangle))
 
-    (bydi-was-called-with wal--compile "make tangle")))
+    (bydi-was-called-with wal--compile (list "make tangle" t))))
 
 (ert-deftest wal-show-compilation-result ()
   :tags '(prelude user-facing)
