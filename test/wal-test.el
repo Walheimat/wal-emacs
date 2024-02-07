@@ -364,6 +364,35 @@ the temporary file."
 
       (bydi-was-called package-initialize))))
 
+(ert-deftest wal--compile-check ()
+  :tags '(prelude)
+
+  (bydi ((:sometimes process-live-p)
+         (:mock process-exit-status :return 1)
+         cancel-timer
+         (:watch wal--compile-timer)
+         (:watch wal--compile-process)
+         (:spy identity))
+
+    (wal--compile-check #'identity)
+
+    (bydi-was-not-called cancel-timer)
+    (bydi-was-not-called identity)
+
+    (let ((wal--compile-timer 'timer))
+
+      (wal--compile-check #'identity)
+      (bydi-was-not-called cancel-timer)
+      (bydi-was-not-called identity)
+
+      (bydi-toggle-volatile 'process-live-p)
+
+      (wal--compile-check #'identity)
+      (bydi-was-called cancel-timer)
+      (bydi-was-called identity)
+      (bydi-was-set wal--compile-timer)
+      (bydi-was-set wal--compile-process))))
+
 (ert-deftest wal-tangle-target ()
   :tags '(prelude)
 
@@ -377,13 +406,26 @@ the temporary file."
 
   (let ((wal--default-path "/tmp"))
 
-    (bydi (compile
-           (:watch default-directory))
+    (bydi ((:mock compile :return (current-buffer))
+           (:watch default-directory)
+           (:ignore run-with-timer))
 
       (shut-up (wal-update))
 
       (bydi-was-set-to default-directory "/tmp")
-      (bydi-was-called-with compile '("make update && make upgrade" nil)))))
+      (bydi-was-called-with compile '("make update && make upgrade")))))
+
+(ert-deftest wal-update--on-completion ()
+  :tags '(prelude user-facing)
+
+  (bydi ((:othertimes yes-or-no-p)
+         (:always restart-emacs))
+
+    (should-not (wal-update--on-completion 0))
+
+    (bydi-toggle-volatile 'yes-or-no-p)
+    (should-not (wal-update--on-completion 1))
+    (should (wal-update--on-completion 0))))
 
 (ert-deftest wal-upgrade ()
   :tags '(prelude)

@@ -260,11 +260,33 @@ Note that `message' is silenced during tangling."
 
 ;;; Helpers
 
-(defun wal--compile (cmd &optional hidden comint)
+(defvar wal--compile-timer nil)
+(defvar wal--compile-process nil)
+
+(defun wal--compile-check (on-completion)
+  "Check the status of the compilation.
+
+If the process is no longer live, call ON-COMPLETION with the
+process status."
+  (when wal--compile-timer
+
+    (let ((process wal--compile-process))
+
+      (unless (process-live-p process)
+
+        (cancel-timer wal--compile-timer)
+
+        (funcall on-completion (process-exit-status process))
+
+        (setq wal--compile-timer nil
+              wal--compile-process nil)))))
+
+(defun wal--compile (cmd &optional hidden on-completion)
   "Compile CMD.
 
-Optionally use `comint-mode' if COMINT is t. If HIDDEN is t, hide
-the compilation."
+If HIDDEN is t, hide the compilation. A handler may be passed as
+ON-COMPLETION that will be called with the exit code on
+completion."
   (defvar compilation-save-buffers-predicate)
 
   (let ((default-directory wal--default-path)
@@ -273,7 +295,16 @@ the compilation."
                                 display-buffer-alist))
         (compilation-save-buffers-predicate #'ignore))
 
-    (setq wal--compile-buffer (compile cmd comint))))
+    (let ((buffer (compile cmd)))
+
+      (setq wal--compile-buffer buffer
+            wal--compile-process (get-buffer-process buffer))
+
+      (when on-completion
+        (setq wal--compile-timer
+              (run-with-timer 0 0.2 'wal--compile-check on-completion)))
+
+      buffer)))
 
 (defun wal--handle-error (exit)
   "Handle the error that occurred during initialization.
@@ -298,7 +329,13 @@ packages in `wal-bridge'."
 
   (message "Updating repository")
 
-  (wal--compile "make update && make upgrade"))
+  (wal--compile "make update && make upgrade" nil 'wal-update--on-completion))
+
+(defun wal-update--on-completion (exit-status)
+  "Handle EXIT-STATUS."
+  (when (and (eq 0 exit-status)
+             (yes-or-no-p "Upgrade succeeded. Want to restart Emacs?"))
+    (restart-emacs)))
 
 (defvar wal-upgrade--wait-time 1)
 
