@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.2.10](https://github.com/Walheimat/wal-emacs/compare/v2.2.9...v2.2.10) (2024-02-09)
+
+
+### Configurations
+
+* **org-capture:** unnarrowed for c, finalize t with tags ([24cd8c0](https://github.com/Walheimat/wal-emacs/commit/24cd8c0d74bdea8bf5a02017a32e7d71cb9592b6))
+* **org:** ask for note when leaving blocked state ([e8169c3](https://github.com/Walheimat/wal-emacs/commit/e8169c3f6568b8aade8d5cdc762e43061ed7db25))
+* **prelude:** don't hide upgrade compilation ([f9d4272](https://github.com/Walheimat/wal-emacs/commit/f9d4272d9f679636b3ba1a912628428638018ce2))
+* **ship-mate:** enable newly factored out modes ([ca78302](https://github.com/Walheimat/wal-emacs/commit/ca7830212bab0cf83b621d855ac1bce1de0e02ea))
+* **ship-mate:** enable ship-mate-dinghy-global-mode ([1084a8d](https://github.com/Walheimat/wal-emacs/commit/1084a8dfd3a31dc451e9638401e183e1a4d3c4c3))
+* **vertico:** easier binding for vertico-multiform-vertical ([37017e8](https://github.com/Walheimat/wal-emacs/commit/37017e848b9b5111c6b849f1ca28b97446d4e72a))
+
+
+### Bug Fixes
+
+* **js:** use JSON mode for rc files ([4a5d740](https://github.com/Walheimat/wal-emacs/commit/4a5d74054f6476009b83b473a62eafcbe0286a04))
+* **org-capture:** pass project to find tasks file ([e0108f2](https://github.com/Walheimat/wal-emacs/commit/e0108f277652c343073baa2f002c39e7abccbe45))
+* **workspace:** allow relative paths for parent project ([ff27028](https://github.com/Walheimat/wal-emacs/commit/ff2702861d32f795d8fc2121376d5b4540a0808e))
+
+
+### Improvements
+
+* **config:** don't fold style guide ([55251b3](https://github.com/Walheimat/wal-emacs/commit/55251b3622a601cc22a7af82f7f5037a1a5580cd))
+* **org-capture:** template to add new task for other project ([c7ce0f9](https://github.com/Walheimat/wal-emacs/commit/c7ce0f936ea39c85a7a4988d26c457962f426e33))
+* **prelude:** ask to restart after successful upgrade ([726944e](https://github.com/Walheimat/wal-emacs/commit/726944e4022b48b38aaabcb9e8b0861aa6be1d44))
+
 ## [2.2.9](https://github.com/Walheimat/wal-emacs/compare/v2.2.8...v2.2.9) (2024-01-28)
 
 

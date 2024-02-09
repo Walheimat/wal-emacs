@@ -3,7 +3,7 @@
 PACKAGE_MARKER=$(HOME)/.emacs.d/elpa/whale-line/whale-line.el
 
 PACKAGE_NAME=wal-emacs
-CURRENT_PACKAGE_VERSION=2.2.9
+CURRENT_PACKAGE_VERSION=2.2.10
 LOCAL_DEPS=build
 LOCAL_PHONY_DEPS=ensure-init $(PACKAGE_MARKER)
 CI_DEPS=build
