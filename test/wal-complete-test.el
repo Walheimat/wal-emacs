@@ -133,6 +133,14 @@
     (call-interactively 'wal-consult-project)
     (bydi-was-called-with consult--multi (list '(consult--source-open-projects consult--source-projects) :prompt "Select project: " :require-match t))))
 
+(ert-deftest wal-consult-agenda-buffer--query ()
+  :tags '(complete org)
+
+  (cl-defun consult--buffer-query (&key sort as predicate)
+    (list sort as predicate))
+
+  (should (equal (wal-consult-agenda-buffer--query) '(visibility buffer-name wal-agenda-buffer-p))))
+
 (ert-deftest wal-consult-outline ()
   :tags '(complete)
 

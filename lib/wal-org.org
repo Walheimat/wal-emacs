@@ -25,13 +25,12 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
   (require 'wal-key-bindings nil t)
   (require 'wal-bridge nil t))
 
-(declare-function consult--buffer-query "ext:consult.el")
-(declare-function consult--buffer-state "ext:consult.el")
-(declare-function consult-org-agenda "ext:consult.el")
+(declare-function consult-org-agenda "wal-complete.el")
 (declare-function general-define-key "ext:general.el")
 (declare-function mixed-pitch-mode "ext:mixed-pitch.el")
 (declare-function org-clock-goto "ext:org-clock.el")
 (declare-function org-roam-buffer-p "ext:org-roam.el")
+(declare-function project-prompt-project-dir "ext:project.el")
 (declare-function project-root "ext:project.el")
 (declare-function transient-prefix "ext:transient.el")
 (declare-function transient-setup "ext:transient.el")
@@ -50,6 +49,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (defvar org-log-note-this-command)
 (defvar org-log-note-marker)
 (defvar partial-recall-meaningful-traits)
+(defvar project-current-directory-override)
 (defvar text-scale-mode-step)
 (defvar visual-fill-column-width)
 (defvar visual-fill-column-center-text)
@@ -292,13 +292,6 @@ I need day-to-day and adds a =consult= buffer source.
 
   (org-agenda-file-p (buffer-file-name buffer)))
 
-(defun wal-consult-agenda-buffer--query ()
-  "Get contributing Org Agenda buffer names."
-  (consult--buffer-query
-   :sort 'visibility
-   :as #'buffer-name
-   :predicate #'wal-agenda-buffer-p))
-
 (defun wal-org-agenda-take-note (&optional arg)
   "Take a note for an agenda item.
 
@@ -327,22 +320,6 @@ the item first."
     (add-to-list 'partial-recall-meaningful-traits 'parallel-mirror-wal-agenda-buffer-p))
 
   (wal-replace-in-alist 'org-agenda-prefix-format '((agenda . "  %?-12t%?-12c%? s%?b")))
-
-  (with-eval-after-load 'consult
-    (defvar wal-consult--source-agenda-buffer
-      (list :name "Agenda Buffer"
-            :narrow ?a
-            :category 'buffer
-            :state #'consult--buffer-state
-            :history 'buffer-name-history
-            :face 'font-lock-keyword-face
-            :items #'wal-consult-agenda-buffer--query))
-
-    (wal-insert
-     'consult-buffer-sources
-     'consult--source-buffer
-     'wal-consult--source-agenda-buffer
-     :quiet t))
 
   :custom
   (org-agenda-hide-tags-regexp "^@")

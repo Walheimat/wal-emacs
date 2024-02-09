@@ -66,14 +66,6 @@
     (bydi ((:always org-agenda-file-p))
       (should (wal-agenda-buffer-p (current-buffer))))))
 
-(ert-deftest wal-consult-agenda-buffer--query ()
-  :tags '(org)
-
-  (cl-defun consult--buffer-query (&key sort as predicate)
-    (list sort as predicate))
-
-  (should (equal (wal-consult-agenda-buffer--query) '(visibility buffer-name wal-agenda-buffer-p))))
-
 (ert-deftest wal-relative-column-width ()
   :tags '(org)
 
