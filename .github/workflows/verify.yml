@@ -8,6 +8,10 @@ on:
       - CHANGELOG.md
       - README.org
   workflow_call:
+    inputs:
+      context:
+        required: false
+        type: string
 
 jobs:
   test:
@@ -36,6 +40,10 @@ jobs:
 
       - name: Run tests
         run: make test
+
+      - name: Run byte-compiler check
+        continue-on-error: ${{ inputs.context != 'release' }}
+        run: make pacify
 
       - name: Submit coverage
         uses: coverallsapp/github-action@master
