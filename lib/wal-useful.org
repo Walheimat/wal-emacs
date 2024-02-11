@@ -114,9 +114,11 @@ HEIGHT and NO-OTHER."
 
 (defun wal-display-buffer-use-some-frame--with-display-p (frame)
   "Check that FRAME is not the selected frame and has a display entry."
-  (and (not (eq frame (selected-frame)))
-       (get-lru-window frame)
-       (cdr-safe (assoc 'display (frame-parameters frame)))))
+  (when (eq 'x (framep (selected-frame)))
+    (and (eq 'x (framep frame))
+         (not (eq frame (selected-frame)))
+         (get-lru-window frame)
+         (cdr-safe (assoc 'display (frame-parameters frame))))))
 
 (cl-defun wal-display-buffer-same-place-or-faraway (buffer &key width height bottom dedicated no-other)
   "Display BUFFER where it is or far away.

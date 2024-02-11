@@ -88,11 +88,12 @@
   :tags '(useful)
 
   (let ((frame nil)
-        (params nil))
+        (params nil)
+        (type nil))
     (bydi ((:mock selected-frame :return frame)
+           (:mock framep :return 'x)
            get-lru-window
            (:mock frame-parameters :return params))
-
 
       (setq frame 1)
       (setq params '((display . t)))
