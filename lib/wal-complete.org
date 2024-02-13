@@ -519,6 +519,15 @@ If DISCONTINUE is non-nil, clock in from now."
    :as #'buffer-name
    :predicate #'wal-agenda-buffer-p))
 
+(defun wal-consult-org-agenda-buffer ()
+  "Complete an `org-agenda' buffer."
+  (interactive)
+
+  (consult--multi
+   '(wal-consult--source-agenda-buffer)
+   :prompt "Switch to buffer: "
+   :require-match t))
+
 (defun wal-consult-outline ()
   "Call the appropriate `consult' method."
   (interactive)
@@ -589,13 +598,14 @@ Use either `flymake' or `flycheck'."
       ("o" "outline" wal-consult-outline)
       ("p" "project" wal-consult-project)
       ("r" "register" consult-register)
-      ("e" "error" wal-consult-error)]
+      ("e" "error" wal-consult-error)
+      ("a" "agenda" wal-consult-org-agenda-buffer)]
 
      ["Find"
       ("m" "bookmark" consult-bookmark)
       ("@" "global mark" consult-global-mark)
       ("f" "recent file" consult-recent-file)
-      ("a" "agenda" consult-org-agenda)]
+      ("t" "agenda" consult-org-agenda)]
 
      ["Search"
       ("s" "line" consult-line)
@@ -605,7 +615,7 @@ Use either `flymake' or `flycheck'."
      ["Do"
       ("c" "clock in" wal-consult-clock-in)
       ("k" "call macro" consult-kmacro)
-      ("t" "change theme" consult-theme)
+      ("T" "change theme" consult-theme)
       ("R" "unregister" wal-consult-unregister)]]
 
     [["Modes"
