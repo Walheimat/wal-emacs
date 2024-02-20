@@ -253,7 +253,7 @@
 (ert-deftest wal-instead-use-custom-banner ()
   :tags '(visuals)
 
-  (let ((wal--default-path "/home/test"))
+  (let ((wal-default-path "/home/test"))
     (bydi ((:sometimes dashboard--image-supported-p))
 
       (should (equal (list :image "/home/test/assets/logo.png"

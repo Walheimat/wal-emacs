@@ -199,7 +199,7 @@ Example for advising =:around=.
 (declare-function wal-transparency--param "wal-visuals.el")
 
 (defvar vertico-preselect)
-(defvar wal--default-path)
+(defvar wal-default-path)
 (defvar wal-emacs-config-build-path)
 
 (defgroup wal-config nil
@@ -410,7 +410,7 @@ This only happens for project buffers as long as NO-RECORD is not t."
                ((not (and-let* ((name (buffer-file-name buffer)))
                        (seq-find (lambda (it) (string-match-p it name)) wal-config-animation--ignored-buffers))))
                ((null (buffer-local-value 'wal-config-animation-parent-buffer buffer)))
-               ((memq buffer (project-buffers (project-current nil wal--default-path)))))
+               ((memq buffer (project-buffers (project-current nil wal-default-path)))))
 
       (wal-config-animation-setup)
 
@@ -441,7 +441,7 @@ Minor mode for editing this config.
 This returns the tag and its annotation as propertized strings."
   (interactive)
 
-  (let* ((default-directory wal--default-path)
+  (let* ((default-directory wal-default-path)
          (version (propertize
                    (string-trim
                     (shell-command-to-string "git describe --abbrev=0"))
@@ -472,13 +472,13 @@ This returns the tag and its annotation as propertized strings."
   "Switch to the config project."
   (interactive)
 
-  (project-switch-project wal--default-path))
+  (project-switch-project wal-default-path))
 
 (defun wal-config-lib-files ()
   "Get a list of all lib files."
-  (defvar wal--lib-path)
+  (defvar wal-lib-path)
 
-  (nthcdr 2 (directory-files wal--lib-path t)))
+  (nthcdr 2 (directory-files wal-lib-path t)))
 
 (defun wal-config-consult-org-heading ()
   "Find a heading in any of library file."
@@ -507,7 +507,7 @@ If ALL-PACKAGES is t, call `org-tags-view' with a pre-constructed
 matcher."
   (interactive "P")
 
-  (defvar wal--lib-path)
+  (defvar wal-lib-path)
   (defvar org-agenda-files)
 
   (let ((org-agenda-files (wal-config-lib-files))

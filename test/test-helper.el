@@ -17,16 +17,16 @@
 
 (defun wal-test-helper--path-setup ()
   "Set up paths."
-  (defvar wal--default-path)
-  (defvar wal--build-path)
-  (defvar wal--lib-path)
+  (defvar wal-default-path)
+  (defvar wal-build-path)
+  (defvar wal-lib-path)
 
   (cl-destructuring-bind (source-dir build-dir lib-dir)
       (dinghy-rope-setup-paths (list "build" "lib"))
 
-    (setq wal--default-path source-dir
-          wal--build-path build-dir
-          wal--lib-path lib-dir)))
+    (setq wal-default-path source-dir
+          wal-build-path build-dir
+          wal-lib-path lib-dir)))
 
 (defvar wal-test-helper--stumps nil)
 

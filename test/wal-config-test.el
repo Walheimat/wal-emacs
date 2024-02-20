@@ -246,9 +246,9 @@
 (ert-deftest wal-describe-config-version ()
   :tags '(config user-facing)
 
-  (defvar wal--default-path)
+  (defvar wal-default-path)
   (let ((out '("1.0.0" "test everything" "1.0.1" "letting the world know"))
-        (wal--default-path "~"))
+        (wal-default-path "~"))
     (bydi ((:mock shell-command-to-string :with (lambda (_) (pop out)))
            (:mock message :with bydi-rf))
 
@@ -270,8 +270,8 @@
 (ert-deftest wal-config-switch-project ()
   :tags '(config user-facing)
 
-  (defvar wal--default-path)
-  (let ((wal--default-path "/tmp/config"))
+  (defvar wal-default-path)
+  (let ((wal-default-path "/tmp/config"))
 
     (bydi (project-switch-project)
 
@@ -282,8 +282,8 @@
 (ert-deftest wal-config-lib-files ()
   :tags '(config)
 
-  (defvar wal--lib-path)
-  (let ((wal--lib-path nil))
+  (defvar wal-lib-path)
+  (let ((wal-lib-path nil))
 
     (bydi ((:mock directory-files :return '("." ".." "/tmp/test.org" "/tmp/test-2.org")))
 

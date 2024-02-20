@@ -46,17 +46,17 @@ the temporary file."
   :tags '(prelude)
 
   (with-bootstrap "test" nil
-    (wal-init bootstrap wal--default-path)
+    (wal-init bootstrap wal-default-path)
 
     (bydi-was-called append-to-file)))
 
 (ert-deftest init-does-not-set-up-for-valid-bootstrap ()
   :tags '(prelude)
 
-  (defvar wal--init-marker)
+  (defvar wal-init--marker)
   (with-bootstrap "test" t
 
-    (wal-init bootstrap wal--default-path)
+    (wal-init bootstrap wal-default-path)
     (bydi-was-not-called append-to-file)))
 
 (ert-deftest init-deletes-outdated-bootstrap ()
@@ -64,7 +64,7 @@ the temporary file."
 
   (with-bootstrap "best" t
 
-    (wal-init bootstrap wal--default-path)
+    (wal-init bootstrap wal-default-path)
     (bydi-was-called delete-region)))
 
 (ert-deftest init--clears ()
@@ -72,7 +72,7 @@ the temporary file."
 
   (with-bootstrap "test" t
 
-    (wal-init bootstrap wal--default-path t)
+    (wal-init bootstrap wal-default-path t)
     (bydi-was-called delete-region)))
 
 (ert-deftest configure-customization ()
@@ -82,7 +82,7 @@ the temporary file."
     :text "(message \"from within\")"
 
     (let ((user-emacs-directory temporary-file-directory)
-          (wal--custom-file (file-name-nondirectory file)))
+          (wal-load--custom-file (file-name-nondirectory file)))
 
       (shut-up
         (ert-with-message-capture messages
@@ -94,7 +94,7 @@ the temporary file."
   :tags '(prelude)
 
   (let ((user-emacs-directory "/tmp")
-        (wal--custom-file "some-custom-file.el"))
+        (wal-load--custom-file "some-custom-file.el"))
 
       (shut-up
         (ert-with-message-capture messages
@@ -107,9 +107,9 @@ the temporary file."
 (ert-deftest load-config--requires-packages ()
   :tags '(prelude)
 
-  (defvar wal-packages)
+  (defvar wal-load--core-packages)
 
-  (let ((wal-packages '(one two)))
+  (let ((wal-load--core-packages '(one two)))
 
     (bydi (require add-to-list wal-load--configure-customization)
       (shut-up (wal-load))
@@ -121,12 +121,12 @@ the temporary file."
 (ert-deftest load-config--defaults-directory ()
   :tags '(prelude)
 
-  (defvar wal-packages)
-  (defvar wal--build-path)
+  (defvar wal-load--core-packages)
+  (defvar wal-build-path)
 
-  (let ((wal-packages '(test))
+  (let ((wal-load--core-packages '(test))
         (default-directory "/tmp")
-        (wal--build-path nil))
+        (wal-build-path nil))
 
     (bydi (require add-to-list wal-load--configure-customization)
 
@@ -137,11 +137,11 @@ the temporary file."
 (ert-deftest load-config--sets-init-error-on-failure ()
   :tags '(prelude)
 
-  (defvar wal-packages)
-  (defvar wal-init-error)
+  (defvar wal-load--core-packages)
+  (defvar wal-error)
 
-  (let ((wal-packages '(fails))
-        (wal-init-error nil))
+  (let ((wal-load--core-packages '(fails))
+        (wal-error nil))
 
     (bydi (add-to-list
            (:mock require :with (lambda (&rest _) (error "Oops")))
@@ -149,24 +149,24 @@ the temporary file."
 
       (shut-up (wal-load))
 
-      (should (string= (error-message-string wal-init-error) "Oops"))
+      (should (string= (error-message-string wal-error) "Oops"))
 
-      (setq wal-init-error nil))))
+      (setq wal-error nil))))
 
 (ert-deftest set-paths--does-that ()
   :tags '(prelude)
 
-  (defvar wal--default-path)
-  (defvar wal--build-path)
-  (defvar wal--lib-path)
+  (defvar wal-default-path)
+  (defvar wal-build-path)
+  (defvar wal-lib-path)
 
-  (let ((wal--default-path nil)
-        (wal--build-path nil)
-        (wal--lib-path nil))
+  (let ((wal-default-path nil)
+        (wal-build-path nil)
+        (wal-lib-path nil))
 
     (wal-bootstrap--set-paths "/tmp")
 
-    (should (string= wal--lib-path "/tmp/lib"))))
+    (should (string= wal-lib-path "/tmp/lib"))))
 
 (ert-deftest configure-cold-boot--sets-package-user-dir ()
   :tags '(prelude)
@@ -185,12 +185,12 @@ the temporary file."
 (ert-deftest touch--does-not-for-non-existing ()
   :tags '(prelude)
 
-  (let ((wal--default-path "/tmp/default")
-        (wal--phony-build-dependencies '("test" "testing")))
+  (let ((wal-default-path "/tmp/default")
+        (wal-tangle--phony-build-dependencies '("test" "testing")))
 
     (bydi ((:mock shell-command-to-string :return ""))
 
-      (shut-up (wal--touch))
+      (shut-up (wal-tangle--touch))
 
       (bydi-was-not-called shell-command-to-string))))
 
@@ -198,12 +198,12 @@ the temporary file."
   :tags '(prelude)
 
   (ert-with-temp-file touchable
-    (let ((wal--default-path "/tmp")
-          (wal--phony-build-dependencies (list touchable "testing"))
+    (let ((wal-default-path "/tmp")
+          (wal-tangle--phony-build-dependencies (list touchable "testing"))
           (output ""))
 
       (bydi ((:mock shell-command-to-string :return output))
-        (shut-up (wal--touch))
+        (shut-up (wal-tangle--touch))
 
         (bydi-was-called-n-times shell-command-to-string 1)
 
@@ -211,7 +211,7 @@ the temporary file."
 
         (shut-up
           (ert-with-message-capture messages
-            (wal--touch)
+            (wal-tangle--touch)
 
             (should (string-match-p "Output from touching: some output\n" messages))))))))
 
@@ -247,23 +247,23 @@ the temporary file."
 (ert-deftest tangle-config--tangles-all-sources ()
   :tags '(prelude)
 
-  (bydi (require org-babel-tangle-file wal--touch)
+  (bydi (require org-babel-tangle-file wal-tangle--touch)
 
     (shut-up (wal-tangle-library))
 
-    (let ((all (+ (length wal-packages)
+    (let ((all (+ (length wal-load--core-packages)
                   (length wal-additional-packages))))
 
       (bydi-was-called-n-times org-babel-tangle-file all))
 
-    (bydi-was-called wal--touch)))
+    (bydi-was-called wal-tangle--touch)))
 
 (ert-deftest bootstrap--configures-cold-boot ()
   :tags '(prelude)
 
-  (defvar wal--build-path)
+  (defvar wal-build-path)
 
-  (let ((wal--build-path "/tmp"))
+  (let ((wal-build-path "/tmp"))
 
     (bydi (wal-bootstrap--configure-cold-boot
            wal-bootstrap--set-paths
@@ -277,9 +277,9 @@ the temporary file."
 (ert-deftest bootstrap--would-load-config ()
   :tags '(prelude)
 
-  (defvar wal--build-path)
+  (defvar wal-build-path)
 
-  (let ((wal--build-path "/tmp"))
+  (let ((wal-build-path "/tmp"))
 
     (bydi (wal-bootstrap--set-paths
            wal-bootstrap--maybe-tangle
@@ -292,7 +292,7 @@ the temporary file."
 (ert-deftest bootstrap--would-tangle ()
   :tags '(prelude)
 
-  (defvar wal--build-path)
+  (defvar wal-build-path)
 
   (let ((wal-emacs-config "/tmp"))
 
@@ -309,7 +309,7 @@ the temporary file."
 (ert-deftest bootstrap--would-ensure ()
   :tags '(prelude)
 
-  (defvar wal--build-path)
+  (defvar wal-build-path)
 
   (let ((wal-emacs-config "/tmp"))
 
@@ -328,9 +328,9 @@ the temporary file."
 (ert-deftest bootstrap--handles-errors ()
   :tags '(prelude)
 
-  (defvar wal-init-error)
+  (defvar wal-error)
 
-  (let ((wal-init-error nil))
+  (let ((wal-error nil))
 
     (bydi (wal-bootstrap--set-paths
            wal-bootstrap--configure-cold-boot
@@ -339,7 +339,7 @@ the temporary file."
            kill-emacs
            delay-warning)
 
-      (setq wal-init-error 'some-error)
+      (setq wal-error 'some-error)
 
       (shut-up (wal-bootstrap "/tmp" 'cold))
 
@@ -364,39 +364,39 @@ the temporary file."
 
       (bydi-was-called package-initialize))))
 
-(ert-deftest wal--compile-check ()
+(ert-deftest wal-compile--check ()
   :tags '(prelude)
 
   (bydi ((:sometimes process-live-p)
          (:mock process-exit-status :return 1)
          cancel-timer
-         (:watch wal--compile-timer)
-         (:watch wal--compile-process)
+         (:watch wal-compile--timer)
+         (:watch wal-compile--process)
          (:spy identity))
 
-    (wal--compile-check #'identity)
+    (wal-compile--check #'identity)
 
     (bydi-was-not-called cancel-timer)
     (bydi-was-not-called identity)
 
-    (let ((wal--compile-timer 'timer))
+    (let ((wal-compile--timer 'timer))
 
-      (wal--compile-check #'identity)
+      (wal-compile--check #'identity)
       (bydi-was-not-called cancel-timer)
       (bydi-was-not-called identity)
 
       (bydi-toggle-volatile 'process-live-p)
 
-      (wal--compile-check #'identity)
+      (wal-compile--check #'identity)
       (bydi-was-called cancel-timer)
       (bydi-was-called identity)
-      (bydi-was-set wal--compile-timer)
-      (bydi-was-set wal--compile-process))))
+      (bydi-was-set wal-compile--timer)
+      (bydi-was-set wal-compile--process))))
 
 (ert-deftest wal-tangle-target ()
   :tags '(prelude)
 
-  (let ((wal--build-path "/tmp/build")
+  (let ((wal-build-path "/tmp/build")
         (buffer-file-name "/tmp/test.org"))
 
     (should (string= (wal-tangle-target) "/tmp/build/test.el"))))
@@ -404,7 +404,7 @@ the temporary file."
 (ert-deftest wal-update ()
   :tags '(prelude user-facing)
 
-  (let ((wal--default-path "/tmp"))
+  (let ((wal-default-path "/tmp"))
 
     (bydi ((:mock compile :return (current-buffer))
            (:watch default-directory)
@@ -458,19 +458,19 @@ the temporary file."
 (ert-deftest wal-tangle ()
   :tags '(prelude user-facing)
 
-  (bydi wal--compile
+  (bydi wal-compile
     (shut-up (wal-tangle))
 
-    (bydi-was-called-with wal--compile (list "make tangle" t))))
+    (bydi-was-called-with wal-compile (list "make tangle" t))))
 
 (ert-deftest wal-show-compilation-result ()
   :tags '(prelude user-facing)
 
-  (let ((wal--compile-buffer nil))
+  (let ((wal-compile--buffer nil))
 
     (should-error (wal-show-compilation-result))
 
-    (setq wal--compile-buffer (current-buffer))
+    (setq wal-compile--buffer (current-buffer))
 
     (bydi pop-to-buffer
       (wal-show-compilation-result)
@@ -481,7 +481,7 @@ the temporary file."
   :tags '(prelude)
 
   (ert-with-temp-directory dinghy-dir
-    (let ((wal--dinghy-path dinghy-dir)
+    (let ((wal-dinghy-path dinghy-dir)
           (src-dir (expand-file-name "src" dinghy-dir)))
 
       (make-directory src-dir)

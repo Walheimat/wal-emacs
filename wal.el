@@ -15,7 +15,7 @@
 
 (declare-function org-babel-tangle-file "ob-tangle")
 
-;;; -- Customization
+;;;; Customization
 
 (defgroup wal nil
   "Walheimat's configuration."
@@ -46,18 +46,7 @@ or run Emacs with flag `--minimal'."
   :group 'wal
   :type '(repeat symbol))
 
-;;; -- Variables
-
-(defvar wal-packages '(wal-useful
-                       wal-package
-                       wal-key-bindings
-                       wal-bridge
-                       wal-visuals
-                       wal-emacs
-                       wal-config)
-  "List of sub-packages that will be loaded.
-
-The order determines the load order as well.")
+;;;; Public variables
 
 (defvar wal-booting nil
   "Set to t during bootstrapping.")
@@ -68,50 +57,37 @@ The order determines the load order as well.")
 (defvar wal-ensure nil
   "Ensure packages after bootstrapping.")
 
-(defvar wal--default-path nil
+(defvar wal-default-path nil
   "The root path of the configuration.
 
 This variable will be set when calling `wal-bootstrap'.")
 
-(defvar wal--lib-path nil
+(defvar wal-lib-path nil
   "The path to the config's library.
 
 This variable will be set when calling `wal-bootstrap'")
 
-(defvar wal--build-path nil
+(defvar wal-build-path nil
   "The path to the config's built packages.
 
 This variable will be set when calling `wal-bootstrap'.")
 
-(defvar wal--dinghy-path nil
+(defvar wal-dinghy-path nil
   "The path to dinghy submodule.
 
 This variable will be set when calling `wal-bootstrap'.")
 
-(defvar wal--custom-file "custom.el"
-  "Name of the custom file.")
-
-(defconst wal--phony-build-dependencies '(".cask")
-  "Files or directories that are phony dependencies.
-
-These files will be touched after tangling.")
-
-(defvar wal-init-error nil
+(defvar wal-error nil
   "Set to the error message if initialization failed.")
 
-(defconst wal--init-marker "wal-prelude-bootstrap")
+;;;; Init bootstrap
 
-(defconst wal--init-end-marker "wal-prelude-bootstrap--end")
+(defconst wal-init--marker "wal-prelude-bootstrap")
 
-(defconst wal--init-marker-fs (concat wal--init-marker ":%s")
+(defconst wal-init--end-marker "wal-prelude-bootstrap--end")
+
+(defconst wal-init--marker-fs (concat wal-init--marker ":%s")
   "String to format new markers.")
-
-(defvar wal--compile-buffer nil)
-
-(defvar wal--ignore-during-tangle '(message partial-recall--schedule-buffer)
-  "Functions that should be advised using `ignore' during tangling.")
-
-;;; -- Creating bootstrapper
 
 (defun wal-init (init-file source-dir &optional clear)
   "Ensure that the INIT-FILE knows how to bootstrap.
@@ -129,12 +105,12 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
          (description (string-trim (shell-command-to-string cmd)))
          (hashed (base64-encode-string description))
          (init-buffer (find-file-noselect init-file))
-         (marker (format wal--init-marker-fs hashed))
+         (marker (format wal-init--marker-fs hashed))
          (template (expand-file-name "data/init.eld" source-dir))
          (template-buffer (find-file-noselect template))
          (template-contents (with-current-buffer template-buffer
                               (buffer-string)))
-         (bootstrap (format template-contents marker source-dir wal--init-end-marker))
+         (bootstrap (format template-contents marker source-dir wal-init--end-marker))
          (ready nil))
 
     (with-current-buffer init-buffer
@@ -143,8 +119,8 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
           (progn
             (message "Bootstrap in '%s' is up-to-date" init-file)
             (setq ready t))
-        (when-let* ((start (string-search wal--init-marker (buffer-string)))
-                    (end (or (string-search wal--init-end-marker (buffer-string))
+        (when-let* ((start (string-search wal-init--marker (buffer-string)))
+                    (end (or (string-search wal-init--end-marker (buffer-string))
                              (point-max))))
           (message "Deleting existing bootstrap in '%s'" init-file)
 
@@ -164,7 +140,15 @@ If CLEAR is t, make sure the INIT-FILE no longer knows."
       (message "Setting up bootstrap in '%s'" init-file)
       (append-to-file bootstrap nil init-file))))
 
-;;; -- Tangling
+;;;; Tangling
+
+(defvar wal-tangle--ignore '(message partial-recall--schedule-buffer)
+  "Functions that should be advised using `ignore' during tangling.")
+
+(defvar wal-tangle--phony-build-dependencies '(".cask")
+  "Files or directories that are phony dependencies.
+
+These files will be touched after tangling.")
 
 (defun wal-tangle-library ()
   "Tangle library files.
@@ -177,45 +161,59 @@ Note that `message' is silenced during tangling."
   (require 'ob-tangle)
   (defvar org-confirm-babel-evaluate)
 
-  (message "Tangling files in '%s'" wal--lib-path)
+  (message "Tangling files in '%s'" wal-lib-path)
 
   (let ((org-confirm-babel-evaluate nil)
-        (sources (nthcdr 2 (directory-files wal--lib-path t))))
+        (sources (nthcdr 2 (directory-files wal-lib-path t))))
 
-    (dolist (it wal--ignore-during-tangle)
+    (dolist (it wal-tangle--ignore)
       (advice-add it :override #'ignore))
 
     (dolist (it sources)
-      (org-babel-tangle-file (expand-file-name it wal--default-path)))
+      (org-babel-tangle-file (expand-file-name it wal-default-path)))
 
-    (dolist (it wal--ignore-during-tangle)
+    (dolist (it wal-tangle--ignore)
       (advice-remove it #'ignore))
 
-    (wal--touch)
+    (wal-tangle--touch)
 
-    (message "All %d library files in `%s' tangled" (length sources) wal--lib-path)))
+    (message "All %d library files in `%s' tangled" (length sources) wal-lib-path)))
 
-(defun wal--touch ()
+(defun wal-tangle--touch ()
   "Touch directories to make sure they aren't considered outdated."
-  (dolist (it wal--phony-build-dependencies)
+  (dolist (it wal-tangle--phony-build-dependencies)
 
     (message "Touching `%s'" it)
 
-    (and-let* ((expanded (expand-file-name it wal--default-path))
+    (and-let* ((expanded (expand-file-name it wal-default-path))
                ((file-exists-p expanded))
                (output (shell-command-to-string (format "touch %s" expanded))))
 
       (unless (string-empty-p output)
         (message "Output from touching: %s" output)))))
 
-;;; -- Loading
+;;;; Loading
+
+(defvar wal-load--core-packages '(wal-useful
+                                  wal-package
+                                  wal-key-bindings
+                                  wal-bridge
+                                  wal-visuals
+                                  wal-emacs
+                                  wal-config)
+  "List of core packages that need to be loaded.
+
+The order determines the load order as well.")
+
+(defvar wal-load--custom-file "custom.el"
+  "Name of the custom file.")
 
 (defun wal-load (&optional build-dir)
   "Load the config from BUILD-DIR."
   (interactive)
 
   (let ((dir (or build-dir
-                 wal--build-path
+                 wal-build-path
                  default-directory))
         (current nil))
 
@@ -225,7 +223,7 @@ Note that `message' is silenced during tangling."
 
     (add-to-list 'load-path dir)
 
-    (let ((all-packages (append wal-packages wal-additional-packages)))
+    (let ((all-packages (append wal-load--core-packages wal-additional-packages)))
 
       (condition-case err
           (dolist (it all-packages)
@@ -235,7 +233,7 @@ Note that `message' is silenced during tangling."
          (message "Failed to load package '%s': %s"
                   current
                   (error-message-string err))
-         (setq wal-init-error err
+         (setq wal-error err
                wal-booting nil))
         (:success
          (message "Successfully loaded all %d packages" (length all-packages)))))
@@ -245,7 +243,7 @@ Note that `message' is silenced during tangling."
 
 (defun wal-load--configure-customization ()
   "Configure custom file and load it."
-  (let ((file (expand-file-name wal--custom-file user-emacs-directory)))
+  (let ((file (expand-file-name wal-load--custom-file user-emacs-directory)))
 
     (if (file-exists-p file)
 
@@ -258,30 +256,31 @@ Note that `message' is silenced during tangling."
 
     (setq custom-file file)))
 
-;;; Helpers
+;;;; Compilation
 
-(defvar wal--compile-timer nil)
-(defvar wal--compile-process nil)
+(defvar wal-compile--buffer nil)
+(defvar wal-compile--timer nil)
+(defvar wal-compile--process nil)
 
-(defun wal--compile-check (on-completion)
+(defun wal-compile--check (on-completion)
   "Check the status of the compilation.
 
 If the process is no longer live, call ON-COMPLETION with the
 process status."
-  (when wal--compile-timer
+  (when wal-compile--timer
 
-    (let ((process wal--compile-process))
+    (let ((process wal-compile--process))
 
       (unless (process-live-p process)
 
-        (cancel-timer wal--compile-timer)
+        (cancel-timer wal-compile--timer)
 
         (funcall on-completion (process-exit-status process))
 
-        (setq wal--compile-timer nil
-              wal--compile-process nil)))))
+        (setq wal-compile--timer nil
+              wal-compile--process nil)))))
 
-(defun wal--compile (cmd &optional hidden on-completion)
+(defun wal-compile (cmd &optional hidden on-completion)
   "Compile CMD.
 
 If HIDDEN is t, hide the compilation. A handler may be passed as
@@ -289,7 +288,7 @@ ON-COMPLETION that will be called with the exit code on
 completion."
   (defvar compilation-save-buffers-predicate)
 
-  (let ((default-directory wal--default-path)
+  (let ((default-directory wal-default-path)
         (display-buffer-alist (if hidden
                                   '(("\\*compilation" (display-buffer-no-window)))
                                 display-buffer-alist))
@@ -297,28 +296,16 @@ completion."
 
     (let ((buffer (compile cmd)))
 
-      (setq wal--compile-buffer buffer
-            wal--compile-process (get-buffer-process buffer))
+      (setq wal-compile--buffer buffer
+            wal-compile--process (get-buffer-process buffer))
 
       (when on-completion
-        (setq wal--compile-timer
-              (run-with-timer 0 0.2 'wal--compile-check on-completion)))
+        (setq wal-compile--timer
+              (run-with-timer 0 0.2 'wal-compile--check on-completion)))
 
       buffer)))
 
-(defun wal--handle-error (exit)
-  "Handle the error that occurred during initialization.
-
-If EXIT is t, exit on error."
-  (when wal-init-error
-    (if exit
-        (kill-emacs 1)
-      (delay-warning
-       'wal
-       (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal-init-error)
-       :error))))
-
-;;; -- Goals
+;;;; Goals
 
 (defun wal-update ()
   "Update the configuration.
@@ -329,7 +316,7 @@ packages in `wal-bridge'."
 
   (message "Updating repository")
 
-  (wal--compile "make update && make upgrade" nil 'wal-update--on-completion))
+  (wal-compile "make update && make upgrade" nil 'wal-update--on-completion))
 
 (defun wal-update--on-completion (exit-status)
   "Handle EXIT-STATUS."
@@ -381,9 +368,9 @@ This waits for a maximum of 5 seconds to upgrade all packages."
 
   (message "Tangling configuration")
 
-  (wal--compile "make tangle" t))
+  (wal-compile "make tangle" t))
 
-;;; -- Bootstrapping
+;;;; Bootstrapping
 
 (defun wal-bootstrap (source-dir &optional mode)
   "Bootstrap the configuration in SOURCE-DIR.
@@ -425,8 +412,20 @@ Ensure means that packages will be installed after loading."
        (setq load nil)))
 
     (when load
-      (wal-load)
-      (wal--handle-error exit))))
+      (wal-load nil)
+      (wal-bootstrap--handle-error exit))))
+
+(defun wal-bootstrap--handle-error (exit-on-error)
+  "Handle the error that occurred during initialization.
+
+If EXIT-ON-ERROR is t, exit on error."
+  (when wal-error
+    (if exit-on-error
+        (kill-emacs 1)
+      (delay-warning
+       'wal
+       (format "Initializing the config failed.\n\nReview the following message:\n\n%s\n\nThen tangle again." wal-error)
+       :error))))
 
 (defun wal-bootstrap--set-paths (source-dir)
   "Set all paths from SOURCE-DIR."
@@ -435,19 +434,19 @@ Ensure means that packages will be installed after loading."
          (dinghy-dir (expand-file-name "dinghy" source-dir)))
 
 
-    (setq wal--default-path source-dir
-          wal--lib-path lib-dir
-          wal--build-path build-dir
-          wal--dinghy-path dinghy-dir)))
+    (setq wal-default-path source-dir
+          wal-lib-path lib-dir
+          wal-build-path build-dir
+          wal-dinghy-path dinghy-dir)))
 
 (defun wal-bootstrap--maybe-tangle ()
   "Maybe tangle the configuration."
-  (if (and (file-directory-p wal--build-path)
-           (not (directory-empty-p wal--build-path)))
+  (if (and (file-directory-p wal-build-path)
+           (not (directory-empty-p wal-build-path)))
 
-      (message "Found non-empty build directory '%s', will not tangle" wal--build-path)
+      (message "Found non-empty build directory '%s', will not tangle" wal-build-path)
 
-    (make-directory wal--build-path t)
+    (make-directory wal-build-path t)
 
     (wal-tangle-library)))
 
@@ -455,7 +454,7 @@ Ensure means that packages will be installed after loading."
   "Prep dinghy packages.
 
 This installs `dinghy-rope'."
-  (let ((src (expand-file-name "src" wal--dinghy-path)))
+  (let ((src (expand-file-name "src" wal-dinghy-path)))
 
     (when (file-exists-p src)
       (package-install-file (expand-file-name "dinghy-rope.el" src)))))
@@ -471,7 +470,7 @@ This installs `dinghy-rope'."
     (setq package-user-dir temp-dir)
     (message "Cold-boot using '%s'" temp-dir)))
 
-;;; -- API
+;;;; API
 
 (defun wal-tangle-target ()
   "Get the target file during tangling."
@@ -479,20 +478,20 @@ This installs `dinghy-rope'."
          (nodir (file-name-nondirectory name))
          (sans (file-name-sans-extension nodir)))
 
-    (expand-file-name (format "%s.el" sans) wal--build-path)))
+    (expand-file-name (format "%s.el" sans) wal-build-path)))
 
 (defun wal-show-compilation-result ()
   "Pop to the compilation buffer."
   (interactive)
 
-  (unless wal--compile-buffer
+  (unless wal-compile--buffer
     (user-error "No compilation buffer"))
 
-  (pop-to-buffer wal--compile-buffer))
+  (pop-to-buffer wal-compile--buffer))
 
 (defun wal-package-files ()
   "Get the package files."
-  (let* ((package-files (nthcdr 2 (directory-files wal--build-path t)))
+  (let* ((package-files (nthcdr 2 (directory-files wal-build-path t)))
          (el-files (seq-filter
                     (lambda (it)
                       (string-equal (file-name-extension it)
