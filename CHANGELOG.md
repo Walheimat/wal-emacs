@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.2.11](https://github.com/Walheimat/wal-emacs/compare/v2.2.10...v2.2.11) (2024-02-24)
+
+
+### Configurations
+
+* **diff-hl:** replace command-map bindings ([a42270b](https://github.com/Walheimat/wal-emacs/commit/a42270b825e90186722a754c2ac6df3f5cbb7375))
+* **elisp:** remove increased delay ([1a528ce](https://github.com/Walheimat/wal-emacs/commit/1a528ce309d9722d63f8a68c81ab7430a8772c9c))
+* **magit:** bind magit-log in transient ([d8a7d7c](https://github.com/Walheimat/wal-emacs/commit/d8a7d7c2affc988bb38bd3ba6e0d28517915bfd6))
+* **magit:** group transient like manual ([15bbb40](https://github.com/Walheimat/wal-emacs/commit/15bbb405fbf7ba86aab26b630bf59b5ac46d0910))
+* **partial-recall:** activate new mode ([01646d0](https://github.com/Walheimat/wal-emacs/commit/01646d06fe74c7131ee2611ebc8a47735ed459ea))
+* **partial-recall:** enable both new modes ([5a0d483](https://github.com/Walheimat/wal-emacs/commit/5a0d4830b901e4c535cb5f613b579c3d8dd83d6f))
+* **partial-recall:** enable concentration ([ef551d3](https://github.com/Walheimat/wal-emacs/commit/ef551d369e777af67c0cdb8ac40677a2f4a3968f))
+* **register:** add quick registers ([d8023c2](https://github.com/Walheimat/wal-emacs/commit/d8023c29b914696fcc671b1e5c1f7081e1bd7f57))
+* **register:** swap {point=>jump}-to-register ([7cda2e3](https://github.com/Walheimat/wal-emacs/commit/7cda2e3fda71601f1fd531354f0271574004cd49))
+
+
+### Bug Fixes
+
+* **display-buffer:** don't use nw frames ([517ff8b](https://github.com/Walheimat/wal-emacs/commit/517ff8b025986910cfd9bda975c971b7553d9d75))
+
+
+### Improvements
+
+* **consult,org-agenda:** add wal-consult-org-agenda-buffer ([0bc8fb0](https://github.com/Walheimat/wal-emacs/commit/0bc8fb00d64e711a6d32225a518765d89c940e1a))
+
 ## [2.2.10](https://github.com/Walheimat/wal-emacs/compare/v2.2.9...v2.2.10) (2024-02-09)
 
 
