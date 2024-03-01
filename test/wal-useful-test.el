@@ -342,6 +342,20 @@
 
     (bydi-was-called-with switch-to-buffer (list nil t))))
 
+(ert-deftest wal-interesting-windows ()
+  :tags '(useful)
+
+  (let ((term "other_terminal"))
+    (bydi ((:mock window-frame :return 'window-frame)
+           (:mock frame-list :return '(frame))
+           (:mock window-list :return '(a b c))
+           (:sometimes frame-live-p)
+           (:sometimes frame-visible-p)
+           (:mock terminal-name :return term)
+           (:othertimes frame-parent))
+
+      (should (equal '(a b c) (wal-interesting-windows))))))
+
 (ert-deftest wal-find-custom-file ()
   :tags '(useful user-facing)
 

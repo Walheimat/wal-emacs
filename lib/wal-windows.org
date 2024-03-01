@@ -29,9 +29,35 @@ Everything that has to do with windows.
 (require 'subr-x)
 
 (declare-function project-name "ext:project.el")
+(declare-function wal-interesting-windows "wal-useful.el")
+(declare-function wal-switch-to-other-buffer "wal-useful.el")
 #+END_SRC
 
 * Packages
+
+** ace-window                                                           :gnu:
+
+Super-charged =other-window=.
+
+#+begin_src emacs-lisp
+(defun wal-in-case-of-single-window-switch-to-other-buffer (&rest _args)
+  "Switch to buffer or other window."
+  (unless (> (length (wal-interesting-windows)) 1)
+    (wal-switch-to-other-buffer)))
+
+(use-package ace-window
+  :config
+  (advice-add
+   'ace-window :before-until
+   #'wal-in-case-of-single-window-switch-to-other-buffer)
+
+  :custom
+  (aw-keys '(?j ?k ?l ?\;))
+
+  :wal-bind
+  (("o" . ace-window)
+   ("C-M-o" . wal-switch-to-other-buffer)))
+#+end_src
 
 ** windmove                                                         :builtin:
 :PROPERTIES:
@@ -91,7 +117,7 @@ for workspace management powered by [[file:wal-bridge.org::*partial-recall][part
   (tab-bar-new-tab-group nil)
 
   :wal-bind
-  ("o" . tab-switch))
+  ("M-o" . tab-switch))
 #+end_src
 
 * Footer

@@ -19,6 +19,7 @@ Custom useful functions, commands and macros.
 ;;; Code:
 
 (require 'compile)
+(require 'cl-seq)
 (require 'subr-x)
 (require 'treesit nil t)
 
@@ -171,6 +172,21 @@ This switch is not recorded."
   (interactive)
 
   (switch-to-buffer nil t))
+
+(defun wal-interesting-windows ()
+  "A list of interesting windows.
+
+This is a simplified `aw-window-list'."
+  (cl-remove-if
+
+   (lambda (window)
+     (let ((frame (window-frame window)))
+       (or (not (and (frame-live-p frame)
+                     (frame-visible-p frame)))
+           (string= "initial_terminal" (terminal-name frame))
+           (and (fboundp 'frame-parent) (frame-parent (window-frame window))))))
+
+   (cl-mapcan #'window-list (frame-list))))
 #+END_SRC
 
 * Editing
