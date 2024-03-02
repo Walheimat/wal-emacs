@@ -168,7 +168,7 @@
          consult-flymake
          (:spy fboundp))
 
-    (bydi-when fboundp 'consult-flycheck t)
+    (bydi-when fboundp :called-with 'consult-flycheck :then-return t)
 
     (defvar flycheck-mode)
 
