@@ -188,6 +188,41 @@
 
     (should-error (wal-consult-error))))
 
+(ert-deftest wal-cape-funs ()
+  (bydi (cape-wrap-super
+         (:watch completion-at-point-functions))
+
+    (wal-cape-history-file)
+
+    (bydi-was-called cape-wrap-super)
+
+    (wal-cape-setup)
+
+    (bydi-was-set completion-at-point-functions t)
+
+    (wal-cape-eshell-setup)
+
+    (bydi-was-set completion-at-point-functions)))
+
+(ert-deftest wal-tempel-comment ()
+  :tags '(edit)
+
+  (with-temp-buffer
+    (setq major-mode 'emacs-lisp-mode)
+
+    (should (string-equal (wal-tempel-comment (list 'c "testing")) ";; testing")))
+  (with-temp-buffer
+    (setq comment-start "// ")
+
+    (should (string-equal (wal-tempel-comment (list 'c "testing")) "// testing"))))
+
+(ert-deftest wal-tempel-setup ()
+  (bydi ((:watch completion-at-point-functions))
+
+    (wal-tempel-setup)
+
+    (bydi-was-set completion-at-point-functions)))
+
 ;;; wal-complete-test.el ends here
 
 ;; Local Variables:

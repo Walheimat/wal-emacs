@@ -36,18 +36,6 @@
         (bydi-was-called abbrev-mode)
         (should-not wal-mc-disabled)))))
 
-(ert-deftest wal-tempel-comment ()
-  :tags '(edit)
-
-  (with-temp-buffer
-    (setq major-mode 'emacs-lisp-mode)
-
-    (should (string-equal (wal-tempel-comment (list 'c "testing")) ";; testing")))
-  (with-temp-buffer
-    (setq comment-start "// ")
-
-    (should (string-equal (wal-tempel-comment (list 'c "testing")) "// testing"))))
-
 (ert-deftest wal-in-case-of-mc-mode-do-not-default ()
   :tags '(edit)
 

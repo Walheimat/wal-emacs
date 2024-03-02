@@ -170,10 +170,27 @@ Provides additional completion function as well as functionality to
 jerry-rig =company= backends to work with =corfu=.
 
 #+begin_src emacs-lisp
+(defun wal-cape-history-file ()
+  "Combined `cape-history' and `cape-file'."
+  (cape-wrap-super #'cape-history #'cape-file))
+
+(defun wal-cape-setup ()
+  "Set up `cape'."
+  (setq-local completion-at-point-functions
+              (cons #'cape-file
+                    completion-at-point-functions)))
+
+(defun wal-cape-eshell-setup ()
+  "Set up `cape' fro Eshell."
+
+  (setq-local completion-at-point-functions
+              (cons #'wal-cape-history-file
+                    completion-at-point-functions)))
+
 (use-package cape
-  :bind
-  (("C-c h" . cape-history)
-   ("C-c /" . cape-file)))
+  :hook
+  (((prog-mode harpoon-prog-like text-mode) . wal-cape-setup)
+   (eshell-mode . wal-cape-eshell-setup)))
 #+end_src
 
 * Minibuffer Completion
@@ -626,6 +643,53 @@ Use either `flymake' or `flycheck'."
 
   :wal-bind
   ("M-l" . consult-line))
+#+END_SRC
+
+** tempel                                                               :gnu:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Don't reduce the boilerplate, reduce your involvement in it with
+snippets. Completing these snippets is bound to a custom binding.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal-tempel-comment (elt)
+  "Comment the element ELT according to mode."
+  (when (eq (car-safe elt) 'c)
+    (let ((cs (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start)))
+
+      (concat cs (cadr elt)))))
+
+(defun wal-tempel-setup ()
+  "Set up `tempel'."
+  (setq-local completion-at-point-functions
+              (cons #'tempel-complete
+                    completion-at-point-functions)))
+
+(use-package tempel
+  :hook
+  ((prog-mode harpoon-prog-like text-mode) . wal-tempel-setup)
+
+  :config
+  (setq tempel-path (wal-list-from
+                     'tempel-path
+                     (expand-file-name
+                      "data/tempel.eld"
+                      wal-default-path)))
+
+  :custom
+  (tempel-user-elements '(wal-tempel-comment))
+  (tempel-mark (propertize "░" 'face 'mode-line-highlight))
+  (tempel-trigger-prefix "\\")
+
+  :bind
+  (:map tempel-map
+   ("M-k" . tempel-kill)
+   ("M-a" . tempel-beginning)
+   ("M-e" . tempel-end)
+   ("M-n" . tempel-next)
+   ("M-p" . tempel-previous)))
 #+END_SRC
 
 * Footer
