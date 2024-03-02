@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.2.12](https://github.com/Walheimat/wal-emacs/compare/v2.2.11...v2.2.12) (2024-03-02)
+
+
+### Configurations
+
+* **cape, tempel:** include into CAPF ([2b2c521](https://github.com/Walheimat/wal-emacs/commit/2b2c52113d92ddbf4fef12e1cf62e5ada6feacd9))
+* **consult:** bind consult-line to user-prefixed M-l ([79d6b9d](https://github.com/Walheimat/wal-emacs/commit/79d6b9d9cd98cc71877141decd8c0ab68190a2af))
+* **embark:** embark-dwim with meta, remove parallel usage ([ce820c9](https://github.com/Walheimat/wal-emacs/commit/ce820c93fe1126992656e68dd68d3edbceb47733))
+* **project:** bind project-find-dir ([282bd40](https://github.com/Walheimat/wal-emacs/commit/282bd40538ec7a87dcc17d6a5c429851186c26f0))
+* **register:** user-prefixed i jumps, meta stores ([682100b](https://github.com/Walheimat/wal-emacs/commit/682100bf2251351c73b70d6f848dda7a27696bdf))
+* **ship-mate:** bind new command to default ([d4452cb](https://github.com/Walheimat/wal-emacs/commit/d4452cbec4457befea658e95cff32d88d9a73d1e))
+* **various:** use meta to access command maps or transients ([030b3c0](https://github.com/Walheimat/wal-emacs/commit/030b3c091f54cbcb7b0c076b252622c98ae6d17c))
+* **whale-line:** enable whale-line-iconify ([a1fa228](https://github.com/Walheimat/wal-emacs/commit/a1fa2280b0937780c229126b5a5287aba59da639))
+
+
+### Improvements
+
+* **windows:** re-introduce ace-window ([c972d91](https://github.com/Walheimat/wal-emacs/commit/c972d9142245c09a6bd59a710028e40f315e9157))
+
 ## [2.2.11](https://github.com/Walheimat/wal-emacs/compare/v2.2.10...v2.2.11) (2024-02-24)
 
 
