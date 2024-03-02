@@ -36,6 +36,7 @@ Complete commands and code.
 (declare-function wal-append "wal-useful.el")
 (declare-function wal-org-clock-in-from-now "wal-org.el")
 (declare-function wal-project--buffer-root "wal-workspace.el")
+(declare-function wal-list-from "wal-useful.el")
 (declare-function wal-univ-p "wal-useful.el")
 
 (defvar consult-register--narrow)
@@ -44,6 +45,7 @@ Complete commands and code.
 (defvar savehist-additional-variables)
 (defvar vertico-map)
 (defvar wal-active-theme)
+(defvar wal-default-path)
 
 ;;; Customization:
 
@@ -190,7 +192,9 @@ jerry-rig =company= backends to work with =corfu=.
 (use-package cape
   :hook
   (((prog-mode harpoon-prog-like text-mode) . wal-cape-setup)
-   (eshell-mode . wal-cape-eshell-setup)))
+   (eshell-mode . wal-cape-eshell-setup))
+
+  :functions (cape-file cape-history cape-wrap-super))
 #+end_src
 
 * Minibuffer Completion
@@ -689,7 +693,10 @@ snippets. Completing these snippets is bound to a custom binding.
    ("M-a" . tempel-beginning)
    ("M-e" . tempel-end)
    ("M-n" . tempel-next)
-   ("M-p" . tempel-previous)))
+   ("M-p" . tempel-previous))
+
+  :defines (tempel-path tempel-map)
+  :functions (tempel-complete))
 #+END_SRC
 
 * Footer
