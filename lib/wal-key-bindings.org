@@ -67,8 +67,7 @@ Most hyper[fn:2] bindings are quick-access actions:
 + =H-<mouse3>= adds another =multiple-cursor= at point
 + =H-n= searches project with =rg= (=C-0= searches using regex,
   =H-M-n= does =rg-menu=)
-+ =H-o= goes to other buffer with =ace-window= (=H-M-o= switches tabs
-  by name)
++ =H-o= goes to other window (=H-M-o= switches tabs by name)
 + =H-p= to rerun the last =ship-mate= command (=H-M-p= binds
   =ship-mate-command-map=)
 + =H-{up,down,left,right}= moves with =windmove= (swap with shift, delete
@@ -525,7 +524,10 @@ USER-KEY and LEADER can be used to prefix the key."
   ;; Alternate binding for C-c x @ h.
   (define-key function-key-map wal-hyper-mock #'event-apply-hyper-modifier)
 
-  ;; Allow deleting windows while repeating other-window.
+  ;; Extend `other-window'.
+  (global-set-key (kbd (wal-prefix-user-key "o")) 'other-window)
+  (advice-add 'other-window :before-until 'wal-other-window)
+
   (with-eval-after-load 'window
     (when (boundp 'other-window-repeat-map)
       (define-key other-window-repeat-map "0" 'delete-window)

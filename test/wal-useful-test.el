@@ -356,6 +356,21 @@
 
       (should (equal '(a b c) (wal-interesting-windows))))))
 
+(ert-deftest wal-other-window ()
+  :tags '(windows)
+
+  (let ((windows nil))
+    (bydi ((:mock wal-interesting-windows :return windows)
+           wal-switch-to-other-buffer)
+
+      (should-not (wal-other-window))
+
+      (setq windows '(a b))
+
+      (wal-other-window)
+
+      (bydi-was-called wal-switch-to-other-buffer))))
+
 (ert-deftest wal-find-custom-file ()
   :tags '(useful user-facing)
 
