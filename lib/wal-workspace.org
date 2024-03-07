@@ -92,7 +92,10 @@ Root markers (how projects are found) and =vc= ignores are extended.
              (expanded (expand-file-name parent child-root)))
 
         (project-switch-project expanded))
-    (user-error "You need to set `wal-project-parent-project'")))
+
+    (let ((name (if (project-current) (project-name (project-current)) "unknown")))
+
+      (user-error "Project '%s' has no parent project (controlled by `wal-project-parent-project')" name))))
 
 (defun wal-project-consult-buffer ()
   "Find an open project buffer using `consult-buffer'."
@@ -186,13 +189,10 @@ If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
                         "coverage/"
                         ".gradle"))
 
-  :bind
-  (:map project-prefix-map
-   ("^" . wal-project-switch-to-parent-project)
-   ("C-f" . wal-project-find-in-here))
-
   :wal-bind
-  (("h" . project-find-file)
+  (("y" . wal-project-find-in-here)
+   ("M-y" . wal-project-switch-to-parent-project)
+   ("h" . project-find-file)
    ("M-h" . project-find-dir)))
 #+END_SRC
 
