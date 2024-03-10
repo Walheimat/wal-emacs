@@ -28,6 +28,53 @@
 
     (bydi-was-called-with eval (list '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))))
 
+(ert-deftest wal-lsp-dwim ()
+  :tags '(lsp)
+
+  (let ((type nil))
+    (bydi ((:mock point :var mock-point :initial 0)
+           (:othertimes use-region-p)
+           (:mock bounds-of-thing-at-point :return '(3 . 0))
+           (:mock thing-at-point :with (lambda (x &rest _) (eq x type)))
+
+           lsp-organize-imports
+           lsp-format-region
+           lsp-rename
+           lsp-execute-code-action
+           lsp-format-buffer)
+
+      (should-error (wal-lsp-dwim))
+
+      (setq type 'whitespace)
+
+      (wal-lsp-dwim)
+
+      (bydi-was-called lsp-format-buffer)
+
+      (setq type 'symbol)
+
+      (wal-lsp-dwim)
+
+      (bydi-was-called lsp-execute-code-action)
+
+      (setq mock-point 3)
+
+      (wal-lsp-dwim)
+
+      (bydi-was-called lsp-rename)
+
+      (bydi-toggle-volatile 'use-region-p)
+
+      (wal-lsp-dwim)
+
+      (bydi-was-called lsp-format-region)
+
+      (setq mock-point 1)
+
+      (wal-lsp-dwim)
+
+      (bydi-was-called lsp-organize-imports))))
+
 (ert-deftest wal-dap-terminated ()
   :tags '(lsp)
 

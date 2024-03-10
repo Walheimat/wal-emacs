@@ -84,6 +84,37 @@ servers yourself[fn:1].
   "Prevent adding workspace roots from other projects."
   (eval '(setf (lsp-session-server-id->folders (lsp-session)) (ht))))
 
+(defun wal-lsp-dwim ()
+  "Make the LSP do what I mean.
+
+The action depends on the current position, active region and the
+`thing-at-point'."
+  (interactive)
+
+  (cond
+   ((eq 1 (point))
+    (call-interactively 'lsp-organize-imports))
+
+   ((use-region-p)
+    (call-interactively 'lsp-format-region))
+
+   ((thing-at-point 'symbol t)
+
+    (let ((bounds (bounds-of-thing-at-point 'symbol)))
+
+      (cond
+       ((eq (car-safe bounds) (point))
+        (call-interactively 'lsp-rename))
+       (t
+        (call-interactively 'lsp-execute-code-action)))))
+
+   ((thing-at-point 'whitespace t)
+
+    (call-interactively 'lsp-format-buffer))
+
+   (t
+    (user-error "No action registered for thing at point"))))
+
 (use-package lsp-mode
   :hook (lsp-completion-mode . wal-lsp-completion)
 
@@ -125,6 +156,10 @@ servers yourself[fn:1].
   (lsp-xml-format-split-attributes t)
   (lsp-xml-format-space-before-empty-close-tag nil)
   (lsp-xml-format-split-attributes-indent-size 1)
+
+  :wal-bind
+  (:map lsp-mode-map
+   ("\\" . wal-lsp-dwim))
 
   :delight
   (lsp-mode " lsp")
