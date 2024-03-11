@@ -51,16 +51,45 @@ for files within projects literally and using regular expressions.
 
   (rg-rerun-toggle-flag "--hidden"))
 
-(defun wal-rg-project-literal (query files)
-  "Search in project for FILES using QUERY literally."
-  (interactive (list (rg-read-pattern t) (rg-read-files)))
+(defun wal-rg--run (&optional pattern literal)
+  "Query for PATTERN for FILES in project.
 
-  (defvar rg-command-line-flags-function)
+If LITERAL is t, search literally."
+  (defvar rg-command-line-flags)
 
-  (let ((dir (rg-project-root buffer-file-name))
+  (let ((pattern (or pattern (rg-read-pattern literal)))
+        (files (rg-read-files))
+        (dir (rg-project-root buffer-file-name))
         (flags (funcall rg-command-line-flags-function 'nil)))
 
-    (rg-run query files dir t nil flags)))
+    (rg-run pattern files dir literal nil flags)))
+
+(defun wal-rg-project-literal ()
+  "Search in project literally."
+  (interactive)
+
+  (wal-rg--run nil t))
+
+(defvar wal-rg-hl-todo--restricted-prefix " ")
+(defvar wal-rg-hl-todo--restricted-suffix ": ")
+
+(defun wal-rg-project-todos (&optional all)
+  "Find `hl-todo' keywords.
+
+If optional ALL is t, be less restrictive about finding
+them (accepting no leading whitespace and no trailing colon)."
+  (interactive "P")
+
+  (defvar hl-todo-keyword-faces)
+
+  (let ((pattern (concat
+                  (unless all wal-rg-hl-todo--restricted-prefix)
+                  "("
+                  (mapconcat #'car hl-todo-keyword-faces "|")
+                  ")"
+                  (unless all wal-rg-hl-todo--restricted-suffix))))
+
+    (wal-rg--run pattern)))
 
 (use-package rg
   :wal-ways t
@@ -72,6 +101,11 @@ for files within projects literally and using regular expressions.
 
   :config
   (wdb-faraway "\\*rg\\*\\'")
+
+  ;; Allow searching for TODOs in a project.
+  (with-eval-after-load 'hl-todo
+    (transient-append-suffix 'rg-menu '(2 0 -1)
+      '("x" "TODOs" wal-rg-project-todos)))
 
   :bind
   (:map rg-mode-map
