@@ -454,24 +454,32 @@ Do not ignore hidden files."
 
     (setq register-alist (assoc-delete-all key register-alist))))
 
-(defun wal-consult-clock-in (&optional discontinue)
-  "Clock into an Org agenda heading.
+(defun wal-consult-clock (&optional arg)
+  "Clock in (or out).
 
 Only non-archived and active headings are matched.
 
-If DISCONTINUE is non-nil, clock in from now."
-  (interactive "P")
+Optional argument ARG can have one of two meanings. If it has the
+numeric value of 0 this will call `wal-clock-in-from-now'. If it
+has numeric value 4 (the default `universal-argument')
+`org-clock-out' is called."
+  (interactive "p")
 
-  (save-window-excursion
+  (let ((clocking (org-clocking-buffer))
+        (stop (and arg (eq 4 arg)))
+        (discontinue (and arg (eq 0 arg))))
 
-    (consult-org-agenda "-ARCHIVE/-DONE")
+    (if stop
+        (org-clock-out)
+      (save-window-excursion
+        (consult-org-agenda "-ARCHIVE/-DONE")
 
-    (if discontinue
-        (wal-org-clock-in-from-now)
-      (org-clock-in)))
+        (if discontinue
+            (wal-org-clock-in-from-now)
+          (org-clock-in))))
 
-  (with-current-buffer (org-clocking-buffer)
-    (save-buffer)))
+    (with-current-buffer clocking
+        (save-buffer))))
 
 (defun wal-then-set-active-theme (theme)
   "Advise to set `wal-active-theme' to THEME."
@@ -622,7 +630,6 @@ Use either `flymake' or `flycheck'."
       ("l" "locate" consult-locate)]
 
      ["Do"
-      ("c" "clock in" wal-consult-clock-in)
       ("k" "call macro" consult-kmacro)
       ("T" "change theme" consult-theme)
       ("R" "unregister" wal-consult-unregister)]]
@@ -632,7 +639,9 @@ Use either `flymake' or `flycheck'."
       ("-" "toggle minor mode" consult-minor-mode-menu)]])
 
   :wal-bind
-  (("," . consult-buffer)
+  (("<SPC>" . wal-consult-clock)
+
+   ("," . consult-buffer)
    ("M-," . consult)
    ("M-l" . consult-line)))
 #+END_SRC

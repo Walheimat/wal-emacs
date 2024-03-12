@@ -78,24 +78,28 @@
       (wal-consult-unregister)
       (should (equal register-alist '((?t . test)))))))
 
-(ert-deftest wal-consult-clock-in ()
+(ert-deftest wal-consult-clock ()
   :tags '(complete)
 
   (bydi (consult-org-agenda
          org-clock-in
+         org-clock-out
          wal-org-clock-in-from-now
          (:spy save-buffer)
          (:mock org-clocking-buffer :return (current-buffer)))
 
-    (wal-consult-clock-in)
+    (wal-consult-clock)
     (bydi-was-called-with consult-org-agenda "-ARCHIVE/-DONE")
     (bydi-was-called org-clock-in)
     (bydi-was-called org-clocking-buffer)
     (bydi-was-called save-buffer)
 
-    (funcall-interactively 'wal-consult-clock-in '(4))
+    (funcall-interactively 'wal-consult-clock 0)
     (bydi-was-called consult-org-agenda)
-    (bydi-was-called wal-org-clock-in-from-now)))
+    (bydi-was-called wal-org-clock-in-from-now)
+
+    (funcall-interactively 'wal-consult-clock 4)
+    (bydi-was-called org-clock-out)))
 
 (ert-deftest wal-then-set-active-theme ()
   :tags '(complete)
