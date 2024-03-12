@@ -547,13 +547,24 @@ has numeric value 4 (the default `universal-argument')
    :as #'buffer-name
    :predicate #'wal-agenda-buffer-p))
 
-(defun wal-consult-outline ()
-  "Call the appropriate `consult' method."
-  (interactive)
+(defun wal-consult-place (&optional prefer-outline)
+  "Go to a place with `consult'.
 
-  (if (derived-mode-p 'org-mode)
-      (call-interactively 'consult-org-heading)
-    (call-interactively 'consult-outline)))
+In Org buffers this is done using `consult-org-heading', in
+`prog-mode' buffers this is done using `consult-imenu', otherwise
+`consult-outline' is used. The latter can be forced if
+PREFER-OUTLINE is t."
+  (interactive "P")
+
+  (if prefer-outline
+      (call-interactively 'consult-outline)
+    (cond
+     ((derived-mode-p 'org-mode)
+      (call-interactively 'consult-org-heading))
+     ((derived-mode-p 'prog-mode)
+      (call-interactively 'consult-imenu))
+     (t
+      (call-interactively 'consult-outline)))))
 
 (defun wal-consult-error ()
   "Jump to error.
@@ -614,7 +625,6 @@ Use either `flymake' or `flycheck'."
       ("SPC" "mark" consult-mark)
       ("g" "line" consult-goto-line)
       ("i" "imenu" consult-imenu)
-      ("o" "outline" wal-consult-outline)
       ("p" "project" wal-consult-project)
       ("r" "register" consult-register)
       ("e" "error" wal-consult-error)]
@@ -640,11 +650,15 @@ Use either `flymake' or `flycheck'."
 
   :wal-bind
   (("<SPC>" . wal-consult-clock)
+   ("i" . wal-consult-place)
 
    ("," . consult-buffer)
    ("M-," . consult)
    ("M-l" . consult-line)))
 #+END_SRC
+
+#+RESULTS:
+: consult-line
 
 ** tempel                                                               :gnu:
 :PROPERTIES:

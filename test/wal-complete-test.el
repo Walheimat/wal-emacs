@@ -145,18 +145,28 @@
 
   (should (equal (wal-consult-agenda-buffer--query) '(visibility buffer-name wal-agenda-buffer-p))))
 
-(ert-deftest wal-consult-outline ()
+(ert-deftest wal-consult-place ()
   :tags '(complete)
 
-  (bydi ((:sometimes derived-mode-p)
-         consult-org-heading
-         consult-outline)
+  (let ((type 'org-mode))
+    (bydi ((:mock derived-mode-p :with (lambda (x) (eq x type)))
+           consult-org-heading
+           consult-imenu
+           consult-outline)
 
-    (wal-consult-outline)
-    (bydi-was-called consult-org-heading)
-    (bydi-toggle-sometimes)
-    (wal-consult-outline)
-    (bydi-was-called consult-outline)))
+      (wal-consult-place)
+      (bydi-was-called consult-org-heading)
+
+      (setq type 'text-mode)
+      (wal-consult-place)
+      (bydi-was-called consult-outline t)
+
+      (setq type 'prog-mode)
+      (wal-consult-place)
+      (bydi-was-called consult-imenu)
+
+      (wal-consult-place t)
+      (bydi-was-called consult-outline))))
 
 (ert-deftest wal-consult-error ()
   :tags '(complete user-facing)
