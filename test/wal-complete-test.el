@@ -84,9 +84,11 @@
   (bydi (consult-org-agenda
          org-clock-in
          org-clock-out
+         (:always org-clocking-p)
          wal-org-clock-in-from-now
          (:spy save-buffer)
-         (:mock org-clocking-buffer :return (current-buffer)))
+         (:mock org-clocking-buffer :return (current-buffer))
+         (:always require))
 
     (wal-consult-clock)
     (bydi-was-called-with consult-org-agenda "-ARCHIVE/-DONE")

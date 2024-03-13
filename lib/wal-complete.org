@@ -465,9 +465,12 @@ has numeric value 4 (the default `universal-argument')
 `org-clock-out' is called."
   (interactive "p")
 
-  (let ((clocking (org-clocking-buffer))
-        (stop (and arg (eq 4 arg)))
-        (discontinue (and arg (eq 0 arg))))
+  (require 'org-clock nil t)
+
+  (let ((stop (and arg (eq 4 arg)))
+        (discontinue (and arg (eq 0 arg)))
+        (previous (when (org-clocking-p)
+                    (org-clocking-buffer))))
 
     (if stop
         (org-clock-out)
@@ -478,8 +481,13 @@ has numeric value 4 (the default `universal-argument')
             (wal-org-clock-in-from-now)
           (org-clock-in))))
 
-    (with-current-buffer clocking
-        (save-buffer))))
+    (when previous
+      (with-current-buffer previous
+        (save-buffer)))
+
+    (when-let ((current (and (org-clocking-p) (org-clocking-buffer))))
+      (with-current-buffer current
+        (save-buffer)))))
 
 (defun wal-then-set-active-theme (theme)
   "Advise to set `wal-active-theme' to THEME."
