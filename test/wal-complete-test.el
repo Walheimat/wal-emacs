@@ -155,7 +155,7 @@
            consult-outline)
 
       (wal-consult-place)
-      (bydi-was-called consult-org-heading)
+      (bydi-was-called-with consult-org-heading "-ARCHIVE")
 
       (setq type 'text-mode)
       (wal-consult-place)
