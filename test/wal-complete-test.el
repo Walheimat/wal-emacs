@@ -129,7 +129,7 @@
   :tags '(complete)
 
   (bydi ((:mock buffer-list :return '("a" "c" "b" "c" "a"))
-         (:mock wal-project--buffer-root :with bydi-rf))
+         (:mock wal-project-buffer-root :with bydi-rf))
     (should (equal '("b" "c" "a") (consult--open-project-items)))))
 
 (ert-deftest wal-consult-project ()

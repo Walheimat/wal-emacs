@@ -64,18 +64,11 @@ Manage and interact with projects.
 Library =project= has by now become mature enough to replace the
 otherwise excellent =projectile=.
 
-Various switch commands (selected when switching projects) are added
-to find Org file containing the tasks, showing =magit= status, finding
-a buffer with =consult=, searching with =rg=, finding the root dir and
-running one of the above commands.
+*** Find parent project and sisters of the current file
 
 The concept of parent projects is established for mono- and projects
-that comprise several sub-projects. The action to switch to it is
-bound in the prefix map. The command to find the tasks file as well as
-a command to only find from the current file's directory are also
-bound there.
-
-Root markers (how projects are found) and =vc= ignores are extended.
+that comprise several sub-projects (the action to switch to it is
+bound to user-prefixed =M-y=).
 
 #+BEGIN_SRC emacs-lisp
 (defvar-local wal-project-parent-project nil
@@ -97,6 +90,23 @@ Root markers (how projects are found) and =vc= ignores are extended.
 
       (user-error "Project '%s' has no parent project (controlled by `wal-project-parent-project')" name))))
 
+(defun wal-project-find-in-here (&optional include-all)
+  "Find a project file in the current directory.
+
+If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
+  (interactive "P")
+
+  (when-let ((project (project-current nil)))
+
+    (project-find-file-in nil (list default-directory) project include-all)))
+#+END_SRC
+
+*** Additional switch commands
+
+Two switch commands (selected when switching projects) are added: one
+to find a buffer with =consult=, another to show =magit= status.
+
+#+BEGIN_SRC emacs-lisp
 (defun wal-project-consult-buffer ()
   "Find an open project buffer using `consult-buffer'."
   (interactive)
@@ -116,7 +126,22 @@ Root markers (how projects are found) and =vc= ignores are extended.
       (magit-status root)
     (message "Project at '%s' is not version-controlled" root)))
 
-(defun wal-project--buffer-root (buffer)
+(defun wal-project-switch-to-tasks ()
+  "Switch to the current project's tasks."
+  (interactive)
+
+  (when-let* ((marker (wal-org-capture--find-project-tasks-heading))
+              (buffer (marker-buffer marker)))
+
+    (switch-to-buffer buffer)))
+#+END_SRC
+
+*** Utility functions
+
+These are functions used in other packages.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal-project-buffer-root (buffer)
   "Get the project root for BUFFER."
   (with-current-buffer buffer
     (when-let* ((dir (cond
@@ -137,26 +162,13 @@ Optionally the PROJECT may be passed directly."
              (root (project-root project)))
 
     (project--value-in-dir symbol root)))
+#+END_SRC
 
-(defun wal-project-find-in-here (&optional include-all)
-  "Find a project file in the current directory.
+*** Package configuration
 
-If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
-  (interactive "P")
+Root markers (how projects are found) and =vc= ignores are extended.
 
-  (when-let ((project (project-current nil)))
-
-    (project-find-file-in nil (list default-directory) project include-all)))
-
-(defun wal-project-switch-to-tasks ()
-  "Switch to the current project's tasks."
-  (interactive)
-
-  (when-let* ((marker (wal-org-capture--find-project-tasks-heading))
-              (buffer (marker-buffer marker)))
-
-    (switch-to-buffer buffer)))
-
+#+BEGIN_SRC emacs-lisp
 (use-package project
   :config
   ;; Allow setting custom names.

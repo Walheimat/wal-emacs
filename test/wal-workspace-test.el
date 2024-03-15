@@ -85,7 +85,7 @@
 
         (should (string= "Project at ’/tmp/test’ is not version-controlled\n" messages))))))
 
-(ert-deftest wal-project--buffer-root ()
+(ert-deftest wal-project-buffer-root ()
   :tags '(workspace)
 
   (bydi ((:mock project-current :return '(vc Git "/tmp"))
@@ -93,7 +93,7 @@
     (with-temp-buffer
       (setq buffer-file-name "/tmp/test-buffer/file.test")
 
-      (wal-project--buffer-root (current-buffer))
+      (wal-project-buffer-root (current-buffer))
 
       (bydi-was-called-with project-current '(nil "/tmp/test-buffer/"))
       (bydi-was-called-with project-root (list '(vc Git "/tmp"))))
@@ -101,7 +101,7 @@
     (with-temp-buffer
       (setq dired-directory "/tmp/test-buffer/")
 
-      (wal-project--buffer-root (current-buffer))
+      (wal-project-buffer-root (current-buffer))
 
       (bydi-was-called-with project-current '(nil "/tmp/test-buffer/"))
       (bydi-was-called-with project-root (list '(vc Git "/tmp"))))))
