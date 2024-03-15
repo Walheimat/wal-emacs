@@ -25,6 +25,30 @@
       (wal-record-this-command)
       (should (equal 'testing wal-command)))))
 
+(ert-deftest wal-vertico-quick-exit-in-case-of-single-match ()
+  :tags '(complete)
+
+  (defvar vertico--total)
+
+  (let ((vertico--total 0))
+    (bydi (vertico-exit)
+
+     (should-not (wal-vertico-quick-exit-in-case-of-single-match))
+
+     (bydi-was-not-called vertico-exit)
+
+     (setq vertico--total 2)
+
+     (should-not (wal-vertico-quick-exit-in-case-of-single-match))
+
+     (bydi-was-not-called vertico-exit)
+
+     (setq vertico--total 1)
+
+     (wal-vertico-quick-exit-in-case-of-single-match)
+
+     (bydi-was-called vertico-exit))))
+
 (ert-deftest wal-with-dired-goto-file-ignored ()
   :tags '(complete)
 

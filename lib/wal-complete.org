@@ -290,7 +290,9 @@ makes sure that we don't go into directories when jumping in Dired.
   (:map vertico-map
    ("RET" . vertico-directory-enter)
    ("DEL" . vertico-directory-delete-char)
-   ("M-DEL" . vertico-directory-delete-word)))
+   ("M-DEL" . vertico-directory-delete-word))
+
+  :functions (vertico-exit))
 #+END_SRC
 
 ** vertico-quick                                                        :gnu:
@@ -301,11 +303,23 @@ makes sure that we don't go into directories when jumping in Dired.
 Quickly jump to a candidate with a single letter.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal-vertico-quick-exit-in-case-of-single-match (&rest _args)
+  "Exit immediately if there is only one match."
+  (defvar vertico--total)
+
+  (when (= 1 vertico--total)
+    (vertico-exit)))
+
 (use-package vertico-quick
   :ensure nil
 
   :demand t
   :after vertico
+
+  :config
+  (advice-add
+   'vertico-quick-jump :before-until
+   'wal-vertico-quick-exit-in-case-of-single-match)
 
   :custom
   (vertico-quick1 "jkl;h")
