@@ -64,11 +64,15 @@ Manage and interact with projects.
 Library =project= has by now become mature enough to replace the
 otherwise excellent =projectile=.
 
-*** Find parent project and sisters of the current file
+*** Find commands
 
 The concept of parent projects is established for mono- and projects
 that comprise several sub-projects (the action to switch to it is
 bound to user-prefixed =M-y=).
+
+There are also two convenience commands to find files relative to the
+current file and to find a file in the other window (which is also
+possible through =C-x 4 p o= which is a bit cumbersome).
 
 #+BEGIN_SRC emacs-lisp
 (defvar-local wal-project-parent-project nil
@@ -99,6 +103,15 @@ If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
   (when-let ((project (project-current nil)))
 
     (project-find-file-in nil (list default-directory) project include-all)))
+
+(defun wal-project-find-file-other-window ()
+  "Find project file in other window."
+  (interactive)
+
+  (let ((display-buffer-overriding-action '((display-buffer-pop-up-window)
+                                            (inhibit-same-window . t))))
+
+    (call-interactively 'project-find-file)))
 #+END_SRC
 
 *** Additional switch commands
@@ -203,9 +216,10 @@ Root markers (how projects are found) and =vc= ignores are extended.
 
   :wal-bind
   (("y" . wal-project-find-in-here)
-   ("M-y" . wal-project-switch-to-parent-project)
+   ("M-y" . project-find-dir)
+   ("C-M-y" . wal-project-switch-to-parent-project)
    ("h" . project-find-file)
-   ("M-h" . project-find-dir)))
+   ("M-h" . wal-project-find-file-other-window)))
 #+END_SRC
 
 * Footer
