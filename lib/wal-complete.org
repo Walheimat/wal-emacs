@@ -23,6 +23,10 @@ Complete commands and code.
   (require 'savehist)
   (require 'wal-key-bindings nil t))
 
+(declare-function cape-dabbrev "ext:cape.el")
+(declare-function cape-file "ext:cape.el")
+(declare-function cape-history "ext:cape.el")
+(declare-function cape-wrap-super "ext:cape.el")
 (declare-function consult--buffer-query "ext:consult.el")
 (declare-function consult--buffer-state "ext:consult.el")
 (declare-function consult-line "ext:consult.el")
@@ -180,12 +184,6 @@ jerry-rig =company= backends to work with =corfu=.
   "Combined `cape-history' and `cape-file'."
   (cape-wrap-super #'cape-history #'cape-file))
 
-(defun wal-cape-setup ()
-  "Set up `cape'."
-  (setq-local completion-at-point-functions
-              (cons #'cape-file
-                    completion-at-point-functions)))
-
 (defun wal-cape-eshell-setup ()
   "Set up `cape' fro Eshell."
 
@@ -194,11 +192,11 @@ jerry-rig =company= backends to work with =corfu=.
                     completion-at-point-functions)))
 
 (use-package cape
-  :hook
-  (((prog-mode harpoon-prog-like text-mode) . wal-cape-setup)
-   (eshell-mode . wal-cape-eshell-setup))
+  :hook (eshell-mode . wal-cape-eshell-setup)
 
-  :functions (cape-file cape-history cape-wrap-super))
+  :wal-bind
+  (("M-." . cape-dabbrev)
+   ("M-/" . cape-file)))
 #+end_src
 
 * Minibuffer Completion

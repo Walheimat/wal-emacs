@@ -237,10 +237,6 @@
 
     (bydi-was-called cape-wrap-super)
 
-    (wal-cape-setup)
-
-    (bydi-was-set completion-at-point-functions t)
-
     (wal-cape-eshell-setup)
 
     (bydi-was-set completion-at-point-functions)))
