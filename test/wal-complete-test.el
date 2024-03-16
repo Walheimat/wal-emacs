@@ -171,6 +171,14 @@
 
   (should (equal (wal-consult-agenda-buffer--query) '(visibility buffer-name wal-agenda-buffer-p))))
 
+(ert-deftest wal-consult-compilation-buffer--query ()
+  :tags '(emacs)
+
+  (cl-defun consult--buffer-query (&key sort as predicate)
+    (list sort as predicate))
+
+  (should (equal (wal-consult-compilation-buffer--query) '(visibility buffer-name wal-compilation-buffer-p))))
+
 (ert-deftest wal-consult-place ()
   :tags '(complete)
 

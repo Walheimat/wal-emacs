@@ -40,6 +40,7 @@ Complete commands and code.
 (declare-function wal-org-clock-in-from-now "wal-org.el")
 (declare-function wal-project-buffer-root "wal-workspace.el")
 (declare-function wal-list-from "wal-useful.el")
+(declare-function wal-switch-to-buffer-obeying-display-actions "wal-useful.el")
 (declare-function wal-univ-p "wal-useful.el")
 
 (defvar consult-register--narrow)
@@ -437,6 +438,8 @@ source for projects while switching to differentiate open and closed
 projects. Since =consult= provides many useful commands a transient
 combining the most useful ones is bound to the eponymous leader key.
 
+*** Custom commands and command variants
+
 #+BEGIN_SRC emacs-lisp
 (defun wal-consult-ripgrep-ignored (&optional dir initial)
   "Search for regexp with rg in DIR with INITIAL input.
@@ -506,72 +509,6 @@ has numeric value 4 (the default `universal-argument')
       (with-current-buffer current
         (save-buffer)))))
 
-(defun wal-then-set-active-theme (theme)
-  "Advise to set `wal-active-theme' to THEME."
-  (setq wal-active-theme theme)
-
-  (when current-prefix-arg
-    (customize-save-variable 'wal-theme theme))
-
-  (run-hooks 'wal-theme-hook))
-
-(defvar consult--project-history nil)
-
-(defvar consult--source-projects
-  (list :name "Projects"
-        :category 'project
-        :history 'consult--project-history
-        :action 'project-switch-project
-        :items (lambda ()
-                 (let ((open (consult--open-project-items))
-                       (all (mapcar #'car project--list)))
-
-                   (seq-filter (lambda (it) (not (member it open))) all)))))
-
-(defun consult--open-project-items ()
-  "Get the open projects."
-  (cl-remove-duplicates
-   (cl-loop for buffer being the buffers
-            for project = (wal-project-buffer-root buffer)
-            if project
-            collect project)
-   :test 'string=))
-
-(defvar consult--source-open-projects
-  (list :name "Open projects"
-        :category 'project
-        :narrow ?o
-        :history 'consult--project-history
-        :action 'project-switch-project
-        :items 'consult--open-project-items))
-
-(defun wal-consult-project ()
-  "Enhanced `project-switch-project' command."
-  (interactive)
-
-  (declare-function consult--multi "ext:consult.el")
-
-  (consult--multi
-   '(consult--source-open-projects consult--source-projects)
-   :prompt "Select project: "
-   :require-match t))
-
-(defvar wal-consult--source-agenda-buffer
-  (list :name "Agenda Buffer"
-        :narrow ?a
-        :category 'buffer
-        :state #'consult--buffer-state
-        :history 'buffer-name-history
-        :face 'font-lock-keyword-face
-        :items #'wal-consult-agenda-buffer--query))
-
-(defun wal-consult-agenda-buffer--query ()
-  "Get contributing Org Agenda buffer names."
-  (consult--buffer-query
-   :sort 'visibility
-   :as #'buffer-name
-   :predicate #'wal-agenda-buffer-p))
-
 (defun wal-consult-place (&optional prefer-outline)
   "Go to a place with `consult'.
 
@@ -605,6 +542,100 @@ Use either `flymake' or `flycheck'."
     (call-interactively 'consult-flymake))
    (t
     (user-error "No syntax checker"))))
+
+(defun wal-consult-project ()
+  "Enhanced `project-switch-project' command."
+  (interactive)
+
+  (declare-function consult--multi "ext:consult.el")
+
+  (consult--multi
+   '(consult--source-open-projects consult--source-projects)
+   :prompt "Select project: "
+   :require-match t))
+#+END_SRC
+
+*** Buffer sources
+
+#+begin_src emacs-lisp
+(defvar consult--project-history nil)
+
+(defvar consult--source-projects
+  (list :name "Projects"
+        :category 'project
+        :history 'consult--project-history
+        :action 'project-switch-project
+        :items (lambda ()
+                 (let ((open (consult--open-project-items))
+                       (all (mapcar #'car project--list)))
+
+                   (seq-filter (lambda (it) (not (member it open))) all)))))
+
+(defun consult--open-project-items ()
+  "Get the open projects."
+  (cl-remove-duplicates
+   (cl-loop for buffer being the buffers
+            for project = (wal-project-buffer-root buffer)
+            if project
+            collect project)
+   :test 'string=))
+
+(defvar consult--source-open-projects
+  (list :name "Open projects"
+        :category 'project
+        :narrow ?o
+        :history 'consult--project-history
+        :action 'project-switch-project
+        :items 'consult--open-project-items))
+
+(defvar wal-consult--source-agenda-buffer
+  (list :name "Agenda Buffer"
+        :narrow ?a
+        :category 'buffer
+        :state #'consult--buffer-state
+        :history 'buffer-name-history
+        :face 'font-lock-keyword-face
+        :items #'wal-consult-agenda-buffer--query))
+
+(defun wal-consult-agenda-buffer--query ()
+  "Get contributing Org Agenda buffer names."
+  (consult--buffer-query
+   :sort 'visibility
+   :as #'buffer-name
+   :predicate #'wal-agenda-buffer-p))
+
+(defvar wal-consult--source-compilation-buffer
+  (list :name "Compilations"
+        :narrow ?c
+        :category 'buffer
+        :history 'buffer-name-history
+        :action #'wal-switch-to-buffer-obeying-display-actions
+        :items #'wal-consult-compilation-buffer--query))
+
+(defun wal-compilation-buffer-p (buffer)
+  "Check if buffer BUFFER is a compilation buffer."
+  (with-current-buffer buffer
+    (derived-mode-p 'compilation-mode 'comint-mode)))
+
+(defun wal-consult-compilation-buffer--query ()
+  "Get compilation buffer names."
+  (consult--buffer-query
+   :sort 'visibility
+   :as #'buffer-name
+   :predicate #'wal-compilation-buffer-p))
+#+end_src
+
+*** Package configuration
+
+#+BEGIN_SRC emacs-lisp
+(defun wal-then-set-active-theme (theme)
+  "Advise to set `wal-active-theme' to THEME."
+  (setq wal-active-theme theme)
+
+  (when current-prefix-arg
+    (customize-save-variable 'wal-theme theme))
+
+  (run-hooks 'wal-theme-hook))
 
 (use-package consult
   :commands (consult--multi consult)
@@ -642,6 +673,13 @@ Use either `flymake' or `flycheck'."
     (wal-replace-in-alist
      'org-speed-commands
      '(("j" . consult-org-heading))))
+
+  (with-eval-after-load 'compile
+    (wal-insert
+     'consult-buffer-sources
+     'consult--source-buffer
+     'wal-consult--source-compilation-buffer
+     :quiet t))
 
   (transient-define-prefix consult ()
     "Run `consult' commands."
