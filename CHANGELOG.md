@@ -1,5 +1,62 @@
 # Changelog
 
+## [2.3.0](https://github.com/Walheimat/wal-emacs/compare/v2.2.12...v2.3.0) (2024-03-17)
+
+
+### Features
+
+* **lsp:** add wal-lsp-dwim and bind to user-prefixed backslash ([4a7587a](https://github.com/Walheimat/wal-emacs/commit/4a7587a46fbeead67591ef45aece78c951f1fad4))
+* **rg,hl-todo:** add wal-rg-project-todos ([6cd3149](https://github.com/Walheimat/wal-emacs/commit/6cd3149de26906ea5249772adbf5e344c8a0aee7))
+* **workspace:** wal-project-find-file-other-window ([9d1400c](https://github.com/Walheimat/wal-emacs/commit/9d1400cb34dbd92524786b25594c56c9d8d49869))
+
+
+### Configurations
+
+* **ace-window:** remove again ([d252185](https://github.com/Walheimat/wal-emacs/commit/d252185249ca22fb58ca704985d85e9e225e603d))
+* **avy:** user-prefixed M-l jumps to word-o ([017db14](https://github.com/Walheimat/wal-emacs/commit/017db14e8a2ffe1379771d7d594781ed01191c7c))
+* **consult:** bind line to user-prefixed M-i instead ([c4c7556](https://github.com/Walheimat/wal-emacs/commit/c4c7556a197c9e8885ff80b8246def29342bc8a7))
+* **consult:** prefer buffer switch, transient after meta ([c36b2bf](https://github.com/Walheimat/wal-emacs/commit/c36b2bf9b60b0a668eb30bf765eefc640561804a))
+* **consult:** re-bind outline, simplify theme ([fc6bb7d](https://github.com/Walheimat/wal-emacs/commit/fc6bb7d50b3d060ffc9d2dccf241aec7a68c9ff5))
+* **consult:** remove wal-consult-org-agenda-buffer ([cfd58b3](https://github.com/Walheimat/wal-emacs/commit/cfd58b32a0c381f0e4bfd7f71afc21d6d2197293))
+* **consult:** user-prefixed = to wal-consult-project ([a77a274](https://github.com/Walheimat/wal-emacs/commit/a77a2742a00d6842e9a6926a2b12a504ebe01a4b))
+* **consult:** wal-consult-unregister in triple-minus map ([d1038dc](https://github.com/Walheimat/wal-emacs/commit/d1038dc3569aaad400388575cccbddc7655ae4e5))
+* **custom:** simplify custom bindings, update list ([1906f12](https://github.com/Walheimat/wal-emacs/commit/1906f1230087cfa3ca0227a9f51aa60045d0b3aa))
+* **docker,diff-hl:** bind to d and h in ambassador ([b69f903](https://github.com/Walheimat/wal-emacs/commit/b69f9035d5c48df984268eab49466a083c71157f))
+* **jinx:** bind jinx-next and jinx-correct in editor ([20c5397](https://github.com/Walheimat/wal-emacs/commit/20c53975cc073f095ccd8c4297c9b84a8c42a16e))
+* **magit:** remove magit-status binding from transient ([226dd53](https://github.com/Walheimat/wal-emacs/commit/226dd53f1e2c3107fe96ce382fbe33439ffdf20e))
+* **org-habit:** push org-habit-graph-column back further ([271fb0d](https://github.com/Walheimat/wal-emacs/commit/271fb0d664a4ac0b35fe0f3263e5f43b255826ba))
+* **other-window:** M-o other-window, C-M-o other-buffer ([9d3e12a](https://github.com/Walheimat/wal-emacs/commit/9d3e12ab370ae36da2d7493b04d4c829b1e8e22b))
+* **outline:** enable for common modes, name for which key ([784a1b3](https://github.com/Walheimat/wal-emacs/commit/784a1b345e8964ec1de196cd640e8d71a7c51e8f))
+* **surround:** bind surround-insert and surround-kill in editor ([622bea5](https://github.com/Walheimat/wal-emacs/commit/622bea5989b3f20e86bdf85e794a9af2940b73ff))
+* **tab-bar:** bind switch to user-prefixed o, rename to M-o ([3d9201b](https://github.com/Walheimat/wal-emacs/commit/3d9201bc93702cd439912f42df348abb37fd55b7))
+* **workspace:** bind custom finders in user-prefixed map ([e48a1ad](https://github.com/Walheimat/wal-emacs/commit/e48a1ad4b350dbd87090109f43cb09c6fad44db4))
+
+
+### Bug Fixes
+
+* **consult:** customize wal-consult-clock instead ([9f3c317](https://github.com/Walheimat/wal-emacs/commit/9f3c3173e33f5b0b2ece011b1925f73cbe281317))
+* **jinx:** map j and c in existing repeat map ([853734a](https://github.com/Walheimat/wal-emacs/commit/853734af9bf0c4fe1fb61c1b45bfb46c2c2ecb03))
+* **wal-consult-clock:** save previously and newly clocking buffer ([f396abe](https://github.com/Walheimat/wal-emacs/commit/f396abe3eea0d705e1837f47a9b4423f789716bb))
+* **wal-consult-place:** don't match archived org headings ([3eb2524](https://github.com/Walheimat/wal-emacs/commit/3eb25242656aa3f4080fd81424ac10ada2c85e19))
+
+
+### Improvements
+
+* **cape:** bind dabbrev and file directly, remove prog setup ([bfebd7a](https://github.com/Walheimat/wal-emacs/commit/bfebd7a11808b5863b05c5f7a1343a7f913372ce))
+* **consult,org-clock:** command wal-consult-org-clock ([e7a4dd7](https://github.com/Walheimat/wal-emacs/commit/e7a4dd75fe0ffa8d9a6aec07dca19d5af4f680f6))
+* **consult,register:** user-prefixed i goes to place ([5681361](https://github.com/Walheimat/wal-emacs/commit/56813615446796f57c84ef9dbbb44bccc7a6571b))
+* **flymake:** add repeat map ([eef0afd](https://github.com/Walheimat/wal-emacs/commit/eef0afd5be87e4a597b87715e44ec3365f6f0644))
+* **jinx:** add repeat-map ([0aed0ab](https://github.com/Walheimat/wal-emacs/commit/0aed0ab52fdcf1c76b7130b7b79cdc3fb6152045))
+* **key-bindings:** fix footnote ([dc0b602](https://github.com/Walheimat/wal-emacs/commit/dc0b6027bb3ed0a09b01e3c1845c6c8bd8a41ee7))
+* **key-bindings:** remove outdated ambassador bindings ([0c2b9ad](https://github.com/Walheimat/wal-emacs/commit/0c2b9ad0d601c03cc04536df056418751a7a0dc0))
+* **org-modern:** consistent filled->empty start pattern ([18400dc](https://github.com/Walheimat/wal-emacs/commit/18400dc991256b340d52a8276493e40cd1799b4c))
+* **other-window:** advise to switch to buffer for single window ([3a032c0](https://github.com/Walheimat/wal-emacs/commit/3a032c0ed2f522a3fa1c12e5a4dd11b2559fed34))
+* **rg:** add wal-rg-rerun-toggle-context ([8c688a5](https://github.com/Walheimat/wal-emacs/commit/8c688a5dd807f2e869123f2048957cf5f63c7ac7))
+* **vertico-quick:** exit for single match ([068ba13](https://github.com/Walheimat/wal-emacs/commit/068ba13c645f9e1314932dbfdff1fce18997ccfc))
+* **vertico,project:** make wal-project-find-in-here flat ([5eafd59](https://github.com/Walheimat/wal-emacs/commit/5eafd59dfc9a63ec40afe2666676c62ac71f542c))
+* **windows:** remove advice again, bind other-buffer directly ([556b0dd](https://github.com/Walheimat/wal-emacs/commit/556b0dd514938af2fc64a8a8cc88349244c82761))
+* **workspace:** rework structure with more subheadings ([bd11053](https://github.com/Walheimat/wal-emacs/commit/bd110533478be87f56e72563119c52bec6cee69c))
+
 ## [2.2.12](https://github.com/Walheimat/wal-emacs/compare/v2.2.11...v2.2.12) (2024-03-02)
 
 
