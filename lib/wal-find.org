@@ -29,8 +29,10 @@ I mostly search.
 (declare-function rg-rerun-toggle-flag "ext:rg-result.el")
 (declare-function rg-run "ext:rg.el")
 (declare-function rg-read-pattern "ext:rg.el")
+(declare-function rg-search-flags "ext:rg.el")
 
 (defvar dogears-list-buffer)
+(defvar rg-cur-search)
 #+END_SRC
 
 * Packages
@@ -50,6 +52,21 @@ for files within projects literally and using regular expressions.
   (interactive)
 
   (rg-rerun-toggle-flag "--hidden"))
+
+(defun wal-rg-rerun-toggle-context (&optional arg)
+  "Re-run last search with toggled '--context' flag.
+
+Optional ARG will be interpreted as a numeric prefix and passed
+to the flag. If a flag is already present, it is removed."
+  (interactive "P")
+
+  (when-let* ((flags (rg-search-flags rg-cur-search))
+              (matcher (lambda (it) (string-prefix-p "--context" it)))
+              (flag (or (seq-find matcher flags)
+                        (and arg
+                             (format "--context=%d" (prefix-numeric-value arg))))))
+
+    (rg-rerun-toggle-flag flag)))
 
 (defun wal-rg--run (&optional pattern literal)
   "Query for PATTERN for FILES in project.
@@ -110,6 +127,7 @@ them (accepting no leading whitespace and no trailing colon)."
   :bind
   (:map rg-mode-map
    ("h" . wal-rg-rerun-toggle-hidden)
+   ("a" . wal-rg-rerun-toggle-context)
    :map isearch-mode-map
    ("M-s n" . rg-isearch-current-file))
 

@@ -15,6 +15,24 @@
     (wal-rg-rerun-toggle-hidden)
     (bydi-was-called-with rg-rerun-toggle-flag (list "--hidden"))))
 
+(ert-deftest wal-rg-rerun-toggle-context ()
+  :tags '(find user-facing just-testing)
+
+  (defvar rg-cur-search nil)
+
+  (bydi ((:mock rg-search-flags :var flags :initial (list "--context=4" "-i"))
+         rg-rerun-toggle-flag)
+
+    (wal-rg-rerun-toggle-context 5)
+
+    (bydi-was-called-with rg-rerun-toggle-flag "--context=4" t)
+
+    (setq flags (list "-i"))
+
+    (wal-rg-rerun-toggle-context 5)
+
+    (bydi-was-called-with rg-rerun-toggle-flag "--context=5")))
+
 (ert-deftest wal-rg--run ()
   :tags '(find)
 
