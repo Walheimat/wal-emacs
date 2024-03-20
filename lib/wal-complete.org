@@ -32,6 +32,7 @@ Complete commands and code.
 (declare-function consult-line "ext:consult.el")
 (declare-function consult-org-agenda "ext:consult.el")
 (declare-function consult-org-heading "ext:consult.el")
+(declare-function corfu-complete "ext:corfu.el")
 (declare-function junk--stringify "ext:junk.el")
 (declare-function junk--parts "ext:junk.el")
 (declare-function org-clock-in "ext:org-clock.el")
@@ -98,11 +99,23 @@ makes sense.
 Jump to a completion candidate with a single letter.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal-corfu-quick-exit-in-case-of-single-match (&rest _args)
+  "Complete immediately if there is only one match."
+  (defvar corfu--total)
+
+  (when (= 1 corfu--total)
+    (corfu-complete)))
+
 (use-package corfu-quick
   :ensure nil
 
   :demand t
   :after corfu
+
+  :config
+  (advice-add
+    'corfu-quick-complete :before-until
+    #'wal-corfu-quick-exit-in-case-of-single-match)
 
   :wal-bind
   (:map corfu-map

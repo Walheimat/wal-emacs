@@ -25,29 +25,39 @@
       (wal-record-this-command)
       (should (equal 'testing wal-command)))))
 
-(ert-deftest wal-vertico-quick-exit-in-case-of-single-match ()
+(ert-deftest wal-vertico-and-corfu-quick-exit-in-case-of-single-match ()
   :tags '(complete)
 
   (defvar vertico--total)
+  (defvar corfu--total)
 
-  (let ((vertico--total 0))
-    (bydi (vertico-exit)
-
-     (should-not (wal-vertico-quick-exit-in-case-of-single-match))
-
-     (bydi-was-not-called vertico-exit)
-
-     (setq vertico--total 2)
+  (let ((vertico--total 0)
+        (corfu--total 0))
+    (bydi (vertico-exit corfu-complete)
 
      (should-not (wal-vertico-quick-exit-in-case-of-single-match))
+     (should-not (wal-corfu-quick-exit-in-case-of-single-match))
 
      (bydi-was-not-called vertico-exit)
+     (bydi-was-not-called corfu-complete)
 
-     (setq vertico--total 1)
+     (setq vertico--total 2
+           corfu--total 2)
+
+     (should-not (wal-vertico-quick-exit-in-case-of-single-match))
+     (should-not (wal-corfu-quick-exit-in-case-of-single-match))
+
+     (bydi-was-not-called vertico-exit)
+     (bydi-was-not-called corfu-complete)
+
+     (setq vertico--total 1
+           corfu--total 1)
 
      (wal-vertico-quick-exit-in-case-of-single-match)
+     (wal-corfu-quick-exit-in-case-of-single-match)
 
-     (bydi-was-called vertico-exit))))
+     (bydi-was-called vertico-exit)
+     (bydi-was-called corfu-complete))))
 
 (ert-deftest wal-with-dired-goto-file-ignored ()
   :tags '(complete)
