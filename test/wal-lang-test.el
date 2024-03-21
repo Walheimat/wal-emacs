@@ -189,7 +189,7 @@
         (wal-maybe-use-custom-css-checker)
         (run-hooks 'lsp-after-open-hook)
 
-        (should (equal flycheck-checker 'wal-scss-stylelint))
+        (should (equal flycheck-checker 'scss-stylelint))
 
         (setq-local major-mode 'test-mode)
         (run-hooks 'lsp-after-open-hook)
@@ -199,7 +199,7 @@
         (setq-local major-mode 'less-css-mode)
         (run-hooks 'lsp-after-open-hook)
 
-        (should (equal flycheck-checker 'wal-less-stylelint))))))
+        (should (equal flycheck-checker 'less-stylelint))))))
 
 ;;; wal-lang-test.el ends here
 
