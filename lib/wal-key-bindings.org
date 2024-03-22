@@ -48,10 +48,9 @@ keys.
 
 Most hyper[fn:2] bindings are quick-access actions:
 
-+ =H-6= jumps to register, =H-M-6= stores point in register, =H-C-M-6=
-  stores window configuration to register (7, 8 and 9 are quick
-  registers, store with =M=)
 + =H-\= calls =wal-lsp-dwim= in LSP buffers
++ =H-'= captures note with =org-roam= (=H-M-'= opens custom
+  =transient=)
 + =H-<equal>= switches to project using =consult=
 + =H-h= finds file in =project= (=H-M-h= find in other window)
 + =H-i= calls =consult= to find a place using =imenu= or =outline= or
@@ -61,6 +60,8 @@ Most hyper[fn:2] bindings are quick-access actions:
   + during =vertico= and =corfu= completion, it triggers the respective
     quick completion
   + when used with =M= it goes to char with a timer
++ =H-;= jumps to register, =H-M-;= stores point in register, =H-C-M-;=
+  stores window configuration to register
 + =H-k= acts on the current point with =embark= (immediately with
   =H-M-k=)
 + =H-l= jumps to line with =avy= (beginning of line if called with
@@ -81,9 +82,7 @@ Most hyper[fn:2] bindings are quick-access actions:
 + =H-u= switches buffers in =partial-recall= memory (=H-M-u= calls the
   command map)
 + =H-y= finds project file in current directory (=H-M-y= finds
-  directory, =H-C-M-y= switches to parent project)
-+ =H-'= captures note with =org-roam= (=H-M-'= opens custom
-  =transient=).
+  directory, =H-C-M-y= switches to parent project).
 
 There are also two =cape= completions:
 
@@ -202,6 +201,14 @@ They are:
 + =w= to kill a region
 + =x= to delete a region.
 
+*** Adjunct
+
+Binds various custom commands.
+
+*** Seeker
+
+Binds various custom commands that relate to finding things.
+
 * Header
 :PROPERTIES:
 :VISIBILITY: folded
@@ -238,9 +245,11 @@ They are:
   :type 'key-sequence
   :group 'wal-key-bindings)
 
-(defcustom wal-leaders '((";" . editor)
-                         ("." . major)
-                         ("/" . ambassador))
+(defcustom wal-leaders '(("6" . adjunct)
+                         ("7" . editor)
+                         ("8" . major)
+                         ("9" . ambassador)
+                         ("0" . seeker))
   "Alist mapping prefix keys to leaders."
   :type '(alist :key-type string :value-type symbol)
   :group 'wal-key-bindings)
@@ -288,7 +297,7 @@ sinks for leader keys, an additional layer using the same prefix key,
 as well as to mirror certain commands for the [[*Editor][editor]] leader key.
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal-general-leaders '(editor ambassador)
+(defvar wal-general-leaders '(editor ambassador adjunct seeker)
   "Leaders that a `general' definer will be created for.")
 
 (cl-defmacro wal-create-leader-sink (name &key definer prefix)
@@ -497,25 +506,16 @@ USER-KEY and LEADER can be used to prefix the key."
 
     (editor "q" 'wal-spill-paragraph)
 
-    (general-define-key
-     :prefix (wal-prefix-user-key "-")
-     :prefix-map 'wal-triple-minus-map
-     :wk-full-keys nil
-     "b" 'wal-kill-some-file-buffers
-     "d" 'wal-l
-     "f" 'wal-fundamental-mode
-     "1" 'wal-force-delete-other-windows)
+    (adjunct
+      "b" 'wal-kill-some-file-buffers
+      "d" 'wal-l
+      "f" 'wal-fundamental-mode
+      "1" 'wal-force-delete-other-windows)
 
-    (general-define-key
-     :prefix (wal-prefix-user-key "0")
-     :prefix-map 'wal-zero-in-map
-     :wk-full-keys nil
-     "f" 'wal-find-fish-config
-     "h" 'wal-dired-from-home
-     "s" 'find-sibling-file)
-
-    (that-key "triple-minus" :user-key "-")
-    (that-key "zero-in" :user-key "0"))
+    (seeker
+      "f" 'wal-find-fish-config
+      "h" 'wal-dired-from-home
+      "s" 'find-sibling-file))
 
   (global-set-key [remap kill-line] #'wal-kwim)
   (global-set-key [remap move-beginning-of-line] #'wal-mwim-beginning)
