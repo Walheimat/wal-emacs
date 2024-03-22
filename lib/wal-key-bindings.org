@@ -140,6 +140,9 @@ Function key =<f5>= is bound to =whaler=, a =transient= that binds
 various commands to interact with this configuration (updating,
 tangling).
 
+Function key =<f6>= is bound to =administrator=, a command map that
+binds various administrative Emacs commands.
+
 ** Leader Keys
 
 There are seven leader keys (three of them =general= leaders), each
@@ -147,11 +150,6 @@ serving its unique purpose by prefixing (groups of) actions by common
 context or scope.
 
 The =general= leader keys have so-called sinks for additional commands.
-
-*** Administrator
-
-Leader key =administrator= is responsible for Emacs actions like loading
-a theme, finding a library, quitting.
 
 *** Ambassador
 
@@ -242,8 +240,7 @@ They are:
 
 (defcustom wal-leaders '((";" . editor)
                          ("." . major)
-                         ("/" . ambassador)
-                         ("]" . administrator))
+                         ("/" . ambassador))
   "Alist mapping prefix keys to leaders."
   :type '(alist :key-type string :value-type symbol)
   :group 'wal-key-bindings)
@@ -291,7 +288,7 @@ sinks for leader keys, an additional layer using the same prefix key,
 as well as to mirror certain commands for the [[*Editor][editor]] leader key.
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal-general-leaders '(editor ambassador administrator)
+(defvar wal-general-leaders '(editor ambassador)
   "Leaders that a `general' definer will be created for.")
 
 (cl-defmacro wal-create-leader-sink (name &key definer prefix)
@@ -456,6 +453,9 @@ USER-KEY and LEADER can be used to prefix the key."
 (with-no-warnings
   (with-eval-after-load 'general
     ;; Additional `general' bindings.
+    (general-create-definer administrator :prefix "<f6>")
+    (that-key "administrator" :key "<f6>")
+
     (administrator
       "f" '(:ignore t :wk "find")
       "fc" 'wal-find-custom-file
