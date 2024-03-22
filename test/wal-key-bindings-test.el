@@ -38,7 +38,6 @@
 (ert-deftest wal-key-by-leader ()
   :tags '(key-bindings)
 
-  (defvar wal-key-reach)
   (defvar wal-leaders)
   (let ((wal-leaders '(("a" . hunk) ("b" . bunk) ("c" . trunk))))
 
@@ -47,16 +46,17 @@
 (ert-deftest wal-key-combo-for-leader ()
   :tags '(key-bindings)
 
-  (defvar wal-key-reach)
   (defvar wal-leaders)
   (bydi ((:mock wal-prefix-user-key :with (lambda (x) (concat "C-t " x))))
 
-    (let ((wal-leaders '(("a" . hunk) ("b" . bunk) ("c" . trunk))))
+    (let ((wal-leaders '(("a" . hunk) ("b" . bunk) ("c" . trunk) ("<f5>" . chunk))))
 
       (should (string-equal "C-t a k" (wal-key-combo-for-leader 'hunk :key "k")))
       (should (string-equal "C-t b b k" (wal-key-combo-for-leader 'bunk :key "k" :in-sink t)))
       (should (string-equal "C-t c" (wal-key-combo-for-leader 'trunk)))
-      (should (equal (kbd "C-t b") (wal-key-combo-for-leader 'bunk :translate t))))))
+      (should (equal (kbd "C-t b") (wal-key-combo-for-leader 'bunk :translate t)))
+
+      (should (equal "<f5>" (wal-key-combo-for-leader 'chunk))))))
 
 (ert-deftest wal-general-create-definer ()
   :tags '(key-bindings)

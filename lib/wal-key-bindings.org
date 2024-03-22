@@ -242,11 +242,14 @@ Binds various custom commands that relate to finding things.
   :type 'key-sequence
   :group 'wal-key-bindings)
 
-(defcustom wal-leaders '(("6" . adjunct)
-                         ("7" . editor)
-                         ("8" . major)
-                         ("9" . ambassador)
-                         ("0" . seeker))
+(defcustom wal-leaders '(("7" . editor)
+                         ("8" . ambassador)
+                         ("0" . seeker)
+                         ("=" . major)
+
+                         ("<f5>" . administrator)
+                         ("<f6>" . whaler)
+                         ("<f7>" . adjunct))
   "Alist mapping prefix keys to leaders."
   :type '(alist :key-type string :value-type symbol)
   :group 'wal-key-bindings)
@@ -271,7 +274,9 @@ Binds various custom commands that relate to finding things.
 If KEY is non-nil, append it. If IN-SINK is non-nil, infix leader
 key. If TRANSLATE is non-nil, convert using `kbd'."
   (when-let* ((leader-key (wal-key-by-leader leader))
-              (prefix (wal-prefix-user-key leader-key))
+              (prefix (if (string-prefix-p "<" leader-key)
+                          leader-key
+                        (wal-prefix-user-key leader-key)))
               (combo (if key
                          (if in-sink
                              (concat prefix " " leader-key " " key)
@@ -294,8 +299,10 @@ sinks for leader keys, an additional layer using the same prefix key,
 as well as to mirror certain commands for the [[*Editor][editor]] leader key.
 
 #+BEGIN_SRC emacs-lisp
-(defvar wal-general-leaders '(editor ambassador adjunct seeker)
-  "Leaders that a `general' definer will be created for.")
+(defvar wal-general-leaders '(editor seeker administrator adjunct ambassador)
+  "Leaders that with a `general' definer.
+
+The exceptions bind `transient' maps directly.")
 
 (cl-defmacro wal-create-leader-sink (name &key definer prefix)
   "Macro to create a leader sink `NAME-sink'.
@@ -459,9 +466,6 @@ USER-KEY and LEADER can be used to prefix the key."
 (with-no-warnings
   (with-eval-after-load 'general
     ;; Additional `general' bindings.
-    (general-create-definer administrator :prefix "<f6>")
-    (that-key "administrator" :key "<f6>")
-
     (administrator
       "f" '(:ignore t :wk "find")
       "fc" 'wal-find-custom-file
@@ -492,9 +496,8 @@ USER-KEY and LEADER can be used to prefix the key."
       "h" '(:ignore t :wk "help")
       "hw" 'woman)
 
-    (global-set-key (kbd "<f5>") #'whaler)
-
     (global-set-key (kbd (wal-key-combo-for-leader 'major)) #'major?)
+    (global-set-key (kbd (wal-key-combo-for-leader 'whaler)) #'whaler)
 
     (when (wal-modern-emacs-p 29)
       (editor "d" 'duplicate-dwim))
