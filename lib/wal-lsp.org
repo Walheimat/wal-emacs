@@ -128,7 +128,7 @@ The action depends on the current position, active region and the
       '("r" "rename file" lsp-javascript-rename-file)))
 
   ;; Command map.
-  (setq lsp-keymap-prefix (wal-prefix-user-key "M-."))
+  (setq lsp-keymap-prefix (wal-prefix-user-key "M-["))
   (lsp-enable-which-key-integration t)
 
   :custom
@@ -155,10 +155,10 @@ The action depends on the current position, active region and the
 
   :wal-bind
   (:map lsp-mode-map
-   ("." . wal-lsp-dwim))
+   ("[" . wal-lsp-dwim))
 
   :wal-bind-keymap
-  (("M-." . lsp-command-map))
+  (("M-[" . lsp-command-map))
 
   :delight
   (lsp-mode " lsp")
@@ -233,11 +233,31 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
   (corfu-mode))
 
 (use-package dap-mode
-  :after lsp-mode
-
   :hook ((dap-session-created . wal-dap-session-created)
          (dap-ui-repl-mode . wal-dap-adapt-company-backend))
   :sinker ((dap-terminated . wal-dap-terminated))
+
+  :init
+  (defvar-keymap wal-dap-command-map
+    "b" 'dap-debug
+    "r" 'dap-ui-repl
+
+    "a" 'dap-ui-expressions-add
+    "." 'dap-eval-thing-at-point
+
+    "t" 'dap-breakpoint-toggle
+    "!" 'dap-breakpoint-delete-all
+    "?" 'dap-breakpoint-condition
+    "l" 'dap-ui-breakpoints-list
+
+    ;; Repeated.
+    "n" 'dap-next
+    "c" 'dap-continue
+    "i" 'dap-step-in
+    "o" 'dap-step-out
+    "e" 'dap-eval
+    "d" 'dap-disconnect)
+  (that-key "dap" :user-key "]")
 
   :config
   (dap-auto-configure-mode)
@@ -281,28 +301,8 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
   ;; Decrease size of `lsp-treemacs' windows.
   (treemacs-text-scale -1)
 
-  :general
-  (ambassador :keymaps 'lsp-mode-map
-    "b" '(:ignore t :wk "dap")
-
-    "bb" 'dap-debug
-    "br" 'dap-ui-repl
-
-    "ba" 'dap-ui-expressions-add
-    "b." 'dap-eval-thing-at-point
-
-    "bt" 'dap-breakpoint-toggle
-    "b!" 'dap-breakpoint-delete-all
-    "b?" 'dap-breakpoint-condition
-    "bl" 'dap-ui-breakpoints-list
-
-    ;; Repeated.
-    "bn" 'dap-next
-    "bc" 'dap-continue
-    "bi" 'dap-step-in
-    "bo" 'dap-step-out
-    "be" 'dap-eval
-    "bd" 'dap-disconnect)
+  :wal-bind-keymap
+  (("]" . wal-dap-command-map))
 
   :delight " dap")
 #+END_SRC
