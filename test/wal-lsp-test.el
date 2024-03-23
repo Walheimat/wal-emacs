@@ -37,19 +37,24 @@
            (:mock bounds-of-thing-at-point :return '(3 . 0))
            (:mock thing-at-point :with (lambda (x &rest _) (eq x type)))
 
+           (:othertimes looking-at)
            lsp-organize-imports
            lsp-format-region
            lsp-rename
            lsp-execute-code-action
            lsp-format-buffer)
 
-      (should-error (wal-lsp-dwim))
+      (wal-lsp-dwim)
 
-      (setq type 'whitespace)
+      (bydi-was-called lsp-execute-code-action t)
+
+      (bydi-toggle-volatile 'looking-at)
 
       (wal-lsp-dwim)
 
       (bydi-was-called lsp-format-buffer)
+
+      (bydi-toggle-volatile 'looking-at)
 
       (setq type 'symbol)
 

@@ -98,22 +98,19 @@ The action depends on the current position, active region and the
    ((use-region-p)
     (call-interactively 'lsp-format-region))
 
-   ((thing-at-point 'symbol t)
+   ((and (thing-at-point 'symbol t)
+         (not (thing-at-point 'number t))
+         (let ((bounds (bounds-of-thing-at-point 'symbol)))
 
-    (let ((bounds (bounds-of-thing-at-point 'symbol)))
+           (eq (car-safe bounds) (point))))
 
-      (cond
-       ((eq (car-safe bounds) (point))
-        (call-interactively 'lsp-rename))
-       (t
-        (call-interactively 'lsp-execute-code-action)))))
+    (call-interactively 'lsp-rename))
 
-   ((thing-at-point 'whitespace t)
-
+   ((looking-at "[ \t]*$")
     (call-interactively 'lsp-format-buffer))
 
    (t
-    (user-error "No action registered for thing at point"))))
+    (call-interactively 'lsp-execute-code-action))))
 
 (use-package lsp-mode
   :hook (lsp-completion-mode . wal-lsp-completion)
