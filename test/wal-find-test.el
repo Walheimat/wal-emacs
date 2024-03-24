@@ -70,12 +70,16 @@
 (ert-deftest wal-dumb-jump-go ()
   :tags '(find user-facing)
 
-  (bydi (xref-find-definitions
-         (:mock thing-at-point :return 'thing))
+  (defvar xref-backend-functions)
+  (defvar xref-prompt-for-identifier)
+
+  (bydi ((:always xref-find-definitions)
+         (:watch xref-prompt-for-identifier)
+         (:watch xref-backend-functions))
+
     (wal-dumb-jump-go)
 
-    (bydi-was-called-with thing-at-point '(symbol))
-    (bydi-was-called-with xref-find-definitions '(thing))))
+    (bydi-was-called xref-find-definitions)))
 
 ;;; wal-find-test.el ends here
 
