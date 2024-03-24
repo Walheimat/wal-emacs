@@ -1,5 +1,47 @@
 # Changelog
 
+## [2.3.1](https://github.com/Walheimat/wal-emacs/compare/v2.3.0...v2.3.1) (2024-03-24)
+
+
+### Configurations
+
+* **cape:** bind to user-prefixed forward slash ([2d5210d](https://github.com/Walheimat/wal-emacs/commit/2d5210dcc6d4dae9fe79fcd8424fc9727406e8e8))
+* **dap-mode:** bind delete-all, re-bind breakpoints-list ([4b7cf6c](https://github.com/Walheimat/wal-emacs/commit/4b7cf6c9414d982d4e697914e3d007303b26383e))
+* **dumb-jump:** bind plain dumb-jump to user-prefixed period ([c1c5650](https://github.com/Walheimat/wal-emacs/commit/c1c565068ae3c1275d123dee1a5d5f25e79c0df7))
+* **general,config:** move whaler to f5, remove as leader ([0a5775f](https://github.com/Walheimat/wal-emacs/commit/0a5775feaf518b8ee8c05f7ae8f3f7a476083d26))
+* **general:** bind all in number row ([d63b79c](https://github.com/Walheimat/wal-emacs/commit/d63b79cc0d693195b0077f157abec85956a3750e))
+* **general:** move administrator to f6 and remove as leader ([4d621a9](https://github.com/Walheimat/wal-emacs/commit/4d621a952140f1552896a63633468377facc782b))
+* **general:** zero-in=>seeker, triple-minus=>adjunct ([9496919](https://github.com/Walheimat/wal-emacs/commit/94969190615123baae1328e842e5f107d989fe20))
+* **key-bindings:** bind package-upgrade ([5a8657a](https://github.com/Walheimat/wal-emacs/commit/5a8657a16810c4d1edca9e0806428546228a1147))
+* **leaders:** re-assign, only blacklist transient leaders ([22d136b](https://github.com/Walheimat/wal-emacs/commit/22d136bfcdd9265d2fb8bcba9eb8fc3d6d530cf0))
+* **lsp-mode:** bind command map to meta backslash ([c92b621](https://github.com/Walheimat/wal-emacs/commit/c92b62108ce622023a1e0519574a93017f12b4e8))
+* **lsp-mode:** move to user-prefixed period ([ec493ec](https://github.com/Walheimat/wal-emacs/commit/ec493eccdeec79c28571c10748dbb8fdca32d896))
+* **lsp, dap:** bind to user-prefixed brackets ([526bd15](https://github.com/Walheimat/wal-emacs/commit/526bd159258ead8ddab8c103a83bbd523a894695))
+* **magit:** don't restore window config, use default ([94fb908](https://github.com/Walheimat/wal-emacs/commit/94fb9083091e47cb5c0ae6395a7ba41c5c447dcf))
+* **org-roam:** bind capture to user-prefixed quote, menu to meta ([8b846a6](https://github.com/Walheimat/wal-emacs/commit/8b846a6b1ecf44b8ead15a48d5188e1d2d6d1f90))
+* **project, org-roam:** project uses quote, roam backslash ([a7c68c0](https://github.com/Walheimat/wal-emacs/commit/a7c68c09d8b0b6a4af974fc5110868d0f3228d19))
+* **rust-mode:** remove cargo-mode, bind cargo-process commands ([e13188a](https://github.com/Walheimat/wal-emacs/commit/e13188a847adab3b08ee8da92876802e4c10d9e1))
+* **simple:** add alt bindings of undo{-redo} to repeat map ([1e98226](https://github.com/Walheimat/wal-emacs/commit/1e9822692881b8cbac06e75e847b5f1db4294696))
+* **surround:** bind keymap the normal way ([a44fa24](https://github.com/Walheimat/wal-emacs/commit/a44fa246f8d48aa486cce97d89a16ed3eb9bc3f6))
+* **vertico:** use unobtrusive for wal-project-find-in-here ([63898bf](https://github.com/Walheimat/wal-emacs/commit/63898bf6bf8914a1e8a3aff86a5657fb4074f41b))
+
+
+### Bug Fixes
+
+* **css-mode,flycheck:** select existing checker ([eeea2cd](https://github.com/Walheimat/wal-emacs/commit/eeea2cd73561a11ffe94340ec88c91a67015a680))
+* **dap-mode:** don't quote :repeat config ([f1b3980](https://github.com/Walheimat/wal-emacs/commit/f1b39807927a73162ee7192d9f4a7ae858f4533f))
+* **dashboard:** ignore args in advice ([9b54e5a](https://github.com/Walheimat/wal-emacs/commit/9b54e5a018639f3e9d28df7de59ff583064d97b4))
+* **puni:** don't override xref-apropos ([ef6f890](https://github.com/Walheimat/wal-emacs/commit/ef6f8900e9901db4037dbd040ea3fae629bbb87c))
+* **vterm:** pass arg within project ([4333663](https://github.com/Walheimat/wal-emacs/commit/43336636cee537352e489d758d483f1270e1f1af))
+
+
+### Improvements
+
+* **corfu-quick:** complete on single match ([bb1e457](https://github.com/Walheimat/wal-emacs/commit/bb1e457e6189ccebcd90cc5b369f5d03ba968ccb))
+* **dap-mode:** position expressions and locals buffer at top ([6b30339](https://github.com/Walheimat/wal-emacs/commit/6b303391b348bbf6d756cbd0d7ced50644f2d46c))
+* **flycheck:** add repeat map ([6e0dae1](https://github.com/Walheimat/wal-emacs/commit/6e0dae136744d68df2f4afe3c98b758746d6f15f))
+* **lsp-dwim:** execute action as fallback, format for whitespace ([9868df6](https://github.com/Walheimat/wal-emacs/commit/9868df6e88bbe80a0ef5fab66aa97a5c917f85f4))
+
 ## [2.3.0](https://github.com/Walheimat/wal-emacs/compare/v2.2.12...v2.3.0) (2024-03-17)
 
 
