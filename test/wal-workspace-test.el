@@ -117,6 +117,15 @@
 
       (should (equal (wal-project-local-value 'major-mode) 'text-mode)))))
 
+(ert-deftest wal-project-find-relative-path-instead ()
+  :tags '(workspace)
+
+  (should-not (wal-project-find-relative-path-instead nil "test.el"))
+
+  (let ((wal-project-find--directory "/tmp/one"))
+
+    (should (string= "/tmp/one/test.el" (cdr (wal-project-find-relative-path-instead nil "test.el"))))))
+
 (ert-deftest wal-project-find-in-here ()
   :tags '(workspace user-facing)
 

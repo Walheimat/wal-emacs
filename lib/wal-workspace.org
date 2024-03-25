@@ -94,13 +94,23 @@ possible through =C-x 4 p o= which is a bit cumbersome).
 
       (user-error "Project '%s' has no parent project (controlled by `wal-project-parent-project')" name))))
 
+(defvar wal-project-find--directory nil)
+
+(defun wal-project-find-relative-path-instead (_type target)
+  "Find TARGET in a sub-directory.
+
+This is used by `wal-project-find-in-here'."
+  (when wal-project-find--directory
+    (cons 'file (expand-file-name target wal-project-find--directory))))
+
 (defun wal-project-find-in-here (&optional include-all)
   "Find a project file in the current directory.
 
 If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
   (interactive "P")
 
-  (when-let ((project (project-current nil)))
+  (when-let ((project (project-current nil))
+             (wal-project-find--directory default-directory))
 
     (project-find-file-in nil (list default-directory) project include-all)))
 
@@ -187,6 +197,10 @@ Root markers (how projects are found) and =vc= ignores are extended.
   ;; Allow setting custom names.
   (put 'project-vc-name 'safe-local-variable #'stringp)
 
+  (advice-add
+   'embark--project-file-full-path :before-until
+   #'wal-project-find-relative-path-instead)
+
   :custom
   (project-vc-extra-root-markers '("pom.xml"
                                    "package.json"
@@ -221,6 +235,9 @@ Root markers (how projects are found) and =vc= ignores are extended.
    ("h" . project-find-file)
    ("M-h" . wal-project-find-file-other-window)))
 #+END_SRC
+
+#+RESULTS:
+: wal-project-find-file-other-window
 
 * Footer
 :PROPERTIES:
