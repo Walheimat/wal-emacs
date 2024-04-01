@@ -52,6 +52,16 @@
 
     (bydi-was-called-last-with faketerm 'argument)))
 
+(ert-deftest wal-vterm-adjust-by-disabling-query-on-exit ()
+  :tags '(terminal)
+
+  (bydi ((:always get-buffer-process)
+         set-process-query-on-exit-flag)
+
+    (wal-vterm-adjust-by-disabling-query-on-exit (current-buffer))
+
+    (bydi-was-called-with set-process-query-on-exit-flag '(... nil))))
+
 ;;; wal-terminal-test.el ends here
 
 ;; Local Variables:

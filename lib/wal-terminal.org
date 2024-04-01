@@ -146,6 +146,11 @@ already exists."
 
     (funcall fun arg)))
 
+(defun wal-vterm-adjust-by-disabling-query-on-exit (buffer)
+  "Disable query-on-exit for BUFFER."
+  (when-let ((proc (get-buffer-process buffer)))
+    (set-process-query-on-exit-flag proc nil)))
+
 (use-package vterm
   :hook
   (vterm-mode . with-editor-export-git-editor)
@@ -154,6 +159,10 @@ already exists."
   (advice-add
    'vterm :around
    #'wal-vterm--prefer-project)
+
+  (advice-add
+   'vterm :filter-return
+   #'wal-vterm-adjust-by-disabling-query-on-exit)
 
   :custom
   (vterm-prefix "VTerm")
