@@ -54,20 +54,21 @@ jump target.
 SCOPE will consume `universal-argument' to determine whether to
 jump to a word in the buffer or anywhere."
   (interactive "P")
+  (let ((avy-style (if scope 'words 'at-full)))
 
-  (if scope
-      (let ((flip (or (and (listp scope) (> 5 (prefix-numeric-value scope)))
-                      (and (numberp scope) (> 2 scope)))))
+    (if scope
+        (let ((flip (or (and (listp scope) (> 5 (prefix-numeric-value scope)))
+                         (and (numberp scope) (> 2 scope)))))
 
-        (setq current-prefix-arg nil)
-        (avy-goto-word-0 flip))
+          (setq current-prefix-arg nil)
+          (avy-goto-word-0 flip))
 
-    (eval (macroexpand
-           '(avy-with avy-goto-word-0
-              (avy-jump avy-goto-word-0-regexp
-                        :beg (line-beginning-position)
-                        :end (line-end-position)
-                        :window-flip t))))))
+      (eval (macroexpand
+             '(avy-with avy-goto-word-0
+                (avy-jump avy-goto-word-0-regexp
+                          :beg (line-beginning-position)
+                          :end (line-end-position)
+                          :window-flip t)))))))
 
 (defun wal-avy-goto-line (&optional beginning)
   "Go to line or BEGINNING of line."
@@ -110,7 +111,6 @@ beginning."
   (avy-timeout-seconds 0.8)
   (avy-style 'words)
   (avy-keys '(?j ?k ?l ?\; ?h ?a ?s ?d ?f ?g))
-  (avy-styles-alist '((avy-goto-word-0 . at-full)))
   (avy-orders-alist '((avy-goto-word-0 . avy-order-closest)
                       (avy-goto-char . avy-order-closest)))
 
