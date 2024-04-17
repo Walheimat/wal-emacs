@@ -16,6 +16,7 @@
 
   (bydi (avy-goto-word-0
          avy-jump
+         require
          (:mock avy-with :with (lambda (_ b) b)))
 
     (with-temp-buffer
@@ -39,7 +40,8 @@
   :tags '(movement user-facing)
 
   (bydi ((:mock avy-goto-line :with beginning-of-line)
-         (:mock avy-goto-end-of-line :with end-of-line))
+         (:mock avy-goto-end-of-line :with end-of-line)
+         require)
 
     (with-temp-buffer
       (insert "test")
