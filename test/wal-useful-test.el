@@ -324,6 +324,35 @@
 
     (should (eq (length (window-list-1)) 1))))
 
+(ert-deftest wal-doppelganger ()
+  :tags '(useful user-facing)
+
+  (ert-with-test-buffer (:name "doppelganger")
+    (let* ((expected (format "%s<doppelganger>" (buffer-name)))
+           (finder (lambda (it) (string= expected (buffer-name (window-buffer it))))))
+
+      (bydi ((:spy wal-doppelganger-mode)
+             (:spy clone-indirect-buffer)
+             (:spy quit-window))
+
+        (wal-doppelganger)
+
+        (should (get-buffer expected))
+
+        (bydi-was-called wal-doppelganger-mode t)
+        (bydi-was-called clone-indirect-buffer t)
+
+        (wal-doppelganger)
+
+        (bydi-was-not-called wal-doppelganger-mode)
+        (bydi-was-not-called clone-indirect-buffer)
+
+        (should (seq-find finder (window-list-1)))
+
+        (wal-doppelganger t)
+
+        (bydi-was-called quit-window)))))
+
 (ert-deftest wal-switch-to-buffer-obeying-display-actions ()
   :tags '(useful)
 

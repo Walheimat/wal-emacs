@@ -344,6 +344,46 @@ Un-dedicates if already dedicated."
     (dolist (window (window-list-1))
       (when (wal-supernova--matches (window-buffer window))
         (quit-window nil window)))))
+
+(defvar wal-doppelganger-mode-map
+  (let ((map (make-sparse-keymap)))
+
+    (define-key map "q" 'quit-window)
+
+    map)
+  "Map used for `wal-doppelganger-mode'.")
+
+(define-minor-mode wal-doppelganger-mode
+  "Mode for the doppelganger buffer."
+  :global nil
+  :lighter "dpp"
+
+  (read-only-mode))
+
+(defun wal-doppelganger (&optional close)
+  "Create a doppelganger of the current buffer.
+
+This calls `clone-indirect-buffer-other-window' unless this
+buffer already has a clone.
+
+If optional CLOSE is passed, close the doppelganger."
+  (interactive "P")
+
+  (let* ((name (buffer-name))
+         (clone-name (format "%s<doppelganger>" name)))
+
+    (if-let* ((existing (get-buffer clone-name)))
+
+        (if close
+            (quit-window nil (get-buffer-window existing))
+          (display-buffer existing 'display-buffer-pop-up-window))
+
+      (unless close
+        (with-current-buffer (clone-indirect-buffer clone-name t t)
+
+          (wal-doppelganger-mode)
+
+          (display-buffer (current-buffer) 'display-buffer-pop-up-window))))))
 #+END_SRC
 
 * Files
