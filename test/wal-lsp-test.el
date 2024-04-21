@@ -41,20 +41,11 @@
            lsp-organize-imports
            lsp-format-region
            lsp-rename
-           lsp-execute-code-action
-           lsp-format-buffer)
+           lsp-execute-code-action)
 
       (wal-lsp-dwim)
 
       (bydi-was-called lsp-execute-code-action t)
-
-      (bydi-toggle-volatile 'looking-at)
-
-      (wal-lsp-dwim)
-
-      (bydi-was-called lsp-format-buffer)
-
-      (bydi-toggle-volatile 'looking-at)
 
       (setq type 'symbol)
 
