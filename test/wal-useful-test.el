@@ -162,26 +162,6 @@
 
     (should (string-equal "I hope I don't get killed\nThat would be terrible\n" (car kill-ring)))))
 
-(ert-deftest wal-then-add-delete-trailing-whitespace-hook--does-nothing-if-unset ()
-  :tags '(useful)
-
-  (let ((wal-delete-trailing-whitespace nil))
-
-    (with-temp-buffer
-      (wal-then-add-delete-trailing-whitespace-hook)
-
-      (should-not (buffer-local-value 'before-save-hook (current-buffer))))))
-
-(ert-deftest wal-then-add-delete-trailing-whitespace-hook ()
-  :tags '(useful)
-
-  (let ((wal-delete-trailing-whitespace t))
-
-    (with-temp-buffer
-      (wal-then-add-delete-trailing-whitespace-hook)
-
-      (should (buffer-local-value 'before-save-hook (current-buffer))))))
-
 (ert-deftest wal-set-cursor-type--sets-and-resets ()
   :tags '(useful user-facing)
 
