@@ -227,6 +227,7 @@ binds various administrative Emacs commands.
 (defvar transient-current-command)
 
 (declare-function general-define-key "ext:general")
+(declare-function general-simulate-key "ext:general")
 (declare-function transient-args "ext:transient.el")
 (declare-function transient-arg-value "ext:transient.el")
 
@@ -515,7 +516,10 @@ USER-KEY and LEADER can be used to prefix the key."
     (seeker
       "f" 'wal-find-fish-config
       "h" 'wal-dired-from-home
-      "s" 'find-sibling-file))
+      "s" 'find-sibling-file)
+
+    (global-set-key (kbd "<f9>") (general-simulate-key "C-x"))
+    (global-set-key (kbd "<f10>") (general-simulate-key "C-c")))
 
   (global-set-key [remap kill-line] #'wal-kwim)
   (global-set-key [remap move-beginning-of-line] #'wal-mwim-beginning)
@@ -527,6 +531,12 @@ USER-KEY and LEADER can be used to prefix the key."
 
   ;; Alternate binding for C-c x @ h.
   (define-key function-key-map wal-hyper-mock #'event-apply-hyper-modifier)
+
+  ;; One-handed events.
+  (define-key function-key-map (kbd "<f5>") #'event-apply-control-modifier)
+  (define-key function-key-map (kbd "<f6>") #'event-apply-meta-modifier)
+  (define-key function-key-map (kbd "<f7>") #'event-apply-hyper-modifier)
+  (define-key function-key-map (kbd "<f8>") #'event-apply-shift-modifier)
 
   ;; Add alternative bindings to repeat map.
   (define-key undo-repeat-map "/" #'undo)
