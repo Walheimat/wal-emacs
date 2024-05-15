@@ -69,6 +69,11 @@ emacs-lisp-mode
  q n n
  ";;; " name ".el ends here")
 
+(ert
+ "(ert-deftest " (p "test") " ()" n>
+ ":tags '(" (p "tag") ")" n n>
+ q ")")
+
 js-mode
 js-ts-mode
 typescript-mode
