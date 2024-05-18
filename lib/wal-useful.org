@@ -372,6 +372,27 @@ If optional CLOSE is passed, close the doppelganger."
           (wal-doppelganger-mode)
 
           (display-buffer (current-buffer) 'display-buffer-pop-up-window))))))
+
+(defmacro wal-with-scrolling-window (&rest body)
+  "Execute BODY within the scrolling window."
+  (declare (indent defun))
+  `(progn
+     (when (one-window-p)
+       (user-error "No scrolling window"))
+
+     (with-selected-window (other-window-for-scrolling)
+       ,@body)))
+
+(defun wal-isearch-other-window (&optional regexp)
+  "Search the other window.
+
+After the search was performed the window is re-centered.
+
+Search using regular expression if REGEXP is t."
+  (interactive "P")
+  (wal-with-scrolling-window
+    (isearch-forward regexp)
+    (recenter-top-bottom)))
 #+END_SRC
 
 * Files

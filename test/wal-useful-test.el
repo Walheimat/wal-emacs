@@ -365,6 +365,36 @@
 
       (should (equal '(a b c) (wal-interesting-windows))))))
 
+(ert-deftest wal-with-scrolling-window ()
+  :tags '(useful)
+
+  (bydi-match-expansion
+   (wal-with-scrolling-window
+     (message "test"))
+   `(progn
+     (when (one-window-p)
+       (user-error "No scrolling window"))
+
+     (with-selected-window (other-window-for-scrolling)
+       (message "test")))))
+
+(ert-deftest wal-isearch-other-window ()
+  :tags '(useful)
+
+  (bydi ((:mock other-window-for-scrolling :return (selected-window))
+         (:othertimes one-window-p)
+         isearch-forward
+         recenter-top-bottom)
+
+    (wal-isearch-other-window t)
+
+    (bydi-was-called-with isearch-forward t)
+    (bydi-was-called recenter-top-bottom)
+
+    (bydi-toggle-volatile 'one-window-p)
+
+    (should-error (wal-isearch-other-window))))
+
 (ert-deftest wal-find-custom-file ()
   :tags '(useful user-facing)
 
