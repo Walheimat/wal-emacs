@@ -311,7 +311,7 @@
     (let* ((expected (format "%s<doppelganger>" (buffer-name)))
            (finder (lambda (it) (string= expected (buffer-name (window-buffer it))))))
 
-      (bydi ((:spy wal-doppelganger-mode)
+      (bydi ((:spy read-only-mode)
              (:spy clone-indirect-buffer)
              (:spy quit-window))
 
@@ -319,12 +319,12 @@
 
         (should (get-buffer expected))
 
-        (bydi-was-called wal-doppelganger-mode t)
+        (bydi-was-called read-only-mode t)
         (bydi-was-called clone-indirect-buffer t)
 
         (wal-doppelganger)
 
-        (bydi-was-not-called wal-doppelganger-mode)
+        (bydi-was-not-called read-only-mode)
         (bydi-was-not-called clone-indirect-buffer)
 
         (should (seq-find finder (window-list-1)))
