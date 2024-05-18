@@ -210,7 +210,6 @@ jerry-rig =company= backends to work with =corfu=.
 
 (defun wal-cape-eshell-setup ()
   "Set up `cape' fro Eshell."
-
   (setq-local completion-at-point-functions
               (cons #'wal-cape-history-file
                     completion-at-point-functions)))
@@ -218,9 +217,14 @@ jerry-rig =company= backends to work with =corfu=.
 (use-package cape
   :hook (eshell-mode . wal-cape-eshell-setup)
 
-  :wal-bind
-  (("/" . cape-dabbrev)
-   ("M-/" . cape-file)))
+  :general
+  (completionist "/" 'cape-dabbrev
+                 "f" 'cape-file
+                 "h" 'cape-history
+                 "a" 'cape-abbrev
+                 "d" 'cape-dict
+                 "k" 'cape-keyword
+                 "l" 'cape-line))
 #+end_src
 
 * Minibuffer Completion
@@ -759,16 +763,7 @@ snippets. Completing these snippets is bound to a custom binding.
 
       (concat cs (cadr elt)))))
 
-(defun wal-tempel-setup ()
-  "Set up `tempel'."
-  (setq-local completion-at-point-functions
-              (cons #'tempel-complete
-                    completion-at-point-functions)))
-
 (use-package tempel
-  :hook
-  ((prog-mode harpoon-prog-like text-mode) . wal-tempel-setup)
-
   :config
   (setq tempel-path (wal-list-from
                      'tempel-path
@@ -779,7 +774,6 @@ snippets. Completing these snippets is bound to a custom binding.
   :custom
   (tempel-user-elements '(wal-tempel-comment))
   (tempel-mark (propertize "░" 'face 'mode-line-highlight))
-  (tempel-trigger-prefix "\\")
 
   :bind
   (:map tempel-map
@@ -788,6 +782,9 @@ snippets. Completing these snippets is bound to a custom binding.
    ("M-e" . tempel-end)
    ("M-n" . tempel-next)
    ("M-p" . tempel-previous))
+
+  :general
+  (completionist "t" 'tempel-complete)
 
   :defines (tempel-path tempel-map)
   :functions (tempel-complete))

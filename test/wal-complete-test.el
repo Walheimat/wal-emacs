@@ -263,13 +263,6 @@
 
     (should (string-equal (wal-tempel-comment (list 'c "testing")) "// testing"))))
 
-(ert-deftest wal-tempel-setup ()
-  (bydi ((:watch completion-at-point-functions))
-
-    (wal-tempel-setup)
-
-    (bydi-was-set completion-at-point-functions)))
-
 ;;; wal-complete-test.el ends here
 
 ;; Local Variables:
