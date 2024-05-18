@@ -432,6 +432,28 @@
 
     (bydi-was-called-with select-window 'current)))
 
+(ert-deftest wal-other-window-for-scrolling ()
+  :tags '(useful windows)
+
+  (bydi ((:sometimes get-mru-window)
+         (:sometimes next-window))
+
+    (wal-other-window-for-scrolling)
+
+    (bydi-was-not-called next-window)
+
+    (bydi-toggle-volatile 'get-mru-window)
+
+    (wal-other-window-for-scrolling)
+
+    (bydi-was-called next-window t)
+
+    (bydi-toggle-volatile 'next-window)
+
+    (wal-other-window-for-scrolling)
+
+    (bydi-was-called-n-times next-window 2)))
+
 (ert-deftest wal-find-custom-file ()
   :tags '(useful user-facing)
 
