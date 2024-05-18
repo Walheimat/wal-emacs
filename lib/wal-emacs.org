@@ -356,6 +356,16 @@ No offender.
   (setq register-alist nil))
 
 (use-package register
+  :config
+  ;; Make sure that jumping to a marker attempts to select a window
+  ;; already displaying the buffer first.
+  (cl-defmethod register-val-jump-to :before ((val marker) arg)
+    (when-let* ((buffer (marker-buffer val))
+                (windows (window-list-1))
+                (live (seq-find (lambda (it) (eq (window-buffer it) buffer))
+                                windows)))
+
+      (select-window live)))
   :custom
   (register-preview-delay 0.8)
 
