@@ -227,6 +227,49 @@ jerry-rig =company= backends to work with =corfu=.
                  "l" 'cape-line))
 #+end_src
 
+** tempel                                                               :gnu:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Don't reduce the boilerplate, reduce your involvement in it with
+snippets. Completing these snippets is bound to a custom binding.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal-tempel-comment (elt)
+  "Comment the element ELT according to mode."
+  (when (eq (car-safe elt) 'c)
+    (let ((cs (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start)))
+
+      (concat cs (cadr elt)))))
+
+(use-package tempel
+  :config
+  (setq tempel-path (wal-list-from
+                     'tempel-path
+                     (expand-file-name
+                      "data/tempel.eld"
+                      wal-default-path)))
+
+  :custom
+  (tempel-user-elements '(wal-tempel-comment))
+  (tempel-mark (propertize "░" 'face 'mode-line-highlight))
+
+  :bind
+  (:map tempel-map
+   ("M-k" . tempel-kill)
+   ("M-a" . tempel-beginning)
+   ("M-e" . tempel-end)
+   ("M-n" . tempel-next)
+   ("M-p" . tempel-previous))
+
+  :general
+  (completionist "t" 'tempel-complete)
+
+  :defines (tempel-path tempel-map)
+  :functions (tempel-complete))
+#+END_SRC
+
 * Minibuffer Completion
 
 ** vertico                                                              :gnu:
@@ -745,49 +788,6 @@ Use either `flymake' or `flycheck'."
 
    ("," . consult-buffer)
    ("M-," . consult)))
-#+END_SRC
-
-** tempel                                                               :gnu:
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Don't reduce the boilerplate, reduce your involvement in it with
-snippets. Completing these snippets is bound to a custom binding.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal-tempel-comment (elt)
-  "Comment the element ELT according to mode."
-  (when (eq (car-safe elt) 'c)
-    (let ((cs (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start)))
-
-      (concat cs (cadr elt)))))
-
-(use-package tempel
-  :config
-  (setq tempel-path (wal-list-from
-                     'tempel-path
-                     (expand-file-name
-                      "data/tempel.eld"
-                      wal-default-path)))
-
-  :custom
-  (tempel-user-elements '(wal-tempel-comment))
-  (tempel-mark (propertize "░" 'face 'mode-line-highlight))
-
-  :bind
-  (:map tempel-map
-   ("M-k" . tempel-kill)
-   ("M-a" . tempel-beginning)
-   ("M-e" . tempel-end)
-   ("M-n" . tempel-next)
-   ("M-p" . tempel-previous))
-
-  :general
-  (completionist "t" 'tempel-complete)
-
-  :defines (tempel-path tempel-map)
-  :functions (tempel-complete))
 #+END_SRC
 
 * Footer
