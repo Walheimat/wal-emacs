@@ -365,6 +365,29 @@
 
       (should (equal '(a b c) (wal-interesting-windows))))))
 
+(ert-deftest wal-swipe-window-prefix ()
+  :tags '(useful)
+
+  (shut-up
+    (bydi ((:mock
+            display-buffer-override-next-command
+            :with
+            bydi-rf)
+           delete-other-windows
+           (:mock display-buffer-in-direction :var direction :initial 'direction)
+           (:always display-buffer-use-some-window))
+
+      (let ((callback (wal-swipe-window-prefix)))
+
+        (should (equal (cons 'direction 'window)
+                       (funcall callback (current-buffer) nil)))
+
+        (setq direction nil
+              callback (wal-swipe-window-prefix))
+
+        (should (equal (cons t 'reuse)
+                       (funcall callback (current-buffer) nil)))))))
+
 (ert-deftest wal-with-scrolling-window ()
   :tags '(useful)
 

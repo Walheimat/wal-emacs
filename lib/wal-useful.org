@@ -373,6 +373,32 @@ If optional CLOSE is passed, close the doppelganger."
 
           (display-buffer (current-buffer) 'display-buffer-pop-up-window))))))
 
+(defun wal-swipe-window-prefix ()
+  "Display the buffer of the next command to the left.
+
+This will first delete other windows and then open the new window
+to the left of the current one.
+
+This is based on `other-window-prefix'."
+  (interactive)
+
+  (message "Will swipe window after next command")
+
+  (display-buffer-override-next-command
+   (lambda (buffer alist)
+     (delete-other-windows)
+
+     (let ((alist (append '((inhibit-same-window . t)
+                            (direction . left))
+                          alist))
+           window type)
+       (if (setq window (display-buffer-in-direction buffer alist))
+           (setq type 'window)
+         (setq window (display-buffer-use-some-window buffer alist)
+               type 'reuse))
+       (cons window type)))
+   nil "[other-window]"))
+
 (defmacro wal-with-scrolling-window (&rest body)
   "Execute BODY within the scrolling window."
   (declare (indent defun))
