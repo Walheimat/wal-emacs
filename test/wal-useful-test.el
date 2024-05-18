@@ -418,6 +418,20 @@
 
     (should-error (wal-isearch-other-window))))
 
+(ert-deftest wal-other-window-mru ()
+  :tags '(useful windows)
+
+  (bydi ((:mock get-mru-window :var mru)
+         select-window)
+
+    (should-not (wal-other-window-mru))
+
+    (setq mru 'current)
+
+    (should (wal-other-window-mru))
+
+    (bydi-was-called-with select-window 'current)))
+
 (ert-deftest wal-find-custom-file ()
   :tags '(useful user-facing)
 
