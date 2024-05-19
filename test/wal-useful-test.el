@@ -432,6 +432,20 @@
 
     (bydi-was-called-with select-window 'current)))
 
+(ert-deftest wal-other-window ()
+  :tags '(useful windows)
+
+  (bydi ((:sometimes one-window-p)
+         wal-switch-to-other-buffer
+         wal-other-window-mru)
+
+    (wal-other-window)
+    (bydi-was-called wal-switch-to-other-buffer t)
+    (bydi-toggle-volatile 'one-window-p)
+
+    (wal-other-window)
+    (bydi-was-called wal-other-window-mru)))
+
 (ert-deftest wal-other-window-for-scrolling ()
   :tags '(useful windows)
 
