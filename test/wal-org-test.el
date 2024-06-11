@@ -211,17 +211,26 @@
 (ert-deftest wal-org-clock-in-and-out-switch-to-state ()
   :tags '(org)
 
-  (should (string-equal "IN PROGRESS" (wal-org-clock-in-switch-to-state "OTHER STATE")))
+  (defvar org-todo-keywords-1)
+  (defvar org-clock-current-task)
 
-  (bydi ((:mock completing-read :return "WAITING"))
-    (defvar org-todo-keywords-1)
-    (defvar org-clock-current-task)
+  (let ((wal-org-clock-in-progress-state "IN PROGRESS")
+        (org-todo-keywords-1 '("BAITING" "WORK" "WAITING")))
 
-    (let ((org-todo-keywords-1 '("BAITING" "WAITING"))
-          (org-clock-current-task nil))
+    (should-not (wal-org-clock-in-switch-to-state "WORK")))
 
-      (should (string-equal "WAITING" (wal-org-clock-out-switch-to-state "OTHER STATE")))
-      (should (string-equal "WAITING" (wal-org-clock-out-switch-to-state "BAITING"))))))
+  (let ((wal-org-clock-in-progress-state "IN PROGRESS")
+        (org-todo-keywords-1 '("BAITING" "IN PROGRESS" "WAITING")))
+
+    (should (string-equal "IN PROGRESS" (wal-org-clock-in-switch-to-state "UNKNOWN STATE")))
+    (should-not (wal-org-clock-in-switch-to-state nil))
+    (should (string-equal "IN PROGRESS" (wal-org-clock-in-switch-to-state "BAITING")))
+
+    (bydi ((:mock completing-read :return "WAITING"))
+      (let ((org-clock-current-task nil))
+
+        (should (string-equal "WAITING" (wal-org-clock-out-switch-to-state "OTHER STATE")))
+        (should (string-equal "WAITING" (wal-org-clock-out-switch-to-state "BAITING")))))))
 
 (ert-deftest wal-org-clock-heading ()
   :tags '(org)

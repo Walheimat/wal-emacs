@@ -809,10 +809,17 @@ command to ignore continuous clocking as well as one to add a note to
 the clocked task.
 
 #+BEGIN_SRC emacs-lisp
+(defvar-local wal-org-clock-in-progress-state "IN PROGRESS"
+  "The state signifying a task is in progress.")
+(put 'wal-org-clock-in-progress-state 'safe-local-variable #'stringp)
+
 (defun wal-org-clock-in-switch-to-state (todo-state)
   "Only switch state to IN PROGRESS if TODO-STATE was given."
-  (when todo-state
-    "IN PROGRESS"))
+  (defvar org-todo-keywords-1)
+
+  (when (and todo-state
+             (member wal-org-clock-in-progress-state org-todo-keywords-1))
+    wal-org-clock-in-progress-state))
 
 (defun wal-org-clock-out-switch-to-state (todo-state)
   "Switch from TODO-STATE to a user-selected state.
