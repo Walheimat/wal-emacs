@@ -40,7 +40,18 @@ Everything that has to do with windows.
 Super-charged =other-window=.
 
 #+begin_src emacs-lisp
+(defun wal-aw-consult-buffer (window)
+  "Switch to WINDOW and then `consult-buffer'."
+  (aw-switch-to-window window)
+  (call-interactively 'consult-buffer))
+
 (use-package ace-window
+  :config
+  (setq aw-dispatch-alist
+        `((?0 aw-delete-window "Delete window")
+          (?, wal-aw-consult-buffer "Consult buffer")
+          (?? aw-show-dispatch-help)))
+
   :custom
   (aw-keys '(?j ?k ?l ?\; ?h ?a ?s ?d ?f ?g))
   (aw-dispatch-always t)
