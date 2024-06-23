@@ -1,5 +1,94 @@
 # Changelog
 
+## [2.4.0](https://github.com/Walheimat/wal-emacs/compare/v2.3.1...v2.4.0) (2024-06-23)
+
+
+### Features
+
+* **settings:** add wal-other-window-for-scrolling ([b88758e](https://github.com/Walheimat/wal-emacs/commit/b88758e3482741d13cafa8aa5092c3ce5854dd3f))
+* **transpose-frame:** add package, create keymap ([a108423](https://github.com/Walheimat/wal-emacs/commit/a108423ed2ad0ab3efc6858b30bef76cbf6c45db))
+* **useful:** wal-swipe-window-prefix ([f6146a9](https://github.com/Walheimat/wal-emacs/commit/f6146a982537181e733dca8effcf783ce164c345))
+* **wal-other-window-mru:** add and bind to M-o ([8920a18](https://github.com/Walheimat/wal-emacs/commit/8920a18ae10ba668ed01ebfd451aeb3a0a266ed6))
+
+
+### Configurations
+
+* **avy:** invert keys of left hand ([db5b41f](https://github.com/Walheimat/wal-emacs/commit/db5b41f273f039eb1df77ae3231a581b326a4e6d))
+* **avy:** use style at for word-0 ([dfcfd40](https://github.com/Walheimat/wal-emacs/commit/dfcfd401f6495260855510e36a96429081576f81))
+* **avy:** use words style everywhere ([8fd8976](https://github.com/Walheimat/wal-emacs/commit/8fd8976232a7d2e0c6eb0c9a396a3a8f36f1290d))
+* **avy:** word-0 at-full, order-closest; re-order keys ([362851c](https://github.com/Walheimat/wal-emacs/commit/362851cf31380857f7ba590dcc27ab85b4a8b1e2))
+* **cape,tempel:** use common command map bound to C-c k ([9d966bd](https://github.com/Walheimat/wal-emacs/commit/9d966bdc71a6aaf7ed0c26300e90cf6fe303f6b9))
+* **consult,avy:** bind H-M-l to consult-goto-line ([a309ca8](https://github.com/Walheimat/wal-emacs/commit/a309ca8415bfc716c70fd88f9ffa1fe150c4b281))
+* **consult,project:** simplify bindings ([f14abee](https://github.com/Walheimat/wal-emacs/commit/f14abee726858c34a7132b29eed2975ed5fb67e1))
+* **consult:** hide compilation buffer source ([aa9ccdc](https://github.com/Walheimat/wal-emacs/commit/aa9ccdcb628dec2e4a8fba8f42c570c47878961f))
+* **consult:** single quote switches projects ([166feed](https://github.com/Walheimat/wal-emacs/commit/166feed4cd4751754b788f12941f8a34de67c2ff))
+* **corfu-quick:** match keys to vertico-quick ([0ecaf01](https://github.com/Walheimat/wal-emacs/commit/0ecaf01c389f2653af2f35081beaa29722b4758c))
+* **corfu,embark:** completion to k, embark to single quote ([149236e](https://github.com/Walheimat/wal-emacs/commit/149236e81720097e3d4088a5c18597fe7b5a44f9))
+* **corfu:** bind completionist to user-prefixed M-k ([d4fe7ac](https://github.com/Walheimat/wal-emacs/commit/d4fe7ac88fc7e91ee7aec5b3be323d1bd00c758e))
+* **corfu:** increase auto-delay, bind user-prefixed . to cap ([1020115](https://github.com/Walheimat/wal-emacs/commit/10201158e233ccb567e7b60bfadca3474c83df55))
+* **corfu:** remove additional binding for corfu-insert-separator ([a1ca633](https://github.com/Walheimat/wal-emacs/commit/a1ca6334df5287b47e77c4644339f7cd3930e45a))
+* **corfu:** use default auto delay ([1790f2d](https://github.com/Walheimat/wal-emacs/commit/1790f2d60ce614b96d4a969a3157e23909f81136))
+* **dap-mode:** bind plain to dap-next, meta to command map ([6afa202](https://github.com/Walheimat/wal-emacs/commit/6afa202762f3509f22eea9f19b6dc2954e327a67))
+* **dired-x:** disable dired-omit-verbose ([775144c](https://github.com/Walheimat/wal-emacs/commit/775144c948a485870c215a06ec1ec2e1ad514d0e))
+* **dired-x:** run dired-omit-mode for dired ([c1bd846](https://github.com/Walheimat/wal-emacs/commit/c1bd846296ef8f72c0c0e59ee40e30a03e66efa9))
+* **dired:** don't remove j binding in repeat-map ([9b825a7](https://github.com/Walheimat/wal-emacs/commit/9b825a776a5b244aa02d82c989034eaf12128092))
+* **dumb-jump:** add additional project markers ([040390a](https://github.com/Walheimat/wal-emacs/commit/040390a8ef6ba7e5abe7eb056baf707e8d1faa0b))
+* **dumb-jump:** move wal-dumb-jump-go back to editor ([11f84b3](https://github.com/Walheimat/wal-emacs/commit/11f84b3435806651de208bb4fc01da4883f37582))
+* **embark:** move to user-prefixed period ([12af10d](https://github.com/Walheimat/wal-emacs/commit/12af10d4a7f7119eca6a7e1e46c3e7cbf1b8c6b4))
+* **gd-script,emacs-lisp-mode:** remove custom completion settings ([b2cae51](https://github.com/Walheimat/wal-emacs/commit/b2cae51f4187b182fc269ae26f0261c9b4c1ff4c))
+* **gdscript-mode:** use default indent offset ([a442f27](https://github.com/Walheimat/wal-emacs/commit/a442f27095e628f6f04299fcc1fbb1b3a4967a8e))
+* **gdscript-mode:** use lsp-mode ([25b5ce0](https://github.com/Walheimat/wal-emacs/commit/25b5ce0864dc7ffddbeaf94c6839f7afb9b42420))
+* **global:** bind modifiers to function keys ([5658063](https://github.com/Walheimat/wal-emacs/commit/56580630dd2e68032d105c73dde4650fc79dd745))
+* **key-bindings:** remove simulations of C-{x,c} ([414eebf](https://github.com/Walheimat/wal-emacs/commit/414eebf81a44b3b6974f933dd56375e9131c5cc5))
+* **lsp-mode,treemacs:** don't set no-delete-other-windows ([497d654](https://github.com/Walheimat/wal-emacs/commit/497d654944502a57edf20b67dd5a749bdd5410ad))
+* **lsp-mode:** set force-aligned for HTML LSP ([fe7e0d3](https://github.com/Walheimat/wal-emacs/commit/fe7e0d310f2654044fe7c68de130204bbf849a5a))
+* **lsp-ui:** enable sideline ([96fe205](https://github.com/Walheimat/wal-emacs/commit/96fe205fc6171e651d678793dda046da9f225526))
+* **magit-process:** apply ANSI colors ([717d1c9](https://github.com/Walheimat/wal-emacs/commit/717d1c94e60b0709a5b72ce5f49a7124de0aecd7))
+* **magit-process:** increase popup time ([02177fa](https://github.com/Walheimat/wal-emacs/commit/02177fa8a94d4e3fc5a340b5f65d83032a49cb91))
+* **magit-process:** set popup time to 4 seconds ([0af383a](https://github.com/Walheimat/wal-emacs/commit/0af383a8853cf80df8792334e3c2b7b85c5edeb5))
+* **org,markdown-mode:** enable auto-fill-mode ([fd42eb6](https://github.com/Walheimat/wal-emacs/commit/fd42eb6d3041c74dd2e69e2cfea5e98e053e9778))
+* **org:** enable enforce-todo{-checkbox}-dependencies ([880a562](https://github.com/Walheimat/wal-emacs/commit/880a5622f88a08c711bdb05a1837cba9a5b16ffd))
+* **package:** bind find-in-here to user-prefixed M-h ([b381dbe](https://github.com/Walheimat/wal-emacs/commit/b381dbed562295322934c4f1e85ff5d2c8ec6483))
+* **project:** bind remember-projects-under to m in map ([46090f8](https://github.com/Walheimat/wal-emacs/commit/46090f8d339a2597355002d6a53a77f0d2f193b6))
+* **project:** switch-to-parent-project => meta quote ([0c75d8f](https://github.com/Walheimat/wal-emacs/commit/0c75d8f2230c88dc9a117fcee3c91588951e3a24))
+* **project:** wal-project-find-in-here in project-prefix-map ([20c4ad2](https://github.com/Walheimat/wal-emacs/commit/20c4ad2e4c353db3fc77be39e79e8e4a485fb6b3))
+* **puni:** move around, no caps ([7dd2e90](https://github.com/Walheimat/wal-emacs/commit/7dd2e9099d23a7a601add862aa7f6fea27bf9a1e))
+* **register:** bind quick register to user-prefixed period ([5d64b4b](https://github.com/Walheimat/wal-emacs/commit/5d64b4b9e7009ded78d1d36883d400a2fb8ad530))
+* **register:** don't bind window-configuration-to-register ([091f9f2](https://github.com/Walheimat/wal-emacs/commit/091f9f242c23c404a141e94f7bd6d49adeda93b8))
+* **register:** remove quick register ([cc8f3cc](https://github.com/Walheimat/wal-emacs/commit/cc8f3ccf7a89e191b89af618e9c0a42581dae50a))
+* **rg:** use ripgrep for buffer name ([4a537e2](https://github.com/Walheimat/wal-emacs/commit/4a537e24c06043a34d6d088de83d418e895bbf6c))
+* **rust-mode:** bind debug command ([78ce7c0](https://github.com/Walheimat/wal-emacs/commit/78ce7c00d796519a6078dfa639ebda3660a49935))
+* **rust-mode:** enable new harpoon feature to format before save ([3fdd648](https://github.com/Walheimat/wal-emacs/commit/3fdd64810cf8814e2aed716b09532cb51158e131))
+* **rust-mode:** load dap-cpptools for debugging ([257dfca](https://github.com/Walheimat/wal-emacs/commit/257dfcae439b6f227f30ed0a6f37c2156ee95859))
+* **ship-mate:** use new keyword for execute commands ([2aa64fa](https://github.com/Walheimat/wal-emacs/commit/2aa64fa95adbcc346045b043a4607627f2a5fcb4))
+
+
+### Bug Fixes
+
+* **avy:** require avy for custom commands ([6db5d7d](https://github.com/Walheimat/wal-emacs/commit/6db5d7d19b9d24c96c92e829c9505ebce0995162))
+* **org:** don't hardcode in-progress state string ([266005b](https://github.com/Walheimat/wal-emacs/commit/266005b23b00d3e99e5b1ec72ae879949af7fadd))
+* **text-mode:** don't globally set auto-fill-mode ([2d936e6](https://github.com/Walheimat/wal-emacs/commit/2d936e6c756d9ab359642072bf0f80377cee423c))
+* **wal-doppelganger:** don't display indirect buffer ([0c5c621](https://github.com/Walheimat/wal-emacs/commit/0c5c62120d5c91d24f4cb7bb457f53267618c03f))
+* **workspace:** make finding in directory work with embark ([dcec633](https://github.com/Walheimat/wal-emacs/commit/dcec6337a38f73778a7d4ac0a8cde045a0e48f36))
+
+
+### Improvements
+
+* **ace-window:** re-add minimal configuration ([fd67f40](https://github.com/Walheimat/wal-emacs/commit/fd67f40480119bf0d7f05e8f4652e57d039777b0))
+* **ace-window:** simplify dispatch alist ([f942f98](https://github.com/Walheimat/wal-emacs/commit/f942f9809ff3e7eea293b5b00eec9d809e806e51))
+* **avy:** only use at-full in custom word-0 ([79b2ac3](https://github.com/Walheimat/wal-emacs/commit/79b2ac331c8ee927029d42ecac43636e03fab638))
+* **bindings:** add which-key replacements for new key ([58ec7dd](https://github.com/Walheimat/wal-emacs/commit/58ec7dd635a5e078484f6181ce46dbedfadbba7a))
+* **dired-x:** add unnumbered property ([3ca2f32](https://github.com/Walheimat/wal-emacs/commit/3ca2f32dfa554685ff58ad7a20555cf06c94372f))
+* **dumb-jump:** call interactively and set to not prompt ([66543b7](https://github.com/Walheimat/wal-emacs/commit/66543b753571a3c8eda2ac28d794523273fd136d))
+* **lsp-mode:** mention why `lsp-enable-snippet` is disabled ([fc5fbc7](https://github.com/Walheimat/wal-emacs/commit/fc5fbc7e3beae03773a8c7a43b793f02ddf78b45))
+* **register:** select window on jump to marker ([c4bd738](https://github.com/Walheimat/wal-emacs/commit/c4bd7388873223b7838eb4c8f27017e454e53107))
+* **tempel:** add ert template ([b03e3a1](https://github.com/Walheimat/wal-emacs/commit/b03e3a193b6ed463d8efbaa92abbb0ffb2547473))
+* **useful:** add wal-doppelganger ([6bfb396](https://github.com/Walheimat/wal-emacs/commit/6bfb39693fbddbeafeb3d8ad894519cac3789aa3))
+* **useful:** wal-isearch-other-windows ([b6e7985](https://github.com/Walheimat/wal-emacs/commit/b6e79854890fbd30452e98cfccfa8e14f268ae77))
+* **useful:** wal-other-window ([965d800](https://github.com/Walheimat/wal-emacs/commit/965d8009e795fec2261cd9c33ffbe173f6471e6d))
+* **vterm:** disable query-on-exit flag ([659be4d](https://github.com/Walheimat/wal-emacs/commit/659be4d6a77f9a77a5e0eed25f162bb68bb31f1a))
+* **wal-lsp-dwim:** don't format buffer at line-end ([fc88104](https://github.com/Walheimat/wal-emacs/commit/fc8810407b5dea32efb79afd7e9649da11e8fd50))
+
 ## [2.3.1](https://github.com/Walheimat/wal-emacs/compare/v2.3.0...v2.3.1) (2024-03-24)
 
 
