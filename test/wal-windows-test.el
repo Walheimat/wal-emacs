@@ -8,16 +8,15 @@
 
 (require 'wal-windows nil t)
 
-(ert-deftest wal-aw-consult-buffer ()
+(ert-deftest wal-aw ()
   :tags '(window)
 
-  (bydi (aw-switch-to-window
-         consult-buffer)
-
-    (wal-aw-consult-buffer 'window)
-
-    (bydi-was-called-with aw-switch-to-window 'window)
-    (bydi-was-called consult-buffer)))
+  (bydi-match-expansion
+   (wal-aw quit-window)
+   '(defun wal-aw-quit-window (window)
+     "Switch to WINDOW and then call `quit-window'."
+     (aw-switch-to-window window)
+     (call-interactively 'quit-window))))
 
 ;;; wal-windows-test.el ends here
 
