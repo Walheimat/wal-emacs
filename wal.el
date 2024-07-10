@@ -80,6 +80,11 @@ This variable will be set when calling `wal-bootstrap'.")
 (defvar wal-error nil
   "Set to the error message if initialization failed.")
 
+(defvar wal-emacs-binary "emacs"
+  "The Emacs binary to use.
+
+This is only relevant for Make targets using Cask.")
+
 ;;;; Init bootstrap
 
 (defconst wal-init--marker "wal-prelude-bootstrap")
@@ -287,12 +292,14 @@ If HIDDEN is t, hide the compilation. A handler may be passed as
 ON-COMPLETION that will be called with the exit code on
 completion."
   (defvar compilation-save-buffers-predicate)
+  (defvar compilation-environment)
 
   (let ((default-directory wal-default-path)
         (display-buffer-alist (if hidden
                                   '(("\\*compilation" (display-buffer-no-window)))
                                 display-buffer-alist))
-        (compilation-save-buffers-predicate #'ignore))
+        (compilation-save-buffers-predicate #'ignore)
+        (compilation-environment (list (format "EMACS=%s" wal-emacs-binary))))
 
     (let ((buffer (compile cmd)))
 
