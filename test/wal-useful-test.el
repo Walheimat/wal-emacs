@@ -436,11 +436,11 @@
   :tags '(useful windows)
 
   (bydi ((:sometimes one-window-p)
-         other-window-prefix
+         wal-switch-to-other-buffer
          wal-other-window-mru)
 
     (wal-other-window)
-    (bydi-was-called other-window-prefix)
+    (bydi-was-called wal-switch-to-other-buffer t)
     (bydi-toggle-volatile 'one-window-p)
 
     (wal-other-window)
