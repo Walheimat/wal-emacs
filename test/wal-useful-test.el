@@ -369,21 +369,23 @@
   :tags '(useful)
 
   (shut-up
-    (bydi ((:mock
-            display-buffer-override-next-command
-            :with
-            bydi-rf)
-           delete-other-windows
-           (:mock display-buffer-in-direction :var direction :initial 'direction)
-           (:always display-buffer-use-some-window))
+    (let ((callback nil))
+      (bydi ((:mock
+              display-buffer-override-next-command
+              :with
+              (lambda (cb &rest _)
+                (setq callback cb)))
+             delete-other-windows
+             (:mock display-buffer-in-direction :var direction :initial 'direction)
+             (:always display-buffer-use-some-window))
 
-      (let ((callback (wal-swipe-window-prefix)))
-
+        (wal-swipe-window-prefix)
         (should (equal (cons 'direction 'window)
                        (funcall callback (current-buffer) nil)))
 
-        (setq direction nil
-              callback (wal-swipe-window-prefix))
+        (setq direction nil)
+
+        (wal-swipe-window-prefix)
 
         (should (equal (cons t 'reuse)
                        (funcall callback (current-buffer) nil)))))))
