@@ -53,6 +53,21 @@
       (wal-avy-goto-line t)
       (should (equal (point) (point-min))))))
 
+(ert-deftest wal-avy-order-closest-line ()
+  :tags '(movement)
+
+  (let ((a))
+    (ert-with-test-buffer (:name "avy-closest")
+      (insert "hello\ntesting\nclosest\line")
+      (save-excursion
+        (goto-char 7)
+        (setq a (point)))
+
+      (goto-char (point-max))
+      (pop-to-buffer (current-buffer))
+
+      (should (eq 1 (wal-avy-order-closest-line (cons a (selected-window))))))))
+
 (ert-deftest avy-action-zip-to-char ()
   :tags '(movement)
 

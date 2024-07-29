@@ -87,6 +87,17 @@ jump to a word in the buffer or anywhere."
         (beginning-of-line-text))
     (avy-goto-end-of-line)))
 
+(defun wal-avy-order-closest-line (location)
+  "Get how close LOCATION is to the current point.
+
+This compares the line numbers of the two points."
+  (let* ((pos (car location))
+         (win (cdr location)))
+
+    (with-selected-window win
+      (abs (- (line-number-at-pos pos)
+              (line-number-at-pos))))))
+
 (defun avy-action-zip-to-char (pt)
   "Zip (just mark) from current point up to PT."
   (set-mark (point))
@@ -121,7 +132,7 @@ beginning."
   (avy-keys '(?j ?k ?l ?\; ?h ?f ?d ?s ?a ?g))
   (avy-orders-alist '((avy-goto-word-0 . avy-order-closest)
                       (avy-goto-char . avy-order-closest)
-                      (avy-goto-line . avy-order-closest)))
+                      (avy-goto-line . wal-avy-order-closest-line)))
 
   :wal-bind
   (("l" . wal-avy-goto-line)
