@@ -513,7 +513,6 @@ USER-KEY and LEADER can be used to prefix the key."
     (adjunct
       "b" 'wal-kill-some-file-buffers
       "d" 'wal-doppelganger
-      "w" 'wal-l
       "f" 'wal-fundamental-mode
       "1" 'wal-force-delete-other-windows)
 
@@ -530,6 +529,11 @@ USER-KEY and LEADER can be used to prefix the key."
   (global-set-key (kbd "C-c o") #'wal-supernova)
   (global-set-key (kbd "C-M-i") #'completion-at-point)
   (global-set-key (kbd "C-M-s") #'wal-isearch-other-window)
+
+  (unless (wal-modern-emacs-p 30)
+    ;; Replaced by `toggle-window-dedicated' in Emacs 30.
+    (define-key window-prefix-map (kbd "d") #'wal-l)
+    (define-key window-prefix-map (kbd "q") #'quit-window))
 
   ;; Alternate binding for C-c x @ h.
   (define-key function-key-map wal-hyper-mock #'event-apply-hyper-modifier)
