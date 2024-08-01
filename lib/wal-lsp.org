@@ -31,6 +31,14 @@ Language servers are awesome. Thanks, Microsoft.
 (declare-function dap--completing-read "ext:dap-mode.el")
 (declare-function dap--json-encode "ext:dap-mode.el")
 (declare-function dap-register-debug-template "ext:dap-mode.el")
+(declare-function dap-disconnect "ext:dap-mode.el")
+(declare-function dap-ui-repl "ext:dap-mode.el")
+(declare-function dap-breakpoint-toggle "ext:dap-mode.el")
+(declare-function dap-eval-thing-at-point "ext:dap-mode.el")
+(declare-function dap-continue "ext:dap-mode.el")
+(declare-function dap-step-out "ext:dap-mode.el")
+(declare-function dap-step-in "ext:dap-mode.el")
+(declare-function dap-next "ext:dap-mode.el")
 (declare-function lsp-deferred "ext:lsp-mode.el")
 (declare-function harpoon-slow-lsp-p "ext:harpoon.el")
 (declare-function wal-append "wal-useful.el")
@@ -206,6 +214,8 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
   (when wal-dap-before
     (set-window-configuration wal-dap-before))
 
+  (wal-debug-mode -1)
+
   (setq wal-dap-before nil
         wal-debugging nil))
 
@@ -213,6 +223,8 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
   "Save window configuration and delete other windows."
   (setq wal-dap-before (current-window-configuration)
         wal-debugging t)
+
+  (wal-debug-mode +1)
 
   (delete-other-windows))
 
@@ -231,6 +243,28 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
 
   (corfu-mode))
 
+(defvar wal-debug-mode-map
+  (let ((map (make-sparse-keymap)))
+
+    ;; Navigation.
+    (define-key map (kbd "<f5>") #'dap-next)
+    (define-key map (kbd "<f6>") #'dap-step-in)
+    (define-key map (kbd "<f7>") #'dap-step-out)
+    (define-key map (kbd "<f8>") #'dap-continue)
+
+    ;; Breakpoints
+    (define-key map (kbd "<f9>") #'dap-eval-thing-at-point)
+    (define-key map (kbd "<f10>") #'dap-breakpoint-toggle)
+    (define-key map (kbd "<f11>") #'dap-ui-repl)
+
+    (define-key map (kbd (wal-prefix-user-key "]")) #'dap-disconnect)
+
+    map))
+
+(define-minor-mode wal-debug-mode
+  "Minor mode to bind some convenience key bindings."
+  :global t)
+
 (use-package dap-mode
   :hook ((dap-session-created . wal-dap-session-created)
          (dap-ui-repl-mode . wal-dap-adapt-company-backend))
@@ -238,24 +272,13 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
 
   :init
   (defvar-keymap wal-dap-command-map
-    "b" 'dap-debug
-    "r" 'dap-ui-repl
-
     "a" 'dap-ui-expressions-add
-    "." 'dap-eval-thing-at-point
-
-    "t" 'dap-breakpoint-toggle
+    "e" 'dap-eval
+    "b" 'dap-breakpoint-toggle
     "!" 'dap-breakpoint-delete-all
     "?" 'dap-breakpoint-condition
-    "l" 'dap-ui-breakpoints-list
+    "l" 'dap-ui-breakpoints-list)
 
-    ;; Repeated.
-    "n" 'dap-next
-    "c" 'dap-continue
-    "i" 'dap-step-in
-    "o" 'dap-step-out
-    "e" 'dap-eval
-    "d" 'dap-disconnect)
   (that-key "dap" :user-key "M-]")
 
   :config
@@ -277,18 +300,6 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
    'dap-ui-repl-company-prefix :override
    #'wal-instead-grab-directly)
 
-  (defvar-keymap dap-repeat-map
-    :doc "Keymap to repeat `dap-mode' commands."
-    :repeat (:enter (dap-next dap-continue dap-step-in dap-step-out)
-             :exit (dap-disconnect dap-eval))
-    "]" 'dap-next
-    "n" 'dap-next
-    "c" 'dap-continue
-    "i" 'dap-step-in
-    "o" 'dap-step-out
-    "e" 'dap-eval
-    "d" 'dap-disconnect)
-
   :custom
   (dap-auto-show-output nil)
   (dap-auto-configure-features '(locals expressions))
@@ -302,7 +313,7 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the
   (treemacs-text-scale -1)
 
   :wal-bind
-  (("]" . dap-next))
+  (("]" . dap-debug))
 
   :wal-bind-keymap
   (("M-]" . wal-dap-command-map))
