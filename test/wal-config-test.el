@@ -299,21 +299,6 @@
 
     (bydi-was-called-with consult-org-heading (list nil '("/tmp/test.org" "/tmp/test-2.org")))))
 
-(ert-deftest wal-config-org-tags-view ()
-  :tags '(config user-facing)
-
-  (bydi (org-tags-view
-         wal-config-lib-files)
-
-    (wal-config-org-tags-view)
-
-    (bydi-was-called wal-config-lib-files)
-    (bydi-was-called org-tags-view)
-
-    (wal-config-org-tags-view t)
-
-    (bydi-was-called-last-with org-tags-view (list nil wal-config--package-tag))))
-
 (ert-deftest wal-customize-group ()
   :tags '(config)
 

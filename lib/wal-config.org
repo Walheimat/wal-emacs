@@ -201,6 +201,7 @@ Example for advising =:around=.
 (defvar vertico-preselect)
 (defvar wal-default-path)
 (defvar wal-emacs-config-build-path)
+(defvar org-agenda-custom-commands)
 
 (defgroup wal-config nil
   "Customize configuring the packages."
@@ -492,30 +493,10 @@ This returns the tag and its annotation as propertized strings."
 
   (customize-group 'wal t))
 
-(defvar wal-config--package-tag "package")
-
-(defun wal-config-org-tags-view (&optional all-packages)
-  "Show tags for the config.
-
-Calls out to `org-tags-view' while setting `org-agenda-fiels' to
-the library files of the config.
-
-Sets up `vertico' to select the prompt to allow for usage of &
-and | selectors.
-
-If ALL-PACKAGES is t, call `org-tags-view' with a pre-constructed
-matcher."
-  (interactive "P")
-
-  (defvar wal-lib-path)
-  (defvar org-agenda-files)
-
-  (let ((org-agenda-files (wal-config-lib-files))
-        (vertico-preselect 'prompt))
-
-    (if all-packages
-        (org-tags-view nil wal-config--package-tag)
-      (call-interactively 'org-tags-view))))
+(with-eval-after-load 'org-agenda
+  (add-to-list
+   'org-agenda-custom-commands
+   `("p" "Wal config packages" tags "+package" ((org-agenda-files ',(wal-config-lib-files))))))
 #+END_SRC
 
 ** Command Map
@@ -528,7 +509,7 @@ matcher."
     [["Find"
       ("f" "project" wal-config-switch-project)
       ("h" "heading" wal-config-consult-org-heading)
-      (":" "tags" wal-config-org-tags-view)]
+      ]
      ["Act"
       ("t" "tangle" wal-tangle)
       ("x" "install expansion pack" junk-install)
