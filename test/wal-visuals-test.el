@@ -188,20 +188,6 @@
 
         (should (string= "Failed to load theme: Unable to find theme file for ‘non-existence’\n" messages))))))
 
-(ert-deftest wal-visual-fill-column-mode--toggles ()
-  :tags '(visuals)
-
-  (bydi (visual-fill-column-mode)
-    (with-temp-buffer
-      (wal-visual-fill-column-mode)
-      (bydi-was-called-with visual-fill-column-mode '(-1))
-
-      (setq visual-line-mode t)
-      (bydi-clear-mocks)
-
-      (wal-visual-fill-column-mode)
-      (bydi-was-called-with visual-fill-column-mode '(+1)))))
-
 (ert-deftest wal-with-recent-files-excluded ()
   :tags '(visuals)
 
