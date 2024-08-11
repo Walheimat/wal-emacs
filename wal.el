@@ -2,7 +2,7 @@
 
 ;; Author: Krister Schuchardt <krister.schuchardt@gmail.com>
 ;; Homepage: https://github.com/Walheimat/wal-emacs
-;; Version: 2.4.0
+;; Version: 2.4.1
 ;; Package-Requires: ((emacs "29.1"))
 
 ;;; Commentary:

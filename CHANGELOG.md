@@ -1,5 +1,43 @@
 # Changelog
 
+## [2.4.1](https://github.com/Walheimat/wal-emacs/compare/v2.4.0...v2.4.1) (2024-08-11)
+
+
+### Configurations
+
+* **ace-window:** add delete-other-windows to dispatch ([3a4cb00](https://github.com/Walheimat/wal-emacs/commit/3a4cb00ef0a593085f424745cf1c5f6f2089ae25))
+* **ace-window:** dispatch when more than 1 window ([d7a382c](https://github.com/Walheimat/wal-emacs/commit/d7a382c5fa0812401c906d4b90a0f6cf9f9c6453))
+* **adjunct:** mimic window-prefix-map of Emacs 30 ([0580b8c](https://github.com/Walheimat/wal-emacs/commit/0580b8c88bc7fb9e7691ecf194c6860acd63298e))
+* **adjunct:** move swipe-window-prefix to user prefixed M-o ([a1d06d5](https://github.com/Walheimat/wal-emacs/commit/a1d06d5e6d575c3455023c17f84e8e602c2a1f74))
+* **avy:** use at-full and closest for goto-line ([92db43c](https://github.com/Walheimat/wal-emacs/commit/92db43c9eff942c3df311f06144ac9b12ee5d41c))
+* **completionist:** re-bind to user-prefixed forward slash ([c6e857d](https://github.com/Walheimat/wal-emacs/commit/c6e857d4caff8c48a868ad1add66dc9a2a1285aa))
+* **corfu:** C-j inserts ([eaf7474](https://github.com/Walheimat/wal-emacs/commit/eaf74741063e0932d5f3233245140c92bc97a517))
+* **flymake:** fix indicator-type to fringes ([2b67ad4](https://github.com/Walheimat/wal-emacs/commit/2b67ad45196a0d5e617f774fcb32e1c02df53b99))
+* **hideshow:** enable in prog(-like) modes, re-bind keys ([cadd5dd](https://github.com/Walheimat/wal-emacs/commit/cadd5dd26eb9686c3440905af135a7db617ddec7))
+* **lsp-sonarlint:** update configuration ([b94faf4](https://github.com/Walheimat/wal-emacs/commit/b94faf440f19fd7c34097f0e77a2d0b07ff0e40a))
+* **partial-recall:** enable new hygiene behavior ([833a09c](https://github.com/Walheimat/wal-emacs/commit/833a09cf1ffa981d7ca4865f9494eab6591d6919))
+* **repeat:** set repeat-exit-key to q ([c542ea6](https://github.com/Walheimat/wal-emacs/commit/c542ea6638828fe0466366810c4f88c7b43d658a))
+* **surround:** remove broken general keymap binding ([2108335](https://github.com/Walheimat/wal-emacs/commit/2108335560036fde47913656dfd66f59c8b70228))
+* **various:** rebind user-prefixed k, i and o ([bda5708](https://github.com/Walheimat/wal-emacs/commit/bda5708914b57d2070bd5d4154702cfd8ff43b66))
+
+
+### Bug Fixes
+
+* **find-project-tasks-heading:** don't set override to nil ([2b3e53a](https://github.com/Walheimat/wal-emacs/commit/2b3e53aac1255861c7c0ce9a1296674d6c2e0ca4))
+
+
+### Improvements
+
+* **ace-window:** add partial-recall buffer switch to dispatch ([5f01fe0](https://github.com/Walheimat/wal-emacs/commit/5f01fe01495fede5beb7cceac779edc5f52034c4))
+* **ace-window:** use common macro ([3a7c312](https://github.com/Walheimat/wal-emacs/commit/3a7c3123101b187a5bf5570e6a8ec7e9a063a1bf))
+* **avy:** order goto-line using line number ([addad3e](https://github.com/Walheimat/wal-emacs/commit/addad3e3e060a7d4943c1a7638d8b2d2bdfe3cd9))
+* **config,org-agenda:** package tag search as custom command ([4c436e7](https://github.com/Walheimat/wal-emacs/commit/4c436e73b402aaf86319ae308121a21bae26f785))
+* **config:** re-order sections and code ([1eeeaa4](https://github.com/Walheimat/wal-emacs/commit/1eeeaa41ebced6f8fea7844b863a6ba31616d1df))
+* **consult:** hide buffers of agenda source ([1a81b42](https://github.com/Walheimat/wal-emacs/commit/1a81b425a1b0ab915208b8616cdbdfb9d2d53c42))
+* **dap-mode:** create custom global minor mode with bindings ([7b8a9b3](https://github.com/Walheimat/wal-emacs/commit/7b8a9b3f2ca178fbac78f183011e984fb769df43))
+* **prelude:** allow setting Emacs version used ([001d9c9](https://github.com/Walheimat/wal-emacs/commit/001d9c92547d824dbaf4e506883aa2d420ebed73))
+* **transpose-frame:** extend on explanation why it is useful ([f9ff479](https://github.com/Walheimat/wal-emacs/commit/f9ff479736bdfeb634c5c030e27cfe9d3a28b6ab))
+
 ## [2.4.0](https://github.com/Walheimat/wal-emacs/compare/v2.3.1...v2.4.0) (2024-06-23)
 
 
