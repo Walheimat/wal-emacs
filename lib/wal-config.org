@@ -220,11 +220,103 @@ Example for advising =:around=.
   :group 'wal-config)
 #+END_SRC
 
-* Lovable Things
+
+* Additional Code
+
+** Acting on the Configuration
+
+Bind commands to edit, update and customize the configuration. The
+more interesting commands are defined in the prelude.
+
+#+begin_src emacs-lisp
+(defun wal-config-switch-project ()
+  "Switch to the config project."
+  (interactive)
+
+  (project-switch-project wal-default-path))
+
+(defun wal-config-consult-org-heading ()
+  "Find a heading in any of library file."
+  (interactive)
+
+  (consult-org-heading nil (wal-config-lib-files)))
+
+(defun wal-customize-group ()
+  "Customize `wal' group."
+  (interactive)
+
+  (customize-group 'wal t))
+
+(with-eval-after-load 'transient
+  ;; Create `transient' for config package.
+  (transient-define-prefix whaler ()
+    "Facilitate the usage of or the working on Walheimat's config."
+    [["Find"
+      ("f" "project" wal-config-switch-project)
+      ("h" "heading" wal-config-consult-org-heading)
+      ]
+     ["Act"
+      ("t" "tangle" wal-tangle)
+      ("x" "install expansion pack" junk-install)
+      ("c" "customize group" wal-customize-group)
+      ("u" "update" wal-update)]
+     ["Help"
+      ("m" "show diff" wal-show-config-diff-range)
+      ("r" "show compilation result" wal-show-compilation-result)]])
+
+  (advice-add 'whaler :around 'wal-with-delayed-transient-popup))
+#+end_src
+
+** Access Information
+
+Minor mode for editing this config.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal-describe-config-version ()
+  "Describe the config's version.
+
+This returns the tag and its annotation as propertized strings."
+  (interactive)
+
+  (let* ((default-directory wal-default-path)
+         (version (propertize
+                   (string-trim
+                    (shell-command-to-string "git describe --abbrev=0"))
+                   'face 'bold))
+         (cat (propertize
+               (string-trim
+                (shell-command-to-string (format "git cat-file tag %s" version)))
+               'face 'italic))
+         (out (concat version ": " (car (last (string-lines cat))))))
+
+    (cond
+     (noninteractive out)
+     (t (message out)))))
+
+(defun wal-show-config-diff-range ()
+  "Call `magit-diff-range' with the latest tag."
+  (interactive)
+
+  (let ((version (shell-command-to-string "git describe --abbrev=0")))
+
+    (magit-diff-range (string-trim version) '("--stat"))))
+
+(defun wal-config-lib-files ()
+  "Get a list of all lib files."
+  (defvar wal-lib-path)
+
+  (nthcdr 2 (directory-files wal-lib-path t)))
+
+;; Adds a custom command to show all packages in the config.
+(with-eval-after-load 'org-agenda
+  (add-to-list
+   'org-agenda-custom-commands
+   `("p" "Wal config packages" tags "+package" ((org-agenda-files ',(wal-config-lib-files))))))
+#+END_SRC
 
 ** Whale Animation
 
-Animate a swimming whale in a =posframe=.
+Show a whale in a =posframe= when editing files in the config.
 
 #+BEGIN_SRC emacs-lisp
 (defvar wal-config-animation--fins (list "-" "'" "-" ","))
@@ -425,102 +517,6 @@ This only happens for project buffers as long as NO-RECORD is not t."
   (advice-add 'switch-to-buffer :after #'wal-config-animation--maybe-display)
   (add-hook 'find-file-hook #'wal-config-animation--on-find-file))
 #+END_SRC
-
-* Editing the Config
-
-Minor mode for editing this config.
-
-** Version Info
-
-#+BEGIN_SRC emacs-lisp
-(defvar wal-config-mode-map (make-sparse-keymap)
-  "Map for `wal-config-mode'.")
-
-(defun wal-describe-config-version ()
-  "Describe the config's version.
-
-This returns the tag and its annotation as propertized strings."
-  (interactive)
-
-  (let* ((default-directory wal-default-path)
-         (version (propertize
-                   (string-trim
-                    (shell-command-to-string "git describe --abbrev=0"))
-                   'face 'bold))
-         (cat (propertize
-               (string-trim
-                (shell-command-to-string (format "git cat-file tag %s" version)))
-               'face 'italic))
-         (out (concat version ": " (car (last (string-lines cat))))))
-
-    (cond
-     (noninteractive out)
-     (t (message out)))))
-
-(defun wal-show-config-diff-range ()
-  "Call `magit-diff-range' with the latest tag."
-  (interactive)
-
-  (let ((version (shell-command-to-string "git describe --abbrev=0")))
-
-    (magit-diff-range (string-trim version) '("--stat"))))
-#+END_SRC
-
-** The Config Itself
-
-#+BEGIN_SRC emacs-lisp
-(defun wal-config-switch-project ()
-  "Switch to the config project."
-  (interactive)
-
-  (project-switch-project wal-default-path))
-
-(defun wal-config-lib-files ()
-  "Get a list of all lib files."
-  (defvar wal-lib-path)
-
-  (nthcdr 2 (directory-files wal-lib-path t)))
-
-(defun wal-config-consult-org-heading ()
-  "Find a heading in any of library file."
-  (interactive)
-
-  (consult-org-heading nil (wal-config-lib-files)))
-
-(defun wal-customize-group ()
-  "Customize `wal' group."
-  (interactive)
-
-  (customize-group 'wal t))
-
-(with-eval-after-load 'org-agenda
-  (add-to-list
-   'org-agenda-custom-commands
-   `("p" "Wal config packages" tags "+package" ((org-agenda-files ',(wal-config-lib-files))))))
-#+END_SRC
-
-** Command Map
-
-#+begin_src emacs-lisp
-(with-eval-after-load 'transient
-  ;; Create `transient' for config package.
-  (transient-define-prefix whaler ()
-    "Facilitate the usage of or the working on Walheimat's config."
-    [["Find"
-      ("f" "project" wal-config-switch-project)
-      ("h" "heading" wal-config-consult-org-heading)
-      ]
-     ["Act"
-      ("t" "tangle" wal-tangle)
-      ("x" "install expansion pack" junk-install)
-      ("c" "customize group" wal-customize-group)
-      ("u" "update" wal-update)]
-     ["Help"
-      ("m" "show diff" wal-show-config-diff-range)
-      ("r" "show compilation result" wal-show-compilation-result)]])
-
-  (advice-add 'whaler :around 'wal-with-delayed-transient-popup))
-#+end_src
 
 * Footer
 :PROPERTIES:
