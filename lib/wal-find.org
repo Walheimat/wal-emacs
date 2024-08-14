@@ -59,13 +59,14 @@ Optional ARG will be interpreted as a numeric prefix and passed
 to the flag. If a flag is already present, it is removed."
   (interactive "P")
 
-  (when-let* ((flags (rg-search-flags rg-cur-search))
-              (matcher (lambda (it) (string-prefix-p "--context" it)))
-              (flag (or (seq-find matcher flags)
-                        (and arg
-                             (format "--context=%d" (prefix-numeric-value arg))))))
+  (let ((flags (rg-search-flags rg-cur-search)))
 
-    (rg-rerun-toggle-flag flag)))
+    (when-let* ((matcher (lambda (it) (string-prefix-p "--context" it)))
+                (flag (or (seq-find matcher flags)
+                          (and arg
+                               (format "--context=%d" (prefix-numeric-value arg))))))
+
+      (rg-rerun-toggle-flag flag))))
 
 (defun wal-rg--run (&optional pattern literal)
   "Query for PATTERN for FILES in project.
