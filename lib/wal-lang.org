@@ -78,7 +78,7 @@ Bitches brew.
 
 #+BEGIN_SRC emacs-lisp
 (use-package elixir-mode
-  :config
+  :init
   (harpoon elixir-mode
     :lsp t
     :messages ("Mixin' potions" "A hex on you")
@@ -87,6 +87,7 @@ Bitches brew.
                 "::" "<>" "#{" "\\\\"
                 "===" "!==" ".."))
 
+  :config
   (define-abbrev-table 'elixir-mode-abbrev-table '(("p" "|>"))))
 #+END_SRC
 
@@ -101,7 +102,7 @@ I want to be ready for =jai=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package cc-mode
-  :config
+  :init
   (harpoon c++-mode
     :lsp t
     :bind t
@@ -112,6 +113,7 @@ I want to be ready for =jai=.
     :lsp t
     :ligatures ("->"))
 
+  :config
   ;; Eliminate conflicts with `delight'.
   (advice-add 'c-update-modeline :override #'ignore)
 
@@ -146,13 +148,14 @@ Follow [[https://rust-analyzer.github.io/manual.html#rust-analyzer-language-serv
 (use-package rust-mode
   :if (executable-find "cargo")
 
-  :config
+  :init
   (harpoon rust-mode
     :lsp (:format t)
     :bind t
     :ligatures ("///" "->" "=>" "::" ".." "#[")
     :messages ("Consider the lobster"))
 
+  :config
   ;; Load default `dap-mode' templates.
   (with-eval-after-load 'dap-mode
     (require 'dap-cpptools))
@@ -212,8 +215,7 @@ TOML."
              (project-directory (locate-dominating-file current marker)))))
 
 (use-package python
-
-  :config
+  :init
   (harpoon python-mode
     :bind t
     :lsp
@@ -223,6 +225,7 @@ TOML."
 
     (setq-local comment-inline-offset 2))
 
+  :config
   ;; Load default `dap-mode' templates.
   (with-eval-after-load 'dap-mode
     (require 'dap-python))
@@ -429,13 +432,14 @@ Deal with the parens.
 
 #+BEGIN_SRC emacs-lisp
 (use-package elisp-mode
-  :config
+  :init
   (harpoon emacs-lisp-mode
     :bind t
     :checker flymake-mode
     :messages ("So it's just a bunch of lists?" "List your lambdas")
     :functions (prettify-symbols-mode))
 
+  :config
   (wal-transient-define-major emacs-lisp-mode ()
     "Access `elisp' commands."
     [["Utility"
@@ -456,7 +460,7 @@ Deal with the parens.
 
 #+BEGIN_SRC emacs-lisp
 (use-package lisp-mode
-  :config
+  :init
   (harpoon common-lisp-mode
     :bind t)
 
@@ -464,6 +468,7 @@ Deal with the parens.
     :flat t
     :ligatures (";;" ";;;"))
 
+  :config
   (add-to-list 'auto-mode-alist '("Cask\\'" . lisp-data-mode))
 
   (with-eval-after-load 'slime
@@ -483,13 +488,14 @@ Get some closure.
 
 #+begin_src emacs-lisp
 (use-package clojure-mode
-  :config
+  :init
   (harpoon clojure-mode
     :lsp t
     :bind t
     :ligatures (";;" "->" "->>")
     :messages ("Cider brew"))
 
+  :config
   (with-eval-after-load 'cider
     (wal-transient-define-major clojure-mode ()
       "Access `clojure-mode' commands."
@@ -562,7 +568,7 @@ Can we have =deno= instead of =node=?
 (use-package js
   :mode ("^\.\\(.*\\)rc$" . js-json-mode)
 
-  :config
+  :init
   (harpoon js-mode
     :messages ("NaN !== NaN" "Null falsy values or undefined")
     :bind t
@@ -579,6 +585,7 @@ Can we have =deno= instead of =node=?
     :lsp t
     :functions (add-node-modules-path prettier-mode))
 
+  :config
   (when (wal-modern-emacs-p 29)
     (bind-key "M-." nil js-ts-mode-map))
 
@@ -613,7 +620,7 @@ Please use TypeScript.
 (use-package typescript-mode
   :mode "\\.ts\\(x\\)?\\'"
 
-  :config
+  :init
   (harpoon typescript-mode
     :messages ("This is any, that is any, everything is any!")
     :tabs t
@@ -695,7 +702,7 @@ Setup for LSP.
 
 #+BEGIN_SRC emacs-lisp
 (use-package go-mode
-  :config
+  :init
   (harpoon go-mode
     :lsp t
     :messages ("What does Sonic say?" "Put a golang under your tongue")))
@@ -722,7 +729,7 @@ Bash your head in!
 
 #+BEGIN_SRC emacs-lisp
 (use-package sh-script
-  :config
+  :init
   (harpoon sh-mode
     :lsp t
     :messages ("Sh..sh..h.." "Bash your head in")
@@ -798,12 +805,13 @@ Sometimes things that don't do things need to look nice.
     (error "Can't change view outside of markdown modes"))))
 
 (use-package markdown-mode
-  :config
+  :init
   (harpoon markdown-mode
     :checker disabled
     :functions (auto-fill-mode)
     :bind t)
 
+  :config
   (wal-transient-define-major markdown-mode ()
     "Access `markdown-mode' commands."
     [["View"
@@ -837,7 +845,7 @@ Yes, you need to install *Android Studio* for some reason.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dart-mode
-  :config
+  :init
   (harpoon dart-mode
     :lsp t
     :bind t
@@ -939,7 +947,7 @@ For some reason, this is also defined in =cc-mode=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package cc-mode
-  :config
+  :init
   (harpoon java-mode
     :lsp (:ignore-dirs (".gradle"))
     :bind t
@@ -1073,7 +1081,7 @@ Editing groovy scripts.
 
 #+begin_src emacs-lisp
 (use-package groovy-mode
-  :config
+  :init
   (harpoon groovy-mode
     :lsp t
     :messages ("Bust-a-Groove")))
@@ -1105,7 +1113,7 @@ The elephant in the room.
 
 #+BEGIN_SRC emacs-lisp
 (use-package php-mode
-  :config
+  :init
   (harpoon php-mode
     :lsp t
     :messages ("Stampy, no!")
@@ -1134,7 +1142,7 @@ Does anyone actually like web development?
 
 #+BEGIN_SRC emacs-lisp
 (use-package mhtml-mode
-  :config
+  :init
   (harpoon mhtml-mode
     :lsp t
     :messages ("Hodge-podge mark-up language")
@@ -1148,7 +1156,7 @@ Does anyone actually like web development?
 
 #+begin_src emacs-lisp
 (use-package nxml-mode
-  :config
+  :init
   (harpoon nxml-mode
     :lsp t
     :messages ("Extreme mark-up language")
@@ -1186,7 +1194,7 @@ Sometimes things that do as well.
 (use-package yaml-mode
   :mode "\\.\\(ya?ml\\|tpl\\)\\'" ; Helm templates.
 
-  :config
+  :init
   (harpoon yaml-mode
     :messages ("JSON?! ... Ah, thank God it's you, YAML!")
     :lsp t
@@ -1219,7 +1227,7 @@ We want quicker suggestions when in CSS modes.
 (use-package css-mode
   :mode ("\\.rasi" . css-mode)
 
-  :config
+  :init
   (harpoon css-mode
     :lsp t
     :messages ("Centering? It's simple. Here's 15 ways to do it.")
@@ -1237,7 +1245,7 @@ We want quicker suggestions when in CSS modes.
          "\\.blade.php\\'"
          "\\.component.html\\'")
 
-  :config
+  :init
   (harpoon web-mode
     :lsp t
     :messages ("This is the Internet"))
@@ -1263,12 +1271,13 @@ The engine you've been waiting for.
 
 #+BEGIN_SRC emacs-lisp
 (use-package gdscript-mode
-  :config
+  :init
   (harpoon gdscript-mode
     :messages ("I wish you were Estra-gone")
     :tabs t
     :lsp t)
 
+  :config
   (advice-add
    'eglot-completion-at-point
    :around #'cape-wrap-buster))
