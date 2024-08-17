@@ -189,6 +189,16 @@
 
   (should (equal (wal-consult-compilation-buffer--query) '(visibility buffer-name wal-compilation-buffer-p))))
 
+(ert-deftest wal-consult-line-symbol-at-point ()
+  :tags '(complete)
+
+  (bydi (consult-line
+         (:mock thing-at-point :return 'thing))
+
+    (wal-consult-line-symbol-at-point)
+
+    (bydi-was-called-with consult-line 'thing)))
+
 (ert-deftest wal-consult-place ()
   :tags '(complete)
 
