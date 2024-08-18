@@ -71,8 +71,6 @@ Enhances =tab-bar-mode= to create short-term-memory workspaces.
 
 Significant buffers opened in a tab belong to that tab. Management like (permanently) adding and removing such buffers is based on their usage over time (continually re-visiting, keeping it visible during a split, keeping it focused for a while).
 
-The package provides a =consult= buffer source that is inserted and used by default when switching buffers. The various buffer-related commands are annotated with =marginalia= and the command map is bound in [[file:wal-key-bindings.org::*Ambassador][ambassador]].
-
 See the [[https://github.com/Walheimat/partial-recall][repository]] for more information.
 
 #+begin_src emacs-lisp
@@ -88,9 +86,26 @@ See the [[https://github.com/Walheimat/partial-recall][repository]] for more inf
 
   (that-key "partial-recall" :user-key "M-i")
 
-  (with-eval-after-load 'consult
-    (require 'partial-recall-x)
+  :wal-bind
+  (("i" . partial-recall-switch-to-buffer))
 
+  :wal-bind-keymap
+  ("M-i" . partial-recall-command-map))
+#+end_src
+
+*** partial-recall-x
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Add =partial-recall= buffers as a =consult-buffer= source.
+
+#+begin_src emacs-lisp
+(use-package partial-recall-x
+  :after partial-recall
+
+  :config
+  (with-eval-after-load 'consult
     (wal-insert
      'consult-buffer-sources
      'consult--source-buffer
@@ -98,13 +113,7 @@ See the [[https://github.com/Walheimat/partial-recall][repository]] for more inf
      :quiet t))
 
   :custom
-  (partial-recall-x-consult-narrow-key ?i)
-
-  :wal-bind
-  (("i" . partial-recall-switch-to-buffer))
-
-  :wal-bind-keymap
-  ("M-i" . partial-recall-command-map))
+  (partial-recall-x-consult-narrow-key ?i))
 #+end_src
 
 ** whale-line                                                      :git:high:
