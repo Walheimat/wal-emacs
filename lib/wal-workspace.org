@@ -118,6 +118,15 @@ If INCLUDE-ALL is t, don't ignore otherwise ignored fils."
                                             (inhibit-same-window . t))))
 
     (call-interactively 'project-find-file)))
+
+(defun wal-project-find-dir-locals ()
+  "Find the dir-locals file."
+  (interactive)
+
+  (when-let ((project (project-current))
+             (root (project-root project)))
+
+    (find-file (expand-file-name dir-locals-file root))))
 #+END_SRC
 
 *** Additional switch commands
@@ -226,7 +235,8 @@ Root markers (how projects are found) and =vc= ignores are extended.
 
   :bind
   (:map project-prefix-map
-   ("m" . project-remember-projects-under))
+   ("m" . project-remember-projects-under)
+   ("l" . wal-project-find-dir-locals))
 
   :wal-bind
   (("y" . project-find-file)

@@ -150,6 +150,21 @@
 
     (bydi-was-called project-find-file)))
 
+(ert-deftest wal-project-find-dir-locals ()
+  :tags '(workspace user-facing)
+
+  (defvar dir-locals-file)
+
+  (let ((dir-locals-file ".dir-locals.el"))
+
+    (bydi ((:mock project-current :return 'project)
+           (:mock project-root :return "/tmp/test")
+           find-file)
+
+      (wal-project-find-dir-locals)
+
+      (bydi-was-called-with find-file "/tmp/test/.dir-locals.el"))))
+
 (ert-deftest wal-project-switch-to-tasks ()
   :tags '(workspace user-facing)
 
