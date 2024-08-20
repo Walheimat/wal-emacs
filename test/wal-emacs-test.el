@@ -8,19 +8,19 @@
 
 (require 'wal-emacs nil t)
 
-(ert-deftest wal-flyspell-commit-messages ()
+(ert-deftest wal-account-for-commit-buffer ()
   :tags '(emacs)
 
-  (bydi (flyspell-mode)
+  (bydi (electric-pair-local-mode)
 
     (with-temp-buffer
-      (wal-text-mode-flyspell-commit-messages)
-      (bydi-was-not-called flyspell-mode)
+      (wal-account-for-commit-buffer)
+      (bydi-was-not-called electric-pair-local-mode)
 
       (rename-buffer "COMMIT_EDITMSG")
-      (wal-text-mode-flyspell-commit-messages)
+      (wal-account-for-commit-buffer)
 
-      (bydi-was-called flyspell-mode))))
+      (bydi-was-called electric-pair-local-mode))))
 
 (ert-deftest wal-with-page-offset ()
   :tags '(emacs)
