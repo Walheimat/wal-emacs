@@ -64,6 +64,26 @@
 
     (should-not register-alist)))
 
+(ert-deftest wal-point-to-register ()
+  :tags '(emacs)
+
+  (ert-with-test-buffer (:name "point-to-register")
+
+    (bydi ((:mock current-window-configuration :return 'window)
+           (:mock point-marker :return 'point)
+           (:mock register-read-with-preview :return "t")
+           register-swap-out
+           set-register)
+
+      (call-interactively 'wal-point-to-register)
+
+      (bydi-was-called-with set-register '("t" point) t)
+
+      (let ((current-prefix-arg '(4)))
+        (call-interactively 'wal-point-to-register)
+
+        (bydi-was-called-with set-register '("t" (window point)))))))
+
 (ert-deftest wal-lighthouse ()
   :tags '(emacs user-facing)
 

@@ -352,6 +352,26 @@ No offender.
 
   (setq register-alist nil))
 
+(defun wal-point-to-register (register &optional arg)
+  "Store current location of point in REGISTER.
+
+With prefix argument ARG, store current window configuration.
+
+This is otherwise a copy of `point-to-register'."
+  (interactive (list (register-read-with-preview
+                      (if current-prefix-arg
+                          "Window configuration to register: "
+                        "Point to register: "))
+                     current-prefix-arg))
+
+  (add-hook 'kill-buffer-hook 'register-swap-out nil t)
+
+  (set-register
+   register
+   (if arg
+       (list (current-window-configuration) (point-marker))
+	 (point-marker))))
+
 (use-package register
   :config
   ;; Make sure that jumping to a marker attempts to select a window
@@ -371,7 +391,7 @@ No offender.
 
   :wal-bind
   (("y" . jump-to-register)
-   ("M-y" . point-to-register)))
+   ("M-y" . wal-point-to-register)))
 #+END_SRC
 
 ** repeat                                                      :builtin:high:
