@@ -701,6 +701,8 @@
         (with-current-buffer file
           (should (string-equal "This one's itchy" (buffer-string)))))
 
+      (setq wal-scratch-persist--rehydrated nil)
+
       (with-current-buffer (get-buffer-create "*scratch*")
         (erase-buffer)
 

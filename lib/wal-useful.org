@@ -608,6 +608,7 @@ If SESSION is non-nil, switch to (or create) it."
     (pop-to-buffer buf '(display-buffer-same-window))))
 
 (defvar wal-scratch-persist--marker "wal-emacs")
+(defvar wal-scratch-persist--rehydrated nil)
 
 (defun wal-scratch-persist--buffer-string (buffer)
   "Get the content from BUFFER.
@@ -632,6 +633,11 @@ order of buffers is not persisted."
     (unless (file-exists-p wal-scratch-persist-file)
       (make-empty-file wal-scratch-persist-file t))
 
+    ;; It's possible that we never rehydated. In order to not lose
+    ;; anything, we rehydrate here instead.
+    (unless wal-scratch-persist--rehydrated
+      (wal-rehydrate-scratch))
+
     (with-temp-buffer
       (thread-last
         (buffer-list)
@@ -650,7 +656,11 @@ This overrides the scratch buffer with the content stored in
 `wal-scratch-persist' if non-nil."
   (interactive)
 
-  (when (file-exists-p wal-scratch-persist-file)
+  (when (and (not wal-scratch-persist--rehydrated)
+             (file-exists-p wal-scratch-persist-file))
+
+    (setq wal-scratch-persist--rehydrated t)
+
     (with-current-buffer (get-buffer "*scratch*")
       (goto-char (point-max))
       (insert-file-contents wal-scratch-persist-file)
