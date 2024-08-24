@@ -1,5 +1,68 @@
 # Changelog
 
+## [2.4.2](https://github.com/Walheimat/wal-emacs/compare/v2.4.1...v2.4.2) (2024-08-24)
+
+### Configurations
+
+* **ace-window:** always dispatch ([2ed6bae](https://github.com/Walheimat/wal-emacs/commit/2ed6baeed11a1b3e0a0c5ff14326e414f23aaac3))
+* **ace-windows:** don't always dispatch but repeat ([fe82e01](https://github.com/Walheimat/wal-emacs/commit/fe82e01962d6cfcfc103cc9955df0475decc0454))
+* **gumshoe:** mothball package ([b3639d0](https://github.com/Walheimat/wal-emacs/commit/b3639d047defcf4f09bc57b0e33c5befb50fc47b))
+* **markdown-mode:** don't enable auto-fill-mode ([bdceef5](https://github.com/Walheimat/wal-emacs/commit/bdceef5e9b5221f28da6a207f2585911b03981f7))
+* **org-mode:** don't enable auto-fill-mode ([e4b80d5](https://github.com/Walheimat/wal-emacs/commit/e4b80d57fd904c3ddbdb7ba0d82afc2748c1843e))
+* **partial-recall:** set narrow key to i ([3ed762a](https://github.com/Walheimat/wal-emacs/commit/3ed762a1ec6b8084615421d75aa28edd1695b231))
+* **settings:** no automatic rehydration ([d2a63ce](https://github.com/Walheimat/wal-emacs/commit/d2a63ce03240c21ee3c2c4c2a6103e1a0256ec7a))
+* **text-mode:** enable visual-line-mode ([e3006e2](https://github.com/Walheimat/wal-emacs/commit/e3006e2b44ec322d23539b1fb71fe95af25b67cf))
+* **transpose-frame:** flop frame, command map with meta ([3a82b23](https://github.com/Walheimat/wal-emacs/commit/3a82b23946aba058ec7ef074e83d917cf3fda1ae))
+* **zig-mode:** add and configure ([2744e97](https://github.com/Walheimat/wal-emacs/commit/2744e9764212abe7dcbd4b66255bed39252067e8))
+
+### Bug Fixes
+
+* **lang,harpoon:** call macro in init step ([5a67afb](https://github.com/Walheimat/wal-emacs/commit/5a67afbd7e1fa2384bc96ff54dd8ffb95c256db4))
+* **rg:** also toggle context flag when there are no flags ([f9ca33f](https://github.com/Walheimat/wal-emacs/commit/f9ca33f741bcb5837f14d5d7d847c008684a5b04))
+
+### Improvements
+
+* **consult,vertico:** use flat display for consult-buffer ([3d41218](https://github.com/Walheimat/wal-emacs/commit/3d41218b1fbd10d60f83393ff88af954a4e1ca1d))
+* **consult:** bind normal and symbol-at-point variant of -line ([2e37e03](https://github.com/Walheimat/wal-emacs/commit/2e37e03db1cbbd826b31c2d06468cbc7bbac3538))
+* **consult:** require explicit preview for consult-buffer ([0b131b0](https://github.com/Walheimat/wal-emacs/commit/0b131b0955c91b4d4f2f537f7423db14867fd7dd))
+* **lsp:** jump to lens, find references as part of dwim ([7436641](https://github.com/Walheimat/wal-emacs/commit/7436641329985091f3a0f4ec5841a0a97ec52b8e))
+* **project:** add command to find dir-locals ([040c11d](https://github.com/Walheimat/wal-emacs/commit/040c11dfe11df346321552fa1257a15d05c3d5a6))
+* **register:** make storing window configuration the alternative ([f281045](https://github.com/Walheimat/wal-emacs/commit/f2810455da4cdeacea2c5e207828050c2092e7bb))
+* **text-mode:** enable electric-pair-mode instead ([d310c74](https://github.com/Walheimat/wal-emacs/commit/d310c74619e7fb8c77a5eaa566b2633d05087d62))
+* **useful:** find symbol's bounds ([3bff4b3](https://github.com/Walheimat/wal-emacs/commit/3bff4b3e966e325cf5ed093e3b8870ad77f7656d))
+* **various:** add package tags describing usage volume ([aa58a6b](https://github.com/Walheimat/wal-emacs/commit/aa58a6b1c117e944f903ccfb9a56051d8da86502))
+* **vertico:** use flat when using ace-window ([5dcc908](https://github.com/Walheimat/wal-emacs/commit/5dcc9083dc8e1bf5a3091eb8c03b6e7d03c9a684))
+* **visual-fill-column:** don't enable after visual-line-mode ([e7db43c](https://github.com/Walheimat/wal-emacs/commit/e7db43c8e230012b4a0644352b53523e922a8807))
+* **yaml-mode:** set standard-indent from custom variable ([b1427b2](https://github.com/Walheimat/wal-emacs/commit/b1427b20559c8fdb0d700e9c91a0ef792ef14853))
+
+### Other
+
+* **ace-window,tab-bar:** fold into o ([d56266e](https://github.com/Walheimat/wal-emacs/commit/d56266e83464dc15d2a1f68844519310120db266))
+* **ace-window:** move to o, bind other-window-* in C-c o ([f197f39](https://github.com/Walheimat/wal-emacs/commit/f197f39ce7e9984ab0a63d574410ff7abd51d946))
+* **ace-window:** use u for consult in dispatch ([5fce007](https://github.com/Walheimat/wal-emacs/commit/5fce007aaa8a3450583b1041c368bd9a9b6d0585))
+* **cape:** cape-dabbrev to user-prefixed M-/ ([ae8d96b](https://github.com/Walheimat/wal-emacs/commit/ae8d96b7c43f153d1126deb2157f58148afdbe6c))
+* **compile:** fold {re-}compile into C-c r ([7f769e1](https://github.com/Walheimat/wal-emacs/commit/7f769e1a2161f975dd32a6258cdddecac6e21380))
+* **complete:** move goto-mark back to transient ([545216d](https://github.com/Walheimat/wal-emacs/commit/545216d5ddd12cfe25bd51f2f0d65dce478bafa4))
+* **consult,dap,lsp,roam:** move to better rows ([2cfe2a1](https://github.com/Walheimat/wal-emacs/commit/2cfe2a15f7554d0ad85ff56a256b4ffb7b1b7571))
+* **consult,partial-recall:** ,=>u and u=>i ([b2bcf74](https://github.com/Walheimat/wal-emacs/commit/b2bcf74049bfbfb7f86d4f512e8af11385750e9a))
+* **consult:** bind ' to consult-mark ([572b708](https://github.com/Walheimat/wal-emacs/commit/572b708e4730bb513aeabbfff3ed3f9ce4377362))
+* **consult:** bind mark commands to ' ([8efa32b](https://github.com/Walheimat/wal-emacs/commit/8efa32b59bce1c948614cf24addec3c91426ce73))
+* **consult:** switch to user-prefixed k for previews ([144046b](https://github.com/Walheimat/wal-emacs/commit/144046b0a3adf3628ca5f2ac8a7c7c526242a619))
+* **eww,outline,bookmark:** shuffle bindings ([8061000](https://github.com/Walheimat/wal-emacs/commit/8061000d7ec12e2f36c5340500df1e63148245ec))
+* **marginalia,embark:** make user-prefixed ; the cycle key ([023ecc2](https://github.com/Walheimat/wal-emacs/commit/023ecc2b67aadbbd095d8424f55aa1e5dd5c6080))
+* **org-agenda:** fold into C-c a ([8b83e4b](https://github.com/Walheimat/wal-emacs/commit/8b83e4b31be8015078c7355b072299d11ba6f912))
+* **org-capture:** fold into C-c c ([677bb44](https://github.com/Walheimat/wal-emacs/commit/677bb44b3c36daf47e8de100ef5c451afbb40891))
+* **org-roam:** make node-find the default binding ([845087d](https://github.com/Walheimat/wal-emacs/commit/845087da1060c4c9a20dce32ab1b8c338092f68b))
+* **org-roam:** move to p ([b9d84f9](https://github.com/Walheimat/wal-emacs/commit/b9d84f976636c7a847c06320db35d3102bb7a57e))
+* **org,dap,lsp:** revert to previous bindings ([46b802d](https://github.com/Walheimat/wal-emacs/commit/46b802d89284b2c72e7d4d29258c8556f03eec2e))
+* **project,register:** switch,find,jump => ',h,y ([61ad645](https://github.com/Walheimat/wal-emacs/commit/61ad645eb07af01643a2660a5cae6b4911c52c4e))
+* **project,ship-mate:** use prefixes to p and , ([0c4ff89](https://github.com/Walheimat/wal-emacs/commit/0c4ff898effd29e1bc283713695b20f2f615e42c))
+* **project:** move from h=>y ([182468a](https://github.com/Walheimat/wal-emacs/commit/182468acc3aedc05a07fa1688e56ffa87b33bc42))
+* **project:** swap project-{find-file,switch} ([3dc7b72](https://github.com/Walheimat/wal-emacs/commit/3dc7b725f3f6f2614f9499f7eb15119617cbeae8))
+* **register,consult:** swap jump and search ([7ec5890](https://github.com/Walheimat/wal-emacs/commit/7ec5890b36181a813ba0c0568003a4b2976af534))
+* **useful:** move wal-supernova to adjunct ([279081d](https://github.com/Walheimat/wal-emacs/commit/279081dbf4c78ad71add8c6d5468b52645bf1b62))
+* **various:** move all C-c bindings to the left hand ([4299679](https://github.com/Walheimat/wal-emacs/commit/4299679de285231564657cc6f6f1ada5fcb1614e))
+
 ## [2.4.1](https://github.com/Walheimat/wal-emacs/compare/v2.4.0...v2.4.1) (2024-08-11)
 
 
