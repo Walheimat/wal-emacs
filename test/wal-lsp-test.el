@@ -33,17 +33,20 @@
 
   (let ((type nil))
     (bydi ((:mock point :var mock-point :initial 0)
-           (:othertimes use-region-p)
-           (:mock bounds-of-thing-at-point :return '(3 . 0))
+           (:mock wal-symbol-bounds :return '(3 . 5))
            (:mock thing-at-point :with (lambda (x &rest _) (eq x type)))
-
            (:othertimes looking-at)
+           (:othertimes use-region-p)
            lsp-organize-imports
            lsp-format-region
            lsp-rename
-           lsp-execute-code-action)
+           lsp-execute-code-action
+           lsp-find-references
+           lsp-avy-lens)
 
       (wal-lsp-dwim)
+
+      (message "state %s" bydi--history)
 
       (bydi-was-called lsp-execute-code-action t)
 
@@ -57,6 +60,12 @@
 
       (wal-lsp-dwim)
 
+      (bydi-was-called lsp-find-references)
+
+      (setq mock-point 4)
+
+      (wal-lsp-dwim)
+
       (bydi-was-called lsp-rename)
 
       (bydi-toggle-volatile 'use-region-p)
@@ -65,11 +74,20 @@
 
       (bydi-was-called lsp-format-region)
 
+      (bydi-toggle-volatile 'use-region-p)
+
       (setq mock-point 1)
 
       (wal-lsp-dwim)
 
-      (bydi-was-called lsp-organize-imports))))
+      (bydi-was-called lsp-organize-imports)
+
+      (setq mock-point 10)
+      (bydi-toggle-volatile 'looking-at)
+
+      (wal-lsp-dwim)
+
+      (bydi-was-called lsp-avy-lens))))
 
 (ert-deftest wal-dap-terminated ()
   :tags '(lsp)

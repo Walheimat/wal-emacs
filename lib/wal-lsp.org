@@ -45,6 +45,7 @@ Language servers are awesome. Thanks, Microsoft.
 (declare-function wal-append "wal-useful.el")
 (declare-function wal-dap "wal-lsp.el")
 (declare-function wal-key-combo-for-leader "wal-key-bindings.el")
+(declare-function wal-symbol-bounds "wal-useful.el")
 (declare-function wal-tempel-setup-capf "wal-edit.el")
 
 (defvar dap-debug-template-configurations)
@@ -99,20 +100,36 @@ The action depends on the current position, active region and the
   (interactive)
 
   (cond
+   ;; At the beginning of the document organize imports.
    ((eq 1 (point))
     (call-interactively 'lsp-organize-imports))
 
+   ;; Format highlighted region.
    ((use-region-p)
     (call-interactively 'lsp-format-region))
 
-   ((and (thing-at-point 'symbol t)
-         (not (thing-at-point 'number t))
-         (let ((bounds (bounds-of-thing-at-point 'symbol)))
+   ;; Jump to lens from the end of lines.
+   ((save-excursion
+	  (end-of-line)
+      (looking-at "[ \t]*$"))
 
-           (eq (car-safe bounds) (point))))
+    (call-interactively 'lsp-avy-lens))
+
+   ;; Find references at the beginning symbols.
+   ((and-let* ((bounds (wal-symbol-bounds)))
+
+      (eq (car-safe bounds) (point)))
+
+    (call-interactively 'lsp-find-references))
+
+   ;; Rename at the end of symbols.
+   ((and-let* ((bounds (wal-symbol-bounds)))
+
+      (eq (cdr-safe bounds) (1+ (point))))
 
     (call-interactively 'lsp-rename))
 
+   ;; Otherwise execute a code action.
    (t
     (call-interactively 'lsp-execute-code-action))))
 
