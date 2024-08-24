@@ -304,6 +304,7 @@ Provide global option narrowing using the =vertico= family of products. The setu
   (vertico-multiform-commands '((tab-switch flat)
                                 (partial-recall-switch-to-buffer flat)
                                 (consult-buffer flat)
+                                (wal-consult-display-buffer flat)
                                 (ace-window flat)
                                 (wal-project-find-in-here unobtrusive)))
 
@@ -610,6 +611,25 @@ Use either `flymake' or `flycheck'."
    '(consult--source-open-projects consult--source-projects)
    :prompt "Select project: "
    :require-match t))
+
+(defun wal-consult-display-buffer ()
+  "Select a buffer and display (not switch to) it.
+
+This uses `display-buffer-pop-up-window'."
+  (interactive)
+
+  (defvar consult--buffer-display)
+  (defvar consult-buffer-sources)
+
+  (let ((display-buffer-alist nil)
+        (consult--buffer-display (lambda (cand &rest _)
+                                   (display-buffer cand 'display-buffer-pop-up-window))))
+
+    (consult--multi consult-buffer-sources
+                    :require-match t
+                    :prompt "Display: "
+                    :history 'consult--buffer-history
+                    :sort nil)))
 #+END_SRC
 
 *** Buffer sources
@@ -718,6 +738,7 @@ Use either `flymake' or `flycheck'."
    consult--source-bookmark
    consult-recent-file
    consult-buffer
+   wal-consult-display-buffer
    :preview-key (wal-prefix-user-key "k")
 
    wal-consult-clock
@@ -789,7 +810,8 @@ Use either `flymake' or `flycheck'."
    ("M-;" . wal-consult-line-symbol-at-point)
 
    ("u" . consult-buffer)
-   ("M-u" . consult)))
+   ("M-u" . consult)
+   ("\\" . wal-consult-display-buffer)))
 #+END_SRC
 
 * Footer

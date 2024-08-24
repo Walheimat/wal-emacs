@@ -181,6 +181,19 @@
 
   (should (equal (wal-consult-agenda-buffer--query) '(visibility buffer-name wal-agenda-buffer-p))))
 
+(ert-deftest wal-consult-display-buffer ()
+  :tags '(complete)
+
+  (defvar consult--buffer-display nil)
+  (defvar consult-buffer-sources nil)
+
+  (bydi ((:mock consult--multi :with (lambda (&rest _) (funcall consult--buffer-display 'cand)))
+         display-buffer)
+
+    (wal-consult-display-buffer)
+
+    (bydi-was-called-with display-buffer '(... display-buffer-pop-up-window))))
+
 (ert-deftest wal-consult-compilation-buffer--query ()
   :tags '(emacs)
 
