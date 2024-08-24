@@ -409,12 +409,14 @@
   (bydi ((:mock other-window-for-scrolling :return (selected-window))
          (:othertimes one-window-p)
          isearch-forward
-         recenter-top-bottom)
+         recenter-top-bottom
+         previous-window)
 
     (wal-isearch-other-window t)
 
     (bydi-was-called-with isearch-forward t)
     (bydi-was-called recenter-top-bottom)
+    (bydi-was-called previous-window)
 
     (bydi-toggle-volatile 'one-window-p)
 
