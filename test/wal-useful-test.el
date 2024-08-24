@@ -880,6 +880,23 @@
         (setq wal-test-setq-b "this")
         (setq wal-test-setq-d "unknown")))))
 
+(ert-deftest wal-symbol-bounds ()
+  :tags '(useful)
+
+  (let ((type 'symbol))
+
+    (bydi ((:mock point :var mock-point :initial 0)
+           (:mock bounds-of-thing-at-point :return '(3 . 0))
+           (:mock thing-at-point :with (lambda (x &rest _) (eq x type)))
+           (:othertimes looking-at))
+
+      (should (equal '(3 . 0)
+                     (wal-symbol-bounds)))
+
+      (setq type 'number)
+
+      (should-not (wal-symbol-bounds)))))
+
 (ert-deftest wal-define-init-setup ()
   :tags '(useful)
 
