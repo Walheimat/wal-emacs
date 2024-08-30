@@ -46,8 +46,6 @@
 
       (wal-lsp-dwim)
 
-      (message "state %s" bydi--history)
-
       (bydi-was-called lsp-execute-code-action t)
 
       (setq type 'symbol)
