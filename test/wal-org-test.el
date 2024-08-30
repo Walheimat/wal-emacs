@@ -285,13 +285,13 @@
 
       (wal-org-agenda-take-note)
 
-      (bydi-was-called consult-org-agenda t)
+      (bydi-was-called consult-org-agenda :clear t)
       (bydi-was-called org-add-note)
       (bydi-was-not-called org-clock-goto)
 
       (funcall-interactively 'wal-org-agenda-take-note t)
 
-      (bydi-was-called consult-org-agenda t)
+      (bydi-was-called consult-org-agenda :clear t)
       (bydi-was-called org-add-note)
       (bydi-was-not-called org-clock-goto)
 
@@ -301,7 +301,7 @@
 
       (bydi-was-not-called consult-org-agenda)
       (bydi-was-called org-add-note)
-      (bydi-was-called org-clock-goto t)
+      (bydi-was-called org-clock-goto :clear t)
 
       (funcall-interactively 'wal-org-agenda-take-note t)
 

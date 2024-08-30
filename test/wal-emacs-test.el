@@ -77,7 +77,7 @@
 
       (call-interactively 'wal-point-to-register)
 
-      (bydi-was-called-with set-register '("t" point) t)
+      (bydi-was-called-with set-register '("t" point) :clear t)
 
       (let ((current-prefix-arg '(4)))
         (call-interactively 'wal-point-to-register)

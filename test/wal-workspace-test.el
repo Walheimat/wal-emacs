@@ -32,7 +32,7 @@
 
       (wal-project-switch-to-parent-project)
 
-      (bydi-was-called-with project-switch-project (list "/tmp/parent") t))))
+      (bydi-was-called-with project-switch-project (list "/tmp/parent") :clear t))))
 
 (ert-deftest switch-to-parent-project--relative-path ()
   :tags '(workspace user-facing)
@@ -46,7 +46,7 @@
 
       (wal-project-switch-to-parent-project)
 
-      (bydi-was-called-with project-switch-project (list "/tmp/parent") t))))
+      (bydi-was-called-with project-switch-project (list "/tmp/parent") :clear t))))
 
 (ert-deftest wal-project-consult-buffer ()
   :tags '(workspace user-facing)

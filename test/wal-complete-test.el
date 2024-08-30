@@ -226,7 +226,7 @@
 
       (setq type 'text-mode)
       (wal-consult-place)
-      (bydi-was-called consult-outline t)
+      (bydi-was-called consult-outline :clear t)
 
       (setq type 'prog-mode)
       (wal-consult-place)

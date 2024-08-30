@@ -88,7 +88,7 @@
 
       (call-interactively 'wal-set-fixed-font-height)
 
-      (bydi-was-called-with wal-font-update (list :height 101 '(default fixed-pitch) nil) t)
+      (bydi-was-called-with wal-font-update (list :height 101 '(default fixed-pitch) nil) :clear t)
       (bydi-was-set-to wal-fixed-font-height 101)
 
       (call-interactively 'wal-set-variable-font-height)

@@ -25,7 +25,7 @@
 
     (wal-rg-rerun-toggle-context 5)
 
-    (bydi-was-called-with rg-rerun-toggle-flag "--context=4" t)
+    (bydi-was-called-with rg-rerun-toggle-flag "--context=4" :clear t)
 
     (setq flags (list "-i"))
 

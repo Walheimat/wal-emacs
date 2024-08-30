@@ -338,8 +338,8 @@
 
         (should (get-buffer expected))
 
-        (bydi-was-called read-only-mode t)
-        (bydi-was-called clone-indirect-buffer t)
+        (bydi-was-called read-only-mode :clear t)
+        (bydi-was-called clone-indirect-buffer :clear t)
 
         (wal-doppelganger)
 
@@ -463,7 +463,7 @@
          wal-other-window-mru)
 
     (wal-other-window)
-    (bydi-was-called wal-switch-to-other-buffer t)
+    (bydi-was-called wal-switch-to-other-buffer :clear t)
     (bydi-toggle-volatile 'one-window-p)
 
     (wal-other-window)
@@ -483,7 +483,7 @@
 
     (wal-other-window-for-scrolling)
 
-    (bydi-was-called next-window t)
+    (bydi-was-called next-window :clear t)
 
     (bydi-toggle-volatile 'next-window)
 

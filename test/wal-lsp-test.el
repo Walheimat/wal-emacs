@@ -46,7 +46,7 @@
 
       (wal-lsp-dwim)
 
-      (bydi-was-called lsp-execute-code-action t)
+      (bydi-was-called lsp-execute-code-action :clear t)
 
       (setq type 'symbol)
 
