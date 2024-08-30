@@ -304,6 +304,25 @@
 
     (should (eq (length (window-list-1)) 1))))
 
+(ert-deftest supernova--single-burst ()
+  :tags '(useful user-facing)
+
+  (let ((a (get-buffer-create "stays"))
+        (b (get-buffer-create "*goes*"))
+        (c (get-buffer-create " also goes"))
+        (d (get-buffer-create "*as well*")))
+
+    (display-buffer-full-frame a nil)
+    (display-buffer-pop-up-window b nil)
+    (display-buffer d '(display-buffer-pop-up-window display-buffer-reuse-window))
+    (display-buffer-below-selected c nil)
+
+    (should (eq (length (window-list-1)) 3))
+
+    (wal-supernova t)
+
+    (should (eq (length (window-list-1)) 2))))
+
 (ert-deftest wal-doppelganger ()
   :tags '(useful user-facing)
 

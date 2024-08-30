@@ -318,14 +318,24 @@ Un-dedicates if already dedicated."
 
     (seq-find #'wal-supernova--matches buffers)))
 
-(defun wal-supernova ()
-  "Quit windows with star buffers."
-  (interactive)
+(defun wal-supernova (&optional single-burst)
+  "Quit windows with star buffers.
 
-  (while (wal-supernova--target-exists-p)
-    (dolist (window (window-list-1))
-      (when (wal-supernova--matches (window-buffer window))
-        (quit-window nil window)))))
+If optional SINGLE-BURST  is t, this only quits star buffers currently
+visible. Otherwise star buffers are closed until none are left."
+  (interactive "P")
+
+  (let ((loop 0))
+
+    (while (or (and (not single-burst)
+                    (wal-supernova--target-exists-p))
+               (> 1 loop))
+
+      (dolist (window (window-list-1))
+        (when (wal-supernova--matches (window-buffer window))
+          (quit-window nil window)))
+
+      (setq loop (1+ loop)))))
 
 (defun wal-doppelganger (&optional close)
   "Create a doppelganger of the current buffer.
