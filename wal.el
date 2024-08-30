@@ -419,7 +419,7 @@ Ensure means that packages will be installed after loading."
        (setq load nil)))
 
     (when load
-      (wal-load nil)
+      (wal-load)
       (wal-bootstrap--handle-error exit))))
 
 (defun wal-bootstrap--handle-error (exit-on-error)
