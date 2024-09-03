@@ -366,27 +366,27 @@ Allows for nicer grouping in the agenda view. The groups relate to custom groups
    '(;; Scheduled items.
      (:name "Schedule" :time-grid t :order 2)
      (:name "Leftovers"
-      :and (:todo ("IN PROGRESS" "WAITING")
-            :scheduled past
-            :not (:tag "@repeated" :tag "@education"))
+      :and (:scheduled past
+            :todo t
+            :not (:habit t))
       :order 3)
 
      ;; Items with deadlines.
-     (:name "Prepare" :and (:scheduled nil :deadline future) :order 4)
+     (:name "Upcoming" :and (:scheduled nil :deadline future) :order 4)
      (:name "Catch up" :deadline past :order 6)
-     (:name "Don't forget" :and (:scheduled nil :deadline t) :order 0)
+     (:name "Don't forget" :and (:scheduled nil :deadline today) :order 0)
 
      ;; Habits.
      (:order-multi (5 (:name "Education" :and (:habit t :tag "@education"))
-                      (:name "Contribution"
-                             :and (:habit t :tag "@contribution"))
+                      (:name "Contribution" :and (:habit t :tag "@contribution"))
                       (:name "Well-being" :and (:habit t :tag "@wellbeing"))
                       (:name "Chores" :and (:habit t :tag "@chore"))
                       (:name "Other habits" :habit t)))
 
      ;; Show blocked and those that are associated with today, discard the rest.
      (:name "Blocked" :todo "BLOCKED" :order 7)
-     (:name "Today" :date t :order 1)
+     (:name "Today" :date today :order 1)
+
      (:discard (:anything t))))
   (org-super-agenda-final-group-separator "\n")
 
