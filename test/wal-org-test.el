@@ -328,6 +328,19 @@
 
       (bydi-was-called-with tab-bar-rename-tab "agenda"))))
 
+(ert-deftest wal-org-super-agenda--with-groups ()
+  :tags '(org)
+
+  (defvar org-super-agenda-groups nil)
+
+  (bydi ((:spy bydi-rf)
+         (:watch org-super-agenda-groups))
+
+    (wal-org-super-agenda--with-groups #'bydi-rf 'test)
+
+    (bydi-was-set org-super-agenda-groups)
+    (bydi-was-called bydi-rf)))
+
 (ert-deftest wal-org--first-record-buffer ()
   :tags '(org)
 

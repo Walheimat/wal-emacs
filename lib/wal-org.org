@@ -363,6 +363,38 @@ Habits are a special kind of todo to keep track of what you keep doing/forgettin
 Allows for nicer grouping in the agenda view. The groups relate to custom groups and todo keywords.
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal-org-super-agenda-groups
+  '(;; Scheduled items.
+    (:name "Schedule" :time-grid t :order 2)
+    (:name "Leftovers"
+           :and (:scheduled past
+                            :todo t
+                            :not (:habit t))
+           :order 3)
+
+    ;; Items with deadlines.
+    (:name "Upcoming" :and (:scheduled nil :deadline future) :order 4)
+    (:name "Catch up" :deadline past :order 6)
+    (:name "Don't forget" :and (:scheduled nil :deadline today) :order 0)
+
+    ;; Habits.
+    (:order-multi (5 (:name "Education" :and (:habit t :tag "@education"))
+                     (:name "Contribution" :and (:habit t :tag "@contribution"))
+                     (:name "Well-being" :and (:habit t :tag "@wellbeing"))
+                     (:name "Chores" :and (:habit t :tag "@chore"))
+                     (:name "Other habits" :habit t)))
+
+    ;; Show blocked and those that are associated with today, discard the rest.
+    (:name "Blocked" :todo "BLOCKED" :order 7)
+    (:name "Today" :date today :order 1)
+    (:discard (:anything t))))
+
+(defun wal-org-super-agenda--with-groups (fun &rest args)
+  "Call FUN with ARGS."
+  (let ((org-super-agenda-groups wal-org-super-agenda-groups))
+
+    (apply fun args)))
+
 (use-package org-super-agenda
   :demand t
   :after org-agenda
@@ -370,33 +402,11 @@ Allows for nicer grouping in the agenda view. The groups relate to custom groups
   :config
   (org-super-agenda-mode)
 
+  (advice-add
+   'org-agenda-list :around
+   #'wal-org-super-agenda--with-groups)
+
   :custom
-  (org-super-agenda-groups
-   '(;; Scheduled items.
-     (:name "Schedule" :time-grid t :order 2)
-     (:name "Leftovers"
-      :and (:scheduled past
-            :todo t
-            :not (:habit t))
-      :order 3)
-
-     ;; Items with deadlines.
-     (:name "Upcoming" :and (:scheduled nil :deadline future) :order 4)
-     (:name "Catch up" :deadline past :order 6)
-     (:name "Don't forget" :and (:scheduled nil :deadline today) :order 0)
-
-     ;; Habits.
-     (:order-multi (5 (:name "Education" :and (:habit t :tag "@education"))
-                      (:name "Contribution" :and (:habit t :tag "@contribution"))
-                      (:name "Well-being" :and (:habit t :tag "@wellbeing"))
-                      (:name "Chores" :and (:habit t :tag "@chore"))
-                      (:name "Other habits" :habit t)))
-
-     ;; Show blocked and those that are associated with today, discard the rest.
-     (:name "Blocked" :todo "BLOCKED" :order 7)
-     (:name "Today" :date today :order 1)
-     (:name "Other" :todo nil)
-     (:discard (:anything t))))
   (org-super-agenda-final-group-separator "\n")
 
   :functions (org-super-agenda-mode))
