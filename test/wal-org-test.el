@@ -309,6 +309,25 @@
       (bydi-was-called org-add-note)
       (bydi-was-not-called org-clock-goto))))
 
+(ert-deftest wal-org-agenda--then-rename-tab ()
+  :tags '(org)
+
+  (defvar org-agenda-window-setup nil)
+
+  (let ((org-agenda-window-setup 'something-else))
+
+    (bydi (tab-bar-rename-tab)
+
+      (wal-org-agenda--then-rename-tab)
+
+      (bydi-was-not-called tab-bar-rename-tab)
+
+      (setq org-agenda-window-setup 'other-tab)
+
+      (wal-org-agenda--then-rename-tab)
+
+      (bydi-was-called-with tab-bar-rename-tab "agenda"))))
+
 (ert-deftest wal-org--first-record-buffer ()
   :tags '(org)
 

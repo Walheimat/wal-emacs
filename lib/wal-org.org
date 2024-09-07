@@ -299,6 +299,11 @@ the item first."
         (consult-org-agenda))
       (org-add-note))))
 
+(defun wal-org-agenda--then-rename-tab (&rest _)
+  "Rename the tab if we set up the window using tabs."
+  (when (eq org-agenda-window-setup 'other-tab)
+    (tab-bar-rename-tab "agenda")))
+
 (use-package org-agenda
   :config
   (with-eval-after-load 'partial-recall
@@ -307,6 +312,10 @@ the item first."
     (add-to-list 'partial-recall-meaningful-traits 'parallel-mirror-wal-agenda-buffer-p))
 
   (wal-replace-in-alist 'org-agenda-prefix-format '((agenda . "  %?-12t%?-12c%? s%?b")))
+
+  (advice-add
+   'org-agenda-prepare-window :after
+   #'wal-org-agenda--then-rename-tab)
 
   :custom
   (org-agenda-hide-tags-regexp "^@")
