@@ -1,5 +1,39 @@
 # Changelog
 
+## [2.4.3](https://github.com/Walheimat/wal-emacs/compare/v2.4.2...v2.4.3) (2024-09-07)
+
+### Configurations
+
+* **casual-suite:** add and configure ([944c839](https://github.com/Walheimat/wal-emacs/commit/944c839aa427aa437901cd0b2e383d47d82c5c5a))
+* **markdown-mode:** use LSP and enable prettier-mode ([3c68e80](https://github.com/Walheimat/wal-emacs/commit/3c68e8029d2f4d5b595ac156f37d6eccbf9ae0e0))
+* **org-agenda:** use other-tab for setup ([b4de01d](https://github.com/Walheimat/wal-emacs/commit/b4de01d04013cc85979c3ee99f98aaad11f793b1))
+* **org-super-agenda:** display items scheduled but with no time ([99a4689](https://github.com/Walheimat/wal-emacs/commit/99a46895bc2feb6a8d63fa283d7d2c170c986ce6))
+* **org-super-agenda:** do collect non-todos ([0ffbc52](https://github.com/Walheimat/wal-emacs/commit/0ffbc526428f769032c4a95660f7ab3f2f2774b2))
+* **org-super-agenda:** re-ogranize groups ([94f2f4d](https://github.com/Walheimat/wal-emacs/commit/94f2f4ddf8c5c13a07adde6673517e4d2317096e))
+* **org-super-agenda:** today for dates, any todo for leftovers ([0f1b9d4](https://github.com/Walheimat/wal-emacs/commit/0f1b9d41be14ed5832d72aa79aa9243791a0c09e))
+
+### Bug Fixes
+
+* **bindings:** don't override wal-hyper-mock ([361c6f2](https://github.com/Walheimat/wal-emacs/commit/361c6f28953befe197ab3ed5ffd17a38f615ef63))
+* **dap-mode:** only require subpackages after loading ([2d27935](https://github.com/Walheimat/wal-emacs/commit/2d279354cd20777f69783f08d5a5fb290a689f4e))
+* **wal-lsp-dwim:** don't move to end of line for looking-at ([dd17e52](https://github.com/Walheimat/wal-emacs/commit/dd17e52a6f9eabf719316693cfe657f2174f7594))
+
+### Improvements
+
+* **consult:** add command to just display buffer ([63517f1](https://github.com/Walheimat/wal-emacs/commit/63517f103de911ff07b467802b7c6d7fc6919f85))
+* **org-agenda:** rename created tab to "agenda" ([d26a5fe](https://github.com/Walheimat/wal-emacs/commit/d26a5fe21099171b8c1cef6bc9aebdb33e6fc80b))
+* **org-clock:** allow setting any keyword on clock-out ([9726308](https://github.com/Walheimat/wal-emacs/commit/9726308fc41b0da7a000ba3feac76accd6bbb433))
+* **org-super-agenda:** only use groups for org-agenda-list ([cf48e63](https://github.com/Walheimat/wal-emacs/commit/cf48e631ccb82498a6af409883d8b901c0a1ab76))
+* **useful:** go to previous window after isearch-other-window ([dee6a8f](https://github.com/Walheimat/wal-emacs/commit/dee6a8f23b1bd41d52e92450b73395dfe2fd92c2))
+* **wal-supernova:** only close first layer with argument ([9edda64](https://github.com/Walheimat/wal-emacs/commit/9edda64d08a9586159c89ccb9300a024d6954876))
+
+### Other
+
+* **bookmark:** bind bookmark-set also to b ([0893275](https://github.com/Walheimat/wal-emacs/commit/08932756c480ac0f06ef087b6f10ba346bac4f65))
+* **ibuffer:** remap buffer-list to ibuffer-other-window ([2dc3838](https://github.com/Walheimat/wal-emacs/commit/2dc3838a62883dfd631412932f7b146fddf1a127))
+* **org-agenda:** bind return to org-agenda-goto ([11432e3](https://github.com/Walheimat/wal-emacs/commit/11432e365d76a2b4ffe962cdfba83c3d405d077e))
+* **org-roam:** make capturing the default binding again ([1aeaf2f](https://github.com/Walheimat/wal-emacs/commit/1aeaf2f65ff65d084e5c1eff688274a1a99e840f))
+
 ## [2.4.2](https://github.com/Walheimat/wal-emacs/compare/v2.4.1...v2.4.2) (2024-08-24)
 
 ### Configurations
