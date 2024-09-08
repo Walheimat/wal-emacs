@@ -14,44 +14,6 @@
   (should-not (wal-in-python-project-p "noexist"))
   (should (wal-in-python-project-p "test")))
 
-(ert-deftest wal-lsp-pyright-install-stubs ()
-  :tags '(lang user-facing)
-
-  (bydi ((:ignore wal-in-python-project-p))
-
-    (should-error (wal-lsp-pyright-install-stubs) :type 'user-error))
-
-  (let ((directory-exists t))
-
-    (bydi ((:always wal-in-python-project-p)
-           (:always project-current)
-           make-directory
-           (:mock project-root :return default-directory)
-           display-buffer-in-side-window
-           async-shell-command
-           (:mock file-directory-p :return directory-exists))
-
-      (should-error (wal-lsp-pyright-install-stubs) :type 'user-error)
-
-      (setq directory-exists nil)
-
-      (wal-lsp-pyright-install-stubs)
-      (bydi-was-called make-directory)
-
-      (let ((buf (get-buffer "*Pyright Stubs*"))
-            (cmd (concat
-                  "git clone https://github.com/microsoft/python-type-stubs "
-                  (expand-file-name "typings" default-directory))))
-
-        (bydi-was-called-with display-buffer-in-side-window (list buf '((side . bottom))))
-
-        (bydi-was-called-with async-shell-command (list cmd buf))))))
-
-(ert-deftest wal-otherwise-return-argument ()
-  :tags '(lang)
-
-  (should (equal 'testing (wal-otherwise-return-argument 'testing))))
-
 (ert-deftest wal-instead-delay-prettier-errors ()
   :tags '(lang)
 
