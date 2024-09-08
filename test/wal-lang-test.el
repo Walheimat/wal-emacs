@@ -87,54 +87,6 @@
 
       (should-error (wal-markdown-view)))))
 
-(ert-deftest wal-find-dart-flutter-sdk-dir ()
-  :tags '(lang)
-
-  (bydi ((:mock executable-find :with (lambda (x) (format "/usr/bin/%s" x)))
-         (:mock shell-command-to-string :return "/tmp/sdk\n"))
-
-    (should (string-equal "/tmp/sdk" (wal-find-dart-flutter-sdk-dir)))))
-
-(ert-deftest wal-find-dart-sdk-dir ()
-  :tags '(lang)
-
-  (bydi ((:mock executable-find :with (lambda (x) (format "/usr/bin/%s" x)))
-         (:mock shell-command-to-string :return "/tmp/sdk\n"))
-
-    (should (string-equal "/tmp/sdk/bin/cache/dart-sdk" (wal-find-dart-sdk-dir)))))
-
-(ert-deftest wal-lsp-dart-set-process-query-on-exit-flag ()
-  :tags '(lang)
-
-  (with-temp-buffer
-    (setq lsp-dart-flutter-daemon-buffer-name (buffer-name))
-    (start-process "sleep-test" (current-buffer) "sleep" "10")
-
-    (should (process-query-on-exit-flag (get-buffer-process lsp-dart-flutter-daemon-buffer-name)))
-
-    (wal-lsp-dart-set-process-query-on-exit-flag)
-
-    (should-not (process-query-on-exit-flag (get-buffer-process lsp-dart-flutter-daemon-buffer-name)))))
-
-(ert-deftest wal-lsp-dart-service-uri ()
-  :tags '(lang user-facing)
-
-  (bydi ((:mock lsp-workspace-get-metadata :with (lambda (_) (error "Testing"))))
-
-    (shut-up
-      (ert-with-message-capture messages
-        (wal-lsp-dart-service-uri)
-        (should (string-equal "Couldn’t get service URI: Testing\n" messages)))))
-
-  (bydi ((:mock lsp-workspace-get-metadata :return "test-uri"))
-
-    (shut-up
-      (ert-with-message-capture messages
-        (wal-lsp-dart-service-uri)
-        (should (string-equal "Service URI (test-uri) copied to kill ring\n" messages))))
-
-    (should (string-equal (car kill-ring) "test-uri"))))
-
 (ert-deftest wal-with-bash-shell ()
   :tags '(lang)
 
