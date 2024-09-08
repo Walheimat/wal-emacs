@@ -174,68 +174,6 @@ If KILL-BUFFER is t, kill the file's buffer."
   (flycheck-keymap-prefix (wal-key-combo-for-leader 'ambassador :key "f" :translate t)))
 #+END_SRC
 
-** flyspell                                                    :builtin:negligible:
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-My spelling is bad. Uses American English for =flyspell=.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal-flyspell ()
-  "(De-)Activate the appropriate `flyspell' mode."
-  (interactive)
-
-  (if flyspell-mode
-      (flyspell-mode -1)
-    (if (derived-mode-p 'prog-mode)
-        (flyspell-prog-mode)
-      (flyspell-mode))))
-
-(defun wal-flyspell-goto-previous-error ()
-  "Go to previous `flyspell-error'."
-  (interactive)
-
-  (flyspell-goto-next-error t))
-
-(use-package flyspell
-  :init
-  (defvar wal-flyspell-map (make-sparse-keymap))
-
-  (that-key "flyspell" :key "C-c s")
-
-  :config
-  ;; Override the map to not remove zealous bindings.
-  (setq flyspell-mode-map wal-flyspell-map)
-  (setf (cdr (assoc 'flyspell-mode minor-mode-map-alist)) (make-sparse-keymap))
-
-  (defvar-keymap flyspell-repeat-map
-    :doc "Keymap to repeat various `flyspell' commands."
-    :repeat t
-    "n" 'flyspell-goto-next-error
-    "p" 'wal-flyspell-goto-previous-error
-    "i" 'ispell-word
-    "a" 'flyspell-auto-correct-word)
-
-  :custom
-  (flyspell-issue-message-flag nil)
-  (flyspell-mode-line-string " fsp")
-  (flyspell-default-dictionary "american")
-
-  :bind
-  (:map wal-flyspell-map
-   ("s" . wal-flyspell)
-   ("b" . flyspell-buffer)
-   ("r" . flyspell-region)
-   ("n" . flyspell-goto-next-error)
-   ("i" . ispell-word)
-   ("a" . flyspell-auto-correct-word)
-   ("c" . ispell-change-dictionary))
-
-  :bind-keymap
-  (("C-c s" . flyspell-mode-map)))
-#+END_SRC
-
 ** jinx                                                          :gnu:medium:
 :PROPERTIES:
 :UNNUMBERED: t

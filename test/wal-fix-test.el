@@ -117,43 +117,6 @@
 
       (should-error (wal-flycheck-file flycheck) :type 'user-error))))
 
-(ert-deftest wal-flyspell ()
-  :tags '(fix user-facing)
-
-  (defvar flyspell-mode nil)
-  (bydi (flyspell-mode flyspell-prog-mode)
-
-    (let ((flyspell-mode t))
-
-      (wal-flyspell)
-
-      (bydi-was-called-with flyspell-mode -1))
-
-    (let ((flyspell-mode nil))
-
-      (wal-flyspell)
-
-      (bydi-was-called flyspell-mode)
-      (bydi-was-not-called flyspell-prog-mode)
-      (bydi-clear-mocks)
-
-      (with-temp-buffer
-
-        (bydi ((:always derived-mode-p))
-          (wal-flyspell)
-
-          (bydi-was-not-called flyspell-mode)
-          (bydi-was-called flyspell-prog-mode))))))
-
-(ert-deftest wal-flyspell-goto-previous-error ()
-  :tags '(fix user-facing)
-
-  (bydi (flyspell-goto-next-error)
-
-    (wal-flyspell-goto-previous-error)
-
-    (bydi-was-called-with flyspell-goto-next-error (list t))))
-
 ;;; wal-fix-test.el ends here
 
 ;; Local Variables:
