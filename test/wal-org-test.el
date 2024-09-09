@@ -34,7 +34,7 @@
 
       (bydi-was-called-n-times font-lock-flush 2))))
 
-(ert-deftest wal-org-refile ()
+(ert-deftest wal-org-refile--maybe-use-default-directory ()
   :tags '(org user-facing)
 
   (defvar org-roam-directory nil)
@@ -43,29 +43,16 @@
   (let ((org-agenda-files '("/tmp/agenda"))
         (org-roam-directory "/tmp/roam"))
 
-    (bydi ((:sometimes org-roam-buffer-p)
-           (:watch org-agenda-files)
+    (bydi ((:watch org-agenda-files)
            org-refile)
 
-      (wal-org-refile)
-      (bydi-was-set-to org-agenda-files '("/tmp/roam") :clear t)
-      (bydi-was-called org-refile :clear t)
-
-      (wal-org-refile 5)
+      (wal-org-refile--maybe-use-default-directory)
       (bydi-was-not-set org-agenda-files)
-      (bydi-was-called org-refile :clear t)
+      (bydi-was-not-called org-refile)
 
-      (wal-org-refile '(4))
-
-      (bydi-was-set-to org-agenda-files (list default-directory) :clear t)
-      (bydi-was-called org-refile :clear t)
-
-      (bydi-toggle-volatile 'org-roam-buffer-p)
-
-      (wal-org-refile '(6))
-
-      (bydi-was-not-set org-agenda-files)
-      (bydi-was-called-with org-refile '(6)))))
+      (wal-org-refile--maybe-use-default-directory '(5))
+      (bydi-was-set-to org-agenda-files (list default-directory))
+      (bydi-was-called org-refile))))
 
 (ert-deftest wal-agenda-buffer-p ()
   :tags '(org)
