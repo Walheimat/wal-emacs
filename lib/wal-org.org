@@ -432,25 +432,34 @@ This adds a function to refile only within =org-roam= files.
   :extras (org-roam-ui))
 
 (defun wal-org-refile (&optional arg)
-  "Refile using ARG, but use `org-roam-directory' for its files.
+  "Prefix-argument-based `org-refile'.
 
-If called with numeric prefix `5', set variable
-`org-agenda-files' to the `org-roam-directory'."
+If called with numeric prefix ARG 5, this command always refiles
+normally. If called with this will set the agenda files to the
+`default-directory'. Otherwise this command will set the agenda files to
+the roam directory for roam buffers or just pass on the argument ARG."
   (interactive "P")
 
   (declare-function org-refile "ext:org.el")
   (defvar org-roam-directory)
 
-  (cond
-   ((and (org-roam-buffer-p) (not (equal arg 5)))
-    (let ((org-agenda-files (list org-roam-directory)))
+  (let ((arg (prefix-numeric-value arg)))
 
-      (org-refile arg)))
+    (cond
+     ((equal arg 5)
+      (org-refile))
 
-   ((equal arg 5)
-    (org-refile))
+     ((equal arg 4)
+      (let ((org-agenda-files (list default-directory)))
 
-   (t (org-refile arg))))
+        (org-refile)))
+
+     ((org-roam-buffer-p)
+      (let ((org-agenda-files (list org-roam-directory)))
+
+        (org-refile arg)))
+
+     (t (org-refile arg)))))
 
 (use-package org-roam
   :wal-ways t

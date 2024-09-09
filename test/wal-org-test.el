@@ -43,21 +43,29 @@
   (let ((org-agenda-files '("/tmp/agenda"))
         (org-roam-directory "/tmp/roam"))
 
-    (bydi ((:always org-roam-buffer-p)
-           (:mock org-refile :return org-agenda-files))
+    (bydi ((:sometimes org-roam-buffer-p)
+           (:watch org-agenda-files)
+           org-refile)
 
-      (should (equal '("/tmp/roam") (wal-org-refile)))
-      (bydi-was-called org-refile)
+      (wal-org-refile)
+      (bydi-was-set-to org-agenda-files '("/tmp/roam") :clear t)
+      (bydi-was-called org-refile :clear t)
 
-      (bydi-clear-mocks)
-      (should (equal '("/tmp/agenda") (wal-org-refile 5)))
-      (bydi-was-called org-refile))
+      (wal-org-refile 5)
+      (bydi-was-not-set org-agenda-files)
+      (bydi-was-called org-refile :clear t)
 
-    (bydi ((:ignore org-roam-buffer-p)
-           (:mock org-refile :return org-agenda-files))
+      (wal-org-refile '(4))
 
-      (should (equal '("/tmp/agenda") (wal-org-refile)))
-      (bydi-was-called org-refile))))
+      (bydi-was-set-to org-agenda-files (list default-directory) :clear t)
+      (bydi-was-called org-refile :clear t)
+
+      (bydi-toggle-volatile 'org-roam-buffer-p)
+
+      (wal-org-refile '(6))
+
+      (bydi-was-not-set org-agenda-files)
+      (bydi-was-called-with org-refile '(6)))))
 
 (ert-deftest wal-agenda-buffer-p ()
   :tags '(org)
