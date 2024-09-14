@@ -11,13 +11,11 @@
 (ert-deftest wal-lsp-completion ()
   :tags '(lsp)
 
-  (let ((completion-category-defaults '((lsp-capf (styles other))))
-        (completion-styles '(testful)))
+  (let ((completion-category-defaults '((lsp-capf (styles other)))))
 
-    (bydi ((:ignore harpoon-slow-lsp-p))
-      (wal-lsp-completion)
+    (wal-lsp-completion)
 
-      (should (equal '((lsp-capf (styles testful))) completion-category-defaults)))))
+    (should (equal '((lsp-capf (styles orderless))) completion-category-defaults))))
 
 (ert-deftest wal-first-prevent-adding-other-projects ()
   :tags '(lsp)
