@@ -976,68 +976,6 @@
 
     (should (equal major-mode 'emacs-lisp-mode))))
 
-(ert-deftest wal-async-process--buffer-name ()
-  :tags '(useful)
-
-  (should (string= (wal-async-process--buffer-name 'test-mode) wal-async-process-buffer-name)))
-
-(ert-deftest wal-async-process--finalize ()
-  :tags '(useful)
-
-  (with-temp-buffer
-    (rename-buffer "*async-finalize-test*")
-
-    (bydi (delete-window delete-other-windows)
-
-      (let ((finalizer (wal-async-process--finalize #'delete-window #'delete-other-windows)))
-
-        (apply finalizer (list (current-buffer) "finished\n"))
-
-        (bydi-was-called delete-window)
-        (bydi-was-not-called delete-other-window)
-        (bydi-clear-mocks)))
-
-    (bydi ((:mock delete-window :with (lambda () (error "Oops"))) delete-other-windows)
-
-      (let ((finalizer (wal-async-process--finalize #'delete-window #'delete-other-windows)))
-
-        (apply finalizer (list (current-buffer) "finished\n"))
-
-        (bydi-was-called delete-window)
-        (bydi-was-called-with delete-other-windows "Oops*async-finalize-test*")
-        (bydi-clear-mocks)
-
-        (apply finalizer (list (current-buffer) "something else "))
-
-        (bydi-was-not-called delete-window)
-        (bydi-was-called-with delete-other-windows "something else")))))
-
-(ert-deftest wal-aysnc-process--maybe-interrupt ()
-  :tags '(useful)
-
-  (bydi ((:always compilation-find-buffer)
-         (:mock get-buffer-process :return 'proc)
-         interrupt-process)
-
-    (wal-async-process--maybe-interrupt)
-
-    (bydi-was-called-with interrupt-process 'proc)))
-
-(ert-deftest wal-async-process ()
-  :tags '(useful)
-
-  (bydi ((:mock wal-async-process--maybe-interrupt :with (lambda () (message "interrupted")))
-         (:mock compilation-start :with (lambda (&rest _) (message "compiles"))))
-    (shut-up (ert-with-message-capture messages
-               (wal-async-process
-                "compiles"
-                (lambda () (message "finishes"))
-                (lambda (_m) nil)
-                t)
-               (with-current-buffer "*wal-async*"
-                 (funcall (car compilation-finish-functions) nil "finished\n"))
-               (should (string= "interrupted\ncompiles\nfinishes\n" messages))))))
-
 (ert-deftest wal-advise-many ()
   :tags '(useful)
 

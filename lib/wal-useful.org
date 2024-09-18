@@ -873,46 +873,6 @@ Turning on/off certain major modes switching between =major-mode= and =fundament
       (setq-local wal-before-fundamental-mode m-mode))))
 #+END_SRC
 
-* Shell Commands
-
-#+BEGIN_SRC emacs-lisp
-(defconst wal-async-process-buffer-name "*wal-async*")
-
-(defun wal-async-process--buffer-name (_name-or-mode)
-  "Return constant buffer name."
-  wal-async-process-buffer-name)
-
-(defun wal-async-process (command callback error-callback &optional interrupt)
-  "Start async process COMMAND with CALLBACK and ERROR-CALLBACK.
-
-Optonally, interrupt any running process if INTERRUPT is t."
-  (when interrupt (wal-async-process--maybe-interrupt))
-
-  (let ((finalizer (wal-async-process--finalize callback error-callback)))
-
-    (with-current-buffer (get-buffer-create wal-async-process-buffer-name)
-      (compilation-start command nil 'wal-async-process--buffer-name)
-      (add-hook 'compilation-finish-functions finalizer nil t))))
-
-(defun wal-async-process--maybe-interrupt ()
-  "Interrupt process without erroring."
-  (when-let* ((comp-buffer (compilation-find-buffer))
-              (proc (get-buffer-process comp-buffer)))
-    (interrupt-process proc)))
-
-(defun wal-async-process--finalize (callback error-callback)
-  "Get finalizer that will call CALLBACK or ERROR-CALLBACK."
-  (lambda (buf status)
-       (if (string= "finished\n" status)
-           (condition-case err
-               (funcall callback)
-             (error
-              (funcall error-callback (concat
-                                       (error-message-string err)
-                                       (buffer-name buf)))))
-         (funcall error-callback (string-trim status)))))
-#+END_SRC
-
 * Advice
 
 #+begin_src emacs-lisp
