@@ -268,42 +268,6 @@
 
       (should (string= "Testing" (buffer-string))))))
 
-(ert-deftest wal-org-agenda-take-note ()
-  :tags '(org user-facing)
-
-  (defvar org-clock-current-task)
-  (let ((org-clock-current-task nil))
-
-    (bydi (consult-org-agenda
-           org-clock-goto
-           org-add-note)
-
-      (wal-org-agenda-take-note)
-
-      (bydi-was-called consult-org-agenda :clear t)
-      (bydi-was-called org-add-note)
-      (bydi-was-not-called org-clock-goto)
-
-      (funcall-interactively 'wal-org-agenda-take-note t)
-
-      (bydi-was-called consult-org-agenda :clear t)
-      (bydi-was-called org-add-note)
-      (bydi-was-not-called org-clock-goto)
-
-      (setq org-clock-current-task "Test task")
-
-      (wal-org-agenda-take-note)
-
-      (bydi-was-not-called consult-org-agenda)
-      (bydi-was-called org-add-note)
-      (bydi-was-called org-clock-goto :clear t)
-
-      (funcall-interactively 'wal-org-agenda-take-note t)
-
-      (bydi-was-called consult-org-agenda)
-      (bydi-was-called org-add-note)
-      (bydi-was-not-called org-clock-goto))))
-
 (ert-deftest wal-org-agenda--then-rename-tab ()
   :tags '(org)
 

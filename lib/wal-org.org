@@ -281,26 +281,6 @@ Plan your day, week and year. This adapts the agenda view to show what I need da
 
   (org-agenda-file-p (buffer-file-name buffer)))
 
-(defun wal-org-agenda-take-note (&optional arg)
-  "Take a note for an agenda item.
-
-This prefers the currently clocked item unless ARG is passed.
-
-Otherwise (or if there is no clocked item) this prompts to select
-the item first."
-  (interactive "P")
-
-  (declare-function org-clock-goto "ext:org-clock.el")
-
-  (let ((current org-clock-current-task))
-
-    (save-window-excursion
-      (if (and current
-               (not arg))
-          (org-clock-goto)
-        (consult-org-agenda))
-      (org-add-note))))
-
 (defun wal-org-agenda--then-rename-tab (&rest _)
   "Rename the tab if we set up the window using tabs."
   (when (eq org-agenda-window-setup 'other-tab)
@@ -336,7 +316,6 @@ the item first."
 
   :bind
   (("C-c a" . org-agenda)
-   ("C-c M-a" . wal-org-agenda-take-note)
    :map org-agenda-mode-map
    ("C-c C-t" . org-agenda-todo-yesterday)
    ("<RET>" . org-agenda-goto)

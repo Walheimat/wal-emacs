@@ -44,6 +44,7 @@ Complete commands and code.
 
 (defvar project--list)
 (defvar vertico-map)
+(defvar org-clock-current-task)
 (defvar wal-active-theme)
 
 ;;; Customization:
@@ -618,6 +619,27 @@ This uses `display-buffer-pop-up-window'."
                     :prompt "Display: "
                     :history 'consult--buffer-history
                     :sort nil)))
+
+(defun wal-consult-org-agenda-take-note (&optional arg)
+  "Take a note for an agenda item.
+
+This prefers the currently clocked item unless ARG is passed.
+
+Otherwise (or if there is no clocked item) this prompts to select
+the item first."
+  (interactive "P")
+
+  (declare-function org-clock-goto "ext:org-clock.el")
+  (declare-function org-add-note "ext:org.el")
+
+  (let ((current org-clock-current-task))
+
+    (save-window-excursion
+      (if (and current
+               (not arg))
+          (org-clock-goto)
+        (consult-org-agenda))
+      (org-add-note))))
 #+END_SRC
 
 *** Buffer sources
@@ -791,6 +813,7 @@ This uses `display-buffer-pop-up-window'."
 
   :wal-bind
   (("<SPC>" . wal-consult-clock)
+   ("M-<SPC>" . wal-consult-org-agenda-take-note)
    ("k" . wal-consult-place)
    ("'" . wal-consult-project)
    ("M-l" . consult-goto-line)

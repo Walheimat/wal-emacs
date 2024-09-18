@@ -194,6 +194,42 @@
 
     (bydi-was-called-with display-buffer '(... display-buffer-pop-up-window))))
 
+(ert-deftest wal-consult-org-agenda-take-note ()
+  :tags '(org user-facing)
+
+  (defvar org-clock-current-task)
+  (let ((org-clock-current-task nil))
+
+    (bydi (consult-org-agenda
+           org-clock-goto
+           org-add-note)
+
+      (wal-consult-org-agenda-take-note)
+
+      (bydi-was-called consult-org-agenda :clear t)
+      (bydi-was-called org-add-note)
+      (bydi-was-not-called org-clock-goto)
+
+      (funcall-interactively 'wal-consult-org-agenda-take-note t)
+
+      (bydi-was-called consult-org-agenda :clear t)
+      (bydi-was-called org-add-note)
+      (bydi-was-not-called org-clock-goto)
+
+      (setq org-clock-current-task "Test task")
+
+      (wal-consult-org-agenda-take-note)
+
+      (bydi-was-not-called consult-org-agenda)
+      (bydi-was-called org-add-note)
+      (bydi-was-called org-clock-goto :clear t)
+
+      (funcall-interactively 'wal-consult-org-agenda-take-note t)
+
+      (bydi-was-called consult-org-agenda)
+      (bydi-was-called org-add-note)
+      (bydi-was-not-called org-clock-goto))))
+
 (ert-deftest wal-consult-compilation-buffer--query ()
   :tags '(emacs)
 
