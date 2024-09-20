@@ -16,6 +16,7 @@ module.exports = {
                 "chore",
                 "ci",
                 "test",
+                "perf",
             ],
         ],
         "scope-case": [2, "always", ["lower-case", "kebab-case"]],
