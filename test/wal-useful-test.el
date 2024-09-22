@@ -220,24 +220,6 @@
 
     (bydi-was-called-with kill-region (list nil nil t))))
 
-(ert-deftest wal-mwim-beginning ()
-  :tags '(useful user-facing)
-
-  (with-temp-buffer
-    (insert "hello\n  world")
-    (goto-char 7)
-    (call-interactively 'wal-mwim-beginning)
-
-    (should (eq (point) 9))
-
-    (call-interactively 'wal-mwim-beginning)
-
-    (should (eq (point) 7))
-
-    (call-interactively 'wal-mwim-beginning)
-
-    (should (eq (point) 9))))
-
 (ert-deftest wal-spill-paragraph ()
   :tags '(useful user-facing)
 
