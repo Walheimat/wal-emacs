@@ -555,6 +555,26 @@ Sometimes things that don't do things need to look nice.
 :END:
 
 #+BEGIN_SRC emacs-lisp
+(defun wal-livedown (&optional kill-only)
+  "Open a livedown version of the current file.
+
+If KILL-ONLY is t, just kill any running process."
+  (interactive "P" markdown-mode)
+
+  (unless (executable-find "livedown")
+    (user-error "You need to install livedown"))
+
+  ;; End previous process.
+  (call-process-shell-command "livedown stop")
+
+  (and-let* (((not kill-only))
+             (file (buffer-file-name))
+             (command (format "livedown start %s --open" file)))
+
+    (start-process-shell-command "livedown" " *wal-livedown*" command)
+
+    (message "Previewing %s in livedown" file)))
+
 (defun wal-markdown-view ()
   "Toggle between different markdown views."
   (interactive)
@@ -580,7 +600,8 @@ Sometimes things that don't do things need to look nice.
   (wal-transient-define-major markdown-mode ()
     "Access `markdown-mode' commands."
     [["View"
-      ("v" "toggle view" wal-markdown-view)]])
+      ("v" "toggle view" wal-markdown-view)
+      ("p" "preview" wal-livedown)]])
 
   :custom
   (markdown-asymmetric-header t)

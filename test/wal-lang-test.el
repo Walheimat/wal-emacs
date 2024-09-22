@@ -22,6 +22,37 @@
 
     (bydi-was-called-with delay-warning (list 'prettier "We are just testing this" :warning))))
 
+(ert-deftest wal-livedown ()
+  :tags '(lang user-facing)
+
+  (bydi ((:othertimes executable-find)
+         call-process-shell-command
+         start-process-shell-command)
+
+    (shut-up
+      (ert-with-temp-file livedown
+        :buffer livedown-buffer
+
+        (with-current-buffer livedown-buffer
+          (setq major-mode 'markdown-mode)
+
+          (should-error (wal-livedown))
+
+          (bydi-toggle-volatile 'executable-find)
+
+          (wal-livedown t)
+
+          (bydi-was-called call-process-shell-command :clear t)
+          (bydi-was-not-called start-process-shell-command)
+
+          (wal-livedown)
+
+          (bydi-was-called-with start-process-shell-command
+            (list '...
+                  (format
+                   "livedown start %s --open"
+                   (buffer-file-name)))))))))
+
 (ert-deftest wal-markdown-view ()
   :tags '(lang user-facing)
 
