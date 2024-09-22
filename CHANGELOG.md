@@ -1,5 +1,54 @@
 # Changelog
 
+## [2.4.4](https://github.com/Walheimat/wal-emacs/compare/v2.4.3...v2.4.4) (2024-09-22)
+
+### Configurations
+
+* **clojure,cider,slime:** mothball packages ([f76e2de](https://github.com/Walheimat/wal-emacs/commit/f76e2de292276f9e76afb3c3f9806fa1b4932ad1))
+* **consult-flycheck:** mothball package ([4137fe8](https://github.com/Walheimat/wal-emacs/commit/4137fe86b80e63fdeca796192262a62e6a4b0294))
+* **display-line-numbers:** enable for prog(-like) modes ([f6823cf](https://github.com/Walheimat/wal-emacs/commit/f6823cf92c1abd757b7c544840b1a4547a1d0073))
+* **eglot:** mothball configuration ([43ffc74](https://github.com/Walheimat/wal-emacs/commit/43ffc7467df9a093f8b37e068545971b894b06da))
+* **email:** mothball section ([ceef0e6](https://github.com/Walheimat/wal-emacs/commit/ceef0e6f6f42bbde2533858800df65042f60a3f6))
+* **flutter:** mothball section ([0b0ef05](https://github.com/Walheimat/wal-emacs/commit/0b0ef058cac1c1c06f6939e4c5c2600bc3de8ab4))
+* **flycheck:** remove wal-flycheck-file ([d0de8f7](https://github.com/Walheimat/wal-emacs/commit/d0de8f7447a2e3ba5e34aa8049ea56767418a395))
+* **flyspell:** mothball configuration ([c1f4201](https://github.com/Walheimat/wal-emacs/commit/c1f4201dd2def3accf3bc7c635e06ccdb1e63c72))
+* **follow:** replace configuration with delight instruction ([c1215c9](https://github.com/Walheimat/wal-emacs/commit/c1215c9243ff3f5b425a0f0d414ce8c6c1af2488))
+* **go:** mothball section ([99aed23](https://github.com/Walheimat/wal-emacs/commit/99aed2366096107c583f8e8a151e331d0144dc5c))
+* **hideshow:** mothball config ([cd20791](https://github.com/Walheimat/wal-emacs/commit/cd20791d418d9754c24def45d8ef22a0797caaa8))
+* **jinx:** lower-case, three-char lighter ([bb560cd](https://github.com/Walheimat/wal-emacs/commit/bb560cddd5b118a35bc770b26bc3df8a02074c10))
+* **log4j-mode:** mothball package ([e5d7d9a](https://github.com/Walheimat/wal-emacs/commit/e5d7d9a8e1f8cff29b1bf2d8eb53cf9a4fcd792a))
+* **org-roam-ui:** mothball package ([9abf9da](https://github.com/Walheimat/wal-emacs/commit/9abf9da6d665b0704eadcae0a1c0810bb09b2820))
+* **org-roam:** two capture templates for dailies ([df357c4](https://github.com/Walheimat/wal-emacs/commit/df357c4c406bd7189edece6666e7109979a9d3b1))
+* **php:** mothball section ([bd90890](https://github.com/Walheimat/wal-emacs/commit/bd90890be2de8729f606ef17ce9b1ca51f7022a9))
+* **prolog:** mothball section ([b4420d1](https://github.com/Walheimat/wal-emacs/commit/b4420d16a84fbf4f80c2a81caaa2c3add3194ca3))
+* **python:** mothball subpackages ([7d1dbe5](https://github.com/Walheimat/wal-emacs/commit/7d1dbe5f32462592d7443127b9be771c5593f54d))
+* **python:** re-add pet and use it to set pyslp server command ([e8adff8](https://github.com/Walheimat/wal-emacs/commit/e8adff8428bcc09570a6719101f0e4c84aa3595d))
+* **rg:** set buffer name to rg-results ([8d61014](https://github.com/Walheimat/wal-emacs/commit/8d61014272df4ee7be9afaf7459b0eee070a49a4))
+* **subword-mode:** change lighter to something less confusing ([fbb977b](https://github.com/Walheimat/wal-emacs/commit/fbb977b6e470a0676a9d20c92b73452d6939982e))
+* **text-mode:** don't use ispell capf ([c534444](https://github.com/Walheimat/wal-emacs/commit/c534444f865cffb7221a85d16861a6d11b5e94de))
+* **visual-fill-column:** mothball package ([6571d48](https://github.com/Walheimat/wal-emacs/commit/6571d480781ead1aa60b6a08c017cb29e0e932b0))
+* **web-mode:** mothball package ([2e8b329](https://github.com/Walheimat/wal-emacs/commit/2e8b329874e5e4cc77a23e34d47d65306b052e10))
+
+### Bug Fixes
+
+* **lsp-mode,corfu,orderless:** just set orderless as style ([213aca7](https://github.com/Walheimat/wal-emacs/commit/213aca7ed5c540520726df29e503424daa5580a6))
+
+### Improvements
+
+* **org-refile:** wal-org-refile can refile to default directory ([b6aac38](https://github.com/Walheimat/wal-emacs/commit/b6aac380a299e34cc588f5a1caff236e9f099895))
+* **useful:** remove unused wal-async code ([4efe193](https://github.com/Walheimat/wal-emacs/commit/4efe19305b26f33516e144e499f53d485fa49788))
+
+### Other
+
+* **casual-suite:** bind new casual-agenda-tmenu ([a78b19d](https://github.com/Walheimat/wal-emacs/commit/a78b19d1d57c3f6baffef3cd6584f258279080f1))
+* **completionist,cape:** swap map and cape-dabbrev ([50cfc6d](https://github.com/Walheimat/wal-emacs/commit/50cfc6da12d391e2f98eda2deefb07576bb4fa82))
+* **dired-x:** add additional binding for dired-omit-mode ([730bf65](https://github.com/Walheimat/wal-emacs/commit/730bf6587826ffe21ccc968c12119db9a62b1534))
+* **global:** prefer zap-up-to-char ([8c7b491](https://github.com/Walheimat/wal-emacs/commit/8c7b491fd8fe76ccea433a72d1b104571c1e7df3))
+* **global:** unbind C-z (also bound to C-x C-z) ([cf8bbce](https://github.com/Walheimat/wal-emacs/commit/cf8bbcec3f07794b8534aea77ff5108cb0fa16d5))
+* **org-agenda,consult:** move note-taking function ([61fa4ed](https://github.com/Walheimat/wal-emacs/commit/61fa4edf310b927d3159bb845a0d263420b294aa))
+* **settings:** only use left-to-right text display ([7d03975](https://github.com/Walheimat/wal-emacs/commit/7d0397584611c2e515b890ed15f1bd3b0243e93e))
+* **useful:** remove wal-mwim-beginning ([39f926f](https://github.com/Walheimat/wal-emacs/commit/39f926f348a1d522512103cdd77aa8b3f807bad7))
+
 ## [2.4.3](https://github.com/Walheimat/wal-emacs/compare/v2.4.2...v2.4.3) (2024-09-07)
 
 ### Configurations
