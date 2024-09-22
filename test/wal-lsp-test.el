@@ -34,9 +34,7 @@
            (:mock wal-symbol-bounds :return '(3 . 5))
            (:mock thing-at-point :with (lambda (x &rest _) (eq x type)))
            (:othertimes looking-at)
-           (:othertimes use-region-p)
            lsp-organize-imports
-           lsp-format-region
            lsp-rename
            lsp-execute-code-action
            lsp-find-references
@@ -63,14 +61,6 @@
       (wal-lsp-dwim)
 
       (bydi-was-called lsp-rename)
-
-      (bydi-toggle-volatile 'use-region-p)
-
-      (wal-lsp-dwim)
-
-      (bydi-was-called lsp-format-region)
-
-      (bydi-toggle-volatile 'use-region-p)
 
       (setq mock-point 1)
 
