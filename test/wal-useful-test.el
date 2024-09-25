@@ -473,6 +473,20 @@
 
     (bydi-was-called-n-times next-window 2)))
 
+(ert-deftest wal-quit-window-kill-buffertest ()
+  :tags '(useful windows)
+
+  (ert-with-test-buffer (:name "to-kill")
+    (bydi ((:spy quit-window)
+           (:spy kill-buffer))
+
+      (pop-to-buffer (current-buffer))
+
+      (wal-quit-window-kill-buffer)
+
+      (bydi-was-called quit-window)
+      (bydi-was-called kill-buffer))))
+
 (ert-deftest wal-find-custom-file ()
   :tags '(useful user-facing)
 
