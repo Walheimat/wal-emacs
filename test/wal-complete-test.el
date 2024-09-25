@@ -322,6 +322,17 @@
 
     (should (string-equal (wal-tempel-comment (list 'c "testing")) "// testing"))))
 
+(ert-deftest wal-vertico--no-cycle ()
+  :tags '(complete)
+
+  (defvar vertico-cycle nil)
+
+  (bydi ((:watch vertico-cycle))
+
+    (should (wal-vertico--no-cycle (lambda () (interactive) (always))))
+
+    (bydi-was-set vertico-cycle)))
+
 ;;; wal-complete-test.el ends here
 
 ;; Local Variables:

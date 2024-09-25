@@ -266,6 +266,12 @@ Don't reduce the boilerplate, reduce your involvement in it with snippets. Compl
 Provide global option narrowing using the =vertico= family of products. The setup is mostly as per the official docs. This just sets up =vertico-multiform-mode= to make certain completion tasks unobtrusive.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal-vertico--no-cycle (func &rest args)
+  "Run FUNC with ARGS while cycling is disabled."
+  (let ((vertico-cycle nil))
+
+    (call-interactively func args)))
+
 (use-package vertico
   :defer 1
   :wal-ways t
@@ -759,6 +765,10 @@ the item first."
   (advice-add 'consult-theme :after #'wal-then-set-active-theme)
 
   (advice-add 'consult :around 'wal-with-delayed-transient-popup)
+
+  ;; Don't cycle when using certain commands.
+  (advice-add 'consult-ripgrep :around 'wal-vertico--no-cycle)
+  (advice-add 'consult-line :around 'wal-vertico--no-cycle)
 
   (with-eval-after-load 'org-agenda
     (wal-insert
