@@ -233,11 +233,11 @@
   (bydi ((:mock org-link-display-format :with bydi-rf)
          (:mock org-get-heading :return "test heading")
          (:mock org-no-properties :with bydi-rf)
-         wal-truncate)
+         truncate-string-to-width)
 
     (wal-org-clock-heading)
 
-    (bydi-was-called-with wal-truncate (list "test heading" 12))))
+    (bydi-was-called-with truncate-string-to-width (list "test heading" 12))))
 
 (ert-deftest wal-org-clock-in-from-now ()
   :tags '(org)

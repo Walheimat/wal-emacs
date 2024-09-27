@@ -747,21 +747,6 @@
 
   (should (equal 314572 (wal-bytes-per-mb 0.3))))
 
-(ert-deftest wal-truncate--truncates ()
-  :tags '(useful)
-
-  (should (string-equal (wal-truncate "This is it" 7) "This...")))
-
-(ert-deftest wal-truncate--truncates-without-len ()
-  :tags '(useful)
-
-  (should (string-equal (wal-truncate "This is it") "This ...")))
-
-(ert-deftest wal-truncate--leaves-as-is-if-below ()
-  :tags '(useful)
-
-  (should (string-equal (wal-truncate "This is it" 24) "This is it")))
-
 (ert-deftest wal-univ-p ()
   :tags '(useful user-facing)
 
