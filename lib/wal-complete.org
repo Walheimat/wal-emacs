@@ -66,10 +66,18 @@ Complete commands and code.
 Light-weight inline completion. The custom function is taken from the wiki to make sure that =corfu= is enabled in the minibuffer when it makes sense. This sense
 
 #+BEGIN_SRC emacs-lisp
+(defvar wal-no-corfu '(ship-mate-execute)
+  "Commands that will make sure `corfu-auto' is disabled.")
+
 (defun wal-corfu-enable-in-minibuffer ()
-  "Enable Corfu in the minibuffer if `completion-at-point' is bound."
+  "Enable Corfu in the minibuffer if `completion-at-point' is bound.
+
+Disable `corfu-auto' if `this-command' is blacklisted."
   (when (where-is-internal #'completion-at-point (list (current-local-map)))
-    (corfu-mode 1)))
+    (corfu-mode 1)
+
+    (when (memq this-command wal-no-corfu)
+      (setq-local corfu-auto nil))))
 
 (use-package corfu
   :hook
