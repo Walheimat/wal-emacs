@@ -300,6 +300,19 @@
     (bydi-was-set org-super-agenda-groups)
     (bydi-was-called bydi-rf)))
 
+(ert-deftest wal-org-roam-dailies--with-first-template-only ()
+  (defvar org-roam-dailies-capture-templates)
+  (let ((org-roam-dailies-capture-templates '(a b c)))
+
+    (bydi ((:watch org-roam-dailies-capture-templates)
+           (:spy ignore))
+
+      (wal-org-roam-dailies--with-first-template-only #'ignore 'test)
+
+      (bydi-was-called-with ignore '((test)))
+
+      (bydi-was-set-to org-roam-dailies-capture-templates '(a)))))
+
 (ert-deftest wal-org--first-record-buffer ()
   :tags '(org)
 
