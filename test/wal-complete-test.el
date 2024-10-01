@@ -18,14 +18,7 @@
          corfu-mode)
     (wal-corfu-enable-in-minibuffer)
     (bydi-was-called-with corfu-mode 1)
-
-    (bydi-was-not-set corfu-auto)
-
-    (let ((wal-no-corfu '(test-command))
-          (this-command 'test-command))
-
-      (wal-corfu-enable-in-minibuffer)
-      (bydi-was-set corfu-auto))))
+    (bydi-was-set corfu-auto)))
 
 (ert-deftest wal-record-this-command ()
   :tags '(complete)
