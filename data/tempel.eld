@@ -58,7 +58,7 @@ conf-mode
  "# " (s title) " #" n
  "#" (make-string (+ 2 (length title)) ?#) "#")
 
-emacs-lisp-mode
+emacs-lisp-mode lisp-interaction-mode lisp-mode
 
 (package
  ";;; " (s name) ".el --- " (s descr) " -*- lexical-binding: t; -*-" n n
@@ -74,9 +74,7 @@ emacs-lisp-mode
  ":tags '(" (p "tag") ")" n n>
  q ")")
 
-js-mode
-js-ts-mode
-typescript-mode
+js-mode js-ts-mode typescript-mode typescript-ts-mode tsx-ts-mode
 
 (docstring
  "/**" n
