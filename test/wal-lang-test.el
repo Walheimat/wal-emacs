@@ -22,6 +22,15 @@
 
     (bydi-was-called-with delay-warning (list 'prettier "We are just testing this" :warning))))
 
+(ert-deftest wal-without-current-prefix-arg ()
+  :tags '(lang)
+
+  (bydi ((:watch current-prefix-arg))
+
+    (wal-without-current-prefix-arg 'ignore)
+
+    (bydi-was-set current-prefix-arg)))
+
 (ert-deftest wal-livedown ()
   :tags '(lang user-facing)
 

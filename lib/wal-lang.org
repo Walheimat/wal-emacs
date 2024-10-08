@@ -447,6 +447,12 @@ STRING is formatted with OBJECTS."
 
     (delay-warning 'prettier formatted :warning)))
 
+(defun wal-without-current-prefix-arg (func &rest _args)
+  "Call FUNC but hide the `current-prefix-arg'."
+  (let ((current-prefix-arg nil))
+
+    (funcall func)))
+
 (use-package prettier
   :config
   (with-eval-after-load 'js
@@ -466,6 +472,10 @@ STRING is formatted with OBJECTS."
   (advice-add
    'prettier--show-error :override
    #'wal-instead-delay-prettier-errors)
+
+  (advice-add
+   'prettier--maybe-prettify-on-save :around
+   #'wal-without-current-prefix-arg)
 
   :custom
   (prettier-lighter " prt")
