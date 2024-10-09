@@ -29,6 +29,7 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (declare-function consult-org-agenda "wal-complete.el")
 (declare-function mixed-pitch-mode "ext:mixed-pitch.el")
 (declare-function org-roam-buffer-p "ext:org-roam.el")
+(declare-function org-archive-subtree "ext:org-archive.el")
 (declare-function project-prompt-project-dir "ext:project.el")
 (declare-function project-root "ext:project.el")
 (declare-function visual-fill-column-mode "ext:visual-fill-column.el")
@@ -40,6 +41,8 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (defvar org-clock-current-task)
 (defvar org-log-note-marker)
 (defvar org-roam-dailies-capture-templates)
+(defvar org-roam-dailies-directory)
+(defvar org-roam-directory)
 (defvar org-super-agenda-groups)
 (defvar partial-recall-meaningful-traits)
 (defvar project-current-directory-override)
@@ -423,6 +426,23 @@ ARGS are passed to FUNC."
 
     (funcall func args)))
 
+(defun wal-org-archive-subtree ()
+  "Archive normally.
+
+If the current file is a dailies file, archive in a single location."
+  (interactive)
+
+  (require 'org-archive nil t)
+
+  (let* ((file-name (buffer-file-name))
+         (dailies-file-p (and file-name
+                              (string-match-p org-roam-dailies-directory file-name)))
+         (org-archive-location (if dailies-file-p
+                                   (expand-file-name "dailies_archive.org::* From %s" org-roam-directory)
+                                 org-archive-location)))
+
+    (call-interactively #'org-archive-subtree)))
+
 (use-package org-roam
   :wal-ways t
   :if (executable-find "sqlite3")
@@ -497,6 +517,8 @@ ARGS are passed to FUNC."
       :target (file+head "%<%Y-%m-%d>.org"
                          "#+title: %<%Y-%m-%d>\n")
       :empty-lines 1)))
+
+  (org-archive-default-command #'wal-org-archive-subtree)
 
   :wal-bind
   (("p" . org-roam-capture)

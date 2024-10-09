@@ -313,6 +313,33 @@
 
       (bydi-was-set-to org-roam-dailies-capture-templates '(a)))))
 
+(ert-deftest wal-org-archive-subtree ()
+  :tags '(org)
+
+  (defvar org-roam-directory nil)
+  (defvar org-archive-location nil)
+  (defvar org-roam-dailies-directory nil)
+
+  (let ((org-roam-dailies-directory "/test/zettel/dailies")
+        (org-roam-directory "/test/zettel/default")
+        (org-archive-location "archive.org"))
+
+    (bydi ((:mock buffer-file-name :var mock-file-name :initial "/test/zettel/dailies/is.org")
+           (:watch org-archive-location)
+           org-archive-subtree
+           require)
+
+      (wal-org-archive-subtree)
+
+      (bydi-was-called org-archive-subtree)
+      (bydi-was-set-to org-archive-location "/test/zettel/default/dailies_archive.org::* From %s" :clear t)
+
+      (setq mock-file-name "/test/other/test.org")
+
+      (wal-org-archive-subtree)
+
+      (bydi-was-set-to org-archive-location "archive.org"))))
+
 (ert-deftest wal-org--first-record-buffer ()
   :tags '(org)
 
