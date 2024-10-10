@@ -33,11 +33,13 @@ The best thing about Emacs. Check out the [[https://orgmode.org/manual/][manual]
 (declare-function project-prompt-project-dir "ext:project.el")
 (declare-function project-root "ext:project.el")
 (declare-function visual-fill-column-mode "ext:visual-fill-column.el")
+(declare-function wal-advise-many "wal-useful.el")
 (declare-function wal-append "wal-useful.el")
 (declare-function wal-project-local-value "wal-workspace.el")
 (declare-function wal-replace-in-alist "wal-fun.el")
 
 (defvar org-agenda-window-setup)
+(defvar org-archive-default-command)
 (defvar org-clock-current-task)
 (defvar org-log-note-marker)
 (defvar org-roam-dailies-capture-templates)
@@ -415,6 +417,70 @@ This adds a function to refile only within =org-roam= files.
   :packages (org-roam)
   :extras (org-roam-ui))
 
+(use-package org-roam
+  :wal-ways t
+  :if (executable-find "sqlite3")
+
+  :commands
+  (org-roam-buffer-display-dedicated
+   org-roam-capture
+   org-roam-node-create
+   org-roam-node-find
+   org-roam-node-read
+   wal-org-roam)
+
+  :init
+  (setq org-roam-v2-ack t)
+
+  :config
+  ;; Show roam buffer on the right.
+  (wdb-nearby org-roam-buffer :side 'right :no-other t)
+
+  (transient-define-prefix wal-org-roam ()
+    "Run `org-roam' commands."
+    [["Capture"
+      ("t" "today" org-roam-dailies-capture-today)]
+     ["Find"
+      ("f" "note" org-roam-node-find)
+      ("T" "today" org-roam-dailies-goto-today)
+      ("d" "daily" org-roam-dailies-goto-date)
+      ("D" "daily directory" org-roam-dailies-find-directory)]
+     ["Actions"
+      ("b" "toggle roam buffer" org-roam-buffer-toggle)
+      ("w" "roam refile" org-roam-refile
+       :inapt-if-not-mode 'org-mode)
+      ("i" "insert node" org-roam-node-insert
+       :inapt-if-not-mode 'org-mode)
+      ("@" "add tag" org-roam-tag-add
+       :inapt-if-not-mode 'org-mode)]
+     ["Visualization"
+      ("g" "graph" org-roam-graph)]])
+
+  (org-roam-db-autosync-enable)
+
+  :custom
+  ;; Setup directories and file names.
+  (org-roam-directory (expand-file-name "zettelkasten" org-directory))
+  (org-roam-extract-new-file-path "${slug}.org")
+
+  ;; Simple capture templates.
+  (org-roam-capture-templates
+   '(("d" "default" plain "%?"
+      :target (file+head "${slug}.org"
+                         "#+title: ${title}\n")
+      :unnarrowed t)))
+
+  :wal-bind
+  (("p" . org-roam-capture)
+   ("M-p" . wal-org-roam))
+
+  :functions (org-roam-db-autosync-enable)
+  :defines (org-roam-buffer org-roam-v2-ack))
+#+END_SRC
+
+** org-roam-dailies
+
+#+begin_src emacs-lisp
 (defun wal-org-roam-dailies--with-first-template-only (func &rest args)
   "Run dailies command FUNC with templates set to nil.
 
@@ -443,24 +509,9 @@ If the current file is a dailies file, archive in a single location."
 
     (call-interactively #'org-archive-subtree)))
 
-(use-package org-roam
-  :wal-ways t
-  :if (executable-find "sqlite3")
-
-  :commands
-  (org-roam-buffer-display-dedicated
-   org-roam-capture
-   org-roam-node-create
-   org-roam-node-find
-   org-roam-node-read
-   wal-org-roam)
-
-  :init
-  (setq org-roam-v2-ack t)
-
+(use-package org-roam-dailies
   :config
-  ;; Show roam buffer on the right.
-  (wdb-nearby org-roam-buffer :side 'right :no-other t)
+  (setq org-archive-default-command #'wal-org-archive-subtree)
 
   ;; Don't force template selection when just visiting a file.
   (wal-advise-many
@@ -472,40 +523,8 @@ If the current file is a dailies file, archive in a single location."
      org-roam-dailies-goto-yesterday
      org-roam-dailies-goto-previous-note))
 
-  (transient-define-prefix wal-org-roam ()
-    "Run `org-roam' commands."
-    [["Capture"
-      ("t" "today" org-roam-dailies-capture-today)]
-     ["Find"
-      ("f" "note" org-roam-node-find)
-      ("T" "today" org-roam-dailies-goto-today)
-      ("d" "daily" org-roam-dailies-goto-date)
-      ("D" "daily directory" org-roam-dailies-find-directory)]
-     ["Actions"
-      ("b" "toggle roam buffer" org-roam-buffer-toggle)
-      ("w" "roam refile" org-roam-refile
-       :inapt-if-not-mode 'org-mode)
-      ("i" "insert node" org-roam-node-insert
-       :inapt-if-not-mode 'org-mode)
-      ("@" "add tag" org-roam-tag-add
-       :inapt-if-not-mode 'org-mode)]
-     ["Visualization"
-      ("g" "graph" org-roam-graph)]])
-
-  (org-roam-db-autosync-enable)
-
   :custom
-  ;; Setup directories and file names.
-  (org-roam-directory (expand-file-name "zettelkasten" org-directory))
   (org-roam-dailies-directory "tagebuch/")
-  (org-roam-extract-new-file-path "${slug}.org")
-
-  ;; Simple capture templates.
-  (org-roam-capture-templates
-   '(("d" "default" plain "%?"
-      :target (file+head "${slug}.org"
-                         "#+title: ${title}\n")
-      :unnarrowed t)))
   (org-roam-dailies-capture-templates
    '(("t" "default" entry
       "* %?\n:PROPERTIES:\n:TASK: %K\n:END:"
@@ -516,17 +535,8 @@ If the current file is a dailies file, archive in a single location."
       "* %?\nDEADLINE:%t\n:PROPERTIES:\n:TASK: %K\n:END:"
       :target (file+head "%<%Y-%m-%d>.org"
                          "#+title: %<%Y-%m-%d>\n")
-      :empty-lines 1)))
-
-  (org-archive-default-command #'wal-org-archive-subtree)
-
-  :wal-bind
-  (("p" . org-roam-capture)
-   ("M-p" . wal-org-roam))
-
-  :functions (org-roam-db-autosync-enable)
-  :defines (org-roam-buffer org-roam-v2-ack))
-#+END_SRC
+      :empty-lines 1))))
+#+end_src
 
 ** org-tree-slide                                               :nongnu:negligible:
 :PROPERTIES:
