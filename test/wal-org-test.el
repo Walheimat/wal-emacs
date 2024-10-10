@@ -326,8 +326,7 @@
 
     (bydi ((:mock buffer-file-name :var mock-file-name :initial "/test/zettel/dailies/is.org")
            (:watch org-archive-location)
-           org-archive-subtree
-           require)
+           org-archive-subtree)
 
       (wal-org-archive-subtree)
 
