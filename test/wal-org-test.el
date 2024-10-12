@@ -237,7 +237,7 @@
 
     (wal-org-clock-heading)
 
-    (bydi-was-called-with truncate-string-to-width (list "test heading" 12))))
+    (bydi-was-called-with truncate-string-to-width (list "test heading" 12 0 nil t))))
 
 (ert-deftest wal-org-clock-in-from-now ()
   :tags '(org)
