@@ -101,7 +101,7 @@
 
   (let ((wal-preferred-fonts '("PreferredFont" "NiceFont" "TestableFont")))
 
-    (should (equal (list "TestableFont" "PreferredFont") (wal-preferred-fonts (list "CruelFont" "TestableFont" "WaningFont" "PreferredFont"))))))
+    (should (equal (list "PreferredFont" "TestableFont") (wal-preferred-fonts (list "CruelFont" "TestableFont" "WaningFont" "PreferredFont"))))))
 
 (ert-deftest wal-fonts-candidate ()
   :tags '(visuals)
