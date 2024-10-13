@@ -30,6 +30,7 @@ Let's greet the world.
 (declare-function cape-wrap-buster "ext:cape.el")
 (declare-function markdown-mode "ext:markdown-mode.el")
 (declare-function markdown-view-mode "ext:markdown-mode.el")
+(declare-function pdf-tools-install "ext:pdf-tools.el")
 (declare-function mixed-pitch-mode "ext:markdown-mode.el")
 (declare-function transient--default-infix-command "ext:transient.el")
 (declare-function transient--show "ext:transient.el")
@@ -52,6 +53,138 @@ Let's greet the world.
   :group 'wal
   :tag "Langauge")
 #+END_SRC
+
+* Global
+
+** compile                                                     :builtin:high:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Show compilations in a pop-up and scroll output.
+
+#+begin_src emacs-lisp
+(use-package compile
+  :hook
+  (compilation-filter . ansi-color-compilation-filter)
+
+  :config
+  (wdb-faraway "\\*compilation")
+
+  :custom
+  (compilation-scroll-output t)
+  (compilation-max-output-line-length nil)
+
+  :bind
+  (("C-c r" . compile)
+   ("C-c M-r" . recompile)))
+#+END_SRC
+
+** diff-mode                                                 :builtin:medium:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Effing diffing.
+
+#+BEGIN_SRC emacs-lisp
+(use-package diff-mode
+  :bind
+  ;; Remove `diff-goto-source'.
+  (:map diff-mode-shared-map
+   ("o" . nil)))
+#+END_SRC
+
+** eldoc                                                        :builtin:low:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Contextual information. Package =lsp-mode= use =eldoc= extensively.
+
+#+BEGIN_SRC emacs-lisp
+(use-package eldoc
+  :custom
+  (eldoc-idle-delay 0.2)
+  (eldoc-echo-area-prefer-doc-buffer 'maybe)
+  (eldoc-echo-area-display-truncation-message nil)
+
+  :delight " eld")
+#+END_SRC
+
+
+** text-mode                                                    :builtin:low:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+No double spaces in sentences.
+
+#+BEGIN_SRC emacs-lisp
+(use-package text-mode
+  :init
+  (harpoon text-mode
+    :flat t
+    :functions
+    (wal-account-for-commit-buffer visual-line-mode))
+
+  :custom
+  (sentence-end-double-space nil)
+  (text-mode-ispell-word-completion nil))
+
+(defun wal-account-for-commit-buffer ()
+  "Account for the buffer being the commit buffer."
+  (when (string-match "COMMIT_EDITMSG" (buffer-name))
+    (electric-pair-local-mode)))
+#+END_SRC
+
+* Documents
+
+** doc-view                                                     :builtin:low:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+#+begin_src emacs-lisp
+(defvar-local wal-doc-view-page-offset 0)
+(put 'wal-doc-view-page-offset 'safe-local-variable #'integerp)
+
+(defun wal-with-page-offset (goto page)
+  "Go to PAGE with an offset.
+
+GOTO is the advised function
+
+This function only applies the offset if `this-command' is
+`doc-view-goto-page' to avoid offsetting going to a previous or
+next page."
+  (let ((offset (if (eq 'doc-view-goto-page this-command)
+                    (+ page wal-doc-view-page-offset)
+                  page)))
+
+    (funcall-interactively goto offset)))
+
+(use-package doc-view
+  :config
+  (advice-add
+   'doc-view-goto-page :around
+   #'wal-with-page-offset))
+#+end_src
+
+** pdf-tools                                                      :melpa:low:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+This provides better PDF editing capabilities than the built-in =doc-view-mode=.
+
+#+begin_src emacs-lisp
+(use-package pdf-tools
+  :defer 3
+  :after doc-view
+
+  :config
+  (pdf-tools-install))
+#+end_src
 
 * Elixir
 

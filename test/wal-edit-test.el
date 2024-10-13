@@ -48,6 +48,22 @@
 
     (should-not (wal-in-case-of-mc-mode-do-not-default))))
 
+(ert-deftest wal-kmacro ()
+  :tags '(emacs user-facing)
+
+  (bydi (kmacro-end-macro
+         kmacro-start-macro)
+
+    (let ((defining-kbd-macro t))
+      (wal-kmacro nil)
+
+      (bydi-was-called kmacro-end-macro))
+
+    (let ((defining-kbd-macro nil))
+      (wal-kmacro nil)
+
+      (bydi-was-called kmacro-start-macro))))
+
 ;;; wal-edit-test.el ends here
 
 ;; Local Variables:

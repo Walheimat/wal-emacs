@@ -251,6 +251,18 @@
       (should (equal (list :text "/home/test/assets/logo.txt")
                      (wal-instead-use-custom-banner))))))
 
+(ert-deftest wal-lighthouse ()
+  :tags '(emacs user-facing)
+
+  (bydi pulse-momentary-highlight-one-line
+    (with-temp-buffer
+      (insert "testing")
+      (goto-char (point-max))
+
+      (wal-lighthouse)
+
+      (bydi-was-called-with pulse-momentary-highlight-one-line (list 8 'cursor)))))
+
 ;;; wal-visuals-test.el ends here
 
 ;; Local Variables:

@@ -324,6 +324,38 @@ Check out the [[https://base16-project.github.io/base16-gallery/][gallery]].
 
 * Guides
 
+** display-line-numbers                                             :builtin:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Display relative line numbers.
+
+#+begin_src emacs-lisp
+(use-package display-line-numbers
+  :hook ((prog-mode harpoon-prog-like) . display-line-numbers-mode)
+
+  :custom
+  (display-line-numbers-type 'relative))
+#+end_src
+
+** hl-line                                                   :builtin:medium:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Highlighting the current line.
+
+#+BEGIN_SRC emacs-lisp
+(use-package hl-line
+  :hook
+  ((tablist-minor-mode
+    tabulated-list-mode
+    dired-mode)
+   . hl-line-mode))
+#+END_SRC
+
+
 ** hl-todo                                                       :melpa:high:
 :PROPERTIES:
 :UNNUMBERED: t
@@ -339,6 +371,32 @@ Highlight =TODO=, =FIXME= etc. in programming modes but only if they are followe
   (hl-todo-highlight-punctuation ":")
   (hl-todo-require-punctuation t))
 #+END_SRC
+
+** pulse                                                 :builtin:negligible:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Highlight lines.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal-lighthouse ()
+  "Do a heavy `pulse-momentary-highlight-one-line'.
+
+This just means increasing duration, delay, size and brightness."
+  (interactive)
+
+  (defvar pulse-iterations)
+  (let ((pulse-iterations 30))
+
+    (pulse-momentary-highlight-one-line (point) 'cursor)))
+
+(use-package pulse
+  :bind
+  ("C-c z" . wal-lighthouse))
+#+END_SRC
+
+
 
 ** rainbow-delimiters                                           :nongnu:high:
 :PROPERTIES:
@@ -363,21 +421,6 @@ Show colors colorfully. This sets the background of color names and hex codes to
 (use-package rainbow-mode
   :delight " rbm")
 #+END_SRC
-
-** display-line-numbers                                             :builtin:
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Display relative line numbers.
-
-#+begin_src emacs-lisp
-(use-package display-line-numbers
-  :hook ((prog-mode harpoon-prog-like) . display-line-numbers-mode)
-
-  :custom
-  (display-line-numbers-type 'relative))
-#+end_src
 
 * Modeline
 

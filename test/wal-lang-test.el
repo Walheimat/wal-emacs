@@ -155,6 +155,20 @@
 
         (should (equal flycheck-checker 'less-stylelint))))))
 
+(ert-deftest wal-account-for-commit-buffer ()
+  :tags '(emacs)
+
+  (bydi (electric-pair-local-mode)
+
+    (with-temp-buffer
+      (wal-account-for-commit-buffer)
+      (bydi-was-not-called electric-pair-local-mode)
+
+      (rename-buffer "COMMIT_EDITMSG")
+      (wal-account-for-commit-buffer)
+
+      (bydi-was-called electric-pair-local-mode))))
+
 ;;; wal-lang-test.el ends here
 
 ;; Local Variables:

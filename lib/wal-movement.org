@@ -29,6 +29,7 @@ Moving around should be fun.
 (declare-function avy-goto-word-0 "ext:avy.el")
 (declare-function org-at-heading-p "ext:org.el")
 (declare-function wal-univ-p "wal-useful.el")
+(declare-function wdb-nearby "wal-useful.el")
 #+END_SRC
 
 * Packages
@@ -142,6 +143,110 @@ beginning."
   (editors "w"
     'avy-kill-ring-save-whole-line
     'avy-kill-ring-save-region))
+#+END_SRC
+
+** bookmark                                                     :builtin:low:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Leave a bookmark why don't you. Binds the keymap and sets up annotations.
+
+#+BEGIN_SRC emacs-lisp
+(use-package bookmark
+  :init
+  (that-key "bookmark" :key "C-c b")
+
+  :config
+  (wdb-nearby "\\*Bookmark Annotation\\*" :side 'left :no-other t)
+
+  :custom
+  (bookmark-use-annotations t)
+  (bookmark-menu-confirm-deletion t)
+  (bookmark-fringe-mark nil)
+
+  :bind-keymap
+  (("C-c b" . bookmark-map))
+
+  :bind
+  (:map bookmark-map
+   ("b" . bookmark-set)
+   ("l" . bookmark-bmenu-list)
+   ("L" . bookmark-load)))
+#+END_SRC
+
+** outline                                                      :builtin:low:
+
+Navigate outline.
+
+#+begin_src emacs-lisp
+(use-package outline
+  :hook ((text-mode prog-mode harpoon-prog-like) . outline-minor-mode)
+
+  :delight
+  (outline-minor-mode " out")
+
+  :config
+  (that-key "outline" :key "C-c d")
+
+  :custom
+  (outline-minor-mode-prefix (kbd "C-c d")))
+#+end_src
+
+** register                                                     :builtin:low:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+No offender.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal-clear-registers ()
+  "Clear all registers."
+  (interactive)
+
+  (setq register-alist nil))
+
+(defun wal-point-to-register (register &optional arg)
+  "Store current location of point in REGISTER.
+
+With prefix argument ARG, store current window configuration.
+
+This is otherwise a copy of `point-to-register'."
+  (interactive (list (register-read-with-preview
+                      (if current-prefix-arg
+                          "Window configuration to register: "
+                        "Point to register: "))
+                     current-prefix-arg))
+
+  (add-hook 'kill-buffer-hook 'register-swap-out nil t)
+
+  (set-register
+   register
+   (if arg
+       (list (current-window-configuration) (point-marker))
+	 (point-marker))))
+
+(use-package register
+  :config
+  ;; Make sure that jumping to a marker attempts to select a window
+  ;; already displaying the buffer first.
+  (cl-defmethod register-val-jump-to :before ((val marker) arg)
+    (when-let* ((buffer (marker-buffer val))
+                (windows (window-list-1))
+                (live (seq-find (lambda (it) (eq (window-buffer it) buffer))
+                                windows)))
+
+      (select-window live)))
+  :custom
+  (register-preview-delay 0.8)
+
+  :general
+  (adjunct "r" 'wal-clear-registers)
+
+  :wal-bind
+  (("y" . jump-to-register)
+   ("M-y" . wal-point-to-register)))
 #+END_SRC
 
 * Footer

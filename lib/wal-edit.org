@@ -26,6 +26,120 @@ It's fun to edit things /quickly/.
 
 * Packages
 
+** abbrev                                                  :builtin:indirect:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Automatic quick expansion.
+
+#+BEGIN_SRC emacs-lisp
+(use-package abbrev
+  :custom
+  (save-abbrevs t)
+
+  :delight " abb")
+#+END_SRC
+
+** calc                                                  :builtin:negligible:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Quick calculations.
+
+#+BEGIN_SRC emacs-lisp
+(use-package calc
+  :bind
+  ("C-c q" . quick-calc))
+#+END_SRC
+
+** drag-stuff                                                     :melpa:low:
+
+Drag stuff.
+
+#+begin_src emacs-lisp
+(use-package drag-stuff
+  :defer 3
+
+  :config
+  (defvar-keymap wal-drag-stuff-repeat-map
+    :doc "Keymap to repeat `drag-stuff' commands."
+    :repeat t
+    "<up>" 'drag-stuff-up
+    "<down>" 'drag-stuff-down
+    "<right>" 'drag-stuff-right
+    "<left>" 'drag-stuff-left)
+
+  :general
+  (editor "<up>" 'drag-stuff-up
+          "<down>" 'drag-stuff-down
+          "<left>" 'drag-stuff-left
+          "<right>" 'drag-stuff-right))
+#+end_src
+
+** elec-pair                                             :builtin:negligible:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Less intrusive pairing mode than =smartparens=.
+
+#+BEGIN_SRC emacs-lisp
+(defun wal-in-case-of-mc-mode-do-not-default (&rest _args)
+  "Advise to inhibit if `multiple-cursors-mode' is t."
+  (bound-and-true-p multiple-cursors-mode))
+
+(use-package elec-pair
+  :hook ((prog-mode harpoon-prog-like) . electric-pair-local-mode)
+
+  :config
+  (advice-add
+   'electric-pair-default-inhibit :before-until
+   #'wal-in-case-of-mc-mode-do-not-default))
+#+END_SRC
+
+** expand-region                                                    :gnu:low:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+One thing that can be a bit tricky is selecting regions, not anymore.
+
+#+BEGIN_SRC emacs-lisp
+(use-package expand-region
+  :config
+  (defvar-keymap expand-region-repeat-map
+    :doc "Keymap to repeat various `expand-region' commands."
+    :repeat t
+    ">" 'er/expand-region
+    "<" 'er/contract-region)
+
+  :bind
+  (("C->" . er/expand-region)))
+#+END_SRC
+
+** kmacro                                                       :builtin:low:
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+
+Some people need macros, okay?
+
+#+BEGIN_SRC emacs-lisp
+(defun wal-kmacro (arg)
+  "Toggle kmacro recording with ARG."
+  (interactive "P")
+
+  (cond
+   (defining-kbd-macro (kmacro-end-macro arg))
+   (t (kmacro-start-macro arg))))
+
+(use-package kmacro
+  :general
+  (editor "k" 'wal-kmacro))
+#+END_SRC
+
 ** multiple-cursors                                           :nongnu:medium:
 :PROPERTIES:
 :UNNUMBERED: t
@@ -80,57 +194,6 @@ Don't you want to edit your buffer in multiple places at once? This sets up the 
   (editors "." 'mc/mark-all-like-this  'mc/edit-ends-of-lines))
 #+END_SRC
 
-** expand-region                                                    :gnu:low:
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-One thing that can be a bit tricky is selecting regions, not anymore.
-
-#+BEGIN_SRC emacs-lisp
-(use-package expand-region
-  :config
-  (defvar-keymap expand-region-repeat-map
-    :doc "Keymap to repeat various `expand-region' commands."
-    :repeat t
-    ">" 'er/expand-region
-    "<" 'er/contract-region)
-
-  :bind
-  (("C->" . er/expand-region)))
-#+END_SRC
-
-** elec-pair                                             :builtin:negligible:
-:PROPERTIES:
-:UNNUMBERED: t
-:END:
-
-Less intrusive pairing mode than =smartparens=.
-
-#+BEGIN_SRC emacs-lisp
-(defun wal-in-case-of-mc-mode-do-not-default (&rest _args)
-  "Advise to inhibit if `multiple-cursors-mode' is t."
-  (bound-and-true-p multiple-cursors-mode))
-
-(use-package elec-pair
-  :hook ((prog-mode harpoon-prog-like) . electric-pair-local-mode)
-
-  :config
-  (advice-add
-   'electric-pair-default-inhibit :before-until
-   #'wal-in-case-of-mc-mode-do-not-default))
-#+END_SRC
-
-** surround                                                :melpa:negligible:
-
-Surround things with pairs and use surrounding pairs to act upon enclosed content.
-
-#+begin_src emacs-lisp
-(use-package surround
-  :general
-  (editors "s" 'surround-insert 'surround-kill))
-#+end_src
-
 ** puni                                                        :melpa:medium:
 :PROPERTIES:
 :UNNUMBERED: t
@@ -166,28 +229,14 @@ Deal with the parens.
    :defines (puni-mode-map))
 #+END_SRC
 
-** drag-stuff                                                     :melpa:low:
+** surround                                                :melpa:negligible:
 
-Drag stuff.
+Surround things with pairs and use surrounding pairs to act upon enclosed content.
 
 #+begin_src emacs-lisp
-(use-package drag-stuff
-  :defer 3
-
-  :config
-  (defvar-keymap wal-drag-stuff-repeat-map
-    :doc "Keymap to repeat `drag-stuff' commands."
-    :repeat t
-    "<up>" 'drag-stuff-up
-    "<down>" 'drag-stuff-down
-    "<right>" 'drag-stuff-right
-    "<left>" 'drag-stuff-left)
-
+(use-package surround
   :general
-  (editor "<up>" 'drag-stuff-up
-          "<down>" 'drag-stuff-down
-          "<left>" 'drag-stuff-left
-          "<right>" 'drag-stuff-right))
+  (editors "s" 'surround-insert 'surround-kill))
 #+end_src
 
 * Footer

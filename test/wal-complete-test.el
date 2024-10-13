@@ -234,6 +234,14 @@
       (bydi-was-called org-add-note)
       (bydi-was-not-called org-clock-goto))))
 
+(ert-deftest wal-compilation-buffer-p ()
+  :tags '(emacs)
+
+  (with-temp-buffer
+    (compilation-mode)
+
+    (should (wal-compilation-buffer-p (current-buffer)))))
+
 (ert-deftest wal-consult-compilation-buffer--query ()
   :tags '(emacs)
 
