@@ -1,5 +1,42 @@
 # Changelog
 
+## [2.4.5](https://github.com/Walheimat/wal-emacs/compare/v2.4.4...v2.4.5) (2024-10-13)
+
+### Configurations
+
+* **consult:** use preview key for consult-ripgrep ([349fd8d](https://github.com/Walheimat/wal-emacs/commit/349fd8d32101fc85007ff8c6357c912a0da04b6b))
+* **drag-stuff:** re-add package ([dc756fa](https://github.com/Walheimat/wal-emacs/commit/dc756fafcacaecbb3bcba3331b18ee9485eba6a5))
+* **ship-mate:** multiple buffers for execute ([1982c52](https://github.com/Walheimat/wal-emacs/commit/1982c52565a5bed5e6bf67a5a324de4883346ddb))
+* **tab-bar:** use truncating name function ([cfd2926](https://github.com/Walheimat/wal-emacs/commit/cfd2926c61cedb5e7e787c7c3af534fff5874750))
+
+### Bug Fixes
+
+* **vertico:** use apply for no-cycle advice ([6cdfd44](https://github.com/Walheimat/wal-emacs/commit/6cdfd44ba6d55d20f216fea3c0c058ad3751d1d7))
+* **visuals:** honor order in wal-preferred-fonts ([ea063b3](https://github.com/Walheimat/wal-emacs/commit/ea063b3731fd3f4daeadca1cb74816a17671c0b6))
+
+### Improvements
+
+* **config:** use less destructive char for whale nose ([51ea726](https://github.com/Walheimat/wal-emacs/commit/51ea726750650305a82ad118855c4d6e57e443b4))
+* **consult:** don't cycle consult-{line,ripgrep} ([62d2e64](https://github.com/Walheimat/wal-emacs/commit/62d2e64bc48bac65598db7c0fad98d087c646238))
+* **corfu:** no auto-completion for ship-mate-execute ([51b0e36](https://github.com/Walheimat/wal-emacs/commit/51b0e3664bb3f381e20153165a9ac97456163e77))
+* **corfu:** no auto-completion in minibuffer ([af9e0c5](https://github.com/Walheimat/wal-emacs/commit/af9e0c580e26563c96d34bd752ff74262800863f))
+* **lsp-mode:** remove formatting from wal-lsp-dwim ([ff337ba](https://github.com/Walheimat/wal-emacs/commit/ff337baafd1ec8ccb25c1f5cdc8edac2120514d6))
+* **markdown-mode:** add function to open file with livedown ([6184925](https://github.com/Walheimat/wal-emacs/commit/6184925411195a0f4ea77a3149daf12fd14c493c))
+* **org-clock:** use ellipsis when truncating heading ([4c1bf84](https://github.com/Walheimat/wal-emacs/commit/4c1bf8410f6c8e9b6519aa41105665f9f628de9a))
+* **org-roam:** archive dailies in single file ([db044f1](https://github.com/Walheimat/wal-emacs/commit/db044f1b293785255c5244167c28950d8f19e127))
+* **org-roam:** factor out dailies functionality ([9b552d8](https://github.com/Walheimat/wal-emacs/commit/9b552d812662889f66655b21c2b60073358b5c06))
+* **org-roam:** single template when going to daily ([7562812](https://github.com/Walheimat/wal-emacs/commit/756281271e0125d2ebfa7bddf0206e9a0510966b))
+* **org-super-agenda:** add group for achieved deadline ([3f075e5](https://github.com/Walheimat/wal-emacs/commit/3f075e5060c5ba937fb2742d7a5be0d883d854da))
+* **org-super-agenda:** group of generally scheduled items ([7e68c85](https://github.com/Walheimat/wal-emacs/commit/7e68c85bff269734039ffb9edd64c18ca303cedc))
+* **prettier:** advise on-save function to ignore prefix arg ([457b215](https://github.com/Walheimat/wal-emacs/commit/457b2155e33c40f4fe8a5e41252bc38e4c78e6af))
+* **shell:** use new wal-quit-window-kill-buffer for dead shells ([52cc797](https://github.com/Walheimat/wal-emacs/commit/52cc797d306db9f25c98049c80a394fc6aad5574))
+* **tempel:** use templates for more JS-based modes ([4b8a1f8](https://github.com/Walheimat/wal-emacs/commit/4b8a1f81aab25057c64a43c15725a8928e8ccdae))
+
+### Other
+
+* **corfu:** don't insert with RET ([554cf2a](https://github.com/Walheimat/wal-emacs/commit/554cf2a92ccb0e31db275a2a8746602ccd8246e5))
+* **major:** uncomment major? command ([05d0dff](https://github.com/Walheimat/wal-emacs/commit/05d0dff5ff7257db508e6ba6c73730805f1c1291))
+
 ## [2.4.4](https://github.com/Walheimat/wal-emacs/compare/v2.4.3...v2.4.4) (2024-09-22)
 
 ### Configurations
