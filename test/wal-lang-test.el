@@ -59,7 +59,7 @@
           (bydi-was-called-with start-process-shell-command
             (list '...
                   (format
-                   "livedown start %s --open"
+                   "livedown start \"%s\" --open"
                    (buffer-file-name)))))))))
 
 (ert-deftest wal-markdown-view ()
