@@ -102,10 +102,27 @@ This provides functionality to run a check on a file from a batch process.
 Just-in-time spell-checking using =enchant-2=.
 
 #+BEGIN_SRC emacs-lisp
+(defun wal-jinx--js-import-p (start)
+  "Check if word at START belongs to a JavaScript import statement."
+  (save-excursion
+    (goto-char start)
+    (beginning-of-line)
+    (when (looking-at-p "^\\(import.+\\|} \\)from.+;$")
+      (save-match-data
+        (looking-at "^\\(import.+\\|} \\)from.+;$")
+        (match-end 0)))))
+
 (use-package jinx
   :if (executable-find "enchant-2")
 
-  :hook (emacs-startup . global-jinx-mode)
+  :hook ((emacs-startup . global-jinx-mode)
+         ((js-mode
+           js-ts-mode
+           typescript-mode
+           typescript-ts-mode
+           tsx-ts-mode)
+          .
+          (lambda () (setq-local jinx--predicates (append jinx--predicates (list 'wal-jinx--js-import-p))))))
 
   :bind
   (:map jinx-repeat-map
