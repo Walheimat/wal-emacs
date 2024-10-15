@@ -273,10 +273,16 @@
   :tags '(useful user-facing)
 
   (let ((a (get-buffer-create "stays"))
-        (b (get-buffer-create "*goes*"))
-        (c (get-buffer-create " also goes")))
+        (b )
+        (c ))
 
     (display-buffer-full-frame a nil)
+
+    (should-error (wal-supernova))
+
+    (setq b (get-buffer-create "*goes*")
+          c (get-buffer-create " also goes"))
+
     (display-buffer-pop-up-window b nil)
     (display-buffer-below-selected c nil)
 
