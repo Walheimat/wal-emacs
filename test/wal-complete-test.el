@@ -163,6 +163,22 @@
 
       (bydi-was-called customize-save-variable))))
 
+(ert-deftest wal-consult-narrow-for-agenda ()
+  :tags '(complete)
+
+  (ert-with-test-buffer (:name "consult narrow")
+
+    (setq major-mode 'org-agenda-mode)
+
+    (let ((this-command 'consult-buffer)
+          (minibuffer--original-buffer (current-buffer)))
+
+      (bydi ((:watch unread-command-events))
+
+        (wal-consult-narrow-for-agenda)
+
+        (bydi-was-set unread-command-events)))))
+
 (ert-deftest consult--open-project-items ()
   :tags '(complete)
 

@@ -733,9 +733,9 @@ the item first."
   (consult-line (thing-at-point 'symbol)))
 #+end_src
 
-*** Package configuration
+*** Advice and Hooks
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (defun wal-then-set-active-theme (theme)
   "Advise to set `wal-active-theme' to THEME."
   (setq wal-active-theme theme)
@@ -745,8 +745,22 @@ the item first."
 
   (run-hooks 'wal-theme-hook))
 
+(defun wal-consult-narrow-for-agenda ()
+  "Pre-narrow `consult-buffer' if its run from the agenda buffer."
+  (and-let* (((eq this-command 'consult-buffer))
+             (original-mode (buffer-local-value 'major-mode minibuffer--original-buffer))
+             ((eq original-mode 'org-agenda-mode)))
+
+    (setq-local unread-command-events (list ?a 32))))
+#+end_src
+
+*** Package configuration
+
+#+BEGIN_SRC emacs-lisp
 (use-package consult
   :commands (consult--multi consult)
+
+  :hook (minibuffer-setup . wal-consult-narrow-for-agenda)
 
   :config
   ;; Integrate with `xref'.
