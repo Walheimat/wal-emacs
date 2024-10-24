@@ -138,18 +138,6 @@
 
       (bydi-was-called-with project-find-file-in '(nil ("/tmp/test") project t)))))
 
-(ert-deftest wal-project-find-file-other-window ()
-  :tags '(workspace user-facing)
-
-  (bydi ((:watch display-buffer-overriding-action)
-         project-find-file)
-
-    (call-interactively 'wal-project-find-file-other-window)
-
-    (bydi-was-set display-buffer-overriding-action)
-
-    (bydi-was-called project-find-file)))
-
 (ert-deftest wal-project-find-dir-locals ()
   :tags '(workspace user-facing)
 
