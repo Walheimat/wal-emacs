@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.4.6](https://github.com/Walheimat/wal-emacs/compare/v2.4.5...v2.4.6) (2024-10-27)
+
+### Configurations
+
+* **hungry-delete:** add package and use for lisp-mode ([f6bfb58](https://github.com/Walheimat/wal-emacs/commit/f6bfb584682515cb4bb315f7ee7154b41fd00ef9))
+* **project:** add deno.json as a root marker ([70a0c87](https://github.com/Walheimat/wal-emacs/commit/70a0c874099189291cde10772be6008bc63e069f))
+* **tab-bar:** set truncated-max to 8 ([c3499f9](https://github.com/Walheimat/wal-emacs/commit/c3499f99d2fd7534f8944c3c93fc30af5c314857))
+
+### Bug Fixes
+
+* **markdown-mode:** double-quote file ([8b1611f](https://github.com/Walheimat/wal-emacs/commit/8b1611fc69057b1d68437bb8487d536c3ef1af58))
+
+### Improvements
+
+* **consult,org-agenda:** narrow consult-buffer to agenda ([ebfb9d7](https://github.com/Walheimat/wal-emacs/commit/ebfb9d745c81ef4334f6ed8a5059b33c9676c979))
+* **hungry-delete:** also activate for lisp-data-mode ([3933f3e](https://github.com/Walheimat/wal-emacs/commit/3933f3ec51b7949c8ecea0256592102ad80f198e))
+* **jinx:** add predicate to exclude JavaScript exports ([311cdc1](https://github.com/Walheimat/wal-emacs/commit/311cdc17ace979a1a6c95c4488a0433cf8f665cb))
+* **wal-supernova:** raise user-error when no target exists ([30697e9](https://github.com/Walheimat/wal-emacs/commit/30697e9c80c131d79b7e5367c2c859f05e0d1d4b))
+
+### Other
+
+* **ship-mate:** select command for alternate ([e704d2a](https://github.com/Walheimat/wal-emacs/commit/e704d2af5da9de70e3fc759ccdc7f9d7b553a792))
+* **useful,consult:** user-prefixed backslash ([e07ca75](https://github.com/Walheimat/wal-emacs/commit/e07ca7517d6e22c1a257e2a766424e8f88015d48))
+* **various:** use C for maps/transients, M for alternate keys ([a813761](https://github.com/Walheimat/wal-emacs/commit/a813761cbbcdc512520d450d5b5a5f5bb9d58f05))
+
 ## [2.4.5](https://github.com/Walheimat/wal-emacs/compare/v2.4.4...v2.4.5) (2024-10-13)
 
 ### Configurations
