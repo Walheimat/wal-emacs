@@ -79,7 +79,7 @@ The action depends on the current position, active region and the
 
   (cond
    ;; At the beginning of the document organize imports.
-   ((eq 1 (point))
+   ((eq (point-min) (point))
     (call-interactively 'lsp-organize-imports))
 
    ;; Jump to lens from the end of lines.
@@ -87,23 +87,21 @@ The action depends on the current position, active region and the
 
     (call-interactively 'lsp-avy-lens))
 
-   ;; Find references at the beginning symbols.
-   ((and-let* ((bounds (wal-symbol-bounds)))
+   ;; When on a symbol.
+   ((wal-symbol-bounds)
+    (let* ((bounds (wal-symbol-bounds))
+           (beg (car-safe bounds))
+           (end (cdr-safe bounds)))
 
-      (eq (car-safe bounds) (point)))
-
-    (call-interactively 'lsp-find-references))
-
-   ;; Rename at the end of symbols.
-   ((and-let* ((bounds (wal-symbol-bounds)))
-
-      (eq (cdr-safe bounds) (1+ (point))))
-
-    (call-interactively 'lsp-rename))
+      ;; Rename at the end of symbols.
+      (if (eq beg (point))
+          (call-interactively 'lsp-rename)
+        ;; Otherwise find references.
+        (call-interactively 'lsp-find-references))))
 
    ;; Otherwise execute a code action.
    (t
-    (call-interactively 'lsp-execute-code-action))))
+    (user-error "No action defined"))))
 
 (use-package lsp-mode
   :hook (lsp-completion-mode . wal-lsp-completion)

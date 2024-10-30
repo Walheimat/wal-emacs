@@ -31,8 +31,7 @@
 
   (let ((type nil))
     (bydi ((:mock point :var mock-point :initial 0)
-           (:mock wal-symbol-bounds :return '(3 . 5))
-           (:mock thing-at-point :with (lambda (x &rest _) (eq x type)))
+           (:mock wal-symbol-bounds :with (lambda () (when (eq type 'symbol) '(3 . 5))))
            (:othertimes looking-at)
            lsp-organize-imports
            lsp-rename
@@ -40,23 +39,15 @@
            lsp-find-references
            lsp-avy-lens)
 
-      (wal-lsp-dwim)
-
-      (bydi-was-called lsp-execute-code-action :clear t)
+      (should-error (wal-lsp-dwim))
 
       (setq type 'symbol)
 
       (wal-lsp-dwim)
 
-      (bydi-was-called lsp-execute-code-action)
+      (bydi-was-called lsp-find-references :clear t)
 
       (setq mock-point 3)
-
-      (wal-lsp-dwim)
-
-      (bydi-was-called lsp-find-references)
-
-      (setq mock-point 4)
 
       (wal-lsp-dwim)
 
