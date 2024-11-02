@@ -130,6 +130,23 @@
 
       (should (string= "d" (wal-junit-match-file))))))
 
+(ert-deftest wal-maven-test-match-file ()
+  :tags '(lang)
+
+  (let ((matched nil))
+
+    (bydi ((:mock project-files :return (list "/test/a.txt" "/test/b.txt"))
+           (:always project-current)
+           (:mock match-string :return matched))
+
+      (setq matched "b.txt")
+
+      (should (string= "/test/b.txt" (wal-maven-test-match-file)))
+
+      (setq matched "c.txt")
+
+      (should-not (wal-maven-test-match-file)))))
+
 (ert-deftest wal-maybe-use-custom-css-checker ()
   :tags '(lang)
 

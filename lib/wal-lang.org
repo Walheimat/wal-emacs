@@ -835,6 +835,25 @@ LSP integration.
     3)
   "Regular expression used for JUnit errors.")
 
+(defun wal-maven-test-match-file ()
+  "Find the file associated with the matched maven test error."
+  (save-match-data
+    (when-let* ((file (match-string 2))
+                (file-regexp (concat (substring-no-properties file) "\\'"))
+                (files (project-files (project-current)))
+                (file (seq-find (lambda (it) (string-match-p file-regexp it)) files)))
+
+      file)))
+
+(defvar wal-maven-test-compilation-error-regexp
+  '(maven-test
+    "\t\\at .+(\\(.+.java\\):\\([0-9]+\\))" ; Regexp.
+    wal-maven-test-match-file               ; File.
+    2                                       ; Line.
+    nil                                     ; Column.
+    nil                                     ; Type.
+    1))                                     ; Hyperlink
+
 (use-package lsp-java
   :config
   (with-eval-after-load 'dap-mode
@@ -879,6 +898,12 @@ LSP integration.
   (add-to-list
    'compilation-error-regexp-alist-alist
    wal-junit-compilation-error-regexp)
+
+  ;; Add regular expression for Maven errors.
+  (add-to-list 'compilation-error-regexp-alist 'maven-test)
+  (add-to-list
+   'compilation-error-regexp-alist-alist
+   wal-maven-test-compilation-error-regexp)
 
   :custom
   (lsp-java-format-on-type-enabled nil) ; Suggested fix for failing completion.
