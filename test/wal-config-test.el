@@ -29,8 +29,7 @@
      (let ((wal-config-animation-timer nil)
            (wal-config-animation-key-frames nil)
            (wal-config-animation-type nil)
-           (wal-config-animation--cachalot-key-frames ["cachalot"])
-           (wal-config-animation--blue-whale-key-frames ["blue"]))
+           (wal-config-animation-key-frames ["blue"]))
 
        (bydi (wal-config-animation-animate run-with-timer cancel-timer kill-buffer)
          ,@body))))
@@ -43,34 +42,12 @@
 
     (wal-config-animation--start-animation)
 
-    (should-not wal-config-animation-key-frames)))
+    (bydi-was-not-called wal-config-animation-animate)))
 
 (ert-deftest animation--start-animation ()
   :tags '(config)
 
   (animation-with-animation
-    (wal-config-animation--start-animation)
-
-    (should wal-config-animation-timer)
-    (bydi-was-called wal-config-animation-animate)
-    (should (string= (aref wal-config-animation-key-frames 0) "blue"))))
-
-(ert-deftest animation--start-animation--cachalot ()
-  :tags '(config)
-
-  (animation-with-animation
-    (setq wal-config-animation-type 'cachalot)
-    (wal-config-animation--start-animation)
-
-    (should wal-config-animation-timer)
-    (bydi-was-called wal-config-animation-animate)
-    (should (string= (aref wal-config-animation-key-frames 0) "cachalot"))))
-
-(ert-deftest animation--start-animation--blue ()
-  :tags '(config)
-
-  (animation-with-animation
-    (setq wal-config-animation-type 'blue)
     (wal-config-animation--start-animation)
 
     (should wal-config-animation-timer)

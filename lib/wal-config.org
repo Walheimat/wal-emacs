@@ -189,10 +189,11 @@ Example for advising =:around=.
   :type 'boolean
   :group 'wal-config)
 
-(defcustom wal-config-animation-type 'blue
-  "The whale to use in the config animation."
-  :type '(choice (const :tag "Blue whale" blue)
-                 (const :tag "Cachalot" cachalot))
+(defcustom wal-config-animation-speed 1.0
+  "The speed of the whale animation.
+
+This is the time in seconds a single frame will be displayed."
+  :type 'float
   :group 'wal-config)
 #+END_SRC
 
@@ -303,15 +304,9 @@ Show a whale in a =posframe= when editing files in the config.
               (format pattern it))
             wal-config-animation--fins)))
 
-(defvar wal-config-animation--cachalot-key-frames
-  (wal-config-animation--build-key-frames "(__.%s >{"))
-
-(defvar wal-config-animation--blue-whale-key-frames
+(defvar wal-config-animation-key-frames
   (wal-config-animation--build-key-frames "[   ⹈ %s    {"))
-
-(defvar wal-config-animation-key-frames nil)
 (defvar wal-config-animation-frame-index 0)
-(defvar wal-config-animation-animation-speed 0.4)
 (defvar wal-config-animation-buffer "*swimming-whale*")
 (defvar wal-config-animation-timer nil)
 
@@ -345,20 +340,13 @@ Show a whale in a =posframe= when editing files in the config.
 
 No-op if it is already running."
   (unless wal-config-animation-timer
-    ;; Set up key frames.
-    (setq wal-config-animation-key-frames
-          (pcase wal-config-animation-type
-            ('cachalot wal-config-animation--cachalot-key-frames)
-            ('blue wal-config-animation--blue-whale-key-frames)
-            (_ wal-config-animation--blue-whale-key-frames)))
-
     ;; Make sure the first frame is animated before we display.
     (wal-config-animation-animate)
 
     ;; Start timer.
     (setq wal-config-animation-timer (run-with-timer
                                       0
-                                      wal-config-animation-animation-speed
+                                      wal-config-animation-speed
                                       #'wal-config-animation-animate))))
 
 (defun wal-config-animation--stop-animation ()
