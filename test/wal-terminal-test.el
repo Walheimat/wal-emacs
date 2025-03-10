@@ -16,41 +16,40 @@
 
     (bydi-was-called eshell-truncate-buffer)))
 
-(ert-deftest wal-vterm--prefer-project ()
+(ert-deftest wal-project-vterm ()
   :tags '(terminal)
-
-  (defun faketerm (&rest args)
-    t)
 
   (bydi ((:sometimes project-current)
          (:mock project-root :return "/tmp")
          (:mock project-prefixed-buffer-name :return "*test-vterm*")
          (:spy pop-to-buffer)
-         (:spy faketerm)
+         (:mock vterm :with bydi-return-first)
          (:watch default-directory))
 
-    (wal-vterm--prefer-project 'faketerm t)
+    (wal-project-vterm)
 
-    (bydi-was-called faketerm)
+    (bydi-was-called vterm :clear t)
     (bydi-was-set-to default-directory "/tmp")
 
     (ert-with-test-buffer (:name "vterm")
       (rename-buffer "*test-vterm*")
 
-      (funcall-interactively 'wal-vterm--prefer-project 'faketerm t)
+      (funcall-interactively 'wal-project-vterm)
 
-      (bydi-was-called faketerm)
+      (bydi-was-not-called vterm)
+
+      (bydi-was-called pop-to-buffer :clear t)
+
+      (funcall-interactively 'wal-project-vterm '(4))
+
       (bydi-was-not-called pop-to-buffer)
-
-      (wal-vterm--prefer-project 'faketerm)
-
-      (bydi-was-called pop-to-buffer))
+      (bydi-was-called vterm :clear t))
 
     (bydi-toggle-sometimes)
 
-    (funcall-interactively 'wal-vterm--prefer-project 'faketerm 'argument)
+    (funcall-interactively 'wal-project-vterm)
 
-    (bydi-was-called-last-with faketerm 'argument)))
+    (bydi-was-not-called vterm)))
 
 (ert-deftest wal-vterm-adjust-by-disabling-query-on-exit ()
   :tags '(terminal)

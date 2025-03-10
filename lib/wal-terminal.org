@@ -133,15 +133,13 @@ Fully functional and slightly cumbersome terminal usable within Emacs.
 Adds the same functionality to have one =vterm= buffer per project and sets up =with-editor=.
 
 #+BEGIN_SRC emacs-lisp
-(defun wal-vterm--prefer-project (fun &optional arg)
-  "Get preferably a `vterm' buffer.
+(defun wal-project-vterm (&optional arg)
+  "Get a `vterm' buffer for the current project.
 
-This calls FUN (which is `vterm'). If there is a project and ARG
-is non-nil, this creates a new buffer even if a project buffer
-already exists."
+If ARG is non-nil, get or create a numbered buffer."
   (interactive "P")
 
-  (if-let ((project (project-current)))
+  (when-let ((project (project-current)))
 
     (let* ((default-directory (project-root project))
            (vterm-buffer-name (project-prefixed-buffer-name "vterm"))
@@ -149,10 +147,7 @@ already exists."
 
       (if (and buffer (not arg))
           (pop-to-buffer buffer (bound-and-true-p display-comint-buffer-action))
-
-        (funcall fun arg)))
-
-    (funcall fun arg)))
+        (vterm arg)))))
 
 (defun wal-vterm-adjust-by-disabling-query-on-exit (buffer)
   "Disable query-on-exit for BUFFER."
@@ -165,10 +160,6 @@ already exists."
 
   :init
   (advice-add
-   'vterm :around
-   #'wal-vterm--prefer-project)
-
-  (advice-add
    'vterm :filter-return
    #'wal-vterm-adjust-by-disabling-query-on-exit)
 
@@ -176,8 +167,9 @@ already exists."
   (vterm-prefix "VTerm")
   (vterm-max-scrollback 10000)
 
-  :general
-  (ambassador "t" 'vterm)
+  :wal-bind
+  (("<f5>" . vterm)
+   ("M-<f5>" . wal-project-vterm))
 
   :delight
   (vterm-copy-mode " vcp"))
