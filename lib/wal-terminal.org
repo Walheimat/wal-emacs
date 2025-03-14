@@ -163,6 +163,15 @@ If ARG is non-nil, get or create a numbered buffer."
    'vterm :filter-return
    #'wal-vterm-adjust-by-disabling-query-on-exit)
 
+  ;; Toggle line numbers while in copy mode.
+  (advice-add
+   'vterm--enter-copy-mode :after
+   #'display-line-numbers-mode)
+
+  (advice-add
+   'vterm--exit-copy-mode  :after
+   (lambda () (display-line-numbers-mode -1)))
+
   :custom
   (vterm-prefix "VTerm")
   (vterm-max-scrollback 10000)
