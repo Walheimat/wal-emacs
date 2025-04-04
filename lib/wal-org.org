@@ -286,6 +286,11 @@ Plan your day, week and year. This adapts the agenda view to show what I need da
 (defun wal-org-agenda--then-rename-tab (&rest _)
   "Rename the tab if we set up the window using tabs."
   (when (eq org-agenda-window-setup 'other-tab)
+    ;; First kill any existing agenda tabs.
+    (when-let ((existing (tab-bar--tab-index-by-name "agenda")))
+      (tab-bar-close-tab (1+ existing)))
+
+    ;; Then rename this new tab.
     (tab-bar-rename-tab "agenda")))
 
 (use-package org-agenda

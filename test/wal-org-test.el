@@ -275,7 +275,9 @@
 
   (let ((org-agenda-window-setup 'something-else))
 
-    (bydi (tab-bar-rename-tab)
+    (bydi (tab-bar-rename-tab
+           tab-bar-close-tab
+           (:mock tab-bar--tab-index-by-name :var index))
 
       (wal-org-agenda--then-rename-tab)
 
@@ -285,7 +287,14 @@
 
       (wal-org-agenda--then-rename-tab)
 
-      (bydi-was-called-with tab-bar-rename-tab "agenda"))))
+      (bydi-was-not-called tab-bar-close-tab)
+      (bydi-was-called-with tab-bar-rename-tab "agenda")
+
+      (setq index 1)
+
+      (wal-org-agenda--then-rename-tab)
+
+      (bydi-was-called-with tab-bar-close-tab 2))))
 
 (ert-deftest wal-org-super-agenda--with-groups ()
   :tags '(org)
