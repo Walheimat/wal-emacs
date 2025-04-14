@@ -166,6 +166,8 @@
 (ert-deftest wal-consult-narrow-for-agenda ()
   :tags '(complete)
 
+  (defvar consult--buffer-display 'switch-to-buffer)
+
   (ert-with-test-buffer (:name "consult narrow")
 
     (setq major-mode 'org-agenda-mode)
@@ -173,11 +175,13 @@
     (let ((this-command 'consult-buffer)
           (minibuffer--original-buffer (current-buffer)))
 
-      (bydi ((:watch unread-command-events))
+      (bydi ((:watch unread-command-events)
+             (:watch consult--buffer-display))
 
         (wal-consult-narrow-for-agenda)
 
-        (bydi-was-set unread-command-events)))))
+        (bydi-was-set unread-command-events)
+        (bydi-was-set-to consult--buffer-display 'switch-to-buffer-other-window)))))
 
 (ert-deftest consult--open-project-items ()
   :tags '(complete)

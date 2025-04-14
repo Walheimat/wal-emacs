@@ -749,10 +749,16 @@ the item first."
   (run-hooks 'wal-theme-hook))
 
 (defun wal-consult-narrow-for-agenda ()
-  "Pre-narrow `consult-buffer' if it's run from the agenda buffer."
+  "Pre-narrow `consult-buffer' if it's run from the agenda buffer.
+
+This also sets the `consult--buffer-display' to use
+`switch-to-buffer-other-window'."
   (and-let* (((eq this-command 'consult-buffer))
              (original-mode (buffer-local-value 'major-mode minibuffer--original-buffer))
              ((eq original-mode 'org-agenda-mode)))
+
+    (with-current-buffer minibuffer--original-buffer
+      (setq-local consult--buffer-display 'switch-to-buffer-other-window))
 
     (setq-local unread-command-events (list ?a 32))))
 #+end_src
