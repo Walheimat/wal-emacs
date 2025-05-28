@@ -281,6 +281,16 @@
     (bydi-was-set org-super-agenda-groups)
     (bydi-was-called bydi-rf)))
 
+(ert-deftest wal-org-roam-node-find-other-winodw ()
+  :tags '(org)
+
+  (bydi ((:mock org-roam-node-read :return 'node)
+         org-roam-node-visit)
+
+    (wal-org-roam-node-find-other-window)
+
+    (bydi-was-called-with org-roam-node-visit (list 'node t))))
+
 (ert-deftest wal-org-roam-dailies--with-first-template-only ()
   (defvar org-roam-dailies-capture-templates)
   (let ((org-roam-dailies-capture-templates '(a b c)))
