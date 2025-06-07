@@ -122,6 +122,60 @@ One thing that can be a bit tricky is selecting regions, not anymore.
   (("C->" . er/expand-region)))
 #+END_SRC
 
+** hideshow                                              :builtin:negligible:
+
+Hide (and show) blocks.
+
+#+begin_src emacs-lisp
+;; From: https://karthinks.com/software/simple-folding-with-hideshow/
+(defun wal-hs-cycle (&optional level)
+  "Cycle `hideshow', optionally hide up to LEVEL."
+  (interactive "p")
+
+  (setq this-command
+        (if (not (= level 1))
+            (progn
+              (hs-hide-level level)
+              'hs-hide-level)
+          (pcase last-command
+            ('hs-cycle
+             (hs-hide-level 1)
+             'hs-cycle-children)
+
+            ('hs-cycle-children
+             (save-excursion (hs-show-block))
+             (hs-show-block)
+             'hs-cycle-subtree)
+
+            ('hs-cycle-subtree
+             (hs-hide-block)
+             'hs-hide-block)
+
+            (_
+             (if (not (hs-already-hidden-p))
+                 (progn
+                   (hs-hide-block)
+                   'hs-hide-block)
+               (hs-hide-level 1)
+               'hs-cycle-children))))))
+
+(use-package hideshow
+  :hook ((prog-mode harpoon-prog-like) . hs-minor-mode)
+
+  :config
+  (defvar-keymap wal-hs-repeat-map
+    :doc "Repeat map for `hideshow'."
+    :repeat t
+    "h" 'wal-hs-cycle)
+
+  :bind
+  (:map hs-minor-mode-map
+        ("C-c h" . wal-hs-cycle))
+
+  :functions
+  (hs-already-hidden-p hs-show-block hs-hide-block hs-hide-level))
+#+end_src
+
 ** hungry-delete                                                  :melpa:low:
 :PROPERTIES:
 :UNNUMBERED: t

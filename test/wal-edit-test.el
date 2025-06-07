@@ -48,6 +48,42 @@
 
     (should-not (wal-in-case-of-mc-mode-do-not-default))))
 
+(ert-deftest wal-hs-cycle ()
+  :tags '(edit)
+
+  (bydi (hs-hide-level
+         hs-show-block
+         hs-hide-block
+         (:sometimes hs-already-hidden-p)
+         (:watch this-command))
+
+    (call-interactively 'wal-hs-cycle)
+    (bydi-was-called-with hs-hide-level 1 :clear t)
+    (bydi-was-set-to this-command 'hs-cycle-children)
+
+    (bydi-toggle-volatile 'hs-already-hidden-p)
+    (call-interactively 'wal-hs-cycle)
+    (bydi-was-called hs-hide-block)
+    (bydi-was-set-to-last this-command 'hs-hide-block)
+
+    (setq last-command 'hs-cycle-children)
+    (call-interactively 'wal-hs-cycle)
+    (bydi-was-called-n-times hs-show-block 2)
+    (bydi-was-set-to-last this-command 'hs-cycle-subtree)
+
+    (setq last-command 'hs-cycle-subtree)
+    (call-interactively 'wal-hs-cycle)
+    (bydi-was-called hs-hide-block)
+    (bydi-was-set-to-last this-command 'hs-hide-block)
+
+    (setq last-command 'hs-cycle)
+    (call-interactively 'wal-hs-cycle)
+    (bydi-was-called-with hs-hide-level 1)
+
+    (funcall 'wal-hs-cycle 3)
+    (bydi-was-called-last-with hs-hide-level 3)
+    (bydi-was-set-to-last this-command 'hs-hide-level)))
+
 (ert-deftest wal-kmacro ()
   :tags '(emacs user-facing)
 
