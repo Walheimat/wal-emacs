@@ -81,14 +81,15 @@ See the [[https://github.com/Walheimat/partial-recall][repository]] for more inf
   (partial-recall-plasticity-of-moment-mode)
   (partial-recall-hygiene-mode)
 
-  (that-key "partial-recall" :user-key "C-i")
+  (define-key wal-command-map "i" partial-recall-command-map)
+  (that-key-in-map "partial-recall" :key "i")
 
-  :wal-bind
-  (("i" . partial-recall-switch-to-buffer)
+  :bind
+  (:map wal-alternate-map
    ("M-i" . partial-recall-menu))
 
-  :wal-bind-keymap
-  ("C-i" . partial-recall-command-map))
+  :wal-bind
+  ("i" . partial-recall-switch-to-buffer))
 #+end_src
 
 *** partial-recall-x
@@ -204,7 +205,7 @@ See the [[https://github.com/Walheimat/parallel][repository]] for more informati
 
 Provides macros to create project-scoped compilation commands.
 
-The package configuration defines =ship-mate-{build,install,clean,execute,test}= commands. Each of these commands have their own per-project history that can be pre-filled through defaults and dir-local variables. The commands are provided through a prefix map bound to =H-M-,=.
+The package configuration defines =ship-mate-{build,install,clean,execute,test}= commands. Each of these commands have their own per-project history that can be pre-filled through defaults and dir-local variables. The commands are provided through a prefix map bound to =C-M-s-c-,=.
 
 These command as well as =project-compile= and =recompile= are advised to be bounded to project files. This means that running them will not prompt to save unsaved files outside of the project.
 
@@ -230,18 +231,16 @@ These command as well as =project-compile= and =recompile= are advised to be bou
 
   (wdb-faraway "\\*ship-mate")
 
-  (that-key "ship-mate" :user-key "C-,")
-  (that-key "ship-mate commands" :user-key "M-,")
+  (define-key wal-command-map "," ship-mate-command-map)
+  (define-key wal-alternate-map "," ship-mate-quick-command-map)
+  (that-key-in-map "ship-mate" :key ",")
+  (that-key-in-map "ship-mate" :key "," :alternate t)
 
   :custom
   (ship-mate-prefix-read-command t)
 
   :wal-bind
-  (("," . ship-mate-rerun-command))
-
-  :wal-bind-keymap
-  (("C-," . ship-mate-command-map)
-   ("M-," . ship-mate-quick-command-map)))
+  (("," . ship-mate-rerun-command)))
 #+end_src
 
 * Footer

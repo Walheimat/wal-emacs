@@ -143,10 +143,26 @@
         (when (display-graphic-p)
           (which-key-add-key-based-replacements "h" "Help me!"))))))
 
+(ert-deftest that-key-in-map ()
+  :tags '(key-bindings)
+
+  (bydi-match-expansion
+   (that-key-in-map "Help map!" :key "h")
+   `(with-eval-after-load 'which-key
+      (declare-function which-key-add-keymap-based-replacements "ext:which-key.el")
+      (which-key-add-keymap-based-replacements wal-command-map "h" "Help map!")))
+
+  (bydi-match-expansion
+   (that-key-in-map "Help map!" :key "h" :alternate t)
+   `(with-eval-after-load 'which-key
+      (declare-function which-key-add-keymap-based-replacements "ext:which-key.el")
+      (which-key-add-keymap-based-replacements wal-alternate-map "h" "Help map!"))))
+
 (ert-deftest wal-prefix-user-key ()
   :tags '(key-bindings)
 
-  (should (string-equal (wal-prefix-user-key "k") "H-k")))
+  (let ((wal-custom-prefix "H"))
+    (should (string-equal (wal-prefix-user-key "k") "H-k"))))
 
 ;;; wal-key-bindings-test.el ends here
 

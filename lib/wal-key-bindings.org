@@ -29,7 +29,6 @@ User-reserved combinations are used for (mostly built-in) commands and command m
 + =C-c q= to do a =quick-calc= (inserted if called with =C-u=)
 + =C-c r= to =compile= (=C-c M-r= to =recompile=)
 + =C-c t= to flop frames (command map of =transpose-frame= with =C-c M-t=)
-+ =C-c w= mimics pressing the hyper key (customizable through =wal-hyper-mock=)
 + =C-c x= opens a scratch buffer (can be called with numeric argument)
 + =C-c z= for a heavy =pulse=
 
@@ -37,80 +36,61 @@ User-reserved combinations are used for (mostly built-in) commands and command m
 
 + =M-o= switches to most recently used window (=C-M-o= switches to =other-buffer=)
 
-** Hyper
+** Custom Prefix
 
-I [[Rebinding Hyper][rebound]] my =<CAPS>= (caps-lock) key to =Hyper_L= to use the hyper bindings below. Therefore, all following keys should be right hand keys.
+The default custom prefix is =C-M-s= (that is control, meta, super). You may override it by setting =wal-custom-prefix= to a valid key combination.
 
-Most hyper[fn:2] bindings are quick-access actions, some have an alternate action using prefix =M=, some bind a command map or transient with prefix =C=:
+Most bindings are quick-access actions, some have an alternate action bound in prefixed =a=, some bind a command map or transient in prefixed =c=.
 
-| Binding                  | Context                                 | Action                            | Alternate                              | Command Map   |
-|--------------------------+-----------------------------------------+-----------------------------------+----------------------------------------+---------------|
-| =H-]=                    |                                         | =dap-debug=                       | =dap-breakpoint-toggle=                | ✓             |
-| =H-[=                    | Buffers with =lsp-mode=.                | =wal-lsp-dwim=                    | =lsp-execute-code-action=              | ✓             |
-| =H-'=                    |                                         | =wal-consult-project=             | =wal-project-switch-to-parent-project= | -             |
-| =H-p=                    |                                         | =org-roam-capture=                | =org-roam-dailies-capture-today=       | ✓             |
-| =H-h=                    |                                         | =project-find=file=               | =wal-project-find-in-here=             | (use =C-x p=) |
-| =H-k=                    | Goes to headings for =org-mode=.        | =wal-consult-place=               | -                                      | -             |
-| =H-k=                    | During compatible =consult= completion. | Preview selection.                | -                                      | -             |
-| =H-;=                    |                                         | =consult-line=                    | =wal-consult-line-symbol-at-point=     | -             |
-| =H-;=                    | During =vertico= completion.            | =marginalia-cycle=                | -                                      | -             |
-| =H-j=                    |                                         | =wal-avy-goto-word=               | =avy-goto-char-in-line=                | -             |
-| =H-j=                    | During =vertico= completion.            | =vertico-quick-exit=              | -                                      | -             |
-| =H-j=                    | During =corfu= completion.              | =corfu-quick-complete=            | -                                      | -             |
-| =H-y=                    |                                         | =jump-to-register=                | =wal-point-to-register=                | (use =C-x r=) |
-| =H-.=                    |                                         | =embark-act=                      | =embark-dwim=                          | -             |
-| =H-l=                    |                                         | =wal-avy-goto-line=               | =consult-goto-line=                    | -             |
-| =H-l=                    | During =vertico= completion.            | =vertico-multiform=vertical=      | -                                      | -             |
-| =H-m=                    |                                         | =magit-status=                    | =magit-find-file=                      | ✓             |
-| =H-<mouse3>=             |                                         | =mc/add-cursor-on-click=          | -                                      | -             |
-| =H-n=                    |                                         | =rg-project-literal=              | =rg-literal=                           | ✓             |
-| =H-o=                    |                                         | =ace-window=                      | =tab-bar-switch-to-tab=                | -             |
-| =H-,=                    |                                         | =ship-mate-rerun-command=         | =ship-mate-quick-command-map=          | ✓             |
-| =H-<SPC>=                |                                         | =wal-consult-clock=               | =wal-consult-agenda-take-note=         | -             |
-| =H-u=                    |                                         | =consult-buffer=                  | =consult-find-file=                    | ✓             |
-| =H-{up,down-left,right}= |                                         | =windmove-{up,down,left-right}=   | -                                      | -             |
-| =H-i=                    |                                         | =partial-recall-switch-to-buffer= | =partial-recall-menu=                  | ✓             |
-| =H-/=                    |                                         | =cape-dabbrev=                    | =tempel-complete=                      | ✓             |
-| =H-\=                    |                                         | =wal-supernova=                   | =wal-consult-display-buffer=           | -             |
+| Binding                | Context                                 | Action                            | Alternate                              | Command Map   |
+|------------------------+-----------------------------------------+-----------------------------------+----------------------------------------+---------------|
+| =]=                    |                                         | =dap-debug=                       | =dap-breakpoint-toggle=                | ✓             |
+| =[=                    | Buffers with =lsp-mode=.                | =wal-lsp-dwim=                    | =lsp-execute-code-action=              | ✓             |
+| ='=                    |                                         | =wal-consult-project=             | =wal-project-switch-to-parent-project= | -             |
+| =p=                    |                                         | =org-roam-capture=                | =org-roam-dailies-capture-today=       | ✓             |
+| =h=                    |                                         | =project-find=file=               | =wal-project-find-in-here=             | (use =C-x p=) |
+| =k=                    | Goes to headings for =org-mode=.        | =wal-consult-place=               | -                                      | -             |
+| =k=                    | During compatible =consult= completion. | Preview selection.                | -                                      | -             |
+| =;=                    |                                         | =consult-line=                    | =wal-consult-line-symbol-at-point=     | -             |
+| =;=                    | During =vertico= completion.            | =marginalia-cycle=                | -                                      | -             |
+| =j=                    |                                         | =wal-avy-goto-word=               | =avy-goto-char-in-line=                | -             |
+| =j=                    | During =vertico= completion.            | =vertico-quick-exit=              | -                                      | -             |
+| =j=                    | During =corfu= completion.              | =corfu-quick-complete=            | -                                      | -             |
+| =y=                    |                                         | =jump-to-register=                | =wal-point-to-register=                | (use =C-x r=) |
+| =.=                    |                                         | =embark-act=                      | =embark-dwim=                          | -             |
+| =l=                    |                                         | =wal-avy-goto-line=               | =consult-goto-line=                    | -             |
+| =l=                    | During =vertico= completion.            | =vertico-multiform=vertical=      | -                                      | -             |
+| =m=                    |                                         | =magit-status=                    | =magit-find-file=                      | ✓             |
+| =<mouse3>=             |                                         | =mc/add-cursor-on-click=          | -                                      | -             |
+| =n=                    |                                         | =rg-project-literal=              | =rg-literal=                           | ✓             |
+| =o=                    |                                         | =ace-window=                      | =tab-switch=                           | -             |
+| =,=                    |                                         | =ship-mate-rerun-command=         | =ship-mate-quick-command-map=          | ✓             |
+| =<SPC>=                |                                         | =wal-consult-clock=               | =wal-consult-agenda-take-note=         | -             |
+| =u=                    |                                         | =consult-buffer=                  | =consult-find-file=                    | ✓             |
+| ={up,down-left,right}= |                                         | =windmove-{up,down,left-right}=   | -                                      | -             |
+| =i=                    |                                         | =partial-recall-switch-to-buffer= | =partial-recall-menu=                  | ✓             |
+| =/=                    |                                         | =cape-dabbrev=                    | =tempel-complete=                      | ✓             |
+| =\=                    |                                         | =wal-supernova=                   | =wal-consult-display-buffer=           | -             |
 
-*** Rebinding Hyper
 
-**** XServer
 
-Assuming you use Xorg Display server, create an =.Xmodmap= file in your home folder containing the following lines.
+*** Using =keyd=
+
+I use =keyd=[fn:2] to overlay holding =capslock= or ='= to produce =wal-user-prefix= (=C-M-s= by default).
+
+I have the following contents in the file =/etc/keyd/default.conf=.
 
 #+BEGIN_SRC conf :tangle no
-! Assign Hyper_L to Caps_Lock
-keycode 66 = Hyper_L
-! Remove caps lock
-remove lock = Caps_Lock
-! Set hyper to mod3 from mod4
-remove mod4 = Hyper_L
-add mod3 = Hyper_L
-#+END_SRC
+[ids]
 
-Add a script (also in your home folder) containing the following command and call it during start-up.
+*
 
-#+begin_src shell :tangle no
-[[ -f ~/.Xmodmap ]] && xmodmap ~/.Xmodmap
-#+end_src
+[main]
 
-This assumes that =Hyper_L= was assigned to modifier =Mod4= that's already used by =Super_L= and modifier =Mod3= is an empty group.
+capslock = overload(wal, capslock)
+' = overload(wal, ')
 
-**** Unsafe Alternative
-
-A much riskier[fn:1] way, provided the recipe above doesn't work, would be to edit your =/usr/share/X11/xkb/symbols/pc= file like so:
-
-#+BEGIN_SRC :tangle no
-...
-// key <CAPS> {    [ Caps_Lock     ]   };
-key <CAPS> {    [ Hyper_L       ]   };
-...
-// modifier_map Lock   { Caps_Lock };
-modifier_map Mod3   { Hyper_L, Hyper_R };
-...
-// modifier_map Mod4   { <HYPR> };
-modifier_map Mod3   { <HYPR> };
+[wal:C-M-A]
 #+END_SRC
 
 ** Named command maps
@@ -215,13 +195,8 @@ A command map that binds various completion commands.
 
 ;;;; Customization:
 
-(defcustom wal-hyper-mock (kbd "C-c w")
-  "The key sequence to use to mock hyper modifier."
-  :type 'key-sequence
-  :group 'wal-key-bindings)
-
-(defcustom wal-hyper-prefix "H"
-  "The key to consider the hyper prefix."
+(defcustom wal-custom-prefix "C-M-s"
+  "The key to consider the custom prefix."
   :type 'key-sequence
   :group 'wal-key-bindings)
 
@@ -242,7 +217,7 @@ A command map that binds various completion commands.
 #+BEGIN_SRC emacs-lisp
 (defsubst wal-prefix-user-key (user-key)
   "Prefix USER-KEY."
-  (let ((prefix (concat wal-hyper-prefix "-")))
+  (let ((prefix (concat wal-custom-prefix "-")))
 
     (concat prefix user-key)))
 
@@ -346,6 +321,10 @@ All ARGS are passed to both definers."
   :config
   (seq-do #'wal-general-create-definer wal-general-leaders)
 
+  (general-define-key :prefix (wal-prefix-user-key "c") :prefix-map 'wal-command-map)
+
+  (general-define-key :prefix (wal-prefix-user-key "a") :prefix-map 'wal-alternate-map)
+
   :functions (general-define-key))
 #+END_SRC
 
@@ -427,6 +406,21 @@ USER-KEY and LEADER can be used to prefix the key."
             `(when ,condition
                (which-key-add-key-based-replacements ,key ,description))
           `(which-key-add-key-based-replacements ,key ,description)))))
+
+
+(cl-defmacro that-key-in-map (description &key key alternate command)
+  "Add DESCRIPTION for KEY in map after loading `which-key'.
+
+The replacement is done either in ALTERNATE or COMMAND map."
+  (let ((map (cond
+              (alternate 'wal-alternate-map)
+              (command 'wal-command-map)
+              (t 'wal-command-map))))
+
+    `(with-eval-after-load 'which-key
+       (declare-function which-key-add-keymap-based-replacements "ext:which-key.el")
+
+       (which-key-add-keymap-based-replacements ,map ,key ,description))))
 
 (use-package which-key
   :defer 2
@@ -528,13 +522,10 @@ USER-KEY and LEADER can be used to prefix the key."
   ;; Replace `buffer-list'.
   (global-set-key [remap list-buffers] #'ibuffer-other-window)
 
-  ;; Alternate binding for C-c x @ h.
-  (define-key function-key-map wal-hyper-mock #'event-apply-hyper-modifier)
-
   ;; One-handed events.
   (define-key function-key-map (kbd "<f9>") #'event-apply-control-modifier)
   (define-key function-key-map (kbd "<f10>") #'event-apply-meta-modifier)
-  (define-key function-key-map (kbd "<f11>") #'event-apply-hyper-modifier)
+  (define-key function-key-map (kbd "<f11>") #'event-apply-super-modifier)
   (define-key function-key-map (kbd "<f12>") #'event-apply-shift-modifier)
 
   ;; Add alternative bindings to repeat map.
@@ -545,6 +536,9 @@ USER-KEY and LEADER can be used to prefix the key."
   (define-key ctl-x-4-map (kbd "M-4") 'wal-swipe-window-prefix)
   (global-set-key (kbd "M-o") 'wal-other-window)
   (global-set-key (kbd "C-M-o") 'wal-switch-to-other-buffer)
+
+  (that-key "wal-command-maps" :user-key "c")
+  (that-key "wal-alternates" :user-key "a")
 
   (with-eval-after-load 'window
     (when (boundp 'other-window-repeat-map)
@@ -569,4 +563,4 @@ USER-KEY and LEADER can be used to prefix the key."
 
 [fn:1] To get a full overview you'll have to call =describe-personal-keybindings= and =general-describe-keybindings=.
 
-[fn:2] Note that =C-c w= is bound to apply the hyper modifier as well; so if you don't have access to the key, you can always use that instead.
+[fn:2] See [[https://github.com/rvaiya/keyd][here]].

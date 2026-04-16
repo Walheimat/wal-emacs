@@ -117,9 +117,8 @@ The action depends on the current position, active region and the
     (transient-append-suffix 'js-mode-major '(0 0 -1)
       '("r" "rename file" lsp-javascript-rename-file)))
 
-  ;; Command map.
-  (setq lsp-keymap-prefix (wal-prefix-user-key "C-["))
-  (lsp-enable-which-key-integration t)
+  (define-key wal-command-map "[" lsp-command-map)
+  (that-key-in-map "lsp" :key "[")
 
   :custom
   ;; Simplify visuals.
@@ -150,11 +149,11 @@ The action depends on the current position, active region and the
 
   :wal-bind
   (:map lsp-mode-map
-   ("[" . wal-lsp-dwim)
-   ("M-[" . lsp-execute-code-action))
+   ("[" . wal-lsp-dwim))
 
-  :wal-bind-keymap
-  (("C-[" . lsp-command-map))
+  :bind
+  (:map wal-alternate-map
+   ("[" . lsp-execute-code-action))
 
   :delight
   (lsp-mode " lsp")
@@ -274,8 +273,6 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the [[Debug Templat
     "?" 'dap-breakpoint-condition
     "l" 'dap-ui-breakpoints-list)
 
-  (that-key "dap" :user-key "C-]")
-
   :config
   (dap-auto-configure-mode)
 
@@ -295,6 +292,9 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the [[Debug Templat
    'dap-ui-repl-company-prefix :override
    #'wal-instead-grab-directly)
 
+  (define-key wal-command-map "]" wal-dap-command-map)
+  (that-key-in-map "dap" :key "]")
+
   :custom
   (dap-auto-show-output nil)
   (dap-auto-configure-features '(locals expressions))
@@ -307,12 +307,13 @@ Debugging using VSCode's DAP (in =lsp-mode=). Have a look at the [[Debug Templat
   ;; Decrease size of `lsp-treemacs' windows.
   (treemacs-text-scale -1)
 
+  :bind
+  (:map wal-alternate-map
+   ("]" . dap-breakpoint-toggle))
+
   :wal-bind
   (("]" . dap-debug)
    ("M-]" . dap-breakpoint-toggle))
-
-  :wal-bind-keymap
-  (("C-]" . wal-dap-command-map))
 
   :delight " dap")
 #+END_SRC
