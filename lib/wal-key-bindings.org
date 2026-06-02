@@ -40,7 +40,7 @@ User-reserved combinations are used for (mostly built-in) commands and command m
 
 The default custom prefix is =C-M-s= (that is control, meta, super). You may override it by setting =wal-custom-prefix= to a valid key combination.
 
-Most bindings are quick-access actions, some have an alternate action bound in prefixed =a=, some bind a command map or transient in prefixed =c=.
+Most bindings are quick-access actions, some have an alternate action bound in prefixed =wal-alternate-key= (default is =<SPC>=), some bind a command map or transient in prefixed =wal-command-key= (default is =<return>=).
 
 | Binding                | Context                                 | Action                            | Alternate                              | Command Map   |
 |------------------------+-----------------------------------------+-----------------------------------+----------------------------------------+---------------|
@@ -211,6 +211,16 @@ A command map that binds various completion commands.
   "Alist mapping prefix keys to leaders."
   :type '(alist :key-type string :value-type symbol)
   :group 'wal-key-bindings)
+
+(defcustom wal-alternate-key "<SPC>"
+  "The key used for alternate actions."
+  :type 'key-sequence
+  :group 'wal-key-bindings)
+
+(defcustom wal-command-key "<return>"
+  "The key used for command maps."
+  :type 'key-sequence
+  :group 'wal-key-bindings)
 #+END_SRC
 
 * Leaders
@@ -322,9 +332,9 @@ All ARGS are passed to both definers."
   :config
   (seq-do #'wal-general-create-definer wal-general-leaders)
 
-  (general-define-key :prefix (wal-prefix-user-key "c") :prefix-map 'wal-command-map)
+  (general-define-key :prefix (wal-prefix-user-key wal-command-key) :prefix-map 'wal-command-map)
 
-  (general-define-key :prefix (wal-prefix-user-key "a") :prefix-map 'wal-alternate-map)
+  (general-define-key :prefix (wal-prefix-user-key wal-alternate-key) :prefix-map 'wal-alternate-map)
 
   :functions (general-define-key))
 #+END_SRC
